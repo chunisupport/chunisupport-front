@@ -69,8 +69,8 @@ import {
   FRIEND_REQUEST_USERNAME_ERROR_ID,
   FRIENDS_COPY,
   FRIENDS_COPY_FEEDBACK_DURATION_MS,
-  FRIENDS_PAGE_TITLE,
   type FriendsTabValue,
+  PAGE_TITLES,
   resolveFriendsTabValue,
 } from './constants'
 import {
@@ -407,7 +407,7 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
  * @returns フレンド画面。
  */
 const FriendsPage = () => {
-  useDocumentTitle(FRIENDS_PAGE_TITLE)
+  useDocumentTitle(PAGE_TITLES.friends)
   const params = useParams<{ tab?: string }>()
   const navigate = useNavigate()
 
@@ -768,7 +768,7 @@ const FriendsPage = () => {
   return (
     <div class="mx-auto w-full max-w-5xl p-4">
       <header class="mb-4 flex items-center justify-between gap-3">
-        <h1 class="text-2xl font-semibold">{FRIENDS_PAGE_TITLE}</h1>
+        <h1 class="text-2xl font-semibold">{PAGE_TITLES.friends}</h1>
         <AppButton
           variant="surface"
           size="sm"

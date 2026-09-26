@@ -1,4 +1,4 @@
-import { ADMIN_COURSES_TITLE } from '../../constants/pageTitles'
+import { PAGE_TITLES } from '../../constants/pageTitles'
 import CourseManagementPage from '../courses/CourseManagementPage'
 
 /**
@@ -7,7 +7,7 @@ import CourseManagementPage from '../courses/CourseManagementPage'
  * @returns 追加と削除を許可した共通のコース管理UI。
  */
 const AdminCoursesPage = () => {
-  return <CourseManagementPage title={ADMIN_COURSES_TITLE} canCreate canDelete />
+  return <CourseManagementPage title={PAGE_TITLES.adminCourses} canCreate canDelete />
 }
 
 export default AdminCoursesPage

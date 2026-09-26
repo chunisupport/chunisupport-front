@@ -2,11 +2,13 @@ import { Navigate, useLocation } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { Match, onMount, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
+import { t } from '../../i18n'
 import { authSession } from '../../stores/authSession'
 import type { AccountType } from '../../types/api'
 import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { buildCurrentPath } from '../../utils/currentPath'
+import Loading from '../Loading/Loading'
 
 type RequireRoleProps = {
   allowedRoles: AccountType[]
@@ -30,12 +32,12 @@ const RequireRole = (props: RequireRoleProps) => {
   return (
     <Switch>
       <Match when={authSession.status === 'unknown'}>
-        <div class="mx-auto w-full max-w-3xl p-6 text-sm text-text-muted">認証情報を確認中...</div>
+        <Loading />
       </Match>
 
       <Match when={authSession.status === 'error'}>
         <div class="mx-auto w-full max-w-3xl p-6 text-sm text-text-muted">
-          認証情報の取得に失敗しました。ページを再読み込みしてください。
+          {t('common.authLoadFailed')}
         </div>
       </Match>
 

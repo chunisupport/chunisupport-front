@@ -5,7 +5,7 @@ import { LoadError } from '../../../components'
 import { showErrorToast } from '../../../components/common/AppToast'
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import { joinDocumentTitleParts } from '../../../constants/site'
-import { SONG_DATA_REFRESH_ERROR_MESSAGE } from '../../../constants/songMaster'
+import { SONG_MASTER_COPY } from '../../../constants/songMaster'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
@@ -178,7 +178,7 @@ const SongDetail = () => {
     try {
       await Promise.all([refetchSongState(), songsData.refreshSongs()])
     } catch (error) {
-      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_MASTER_COPY.refreshError))
     }
   }
 

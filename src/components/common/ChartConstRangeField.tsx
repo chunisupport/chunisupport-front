@@ -1,20 +1,15 @@
 import type { Component } from 'solid-js'
+import { localizedCopy, t } from '../../i18n'
 import { CHART_LEVEL_FILTER_OPTIONS } from '../../utils/chartLevel'
 import { normalizeChartConstRangeInput } from '../../utils/rangeInput'
 import { CheckboxField } from './CheckboxField'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './filterStyles'
-import {
-  RANGE_END_LABEL_SUFFIX,
-  RANGE_START_LABEL_SUFFIX,
-  SelectRangeInput,
-  TextRangeInput,
-} from './RangeInput'
+import { RANGE_INPUT_COPY, SelectRangeInput, TextRangeInput } from './RangeInput'
 
-/** レベル範囲セクションの見出し */
-const CONST_LEVEL_RANGE_TITLE = 'レベル'
+/** 譜面定数範囲フィールドの表示文言 */
+const CHART_CONST_RANGE_COPY = localizedCopy('chartConstRange')
 
 /** 譜面定数範囲セクションの見出し */
-const CONST_VALUE_RANGE_TITLE = '譜面定数'
 export type ChartConstRangeFieldProps = {
   /** 入力欄IDの接頭辞 */
   idPrefix?: string
@@ -41,11 +36,11 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
   <div>
     {props.constFilterMode === 'number' ? (
       <TextRangeInput
-        title={CONST_VALUE_RANGE_TITLE}
+        title={CHART_CONST_RANGE_COPY.constant}
         inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
         start={{
           id: `${props.idPrefix ?? 'filter'}-const-min`,
-          label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          label: `${CHART_CONST_RANGE_COPY.constant} ${RANGE_INPUT_COPY.startSuffix}`,
           value: props.minValue,
           inputMode: 'decimal',
           pattern: '[0-9]*[.]?[0-9]*',
@@ -55,7 +50,7 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
         }}
         end={{
           id: `${props.idPrefix ?? 'filter'}-const-max`,
-          label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          label: `${CHART_CONST_RANGE_COPY.constant} ${RANGE_INPUT_COPY.endSuffix}`,
           value: props.maxValue,
           inputMode: 'decimal',
           pattern: '[0-9]*[.]?[0-9]*',
@@ -66,17 +61,17 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
       />
     ) : (
       <SelectRangeInput
-        title={CONST_LEVEL_RANGE_TITLE}
+        title={CHART_CONST_RANGE_COPY.level}
         options={[...CHART_LEVEL_FILTER_OPTIONS]}
-        placeholder="選択…"
+        placeholder={t('common.selectPlaceholder')}
         start={{
           value: props.constLevelMin,
-          label: `${CONST_LEVEL_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          label: `${CHART_CONST_RANGE_COPY.level} ${RANGE_INPUT_COPY.startSuffix}`,
           onChange: (value) => props.onConstLevelChange('min', value),
         }}
         end={{
           value: props.constLevelMax,
-          label: `${CONST_LEVEL_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          label: `${CHART_CONST_RANGE_COPY.level} ${RANGE_INPUT_COPY.endSuffix}`,
           onChange: (value) => props.onConstLevelChange('max', value),
         }}
       />
@@ -88,7 +83,7 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
         class="flex items-center gap-2"
         textVariant="large"
-        label="譜面定数で指定"
+        label={CHART_CONST_RANGE_COPY.useConstant}
       />
     </div>
   </div>

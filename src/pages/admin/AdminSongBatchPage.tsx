@@ -21,7 +21,7 @@ import { showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../components/common/filterStyles'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
-import { ADMIN_SONG_BATCH_PAGE_TITLE } from '../../constants/pageTitles'
+import { PAGE_TITLES } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { songBatchJobsQueryOptions, songBatchQueryKeys } from '../../queries/songBatch'
 import type { SongBatchJobDTO, SongBatchJobStatus, SongBatchMode } from '../../types/api'
@@ -177,7 +177,7 @@ const SongBatchJobCard = (props: { job: SongBatchJobDTO }): JSX.Element => {
  * @returns 実行フォーム、確認ダイアログ、実行履歴。
  */
 const AdminSongBatchPage = (): JSX.Element => {
-  useDocumentTitle(ADMIN_SONG_BATCH_PAGE_TITLE)
+  useDocumentTitle(PAGE_TITLES.adminSongBatch)
 
   const queryClient = useQueryClient()
   const jobsQuery = useQuery(() => songBatchJobsQueryOptions())

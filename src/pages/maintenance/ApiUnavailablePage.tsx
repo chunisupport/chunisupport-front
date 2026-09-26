@@ -1,12 +1,8 @@
 import { WifiOff } from 'lucide-solid'
 import { onMount } from 'solid-js'
 import { AppButton } from '../../components/common/AppButton'
-import {
-  API_UNAVAILABLE_MESSAGE,
-  API_UNAVAILABLE_PAGE_COPY,
-  API_UNAVAILABLE_RETRY_BUTTON_LABEL,
-} from '../../constants/maintenance'
-import { API_UNAVAILABLE_PAGE_TITLE } from '../../constants/pageTitles'
+import { API_UNAVAILABLE_PAGE_COPY, MAINTENANCE_COPY } from '../../constants/maintenance'
+import { PAGE_TITLES } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 type ApiUnavailablePageProps = {
@@ -23,7 +19,7 @@ type ApiUnavailablePageProps = {
  */
 const ApiUnavailablePage = (props: ApiUnavailablePageProps) => {
   let mainElement: HTMLElement | undefined
-  useDocumentTitle(API_UNAVAILABLE_PAGE_TITLE)
+  useDocumentTitle(PAGE_TITLES.apiUnavailable)
 
   onMount(() => {
     mainElement?.focus()
@@ -40,7 +36,9 @@ const ApiUnavailablePage = (props: ApiUnavailablePageProps) => {
           <WifiOff class="h-7 w-7" aria-hidden="true" />
         </span>
         <h1 class="mt-4 text-2xl font-semibold">{API_UNAVAILABLE_PAGE_COPY.heading}</h1>
-        <p class="mt-3 text-sm leading-relaxed text-text-muted">{API_UNAVAILABLE_MESSAGE}</p>
+        <p class="mt-3 text-sm leading-relaxed text-text-muted">
+          {MAINTENANCE_COPY.apiUnavailableMessage}
+        </p>
 
         <AppButton
           variant="primary"
@@ -48,9 +46,7 @@ const ApiUnavailablePage = (props: ApiUnavailablePageProps) => {
           disabled={props.isRefreshing}
           onClick={props.onRetry}
         >
-          {props.isRefreshing
-            ? API_UNAVAILABLE_PAGE_COPY.retrying
-            : API_UNAVAILABLE_RETRY_BUTTON_LABEL}
+          {props.isRefreshing ? API_UNAVAILABLE_PAGE_COPY.retrying : MAINTENANCE_COPY.retryButton}
         </AppButton>
 
         <p class="sr-only" aria-live="polite" aria-atomic="true">

@@ -20,8 +20,8 @@ type PlayerDataEmptyStateProps = {
  */
 const PlayerDataEmptyState: Component<PlayerDataEmptyStateProps> = (props) => {
   const [copyState, setCopyState] = createSignal<'idle' | 'copied' | 'failed'>('idle')
-  const title = () => props.title ?? 'プレイヤーデータが未登録です'
-  const message = () => props.message ?? 'まずはChuniSupportにスコアを登録してみましょう。'
+  const title = () => props.title ?? PLAYER_DATA_EMPTY_STATE_TEXT.defaultTitle
+  const message = () => props.message ?? PLAYER_DATA_EMPTY_STATE_TEXT.defaultMessage
 
   /**
    * ブックマークレットをクリップボードへコピーする。

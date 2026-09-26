@@ -4,6 +4,7 @@ import { GoogleLoginForm } from '../../../components/auth/GoogleLoginForm'
 import { REGISTER_PATH } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
+import { localizedCopy } from '../../../i18n'
 import { isUnregisteredLoginError, normalizeRedirectParam } from '../../../usecases/auth/loginFlow'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
@@ -13,6 +14,9 @@ import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
  *
  * @returns ログインフォームの JSX 要素。
  */
+/** ログイン画面の表示文言 */
+const LOGIN_COPY = localizedCopy('auth.login')
+
 const Login = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -41,10 +45,10 @@ const Login = () => {
       return null
     }
 
-    return toUserFriendlyErrorMessage(error, 'Googleログインに失敗しました。')
+    return toUserFriendlyErrorMessage(error, LOGIN_COPY.failed)
   }
 
-  useDocumentTitle('ログイン')
+  useDocumentTitle(() => LOGIN_COPY.title)
 
   return (
     <div class="min-h-screen flex justify-center px-4 py-10">
@@ -55,7 +59,7 @@ const Login = () => {
           <>
             <div class="text-center mb-6">
               <p class="text-text-muted mb-2">ChuniSupport</p>
-              <h1 class="text-2xl font-semibold">ログイン</h1>
+              <h1 class="text-2xl font-semibold">{LOGIN_COPY.title}</h1>
             </div>
 
             <div class="mb-6">
@@ -64,14 +68,14 @@ const Login = () => {
 
             <div class="text-center">
               <p class="mb-5 text-sm text-text-muted">
-                新規アカウント作成は
+                {LOGIN_COPY.registerPrefix}
                 <A href={REGISTER_PATH} class="text-link underline ml-1">
-                  こちら
+                  {LOGIN_COPY.here}
                 </A>
               </p>
               <p class="text-sm text-text-muted">
                 <A href="/" class="text-link underline ml-1">
-                  トップページへ戻る
+                  {LOGIN_COPY.backToTop}
                 </A>
               </p>
             </div>

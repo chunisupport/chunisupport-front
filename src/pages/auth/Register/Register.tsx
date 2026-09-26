@@ -7,6 +7,7 @@ import { createEffect, createSignal, onMount, Show } from 'solid-js'
 import { postSignup } from '../../../api/auth'
 import { fetchMe } from '../../../api/users'
 import { Loading, Turnstile } from '../../../components'
+import { GOOGLE_LOGIN_COPY } from '../../../components/auth/googleLoginForm.constants'
 import { AppButton } from '../../../components/common/AppButton'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { CF_TURNSTILE_SITE_KEY } from '../../../config'
@@ -17,14 +18,7 @@ import { clearAuthenticatedUser } from '../../../stores/authSession'
 import { resolveGoogleRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
-import {
-  PRIVACY_POLICY_URL,
-  REGISTERED_GOOGLE_ACCOUNT_MESSAGE,
-  TERMS_URL,
-  TURNSTILE_ERROR_MESSAGE,
-  TURNSTILE_REQUIRED_MESSAGE,
-  USERNAME_FORBIDDEN_WORD_REQUIREMENT,
-} from './constants'
+import { PRIVACY_POLICY_URL, REGISTER_COPY, TERMS_URL } from './constants'
 
 /**
  * Google認証を利用する新規登録画面を表示する。
@@ -107,14 +101,14 @@ const Register = () => {
         await signOut(auth)
         clearAuthenticatedUser()
         setGoogleEmail('')
-        setErrorMessage(REGISTERED_GOOGLE_ACCOUNT_MESSAGE)
+        setErrorMessage(REGISTER_COPY.registeredGoogleAccount)
         return
       }
 
       setGoogleEmail(result.user.email ?? '')
       setStep('fill_username')
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, 'Googleアカウントの認証に失敗しました。'))
+      setErrorMessage(toUserFriendlyErrorMessage(error, REGISTER_COPY.googleAuthFailed))
     } finally {
       setIsSubmitting(false)
     }
@@ -130,7 +124,7 @@ const Register = () => {
     event.preventDefault()
     const verifiedToken = turnstileToken()
     if (!verifiedToken) {
-      setErrorMessage(TURNSTILE_REQUIRED_MESSAGE)
+      setErrorMessage(REGISTER_COPY.turnstileRequired)
       return
     }
 
@@ -141,7 +135,7 @@ const Register = () => {
       await redirectAfterAuthentication(navigate)
     } catch (error) {
       resetTurnstile()
-      setErrorMessage(toUserFriendlyErrorMessage(error, '予期せぬエラーで登録に失敗しました。'))
+      setErrorMessage(toUserFriendlyErrorMessage(error, REGISTER_COPY.registerFailed))
     } finally {
       setIsSubmitting(false)
     }
@@ -178,7 +172,7 @@ const Register = () => {
     return isAlphanumeric() === true && isValidLength() === true
   }
 
-  useDocumentTitle('新規登録')
+  useDocumentTitle(() => REGISTER_COPY.title)
 
   return (
     <div class="min-h-screen flex justify-center px-4 py-10">
@@ -189,21 +183,22 @@ const Register = () => {
           <>
             <div class="text-center mb-6">
               <p class="text-text-muted mb-2">ChuniSupport</p>
-              <h1 class="text-2xl font-semibold">新規登録</h1>
+              <h1 class="text-2xl font-semibold">{REGISTER_COPY.title}</h1>
             </div>
 
             {/* 注意事項 */}
             <div class="mb-6 p-4 bg-warning-bg border border-warning-border rounded-md">
               <p class="text-warning text-sm">
-                スコアデータの登録には
-                <span class="font-bold">ゲキチュウマイ-NET利用権</span>が必要です。
+                {REGISTER_COPY.noticePrefix}
+                <span class="font-bold">{REGISTER_COPY.noticeEmphasis}</span>
+                {REGISTER_COPY.noticeSuffix}
               </p>
             </div>
 
             {/* Step 1: Google認証 */}
             <Show when={step() === 'google_auth'}>
               <div class="mb-6 text-center">
-                <p class="text-sm text-text-muted mb-4">Googleアカウントで新規登録します。</p>
+                <p class="text-sm text-text-muted mb-4">{REGISTER_COPY.googleDescription}</p>
                 {errorMessage() && (
                   <div class="mb-4 p-3 bg-danger-bg border border-danger-border rounded-md flex items-center text-left">
                     <X class="w-5 h-5 text-danger mr-2 shrink-0" />
@@ -239,7 +234,9 @@ const Register = () => {
                       />
                     </svg>
                   )}
-                  <span class="text-sm font-medium text-text-muted">Googleで続ける</span>
+                  <span class="text-sm font-medium text-text-muted">
+                    {REGISTER_COPY.continueWithGoogle}
+                  </span>
                 </AppButton>
               </div>
             </Show>
@@ -248,7 +245,8 @@ const Register = () => {
             <Show when={step() === 'fill_username'}>
               <div class="mb-6 text-left">
                 <div class="mb-4 p-3 bg-surface-hover border border-border-strong rounded-md text-sm text-text-muted">
-                  Googleアカウント: <span class="font-medium">{googleEmail()}</span>
+                  {REGISTER_COPY.googleAccount}
+                  <span class="font-medium">{googleEmail()}</span>
                 </div>
                 <TextField
                   class="mb-2"
@@ -258,7 +256,7 @@ const Register = () => {
                 >
                   <TextField.Input
                     class="w-full px-3 py-2 border border-border-strong rounded-md focus:outline-none focus:ring-2 focus:ring-focus-ring data-invalid:border-danger-border"
-                    placeholder="ユーザー名"
+                    placeholder={REGISTER_COPY.usernamePlaceholder}
                     value={username()}
                     onInput={(event) => {
                       setUsername(event.currentTarget.value)
@@ -266,10 +264,13 @@ const Register = () => {
                     }}
                   />
                   <TextField.Description class="mt-1">
-                    <ValidationItem status={isAlphanumeric()} text="小文字の英数字のみ" />
-                    <ValidationItem status={isValidLength()} text="5文字〜50文字" />
-                    <ValidationItem status={null} text="他ユーザーと重複しないもの" />
-                    <ValidationItem status={null} text={USERNAME_FORBIDDEN_WORD_REQUIREMENT} />
+                    <ValidationItem
+                      status={isAlphanumeric()}
+                      text={REGISTER_COPY.usernameAlphanumeric}
+                    />
+                    <ValidationItem status={isValidLength()} text={REGISTER_COPY.usernameLength} />
+                    <ValidationItem status={null} text={REGISTER_COPY.usernameUnique} />
+                    <ValidationItem status={null} text={REGISTER_COPY.usernameForbiddenWord} />
                   </TextField.Description>
                 </TextField>
                 {/* 利用規約 */}
@@ -281,24 +282,25 @@ const Register = () => {
                   labelClass="ml-2 text-text text-sm select-none"
                   label={
                     <>
+                      {REGISTER_COPY.agreePrefix}
                       <a
                         href={TERMS_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-link underline"
                       >
-                        利用規約
+                        {REGISTER_COPY.terms}
                       </a>
-                      と
+                      {REGISTER_COPY.agreeMiddle}
                       <a
                         href={PRIVACY_POLICY_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-link underline"
                       >
-                        プライバシーポリシー
+                        {REGISTER_COPY.privacyPolicy}
                       </a>
-                      に同意します
+                      {REGISTER_COPY.agreeSuffix}
                     </>
                   }
                 />
@@ -317,7 +319,7 @@ const Register = () => {
                     onExpire={() => setTurnstileToken('')}
                     onError={() => {
                       setTurnstileToken('')
-                      setErrorMessage(TURNSTILE_ERROR_MESSAGE)
+                      setErrorMessage(GOOGLE_LOGIN_COPY.turnstileError)
                     }}
                   />
                   <div class="flex justify-center">
@@ -327,7 +329,7 @@ const Register = () => {
                       class="rounded-md"
                       disabled={!(isUsernameValid() && agreedToTerms()) || isSubmitting()}
                     >
-                      {isSubmitting() ? '処理中...' : '登録'}
+                      {isSubmitting() ? REGISTER_COPY.submitting : REGISTER_COPY.submit}
                     </AppButton>
                   </div>
                 </form>
@@ -336,14 +338,14 @@ const Register = () => {
 
             <div class="text-center">
               <p class="mb-5 text-sm text-text-muted">
-                すでにアカウントをお持ちの方は
+                {REGISTER_COPY.hasAccountPrefix}
                 <A href="/login" class="text-link underline ml-1">
-                  こちら
+                  {REGISTER_COPY.here}
                 </A>
               </p>
               <p class="text-sm text-text-muted">
                 <A href="/" class="text-link underline ml-1">
-                  トップページへ戻る
+                  {REGISTER_COPY.backToTop}
                 </A>
               </p>
             </div>

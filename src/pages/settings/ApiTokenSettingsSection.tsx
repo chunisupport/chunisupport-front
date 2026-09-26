@@ -10,7 +10,7 @@ import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { API_DOCUMENTATION_URL } from '../../config'
 import { DEVELOPER_API_COPY } from '../../constants/developerApi'
-import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
+import { EXTERNAL_LINK_COPY } from '../../constants/externalLink'
 import type { AccountType, ApiToken, ApiTokenPermission } from '../../types/api'
 import {
   canIssueReadWriteApiToken,
@@ -358,7 +358,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
       >
         {DEVELOPER_API_COPY.documentationLink}
         <ExternalLink class="h-4 w-4" aria-hidden="true" />
-        <span class="sr-only">{EXTERNAL_LINK_NEW_TAB_DESCRIPTION}</span>
+        <span class="sr-only">{EXTERNAL_LINK_COPY.newTab}</span>
       </a>
 
       <div id="api-token" class="mt-8 border-t border-border pt-6">

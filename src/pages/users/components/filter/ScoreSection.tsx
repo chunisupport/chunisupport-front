@@ -2,8 +2,7 @@ import type { Component } from 'solid-js'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
 import {
-  RANGE_END_LABEL_SUFFIX,
-  RANGE_START_LABEL_SUFFIX,
+  RANGE_INPUT_COPY,
   SelectRangeInput,
   TextRangeInput,
 } from '../../../../components/common/RangeInput'
@@ -46,7 +45,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
         start={{
           id: 'filter-score-min',
-          label: `${SCORE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          label: `${SCORE_RANGE_TITLE} ${RANGE_INPUT_COPY.startSuffix}`,
           value: props.scoreMinInput,
           inputMode: 'numeric',
           pattern: '[0-9]*',
@@ -56,7 +55,7 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         }}
         end={{
           id: 'filter-score-max',
-          label: `${SCORE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          label: `${SCORE_RANGE_TITLE} ${RANGE_INPUT_COPY.endSuffix}`,
           value: props.scoreMaxInput,
           inputMode: 'numeric',
           pattern: '[0-9]*',
@@ -72,12 +71,12 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         placeholder="選択…"
         start={{
           value: props.scoreRankMin,
-          label: `${SCORE_RANK_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          label: `${SCORE_RANK_RANGE_TITLE} ${RANGE_INPUT_COPY.startSuffix}`,
           onChange: (value) => props.onScoreRankChange('min', value),
         }}
         end={{
           value: props.scoreRankMax,
-          label: `${SCORE_RANK_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          label: `${SCORE_RANK_RANGE_TITLE} ${RANGE_INPUT_COPY.endSuffix}`,
           onChange: (value) => props.onScoreRankChange('max', value),
         }}
       />

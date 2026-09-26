@@ -1,4 +1,5 @@
 import { SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_PHRASE } from '../constants/songBatch'
+import { t } from '../i18n'
 import type { SongBatchJobDTO, SongBatchJobStatus, SongBatchMode } from '../types/api'
 
 /** 楽曲バッチジョブの状態を表示する色調 */
@@ -42,7 +43,9 @@ export const formatSongBatchDuration = (job: SongBatchJobDTO): string | null => 
   const totalSeconds = Math.round(elapsedMs / MILLISECONDS_PER_SECOND)
   const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE)
   const seconds = totalSeconds % SECONDS_PER_MINUTE
-  return minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`
+  return minutes > 0
+    ? t('duration.minutesSeconds', { minutes, seconds })
+    : t('duration.seconds', { seconds })
 }
 
 /**

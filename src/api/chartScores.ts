@@ -1,8 +1,7 @@
 import { CHART_SCORES_BASE_URL, FRONTEND_BASE_URL } from '../config'
+import { t } from '../i18n'
 import type { ChartScoresDifficulty, ChartScoresResponse } from '../types/chartScores'
 import { resolveStaticDataBaseUrl } from './chartStats'
-
-const CHART_SCORES_FETCH_ERROR_MESSAGE = '譜面スコア統計の取得に失敗しました'
 
 /**
  * 指定難易度のレート帯別スコア統計を静的配信JSONから取得する。
@@ -19,7 +18,7 @@ export const fetchChartScores = async (
     headers: { Accept: 'application/json' },
   })
 
-  if (!response.ok) throw new Error(CHART_SCORES_FETCH_ERROR_MESSAGE)
+  if (!response.ok) throw new Error(t('errors.chartScoresFetchFailed'))
 
   return (await response.json()) as ChartScoresResponse
 }

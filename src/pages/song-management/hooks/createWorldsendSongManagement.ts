@@ -8,7 +8,7 @@ import {
   updateWorldsendSongs,
 } from '../../../api/songs'
 import { showErrorToast, showSuccessToast } from '../../../components/common/AppToast'
-import { SONG_DATA_REFRESH_ERROR_MESSAGE } from '../../../constants/songMaster'
+import { SONG_MASTER_COPY } from '../../../constants/songMaster'
 import { useSongsData } from '../../../stores/songsData'
 import type { ManagedWorldsendSongDTO, MasterDataDTO } from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
@@ -123,7 +123,7 @@ export const createWorldsendSongManagement = (masterData: Accessor<MasterDataDTO
    */
   const invalidatePublicSongs = (): void => {
     void songsData.refreshWorldsendSongs().catch((error: unknown) => {
-      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_MASTER_COPY.refreshError))
     })
   }
 
@@ -137,7 +137,7 @@ export const createWorldsendSongManagement = (masterData: Accessor<MasterDataDTO
     try {
       mutateManagedSongs(await fetchManagedWorldsendSongs())
     } catch (error) {
-      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_MASTER_COPY.refreshError))
       return
     }
 

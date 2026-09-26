@@ -15,7 +15,6 @@ import {
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
-
 import { fetchMe } from './api/users'
 import {
   Announcements,
@@ -23,19 +22,14 @@ import {
   LoadError,
   Loading,
   NavBar,
-  X_TIMELINE_HEADING,
+  X_TIMELINE_COPY,
   XTimeline,
 } from './components'
 import ApplicationAvailabilityGate from './components/availability/ApplicationAvailabilityGate'
 import { SelectableCardLink } from './components/common/SelectableCardButton'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
-
-import {
-  FOOTER_COPYRIGHT_TEXT,
-  FOOTER_COPYRIGHT_TEXT_2,
-  FOOTER_DISCLAIMER_TEXT,
-} from './constants/footer'
+import { FOOTER_COPY, FOOTER_COPYRIGHT_TEXT } from './constants/footer'
 import {
   ADMIN_CHART_RANKING_PATH,
   ADMIN_COURSES_PATH,
@@ -72,16 +66,17 @@ import {
   WORLDSEND_SONGS_PATH,
 } from './constants/routes'
 import {
-  ADMIN_ONLY_TOOL_LOCK_LABEL,
   DISABLED_TOOL_BADGE_TEXT,
   isToolLinkListed,
   TOOL_LINKS,
+  TOOLS_COPY,
   type ToolLink,
   type ToolLinkIcon,
 } from './constants/tools'
 import { useRememberAppMainScrollNavigationType } from './hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import { useRobotsMeta } from './hooks/useRobotsMeta'
+import { t } from './i18n'
 import NotFoundPage from './pages/NotFoundPage'
 import { authSession, getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
@@ -232,8 +227,8 @@ const LandingFooter = () => {
     <footer class="border-t border-border bg-surface px-4 py-5 text-sm text-text-muted">
       <div class="mx-auto flex w-full max-w-4xl flex-col items-center gap-1">
         <span>{FOOTER_COPYRIGHT_TEXT}</span>
-        <span>{FOOTER_COPYRIGHT_TEXT_2}</span>
-        <span>{FOOTER_DISCLAIMER_TEXT}</span>
+        <span>{FOOTER_COPY.copyright}</span>
+        <span>{FOOTER_COPY.disclaimer}</span>
       </div>
     </footer>
   )
@@ -271,21 +266,19 @@ const LandingPage = () => {
             fallback={
               <section class="rounded-lg border border-border bg-surface p-6">
                 <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
-                <p class="mb-4 text-sm text-text-muted">
-                  ログインまたは新規登録して、プレイデータを管理しましょう。
-                </p>
+                <p class="mb-4 text-sm text-text-muted">{t('home.guestDescription')}</p>
                 <div class="flex flex-wrap gap-3">
                   <A
                     href="/login"
                     class="rounded-md border border-border-strong px-4 py-2 text-sm font-medium hover:bg-surface-muted"
                   >
-                    ログイン
+                    {t('home.login')}
                   </A>
                   <A
                     href="/register"
                     class="rounded-md bg-action-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-action-primary-hover"
                   >
-                    新規登録
+                    {t('home.register')}
                   </A>
                 </div>
               </section>
@@ -293,15 +286,17 @@ const LandingPage = () => {
           >
             {(username) => (
               <section class="rounded-lg border border-border bg-surface p-6">
-                <h1 class="mb-4 text-2xl font-semibold">ようこそ、{username()}さん</h1>
+                <h1 class="mb-4 text-2xl font-semibold">
+                  {t('home.welcome', { username: username() })}
+                </h1>
                 <div class="rounded-md border border-border bg-surface-muted p-4">
-                  <p class="text-sm text-text-muted">プロフィール</p>
+                  <p class="text-sm text-text-muted">{t('home.profile')}</p>
                   <p class="mt-1 text-lg font-semibold text-text">@{username()}</p>
                   <A
                     href={`/users/${encodeURIComponent(username())}`}
                     class="mt-3 inline-block text-sm font-medium text-action-primary underline"
                   >
-                    マイページを開く
+                    {t('home.openMyPage')}
                   </A>
                 </div>
               </section>
@@ -313,7 +308,7 @@ const LandingPage = () => {
           <Announcements />
 
           <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
-            <h2 class="mb-3 text-xl font-semibold">{X_TIMELINE_HEADING}</h2>
+            <h2 class="mb-3 text-xl font-semibold">{X_TIMELINE_COPY.heading}</h2>
             <XTimeline />
           </section>
         </div>
@@ -391,8 +386,8 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
         <span
           class="pointer-events-none absolute top-2 right-2 text-text-muted"
           role="img"
-          aria-label={ADMIN_ONLY_TOOL_LOCK_LABEL}
-          title={ADMIN_ONLY_TOOL_LOCK_LABEL}
+          aria-label={TOOLS_COPY.adminOnly}
+          title={TOOLS_COPY.adminOnly}
         >
           <Lock class="h-4 w-4" aria-hidden="true" />
         </span>
@@ -407,14 +402,14 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
  * @returns ツールページ
  */
 const ToolsPage = () => {
-  useDocumentTitle('ツール')
+  useDocumentTitle(() => t('home.tools'))
   const listedTools = createMemo(() =>
     TOOL_LINKS.filter((tool) => isToolLinkListed(tool, authSession.user?.account_type))
   )
 
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
-      <h1 class="text-2xl font-semibold">ツール</h1>
+      <h1 class="text-2xl font-semibold">{t('home.tools')}</h1>
       <div class="grid gap-3 sm:grid-cols-2">
         <For each={listedTools()}>{(tool) => <ToolCardContent tool={tool} />}</For>
       </div>

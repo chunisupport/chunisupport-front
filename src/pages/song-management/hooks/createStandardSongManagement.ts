@@ -9,7 +9,7 @@ import {
 } from '../../../api/songs'
 import { showErrorToast, showSuccessToast } from '../../../components/common/AppToast'
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
-import { SONG_DATA_REFRESH_ERROR_MESSAGE } from '../../../constants/songMaster'
+import { SONG_MASTER_COPY } from '../../../constants/songMaster'
 import { useSongsData } from '../../../stores/songsData'
 import type { ManagedSongDTO, MasterDataDTO } from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
@@ -190,7 +190,7 @@ export const createStandardSongManagement = (masterData: Accessor<MasterDataDTO 
    */
   const invalidatePublicSongs = (): void => {
     void songsData.refreshSongs().catch((error: unknown) => {
-      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_MASTER_COPY.refreshError))
     })
   }
 
@@ -204,7 +204,7 @@ export const createStandardSongManagement = (masterData: Accessor<MasterDataDTO 
     try {
       mutateManagedSongs(await fetchManagedSongs())
     } catch (error) {
-      showErrorToast(toUserFriendlyErrorMessage(error, SONG_DATA_REFRESH_ERROR_MESSAGE))
+      showErrorToast(toUserFriendlyErrorMessage(error, SONG_MASTER_COPY.refreshError))
       return
     }
 

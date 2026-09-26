@@ -1,6 +1,6 @@
-/** 新しいタブで開く外部リンクを支援技術へ伝える文言 */
-export const EXTERNAL_LINK_NEW_TAB_DESCRIPTION = '（新しいタブで開きます）'
-
+import { localizedCopy } from '../i18n'
+/** 外部リンクの補足文言 */
+export const EXTERNAL_LINK_COPY = localizedCopy('externalLink')
 /** YouTube検索結果ページのURL */
 export const YOUTUBE_SEARCH_URL = 'https://www.youtube.com/results'
 

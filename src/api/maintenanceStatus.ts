@@ -1,10 +1,10 @@
 import { API_BASE_URL } from '../config'
+import { t } from '../i18n'
 import type { SystemStatusDTO } from '../types/api'
 import { parseSystemStatusDTO } from '../utils/systemStatus'
 import { fetchApi } from './fetchApi'
 
 const SYSTEM_STATUS_API_PATH = `${API_BASE_URL}/internal/system/status`
-const SYSTEM_STATUS_FETCH_ERROR_MESSAGE = 'システム状態の取得に失敗しました'
 
 /**
  * 認証を待たずにAPIのシステム状態を取得する。
@@ -21,7 +21,7 @@ export const fetchSystemStatus = async (signal?: AbortSignal): Promise<SystemSta
   })
 
   if (!response.ok) {
-    throw new Error(SYSTEM_STATUS_FETCH_ERROR_MESSAGE)
+    throw new Error(t('errors.systemStatusFetchFailed'))
   }
 
   return parseSystemStatusDTO(await response.json())

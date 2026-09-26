@@ -1,4 +1,5 @@
 import type { JSX } from 'solid-js'
+import { t } from '../../i18n'
 
 export type LoadingSize = 'default' | 'inline'
 
@@ -29,7 +30,7 @@ const Loading = (props: LoadingProps): JSX.Element => {
     <div
       class="flex h-full items-center justify-center overflow-hidden"
       role="status"
-      aria-label={props.ariaLabel ?? '読み込み中'}
+      aria-label={props.ariaLabel ?? t('common.loading')}
       aria-hidden={props.ariaHidden}
     >
       <div

@@ -1,5 +1,6 @@
 import { A } from '@solidjs/router'
 import type { JSX } from 'solid-js'
+import { t } from '../../../i18n'
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
 import { getScoreRank, type ScoreRank } from '../../../utils/scoreRank'
 import { SortableHeaderButton, type SortDirection } from '../SortableTableHeader'
@@ -88,7 +89,6 @@ const RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS =
   'inline-flex w-[34px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 const HARD_LAMP_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
 const FULL_CHAIN_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
-const LAMP_NONE_ACCESSIBLE_LABEL = 'なし'
 
 /**
  * レコードのコンボランプ値から表示用バッジを生成する。
@@ -162,7 +162,11 @@ export const renderDefaultRecordFullChainBadge = (
  * @returns ハード・コンボ・FULL CHAINの順に並べた読み上げ文言。
  */
 const getRecordLampsAccessibleLabel = (record: DefaultRecordLampBadgesRecord): string =>
-  `ハードランプ ${record.clear_lamp ?? LAMP_NONE_ACCESSIBLE_LABEL}、コンボランプ ${getDefaultRecordLampAccessibleLabel(record.combo_lamp, record.score)}、FULL CHAIN ${record.full_chain ?? LAMP_NONE_ACCESSIBLE_LABEL}`
+  t('recordLamps.accessibleLabel', {
+    clear: record.clear_lamp ?? t('common.none'),
+    combo: getDefaultRecordLampAccessibleLabel(record.combo_lamp, record.score),
+    chain: record.full_chain ?? t('common.none'),
+  })
 
 /** ランプ未達成のドットに使う背景色クラス */
 const LAMP_DOT_PLACEHOLDER_CLASS = 'bg-surface-hover'

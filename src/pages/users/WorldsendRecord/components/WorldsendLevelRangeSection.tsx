@@ -1,9 +1,5 @@
 import type { Component } from 'solid-js'
-import {
-  RANGE_END_LABEL_SUFFIX,
-  RANGE_START_LABEL_SUFFIX,
-  SelectRangeInput,
-} from '../../../../components/common/RangeInput'
+import { RANGE_INPUT_COPY, SelectRangeInput } from '../../../../components/common/RangeInput'
 import { WORLDSEND_LEVEL_STAR_OPTIONS } from '../../../../constants/chart'
 import { formatWorldsendLevelStar } from '../utils/filterDialog'
 
@@ -30,12 +26,12 @@ const WorldsendLevelRangeSection: Component<WorldsendLevelRangeSectionProps> = (
       formatLabel={formatWorldsendLevelStar}
       start={{
         value: props.minValue,
-        label: `${WORLDSEND_LEVEL_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+        label: `${WORLDSEND_LEVEL_RANGE_TITLE} ${RANGE_INPUT_COPY.startSuffix}`,
         onChange: (value) => props.onChange('min', value),
       }}
       end={{
         value: props.maxValue,
-        label: `${WORLDSEND_LEVEL_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+        label: `${WORLDSEND_LEVEL_RANGE_TITLE} ${RANGE_INPUT_COPY.endSuffix}`,
         onChange: (value) => props.onChange('max', value),
       }}
     />

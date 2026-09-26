@@ -1,4 +1,5 @@
 import { LOGIN_PATH } from '../constants/routes'
+import { t } from '../i18n'
 import { auth } from '../lib/firebase'
 import { clearAuthenticatedUser } from '../stores/authSession'
 import { markMaintenanceDetected } from '../stores/availability'
@@ -132,7 +133,7 @@ export const fetchWithAuth = async (
     }
 
     const apiError = new Error(
-      error ? getErrorMessage(error) : 'リクエストに失敗しました'
+      error ? getErrorMessage(error) : t('errors.requestFailed')
     ) as Error & {
       status?: number
       code?: string

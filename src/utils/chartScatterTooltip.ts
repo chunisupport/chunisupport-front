@@ -1,4 +1,5 @@
 import type { TooltipModel } from 'chart.js'
+import { t } from '../i18n'
 import type { PlayerRecordDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
 import { resolveViewportTooltipPosition } from './chartTooltipPosition'
@@ -71,7 +72,11 @@ export const updateChartScatterTooltip = (
   detailElement.className = 'mt-1 text-text-muted'
   detailElement.textContent =
     detail ??
-    `${record.difficulty} / 定数 ${formatChartConst(record.const)} / ${formatInteger(record.score)}`
+    t('chartScatterTooltip.detail', {
+      difficulty: record.difficulty,
+      constant: formatChartConst(record.const),
+      score: formatInteger(record.score),
+    })
 
   const contentElement = document.createElement('div')
   contentElement.className = 'relative'

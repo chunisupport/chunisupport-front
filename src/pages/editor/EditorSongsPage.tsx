@@ -1,5 +1,5 @@
 import SongManagementPage from '../song-management/SongManagementPage'
-import { EDITOR_SONGS_TITLE } from './constants'
+import { PAGE_TITLES } from './constants'
 
 /**
  * EDITOR向けの楽曲編集画面を表示する。
@@ -9,7 +9,7 @@ import { EDITOR_SONGS_TITLE } from './constants'
 const EditorSongsPage = () => {
   return (
     <SongManagementPage
-      title={EDITOR_SONGS_TITLE}
+      title={PAGE_TITLES.editorSongs}
       canCreate={false}
       canDelete={false}
       showAdvancedFilters={false}

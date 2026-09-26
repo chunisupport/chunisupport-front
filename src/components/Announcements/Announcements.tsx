@@ -3,11 +3,8 @@ import { fetchAnnouncements } from '../../api/announcements'
 import {
   ANNOUNCEMENT_CATEGORY_CLASSES,
   ANNOUNCEMENT_CATEGORY_LABELS,
-  ANNOUNCEMENTS_EMPTY_MESSAGE,
-  ANNOUNCEMENTS_HEADING,
-  ANNOUNCEMENTS_LIST_LINK_TEXT,
+  ANNOUNCEMENTS_COPY,
   ANNOUNCEMENTS_LIST_URL,
-  ANNOUNCEMENTS_LOADING_LABEL,
 } from '../../constants/announcements'
 import { formatAnnouncementDate } from '../../utils/announcementFeed'
 import LoadError from '../LoadError/LoadError'
@@ -24,12 +21,12 @@ const Announcements = () => {
   return (
     <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
       <div class="mb-3 flex items-center justify-between gap-3">
-        <h2 class="text-xl font-semibold">{ANNOUNCEMENTS_HEADING}</h2>
+        <h2 class="text-xl font-semibold">{ANNOUNCEMENTS_COPY.heading}</h2>
         <a
           href={ANNOUNCEMENTS_LIST_URL}
           class="shrink-0 text-sm font-medium text-action-primary underline hover:text-action-primary-hover"
         >
-          {ANNOUNCEMENTS_LIST_LINK_TEXT}
+          {ANNOUNCEMENTS_COPY.listLink}
         </a>
       </div>
 
@@ -37,14 +34,14 @@ const Announcements = () => {
         when={!announcements.loading}
         fallback={
           <div class="h-24">
-            <Loading ariaLabel={ANNOUNCEMENTS_LOADING_LABEL} />
+            <Loading ariaLabel={ANNOUNCEMENTS_COPY.loading} />
           </div>
         }
       >
         <Show when={!announcements.error} fallback={<LoadError error={announcements.error} />}>
           <Show
             when={(announcements()?.length ?? 0) > 0}
-            fallback={<p class="text-sm text-text-muted">{ANNOUNCEMENTS_EMPTY_MESSAGE}</p>}
+            fallback={<p class="text-sm text-text-muted">{ANNOUNCEMENTS_COPY.empty}</p>}
           >
             <ul class="space-y-2">
               <For each={announcements()}>

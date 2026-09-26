@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 export const MIN_CHART_CONSTANT_SCORE = 975000
 export const MAX_CHART_CONSTANT_SCORE = 1010000
 
@@ -64,10 +65,10 @@ const assertValidInput = (input: ChartConstantCalculatorInput): void => {
     input.score < MIN_CHART_CONSTANT_SCORE ||
     input.score > MAX_CHART_CONSTANT_SCORE
   ) {
-    throw new Error('スコアは975,000〜1,010,000の整数で入力してください。')
+    throw new Error(t('validation.chartConstantScore'))
   }
   if (!Number.isFinite(input.overPower) || input.overPower < 0) {
-    throw new Error('OVER POWERは0以上の数値で入力してください。')
+    throw new Error(t('validation.chartConstantOverPower'))
   }
 }
 

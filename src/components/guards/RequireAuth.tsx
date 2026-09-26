@@ -2,6 +2,7 @@ import { Navigate, useLocation } from '@solidjs/router'
 import type { JSX } from 'solid-js'
 import { createSignal, Match, onMount, Switch } from 'solid-js'
 import { fetchMe } from '../../api/users'
+import { t } from '../../i18n'
 import { getAuthStatus } from '../../stores/authSession.ts'
 import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath.ts'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession.ts'
@@ -48,7 +49,7 @@ const RequireAuth = (props: RequireAuthProps) => {
 
       <Match when={authStatus() === 'error'}>
         <div class="mx-auto w-full max-w-3xl p-6 text-sm text-text-muted">
-          認証情報の取得に失敗しました。ページを再読み込みしてください。
+          {t('common.authLoadFailed')}
         </div>
       </Match>
 

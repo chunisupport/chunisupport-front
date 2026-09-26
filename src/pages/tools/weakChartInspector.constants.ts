@@ -1,4 +1,4 @@
-import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../constants/chart'
+import { CHART_COPY } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import {
   WEAK_CHART_OP_TARGET_FILTER,
@@ -71,7 +71,7 @@ export const WEAK_CHART_AGGREGATION_DIFFICULTY_OPTIONS: readonly {
 }[] = [
   {
     value: WEAK_CHART_OP_TARGET_FILTER,
-    label: THEORETICAL_OVER_POWER_TARGET_LABEL,
+    label: CHART_COPY.opTarget,
   },
   ...PLAYER_DATA_DIFFICULTIES.map((difficulty) => ({
     value: difficulty,

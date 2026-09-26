@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
+import { t } from '../../../i18n'
 
 /** フィルターボタンの1辺。リングサイズ算出の基準に使う */
 const FILTER_BUTTON_SIZE_REM = 2.375 / 2.0
@@ -63,7 +64,6 @@ const FILTER_RESET_INNER_RING_RADIUS =
   FILTER_RESET_INNER_RING_INNER_RADIUS + FILTER_RESET_INNER_RING_STROKE_WIDTH / 2
 
 /** リセット操作中に外側リングの上へ表示する文言 */
-const FILTER_RESET_HOLDING_LABEL = 'フィルター・ソート リセット'
 
 /** リセット可能になった後にリング内へ表示する文言 */
 const FILTER_RESET_READY_LABEL = 'RELEASE'
@@ -133,7 +133,7 @@ const FilterResetHoldIndicator: Component<FilterResetHoldIndicatorProps> = (prop
         />
       </svg>
       <div class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded border border-danger-border bg-danger-bg px-3 py-2 text-base font-semibold text-danger shadow-md">
-        {props.holdingLabel ?? FILTER_RESET_HOLDING_LABEL}
+        {props.holdingLabel ?? t('filterReset.holding')}
       </div>
       <Show when={props.ready}>
         <div

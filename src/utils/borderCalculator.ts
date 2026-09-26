@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 export const CHUNITHM_THEORETICAL_SCORE = 1010000
 
 const SCORE_DENOMINATOR = 10000
@@ -43,17 +44,17 @@ export type BorderCalculatorResult =
  */
 const assertValidBorderInput = (input: BorderCalculatorInput): void => {
   if (!Number.isInteger(input.notes) || input.notes <= 0) {
-    throw new Error('ノーツ数は1以上の整数で入力してください。')
+    throw new Error(t('validation.borderNotes'))
   }
   if (!Number.isInteger(input.targetScore) || input.targetScore < 0) {
-    throw new Error('目標スコアは0以上の整数で入力してください。')
+    throw new Error(t('validation.borderTargetScore'))
   }
   if (input.targetJustice === undefined) return
   if (!Number.isInteger(input.targetJustice) || input.targetJustice < 0) {
-    throw new Error('目標JUSTICE数は0以上の整数で入力してください。')
+    throw new Error(t('validation.borderTargetJustice'))
   }
   if (input.targetJustice > input.notes) {
-    throw new Error('目標JUSTICE数はノーツ数以下で入力してください。')
+    throw new Error(t('validation.borderTargetJusticeMax'))
   }
 }
 

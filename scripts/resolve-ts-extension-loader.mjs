@@ -12,7 +12,7 @@ export async function resolve(specifier, context, defaultResolve) {
     return await defaultResolve(specifier, context, defaultResolve)
   } catch (error) {
     if (
-      error?.code !== 'ERR_MODULE_NOT_FOUND' ||
+      !['ERR_MODULE_NOT_FOUND', 'ERR_UNSUPPORTED_DIR_IMPORT'].includes(error?.code) ||
       !isRelativeOrAbsoluteSpecifier(specifier) ||
       hasExtension(specifier) ||
       !context.parentURL
@@ -21,8 +21,9 @@ export async function resolve(specifier, context, defaultResolve) {
     }
 
     const parentPath = fileURLToPath(context.parentURL)
-    for (const ext of ['.ts', '.tsx']) {
-      const candidatePath = resolvePath(dirname(parentPath), `${specifier}${ext}`)
+    // TypeScript と同様に、拡張子省略とディレクトリの index を解決する。
+    for (const suffix of ['.ts', '.tsx', '/index.ts', '/index.tsx']) {
+      const candidatePath = resolvePath(dirname(parentPath), `${specifier}${suffix}`)
       try {
         await access(candidatePath)
         return defaultResolve(pathToFileURL(candidatePath).href, context, defaultResolve)

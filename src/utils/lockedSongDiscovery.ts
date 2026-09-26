@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import type { FilterState } from '../types/recordFilter'
 import type { OverPowerChartEntry, OverPowerSummaryRow } from '../usecases/overpower/types'
@@ -64,13 +65,16 @@ export const parseDisplayedHundredths = (
 ): LockedSongObservationParseResult => {
   const normalized = value.trim()
   if (!DECIMAL_INPUT_PATTERN.test(normalized)) {
-    return { ok: false, error: `${label}は0以上、小数第2位までで入力してください。` }
+    return { ok: false, error: t('validation.decimalHundredths', { label }) }
   }
 
   const [integerPart, decimalPart = ''] = normalized.split('.')
   const scaledValue = Number(integerPart) * 100 + Number(decimalPart.padEnd(2, '0'))
   if (!Number.isSafeInteger(scaledValue) || (max !== undefined && scaledValue > max * 100)) {
-    return { ok: false, error: `${label}は${max ?? '有効な範囲'}以下で入力してください。` }
+    return {
+      ok: false,
+      error: t('validation.maxValue', { label, max: max ?? t('validation.validRange') }),
+    }
   }
 
   return { ok: true, scaledValue }

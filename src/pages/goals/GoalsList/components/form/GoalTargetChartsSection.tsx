@@ -6,12 +6,8 @@ import {
   GenreMultiSelect,
   VersionMultiSelect,
 } from '../../../../../components/common/DomainMultiSelect'
-import {
-  RANGE_END_LABEL_SUFFIX,
-  RANGE_START_LABEL_SUFFIX,
-  TextRangeInput,
-} from '../../../../../components/common/RangeInput'
-import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../../../../constants/chart'
+import { RANGE_INPUT_COPY, TextRangeInput } from '../../../../../components/common/RangeInput'
+import { CHART_COPY } from '../../../../../constants/chart'
 import type { MasterDataDTO } from '../../../../../types/api'
 import { normalizeChartConstRangeInput } from '../../../../../utils/rangeInput'
 import { GOAL_FIELD_INPUT_CLASS, GoalFilterCheckbox } from './goalFormFields'
@@ -89,7 +85,7 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
             </div>
             <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
               <GoalFilterCheckbox
-                label={THEORETICAL_OVER_POWER_TARGET_LABEL}
+                label={CHART_COPY.opTarget}
                 checked={props.chartTargetMode === 'op_target'}
                 onChange={props.onToggleOpTarget}
               />
@@ -144,7 +140,7 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
             inputClass={GOAL_FIELD_INPUT_CLASS}
             start={{
               id: 'goal-chart-const-min',
-              label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+              label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_INPUT_COPY.startSuffix}`,
               value: props.constMin,
               inputMode: 'decimal',
               pattern: '[0-9]*[.]?[0-9]*',
@@ -153,7 +149,7 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
             }}
             end={{
               id: 'goal-chart-const-max',
-              label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+              label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_INPUT_COPY.endSuffix}`,
               value: props.constMax,
               inputMode: 'decimal',
               pattern: '[0-9]*[.]?[0-9]*',

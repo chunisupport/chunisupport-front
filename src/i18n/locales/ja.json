@@ -1,7 +1,7 @@
 {
   "appearance": {
     "sectionTitle": "外観",
-    "dialogDescription": "背景とアクセントを選択します。",
+    "dialogDescription": "言語・背景・アクセントを選択します。",
     "themeLabel": "背景",
     "accentLabel": "アクセント",
     "languageLabel": "言語",
@@ -20,5 +20,428 @@
       "blue": "ブルー",
       "violet": "バイオレット"
     }
+  },
+  "apiErrors": {
+    "bad_request": "リクエスト形式が不正です",
+    "internal_error": "サーバーエラーが発生しました",
+    "unauthorized": "認証が必要です",
+    "invalid_credentials": "ユーザー名またはパスワードが正しくありません",
+    "invalid_recovery_credentials": "リカバリーコードが無効または使用済みです",
+    "invalid_token": "認証トークンが無効です",
+    "invalid_turnstile_token": "認証確認に失敗しました。もう一度お試しください",
+    "token_expired": "認証トークンの有効期限が切れています",
+    "missing_token": "認証トークンが必要です",
+    "recent_sign_in_required": "再認証が必要です。もう一度Googleログインを行ってください",
+    "forbidden": "アクセス権限がありません",
+    "firebase_uid_already_linked": "このGoogleアカウントはすでに別のユーザーに連携されています",
+    "registration_failed": "このユーザー名は使用できません",
+    "user_not_found": "ユーザーが見つかりません",
+    "operation_failed": "操作に失敗しました",
+    "player_not_linked": "プレイヤーデータが連携されていません",
+    "player_not_found": "プレイヤーが見つかりません",
+    "player_metric_history_not_found": "RATING・OVER POWER・OP%履歴が見つかりません",
+    "data_transfer_player_not_found": "エクスポートできるプレイヤーデータがありません",
+    "data_transfer_invalid_file": "選択した移行ファイルを読み込めません",
+    "data_transfer_invalid_signature": "移行ファイルの署名を確認できません",
+    "data_transfer_unsupported_schema": "この移行ファイル形式には対応していません",
+    "data_transfer_invalid_data": "移行ファイル内のデータが不正です",
+    "data_transfer_unresolved_reference": "移行先で参照できないデータが含まれています",
+    "data_transfer_destination_not_empty": "移行先アカウントには既に対象データがあります",
+    "song_not_found": "楽曲が見つかりません",
+    "chart_not_found": "譜面が見つかりません",
+    "invalid_genre_id": "ジャンルIDが不正です",
+    "invalid_difficulty_id": "難易度IDが不正です",
+    "invalid_difficulty": "難易度の指定が不正です",
+    "score_history_not_found": "スコア履歴が見つかりません",
+    "score_history_unsupported_difficulty": "スコア履歴に対応していない難易度です",
+    "validation_failed": "入力内容に誤りがあります",
+    "resource_not_found": "データが見つかりません",
+    "conflict": "データが競合しています",
+    "api_token_not_found": "APIトークンが見つかりません",
+    "api_token_limit_exceeded": "APIトークンの発行上限に達しています",
+    "api_token_name_conflict": "同じ名前のAPIトークンがすでに存在します",
+    "invalid_api_token_name": "APIトークン名は1〜50文字で入力してください",
+    "invalid_api_token_id": "APIトークンの指定が不正です",
+    "payload_too_large": "データサイズが大きすぎます",
+    "goal_not_found": "目標が見つかりません",
+    "goal_limit_exceeded": "目標の上限件数に達しています",
+    "goal_invalid_title": "目標タイトルが不正です",
+    "goal_invalid_achievement_type": "目標種別が不正です",
+    "goal_invalid_achievement_params": "目標パラメータが不正です",
+    "goal_invalid_attributes": "目標条件が不正です",
+    "goal_invalid_order": "目標の並び順が不正です",
+    "invalid_goal_input": "目標入力が不正です",
+    "goal_group_not_found": "目標グループが見つかりません",
+    "goal_group_limit_exceeded": "目標グループの上限件数に達しています",
+    "goal_group_invalid_name": "目標グループ名が不正です",
+    "goal_group_conflict": "同じ名前の目標グループがすでに存在します",
+    "goal_group_invalid_order": "目標グループの並び順が不正です",
+    "record_filter_not_found": "保存済みフィルターが見つかりません",
+    "record_filter_limit_exceeded": "保存済みフィルターの上限件数に達しています",
+    "invalid_record_filter_input": "保存済みフィルターの入力内容が不正です",
+    "invalid_record_filter_id": "保存済みフィルターIDが不正です",
+    "friendship_limit_exceeded": "フレンド枠の上限に達しています",
+    "friendship_conflict": "既に申請中、またはフレンドになっています",
+    "friend_request_not_found": "対象のフレンド申請が見つかりません",
+    "friend_not_found": "承認済みフレンドが見つかりません",
+    "friend_score_comparison_unavailable": "プレイヤーデータが未連携のため比較できません",
+    "favorite_song_limit_exceeded": "お気に入り楽曲の上限件数に達しています",
+    "username_empty": "ユーザーネームが空です",
+    "username_too_short": "ユーザーネームは5文字以上である必要があります",
+    "username_too_long": "ユーザーネームは50文字以内である必要があります",
+    "username_invalid_char": "ユーザーネームは小文字英数字のみ使用できます",
+    "username_forbidden": "このユーザーネームは使用できません",
+    "username_taken": "このユーザーネームはすでに使用されています",
+    "password_too_short": "パスワードは8文字以上である必要があります",
+    "password_too_long": "パスワードは128文字以内である必要があります",
+    "invalid_password": "パスワードが無効です",
+    "app_version_unsupported": "データが古くなっています",
+    "duplicate_official_idx": "同じ公式IDがすでに存在します",
+    "invalid_version_input": "バージョン名または稼働日の入力内容が不正です",
+    "version_not_found": "対象のバージョンが見つかりません",
+    "version_name_conflict": "同じバージョン名がすでに存在します",
+    "version_not_latest": "最新版以外のバージョンは削除できません",
+    "version_in_use": "対象バージョンの期間に楽曲があるため削除できません",
+    "song_batch_already_running": "楽曲バッチが実行中です。終了してから再度実行してください",
+    "song_batch_job_not_found": "対象の楽曲バッチジョブが見つかりません",
+    "invalid_song_batch_job_id": "楽曲バッチジョブのIDが不正です",
+    "invalid_song_batch_mode": "楽曲バッチの実行モードが不正です",
+    "not_found": "リソースが見つかりません",
+    "method_not_allowed": "許可されていない操作です",
+    "unsupported_media_type": "サポートされていないメディアタイプです",
+    "too_many_requests": "リクエストが多すぎます。しばらく待ってから再試行してください",
+    "service_unavailable": "サービスが一時的に利用できません",
+    "maintenance_mode": "現在メンテナンス中です"
+  },
+  "common": {
+    "errorOccurred": "エラーが発生しました",
+    "cancel": "キャンセル",
+    "reset": "リセット",
+    "back": "戻る",
+    "loading": "読み込み中",
+    "none": "なし",
+    "selectAll": "すべて選択",
+    "clearAll": "すべて解除",
+    "selectPlaceholder": "選択…",
+    "loadFailed": "データの取得に失敗しました。時間をおいて再度お試しください。",
+    "authLoadFailed": "認証情報の取得に失敗しました。ページを再読み込みしてください。",
+    "genre": "ジャンル",
+    "selectGenre": "ジャンルを選択",
+    "version": "バージョン",
+    "selectVersion": "バージョンを選択"
+  },
+  "errors": {
+    "unexpected": "予期せぬエラーが発生しました。時間をおいて再度お試しください。",
+    "requestFailed": "リクエストに失敗しました",
+    "notSignedIn": "ログインしていません。再度ログインしてください。",
+    "unsupportedSavedUpdate": "保存済み更新結果の形式に対応していません。",
+    "apiVersionFetchFailed": "APIバージョン情報の取得に失敗しました",
+    "announcementsFetchFailed": "お知らせの取得に失敗しました",
+    "chartScoresFetchFailed": "譜面スコア統計の取得に失敗しました",
+    "chartStatsFetchFailed": "レコード統計の取得に失敗しました",
+    "systemStatusFetchFailed": "システム状態の取得に失敗しました"
+  },
+  "firebaseAuthErrors": {
+    "auth/account-exists-with-different-credential": "このGoogleアカウントは別の認証方法ですでに使用されています。",
+    "auth/cancelled-popup-request": "Google認証がキャンセルされました。もう一度お試しください。",
+    "auth/credential-already-in-use": "このGoogleアカウントはすでに使用されています。",
+    "auth/email-already-in-use": "このメールアドレスはすでに使用されています。",
+    "auth/internal-error": "予期せぬエラーが発生しました。時間をおいて再度お試しください。",
+    "auth/invalid-credential": "認証情報が無効です。もう一度ログインしてください。",
+    "auth/network-request-failed": "通信に失敗しました。ネットワーク接続を確認してもう一度お試しください。",
+    "auth/operation-not-allowed": "この認証方法は現在利用できません。",
+    "auth/popup-blocked": "ポップアップがブロックされました。ブラウザの設定を確認してください。",
+    "auth/popup-closed-by-user": "Google認証がキャンセルされました。",
+    "auth/requires-recent-login": "再認証が必要です。もう一度Googleログインを行ってください。",
+    "auth/too-many-requests": "リクエストが多すぎます。しばらく待ってから再試行してください。",
+    "auth/user-disabled": "このアカウントは利用できません。",
+    "auth/user-mismatch": "ログイン中のアカウントと異なるアカウントで再認証されました。"
+  },
+  "home": {
+    "guestDescription": "ログインまたは新規登録して、プレイデータを管理しましょう。",
+    "login": "ログイン",
+    "register": "新規登録",
+    "welcome": "ようこそ、{{ username }}さん",
+    "profile": "プロフィール",
+    "openMyPage": "マイページを開く",
+    "tools": "ツール"
+  },
+  "playerDataEmptyState": {
+    "bookmarkletTitle": "ブックマークレット",
+    "bookmarkletDescription": "以下のブックマークレットをブラウザのブックマークに登録してください。",
+    "dataRegistrationHelpLink": "登録方法がわからない方はこちら",
+    "copyButton": "コピー",
+    "copiedLabel": "コピーしました",
+    "copyFailedLabel": "コピーに失敗しました。手動でコピーしてください。",
+    "defaultTitle": "プレイヤーデータが未登録です",
+    "defaultMessage": "まずはChuniSupportにスコアを登録してみましょう。"
+  },
+  "pagination": {
+    "nav": "ページネーション",
+    "previous": "前のページ",
+    "next": "次のページ"
+  },
+  "cardTableViewToggle": {
+    "toCard": "カード表示に切り替え",
+    "toTable": "表表示に切り替え"
+  },
+  "copyFromStandard": {
+    "copyBpmFromStandardAriaLabel": "STANDARDからBPMを入力",
+    "copyReadingFromStandardAriaLabel": "STANDARDから読みを入力",
+    "copyWikiPageTitleFromStandardAriaLabel": "STANDARDからWikiページタイトルを入力",
+    "copyFromStandardNotFound": "一致するSTANDARD楽曲が見つかりません。",
+    "copyBpmFromStandardBpmMissing": "一致するSTANDARD楽曲にBPMがありません。",
+    "copyReadingFromStandardMissing": "一致するSTANDARD楽曲に読みがありません。",
+    "copyWikiPageTitleFromStandardMissing": "一致するSTANDARD楽曲にWikiページタイトルがありません。"
+  },
+  "toast": {
+    "region": "通知",
+    "close": "通知を閉じる"
+  },
+  "rangeInput": {
+    "startSuffix": "ここから",
+    "endSuffix": "ここまで",
+    "separator": "範囲"
+  },
+  "chartConstRange": {
+    "level": "レベル",
+    "constant": "譜面定数",
+    "useConstant": "譜面定数で指定"
+  },
+  "filterReset": {
+    "hintPrefix": "Tips: フィルターボタン",
+    "hintSuffix": "を長押しすると、フィルター・ソートをリセットできます。",
+    "trigger": "フィルターをリセット",
+    "title": "フィルターをリセットしますか？",
+    "holding": "フィルター・ソート リセット"
+  },
+  "recordLamps": {
+    "accessibleLabel": "ハードランプ {{ clear }}、コンボランプ {{ combo }}、FULL CHAIN {{ chain }}"
+  },
+  "xTimeline": {
+    "heading": "X公式アカウント",
+    "linkText": "ChuniSupport公式Xを開く"
+  },
+  "googleLogin": {
+    "turnstileError": "認証確認に失敗しました。しばらく待ってから再度お試しください。",
+    "error": "Googleログインに失敗しました。",
+    "button": "Googleでログイン",
+    "submitting": "処理中..."
+  },
+  "pageTitles": {
+    "editorSongs": "楽曲編集",
+    "editorCourses": "コース編集",
+    "adminCourses": "コース管理（ADMIN）",
+    "editorMenu": "編集メニュー",
+    "friends": "フレンド",
+    "maintenance": "メンテナンス中です",
+    "apiUnavailable": "サービスに接続できません",
+    "maintenanceLogin": "スタッフログイン",
+    "adminMaintenance": "メンテナンス管理",
+    "adminSongBatch": "楽曲バッチ"
+  },
+  "latestScoreUpdate": {
+    "title": "スコア更新履歴",
+    "empty": "保存された更新差分はありません。",
+    "changedSongsEmpty": "更新された楽曲はありません。",
+    "history": "更新履歴",
+    "newest": "最新・"
+  },
+  "maintenance": {
+    "recheckButton": "状態を再確認",
+    "retryButton": "再試行",
+    "apiUnavailableMessage": "ネットワーク接続を確認し、時間を置いてから再試行してください",
+    "staffOnlyError": "このログイン画面は管理者・編集者専用です",
+    "checking": "サービスの状態を確認しています",
+    "commentErrors": {
+      "required": "メンテナンスコメントを入力してください",
+      "too_long": "メンテナンスコメントは1,000文字以内で入力してください",
+      "control_character": "改行以外の制御文字は使用できません"
+    },
+    "systemStatus": {
+      "operational": "通常稼働中",
+      "maintenance": "メンテナンス中"
+    },
+    "page": {
+      "heading": "メンテナンス中です",
+      "defaultComment": "現在、サービスのメンテナンスを実施しています。",
+      "updatedAtLabel": "状態更新",
+      "timeZoneLabel": "JST"
+    },
+    "apiUnavailablePage": {
+      "heading": "サービスに接続できません",
+      "retrying": "接続を確認しています",
+      "unchanged": "まだサービスに接続できません",
+      "recovered": "サービスへの接続を確認しました"
+    }
+  },
+  "auth": {
+    "register": {
+      "registeredGoogleAccount": "このGoogleアカウントはすでに登録済みです。ログイン画面からログインしてください。",
+      "turnstileRequired": "認証確認を完了してから登録してください。",
+      "usernameForbiddenWord": "登録禁止語に該当しないもの",
+      "googleAuthFailed": "Googleアカウントの認証に失敗しました。",
+      "registerFailed": "予期せぬエラーで登録に失敗しました。",
+      "title": "新規登録",
+      "noticePrefix": "スコアデータの登録には",
+      "noticeEmphasis": "ゲキチュウマイ-NET利用権",
+      "noticeSuffix": "が必要です。",
+      "googleDescription": "Googleアカウントで新規登録します。",
+      "continueWithGoogle": "Googleで続ける",
+      "googleAccount": "Googleアカウント: ",
+      "usernamePlaceholder": "ユーザー名",
+      "usernameAlphanumeric": "小文字の英数字のみ",
+      "usernameLength": "5文字〜50文字",
+      "usernameUnique": "他ユーザーと重複しないもの",
+      "agreePrefix": "",
+      "terms": "利用規約",
+      "agreeMiddle": "と",
+      "privacyPolicy": "プライバシーポリシー",
+      "agreeSuffix": "に同意します",
+      "submitting": "処理中...",
+      "submit": "登録",
+      "hasAccountPrefix": "すでにアカウントをお持ちの方は",
+      "here": "こちら",
+      "backToTop": "トップページへ戻る"
+    },
+    "login": {
+      "failed": "Googleログインに失敗しました。",
+      "title": "ログイン",
+      "registerPrefix": "新規アカウント作成は",
+      "here": "こちら",
+      "backToTop": "トップページへ戻る"
+    }
+  },
+  "nav": {
+    "adminMenu": "管理メニュー",
+    "settings": "設定",
+    "displaySettings": "表示設定",
+    "help": "ヘルプ",
+    "logout": "ログアウト",
+    "home": "ホーム",
+    "goals": "目標",
+    "tools": "ツール",
+    "songs": "楽曲DB",
+    "others": "その他",
+    "loginRequiredTitle": "ログインが必要です",
+    "loginRequiredDescription": "この機能を利用するにはログインが必要です。",
+    "toLogin": "ログイン画面へ",
+    "logoutTitle": "ログアウトしますか？",
+    "logoutDescription": "本当にログアウトしますか？"
+  },
+  "announcements": {
+    "heading": "お知らせ",
+    "listLink": "すべて見る",
+    "empty": "現在、お知らせはありません。",
+    "loading": "お知らせを読み込み中",
+    "categories": {
+      "important": "重要",
+      "update": "アップデート",
+      "maintenance": "メンテナンス",
+      "other": "その他"
+    }
+  },
+  "chart": {
+    "opTarget": "OP対象（MAS+ULT）"
+  },
+  "developerApi": {
+    "menuLabel": "開発者向けAPI",
+    "sectionTitle": "API・外部連携",
+    "description": "ChuniSupportの楽曲情報やプレイデータを、Discord BotやWebアプリなどから利用できます。",
+    "documentationLink": "APIドキュメントを見る"
+  },
+  "externalLink": {
+    "newTab": "（新しいタブで開きます）"
+  },
+  "recordFilterOptions": {
+    "excludeLockedSongs": "未解禁曲を除外"
+  },
+  "songMaster": {
+    "refreshError": "操作は完了しましたが、最新の楽曲データを取得できませんでした。再読み込みしてください。"
+  },
+  "tools": {
+    "adminOnly": "管理者限定",
+    "links": {
+      "chartStats": {
+        "title": "レコード統計",
+        "description": "全プレイヤーの記録から、譜面ごとのランク・コンボ・クリア状況を確認できます。"
+      },
+      "dashboard": {
+        "title": "ダッシュボード",
+        "description": "プレイ記録から達成状況と次に狙う譜面を確認できます。"
+      },
+      "friendVs": {
+        "title": "フレンドVS",
+        "description": "フレンドとスコアで勝負。"
+      },
+      "chartConstantCalculator": {
+        "title": "譜面定数計算機",
+        "description": "OVER POWER変動から譜面定数を逆算します。"
+      },
+      "borderCalculator": {
+        "title": "ボーダー計算機",
+        "description": "楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。"
+      },
+      "weakChartInspector": {
+        "title": "苦手譜面インスペクター",
+        "description": "プレイ済み譜面を譜面定数ごとに比較し、得意・苦手譜面を推測します。"
+      },
+      "onlineWeakChartInspector": {
+        "title": "苦手譜面インスペクター Online",
+        "description": "自分のスコアを同じレート帯の平均スコアと比較します。"
+      },
+      "randomSongSelector": {
+        "title": "ランダム選曲",
+        "description": "条件に合う通常譜面から指定曲数をランダムに選びます。"
+      },
+      "bestSlotRanking": {
+        "title": "ベスト枠ランキング",
+        "description": "レート帯ごとのベスト枠採用率が高い譜面をランキングで確認できます。"
+      },
+      "allSongBestFrame": {
+        "title": "全曲ベスト枠",
+        "description": "全曲・全譜面から、単曲レート上位30曲・上位50曲を計算します。"
+      },
+      "lockedSongDiscovery": {
+        "title": "未解禁曲ディスカバー",
+        "description": "分類別の筐体OVER POWERを照合し、未解禁曲がある範囲を絞り込みます。"
+      },
+      "ratingTheoreticalChecker": {
+        "title": "ベスト枠・新曲枠理論値チェッカー",
+        "description": "全譜面SSS+時の理論値レーティングを確認できます。"
+      }
+    }
+  },
+  "footer": {
+    "copyright": "サイト上のコンテンツの著作権は、原則として各コンテンツの著作権保持者に帰属します。",
+    "disclaimer": "当サイトは非公式のファンサイトであり、株式会社セガをはじめとする関係者・関係会社とは一切関係ありません。"
+  },
+  "validation": {
+    "decimalHundredths": "{{ label }}は0以上、小数第2位までで入力してください。",
+    "maxValue": "{{ label }}は{{ max }}以下で入力してください。",
+    "validRange": "有効な範囲",
+    "chartConstantScore": "スコアは975,000〜1,010,000の整数で入力してください。",
+    "chartConstantOverPower": "OVER POWERは0以上の数値で入力してください。",
+    "borderNotes": "ノーツ数は1以上の整数で入力してください。",
+    "borderTargetScore": "目標スコアは0以上の整数で入力してください。",
+    "borderTargetJustice": "目標JUSTICE数は0以上の整数で入力してください。",
+    "borderTargetJusticeMax": "目標JUSTICE数はノーツ数以下で入力してください。"
+  },
+  "goalLamp": {
+    "HRD": "HARD以上",
+    "BRV": "BRAVE以上",
+    "ABS": "ABSOLUTE以上",
+    "CTS": "CATASTROPHY以上",
+    "FC": "FULL COMBO以上",
+    "AJ": "ALL JUSTICE",
+    "GOLD": "FULL CHAIN GOLD",
+    "PLATINUM": "FULL CHAIN PLATINUM"
+  },
+  "duration": {
+    "minutesSeconds": "{{ minutes }}分{{ seconds }}秒",
+    "seconds": "{{ seconds }}秒"
+  },
+  "chartScatterTooltip": {
+    "detail": "{{ difficulty }} / 定数 {{ constant }} / {{ score }}"
   }
 }

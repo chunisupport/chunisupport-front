@@ -1,7 +1,6 @@
 import { CHART_STATS_BASE_URL, FRONTEND_BASE_URL } from '../config'
+import { t } from '../i18n'
 import type { ChartStatsDifficulty, ChartStatsResponse } from '../types/chartStats'
-
-const CHART_STATS_FETCH_ERROR_MESSAGE = 'レコード統計の取得に失敗しました'
 
 /** 難易度と静的JSONファイル名の対応 */
 const CHART_STATS_FILE_NAME: Record<ChartStatsDifficulty, string> = {
@@ -50,7 +49,7 @@ export const fetchChartStats = async (
     { headers: { Accept: 'application/json' } }
   )
 
-  if (!response.ok) throw new Error(CHART_STATS_FETCH_ERROR_MESSAGE)
+  if (!response.ok) throw new Error(t('errors.chartStatsFetchFailed'))
 
   return (await response.json()) as ChartStatsResponse
 }

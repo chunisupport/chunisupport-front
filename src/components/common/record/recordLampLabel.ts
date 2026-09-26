@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import type { SharedClearLamp, SharedComboLamp, SharedFullChain } from './recordStyleClasses'
 
@@ -36,7 +37,7 @@ export const getDefaultRecordLampAccessibleLabel = (
   score?: number
 ): string => {
   if (lamp === 'ALL JUSTICE' && score === MAX_SCORE) return 'ALL JUSTICE CRITICAL'
-  return lamp ?? 'なし'
+  return lamp ?? t('common.none')
 }
 
 /**

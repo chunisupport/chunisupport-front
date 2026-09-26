@@ -2,6 +2,7 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Funnel, RotateCcw } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
+import { t } from '../../i18n'
 import { AppButton, getAppButtonClass, getAppIconButtonClass } from './AppButton'
 
 type FilterResetDialogProps = {
@@ -11,12 +12,6 @@ type FilterResetDialogProps = {
   /** 長押しリセットが利用可能な画面で操作ヒントを表示するか */
   showShortcutHint?: boolean
 }
-
-/** リセット確認ダイアログで共通表示する補足文の先頭 */
-const RESET_DIALOG_DESCRIPTION_PREFIX = 'Tips: フィルターボタン'
-
-/** リセット確認ダイアログで共通表示する補足文の末尾 */
-const RESET_DIALOG_DESCRIPTION_SUFFIX = 'を長押しすると、フィルター・ソートをリセットできます。'
 
 /**
  * フィルターやソート条件を初期状態へ戻す確認ダイアログを表示する。
@@ -31,13 +26,13 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
    *
    * @returns トリガーのアクセシブル名とタイトル。
    */
-  const triggerLabel = () => props.triggerLabel ?? 'フィルターをリセット'
+  const triggerLabel = () => props.triggerLabel ?? t('filterReset.trigger')
   /**
    * リセット確認ダイアログの見出しを返す。
    *
    * @returns ダイアログタイトル。
    */
-  const title = () => props.title ?? 'フィルターをリセットしますか？'
+  const title = () => props.title ?? t('filterReset.title')
 
   return (
     <AlertDialog open={resetDialogOpen()} onOpenChange={setResetDialogOpen}>
@@ -56,9 +51,9 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
           <AlertDialog.Title class="text-lg font-bold mb-2">{title()}</AlertDialog.Title>
           <Show when={props.showShortcutHint ?? true}>
             <AlertDialog.Description class="mb-4 text-sm text-text-muted">
-              {RESET_DIALOG_DESCRIPTION_PREFIX}
+              {t('filterReset.hintPrefix')}
               <Funnel class="mx-1 inline-block h-4 w-4 align-[-0.125em]" aria-hidden="true" />
-              {RESET_DIALOG_DESCRIPTION_SUFFIX}
+              {t('filterReset.hintSuffix')}
             </AlertDialog.Description>
           </Show>
           <div class="flex justify-end gap-2">
@@ -67,7 +62,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
               type="button"
               class={getAppButtonClass({ variant: 'secondary' })}
             >
-              キャンセル
+              {t('common.cancel')}
             </AlertDialog.CloseButton>
             <AppButton
               variant="danger"
@@ -76,7 +71,7 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
                 setResetDialogOpen(false)
               }}
             >
-              リセット
+              {t('common.reset')}
             </AppButton>
           </div>
         </AlertDialog.Content>

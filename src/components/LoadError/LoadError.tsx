@@ -1,11 +1,10 @@
 import type { Component } from 'solid-js'
+import { t } from '../../i18n'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
 type Props = {
   error: unknown
 }
-
-const LOAD_ERROR_FALLBACK_MESSAGE = 'データの取得に失敗しました。時間をおいて再度お試しください。'
 
 /**
  * 画面初期表示に必要なデータ取得エラーを表示する。
@@ -14,7 +13,7 @@ const LOAD_ERROR_FALLBACK_MESSAGE = 'データの取得に失敗しました。�
  * @returns データ取得エラーの表示。
  */
 const LoadError: Component<Props> = (props) => {
-  const message = () => toUserFriendlyErrorMessage(props.error, LOAD_ERROR_FALLBACK_MESSAGE)
+  const message = () => toUserFriendlyErrorMessage(props.error, t('common.loadFailed'))
 
   return (
     <p

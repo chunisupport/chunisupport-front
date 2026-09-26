@@ -1,6 +1,6 @@
 import { type Component, onMount } from 'solid-js'
 
-import { X_TIMELINE_ACCOUNT_URL, X_TIMELINE_LINK_TEXT, X_TIMELINE_SCRIPT_SRC } from './constants'
+import { X_TIMELINE_ACCOUNT_URL, X_TIMELINE_COPY, X_TIMELINE_SCRIPT_SRC } from './constants'
 
 type XWidgets = {
   load: (element?: HTMLElement) => void
@@ -83,7 +83,7 @@ export const XTimeline: Component = () => {
   return (
     <div ref={containerRef}>
       <a class="twitter-timeline" href={X_TIMELINE_ACCOUNT_URL}>
-        {X_TIMELINE_LINK_TEXT}
+        {X_TIMELINE_COPY.linkText}
       </a>
     </div>
   )

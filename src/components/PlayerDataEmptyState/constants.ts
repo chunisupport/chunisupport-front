@@ -1,4 +1,5 @@
 import { BOOKMARKLET_BASE_URL, BOOKMARKLET_ENTRYPOINT, DOCUMENTATION_BASE_URL } from '../../config'
+import { localizedCopy } from '../../i18n'
 
 /**
  * プレイヤーデータ登録用スクリプトを読み込むブックマークレット。
@@ -16,11 +17,4 @@ export const DATA_REGISTRATION_HELP_URL = new URL(
 /**
  * プレイヤーデータ未登録案内で利用する表示文言。
  */
-export const PLAYER_DATA_EMPTY_STATE_TEXT = {
-  bookmarkletTitle: 'ブックマークレット',
-  bookmarkletDescription: '以下のブックマークレットをブラウザのブックマークに登録してください。',
-  dataRegistrationHelpLink: '登録方法がわからない方はこちら',
-  copyButton: 'コピー',
-  copiedLabel: 'コピーしました',
-  copyFailedLabel: 'コピーに失敗しました。手動でコピーしてください。',
-} as const
+export const PLAYER_DATA_EMPTY_STATE_TEXT = localizedCopy('playerDataEmptyState')

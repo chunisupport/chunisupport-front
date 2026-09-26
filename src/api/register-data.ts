@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config'
 import { SUPPORTED_LATEST_SCORE_UPDATE_SCHEMA_VERSIONS } from '../constants/playerLatestUpdate'
+import { t } from '../i18n'
 import type { PlayerDataResult, PlayerLatestUpdateResult } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
@@ -59,7 +60,7 @@ export const fetchLatestPlayerDataUpdate = async (): Promise<PlayerLatestUpdateR
       (schemaVersion) => schemaVersion === result.schema_version
     )
   ) {
-    throw new Error('保存済み更新結果の形式に対応していません。')
+    throw new Error(t('errors.unsupportedSavedUpdate'))
   }
 
   return result
@@ -83,7 +84,7 @@ export const fetchRecentPlayerDataUpdates = async (): Promise<PlayerLatestUpdate
         )
     )
   ) {
-    throw new Error('保存済み更新結果の形式に対応していません。')
+    throw new Error(t('errors.unsupportedSavedUpdate'))
   }
   return results
 }

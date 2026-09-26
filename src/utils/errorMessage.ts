@@ -1,36 +1,19 @@
+import { localizedCopy, t } from '../i18n'
 import { type ErrorCode, errorMessages } from '../types/api'
 
-const DEFAULT_USER_FRIENDLY_ERROR_MESSAGE =
-  '予期せぬエラーが発生しました。時間をおいて再度お試しください。'
+const FIREBASE_AUTH_ERROR_MESSAGES: Readonly<Record<string, string>> =
+  localizedCopy('firebaseAuthErrors')
 
-const FIREBASE_AUTH_ERROR_MESSAGES: Record<string, string> = {
-  'auth/account-exists-with-different-credential':
-    'このGoogleアカウントは別の認証方法ですでに使用されています。',
-  'auth/cancelled-popup-request': 'Google認証がキャンセルされました。もう一度お試しください。',
-  'auth/credential-already-in-use': 'このGoogleアカウントはすでに使用されています。',
-  'auth/email-already-in-use': 'このメールアドレスはすでに使用されています。',
-  'auth/internal-error': DEFAULT_USER_FRIENDLY_ERROR_MESSAGE,
-  'auth/invalid-credential': '認証情報が無効です。もう一度ログインしてください。',
-  'auth/network-request-failed':
-    '通信に失敗しました。ネットワーク接続を確認してもう一度お試しください。',
-  'auth/operation-not-allowed': 'この認証方法は現在利用できません。',
-  'auth/popup-blocked': 'ポップアップがブロックされました。ブラウザの設定を確認してください。',
-  'auth/popup-closed-by-user': 'Google認証がキャンセルされました。',
-  'auth/requires-recent-login': '再認証が必要です。もう一度Googleログインを行ってください。',
-  'auth/too-many-requests': 'リクエストが多すぎます。しばらく待ってから再試行してください。',
-  'auth/user-disabled': 'このアカウントは利用できません。',
-  'auth/user-mismatch': 'ログイン中のアカウントと異なるアカウントで再認証されました。',
-}
-
-const STATUS_ERROR_MESSAGES: Record<number, string> = {
-  400: errorMessages.bad_request,
-  401: errorMessages.unauthorized,
-  403: errorMessages.forbidden,
-  404: errorMessages.not_found,
-  409: errorMessages.conflict,
-  413: errorMessages.payload_too_large,
-  429: errorMessages.too_many_requests,
-  503: errorMessages.service_unavailable,
+/** HTTPステータスに対応するAPIエラーコード */
+const STATUS_ERROR_CODES: Record<number, ErrorCode> = {
+  400: 'bad_request',
+  401: 'unauthorized',
+  403: 'forbidden',
+  404: 'not_found',
+  409: 'conflict',
+  413: 'payload_too_large',
+  429: 'too_many_requests',
+  503: 'service_unavailable',
 }
 
 type ErrorLike = {
@@ -72,7 +55,8 @@ const resolveCodeMessage = (code: unknown): string | null => {
 const resolveStatusMessage = (status: unknown): string | null => {
   if (typeof status !== 'number') return null
   if (status >= 500) return errorMessages.service_unavailable
-  return STATUS_ERROR_MESSAGES[status] ?? null
+  const code = STATUS_ERROR_CODES[status]
+  return code ? errorMessages[code] : null
 }
 
 /**
@@ -84,7 +68,7 @@ const resolveStatusMessage = (status: unknown): string | null => {
  */
 export const toUserFriendlyErrorMessage = (
   error: unknown,
-  fallbackMessage = DEFAULT_USER_FRIENDLY_ERROR_MESSAGE
+  fallbackMessage = t('errors.unexpected')
 ): string => {
   const errorLike = toErrorLike(error)
   if (!errorLike) return fallbackMessage

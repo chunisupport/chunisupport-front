@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config'
+import { t } from '../i18n'
 import type { ApiRootResponse, ApiVersionResponse } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
@@ -10,7 +11,7 @@ import { fetchWithAuth } from './fetchWithAuth'
 export const fetchApiRoot = async (): Promise<ApiRootResponse> => {
   const response = await fetchWithAuth(API_BASE_URL)
   if (!response.ok) {
-    throw new Error('APIバージョン情報の取得に失敗しました')
+    throw new Error(t('errors.apiVersionFetchFailed'))
   }
 
   return response.json()
@@ -24,7 +25,7 @@ export const fetchApiRoot = async (): Promise<ApiRootResponse> => {
 export const fetchApiVersion = async (): Promise<ApiVersionResponse> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/admin/build-info`)
   if (!response.ok) {
-    throw new Error('APIバージョン情報の取得に失敗しました')
+    throw new Error(t('errors.apiVersionFetchFailed'))
   }
 
   return response.json()

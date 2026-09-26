@@ -1,4 +1,5 @@
 import type { JSX } from 'solid-js'
+import { t } from '../../i18n'
 import type { AppMultiSelectOption, AppMultiSelectValue } from './AppMultiSelect'
 import { MultiSelectField, type MultiSelectFieldProps } from './AppMultiSelect'
 
@@ -35,8 +36,8 @@ export const GenreMultiSelect = <TValue extends AppMultiSelectValue>(
 ): JSX.Element => (
   <MultiSelectField
     {...props}
-    label={props.label ?? 'ジャンル'}
-    placeholder={props.placeholder ?? 'ジャンルを選択'}
+    label={props.label ?? t('common.genre')}
+    placeholder={props.placeholder ?? t('common.selectGenre')}
   />
 )
 
@@ -51,7 +52,7 @@ export const VersionMultiSelect = <TValue extends AppMultiSelectValue>(
 ): JSX.Element => (
   <MultiSelectField
     {...props}
-    label={props.label ?? 'バージョン'}
-    placeholder={props.placeholder ?? 'バージョンを選択'}
+    label={props.label ?? t('common.version')}
+    placeholder={props.placeholder ?? t('common.selectVersion')}
   />
 )

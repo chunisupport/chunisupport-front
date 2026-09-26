@@ -3,10 +3,9 @@ import {
   ANNOUNCEMENTS_FEED_URL,
   ANNOUNCEMENTS_LIST_URL,
 } from '../constants/announcements'
+import { t } from '../i18n'
 import type { Announcement } from '../types/announcement'
 import { parseAnnouncementFeed } from '../utils/announcementFeed'
-
-const ANNOUNCEMENTS_FETCH_ERROR_MESSAGE = 'お知らせの取得に失敗しました'
 
 /**
  * ドキュメントサイトからトップページ用のお知らせを取得する。
@@ -20,7 +19,7 @@ export const fetchAnnouncements = async (): Promise<Announcement[]> => {
   })
 
   if (!response.ok) {
-    throw new Error(ANNOUNCEMENTS_FETCH_ERROR_MESSAGE)
+    throw new Error(t('errors.announcementsFetchFailed'))
   }
 
   return parseAnnouncementFeed(await response.json(), ANNOUNCEMENTS_LIST_URL).announcements.slice(

@@ -1,3 +1,4 @@
+import { localizedCopy, t } from '../i18n'
 export interface ErrorResponse {
   error?: {
     status: number
@@ -221,98 +222,7 @@ export type ErrorCode =
   | 'maintenance_mode'
 
 /** APIエラーコードに対応する利用者向けメッセージ */
-export const errorMessages: Record<ErrorCode, string> = {
-  bad_request: 'リクエスト形式が不正です',
-  internal_error: 'サーバーエラーが発生しました',
-  unauthorized: '認証が必要です',
-  invalid_credentials: 'ユーザー名またはパスワードが正しくありません',
-  invalid_recovery_credentials: 'リカバリーコードが無効または使用済みです',
-  invalid_token: '認証トークンが無効です',
-  invalid_turnstile_token: '認証確認に失敗しました。もう一度お試しください',
-  token_expired: '認証トークンの有効期限が切れています',
-  missing_token: '認証トークンが必要です',
-  recent_sign_in_required: '再認証が必要です。もう一度Googleログインを行ってください',
-  forbidden: 'アクセス権限がありません',
-  firebase_uid_already_linked: 'このGoogleアカウントはすでに別のユーザーに連携されています',
-  registration_failed: 'このユーザー名は使用できません',
-  user_not_found: 'ユーザーが見つかりません',
-  operation_failed: '操作に失敗しました',
-  player_not_linked: 'プレイヤーデータが連携されていません',
-  player_not_found: 'プレイヤーが見つかりません',
-  player_metric_history_not_found: 'RATING・OVER POWER・OP%履歴が見つかりません',
-  data_transfer_player_not_found: 'エクスポートできるプレイヤーデータがありません',
-  data_transfer_invalid_file: '選択した移行ファイルを読み込めません',
-  data_transfer_invalid_signature: '移行ファイルの署名を確認できません',
-  data_transfer_unsupported_schema: 'この移行ファイル形式には対応していません',
-  data_transfer_invalid_data: '移行ファイル内のデータが不正です',
-  data_transfer_unresolved_reference: '移行先で参照できないデータが含まれています',
-  data_transfer_destination_not_empty: '移行先アカウントには既に対象データがあります',
-  song_not_found: '楽曲が見つかりません',
-  chart_not_found: '譜面が見つかりません',
-  invalid_genre_id: 'ジャンルIDが不正です',
-  invalid_difficulty_id: '難易度IDが不正です',
-  invalid_difficulty: '難易度の指定が不正です',
-  score_history_not_found: 'スコア履歴が見つかりません',
-  score_history_unsupported_difficulty: 'スコア履歴に対応していない難易度です',
-  validation_failed: '入力内容に誤りがあります',
-  resource_not_found: 'データが見つかりません',
-  conflict: 'データが競合しています',
-  api_token_not_found: 'APIトークンが見つかりません',
-  api_token_limit_exceeded: 'APIトークンの発行上限に達しています',
-  api_token_name_conflict: '同じ名前のAPIトークンがすでに存在します',
-  invalid_api_token_name: 'APIトークン名は1〜50文字で入力してください',
-  invalid_api_token_id: 'APIトークンの指定が不正です',
-  payload_too_large: 'データサイズが大きすぎます',
-  goal_not_found: '目標が見つかりません',
-  goal_limit_exceeded: '目標の上限件数に達しています',
-  goal_invalid_title: '目標タイトルが不正です',
-  goal_invalid_achievement_type: '目標種別が不正です',
-  goal_invalid_achievement_params: '目標パラメータが不正です',
-  goal_invalid_attributes: '目標条件が不正です',
-  goal_invalid_order: '目標の並び順が不正です',
-  invalid_goal_input: '目標入力が不正です',
-  goal_group_not_found: '目標グループが見つかりません',
-  goal_group_limit_exceeded: '目標グループの上限件数に達しています',
-  goal_group_invalid_name: '目標グループ名が不正です',
-  goal_group_conflict: '同じ名前の目標グループがすでに存在します',
-  goal_group_invalid_order: '目標グループの並び順が不正です',
-  record_filter_not_found: '保存済みフィルターが見つかりません',
-  record_filter_limit_exceeded: '保存済みフィルターの上限件数に達しています',
-  invalid_record_filter_input: '保存済みフィルターの入力内容が不正です',
-  invalid_record_filter_id: '保存済みフィルターIDが不正です',
-  friendship_limit_exceeded: 'フレンド枠の上限に達しています',
-  friendship_conflict: '既に申請中、またはフレンドになっています',
-  friend_request_not_found: '対象のフレンド申請が見つかりません',
-  friend_not_found: '承認済みフレンドが見つかりません',
-  friend_score_comparison_unavailable: 'プレイヤーデータが未連携のため比較できません',
-  favorite_song_limit_exceeded: 'お気に入り楽曲の上限件数に達しています',
-  username_empty: 'ユーザーネームが空です',
-  username_too_short: 'ユーザーネームは5文字以上である必要があります',
-  username_too_long: 'ユーザーネームは50文字以内である必要があります',
-  username_invalid_char: 'ユーザーネームは小文字英数字のみ使用できます',
-  username_forbidden: 'このユーザーネームは使用できません',
-  username_taken: 'このユーザーネームはすでに使用されています',
-  password_too_short: 'パスワードは8文字以上である必要があります',
-  password_too_long: 'パスワードは128文字以内である必要があります',
-  invalid_password: 'パスワードが無効です',
-  app_version_unsupported: 'データが古くなっています',
-  duplicate_official_idx: '同じ公式IDがすでに存在します',
-  invalid_version_input: 'バージョン名または稼働日の入力内容が不正です',
-  version_not_found: '対象のバージョンが見つかりません',
-  version_name_conflict: '同じバージョン名がすでに存在します',
-  version_not_latest: '最新版以外のバージョンは削除できません',
-  version_in_use: '対象バージョンの期間に楽曲があるため削除できません',
-  song_batch_already_running: '楽曲バッチが実行中です。終了してから再度実行してください',
-  song_batch_job_not_found: '対象の楽曲バッチジョブが見つかりません',
-  invalid_song_batch_job_id: '楽曲バッチジョブのIDが不正です',
-  invalid_song_batch_mode: '楽曲バッチの実行モードが不正です',
-  not_found: 'リソースが見つかりません',
-  method_not_allowed: '許可されていない操作です',
-  unsupported_media_type: 'サポートされていないメディアタイプです',
-  too_many_requests: 'リクエストが多すぎます。しばらく待ってから再試行してください',
-  service_unavailable: 'サービスが一時的に利用できません',
-  maintenance_mode: '現在メンテナンス中です',
-}
+export const errorMessages: Record<ErrorCode, string> = localizedCopy('apiErrors')
 
 // エラーコードからメッセージを取得するヘルパー関数
 export const getErrorMessage = (error: ErrorResponse): string => {
@@ -320,7 +230,7 @@ export const getErrorMessage = (error: ErrorResponse): string => {
   if (code && code in errorMessages) {
     return errorMessages[code as ErrorCode]
   }
-  return 'エラーが発生しました'
+  return t('common.errorOccurred')
 }
 
 export interface ChartDTO {

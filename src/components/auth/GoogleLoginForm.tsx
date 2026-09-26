@@ -6,12 +6,7 @@ import { loginWithGoogle } from '../../usecases/auth/loginWithGoogle'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { AppButton } from '../common/AppButton'
 import { Turnstile } from '../Turnstile/Turnstile'
-import {
-  GOOGLE_LOGIN_BUTTON_LABEL,
-  GOOGLE_LOGIN_ERROR_MESSAGE,
-  GOOGLE_LOGIN_SUBMITTING_LABEL,
-  TURNSTILE_ERROR_MESSAGE,
-} from './googleLoginForm.constants'
+import { GOOGLE_LOGIN_COPY } from './googleLoginForm.constants'
 
 export type GoogleLoginFormProps = {
   /**
@@ -64,7 +59,7 @@ export const GoogleLoginForm = (props: GoogleLoginFormProps) => {
       const pageErrorMessage = await props.onFailure(error)
       setErrorMessage(pageErrorMessage ?? '')
     } catch (failureHandlerError) {
-      setErrorMessage(toUserFriendlyErrorMessage(failureHandlerError, GOOGLE_LOGIN_ERROR_MESSAGE))
+      setErrorMessage(toUserFriendlyErrorMessage(failureHandlerError, GOOGLE_LOGIN_COPY.error))
     }
   }
 
@@ -111,7 +106,7 @@ export const GoogleLoginForm = (props: GoogleLoginFormProps) => {
         onExpire={() => setTurnstileToken('')}
         onError={() => {
           setTurnstileToken('')
-          setErrorMessage(TURNSTILE_ERROR_MESSAGE)
+          setErrorMessage(GOOGLE_LOGIN_COPY.turnstileError)
         }}
       />
       <AppButton
@@ -144,7 +139,7 @@ export const GoogleLoginForm = (props: GoogleLoginFormProps) => {
             d="M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.9 2.2 30.4 0 24 0 14.8 0 6.7 5.1 2.7 13.2l8.1 6.2C12.7 13.6 17.9 9.5 24 9.5z"
           />
         </svg>
-        {isSubmitting() ? GOOGLE_LOGIN_SUBMITTING_LABEL : GOOGLE_LOGIN_BUTTON_LABEL}
+        {isSubmitting() ? GOOGLE_LOGIN_COPY.submitting : GOOGLE_LOGIN_COPY.button}
       </AppButton>
     </form>
   )

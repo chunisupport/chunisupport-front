@@ -5,11 +5,7 @@ import { LoadError, Loading } from '../../components'
 import { AppSelect } from '../../components/common/AppSelect'
 import {
   formatPreviousScoreUpdateLabel,
-  LATEST_SCORE_UPDATE_CHANGED_SONGS_EMPTY_MESSAGE,
-  LATEST_SCORE_UPDATE_EMPTY_MESSAGE,
-  LATEST_SCORE_UPDATE_HISTORY_LABEL,
-  LATEST_SCORE_UPDATE_NEWEST_LABEL,
-  LATEST_SCORE_UPDATE_TITLE,
+  LATEST_SCORE_UPDATE_COPY,
 } from '../../constants/playerLatestUpdate'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useSongsData } from '../../stores/songsData'
@@ -36,7 +32,7 @@ const LatestScoreUpdatePage = () => {
   const songsData = useSongsData()
   const [selectedIndex, setSelectedIndex] = createSignal(0)
 
-  useDocumentTitle(LATEST_SCORE_UPDATE_TITLE)
+  useDocumentTitle(LATEST_SCORE_UPDATE_COPY.title)
 
   /**
    * 最新更新結果と表示に必要なコースマスタを取得する。
@@ -68,7 +64,7 @@ const LatestScoreUpdatePage = () => {
   const historyOptions = createMemo(() =>
     (pageData()?.updates ?? []).map((update, index) => ({
       index,
-      label: `${index === 0 ? LATEST_SCORE_UPDATE_NEWEST_LABEL : formatPreviousScoreUpdateLabel(index)}${formatPlayerMetricHistoryDateTime(update.imported_at)}`,
+      label: `${index === 0 ? LATEST_SCORE_UPDATE_COPY.newest : formatPreviousScoreUpdateLabel(index)}${formatPlayerMetricHistoryDateTime(update.imported_at)}`,
     }))
   )
   const selectedOption = createMemo(() => historyOptions()[selectedIndex()])
@@ -77,7 +73,7 @@ const LatestScoreUpdatePage = () => {
   return (
     <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
       <Show when={pageData.state !== 'ready' || pageData()?.results.length === 0}>
-        <h1 class="text-2xl font-semibold">{LATEST_SCORE_UPDATE_TITLE}</h1>
+        <h1 class="text-2xl font-semibold">{LATEST_SCORE_UPDATE_COPY.title}</h1>
       </Show>
 
       <Switch>
@@ -91,7 +87,7 @@ const LatestScoreUpdatePage = () => {
         </Match>
         <Match when={pageData()?.results.length === 0}>
           <p class="rounded-md border border-border bg-surface px-3 py-4 text-center text-sm text-text-muted">
-            {LATEST_SCORE_UPDATE_EMPTY_MESSAGE}
+            {LATEST_SCORE_UPDATE_COPY.empty}
           </p>
         </Match>
         <Match when={selectedResult()}>
@@ -107,14 +103,14 @@ const LatestScoreUpdatePage = () => {
                   onChange={(option) => {
                     if (option) setSelectedIndex(option.index)
                   }}
-                  label={LATEST_SCORE_UPDATE_HISTORY_LABEL}
+                  label={LATEST_SCORE_UPDATE_COPY.history}
                   formatLabel={(option) => option.label}
                 />
               </Show>
               <Show when={result()} keyed>
                 {(selectedResult) => (
                   <RegisterScoreResultView
-                    pageTitle={LATEST_SCORE_UPDATE_TITLE}
+                    pageTitle={LATEST_SCORE_UPDATE_COPY.title}
                     result={selectedResult}
                     resolveSongTitle={(change) =>
                       resolveRegisterScoreSongTitle(
@@ -139,7 +135,7 @@ const LatestScoreUpdatePage = () => {
                     resolveCourseTitle={(change) =>
                       resolveRegisterScoreCourseTitle(change, pageData()?.courses ?? [])
                     }
-                    changedSongsEmptyMessage={LATEST_SCORE_UPDATE_CHANGED_SONGS_EMPTY_MESSAGE}
+                    changedSongsEmptyMessage={LATEST_SCORE_UPDATE_COPY.changedSongsEmpty}
                   />
                 )}
               </Show>

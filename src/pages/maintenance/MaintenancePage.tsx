@@ -1,8 +1,8 @@
 import { Wrench } from 'lucide-solid'
 import { createMemo, onMount, Show } from 'solid-js'
-import { X_TIMELINE_HEADING, XTimeline } from '../../components/XTimeline'
+import { X_TIMELINE_COPY, XTimeline } from '../../components/XTimeline'
 import { MAINTENANCE_PAGE_COPY } from '../../constants/maintenance'
-import { MAINTENANCE_PAGE_TITLE } from '../../constants/pageTitles'
+import { PAGE_TITLES } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { availability } from '../../stores/availability'
 import { formatJstDateTime } from '../../utils/jstDateTime'
@@ -14,7 +14,7 @@ import { formatJstDateTime } from '../../utils/jstDateTime'
  */
 const MaintenancePage = () => {
   let mainElement: HTMLElement | undefined
-  useDocumentTitle(MAINTENANCE_PAGE_TITLE)
+  useDocumentTitle(PAGE_TITLES.maintenance)
 
   onMount(() => {
     mainElement?.focus()
@@ -61,7 +61,7 @@ const MaintenancePage = () => {
         </section>
 
         <section class="min-w-0 rounded-xl border border-border bg-surface p-6 shadow-sm sm:p-8">
-          <h2 class="mb-3 text-xl font-semibold">{X_TIMELINE_HEADING}</h2>
+          <h2 class="mb-3 text-xl font-semibold">{X_TIMELINE_COPY.heading}</h2>
           <XTimeline />
         </section>
       </div>

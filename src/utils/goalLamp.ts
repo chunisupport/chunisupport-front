@@ -1,3 +1,4 @@
+import { localizedCopy, withLocalizedLabels } from '../i18n'
 import type { PlayerRecordDTO } from '../types/api'
 
 export type HardLampGoalValue = 'HRD' | 'BRV' | 'ABS' | 'CTS'
@@ -13,25 +14,26 @@ export const COMBO_LAMP_VALUES = ['FC', 'AJ'] as const
 /** FULL CHAIN目標で選択できる値 */
 export const FULL_CHAIN_VALUES = ['GOLD', 'PLATINUM'] as const
 
+/** ランプ目標の選択肢の表示文言 */
+const GOAL_LAMP_LABELS = localizedCopy('goalLamp')
+
 /** ハードランプ目標の選択肢 */
-export const HARD_LAMP_OPTIONS = [
-  { value: 'HRD', label: 'HARD以上' },
-  { value: 'BRV', label: 'BRAVE以上' },
-  { value: 'ABS', label: 'ABSOLUTE以上' },
-  { value: 'CTS', label: 'CATASTROPHY以上' },
-] as const satisfies readonly { value: HardLampGoalValue; label: string }[]
+export const HARD_LAMP_OPTIONS = withLocalizedLabels(
+  [{ value: 'HRD' }, { value: 'BRV' }, { value: 'ABS' }, { value: 'CTS' }] as const,
+  GOAL_LAMP_LABELS
+)
 
 /** コンボランプ目標の選択肢 */
-export const COMBO_LAMP_OPTIONS = [
-  { value: 'FC', label: 'FULL COMBO以上' },
-  { value: 'AJ', label: 'ALL JUSTICE' },
-] as const satisfies readonly { value: ComboLampGoalValue; label: string }[]
+export const COMBO_LAMP_OPTIONS = withLocalizedLabels(
+  [{ value: 'FC' }, { value: 'AJ' }] as const,
+  GOAL_LAMP_LABELS
+)
 
 /** FULL CHAIN目標の選択肢 */
-export const FULL_CHAIN_OPTIONS = [
-  { value: 'GOLD', label: 'FULL CHAIN GOLD' },
-  { value: 'PLATINUM', label: 'FULL CHAIN PLATINUM' },
-] as const satisfies readonly { value: FullChainGoalValue; label: string }[]
+export const FULL_CHAIN_OPTIONS = withLocalizedLabels(
+  [{ value: 'GOLD' }, { value: 'PLATINUM' }] as const,
+  GOAL_LAMP_LABELS
+)
 
 /** プレイヤーレコード上のハードランプ達成順 */
 export const HARD_LAMP_ORDER: Partial<Record<NonNullable<PlayerRecordDTO['clear_lamp']>, number>> =

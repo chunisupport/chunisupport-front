@@ -12,7 +12,7 @@ import {
 } from 'solid-js'
 import { fetchMe } from '../../api/users'
 import { Loading } from '../../components'
-import { API_UNAVAILABLE_PAGE_COPY, AVAILABILITY_CHECKING_LABEL } from '../../constants/maintenance'
+import { API_UNAVAILABLE_PAGE_COPY, MAINTENANCE_COPY } from '../../constants/maintenance'
 import { auth } from '../../lib/firebase'
 import ApiUnavailablePage from '../../pages/maintenance/ApiUnavailablePage'
 import MaintenancePage from '../../pages/maintenance/MaintenancePage'
@@ -237,7 +237,7 @@ const ApplicationAvailabilityGate = (props: ApplicationAvailabilityGateProps) =>
         <main
           class="flex min-h-dvh items-center justify-center"
           aria-busy="true"
-          aria-label={AVAILABILITY_CHECKING_LABEL}
+          aria-label={MAINTENANCE_COPY.checking}
         >
           <Loading />
         </main>

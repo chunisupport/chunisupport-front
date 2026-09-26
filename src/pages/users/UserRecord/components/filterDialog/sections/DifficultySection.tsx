@@ -4,7 +4,7 @@ import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../../components/common/AppButton'
 import { AppSelect } from '../../../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../../../components/common/CheckboxField'
-import { EXCLUDE_LOCKED_SONGS_FILTER_LABEL } from '../../../../../../constants/recordFilterOptions'
+import { RECORD_FILTER_OPTIONS_COPY } from '../../../../../../constants/recordFilterOptions'
 import type { Difficulty, OpTargetType } from '../../../../../../types/recordFilter'
 
 type DifficultySectionProps = {
@@ -162,7 +162,7 @@ const DifficultySection: Component<DifficultySectionProps> = (props) => (
         disabled={props.lockedSongsDisabled}
         class="relative -mt-1 flex items-center gap-2"
         textVariant="large"
-        label={EXCLUDE_LOCKED_SONGS_FILTER_LABEL}
+        label={RECORD_FILTER_OPTIONS_COPY.excludeLockedSongs}
       />
     </div>
   </div>

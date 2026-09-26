@@ -9,10 +9,10 @@ import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import {
   MAINTENANCE_COMMENT_ERROR_MESSAGES,
   MAINTENANCE_COMMENT_MAX_CODE_POINTS,
-  MAINTENANCE_RECHECK_BUTTON_LABEL,
+  MAINTENANCE_COPY,
   SYSTEM_STATUS_LABELS,
 } from '../../constants/maintenance'
-import { ADMIN_MAINTENANCE_PAGE_TITLE } from '../../constants/pageTitles'
+import { PAGE_TITLES } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   applySystemStatus,
@@ -114,7 +114,7 @@ const MaintenanceStatusSummary = (props: MaintenanceStatusSummaryProps): JSX.Ele
  * @returns メンテナンス状態管理フォームと確認ダイアログ。
  */
 const AdminMaintenancePage = (): JSX.Element => {
-  useDocumentTitle(ADMIN_MAINTENANCE_PAGE_TITLE)
+  useDocumentTitle(PAGE_TITLES.adminMaintenance)
 
   const initialComment = availability.state.kind === 'maintenance' ? availability.state.comment : ''
   const [comment, setComment] = createSignal(initialComment)
@@ -331,7 +331,7 @@ const AdminMaintenancePage = (): JSX.Element => {
                 class="mt-3"
                 onClick={() => void synchronizeMaintenanceStatus()}
               >
-                {MAINTENANCE_RECHECK_BUTTON_LABEL}
+                {MAINTENANCE_COPY.recheckButton}
               </AppButton>
             </section>
           </Show>

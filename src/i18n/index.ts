@@ -120,3 +120,26 @@ const createCopyView = (path: string): object => {
  */
 export const localizedCopy = <P extends LocaleCopyPath>(path: P): FlatLocaleDictionary[P] =>
   createCopyView(path) as FlatLocaleDictionary[P]
+
+/**
+ * 選択肢の label を辞書の文言で参照するように置き換える。
+ * label は参照するたびに現在の表示言語の文言を返す。
+ *
+ * @example
+ * const OPTIONS = withLocalizedLabels([{ value: 'HRD' }, { value: 'BRV' }] as const, COPY.lamps)
+ *
+ * @param options label 以外の選択肢情報
+ * @param labels 選択肢の値をキーにした文言辞書
+ * @returns label を持つ選択肢の配列
+ */
+export const withLocalizedLabels = <T extends { readonly value: string | number }>(
+  options: readonly T[],
+  labels: Readonly<Record<string, string>>
+): (T & { readonly label: string })[] =>
+  options.map(
+    (option) =>
+      Object.defineProperty({ ...option }, 'label', {
+        enumerable: true,
+        get: () => labels[String(option.value)],
+      }) as T & { readonly label: string }
+  )

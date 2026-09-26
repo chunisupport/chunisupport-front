@@ -21,6 +21,7 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createEffect, createSignal, For, onMount } from 'solid-js'
+import { t } from '../../i18n'
 import { isHomePath } from './navItemMatching'
 
 type NavBarProps = {
@@ -31,9 +32,9 @@ import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
 import { DISCORD_COMMUNITY } from '../../constants/discordCommunity'
-import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
-import { EDITOR_MENU_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
-import { LATEST_SCORE_UPDATE_TITLE } from '../../constants/playerLatestUpdate'
+import { EXTERNAL_LINK_COPY } from '../../constants/externalLink'
+import { PAGE_TITLES } from '../../constants/pageTitles'
+import { LATEST_SCORE_UPDATE_COPY } from '../../constants/playerLatestUpdate'
 import { EDITOR_PATH, FRIENDS_PATH, LATEST_SCORE_UPDATE_PATH } from '../../constants/routes'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
@@ -111,7 +112,7 @@ const NavBar = (props: NavBarProps) => {
             ...(authSession.user?.account_type === 'ADMIN'
               ? [
                   {
-                    label: '管理メニュー',
+                    label: t('nav.adminMenu'),
                     icon: () => <Shield class="h-4 w-4" aria-hidden="true" />,
                     path: '/admin',
                   },
@@ -120,37 +121,37 @@ const NavBar = (props: NavBarProps) => {
             ...(authSession.user?.account_type === 'EDITOR'
               ? [
                   {
-                    label: EDITOR_MENU_TITLE,
+                    label: PAGE_TITLES.editorMenu,
                     icon: () => <Shield class="h-4 w-4" aria-hidden="true" />,
                     path: EDITOR_PATH,
                   },
                 ]
               : []),
             {
-              label: FRIENDS_PAGE_TITLE,
+              label: PAGE_TITLES.friends,
               icon: () => <UsersRound class="h-4 w-4" aria-hidden="true" />,
               path: FRIENDS_PATH,
               hasNotificationDot: friendRequestNotification.hasPendingReceivedRequest,
             },
             {
-              label: LATEST_SCORE_UPDATE_TITLE,
+              label: LATEST_SCORE_UPDATE_COPY.title,
               icon: () => <History class="h-4 w-4" aria-hidden="true" />,
               path: LATEST_SCORE_UPDATE_PATH,
             },
             {
-              label: '設定',
+              label: t('nav.settings'),
               icon: () => <Settings class="h-4 w-4" aria-hidden="true" />,
               path: '/settings',
             },
           ]
         : []),
       {
-        label: '表示テーマ',
+        label: t('nav.displaySettings'),
         icon: () => <Palette class="h-4 w-4" aria-hidden="true" />,
         action: 'theme' as const,
       },
       {
-        label: 'ヘルプ',
+        label: t('nav.help'),
         icon: () => <BadgeQuestionMark class="h-4 w-4" aria-hidden="true" />,
         path: DOCUMENTATION_BASE_URL,
       },
@@ -170,7 +171,7 @@ const NavBar = (props: NavBarProps) => {
       ...(uname
         ? [
             {
-              label: 'ログアウト',
+              label: t('nav.logout'),
               icon: () => <LogOut class="h-4 w-4" aria-hidden="true" />,
               action: 'logout' as const,
             },
@@ -181,14 +182,14 @@ const NavBar = (props: NavBarProps) => {
     return [
       {
         id: 'home',
-        label: 'ホーム',
+        label: t('nav.home'),
         path: userPath,
         icon: () => <House class="h-6 w-6" aria-hidden="true" />,
         requiresAuth: true,
       },
       {
         id: 'goals',
-        label: '目標',
+        label: t('nav.goals'),
         path: '/goals',
         icon: () => <FlagTriangleRight class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
@@ -196,21 +197,21 @@ const NavBar = (props: NavBarProps) => {
       },
       {
         id: 'tools',
-        label: 'ツール',
+        label: t('nav.tools'),
         path: '/tools',
         icon: () => <Wrench class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
       },
       {
         id: 'songs',
-        label: '楽曲DB',
+        label: t('nav.songs'),
         path: '/songs',
         icon: () => <Music class="h-6 w-6" aria-hidden="true" />,
         matchPrefix: true,
       },
       {
         id: 'others',
-        label: 'その他',
+        label: t('nav.others'),
         path: '#',
         matchPattern: /a^/, // マッチしないダミーパターン
         icon: () => <Ellipsis class="h-6 w-6" aria-hidden="true" />,
@@ -335,7 +336,7 @@ const NavBar = (props: NavBarProps) => {
           {item.path?.startsWith('http') && (
             <>
               <ExternalLink class="h-3.5 w-3.5" aria-hidden="true" />
-              <span class="sr-only">{EXTERNAL_LINK_NEW_TAB_DESCRIPTION}</span>
+              <span class="sr-only">{EXTERNAL_LINK_COPY.newTab}</span>
             </>
           )}
         </span>
@@ -456,12 +457,14 @@ const NavBar = (props: NavBarProps) => {
           <Dialog.Portal>
             <Dialog.Overlay class="fixed inset-0 bg-overlay z-50" />
             <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg flex flex-col items-center">
-              <Dialog.Title class="text-lg font-bold mb-2">ログインが必要です</Dialog.Title>
+              <Dialog.Title class="text-lg font-bold mb-2">
+                {t('nav.loginRequiredTitle')}
+              </Dialog.Title>
               <Dialog.Description class="mb-4 text-sm text-text-muted">
-                この機能を利用するにはログインが必要です。
+                {t('nav.loginRequiredDescription')}
               </Dialog.Description>
               <div class="flex gap-4 mt-2">
-                <AppButton onClick={() => setShowLoginDialog(false)}>戻る</AppButton>
+                <AppButton onClick={() => setShowLoginDialog(false)}>{t('common.back')}</AppButton>
                 <AppButton
                   variant="primary"
                   onClick={() => {
@@ -469,7 +472,7 @@ const NavBar = (props: NavBarProps) => {
                     navigate('/login')
                   }}
                 >
-                  ログイン画面へ
+                  {t('nav.toLogin')}
                 </AppButton>
               </div>
             </Dialog.Content>
@@ -482,15 +485,17 @@ const NavBar = (props: NavBarProps) => {
             <AlertDialog.Overlay class="fixed inset-0 bg-overlay z-50" />
             <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg flex flex-col items-center">
               <AlertDialog.Title class="text-lg font-bold mb-2">
-                ログアウトしますか？
+                {t('nav.logoutTitle')}
               </AlertDialog.Title>
               <AlertDialog.Description class="mb-4 text-sm text-text-muted">
-                本当にログアウトしますか？
+                {t('nav.logoutDescription')}
               </AlertDialog.Description>
               <div class="flex gap-4 mt-2">
-                <AppButton onClick={() => setShowLogoutDialog(false)}>キャンセル</AppButton>
+                <AppButton onClick={() => setShowLogoutDialog(false)}>
+                  {t('common.cancel')}
+                </AppButton>
                 <AppButton variant="danger" onClick={handleLogout}>
-                  ログアウト
+                  {t('nav.logout')}
                 </AppButton>
               </div>
             </AlertDialog.Content>
@@ -501,7 +506,9 @@ const NavBar = (props: NavBarProps) => {
           <Dialog.Portal>
             <Dialog.Overlay class="fixed inset-0 bg-overlay z-50" />
             <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-              <Dialog.Title class="text-lg font-bold text-text">表示テーマ</Dialog.Title>
+              <Dialog.Title class="text-lg font-bold text-text">
+                {t('nav.displaySettings')}
+              </Dialog.Title>
               <Dialog.Description class="mt-2 text-sm text-text-muted">
                 {APPEARANCE_SETTINGS_COPY.dialogDescription}
               </Dialog.Description>

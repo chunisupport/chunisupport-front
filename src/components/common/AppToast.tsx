@@ -2,6 +2,7 @@ import { Toast, toaster } from '@kobalte/core/toast'
 import { CheckCircle, CircleAlert, Info, X } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { Portal } from 'solid-js/web'
+import { t } from '../../i18n'
 
 type AppToastTone = 'success' | 'error' | 'info'
 
@@ -13,8 +14,6 @@ type AppToastOptions = {
 }
 
 const APP_TOAST_DURATION_MS = 3000
-const APP_TOAST_REGION_LABEL = '通知'
-const APP_TOAST_CLOSE_LABEL = '通知を閉じる'
 
 const APP_TOAST_TONE_CLASS: Record<AppToastTone, string> = {
   success: 'border-success-border bg-surface-raised text-success',
@@ -47,7 +46,7 @@ const getAppToastIcon = (tone: AppToastTone): JSX.Element => {
 export const AppToastRegion = (): JSX.Element => (
   <Portal>
     <Toast.Region
-      aria-label={APP_TOAST_REGION_LABEL}
+      aria-label={t('toast.region')}
       duration={APP_TOAST_DURATION_MS}
       limit={4}
       pauseOnInteraction
@@ -80,7 +79,7 @@ export const showAppToast = (options: AppToastOptions): number =>
           {options.message}
         </Toast.Description>
         <Toast.CloseButton
-          aria-label={APP_TOAST_CLOSE_LABEL}
+          aria-label={t('toast.close')}
           class="shrink-0 rounded p-1 hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
           <X class="h-4 w-4" aria-hidden="true" />

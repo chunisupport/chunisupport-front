@@ -1,3 +1,4 @@
+import { localizedCopy } from '../i18n'
 import type { AccountType } from '../types/api'
 import {
   ALL_SONG_BEST_FRAME_PATH,
@@ -38,8 +39,8 @@ export const DISABLED_TOOL_BADGE_TEXT = 'coming soon'
 /**
  * ADMIN 限定ツールカードの南京錠アイコンの説明。
  */
-export const ADMIN_ONLY_TOOL_LOCK_LABEL = '管理者限定'
-
+/** ツール一覧の表示文言 */
+export const TOOLS_COPY = localizedCopy('tools')
 /**
  * ツールページに表示するリンク情報。
  *
@@ -96,80 +97,52 @@ export const getToolLink = (href: string): ToolLink => {
 }
 
 /**
+ * 表示言語に追従するタイトルと概要を持つツールリンクを生成する。
+ *
+ * @param key - ツールの表示文言を参照する辞書キー。
+ * @param link - タイトルと概要以外のリンク情報。
+ * @returns ツールページに表示するリンク情報。
+ */
+const createToolLink = (
+  key: keyof typeof TOOLS_COPY.links,
+  link: Omit<ToolLink, 'title' | 'description'>
+): ToolLink => ({
+  ...link,
+  get title() {
+    return TOOLS_COPY.links[key].title
+  },
+  get description() {
+    return TOOLS_COPY.links[key].description
+  },
+})
+
+/**
  * ツールページに表示するリンク一覧。
  */
 export const TOOL_LINKS: ToolLink[] = [
-  {
-    title: 'レコード統計',
-    href: CHART_STATS_PATH,
-    icon: 'distribution',
-    description: '全プレイヤーの記録から、譜面ごとのランク・コンボ・クリア状況を確認できます。',
-  },
-  {
-    title: 'ダッシュボード',
-    href: DASHBOARD_PATH,
-    icon: 'chart',
-    description: 'プレイ記録から達成状況と次に狙う譜面を確認できます。',
-  },
-  {
-    title: 'フレンドVS',
-    href: FRIEND_VS_PATH,
-    icon: 'friendVs',
-    description: 'フレンドとスコアで勝負。',
-  },
-  {
-    title: '譜面定数計算機',
+  createToolLink('chartStats', { href: CHART_STATS_PATH, icon: 'distribution' }),
+  createToolLink('dashboard', { href: DASHBOARD_PATH, icon: 'chart' }),
+  createToolLink('friendVs', { href: FRIEND_VS_PATH, icon: 'friendVs' }),
+  createToolLink('chartConstantCalculator', {
     href: CHART_CONSTANT_CALCULATOR_PATH,
     icon: 'calculator',
-    description: 'OVER POWER変動から譜面定数を逆算します。',
-  },
-  {
-    title: 'ボーダー計算機',
-    href: BORDER_CALCULATOR_PATH,
-    icon: 'target',
-    description: '楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。',
-  },
-  {
-    title: '苦手譜面インスペクター',
-    href: WEAK_CHART_INSPECTOR_PATH,
-    icon: 'chart',
-    description: 'プレイ済み譜面を譜面定数ごとに比較し、得意・苦手譜面を推測します。',
-  },
-  {
-    title: '苦手譜面インスペクター Online',
+  }),
+  createToolLink('borderCalculator', { href: BORDER_CALCULATOR_PATH, icon: 'target' }),
+  createToolLink('weakChartInspector', { href: WEAK_CHART_INSPECTOR_PATH, icon: 'chart' }),
+  createToolLink('onlineWeakChartInspector', {
     href: ONLINE_WEAK_CHART_INSPECTOR_PATH,
     icon: 'globe',
-    description: '自分のスコアを同じレート帯の平均スコアと比較します。',
-  },
-  {
-    title: 'ランダム選曲',
-    href: RANDOM_SONG_SELECTOR_PATH,
-    icon: 'random',
-    description: '条件に合う通常譜面から指定曲数をランダムに選びます。',
-  },
-  {
-    title: 'ベスト枠ランキング',
-    href: BEST_SLOT_RANKING_PATH,
-    icon: 'ranking',
-    description: 'レート帯ごとのベスト枠採用率が高い譜面をランキングで確認できます。',
-  },
-  {
-    title: '全曲ベスト枠',
-    href: ALL_SONG_BEST_FRAME_PATH,
-    icon: 'list',
-    description: '全曲・全譜面から、単曲レート上位30曲・上位50曲を計算します。',
-  },
-  {
-    title: '未解禁曲ディスカバー',
+  }),
+  createToolLink('randomSongSelector', { href: RANDOM_SONG_SELECTOR_PATH, icon: 'random' }),
+  createToolLink('bestSlotRanking', { href: BEST_SLOT_RANKING_PATH, icon: 'ranking' }),
+  createToolLink('allSongBestFrame', { href: ALL_SONG_BEST_FRAME_PATH, icon: 'list' }),
+  createToolLink('lockedSongDiscovery', {
     href: LOCKED_SONG_DISCOVERY_PATH,
     icon: 'discover',
-    description: '分類別の筐体OVER POWERを照合し、未解禁曲がある範囲を絞り込みます。',
     adminOnly: true,
-  },
-  {
-    title: 'ベスト枠・新曲枠理論値チェッカー',
+  }),
+  createToolLink('ratingTheoreticalChecker', {
     href: RATING_THEORETICAL_CHECKER_PATH,
     icon: 'gauge',
-    description: '全譜面SSS+時の理論値レーティングを確認できます。',
-  },
+  }),
 ]

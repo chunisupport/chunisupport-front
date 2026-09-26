@@ -1,4 +1,5 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
+import { t } from '../i18n'
 import type {
   ChartStats,
   ChartStatsClear,
@@ -39,8 +40,8 @@ const COMBO_DISTRIBUTION_DEFINITIONS = [
   ['ajc', 'AJC'],
   ['aj', 'AJ'],
   ['fc', 'FC'],
-  ['none', 'なし'],
-] as const satisfies readonly (readonly [keyof ChartStatsCombo, string])[]
+  ['none', null],
+] as const satisfies readonly (readonly [keyof ChartStatsCombo, string | null])[]
 
 /** クリアランプ分布の表示順とJSONキー */
 const CLEAR_DISTRIBUTION_DEFINITIONS = [
@@ -122,7 +123,7 @@ export const buildChartStatsDistribution = (
   if (category === 'combo') {
     return COMBO_DISTRIBUTION_DEFINITIONS.map(([key, label]) => ({
       key,
-      label,
+      label: label ?? t('common.none'),
       count: chart.combo[key],
     }))
   }

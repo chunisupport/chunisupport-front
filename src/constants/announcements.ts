@@ -1,22 +1,18 @@
 import { DOCUMENTATION_BASE_URL } from '../config'
+import { localizedCopy } from '../i18n'
 import type { AnnouncementCategory } from '../types/announcement'
 
 const DOCUMENTATION_URL = DOCUMENTATION_BASE_URL.replace(/\/$/, '')
 
-export const ANNOUNCEMENTS_HEADING = 'お知らせ'
+/** お知らせ欄の表示文言 */
+export const ANNOUNCEMENTS_COPY = localizedCopy('announcements')
 export const ANNOUNCEMENTS_LIST_URL = `${DOCUMENTATION_URL}/announcements/`
 export const ANNOUNCEMENTS_FEED_URL = `${DOCUMENTATION_URL}/announcements.json`
-export const ANNOUNCEMENTS_LIST_LINK_TEXT = 'すべて見る'
-export const ANNOUNCEMENTS_EMPTY_MESSAGE = '現在、お知らせはありません。'
-export const ANNOUNCEMENTS_LOADING_LABEL = 'お知らせを読み込み中'
 export const ANNOUNCEMENTS_DISPLAY_LIMIT = 3
 
-export const ANNOUNCEMENT_CATEGORY_LABELS: Record<AnnouncementCategory, string> = {
-  important: '重要',
-  update: 'アップデート',
-  maintenance: 'メンテナンス',
-  other: 'その他',
-}
+export const ANNOUNCEMENT_CATEGORY_LABELS: Record<AnnouncementCategory, string> = localizedCopy(
+  'announcements.categories'
+)
 
 export const ANNOUNCEMENT_CATEGORY_CLASSES: Record<AnnouncementCategory, string> = {
   important: 'border-danger-border bg-danger-bg text-danger',

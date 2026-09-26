@@ -2,8 +2,8 @@ import { useNavigate, useSearchParams } from '@solidjs/router'
 import { signOut } from 'firebase/auth'
 
 import { GoogleLoginForm } from '../../components/auth/GoogleLoginForm'
-import { MAINTENANCE_STAFF_ONLY_ERROR_MESSAGE } from '../../constants/maintenance'
-import { MAINTENANCE_LOGIN_PAGE_TITLE } from '../../constants/pageTitles'
+import { MAINTENANCE_COPY } from '../../constants/maintenance'
+import { PAGE_TITLES } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
@@ -75,7 +75,7 @@ const MaintenanceLoginPage = () => {
    */
   const handleLoginFailure = async (error: unknown): Promise<string> => {
     if (isMaintenanceStaffRequiredError(error)) {
-      return MAINTENANCE_STAFF_ONLY_ERROR_MESSAGE
+      return MAINTENANCE_COPY.staffOnlyError
     }
 
     if (isInvalidTokenLoginError(error)) {
@@ -85,20 +85,20 @@ const MaintenanceLoginPage = () => {
 
     if (isMaintenanceModeLoginError(error) || isUnregisteredLoginError(error)) {
       await clearRejectedStaffSession()
-      return MAINTENANCE_STAFF_ONLY_ERROR_MESSAGE
+      return MAINTENANCE_COPY.staffOnlyError
     }
 
     return toUserFriendlyErrorMessage(error, MAINTENANCE_LOGIN_ERROR_MESSAGE)
   }
 
-  useDocumentTitle(MAINTENANCE_LOGIN_PAGE_TITLE)
+  useDocumentTitle(PAGE_TITLES.maintenanceLogin)
 
   return (
     <main class="min-h-dvh flex justify-center px-4 py-10">
       <div class="w-full max-w-md">
         <div class="mb-6 text-center">
           <p class="mb-2 text-text-muted">{MAINTENANCE_LOGIN_SITE_NAME}</p>
-          <h1 class="text-2xl font-semibold">{MAINTENANCE_LOGIN_PAGE_TITLE}</h1>
+          <h1 class="text-2xl font-semibold">{PAGE_TITLES.maintenanceLogin}</h1>
           <p class="mt-2 text-sm text-text-muted">{MAINTENANCE_LOGIN_DESCRIPTION}</p>
         </div>
 
