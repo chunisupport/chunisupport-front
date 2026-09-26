@@ -1,6 +1,6 @@
-import { localizedCopy } from '../../i18n'
 import type { AppTabOption } from '../../components/common/AppTabs'
 import { FRIENDS_PATH } from '../../constants/routes'
+import { localizedCopy } from '../../i18n'
 
 /** フレンド画面の表示文言 */
 const FRIENDS_TEXT = localizedCopy('friends')
@@ -26,7 +26,11 @@ export const buildFriendsTabOptions = (
   hasPendingReceivedRequest: boolean
 ): readonly AppTabOption<FriendsTabValue>[] => [
   { value: 'friends', label: FRIENDS_TEXT.friendsLabel },
-  { value: 'received', label: FRIENDS_TEXT.receivedLabel, hasNotificationDot: hasPendingReceivedRequest },
+  {
+    value: 'received',
+    label: FRIENDS_TEXT.receivedLabel,
+    hasNotificationDot: hasPendingReceivedRequest,
+  },
   { value: 'sent', label: FRIENDS_TEXT.sentLabel },
 ]
 

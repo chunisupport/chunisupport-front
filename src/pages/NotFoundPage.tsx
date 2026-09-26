@@ -1,6 +1,6 @@
-import { t } from '../i18n'
 import { A } from '@solidjs/router'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { t } from '../i18n'
 
 const NotFoundPage = () => {
   useDocumentTitle('404 Not Found')

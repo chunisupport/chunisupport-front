@@ -1,9 +1,9 @@
-import { t } from '../../../i18n'
 import { TextField } from '@kobalte/core/text-field'
 import { Plus } from 'lucide-solid'
 import { Index } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
+import { t } from '../../../i18n'
 import type { MasterItemDTO } from '../../../types/api'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,

@@ -8,7 +8,15 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
 import type { UserDTO } from '../../types/api'
-import { createMaintenanceStaffRequiredError, isInvalidTokenLoginError, isMaintenanceModeLoginError, isMaintenanceStaffRequiredError, isUnregisteredLoginError, normalizeRedirectParam, resolveMaintenanceLoginDestination } from '../../usecases/auth/loginFlow'
+import {
+  createMaintenanceStaffRequiredError,
+  isInvalidTokenLoginError,
+  isMaintenanceModeLoginError,
+  isMaintenanceStaffRequiredError,
+  isUnregisteredLoginError,
+  normalizeRedirectParam,
+  resolveMaintenanceLoginDestination,
+} from '../../usecases/auth/loginFlow'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { MAINTENANCE_LOGIN_COPY, MAINTENANCE_LOGIN_SITE_NAME } from './maintenanceLogin.constants'
 

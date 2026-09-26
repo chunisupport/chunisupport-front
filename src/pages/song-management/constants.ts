@@ -3,7 +3,9 @@ import { localizedCopy } from '../../i18n'
 export const SONG_MANAGEMENT_ACTION_COPY = localizedCopy('songManagement.songManagementActionCopy')
 
 /** 楽曲管理画面の見出し・説明文言 */
-export const SONG_MANAGEMENT_SECTION_COPY = localizedCopy('songManagement.songManagementSectionCopy')
+export const SONG_MANAGEMENT_SECTION_COPY = localizedCopy(
+  'songManagement.songManagementSectionCopy'
+)
 
 /** 楽曲管理画面の入力項目文言 */
 export const SONG_MANAGEMENT_FIELD_COPY = localizedCopy('songManagement.songManagementFieldCopy')

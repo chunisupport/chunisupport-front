@@ -1,10 +1,9 @@
-import { formatMessage, localizedCopy } from '../../i18n'
 import { createSignal, Show } from 'solid-js'
-
 import { postRegisterData } from '../../api/register-data'
 import { AppButton } from '../../components/common/AppButton'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { formatMessage, localizedCopy } from '../../i18n'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 
 /** スタッフ向けスコア登録検証画面の表示文言 */
@@ -118,7 +117,8 @@ const RegisterScoreTempPage = () => {
           <h1 class="text-2xl font-semibold">{REGISTER_SCORE_TEMP_TEXT.title}</h1>
           <p class="mt-2 text-sm text-text-muted">
             {REGISTER_SCORE_TEMP_TEXT.descriptionPrefix}{' '}
-            <span class="font-semibold">?format=json</span> {REGISTER_SCORE_TEMP_TEXT.descriptionSuffix}
+            <span class="font-semibold">?format=json</span>{' '}
+            {REGISTER_SCORE_TEMP_TEXT.descriptionSuffix}
           </p>
         </div>
 
@@ -141,7 +141,9 @@ const RegisterScoreTempPage = () => {
                   <p>
                     {REGISTER_SCORE_TEMP_TEXT.format}
                     <span class="ml-1 font-semibold">
-                      {format() !== null ? formatLabelMap[format() as UploadFormat] : REGISTER_SCORE_TEMP_TEXT.formatUnknown}
+                      {format() !== null
+                        ? formatLabelMap[format() as UploadFormat]
+                        : REGISTER_SCORE_TEMP_TEXT.formatUnknown}
                     </span>
                   </p>
                   <p>
@@ -152,9 +154,7 @@ const RegisterScoreTempPage = () => {
                 </div>
               )}
             </Show>
-            <div class="text-xs text-text-subtle">
-              {REGISTER_SCORE_TEMP_TEXT.limitNote}
-            </div>
+            <div class="text-xs text-text-subtle">{REGISTER_SCORE_TEMP_TEXT.limitNote}</div>
           </div>
         </div>
 

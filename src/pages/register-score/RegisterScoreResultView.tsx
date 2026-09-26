@@ -1,4 +1,3 @@
-import { t } from '../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Eye, EyeOff, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
@@ -18,6 +17,7 @@ import {
   type SharedClearLamp,
   type SharedComboLamp,
 } from '../../components/common/record/recordStyleClasses'
+import { t } from '../../i18n'
 import type {
   PlayerDataCourseRecordChange,
   PlayerDataCourseRecordState,

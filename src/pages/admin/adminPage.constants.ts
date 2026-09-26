@@ -1,4 +1,3 @@
-import { localizedCopy } from '../../i18n'
 import {
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
@@ -7,6 +6,7 @@ import {
   ADMIN_SONG_BATCH_PATH,
   ADMIN_VERSIONS_PATH,
 } from '../../constants/routes'
+import { localizedCopy } from '../../i18n'
 
 /** 管理メニューの表示文言 */
 const ADMIN_MENU_TEXT = localizedCopy('admin.menu')

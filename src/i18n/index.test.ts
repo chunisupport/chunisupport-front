@@ -1,22 +1,31 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { setLocalePreferenceSignal } from '../stores/localePreferences'
-import { formatMessage, localizedCopy } from './index'
+import { formatMessage, loadLocaleDictionary, localizedCopy, t } from './index'
 
-test('localizedCopy は現在の表示言語の文言を返すこと', () => {
+test('localizedCopy は読み込んだ表示言語の文言を返すこと', async () => {
   // Given
   const copy = localizedCopy('appearance')
 
   // When
-  setLocalePreferenceSignal('ja')
   const japanese = copy.themeLabel
-  setLocalePreferenceSignal('en')
+  await loadLocaleDictionary('en')
   const english = copy.themeLabel
-  setLocalePreferenceSignal('ja')
+  await loadLocaleDictionary('ja')
 
   // Then
   assert.equal(japanese, '背景')
   assert.equal(english, 'Background')
+})
+
+test('t はテンプレート変数を埋め込んだ文言を返すこと', () => {
+  // Given
+  const username = 'chunisupport'
+
+  // When
+  const result = t('home.welcome', { username })
+
+  // Then
+  assert.equal(result, 'ようこそ、chunisupportさん')
 })
 
 test('localizedCopy のネストした文言も列挙できること', () => {

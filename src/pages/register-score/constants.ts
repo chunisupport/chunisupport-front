@@ -12,11 +12,15 @@ export const REGISTER_SCORE_COPY = localizedCopy('registerScore.registerScoreCop
  *
  * 将来的なi18n対応のため、ソートロジック内の直書きを避けてここで一元管理する。
  */
-export const REGISTER_SCORE_PRIMARY_SORT_LABELS = localizedCopy('registerScore.registerScorePrimarySortLabels')
+export const REGISTER_SCORE_PRIMARY_SORT_LABELS = localizedCopy(
+  'registerScore.registerScorePrimarySortLabels'
+)
 
 /**
  * 楽曲カードのソート方向選択肢に表示するラベル。
  *
  * 将来的なi18n対応のため、ソートロジック内の直書きを避けてここで一元管理する。
  */
-export const REGISTER_SCORE_SORT_DIRECTION_LABELS = localizedCopy('registerScore.registerScoreSortDirectionLabels')
+export const REGISTER_SCORE_SORT_DIRECTION_LABELS = localizedCopy(
+  'registerScore.registerScoreSortDirectionLabels'
+)

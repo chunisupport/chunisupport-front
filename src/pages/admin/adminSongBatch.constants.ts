@@ -1,5 +1,5 @@
-import { formatMessage, localizedCopy } from '../../i18n'
 import { SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_PHRASE } from '../../constants/songBatch'
+import { formatMessage, localizedCopy } from '../../i18n'
 import type { SongBatchJobStatus, SongBatchMode, SongBatchTrigger } from '../../types/api'
 
 /** 楽曲バッチ画面の表示文言 */
@@ -35,7 +35,9 @@ export const ADMIN_SONG_BATCH_COPY = {
 } as const
 
 /** 実行モードの表示名 */
-export const SONG_BATCH_MODE_LABELS: Record<SongBatchMode, string> = localizedCopy('admin.songBatch.songBatchModeLabels')
+export const SONG_BATCH_MODE_LABELS: Record<SongBatchMode, string> = localizedCopy(
+  'admin.songBatch.songBatchModeLabels'
+)
 
 /** 実行モードの選択肢 */
 export const SONG_BATCH_MODE_OPTIONS: readonly {
@@ -46,7 +48,11 @@ export const SONG_BATCH_MODE_OPTIONS: readonly {
   /** 使用するデータソースの概要 */
   description: string
 }[] = [
-  { value: 'NORMAL', label: SONG_BATCH_MODE_LABELS.NORMAL, description: ADMIN_SONG_BATCH_TEXT.normalDescription },
+  {
+    value: 'NORMAL',
+    label: SONG_BATCH_MODE_LABELS.NORMAL,
+    description: ADMIN_SONG_BATCH_TEXT.normalDescription,
+  },
   {
     value: 'MAJOR_UPDATE',
     label: SONG_BATCH_MODE_LABELS.MAJOR_UPDATE,
@@ -55,10 +61,14 @@ export const SONG_BATCH_MODE_OPTIONS: readonly {
 ]
 
 /** ジョブ状態の表示名 */
-export const SONG_BATCH_STATUS_LABELS: Record<SongBatchJobStatus, string> = localizedCopy('admin.songBatch.songBatchStatusLabels')
+export const SONG_BATCH_STATUS_LABELS: Record<SongBatchJobStatus, string> = localizedCopy(
+  'admin.songBatch.songBatchStatusLabels'
+)
 
 /** 起動元の表示名。管理画面からの実行は要求者名を併せて表示する */
-export const SONG_BATCH_TRIGGER_LABELS: Record<SongBatchTrigger, string> = localizedCopy('admin.songBatch.songBatchTriggerLabels')
+export const SONG_BATCH_TRIGGER_LABELS: Record<SongBatchTrigger, string> = localizedCopy(
+  'admin.songBatch.songBatchTriggerLabels'
+)
 
 /** 実行モードごとの確認ダイアログ文言 */
 export const SONG_BATCH_CONFIRMATION_COPY: Record<

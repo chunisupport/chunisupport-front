@@ -1,10 +1,6 @@
 import { type Flatten, flatten, resolveTemplate, translator } from '@solid-primitives/i18n'
-import { localePreference } from '../stores/localePreferences'
 import type { AppLocale } from '../utils/localePreference'
-import en from './locales/en.json' with { type: 'json' }
 import ja from './locales/ja.json' with { type: 'json' }
-import ko from './locales/ko.json' with { type: 'json' }
-import zhTW from './locales/zh-TW.json' with { type: 'json' }
 
 /** 日本語辞書を基準にした文言辞書の型 */
 export type LocaleDictionary = typeof ja
@@ -26,23 +22,48 @@ type FlatDictionary = Readonly<Record<string, unknown>>
 
 const FLAT_JA: FlatDictionary = flatten(ja)
 
-/** 言語ごとの平坦化済み辞書。未翻訳の文言は日本語で補完する。 */
-const FLAT_DICTIONARIES: Record<AppLocale, FlatDictionary> = {
-  ja: FLAT_JA,
-  en: { ...FLAT_JA, ...flatten(en) },
-  'zh-TW': { ...FLAT_JA, ...flatten(zhTW) },
-  ko: { ...FLAT_JA, ...flatten(ko) },
+/** 日本語以外の辞書の読み込み処理。表示中の言語の辞書だけを取得するため動的に読み込む。 */
+const DICTIONARY_LOADERS: Record<
+  Exclude<AppLocale, 'ja'>,
+  () => Promise<{ default: Readonly<Record<string, unknown>> }>
+> = {
+  en: () => import('./locales/en.json', { with: { type: 'json' } }),
+  'zh-TW': () => import('./locales/zh-TW.json', { with: { type: 'json' } }),
+  ko: () => import('./locales/ko.json', { with: { type: 'json' } }),
+}
+
+/** 現在の表示言語の平坦化済み辞書。未翻訳の文言は日本語で補完する。 */
+let activeDictionary: FlatDictionary = FLAT_JA
+
+/**
+ * 表示言語の辞書を読み込み、以降の文言参照に使用する。
+ * 表示言語の切り替えは再読み込みで反映するため、アプリ描画前に一度だけ呼び出す。
+ * 読み込みに失敗した場合は日本語の辞書を使用する。
+ * @param locale 読み込む表示言語
+ * @returns 読み込み完了時に解決される Promise
+ */
+export const loadLocaleDictionary = async (locale: AppLocale): Promise<void> => {
+  if (locale === 'ja') {
+    activeDictionary = FLAT_JA
+    return
+  }
+
+  try {
+    const dictionary = await DICTIONARY_LOADERS[locale]()
+    activeDictionary = { ...FLAT_JA, ...flatten(dictionary.default) }
+  } catch {
+    activeDictionary = FLAT_JA
+  }
 }
 
 /**
  * 現在の表示言語で平坦化済み辞書を取得する。
  * @returns 現在の表示言語の辞書
  */
-const currentDictionary = (): FlatDictionary => FLAT_DICTIONARIES[localePreference()]
+const currentDictionary = (): FlatDictionary => activeDictionary
 
 /**
  * 辞書パスから現在の表示言語の文言を取得する。
- * リアクティブな文脈で呼び出すと、表示言語の変更に追従する。
  *
  * @example t('common.save')
  * @example t('songs.resultCount', { count: 10 })
@@ -108,8 +129,7 @@ const createCopyView = (path: string): object => {
 
 /**
  * 辞書パス配下の文言をオブジェクトとして参照する。
- * 返り値のプロパティは参照するたびに現在の表示言語の文言を返すため、
- * JSX やメモ内で参照すると表示言語の変更に追従する。
+ * 返り値のプロパティは参照するたびに現在の表示言語の文言を返す。
  *
  * @example
  * const COPY = localizedCopy('settings.appearance')

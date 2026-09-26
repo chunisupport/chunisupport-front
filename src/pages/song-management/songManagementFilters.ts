@@ -26,7 +26,9 @@ export type SongManagementFilters = {
   catalogOnly: boolean
 }
 
-export const SONG_MANAGEMENT_FILTER_LABELS = localizedCopy('songManagement.filters.songManagementFilterLabels')
+export const SONG_MANAGEMENT_FILTER_LABELS = localizedCopy(
+  'songManagement.filters.songManagementFilterLabels'
+)
 
 export const SONG_MANAGEMENT_MISSING_FIELD_OPTIONS: readonly {
   value: SongManagementMissingField

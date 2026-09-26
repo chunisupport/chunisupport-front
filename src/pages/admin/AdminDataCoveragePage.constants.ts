@@ -1,5 +1,5 @@
-import { localizedCopy } from '../../i18n'
 import type { AppTabOption } from '../../components/common/AppTabs'
+import { localizedCopy } from '../../i18n'
 import type { ChartMetadataCoverageField } from './dataCoverage'
 
 /** データ充足状況画面の表示文言 */

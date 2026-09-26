@@ -1,9 +1,9 @@
-import { localizedCopy } from '../../i18n'
 import {
   ADMIN_DATA_COVERAGE_PATH,
   EDITOR_COURSES_PATH,
   EDITOR_SONGS_PATH,
 } from '../../constants/routes'
+import { localizedCopy } from '../../i18n'
 
 /** 編集メニューの表示文言 */
 const EDITOR_TEXT = localizedCopy('editor')

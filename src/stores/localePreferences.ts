@@ -1,13 +1,17 @@
-import { createSignal } from 'solid-js'
 import {
   type AppLocale,
   readLocalePreference,
   saveLocalePreference,
 } from '../utils/localePreference'
 
-export const [localePreference, setLocalePreferenceSignal] = createSignal<AppLocale>(
-  readLocalePreference()
-)
+/** 読み込み時に確定した表示言語。切り替えは再読み込みで反映する。 */
+const CURRENT_LOCALE = readLocalePreference()
+
+/**
+ * 現在の表示言語を取得する。
+ * @returns 現在の表示言語
+ */
+export const localePreference = (): AppLocale => CURRENT_LOCALE
 
 /**
  * 表示言語を保存し、画面を再読み込みして反映する。
@@ -16,7 +20,7 @@ export const [localePreference, setLocalePreferenceSignal] = createSignal<AppLoc
  * @returns なし
  */
 export const updateLocalePreference = (locale: AppLocale): void => {
-  if (locale === localePreference()) {
+  if (locale === CURRENT_LOCALE) {
     return
   }
 

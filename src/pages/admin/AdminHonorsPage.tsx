@@ -1,4 +1,3 @@
-import { t } from '../../i18n'
 import { Dialog } from '@kobalte/core/dialog'
 import { Link } from '@kobalte/core/link'
 import { TextField } from '@kobalte/core/text-field'
@@ -14,6 +13,7 @@ import { SearchTextField } from '../../components/common/SearchTextField'
 import { SortableTableHeaderCell } from '../../components/common/SortableTableHeader'
 import { getHonorTypeClassName } from '../../constants/honors'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { t } from '../../i18n'
 import type { AdminHonorDTO, HonorRequestDTO, MasterItemDTO } from '../../types/api'
 import {
   type AdminHonorSort,
