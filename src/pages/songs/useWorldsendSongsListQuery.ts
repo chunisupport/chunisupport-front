@@ -1,7 +1,7 @@
 import { createMemo, createResource, createSignal, onMount } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../api/songs'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
-import { buildSearchableItems, filterSearchableItems } from './searchHelpers'
+import { buildSearchableItems, filterSearchableItems } from '../../utils/searchHelpers'
 import { createSongFilters, filterSongs, type SongFilters } from './songFilters'
 
 /**

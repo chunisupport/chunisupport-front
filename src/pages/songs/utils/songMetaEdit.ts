@@ -1,5 +1,6 @@
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
+import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type {
   PlayerDataDifficulty,
   SongDTO,
@@ -11,7 +12,7 @@ import type {
 } from '../../../types/api'
 import { formatChartConst } from '../../../utils/chartConstFormat'
 import { toInputValue } from '../../../utils/rangeInput'
-import { SONG_EDIT_COPY, SONG_EDIT_INPUT_LIMITS } from '../songEditConstants'
+import { SONG_EDIT_COPY } from '../songEditConstants'
 
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const NON_NEGATIVE_INTEGER_PATTERN = /^\d*$/

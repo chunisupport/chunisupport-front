@@ -31,7 +31,7 @@ APIラッパー: `src/api/songs.ts` → `fetchMasterData()`
 | --- | --- |
 | `src/pages/songs/SongsList/SongsList.tsx` | 楽曲一覧のジャンルソート順として `sortSongs(..., masterData()?.genres)` に渡す |
 | `src/pages/songs/WorldsendSongsList/WorldsendSongsList.tsx` | WORLD'S END楽曲一覧のジャンルソート順として `sortWorldsendSongs(..., masterData()?.genres)` に渡す |
-| `src/pages/songs/SongManagementPage.tsx` | 楽曲編集フォームでのジャンル選択（`genre_id` → `genre` 名への逆引き、および `toSongDraft`/`toWorldsendDraft` での `genre_id` 解決） |
+| `src/pages/song-management/SongManagementPage.tsx` | 楽曲編集フォームでのジャンル選択（`genre_id` → `genre` 名への逆引き、および `toSongDraft`/`toWorldsendDraft` での `genre_id` 解決） |
 | `src/pages/goals/utils/goalProgress.ts` | `filterRecordsByAttributes` でジャンルIDを名称に変換し、楽曲ジャンルと突合してレコードをフィルタリング |
 | `src/pages/goals/utils/goalForm.ts` | `formatGoalAttributesLabel` でジャンルIDを表示名に変換する処理が残っている。ただし現在この関数は実利用されていない |
 | `src/pages/goals/GoalsList/components/GoalFormDialog.tsx` | 目標作成・編集ダイアログでジャンル選択チェックボックスの選択肢として表示 |
@@ -47,7 +47,7 @@ APIラッパー: `src/api/songs.ts` → `fetchMasterData()`
 | ファイル | 用途 |
 | --- | --- |
 | `src/pages/songs/SongDetail/SongDetail.tsx` | 楽曲が持つ譜面を判定し、タブ表示用の `availableDifficulties` を生成するために難易度順序リストとして使用 |
-| `src/pages/songs/SongManagementPage.tsx` | `toSongDraft` で楽曲のchartをdifficultyのidと紐付けて編集用ドラフトを生成 |
+| `src/pages/song-management/SongManagementPage.tsx` | `toSongDraft` で楽曲のchartをdifficultyのidと紐付けて編集用ドラフトを生成 |
 | `src/pages/goals/utils/goalProgress.ts` | `filterRecordsByAttributes` で難易度IDを名称に変換し、レコード難易度と突合してフィルタリング |
 | `src/pages/goals/utils/goalForm.ts` | `formatGoalAttributesLabel` で難易度IDを表示名に変換する処理が残っている。ただし現在この関数は実利用されていない |
 | `src/pages/goals/GoalsList/components/GoalFormDialog.tsx` | 目標作成・編集ダイアログで難易度選択チェックボックスの選択肢として表示 |
@@ -96,7 +96,7 @@ APIラッパー: `src/api/songs.ts` → `fetchMasterData()`
 | `src/pages/songs/SongsList/SongsList.tsx` | `createResource(fetchMasterData)` |
 | `src/pages/songs/WorldsendSongsList/WorldsendSongsList.tsx` | `createResource(fetchMasterData)` |
 | `src/pages/songs/components/useSongDetailBase.ts` | `createResource(fetchMasterData)`。`SongDetail` などの詳細画面から利用。バージョン名解決は別途 `fetchVersions()` を利用 |
-| `src/pages/songs/SongManagementPage.tsx` | `createResource(fetchMasterData)` |
+| `src/pages/song-management/SongManagementPage.tsx` | `createResource(fetchMasterData)` |
 | `src/pages/goals/GoalsList/GoalsList.tsx` | `Promise.all` 内で `fetchMasterData()` を並列実行。目標のバージョン条件は別途 `fetchVersions()` を利用 |
 | `src/pages/users/UserRecord/UserRecord.tsx` | `createResource(fetchMasterData)`。バージョンフィルターとレコードメタ付与は別途 `fetchVersions()` を利用 |
 | `src/pages/users/UserOverPower/UserOverPower.tsx` | `createResource(fetchMasterData)`。バージョン別集計と未解禁曲ダイアログは別途 `fetchVersions()` を利用 |

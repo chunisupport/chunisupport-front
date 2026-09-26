@@ -10,10 +10,10 @@ import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
 import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
 import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
+import { SONG_FILTER_INPUT_CLASS } from '../../../components/common/filterStyles'
 import { RangeControlRow } from '../../../components/common/RangeInput'
 import type { VersionSummaryDTO } from '../../../types/api'
 import { getShortVersionName } from '../../../utils/versionConverter'
-import { SONG_FILTER_INPUT_CLASS } from '../songFilters'
 import {
   createSongManagementFilters,
   SONG_MANAGEMENT_FILTER_LABELS as LABELS,

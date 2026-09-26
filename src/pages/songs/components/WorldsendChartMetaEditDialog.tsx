@@ -4,11 +4,11 @@ import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
+import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type { UpdateWorldsendChartRequestDTO, WorldsendSongDTO } from '../../../types/api'
 import { toInputValue } from '../../../utils/rangeInput'
 import {
   SONG_EDIT_COPY,
-  SONG_EDIT_INPUT_LIMITS,
   SONG_EDIT_NUMBER_INPUT_CLASS,
   SONG_EDIT_TEXT_INPUT_CLASS,
 } from '../songEditConstants'

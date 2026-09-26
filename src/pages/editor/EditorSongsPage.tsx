@@ -1,4 +1,4 @@
-import SongManagementPage from '../songs/SongManagementPage'
+import SongManagementPage from '../song-management/SongManagementPage'
 import { EDITOR_SONGS_TITLE } from './constants'
 
 /**
