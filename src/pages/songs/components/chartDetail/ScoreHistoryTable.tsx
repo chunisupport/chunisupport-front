@@ -1,17 +1,8 @@
 import { createMemo, For, Show } from 'solid-js'
 import { DefaultRecordLampBadges } from '../../../../components/common/record/RecordDisplayParts'
 import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../../../../types/api'
-import {
-  buildScoreHistoryTableRows,
-  formatScoreHistoryDateTime,
-} from '../../../../utils/scoreHistory'
-import {
-  CURRENT_BEST_LABEL,
-  SCORE_HISTORY_LAMP_LABEL,
-  SCORE_HISTORY_SCORE_LABEL,
-  SCORE_HISTORY_TABLE_MIN_WIDTH_CLASS,
-  SCORE_HISTORY_UPDATED_AT_LABEL,
-} from './constants'
+import { buildScoreHistoryTableRows, formatScoreHistoryDateTime } from '../../../../utils/scoreHistory'
+import { CHART_DETAIL_COPY, SCORE_HISTORY_TABLE_MIN_WIDTH_CLASS } from './constants'
 
 /**
  * 現行ベストを先頭とするスコア履歴を表形式で表示する。
@@ -36,13 +27,13 @@ const ScoreHistoryTable = (props: {
         <thead class="bg-surface-muted text-center text-xs text-text-muted">
           <tr>
             <th scope="col" class="px-3 py-2 text-left sm:px-4">
-              {SCORE_HISTORY_UPDATED_AT_LABEL}
+              {CHART_DETAIL_COPY.updatedAt}
             </th>
             <th scope="col" class="w-32 px-3 py-2 text-right sm:w-44 sm:px-4">
-              {SCORE_HISTORY_SCORE_LABEL}
+              {CHART_DETAIL_COPY.score}
             </th>
             <th scope="col" class="w-36 px-3 py-2 sm:px-4">
-              {SCORE_HISTORY_LAMP_LABEL}
+              {CHART_DETAIL_COPY.lamp}
             </th>
           </tr>
         </thead>
@@ -69,7 +60,7 @@ const ScoreHistoryTable = (props: {
                         <span>{formatScoreHistoryDateTime(entry().updated_at)}</span>
                         <Show when={index() === 0}>
                           <span class="rounded-full bg-action-primary-muted px-2 py-0.5 text-xs font-semibold text-action-primary">
-                            {CURRENT_BEST_LABEL}
+                            {CHART_DETAIL_COPY.current}
                           </span>
                         </Show>
                       </div>

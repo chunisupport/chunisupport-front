@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 /**
  * API日時を設定画面向けの日本語表記へ変換する。
  *
@@ -5,7 +6,7 @@
  * @param emptyLabel - 値がない場合に表示する文言。
  * @returns 日本語の日時表記、または値がない場合の文言。
  */
-export const formatSettingsDateTime = (value: string | null, emptyLabel = '未登録'): string => {
+export const formatSettingsDateTime = (value: string | null, emptyLabel = t('common.notRegistered')): string => {
   if (!value) {
     return emptyLabel
   }

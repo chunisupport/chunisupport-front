@@ -1,39 +1,6 @@
+import { localizedCopy } from '../../i18n'
 /** 楽曲詳細のマスタ編集UIで使用する表示文言 */
-export const SONG_EDIT_COPY = {
-  editSongAriaLabel: '楽曲情報を編集',
-  editChartAriaLabel: '譜面情報を編集',
-  songDialogTitle: '楽曲情報を編集',
-  chartDialogTitle: '譜面情報を編集',
-  songFormDescription: 'ジャンル、BPM、リリース日、Wikiページタイトルを編集します。',
-  chartFormDescription: '譜面定数、ノーツ数、ノーツデザイナーを編集します。',
-  worldsendChartFormDescription: '属性、レベル、ノーツ数、ノーツデザイナーを編集します。',
-  genreLabel: 'GENRE',
-  bpmLabel: 'BPM',
-  releaseLabel: 'RELEASE',
-  wikiPageTitleLabel: 'WIKI PAGE TITLE',
-  constLabel: 'CONST',
-  constUnknownLabel: '定数不明',
-  notesLabel: 'NOTES',
-  notesDesignerLabel: 'NOTES DESIGNER',
-  attributeLabel: '属性',
-  levelLabel: 'LEVEL',
-  genrePlaceholder: '選択してください',
-  cancelButton: 'キャンセル',
-  saveButton: '保存',
-  savingButton: '保存中...',
-  songUpdateSuccess: '楽曲情報を更新しました。',
-  chartUpdateSuccess: '譜面情報を更新しました。',
-  songUpdateError: '楽曲情報の更新に失敗しました。',
-  chartUpdateError: '譜面情報の更新に失敗しました。',
-  genreRequired: 'ジャンルを選択してください。',
-  bpmInvalid: 'BPMは0以上の整数で入力してください。',
-  releaseInvalid: 'リリース日の形式が不正です。日付を入力し直してください。',
-  constInvalid: '譜面定数は0以上で入力してください。',
-  notesInvalid: 'ノーツは0以上の整数で入力してください。',
-  notesDesignerTooLong: 'NOTES DESIGNERは100文字以下で入力してください。',
-  wikiPageTitleTooLong: 'WIKI PAGE TITLEは300文字以下で入力してください。',
-  levelInvalid: "WORLD'S ENDレベルは1〜5で入力してください。",
-} as const
+export const SONG_EDIT_COPY = localizedCopy('songs.edit')
 
 /** 楽曲詳細のマスタ編集フォームで使うテキスト入力の共通スタイル */
 export const SONG_EDIT_TEXT_INPUT_CLASS =

@@ -1,3 +1,4 @@
+import { localizedCopy } from '../../../i18n'
 import type { ScoreHistoryDifficulty } from '../../../api/songs'
 import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
 import type { PlayerDataDifficulty } from '../../../types/api'
@@ -23,9 +24,5 @@ export const supportsScoreHistory = (
 ): difficulty is ScoreHistoryDifficulty =>
   SCORE_HISTORY_DIFFICULTIES.some((historyDifficulty) => historyDifficulty === difficulty)
 
-/** 楽曲詳細の自己スコアカード見出し */
-export const OWN_SCORE_CARD_TITLE = '自分のスコア'
-/** 未プレイ譜面に表示する文言 */
-export const UNPLAYED_SCORE_LABEL = '未プレイ'
-/** 履歴画面へ遷移するリンクの表示文言 */
-export const SCORE_HISTORY_LINK_LABEL = '履歴を見る'
+/** 自分のスコア欄の表示文言 */
+export const OWN_SCORE_COPY = localizedCopy('songs.ownScore')

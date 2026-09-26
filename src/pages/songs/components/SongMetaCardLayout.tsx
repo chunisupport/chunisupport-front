@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { For, type JSX } from 'solid-js'
 import placeholderImageUrl from '../../../assets/placeholder.png'
 import { JacketImage } from '../../../components/common/JacketImage'
@@ -31,13 +32,13 @@ const SongMetaCardLayout = (props: Props) => {
       <div class="grid grid-cols-[minmax(0,42vw)_minmax(0,1fr)] items-start gap-4 lg:contents">
         <JacketImage
           source={jacketUrl() ?? undefined}
-          alt={`${props.title}のジャケット`}
+          alt={t('songs.meta.jacketAlt', { title: props.title })}
           class="block aspect-square w-full overflow-hidden rounded-md border border-border bg-surface"
           imageClass="h-full w-full object-cover"
           fallback={
             <img
               src={placeholderImageUrl}
-              alt={`${props.title}のジャケット（フォールバック）`}
+              alt={t('songs.meta.jacketFallbackAlt', { title: props.title })}
               class="h-full w-full object-cover"
             />
           }

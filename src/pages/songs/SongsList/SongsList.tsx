@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { ArrowUpDown } from 'lucide-solid'
 import { createMemo, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
@@ -12,7 +13,7 @@ import SongsViewToggle from '../components/SongsViewToggle'
 import { createSongCardLayout } from '../createSongCardLayout'
 import SongCardSortControls from '../SongsCardList/components/SongCardSortControls'
 import SongsCardGrid from '../SongsCardList/components/SongsCardGrid'
-import { SONG_CARD_DEFAULT_SORT_OPTION_ID } from '../SongsCardList/constants'
+import { SONG_CARD_COPY, SONG_CARD_DEFAULT_SORT_OPTION_ID } from '../SongsCardList/constants'
 import { findSongCardSortOption } from '../SongsCardList/utils/songCardSort'
 import { songListViewMode } from '../songListViewMode'
 import { useSongsListQuery } from '../useSongsListQuery'
@@ -68,7 +69,7 @@ const SongsList = () => {
     setSortDirection(nextSort.sortDirection)
   }
 
-  useDocumentTitle('楽曲一覧')
+  useDocumentTitle(() => SONG_CARD_COPY.pageTitle)
 
   return (
     <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
@@ -80,7 +81,7 @@ const SongsList = () => {
               style={{ width: isCardView() ? `${cardLayout.contentWidth()}px` : '100%' }}
             >
               <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold">楽曲一覧</h1>
+                <h1 class="text-2xl font-semibold">{SONG_CARD_COPY.pageTitle}</h1>
                 <div class="flex items-center gap-2">
                   <SongListViewModeToggle />
                   <SongsViewToggle />
@@ -134,7 +135,7 @@ const SongsList = () => {
                   />
                 </Show>
               </div>
-              <p class="text-sm text-text-muted">{filteredSongs().length}件</p>
+              <p class="text-sm text-text-muted">{t('songs.list.count', { count: filteredSongs().length })}</p>
 
               <Show
                 when={isCardView()}
@@ -158,7 +159,7 @@ const SongsList = () => {
               </Show>
 
               <Show when={filteredSongs().length === 0}>
-                <p class="text-sm text-text-subtle">表示できる楽曲がありません。</p>
+                <p class="text-sm text-text-subtle">{SONG_CARD_COPY.empty}</p>
               </Show>
             </div>
           </div>

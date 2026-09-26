@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { useParams } from '@solidjs/router'
 import { createMemo, createResource, Show } from 'solid-js'
 import { fetchSongStats, fetchWorldsendSongByDisplayId } from '../../../api/songs'
@@ -124,7 +125,10 @@ const WorldsendSongDetail = () => {
   }
 
   useDocumentTitle(() =>
-    joinDocumentTitleParts(song()?.title ?? "WORLD'S END楽曲", "WORLD'S END楽曲詳細")
+    joinDocumentTitleParts(
+      song()?.title ?? t('songs.detail.worldsendSong'),
+      t('songs.detail.worldsendPageTitle')
+    )
   )
 
   return (

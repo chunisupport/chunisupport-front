@@ -1,3 +1,4 @@
+import { WORLDSEND_SONG_CARD_COPY } from '../../WorldsendSongsCardList/constants'
 import { createMemo, For, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
@@ -75,7 +76,7 @@ const WorldsendSongsTable = (props: Props) => {
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
             <SortableTableHeaderCell
-              label="タイトル"
+              label={WORLDSEND_SONG_CARD_COPY.sortTitle}
               active={props.sortKey === 'title'}
               direction={props.sortDirection}
               align="start"
@@ -84,7 +85,7 @@ const WorldsendSongsTable = (props: Props) => {
               onClick={() => props.onSortChange('title')}
             />
             <SortableTableHeaderCell
-              label="アーティスト"
+              label={WORLDSEND_SONG_CARD_COPY.sortArtist}
               active={props.sortKey === 'artist'}
               direction={props.sortDirection}
               align="start"
@@ -93,7 +94,7 @@ const WorldsendSongsTable = (props: Props) => {
               onClick={() => props.onSortChange('artist')}
             />
             <SortableTableHeaderCell
-              label="ジャンル"
+              label={WORLDSEND_SONG_CARD_COPY.sortGenre}
               active={props.sortKey === 'genre'}
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
@@ -101,7 +102,7 @@ const WorldsendSongsTable = (props: Props) => {
               onClick={() => props.onSortChange('genre')}
             />
             <SortableTableHeaderCell
-              label="追加日"
+              label={WORLDSEND_SONG_CARD_COPY.sortRelease}
               active={props.sortKey === 'release'}
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
@@ -117,7 +118,7 @@ const WorldsendSongsTable = (props: Props) => {
               onClick={() => props.onSortChange('bpm')}
             />
             <SortableTableHeaderCell
-              label="属性"
+              label={WORLDSEND_SONG_CARD_COPY.sortAttribute}
               active={props.sortKey === 'attribute'}
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
@@ -125,7 +126,7 @@ const WorldsendSongsTable = (props: Props) => {
               onClick={() => props.onSortChange('attribute')}
             />
             <SortableTableHeaderCell
-              label="レベル"
+              label={WORLDSEND_SONG_CARD_COPY.sortLevel}
               active={props.sortKey === 'level'}
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}

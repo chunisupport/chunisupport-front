@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { Button } from '@kobalte/core/button'
 import { Link } from '@kobalte/core/link'
 import { ExternalLink } from 'lucide-solid'
@@ -84,7 +85,7 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
                 onClick={props.onBack}
                 class="cursor-pointer border-0 bg-transparent p-0 text-action-primary hover:underline"
               >
-                ← 戻る
+                {`← ${t('common.back')}`}
               </Button>
             </div>
 

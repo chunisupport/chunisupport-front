@@ -1,3 +1,4 @@
+import { localizedCopy } from '../../i18n'
 import type { SongDTO, VersionSummaryDTO } from '../../types/api'
 import { parseOptionalRangeNumberInput } from '../../utils/rangeInput'
 import { resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
@@ -11,21 +12,7 @@ export type SongFilters = {
   versions: string[] | null
 }
 
-export const SONG_FILTER_LABELS = {
-  title: 'フィルター',
-  cancel: 'キャンセル',
-  apply: '適用',
-  active: 'フィルター適用中',
-  holdReset: 'フィルター リセット',
-  unselected: '未選択',
-  bpm: 'BPM',
-  bpmMin: 'BPM 下限',
-  bpmMax: 'BPM 上限',
-  release: '追加日',
-  releaseMin: '追加日 開始',
-  releaseMax: '追加日 終了',
-  rangeError: '下限は上限以下にしてください。',
-} as const
+export const SONG_FILTER_LABELS = localizedCopy('songs.filters')
 
 /**
  * 未指定の楽曲フィルタを生成する。

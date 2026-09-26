@@ -1,10 +1,14 @@
-export const SETTINGS_SECTIONS = [
-  { id: 'appearance', label: '外観' },
-  { id: 'profile', label: 'プロフィール' },
-  { id: 'api', label: 'API・外部連携' },
-  { id: 'data', label: 'データ管理' },
-  { id: 'account', label: 'アカウント' },
-] as const
+import { localizedCopy, withLocalizedLabels } from '../../i18n'
+export const SETTINGS_SECTIONS = withLocalizedLabels(
+  [
+  { id: 'appearance' },
+  { id: 'profile' },
+  { id: 'api' },
+  { id: 'data' },
+  { id: 'account' },
+] as const,
+  localizedCopy('settings.sections'), 'label', 'id'
+)
 
 export type SettingsSectionId = (typeof SETTINGS_SECTIONS)[number]['id']
 

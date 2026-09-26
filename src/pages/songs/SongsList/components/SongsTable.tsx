@@ -1,3 +1,4 @@
+import { SONG_CARD_COPY } from '../../SongsCardList/constants'
 import { createMemo, For, Show } from 'solid-js'
 import { createWindowVirtualTable } from '../../../../components/common/createWindowVirtualTable'
 import { SortableTableHeaderCell } from '../../../../components/common/SortableTableHeader'
@@ -142,7 +143,7 @@ const SongsTable = (props: Props) => {
         <thead class="block">
           <tr class="grid" style={{ 'grid-template-columns': GRID_TEMPLATE_COLUMNS }}>
             <SortableTableHeaderCell
-              label="タイトル"
+              label={SONG_CARD_COPY.sortTitle}
               active={props.sortKey === 'title'}
               direction={props.sortDirection}
               align="start"
@@ -151,7 +152,7 @@ const SongsTable = (props: Props) => {
               onClick={() => props.onSortChange('title')}
             />
             <SortableTableHeaderCell
-              label="アーティスト"
+              label={SONG_CARD_COPY.sortArtist}
               active={props.sortKey === 'artist'}
               direction={props.sortDirection}
               align="start"
@@ -160,7 +161,7 @@ const SongsTable = (props: Props) => {
               onClick={() => props.onSortChange('artist')}
             />
             <SortableTableHeaderCell
-              label="ジャンル"
+              label={SONG_CARD_COPY.sortGenre}
               active={props.sortKey === 'genre'}
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}
@@ -168,7 +169,7 @@ const SongsTable = (props: Props) => {
               onClick={() => props.onSortChange('genre')}
             />
             <SortableTableHeaderCell
-              label="追加日"
+              label={SONG_CARD_COPY.sortRelease}
               active={props.sortKey === 'release'}
               direction={props.sortDirection}
               thClass={HEADER_CELL_CLASS}

@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { useNavigate } from '@solidjs/router'
 import { createMemo, createResource } from 'solid-js'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
@@ -18,7 +19,7 @@ export const useSongDetailBase = (song: () => ReleaseSong | undefined) => {
   const songVersionName = createMemo(() => {
     const currentSong = song()
     const versions = versionData()?.versions
-    if (!currentSong || !versions) return '不明'
+    if (!currentSong || !versions) return t('common.unknown')
 
     return getShortVersionName(resolveVersionNameByReleaseDate(currentSong.release, versions))
   })

@@ -1,6 +1,10 @@
+import { localizedCopy } from '../../../i18n'
 import { A, useLocation } from '@solidjs/router'
 import { createMemo } from 'solid-js'
 import { getAppButtonClass } from '../../../components/common/AppButton'
+
+/** 楽曲一覧切り替えの表示文言 */
+const SONGS_VIEW_TOGGLE_COPY = localizedCopy('songs.viewToggle')
 
 /**
  * 通常曲とWORLD'S ENDの楽曲一覧を切り替える。
@@ -24,7 +28,7 @@ const SongsViewToggle = () => {
   )
 
   return (
-    <nav aria-label="楽曲一覧切り替え" class="flex items-center">
+    <nav aria-label={SONGS_VIEW_TOGGLE_COPY.label} class="flex items-center">
       <A
         href={nextView().href}
         class={getAppButtonClass({

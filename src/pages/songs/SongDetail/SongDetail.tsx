@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { useParams, useSearchParams } from '@solidjs/router'
 import { createEffect, createMemo, createResource, createSignal, on, Show, untrack } from 'solid-js'
 import { fetchSongByDisplayId, fetchSongStats } from '../../../api/songs'
@@ -182,7 +183,7 @@ const SongDetail = () => {
     }
   }
 
-  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? '楽曲', '楽曲詳細'))
+  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? t('songs.detail.song'), t('songs.detail.pageTitle')))
 
   return (
     <Show when={songState()?.type !== 'notFound'} fallback={<NotFoundPage />}>

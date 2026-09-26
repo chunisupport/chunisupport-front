@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { useQuery } from '@tanstack/solid-query'
 import { createMemo, createResource, Show } from 'solid-js'
@@ -5,11 +6,7 @@ import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/son
 
 import { LoadError, Loading } from '../../../components'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
-import {
-  buildAdminChartRankingPath,
-  buildSongDetailPath,
-  isChartDetailFromSongDetailState,
-} from '../../../constants/routes'
+import { buildAdminChartRankingPath, buildSongDetailPath, isChartDetailFromSongDetailState } from '../../../constants/routes'
 import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { songFriendRankingQueryOptions } from '../../../queries/friendRankings'
@@ -18,7 +15,7 @@ import { isNotFoundOrInvalidDisplayIdApiError } from '../../../utils/apiError'
 import { parseScoreHistoryDifficulty } from '../../../utils/scoreHistory'
 import NotFoundPage from '../../NotFoundPage'
 import ChartDetailPage from '../components/chartDetail/ChartDetailPage'
-import { CHART_DETAIL_PAGE_TITLE } from '../components/chartDetail/constants'
+import { CHART_DETAIL_COPY } from '../components/chartDetail/constants'
 
 /**
  * ログインユーザーの譜面詳細を表示する。
@@ -60,7 +57,7 @@ const SongScoreHistory = () => {
   /** 存在しない・形式不正の表示IDは存在しない曲とみなして404表示にする */
   const isSongNotFound = createMemo(() => isNotFoundOrInvalidDisplayIdApiError(song.error))
 
-  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? '楽曲', CHART_DETAIL_PAGE_TITLE))
+  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? t('songs.detail.song'), CHART_DETAIL_COPY.pageTitle))
 
   /**
    * 楽曲詳細から入った履歴では詳細URLを積まず、元の詳細履歴へ戻す。

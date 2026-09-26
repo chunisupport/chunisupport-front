@@ -1,3 +1,4 @@
+import { t } from '../../../i18n'
 import { createMemo, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { useAppMainScrollRestoration } from '../../../hooks/useAppMainScrollRestoration'
@@ -12,7 +13,7 @@ import { songListViewMode } from '../songListViewMode'
 import { useWorldsendSongsListQuery } from '../useWorldsendSongsListQuery'
 import WorldsendSongCardSortControls from '../WorldsendSongsCardList/components/WorldsendSongCardSortControls'
 import WorldsendSongsCardGrid from '../WorldsendSongsCardList/components/WorldsendSongsCardGrid'
-import { WORLDSEND_SONG_CARD_DEFAULT_SORT_OPTION_ID } from '../WorldsendSongsCardList/constants'
+import { WORLDSEND_SONG_CARD_COPY, WORLDSEND_SONG_CARD_DEFAULT_SORT_OPTION_ID } from '../WorldsendSongsCardList/constants'
 import { findWorldsendSongCardSortOption } from '../WorldsendSongsCardList/utils/worldsendSongCardSort'
 import WorldsendSongsTable from './components/WorldsendSongsTable'
 import { nextSortState, sortWorldsendSongs, type WorldsendSongSortKey } from './utils/sorting'
@@ -65,7 +66,7 @@ const WorldsendSongsList = () => {
     setSortDirection(nextSort.sortDirection)
   }
 
-  useDocumentTitle("WORLD'S END 楽曲一覧")
+  useDocumentTitle(() => WORLDSEND_SONG_CARD_COPY.pageTitle)
 
   return (
     <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
@@ -77,7 +78,7 @@ const WorldsendSongsList = () => {
               style={{ width: isCardView() ? `${cardLayout.contentWidth()}px` : '100%' }}
             >
               <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold">WORLD&apos;S END 楽曲一覧</h1>
+                <h1 class="text-2xl font-semibold">{WORLDSEND_SONG_CARD_COPY.pageTitle}</h1>
                 <div class="flex items-center gap-2">
                   <SongListViewModeToggle />
                   <SongsViewToggle />
@@ -113,7 +114,7 @@ const WorldsendSongsList = () => {
                   />
                 </Show>
               </div>
-              <p class="text-sm text-text-muted">{filteredSongs().length}件</p>
+              <p class="text-sm text-text-muted">{t('songs.list.count', { count: filteredSongs().length })}</p>
 
               <Show
                 when={isCardView()}
@@ -136,7 +137,7 @@ const WorldsendSongsList = () => {
               </Show>
 
               <Show when={filteredSongs().length === 0}>
-                <p class="text-sm text-text-subtle">表示できる楽曲がありません。</p>
+                <p class="text-sm text-text-subtle">{WORLDSEND_SONG_CARD_COPY.empty}</p>
               </Show>
             </div>
           </div>

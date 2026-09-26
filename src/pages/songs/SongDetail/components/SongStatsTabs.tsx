@@ -1,3 +1,4 @@
+import { localizedCopy } from '../../../../i18n'
 import { createMemo, createSignal, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { AppSelect } from '../../../../components/common/AppSelect'
@@ -7,6 +8,9 @@ import SongStatsTable, {
   type SongStatsTableViewOption,
   TABLE_VIEW_OPTIONS,
 } from './SongStatsTable'
+
+/** 難易度別統計の表示文言 */
+const SONG_STATS_COPY = localizedCopy('songs.stats')
 
 type DifficultyOption = {
   label: string
@@ -36,7 +40,7 @@ type Props = {
 
 /** 難易度別統計の補足説明文 */
 const SONG_STATS_DESCRIPTION =
-  '実力帯(ベスト枠平均)ごとに集計されます。データは1日に2回更新されます。'
+  SONG_STATS_COPY.description
 
 /** 難易度別統計のSelect群を横並びにするコンテナクラス */
 const STATS_CONTROL_ROW_CLASS = 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center'
@@ -90,7 +94,7 @@ const SongStatsTabs = (props: Props) => {
   return (
     <div class="space-y-3 rounded-md border border-border bg-surface p-4">
       <div class="space-y-1">
-        <h2 class="text-lg font-semibold">難易度別統計</h2>
+        <h2 class="text-lg font-semibold">{SONG_STATS_COPY.title}</h2>
         <p class="text-xs text-text-muted">{SONG_STATS_DESCRIPTION}</p>
       </div>
 
@@ -103,7 +107,7 @@ const SongStatsTabs = (props: Props) => {
               optionTextValue="label"
               value={selectedDifficultyOption()}
               onChange={handleDifficultyChange}
-              label="統計に表示する難易度"
+              label={SONG_STATS_COPY.difficultyLabel}
               labelVariant="srOnly"
               triggerClass="h-10 text-text-muted"
               contentZIndexClass="z-50"
@@ -123,7 +127,7 @@ const SongStatsTabs = (props: Props) => {
             optionTextValue="label"
             value={selectedTableViewOption()}
             onChange={handleTableViewChange}
-            label="統計テーブルの表示内容"
+            label={SONG_STATS_COPY.contentLabel}
             labelVariant="srOnly"
             triggerClass="h-10 text-text-muted"
             contentZIndexClass="z-50"

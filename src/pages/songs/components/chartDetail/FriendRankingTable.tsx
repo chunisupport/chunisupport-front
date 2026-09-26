@@ -3,12 +3,7 @@ import { For, Show } from 'solid-js'
 import type { FriendRankingEntryDTO, WorldsendFriendRankingEntryDTO } from '../../../../types/api'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
 import { buildUserProfilePagePath } from '../../../../utils/userProfileRoute'
-import {
-  FRIEND_RANKING_EMPTY_LABEL,
-  FRIEND_RANKING_PLAYER_LABEL,
-  FRIEND_RANKING_RANK_LABEL,
-  SCORE_HISTORY_SCORE_LABEL,
-} from './constants'
+import { CHART_DETAIL_COPY } from './constants'
 
 type FriendRankingTableEntry = Pick<
   FriendRankingEntryDTO | WorldsendFriendRankingEntryDTO,
@@ -80,7 +75,7 @@ const FriendRankingTable = (props: Props) => {
       when={props.entries.length > 0}
       fallback={
         <div class="rounded-md border border-border bg-surface px-4 py-10 text-center text-sm text-text-muted">
-          {FRIEND_RANKING_EMPTY_LABEL}
+          {CHART_DETAIL_COPY.rankingEmpty}
         </div>
       }
     >
@@ -89,13 +84,13 @@ const FriendRankingTable = (props: Props) => {
           <thead class="bg-surface-muted text-center text-xs text-text-muted">
             <tr>
               <th scope="col" class="w-14 px-3 py-2 sm:w-20 sm:px-4">
-                {FRIEND_RANKING_RANK_LABEL}
+                {CHART_DETAIL_COPY.rank}
               </th>
               <th scope="col" class="px-3 py-2 text-left sm:px-4">
-                {FRIEND_RANKING_PLAYER_LABEL}
+                {CHART_DETAIL_COPY.player}
               </th>
               <th scope="col" class="w-32 px-3 py-2 text-right sm:w-44 sm:px-4">
-                {SCORE_HISTORY_SCORE_LABEL}
+                {CHART_DETAIL_COPY.score}
               </th>
             </tr>
           </thead>

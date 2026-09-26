@@ -1,3 +1,4 @@
+import { localizedCopy, t } from '../../i18n'
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
@@ -21,6 +22,9 @@ import { DataTransferSettingsSection } from './DataTransferSettingsSection'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
 import { UsernameChangeForm } from './UsernameChangeForm'
+
+/** 設定画面の表示文言 */
+const SETTINGS_COPY = localizedCopy('settings.page')
 
 type SettingsSummary = {
   me: Awaited<ReturnType<typeof fetchMe>>
@@ -48,7 +52,7 @@ const Settings = () => {
   const [accountDeleting, setAccountDeleting] = createSignal(false)
   const [accountDeleteError, setAccountDeleteError] = createSignal('')
 
-  useDocumentTitle('設定')
+  useDocumentTitle(() => t('nav.settings'))
 
   /**
    * ログイン中ユーザーのフレンドランキングキャッシュを無効化する。
@@ -119,10 +123,10 @@ const Settings = () => {
             }
           : current
       )
-      setPrivacySuccess('非公開設定を更新しました。')
+      setPrivacySuccess(SETTINGS_COPY.privacyUpdated)
     } catch (error) {
       setPrivacyValue(previousValue)
-      setPrivacyError(toUserFriendlyErrorMessage(error, '設定更新に失敗しました。'))
+      setPrivacyError(toUserFriendlyErrorMessage(error, SETTINGS_COPY.privacyFailed))
       await handlePrivacyRefresh()
     } finally {
       setPrivacySubmitting(false)
@@ -168,10 +172,10 @@ const Settings = () => {
       await deletePlayerData()
       await invalidateCurrentUserFriendRankings().catch(() => undefined)
       setPlayerDeleteDialogOpen(false)
-      setPlayerDataSuccess('プレイヤーデータを削除しました。必要であれば再登録してください。')
+      setPlayerDataSuccess(SETTINGS_COPY.playerDataDeleted)
       await refetchSummary()
     } catch (error) {
-      setPlayerDataError(toUserFriendlyErrorMessage(error, 'プレイヤーデータ削除に失敗しました。'))
+      setPlayerDataError(toUserFriendlyErrorMessage(error, SETTINGS_COPY.playerDataDeleteFailed))
     } finally {
       setPlayerDeleting(false)
     }
@@ -194,13 +198,13 @@ const Settings = () => {
     } catch (error) {
       const err = error as Error & { code?: string }
       if (err.code === 'auth/popup-closed-by-user') {
-        setAccountDeleteError('再認証がキャンセルされました。')
+        setAccountDeleteError(SETTINGS_COPY.reauthCancelled)
       } else if (err.code === 'auth/user-mismatch') {
-        setAccountDeleteError('ログイン中のアカウントと異なるアカウントで再認証されました。')
+        setAccountDeleteError(SETTINGS_COPY.reauthMismatch)
       } else if (err.code === 'recent_sign_in_required') {
-        setAccountDeleteError('再認証の有効期限が切れています。もう一度お試しください。')
+        setAccountDeleteError(SETTINGS_COPY.reauthExpired)
       } else {
-        setAccountDeleteError(toUserFriendlyErrorMessage(error, '退会処理に失敗しました。'))
+        setAccountDeleteError(toUserFriendlyErrorMessage(error, SETTINGS_COPY.accountDeleteFailed))
       }
     } finally {
       setAccountDeleting(false)
@@ -209,9 +213,9 @@ const Settings = () => {
 
   return (
     <div class="mx-auto w-full max-w-6xl p-4">
-      <h1 class="mb-6 text-2xl font-semibold text-text">設定</h1>
+      <h1 class="mb-6 text-2xl font-semibold text-text">{t('nav.settings')}</h1>
       <div class="grid gap-6 md:grid-cols-[13rem_minmax(0,1fr)]">
-        <nav aria-label="設定カテゴリ" class="md:sticky md:top-4 md:self-start">
+        <nav aria-label={SETTINGS_COPY.categories} class="md:sticky md:top-4 md:self-start">
           <ul class="flex gap-2 overflow-x-auto border-b border-border pb-3 md:flex-col md:border-b-0 md:border-r md:pb-0 md:pr-4">
             <For each={SETTINGS_SECTIONS}>
               {(section) => (
@@ -246,20 +250,20 @@ const Settings = () => {
                   <Show when={activeSection() === 'profile'}>
                     <section aria-labelledby="profile-title">
                       <h2 id="profile-title" class="text-xl font-semibold text-text">
-                        プロフィール
+                        {t('settings.sections.profile')}
                       </h2>
                       <div class="mt-5 flex items-center justify-between gap-4 border-b border-border py-4">
                         <div>
-                          <h3 class="font-medium text-text">プロフィールを非公開にする</h3>
+                          <h3 class="font-medium text-text">{SETTINGS_COPY.privateProfile}</h3>
                           <p class="mt-1 text-sm text-text-muted">
-                            プロフィールとプレイ情報を自分だけに表示します。
+                            {SETTINGS_COPY.privateProfileDescription}
                           </p>
                         </div>
                         <AppSwitch
                           checked={privacyValue()}
                           onChange={handleTogglePrivacy}
                           disabled={privacySubmitting()}
-                          label="プロフィールを非公開にする"
+                          label={SETTINGS_COPY.privateProfile}
                         />
                       </div>
                       <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
@@ -282,17 +286,17 @@ const Settings = () => {
                     <div class="space-y-10">
                       <section aria-labelledby="player-data-title">
                         <h2 id="player-data-title" class="text-xl font-semibold text-text">
-                          プレイヤーデータ
+                          {SETTINGS_COPY.playerData}
                         </h2>
                         <dl class="mt-5 divide-y divide-border border-y border-border">
                           <div class="flex justify-between gap-4 py-4">
-                            <dt class="text-text-muted">連携状態</dt>
+                            <dt class="text-text-muted">{SETTINGS_COPY.linkStatus}</dt>
                             <dd class="font-medium text-text">
-                              {loadedSummary().profile.player ? '連携済み' : '未連携'}
+                              {loadedSummary().profile.player ? SETTINGS_COPY.linked : SETTINGS_COPY.unlinked}
                             </dd>
                           </div>
                           <div class="flex justify-between gap-4 py-4">
-                            <dt class="text-text-muted">最終更新</dt>
+                            <dt class="text-text-muted">{SETTINGS_COPY.lastUpdated}</dt>
                             <dd class="font-medium text-text">
                               {formatSettingsDateTime(loadedSummary().me.last_score_update)}
                             </dd>
@@ -310,7 +314,7 @@ const Settings = () => {
                           onClick={() => setPlayerDeleteDialogOpen(true)}
                           disabled={!loadedSummary().profile.player}
                         >
-                          プレイヤーデータを削除
+                          {SETTINGS_COPY.deletePlayerData}
                         </AppButton>
                       </section>
                       <DataTransferSettingsSection
@@ -328,17 +332,17 @@ const Settings = () => {
                   <Show when={activeSection() === 'account'}>
                     <section aria-labelledby="account-title">
                       <h2 id="account-title" class="text-xl font-semibold text-text">
-                        アカウント
+                        {t('settings.sections.account')}
                       </h2>
                       <dl class="mt-5 divide-y divide-border border-y border-border">
                         <div class="flex justify-between gap-4 py-4">
-                          <dt class="text-text-muted">ユーザーネーム</dt>
+                          <dt class="text-text-muted">{SETTINGS_COPY.username}</dt>
                           <dd class="font-sans font-medium text-text">
                             {loadedSummary().me.username}
                           </dd>
                         </div>
                         <div class="flex justify-between gap-4 py-4">
-                          <dt class="text-text-muted">アカウント種別</dt>
+                          <dt class="text-text-muted">{SETTINGS_COPY.accountType}</dt>
                           <dd class="font-medium text-text">{loadedSummary().me.account_type}</dd>
                         </div>
                       </dl>
@@ -347,9 +351,9 @@ const Settings = () => {
                         onChanged={handleUsernameChanged}
                       />
                       <div class="mt-10 border-t border-danger-border pt-6">
-                        <h3 class="font-semibold text-danger">退会</h3>
+                        <h3 class="font-semibold text-danger">{SETTINGS_COPY.deleteAccountTitle}</h3>
                         <p class="mt-1 text-sm text-text-muted">
-                          アカウントと関連データを完全に削除します。
+                          {SETTINGS_COPY.deleteAccountDescription}
                         </p>
                         <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
                           {accountDeleteError()}
@@ -359,7 +363,7 @@ const Settings = () => {
                           class="mt-4"
                           onClick={() => setAccountDeleteDialogOpen(true)}
                         >
-                          退会する
+                          {SETTINGS_COPY.deleteAccount}
                         </AppButton>
                       </div>
                     </section>
@@ -376,24 +380,24 @@ const Settings = () => {
           <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
           <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
             <AlertDialog.Title class="text-lg font-bold text-text">
-              プレイヤーデータを削除しますか？
+              {SETTINGS_COPY.playerDataDeleteTitle}
             </AlertDialog.Title>
             <AlertDialog.Description class="mt-2 text-sm text-text-muted">
-              スコア記録を含むプレイヤーデータが削除されます。この操作は取り消せません。
+              {SETTINGS_COPY.playerDataDeleteDescription}
             </AlertDialog.Description>
             <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
               {playerDataError()}
             </p>
             <div class="mt-6 flex justify-end gap-2">
               <AlertDialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted">
-                キャンセル
+                {t('common.cancel')}
               </AlertDialog.CloseButton>
               <AppButton
                 variant="danger"
                 onClick={handleDeletePlayerData}
                 disabled={playerDeleting()}
               >
-                {playerDeleting() ? '削除中...' : '削除する'}
+                {playerDeleting() ? SETTINGS_COPY.deleting : SETTINGS_COPY.delete}
               </AppButton>
             </div>
           </AlertDialog.Content>
@@ -405,24 +409,24 @@ const Settings = () => {
           <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
           <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
             <AlertDialog.Title class="text-lg font-bold text-danger">
-              本当に退会しますか？
+              {SETTINGS_COPY.deleteAccountConfirmTitle}
             </AlertDialog.Title>
             <AlertDialog.Description class="mt-2 text-sm text-text-muted">
-              ユーザー情報、プレイヤーデータ、目標、APIトークンがすべて削除されます。本人確認のため再認証が必要です。
+              {SETTINGS_COPY.deleteAccountConfirmDescription}
             </AlertDialog.Description>
             <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
               {accountDeleteError()}
             </p>
             <div class="mt-6 flex justify-end gap-2">
               <AlertDialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted">
-                キャンセル
+                {t('common.cancel')}
               </AlertDialog.CloseButton>
               <AppButton
                 variant="danger"
                 onClick={handleDeleteAccount}
                 disabled={accountDeleting()}
               >
-                {accountDeleting() ? '処理中...' : '退会する'}
+                {accountDeleting() ? SETTINGS_COPY.processing : SETTINGS_COPY.deleteAccount}
               </AppButton>
             </div>
           </AlertDialog.Content>

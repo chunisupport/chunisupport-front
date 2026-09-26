@@ -1,29 +1,11 @@
+import { localizedCopy } from '../../../i18n'
 import { DIFFICULTY_SHORT_NAME_MAP, PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
 import type { SortDirection } from '../../../utils/sortingQuery'
 import type { SongChartDisplayMode } from '../SongsList/constants'
 import type { SongSortKey } from '../SongsList/utils/sorting'
 
 /** カード型楽曲一覧の表示文言 */
-export const SONG_CARD_COPY = {
-  pageTitle: '楽曲一覧',
-  countSuffix: '件',
-  empty: '表示できる楽曲がありません。',
-  sortKeyLabel: 'ソート',
-  sortDirectionLabel: '並び順',
-  sortDefault: '標準',
-  sortTitle: 'タイトル',
-  sortArtist: 'アーティスト',
-  sortGenre: 'ジャンル',
-  sortRelease: '追加日',
-  sortBpm: 'BPM',
-  sortConstSuffix: '定数',
-  sortNotesSuffix: 'ノーツ',
-  sortAsc: '昇順',
-  sortDesc: '降順',
-  genreLabel: 'GENRE',
-  bpmLabel: 'BPM',
-  releaseLabel: 'RELEASE',
-} as const
+export const SONG_CARD_COPY = localizedCopy('songs.card')
 
 /** 追加日より小さく、一段薄いバージョン名の表示クラス */
 export const SONG_CARD_VERSION_NAME_CLASS = 'text-[0.6875rem] leading-none text-text-muted'

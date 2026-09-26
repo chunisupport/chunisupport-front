@@ -1,28 +1,9 @@
+import { localizedCopy } from '../../../i18n'
 import type { SortDirection } from '../../../utils/sortingQuery'
 import type { WorldsendSongSortKey } from '../WorldsendSongsList/utils/sorting'
 
 /** WORLD'S END カード型楽曲一覧の表示文言 */
-export const WORLDSEND_SONG_CARD_COPY = {
-  pageTitle: "WORLD'S END 楽曲一覧",
-  countSuffix: '件',
-  empty: '表示できる楽曲がありません。',
-  sortKeyLabel: 'ソート',
-  sortDirectionLabel: '並び順',
-  sortDefault: '標準',
-  sortTitle: 'タイトル',
-  sortArtist: 'アーティスト',
-  sortGenre: 'ジャンル',
-  sortRelease: '追加日',
-  sortBpm: 'BPM',
-  sortAttribute: '属性',
-  sortLevel: 'レベル',
-  sortNotes: 'ノーツ',
-  sortAsc: '昇順',
-  sortDesc: '降順',
-  genreLabel: 'GENRE',
-  bpmLabel: 'BPM',
-  releaseLabel: 'RELEASE',
-} as const
+export const WORLDSEND_SONG_CARD_COPY = localizedCopy('songs.worldsendCard')
 
 /** 未設定時の表示 */
 export const WORLDSEND_SONG_CARD_EMPTY = '-'

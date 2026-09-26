@@ -8,18 +8,8 @@ import { LoadError, Loading } from '../../../../components'
 import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import { authSession } from '../../../../stores/authSession'
-import type {
-  FriendRankingEntryDTO,
-  ScoreHistoryEntryDTO,
-  WorldsendFriendRankingEntryDTO,
-} from '../../../../types/api'
-import {
-  ADMIN_CHART_RANKING_LINK_LABEL,
-  FRIEND_RANKING_SECTION_LABEL,
-  SCORE_HISTORY_MAX_ENTRIES_LABEL,
-  SCORE_HISTORY_SECTION_LABEL,
-  SCORE_HISTORY_VERSION_LABEL_TOGGLE,
-} from './constants'
+import type { FriendRankingEntryDTO, ScoreHistoryEntryDTO, WorldsendFriendRankingEntryDTO } from '../../../../types/api'
+import { CHART_DETAIL_COPY, SCORE_HISTORY_MAX_ENTRIES_LABEL } from './constants'
 import FriendRankingTable from './FriendRankingTable'
 import ScoreHistoryChart from './ScoreHistoryChart'
 import ScoreHistoryTable from './ScoreHistoryTable'
@@ -72,7 +62,7 @@ const ChartDetailPage = (props: Props) => {
         onClick={props.onBack}
         class="cursor-pointer border-0 bg-transparent p-0 text-sm text-action-primary hover:underline"
       >
-        ← 楽曲詳細へ戻る
+        {`← ${CHART_DETAIL_COPY.backToSong}`}
       </Button>
 
       <header class="space-y-2">
@@ -86,7 +76,7 @@ const ChartDetailPage = (props: Props) => {
       <section class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2 class="flex flex-wrap items-baseline gap-2 text-lg font-semibold">
-            {SCORE_HISTORY_SECTION_LABEL}
+            {CHART_DETAIL_COPY.scoreHistory}
             <span class="text-xs font-normal text-text-muted">
               {SCORE_HISTORY_MAX_ENTRIES_LABEL}
             </span>
@@ -95,7 +85,7 @@ const ChartDetailPage = (props: Props) => {
             <CheckboxField
               id="score-history-version-label-toggle"
               checked={showVersions()}
-              label={SCORE_HISTORY_VERSION_LABEL_TOGGLE}
+              label={CHART_DETAIL_COPY.versionToggle}
               disabled={versions.loading}
               onChange={setShowVersions}
             />
@@ -114,7 +104,7 @@ const ChartDetailPage = (props: Props) => {
       </section>
 
       <section class="space-y-4">
-        <h2 class="text-lg font-semibold">{FRIEND_RANKING_SECTION_LABEL}</h2>
+        <h2 class="text-lg font-semibold">{CHART_DETAIL_COPY.friendRanking}</h2>
         <Show
           when={!props.friendRankingError}
           fallback={<LoadError error={props.friendRankingError} />}
@@ -134,7 +124,7 @@ const ChartDetailPage = (props: Props) => {
             class={getAppButtonClass({ variant: 'surface', size: 'sm' })}
           >
             <Trophy class="h-4 w-4" aria-hidden="true" />
-            {ADMIN_CHART_RANKING_LINK_LABEL}
+            {CHART_DETAIL_COPY.adminRankingLink}
           </A>
         </div>
       </Show>

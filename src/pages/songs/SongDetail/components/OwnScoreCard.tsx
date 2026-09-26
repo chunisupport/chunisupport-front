@@ -1,3 +1,4 @@
+import { formatMessage, t } from '../../../../i18n'
 import { A } from '@solidjs/router'
 import { ChevronRight } from 'lucide-solid'
 import { For, Show } from 'solid-js'
@@ -6,18 +7,10 @@ import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'
 import { DefaultRecordLampBadges } from '../../../../components/common/record/RecordDisplayParts'
 import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import { WORLDSEND_SCORE_LABEL } from '../../../../constants/chart'
-import {
-  buildSongChartDetailPath,
-  buildWorldsendChartDetailPath,
-  CHART_DETAIL_FROM_SONG_DETAIL_STATE,
-} from '../../../../constants/routes'
+import { buildSongChartDetailPath, buildWorldsendChartDetailPath, CHART_DETAIL_FROM_SONG_DETAIL_STATE } from '../../../../constants/routes'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../../types/api'
 import WorldsendBadge from '../../components/WorldsendBadge'
-import {
-  OWN_SCORE_CARD_TITLE,
-  SCORE_HISTORY_LINK_LABEL,
-  UNPLAYED_SCORE_LABEL,
-} from '../scoreHistory.constants'
+import { OWN_SCORE_COPY } from '../scoreHistory.constants'
 
 /** 楽曲詳細で表示する難易度別の自己スコアとランプ状態 */
 export type OwnScoreItem = {
@@ -81,10 +74,12 @@ const buildOwnScoreLinkAriaLabel = (item: OwnScoreItem): string =>
   [
     item.difficulty,
     item.score?.toLocaleString('ja-JP'),
-    `ハード ${item.clearLamp ?? 'なし'}`,
-    `コンボ ${getDefaultRecordLampLabel(item.comboLamp ?? null, item.score) || 'なし'}`,
-    `FULL CHAIN ${item.fullChain ?? 'なし'}`,
-    SCORE_HISTORY_LINK_LABEL,
+    formatMessage(OWN_SCORE_COPY.hardLamp, { lamp: item.clearLamp ?? t('common.none') }),
+    formatMessage(OWN_SCORE_COPY.comboLamp, {
+      lamp: getDefaultRecordLampLabel(item.comboLamp ?? null, item.score) || t('common.none'),
+    }),
+    formatMessage(OWN_SCORE_COPY.fullChain, { lamp: item.fullChain ?? t('common.none') }),
+    OWN_SCORE_COPY.historyLink,
   ].join(' ')
 
 /**
@@ -111,7 +106,7 @@ const OwnScoreCard = (props: {
   loading: boolean
 }) => (
   <section>
-    <h2 class="mb-3 text-lg font-semibold">{OWN_SCORE_CARD_TITLE}</h2>
+    <h2 class="mb-3 text-lg font-semibold">{OWN_SCORE_COPY.ownScoreTitle}</h2>
     <Show when={!props.loading} fallback={<Loading />}>
       <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <For each={props.items}>
@@ -123,7 +118,7 @@ const OwnScoreCard = (props: {
                   fallback={
                     <div class={UNPLAYED_OWN_SCORE_CARD_CLASS}>
                       <OwnScoreBadge difficulty={item.difficulty} />
-                      <span class="ml-auto text-sm text-text-muted">{UNPLAYED_SCORE_LABEL}</span>
+                      <span class="ml-auto text-sm text-text-muted">{OWN_SCORE_COPY.unplayed}</span>
                     </div>
                   }
                 >

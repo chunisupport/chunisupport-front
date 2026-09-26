@@ -1,4 +1,8 @@
+import { localizedCopy } from '../../../i18n'
 import { SearchTextField } from '../../../components/common/SearchTextField'
+
+/** 楽曲検索欄の表示文言 */
+const SONG_SEARCH_COPY = localizedCopy('songs.search')
 
 type SongSearchInputProps = {
   id: string
@@ -17,12 +21,12 @@ const SongSearchInput = (props: SongSearchInputProps) => {
       id={props.id}
       class="min-w-0 flex-1"
       frameClass="rounded-l border-r-0"
-      label="楽曲検索"
-      ariaLabel="楽曲検索"
+      label={SONG_SEARCH_COPY.label}
+      ariaLabel={SONG_SEARCH_COPY.label}
       value={props.value}
       active={props.value.trim().length > 0}
       onChange={props.onInput}
-      placeholder="曲名・アーティスト名で検索"
+      placeholder={SONG_SEARCH_COPY.placeholder}
     />
   )
 }

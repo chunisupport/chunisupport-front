@@ -122,24 +122,35 @@ export const localizedCopy = <P extends LocaleCopyPath>(path: P): FlatLocaleDict
   createCopyView(path) as FlatLocaleDictionary[P]
 
 /**
- * 選択肢の label を辞書の文言で参照するように置き換える。
- * label は参照するたびに現在の表示言語の文言を返す。
+ * 選択肢の表示文言を辞書の文言で参照するように置き換える。
+ * 置き換えたプロパティは参照するたびに現在の表示言語の文言を返す。
  *
  * @example
  * const OPTIONS = withLocalizedLabels([{ value: 'HRD' }, { value: 'BRV' }] as const, COPY.lamps)
  *
- * @param options label 以外の選択肢情報
- * @param labels 選択肢の値をキーにした文言辞書
- * @returns label を持つ選択肢の配列
+ * @param options 表示文言以外の選択肢情報
+ * @param labels 選択肢の識別値をキーにした文言辞書
+ * @param field 文言を設定するプロパティ名。既定値は label
+ * @param keyField 選択肢の識別値を持つプロパティ名。既定値は value
+ * @returns 表示文言を持つ選択肢の配列
  */
-export const withLocalizedLabels = <T extends { readonly value: string | number }>(
+export const withLocalizedLabels = <
+  T extends object,
+  F extends string = 'label',
+  K extends keyof T = 'value' extends keyof T ? 'value' : keyof T,
+>(
   options: readonly T[],
-  labels: Readonly<Record<string, string>>
-): (T & { readonly label: string })[] =>
-  options.map(
-    (option) =>
-      Object.defineProperty({ ...option }, 'label', {
+  labels: Readonly<Record<string, string>>,
+  field: F = 'label' as F,
+  keyField: K = 'value' as K
+): (T & { readonly [P in F]: string })[] =>
+  options.map((option) =>
+    Object.defineProperty(
+      Object.defineProperties({}, Object.getOwnPropertyDescriptors(option)),
+      field,
+      {
         enumerable: true,
-        get: () => labels[String(option.value)],
-      }) as T & { readonly label: string }
-  )
+        get: () => labels[String(option[keyField])],
+      }
+    )
+  ) as (T & { readonly [P in F]: string })[]

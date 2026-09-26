@@ -1,14 +1,4 @@
-import {
-  Chart,
-  type ChartData,
-  type ChartOptions,
-  Legend,
-  LinearScale,
-  LineController,
-  LineElement,
-  PointElement,
-  Tooltip,
-} from 'chart.js'
+import { Chart, type ChartData, type ChartOptions, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip } from 'chart.js'
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { ScoreHistoryEntryDTO } from '../../../../types/api'
@@ -16,7 +6,7 @@ import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chart
 import { formatScoreKilo } from '../../../../utils/numberFormat'
 import { formatScoreHistoryTimestamp } from '../../../../utils/scoreHistory'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { SCORE_HISTORY_EMPTY_LABEL, SCORE_HISTORY_SCORE_LABEL } from './constants'
+import { CHART_DETAIL_COPY } from './constants'
 
 Chart.register(Legend, LineController, LineElement, LinearScale, PointElement, Tooltip)
 
@@ -99,8 +89,8 @@ const createScoreHistoryChartOptions = (
           label: (context) => {
             const score = context.parsed.y
             return score === null
-              ? SCORE_HISTORY_SCORE_LABEL
-              : `${SCORE_HISTORY_SCORE_LABEL}: ${score.toLocaleString('ja-JP')}`
+              ? CHART_DETAIL_COPY.score
+              : `${CHART_DETAIL_COPY.score}: ${score.toLocaleString('ja-JP')}`
           },
         },
       },
@@ -160,7 +150,7 @@ const ScoreHistoryChart = (props: Props) => {
     const chartData: ChartData<'line', ScoreHistoryChartPoint[], number> = {
       datasets: [
         {
-          label: SCORE_HISTORY_SCORE_LABEL,
+          label: CHART_DETAIL_COPY.score,
           data: entries.map((entry) => ({
             x: new Date(entry.updated_at).getTime(),
             y: entry.score,
@@ -202,11 +192,11 @@ const ScoreHistoryChart = (props: Props) => {
       <Show
         when={props.entries.length > 0}
         fallback={
-          <div class="py-10 text-center text-sm text-text-muted">{SCORE_HISTORY_EMPTY_LABEL}</div>
+          <div class="py-10 text-center text-sm text-text-muted">{CHART_DETAIL_COPY.historyEmpty}</div>
         }
       >
         <div class={CHART_HEIGHT_CLASS}>
-          <canvas ref={canvasRef} aria-label="スコア履歴の折れ線グラフ" role="img" />
+          <canvas ref={canvasRef} aria-label={CHART_DETAIL_COPY.historyChartAriaLabel} role="img" />
         </div>
       </Show>
     </section>

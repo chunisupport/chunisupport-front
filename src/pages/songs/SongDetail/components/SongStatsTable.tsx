@@ -1,42 +1,19 @@
-import {
-  BarController,
-  BarElement,
-  CategoryScale,
-  Chart,
-  type ChartData,
-  type ChartOptions,
-  Legend,
-  LinearScale,
-  LineController,
-  LineElement,
-  type Plugin,
-  PointElement,
-  Tooltip,
-} from 'chart.js'
+import { formatMessage, localizedCopy } from '../../../../i18n'
+import { BarController, BarElement, CategoryScale, Chart, type ChartData, type ChartOptions, Legend, LinearScale, LineController, LineElement, type Plugin, PointElement, Tooltip } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
 import { createChartStripePattern } from '../../../../utils/chartPattern'
-import {
-  CHART_COLOR_FALLBACK,
-  resolveChartColor,
-  resolveChartPixelLength,
-} from '../../../../utils/chartTheme'
-import {
-  calculateDisplayedScoreDifference,
-  formatScoreDifference,
-  getScoreDifferenceClass,
-} from '../../../../utils/scoreDifference'
+import { CHART_COLOR_FALLBACK, resolveChartColor, resolveChartPixelLength } from '../../../../utils/chartTheme'
+import { calculateDisplayedScoreDifference, formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { completeSongStatsRatingBands } from '../../../../utils/songStats'
-import { OWN_SCORE_CARD_TITLE } from '../scoreHistory.constants'
-import {
-  CLEAR_CHART_DATASET_DEFINITIONS,
-  COMBO_CHART_DATASET_DEFINITIONS,
-  RANK_CHART_DATASET_DEFINITIONS,
-  type SongStatsChartStripePatternDefinition,
-} from './songStatsChartDefinitions'
+import { OWN_SCORE_COPY } from '../scoreHistory.constants'
+import { CLEAR_CHART_DATASET_DEFINITIONS, COMBO_CHART_DATASET_DEFINITIONS, RANK_CHART_DATASET_DEFINITIONS, type SongStatsChartStripePatternDefinition } from './songStatsChartDefinitions'
 import { isOwnBestAverageRatingBand } from './songStatsHighlight'
+
+/** 難易度別統計の表示文言 */
+const SONG_STATS_COPY = localizedCopy('songs.stats')
 
 Chart.register(
   BarController,
@@ -106,10 +83,10 @@ const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
 /** 平均・中央値グラフのセクション見出し */
-const AVERAGE_SCORE_CHART_TITLE = '平均・中央値'
+const AVERAGE_SCORE_CHART_TITLE = SONG_STATS_COPY.averageMedian
 /** 平均スコア系列の凡例・ツールチップ表示名 */
-const AVERAGE_SCORE_CHART_LABEL = '平均スコア'
-const MEDIAN_SCORE_CHART_LABEL = '中央値スコア'
+const AVERAGE_SCORE_CHART_LABEL = SONG_STATS_COPY.averageScore
+const MEDIAN_SCORE_CHART_LABEL = SONG_STATS_COPY.medianScore
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 const MEDIAN_SCORE_CHART_BORDER_DASH = [6, 4]
 /** 平均・中央値グラフに常時表示するデータ点の半径 */
@@ -117,21 +94,21 @@ const AVERAGE_SCORE_CHART_POINT_RADIUS = 2
 /** 平均・中央値グラフのデータ点をホバーした際の半径 */
 const AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS = 4
 /** 自分のスコア参照線の凡例・ツールチップ表示名 */
-const OWN_SCORE_CHART_LABEL = OWN_SCORE_CARD_TITLE
+const OWN_SCORE_CHART_LABEL = OWN_SCORE_COPY.ownScoreTitle
 /** 自分のスコア参照線の色。アクセント色に依存せず平均・中央値と区別する */
 const OWN_SCORE_CHART_COLOR = '--cs-color-text'
 /** 平均・中央値グラフのアクセシブル名 */
-const AVERAGE_SCORE_CHART_ARIA_LABEL = 'レーティング帯別の平均スコアと中央値スコアの折れ線グラフ'
+const AVERAGE_SCORE_CHART_ARIA_LABEL = SONG_STATS_COPY.averageChartAriaLabel
 /** 自分のスコア参照線を含む平均・中央値グラフのアクセシブル名 */
 const AVERAGE_SCORE_CHART_WITH_OWN_SCORE_ARIA_LABEL =
-  'レーティング帯別の平均スコア、中央値スコア、自分のスコアの折れ線グラフ'
+  SONG_STATS_COPY.averageChartWithOwnAriaLabel
 /** 統計テーブルの表示カテゴリ選択肢 */
 export const TABLE_VIEW_OPTIONS: SongStatsTableViewOption[] = [
-  { label: '平均スコア', value: 'averageScore' },
-  { label: '中央値スコア', value: 'medianScore' },
-  { label: 'スコアランク', value: 'scoreRank' },
+  { label: SONG_STATS_COPY.averageScore, value: 'averageScore' },
+  { label: SONG_STATS_COPY.medianScore, value: 'medianScore' },
+  { label: SONG_STATS_COPY.scoreRank, value: 'scoreRank' },
   { label: 'FC/AJ/AJC', value: 'combo' },
-  { label: 'ハードランプ', value: 'clear' },
+  { label: SONG_STATS_COPY.hardLamp, value: 'clear' },
 ]
 /** ランク別人数を表示する列とAPIレスポンスのキー */
 const RANK_STAT_COLUMN_DEFINITIONS = [
@@ -180,16 +157,16 @@ const getTableColumnDefinitions = (
     case 'averageScore':
       return [
         {
-          label: '人数',
+          label: SONG_STATS_COPY.players,
           getValue: (band) => band.player_count.toLocaleString(),
         },
         {
-          label: '平均スコア',
+          label: SONG_STATS_COPY.averageScore,
           getValue: (band) =>
             band.average_score === null ? '-' : formatAverageScore(band.average_score),
         },
         {
-          label: '自分との差',
+          label: SONG_STATS_COPY.differenceFromOwn,
           getValue: (band) => {
             const difference = calculateDisplayedScoreDifference(ownScore, band.average_score)
             return difference === undefined ? '-' : formatScoreDifference(difference)
@@ -203,16 +180,16 @@ const getTableColumnDefinitions = (
     case 'medianScore':
       return [
         {
-          label: '人数',
+          label: SONG_STATS_COPY.players,
           getValue: (band) => band.player_count.toLocaleString(),
         },
         {
-          label: '中央値スコア',
+          label: SONG_STATS_COPY.medianScore,
           getValue: (band) =>
             band.median_score === null ? '-' : formatAverageScore(band.median_score),
         },
         {
-          label: '自分との差',
+          label: SONG_STATS_COPY.differenceFromOwn,
           getValue: (band) => {
             const difference = calculateDisplayedScoreDifference(ownScore, band.median_score)
             return difference === undefined ? '-' : formatScoreDifference(difference)
@@ -369,7 +346,11 @@ const createSongStatsChartOptions = (): ChartOptions<'bar'> => {
       },
       tooltip: {
         callbacks: {
-          label: (context) => `${context.dataset.label}: ${context.parsed.y?.toLocaleString()}人`,
+          label: (context) =>
+            formatMessage(SONG_STATS_COPY.playerCount, {
+              label: context.dataset.label ?? '',
+              count: context.parsed.y?.toLocaleString() ?? '',
+            }),
         },
       },
     },
@@ -479,7 +460,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
       <div class={`${CHART_HEIGHT_CLASS} flex flex-col`}>
         <ul
           class="mb-1 flex shrink-0 flex-wrap justify-center gap-x-3 gap-y-1 text-xs"
-          aria-label={`${props.title}凡例`}
+          aria-label={formatMessage(SONG_STATS_COPY.legend, { title: props.title })}
         >
           <For each={props.datasets}>
             {(dataset) => (
@@ -730,19 +711,19 @@ const SongStatsCharts = (props: SongStatsChartsProps) => {
     <div class="mt-4 grid gap-4 lg:grid-cols-2">
       <SongStatsBarChart
         title="RANK"
-        ariaLabel="レーティング帯別のスコアランク人数グラフ"
+        ariaLabel={SONG_STATS_COPY.rankChartAriaLabel}
         labels={labels()}
         datasets={rankDatasets()}
       />
       <SongStatsBarChart
         title="COMBO"
-        ariaLabel="レーティング帯別のNONE、FC、AJ、AJC人数グラフ"
+        ariaLabel={SONG_STATS_COPY.comboChartAriaLabel}
         labels={labels()}
         datasets={comboDatasets()}
       />
       <SongStatsBarChart
         title="HARD"
-        ariaLabel="レーティング帯別のハードランプ人数グラフ"
+        ariaLabel={SONG_STATS_COPY.clearChartAriaLabel}
         labels={labels()}
         datasets={clearDatasets()}
       />
@@ -785,7 +766,7 @@ const SongStatsTable = (props: Props) => {
         <table class="min-w-full text-sm">
           <thead>
             <tr>
-              <th class={TABLE_LEFT_HEADER_CELL_CLASS}>実力帯</th>
+              <th class={TABLE_LEFT_HEADER_CELL_CLASS}>{SONG_STATS_COPY.ratingBand}</th>
               <For each={displayedColumns()}>
                 {(column) => <th class={TABLE_HEADER_CELL_CLASS}>{column.label}</th>}
               </For>
