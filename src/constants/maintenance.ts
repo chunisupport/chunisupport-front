@@ -10,9 +10,6 @@ export const MAINTENANCE_DEFAULT_RETRY_AFTER_SECONDS = MAINTENANCE_POLL_INTERVAL
 /** API接続不能時に順番に使用する再試行間隔（ミリ秒） */
 export const API_UNAVAILABLE_RETRY_DELAYS_MS = [5_000, 15_000, 30_000, 60_000] as const
 
-/** メンテナンス状態の日時表示に使用するIANAタイムゾーン */
-export const MAINTENANCE_TIME_ZONE = 'Asia/Tokyo'
-
 /** メンテナンスコメントの検証エラー文言 */
 export const MAINTENANCE_COMMENT_ERROR_MESSAGES = {
   required: 'メンテナンスコメントを入力してください',

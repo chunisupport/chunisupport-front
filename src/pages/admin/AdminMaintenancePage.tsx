@@ -1,11 +1,11 @@
-import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { CircleCheck, Wrench } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { updateMaintenance } from '../../api/maintenance'
 import { Loading } from '../../components'
-import { AppButton } from '../../components/common/AppButton'
+import { AppButton, type AppButtonVariant } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import {
   MAINTENANCE_COMMENT_ERROR_MESSAGES,
   MAINTENANCE_COMMENT_MAX_CODE_POINTS,
@@ -21,13 +21,13 @@ import {
 } from '../../stores/availability'
 import { refreshAvailability } from '../../usecases/availability/refreshAvailability'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { formatJstDateTime } from '../../utils/jstDateTime'
 import type { MaintenanceCommentValidationError } from '../../utils/maintenanceComment'
 import {
   countMaintenanceCommentCodePoints,
   normalizeMaintenanceComment,
   validateMaintenanceComment,
 } from '../../utils/maintenanceComment'
-import { formatMaintenanceDateTime } from '../../utils/maintenanceDateTime'
 import {
   ADMIN_MAINTENANCE_ACTION_COPY,
   ADMIN_MAINTENANCE_COMMENT_ROWS,
@@ -67,7 +67,7 @@ const COMMENT_TEXT_AREA_CLASS =
  * @returns 管理画面の状態サマリー。
  */
 const MaintenanceStatusSummary = (props: MaintenanceStatusSummaryProps): JSX.Element => {
-  const formattedUpdatedAt = createMemo(() => formatMaintenanceDateTime(props.updatedAt))
+  const formattedUpdatedAt = createMemo(() => formatJstDateTime(props.updatedAt))
 
   return (
     <section
@@ -147,6 +147,20 @@ const AdminMaintenancePage = (): JSX.Element => {
     return error === null ? '' : MAINTENANCE_COMMENT_ERROR_MESSAGES[error]
   })
   const isSubmitting = createMemo(() => pendingAction() !== null)
+  const confirmationCopy = createMemo(() => {
+    const confirmed = confirmation()
+    return confirmed === null ? null : ADMIN_MAINTENANCE_ACTION_COPY[confirmed.action]
+  })
+  const commentPreview = createMemo(() => {
+    const confirmed = confirmation()
+    return confirmed === null || confirmed.action === 'end' ? null : confirmed.comment
+  })
+  const confirmationVariant = createMemo((): AppButtonVariant => {
+    const action = confirmation()?.action
+    if (action === 'start') return 'danger'
+    if (action === 'end') return 'success'
+    return 'primary'
+  })
   const isUpdateDisabled = createMemo(
     () => isSubmitting() || isMaintenanceCommentUnchanged(comment(), currentComment())
   )
@@ -253,7 +267,7 @@ const AdminMaintenancePage = (): JSX.Element => {
    * @returns なし。
    */
   const handleConfirmationOpenChange = (open: boolean): void => {
-    if (!open && !isSubmitting()) {
+    if (!open) {
       setConfirmation(null)
     }
   }
@@ -400,68 +414,35 @@ const AdminMaintenancePage = (): JSX.Element => {
           </Show>
         </form>
 
-        <AlertDialog open={confirmation() !== null} onOpenChange={handleConfirmationOpenChange}>
-          <AlertDialog.Portal>
-            <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-            <Show when={confirmation()} keyed>
-              {(confirmed) => {
-                const copy = ADMIN_MAINTENANCE_ACTION_COPY[confirmed.action]
-                return (
-                  <AlertDialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-5 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-h-[90dvh] sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-                    <AlertDialog.Title class="shrink-0 text-lg font-bold text-text">
-                      {copy.title}
-                    </AlertDialog.Title>
-
-                    <div class="min-h-0 flex-1 overflow-y-auto">
-                      <AlertDialog.Description class="mt-2 text-sm text-text-muted">
-                        {copy.description}
-                      </AlertDialog.Description>
-
-                      <Show when={confirmed.action !== 'end'}>
-                        <section
-                          class="mt-4 rounded-md border border-border bg-surface-muted p-3"
-                          aria-label={ADMIN_MAINTENANCE_COPY.commentPreview}
-                        >
-                          <h2 class="text-xs font-semibold text-text-muted">
-                            {ADMIN_MAINTENANCE_COPY.commentPreview}
-                          </h2>
-                          <p class="mt-2 whitespace-pre-wrap break-words text-sm text-text">
-                            {confirmed.comment}
-                          </p>
-                        </section>
-                      </Show>
-                    </div>
-
-                    <div class="mt-5 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                      <AppButton
-                        disabled={isSubmitting()}
-                        onClick={() => handleConfirmationOpenChange(false)}
-                      >
-                        {ADMIN_MAINTENANCE_COPY.cancelButton}
-                      </AppButton>
-                      <AppButton
-                        variant={
-                          confirmed.action === 'start'
-                            ? 'danger'
-                            : confirmed.action === 'end'
-                              ? 'success'
-                              : 'primary'
-                        }
-                        disabled={isSubmitting()}
-                        aria-busy={pendingAction() === confirmed.action}
-                        onClick={() => void handleConfirm()}
-                      >
-                        {pendingAction() === confirmed.action
-                          ? ADMIN_MAINTENANCE_COPY.submitting
-                          : copy.confirmButton}
-                      </AppButton>
-                    </div>
-                  </AlertDialog.Content>
-                )
-              }}
-            </Show>
-          </AlertDialog.Portal>
-        </AlertDialog>
+        <AppConfirmDialog
+          open={confirmation() !== null}
+          onOpenChange={handleConfirmationOpenChange}
+          title={confirmationCopy()?.title ?? ''}
+          description={confirmationCopy()?.description ?? ''}
+          cancelLabel={ADMIN_MAINTENANCE_COPY.cancelButton}
+          confirmLabel={
+            isSubmitting()
+              ? ADMIN_MAINTENANCE_COPY.submitting
+              : (confirmationCopy()?.confirmButton ?? '')
+          }
+          confirmVariant={confirmationVariant()}
+          pending={isSubmitting()}
+          onConfirm={() => void handleConfirm()}
+        >
+          <Show when={commentPreview()}>
+            {(preview) => (
+              <section
+                class="mt-4 rounded-md border border-border bg-surface-muted p-3"
+                aria-label={ADMIN_MAINTENANCE_COPY.commentPreview}
+              >
+                <h3 class="text-xs font-semibold text-text-muted">
+                  {ADMIN_MAINTENANCE_COPY.commentPreview}
+                </h3>
+                <p class="mt-2 whitespace-pre-wrap break-words text-sm text-text">{preview()}</p>
+              </section>
+            )}
+          </Show>
+        </AppConfirmDialog>
       </Show>
     </div>
   )
