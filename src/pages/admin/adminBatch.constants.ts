@@ -1,11 +1,16 @@
-import type { SongBatchJobStatus, SongBatchMode, SongBatchTrigger } from '../../types/api'
+import type { AppTabOption } from '../../components/common/AppTabs'
+import type { BatchJobStatus, BatchJobTrigger, SongBatchMode } from '../../types/api'
+import type { AdminBatchTabValue } from './adminBatchTab'
 
-/** 楽曲バッチ管理画面に表示する文言 */
-export const ADMIN_SONG_BATCH_COPY = {
-  heading: '楽曲バッチ',
+/** バッチ管理画面のタブ選択肢 */
+export const ADMIN_BATCH_TAB_OPTIONS: readonly AppTabOption<AdminBatchTabValue>[] = [
+  { value: 'song', label: '楽曲バッチ' },
+  { value: 'chartStats', label: '譜面統計バッチ' },
+]
+
+/** 各バッチの実行フォームと実行履歴で共通して表示する文言 */
+export const BATCH_JOB_COPY = {
   runSection: '実行',
-  modeLabel: '実行モード',
-  fillMissingReleaseDateLabel: 'リリース日を補完',
   runButton: '実行',
   runningButton: '実行中',
   historySection: '実行履歴',
@@ -16,15 +21,36 @@ export const ADMIN_SONG_BATCH_COPY = {
   emptyHistory: '実行履歴はありません',
   cancelButton: 'キャンセル',
   submitting: '送信中...',
-  maintenanceOnly: 'メンテナンス中のみ選択可能',
-  startSuccess: '楽曲バッチを開始しました。',
-  startFailure: '楽曲バッチを開始できませんでした。',
   startedAt: '開始 (JST)',
   startedAtUnknown: '未記録',
   duration: '所要時間',
+  deletedRequester: '削除済みユーザー',
+} as const
+
+/** ジョブ状態の表示名 */
+export const BATCH_JOB_STATUS_LABELS: Record<BatchJobStatus, string> = {
+  RUNNING: '実行中',
+  SUCCEEDED: '成功',
+  SUCCEEDED_WITH_WARNINGS: '警告付き成功',
+  FAILED: '失敗',
+  INTERRUPTED: '中断',
+}
+
+/** 起動元の表示名。管理画面からの実行は要求者名を併せて表示する */
+export const BATCH_JOB_TRIGGER_LABELS: Record<BatchJobTrigger, string> = {
+  CLI: 'CLI',
+  ADMIN: '管理画面',
+}
+
+/** 楽曲バッチタブに表示する文言 */
+export const SONG_BATCH_COPY = {
+  modeLabel: '実行モード',
+  fillMissingReleaseDateLabel: 'リリース日を補完',
+  maintenanceOnly: 'メンテナンス中のみ選択可能',
+  startSuccess: '楽曲バッチを開始しました。',
+  startFailure: '楽曲バッチを開始できませんでした。',
   warningCount: '除外したデータソース',
   fillMissingReleaseDateBadge: 'リリース日補完',
-  deletedRequester: '削除済みユーザー',
 } as const
 
 /**
@@ -60,21 +86,6 @@ export const SONG_BATCH_MODE_OPTIONS: readonly {
   },
 ]
 
-/** ジョブ状態の表示名 */
-export const SONG_BATCH_STATUS_LABELS: Record<SongBatchJobStatus, string> = {
-  RUNNING: '実行中',
-  SUCCEEDED: '成功',
-  SUCCEEDED_WITH_WARNINGS: '警告付き成功',
-  FAILED: '失敗',
-  INTERRUPTED: '中断',
-}
-
-/** 起動元の表示名。管理画面からの実行は要求者名を併せて表示する */
-export const SONG_BATCH_TRIGGER_LABELS: Record<SongBatchTrigger, string> = {
-  CLI: 'CLI',
-  ADMIN: '管理画面',
-}
-
 /** 実行モードごとの確認ダイアログ文言 */
 export const SONG_BATCH_CONFIRMATION_COPY: Record<
   SongBatchMode,
@@ -99,3 +110,13 @@ export const SONG_BATCH_CONFIRMATION_COPY: Record<
     confirmButton: '大型アップデートを実行する',
   },
 }
+
+/** 譜面統計バッチタブに表示する文言 */
+export const CHART_STATS_BATCH_COPY = {
+  startSuccess: '譜面統計バッチを開始しました。',
+  startFailure: '譜面統計バッチを開始できませんでした。',
+  confirmTitle: '譜面統計を再集計しますか？',
+  confirmDescription:
+    '全プレイヤーの記録から譜面統計とベスト枠採用率を再集計します。公開用の統計JSONは次回の定期更新で反映されます。',
+  confirmButton: '再集計する',
+} as const
