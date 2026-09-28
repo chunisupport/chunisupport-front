@@ -85,7 +85,7 @@ export interface BatchJobDTO {
   started_at: string
   /** 終了日時。実行中は null */
   finished_at: string | null
-  /** 失敗理由。失敗以外は null */
+  /** 失敗・中断の理由。成功・実行中、および理由が分からない中断では null */
   error_message: string | null
 }
 
