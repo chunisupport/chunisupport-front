@@ -1,9 +1,9 @@
 import {
+  ADMIN_BATCH_PATH,
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
   ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
-  ADMIN_SONG_BATCH_PATH,
   ADMIN_VERSIONS_PATH,
 } from '../../constants/routes'
 
@@ -59,10 +59,10 @@ export const ADMIN_PAGE_LINKS = [
     icon: 'versions',
   },
   {
-    href: ADMIN_SONG_BATCH_PATH,
-    title: '楽曲バッチ',
-    description: '楽曲データの取り込みを実行し、実行履歴を確認します。',
-    icon: 'songBatch',
+    href: ADMIN_BATCH_PATH,
+    title: 'バッチ管理',
+    description: '楽曲データの取り込みや譜面統計の再集計を実行し、実行履歴を確認します。',
+    icon: 'batch',
   },
   {
     href: ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,

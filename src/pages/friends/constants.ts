@@ -1,5 +1,6 @@
 import type { AppTabOption } from '../../components/common/AppTabs'
 import { FRIENDS_PATH } from '../../constants/routes'
+import { buildUrlTabPath, resolveUrlTab } from '../../utils/urlTab'
 
 export { FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 
@@ -39,10 +40,8 @@ const FRIENDS_TAB_PATH_SEGMENTS: Record<FriendsTabValue, string> = {
  * @param tab - URLへ反映するタブ値。
  * @returns 対象タブを表示するURLパス。
  */
-export const buildFriendsTabPath = (tab: FriendsTabValue): string => {
-  const segment = FRIENDS_TAB_PATH_SEGMENTS[tab]
-  return segment ? `${FRIENDS_PATH}/${segment}` : FRIENDS_PATH
-}
+export const buildFriendsTabPath = (tab: FriendsTabValue): string =>
+  buildUrlTabPath(FRIENDS_PATH, FRIENDS_TAB_PATH_SEGMENTS, tab)
 
 /**
  * URLパスセグメントからフレンド画面タブ値を復元する。
@@ -50,20 +49,8 @@ export const buildFriendsTabPath = (tab: FriendsTabValue): string => {
  * @param segment - URLパスのタブ部分。
  * @returns 対応するタブ値。未対応の場合は null。
  */
-export const resolveFriendsTabValue = (segment: string | undefined): FriendsTabValue | null => {
-  switch (segment) {
-    case undefined:
-      return 'friends'
-    case FRIENDS_TAB_PATH_SEGMENTS.friends:
-      return 'friends'
-    case FRIENDS_TAB_PATH_SEGMENTS.received:
-      return 'received'
-    case FRIENDS_TAB_PATH_SEGMENTS.sent:
-      return 'sent'
-    default:
-      return null
-  }
-}
+export const resolveFriendsTabValue = (segment: string | undefined): FriendsTabValue | null =>
+  resolveUrlTab(FRIENDS_TAB_PATH_SEGMENTS, segment, 'friends')
 
 /** フレンド画面で使う固定文言 */
 export const FRIENDS_COPY = {

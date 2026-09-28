@@ -1,4 +1,4 @@
-import { A, Route, Router } from '@solidjs/router'
+import { A, Navigate, Route, Router } from '@solidjs/router'
 import {
   Calculator,
   ChartColumnStacked,
@@ -37,6 +37,7 @@ import {
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
 import {
+  ADMIN_BATCH_PATH,
   ADMIN_CHART_RANKING_PATH,
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
@@ -44,7 +45,6 @@ import {
   ADMIN_NAMEPLATE_PREVIEW_PATH,
   ADMIN_PATH,
   ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
-  ADMIN_SONG_BATCH_PATH,
   ADMIN_VERSIONS_PATH,
   ADMIN_WORLDSEND_CHART_RANKING_PATH,
   ALL_SONG_BEST_FRAME_PATH,
@@ -140,7 +140,7 @@ const AdminCoursesPage = lazy(() => import('./pages/admin/AdminCoursesPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
 const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
-const AdminSongBatchPage = lazy(() => import('./pages/admin/AdminSongBatchPage'))
+const AdminBatchPage = lazy(() => import('./pages/admin/AdminBatchPage'))
 const AdminRatingImageDomPreviewPage = lazy(
   () => import('./pages/admin/AdminRatingImageDomPreviewPage')
 )
@@ -431,7 +431,7 @@ const LoadableAdminCoursesPage = withRouteLoadBoundary(AdminCoursesPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
-const LoadableAdminSongBatchPage = withRouteLoadBoundary(AdminSongBatchPage)
+const LoadableAdminBatchPage = withRouteLoadBoundary(AdminBatchPage)
 const LoadableAdminRatingImageDomPreviewPage = withRouteLoadBoundary(AdminRatingImageDomPreviewPage)
 const LoadableAdminNameplatePreviewPage = withRouteLoadBoundary(AdminNameplatePreviewPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
@@ -561,13 +561,13 @@ const GuardedAdminMaintenancePage = () => (
 )
 
 /**
- * ADMIN 権限を要求して楽曲バッチ管理画面を表示する。
+ * ADMIN 権限を要求してバッチ管理画面を表示する。
  *
- * @returns 権限制御済みの楽曲バッチ管理画面。
+ * @returns 権限制御済みのバッチ管理画面。
  */
-const GuardedAdminSongBatchPage = () => (
+const GuardedAdminBatchPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
-    <LoadableAdminSongBatchPage />
+    <LoadableAdminBatchPage />
   </RequireRole>
 )
 
@@ -772,7 +772,9 @@ const App = () => {
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
       <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
       <Route path={ADMIN_VERSIONS_PATH} component={withNavBar(GuardedAdminVersionsPage)} />
-      <Route path={ADMIN_SONG_BATCH_PATH} component={withNavBar(GuardedAdminSongBatchPage)} />
+      <Route path={`${ADMIN_BATCH_PATH}/:tab?`} component={withNavBar(GuardedAdminBatchPage)} />
+      {/* 楽曲バッチ単独だった頃の管理画面URL。ブックマークからの遷移をバッチ管理画面へ移す */}
+      <Route path="/admin/song-batch" component={() => <Navigate href={ADMIN_BATCH_PATH} />} />
       <Route
         path={ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH}
         component={withNavBar(GuardedAdminRatingImageDomPreviewPage)}

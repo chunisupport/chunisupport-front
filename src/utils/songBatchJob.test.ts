@@ -1,128 +1,41 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { SongBatchJobDTO } from '../types/api'
-import {
-  findRunningSongBatchJob,
-  formatSongBatchDuration,
-  isSongBatchConfirmationSatisfied,
-  resolveSongBatchStatusTone,
-} from './songBatchJob'
+import { SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_DELAY_SECONDS } from '../constants/songBatch'
+import { getSongBatchConfirmationDelaySeconds, isSongBatchModeAvailable } from './songBatchJob'
 
-/**
- * テスト用の楽曲バッチジョブを生成する。
- *
- * @param overrides - 既定値から変更する項目。
- * @returns 楽曲バッチジョブ。
- */
-const createJob = (overrides: Partial<SongBatchJobDTO> = {}): SongBatchJobDTO => ({
-  id: 'job-1',
-  mode: 'NORMAL',
-  fill_missing_release_date: false,
-  trigger: 'CLI',
-  requested_by: null,
-  status: 'SUCCEEDED',
-  started_at: '2026-09-26T03:00:00Z',
-  finished_at: '2026-09-26T03:03:10Z',
-  warning_count: 0,
-  error_message: null,
-  ...overrides,
-})
-
-test('実行中のジョブがある場合はそのジョブを返すこと', () => {
+test('通常実行はメンテナンス状態に関わらず選択できること', () => {
   // Given
-  const running = createJob({ id: 'running', status: 'RUNNING', finished_at: null })
-  const jobs = [running, createJob({ id: 'finished' })]
+  const maintenanceStates = [true, false]
 
   // When
-  const result = findRunningSongBatchJob(jobs)
+  const results = maintenanceStates.map((isMaintenance) =>
+    isSongBatchModeAvailable('NORMAL', isMaintenance)
+  )
 
   // Then
-  assert.equal(result, running)
+  assert.deepEqual(results, [true, true])
 })
 
-test('実行中のジョブがない場合はnullを返すこと', () => {
+test('大型アップデートはメンテナンス中だけ選択できること', () => {
   // Given
-  const jobs = [createJob(), createJob({ id: 'failed', status: 'FAILED' })]
+  const maintenanceStates = [true, false]
 
   // When
-  const result = findRunningSongBatchJob(jobs)
+  const results = maintenanceStates.map((isMaintenance) =>
+    isSongBatchModeAvailable('MAJOR_UPDATE', isMaintenance)
+  )
 
   // Then
-  assert.equal(result, null)
+  assert.deepEqual(results, [true, false])
 })
 
-test('通常実行は確認文言なしで実行できること', () => {
+test('大型アップデートだけ確認後の待機時間を設けること', () => {
   // Given
-  const input = ''
+  const modes = ['NORMAL', 'MAJOR_UPDATE'] as const
 
   // When
-  const result = isSongBatchConfirmationSatisfied('NORMAL', input)
+  const results = modes.map((mode) => getSongBatchConfirmationDelaySeconds(mode))
 
   // Then
-  assert.equal(result, true)
-})
-
-test('大型アップデートは確認文言が一致した場合だけ実行できること', () => {
-  // Given
-  const inputs = ['', '大型', ' 大型アップデート ', '大型アップデート']
-
-  // When
-  const results = inputs.map((input) => isSongBatchConfirmationSatisfied('MAJOR_UPDATE', input))
-
-  // Then
-  assert.deepEqual(results, [false, false, true, true])
-})
-
-test('所要時間を分と秒で表示すること', () => {
-  // Given
-  const job = createJob({ started_at: '2026-09-26T03:00:00Z', finished_at: '2026-09-26T03:03:10Z' })
-
-  // When
-  const result = formatSongBatchDuration(job)
-
-  // Then
-  assert.equal(result, '3分10秒')
-})
-
-test('1分未満の所要時間は秒だけで表示すること', () => {
-  // Given
-  const job = createJob({ started_at: '2026-09-26T03:00:00Z', finished_at: '2026-09-26T03:00:42Z' })
-
-  // When
-  const result = formatSongBatchDuration(job)
-
-  // Then
-  assert.equal(result, '42秒')
-})
-
-test('終了していないジョブや不正な日時の所要時間はnullを返すこと', () => {
-  // Given
-  const jobs = [
-    createJob({ status: 'RUNNING', finished_at: null }),
-    createJob({ finished_at: 'not-a-date' }),
-    createJob({ started_at: '2026-09-26T03:00:10Z', finished_at: '2026-09-26T03:00:00Z' }),
-  ]
-
-  // When
-  const results = jobs.map((job) => formatSongBatchDuration(job))
-
-  // Then
-  assert.deepEqual(results, [null, null, null])
-})
-
-test('ジョブの状態を表示用の色調へ変換すること', () => {
-  // Given
-  const statuses = [
-    'RUNNING',
-    'SUCCEEDED',
-    'SUCCEEDED_WITH_WARNINGS',
-    'FAILED',
-    'INTERRUPTED',
-  ] as const
-
-  // When
-  const results = statuses.map((status) => resolveSongBatchStatusTone(status))
-
-  // Then
-  assert.deepEqual(results, ['info', 'success', 'warning', 'danger', 'danger'])
+  assert.deepEqual(results, [0, SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_DELAY_SECONDS])
 })
