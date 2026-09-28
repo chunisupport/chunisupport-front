@@ -1,4 +1,3 @@
-import { SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_PHRASE } from '../../constants/songBatch'
 import type { SongBatchJobStatus, SongBatchMode, SongBatchTrigger } from '../../types/api'
 
 /** 楽曲バッチ管理画面に表示する文言 */
@@ -17,7 +16,7 @@ export const ADMIN_SONG_BATCH_COPY = {
   emptyHistory: '実行履歴はありません',
   cancelButton: 'キャンセル',
   submitting: '送信中...',
-  confirmationInputLabel: `確認のため「${SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_PHRASE}」と入力`,
+  maintenanceOnly: 'メンテナンス中のみ選択可能',
   startSuccess: '楽曲バッチを開始しました。',
   startFailure: '楽曲バッチを開始できませんでした。',
   startedAt: '開始 (JST)',
@@ -27,6 +26,16 @@ export const ADMIN_SONG_BATCH_COPY = {
   fillMissingReleaseDateBadge: 'リリース日補完',
   deletedRequester: '削除済みユーザー',
 } as const
+
+/**
+ * 確認ダイアログの実行ボタンに、有効化までの残り秒数を付けた文言を返す。
+ *
+ * @param label - 実行ボタンの文言。
+ * @param remainingSeconds - 有効化までの残り秒数。
+ * @returns 残り秒数がある場合は「文言 (秒数)」、ない場合は文言のみ。
+ */
+export const formatSongBatchConfirmLabel = (label: string, remainingSeconds: number): string =>
+  remainingSeconds > 0 ? `${label} (${remainingSeconds})` : label
 
 /** 実行モードの表示名 */
 export const SONG_BATCH_MODE_LABELS: Record<SongBatchMode, string> = {

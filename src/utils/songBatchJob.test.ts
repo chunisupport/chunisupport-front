@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_DELAY_SECONDS } from '../constants/songBatch'
 import type { SongBatchJobDTO } from '../types/api'
 import {
   findRunningSongBatchJob,
   formatSongBatchDuration,
-  isSongBatchConfirmationSatisfied,
+  getSongBatchConfirmationDelaySeconds,
+  isSongBatchModeAvailable,
   resolveSongBatchStatusTone,
 } from './songBatchJob'
 
@@ -51,26 +53,41 @@ test('実行中のジョブがない場合はnullを返すこと', () => {
   assert.equal(result, null)
 })
 
-test('通常実行は確認文言なしで実行できること', () => {
+test('通常実行はメンテナンス状態に関わらず選択できること', () => {
   // Given
-  const input = ''
+  const maintenanceStates = [true, false]
 
   // When
-  const result = isSongBatchConfirmationSatisfied('NORMAL', input)
+  const results = maintenanceStates.map((isMaintenance) =>
+    isSongBatchModeAvailable('NORMAL', isMaintenance)
+  )
 
   // Then
-  assert.equal(result, true)
+  assert.deepEqual(results, [true, true])
 })
 
-test('大型アップデートは確認文言が一致した場合だけ実行できること', () => {
+test('大型アップデートはメンテナンス中だけ選択できること', () => {
   // Given
-  const inputs = ['', '大型', ' 大型アップデート ', '大型アップデート']
+  const maintenanceStates = [true, false]
 
   // When
-  const results = inputs.map((input) => isSongBatchConfirmationSatisfied('MAJOR_UPDATE', input))
+  const results = maintenanceStates.map((isMaintenance) =>
+    isSongBatchModeAvailable('MAJOR_UPDATE', isMaintenance)
+  )
 
   // Then
-  assert.deepEqual(results, [false, false, true, true])
+  assert.deepEqual(results, [true, false])
+})
+
+test('大型アップデートだけ確認後の待機時間を設けること', () => {
+  // Given
+  const modes = ['NORMAL', 'MAJOR_UPDATE'] as const
+
+  // When
+  const results = modes.map((mode) => getSongBatchConfirmationDelaySeconds(mode))
+
+  // Then
+  assert.deepEqual(results, [0, SONG_BATCH_MAJOR_UPDATE_CONFIRMATION_DELAY_SECONDS])
 })
 
 test('所要時間を分と秒で表示すること', () => {

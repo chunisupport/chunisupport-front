@@ -123,7 +123,7 @@ const SELECTABLE_CARD_RADIO_CONTROL_CLASS =
 const SELECTABLE_CARD_RADIO_INDICATOR_CLASS = 'h-2.5 w-2.5 rounded-full bg-action-primary'
 
 const SELECTABLE_CARD_LABEL_CLASS =
-  'absolute inset-0 cursor-pointer rounded-lg focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring'
+  'absolute inset-0 cursor-pointer rounded-lg data-[disabled]:cursor-not-allowed focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring'
 
 /**
  * 選択式カード UI に適用する Tailwind クラスを返す。

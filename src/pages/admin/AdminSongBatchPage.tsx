@@ -1,5 +1,4 @@
 import { RadioGroup } from '@kobalte/core/radio-group'
-import { TextField } from '@kobalte/core/text-field'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
 import {
   CircleCheck,
@@ -10,32 +9,47 @@ import {
   Terminal,
   TriangleAlert,
   UserRound,
+  Wrench,
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
-import { createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  onCleanup,
+  onMount,
+  Show,
+  Switch,
+  untrack,
+} from 'solid-js'
 import { startSongBatchJob } from '../../api/songBatch'
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
-import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../components/common/filterStyles'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { ADMIN_SONG_BATCH_PAGE_TITLE } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { songBatchJobsQueryOptions, songBatchQueryKeys } from '../../queries/songBatch'
+import { availability } from '../../stores/availability'
 import type { SongBatchJobDTO, SongBatchJobStatus, SongBatchMode } from '../../types/api'
+import { refreshAvailability } from '../../usecases/availability/refreshAvailability'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { formatJstDateTime } from '../../utils/jstDateTime'
 import {
   findRunningSongBatchJob,
   formatSongBatchDuration,
-  isSongBatchConfirmationSatisfied,
+  getSongBatchConfirmationDelaySeconds,
+  isSongBatchModeAvailable,
   resolveSongBatchStatusTone,
   type SongBatchStatusTone,
 } from '../../utils/songBatchJob'
 import {
   ADMIN_SONG_BATCH_COPY,
+  formatSongBatchConfirmLabel,
   SONG_BATCH_CONFIRMATION_COPY,
   SONG_BATCH_MODE_LABELS,
   SONG_BATCH_MODE_OPTIONS,
@@ -53,8 +67,8 @@ const STATUS_TONE_CLASS: Record<SongBatchStatusTone, string> = {
 
 const STATUS_ICON_CLASS = 'h-4 w-4 shrink-0'
 
-/** 確認文言の入力欄。スマートフォンでの自動ズームを避けるため文字サイズを16pxにする */
-const CONFIRMATION_INPUT_CLASS = `mt-2 w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-base text-text hover:border-input-border-hover ${FILTER_DIALOG_FIELD_FOCUS_CLASS}`
+/** 確認ダイアログの待機秒数を減らす間隔（ミリ秒） */
+const CONFIRMATION_COUNTDOWN_INTERVAL_MS = 1_000
 
 /**
  * RadioGroup から受け取った値が実行モードかどうか判定する。
@@ -189,9 +203,10 @@ const AdminSongBatchPage = (): JSX.Element => {
   const [mode, setMode] = createSignal<SongBatchMode>('NORMAL')
   const [fillMissingReleaseDate, setFillMissingReleaseDate] = createSignal(true)
   const [confirmationOpen, setConfirmationOpen] = createSignal(false)
-  const [confirmationInput, setConfirmationInput] = createSignal('')
+  const [confirmationWaitSeconds, setConfirmationWaitSeconds] = createSignal(0)
   const [actionError, setActionError] = createSignal('')
 
+  const isMaintenance = createMemo(() => availability.state.kind === 'maintenance')
   const runningJob = createMemo(() => findRunningSongBatchJob(jobsQuery.data ?? []))
   // 実行中かどうか分からない間は実行させず、サーバー側の排他だけに頼らない
   const isRunDisabled = createMemo(
@@ -199,6 +214,32 @@ const AdminSongBatchPage = (): JSX.Element => {
   )
   const confirmationCopy = createMemo(() => SONG_BATCH_CONFIRMATION_COPY[mode()])
   const runVariant = createMemo(() => (mode() === 'MAJOR_UPDATE' ? 'danger' : 'primary'))
+  const isConfirmDisabled = createMemo(
+    () => confirmationWaitSeconds() > 0 || !isSongBatchModeAvailable(mode(), isMaintenance())
+  )
+
+  // 表示中のメンテナンス状態が古いまま大型アップデートを選べないよう、開いた時点で再確認する
+  onMount(() => {
+    void refreshAvailability()
+  })
+
+  // メンテナンスが終了したら大型アップデートの選択と確認を取り消す
+  createEffect(() => {
+    if (isSongBatchModeAvailable(mode(), isMaintenance())) return
+    setConfirmationOpen(false)
+    setMode('NORMAL')
+  })
+
+  // 確認ダイアログを開いている間だけ、実行ボタンを有効化するまでの秒数を数える
+  createEffect(() => {
+    if (!confirmationOpen()) return
+
+    setConfirmationWaitSeconds(getSongBatchConfirmationDelaySeconds(untrack(mode)))
+    const intervalId = window.setInterval(() => {
+      setConfirmationWaitSeconds((seconds) => Math.max(0, seconds - 1))
+    }, CONFIRMATION_COUNTDOWN_INTERVAL_MS)
+    onCleanup(() => window.clearInterval(intervalId))
+  })
 
   /**
    * 確認ダイアログを開く。表示中は実行条件を変更できないため、確定時の値をそのまま送信する。
@@ -211,7 +252,6 @@ const AdminSongBatchPage = (): JSX.Element => {
     if (isRunDisabled()) return
 
     setActionError('')
-    setConfirmationInput('')
     setConfirmationOpen(true)
   }
 
@@ -221,9 +261,7 @@ const AdminSongBatchPage = (): JSX.Element => {
    * @returns なし。
    */
   const handleConfirm = (): void => {
-    if (startMutation.isPending || !isSongBatchConfirmationSatisfied(mode(), confirmationInput())) {
-      return
-    }
+    if (startMutation.isPending || isConfirmDisabled()) return
 
     startMutation.mutate(
       { mode: mode(), fill_missing_release_date: fillMissingReleaseDate() },
@@ -270,10 +308,18 @@ const AdminSongBatchPage = (): JSX.Element => {
                   title={option.label}
                   description={option.description}
                   ariaLabel={option.label}
+                  disabled={!isSongBatchModeAvailable(option.value, isMaintenance())}
                   danger={option.value === 'MAJOR_UPDATE'}
                   density="compact"
                   class="rounded-md py-3"
-                />
+                >
+                  <Show when={!isSongBatchModeAvailable(option.value, isMaintenance())}>
+                    <span title={ADMIN_SONG_BATCH_COPY.maintenanceOnly}>
+                      <Wrench class={STATUS_ICON_CLASS} aria-hidden="true" />
+                      <span class="sr-only">{ADMIN_SONG_BATCH_COPY.maintenanceOnly}</span>
+                    </span>
+                  </Show>
+                </SelectableCardItem>
               )}
             </For>
           </div>
@@ -368,27 +414,16 @@ const AdminSongBatchPage = (): JSX.Element => {
         confirmLabel={
           startMutation.isPending
             ? ADMIN_SONG_BATCH_COPY.submitting
-            : confirmationCopy().confirmButton
+            : formatSongBatchConfirmLabel(
+                confirmationCopy().confirmButton,
+                confirmationWaitSeconds()
+              )
         }
         confirmVariant={runVariant()}
         pending={startMutation.isPending}
-        confirmDisabled={!isSongBatchConfirmationSatisfied(mode(), confirmationInput())}
+        confirmDisabled={isConfirmDisabled()}
         onConfirm={handleConfirm}
-      >
-        <Show when={mode() === 'MAJOR_UPDATE'}>
-          <TextField
-            class="mt-4"
-            value={confirmationInput()}
-            onChange={setConfirmationInput}
-            disabled={startMutation.isPending}
-          >
-            <TextField.Label class="block text-sm font-medium text-text-muted">
-              {ADMIN_SONG_BATCH_COPY.confirmationInputLabel}
-            </TextField.Label>
-            <TextField.Input autocomplete="off" class={CONFIRMATION_INPUT_CLASS} />
-          </TextField>
-        </Show>
-      </AppConfirmDialog>
+      />
     </div>
   )
 }
