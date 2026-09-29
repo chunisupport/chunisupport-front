@@ -443,10 +443,12 @@ const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/master`)
   const raw = (await response.json()) as Omit<
     MasterDataDTO,
-    'achievement_types' | 'possessions'
+    'achievement_types' | 'possessions' | 'class_emblems' | 'class_emblem_bases'
   > & {
     achievement_types?: unknown[]
     possessions?: MasterItemDTO[]
+    class_emblems?: MasterItemDTO[]
+    class_emblem_bases?: MasterItemDTO[]
   }
 
   const achievementTypes: AchievementTypeDTO[] = (raw.achievement_types ?? [])
@@ -490,6 +492,8 @@ const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
     ...raw,
     genres: sortMasterItemsBySortOrder(raw.genres ?? []),
     possessions: sortMasterItemsBySortOrder(raw.possessions ?? []),
+    class_emblems: sortMasterItemsBySortOrder(raw.class_emblems ?? []),
+    class_emblem_bases: sortMasterItemsBySortOrder(raw.class_emblem_bases ?? []),
     achievement_types: achievementTypes,
   }
 }

@@ -13,8 +13,14 @@ import {
   onMount,
   Show,
 } from 'solid-js'
+import { fetchClassEmblems } from '../../../../api/classEmblems'
 import { fetchPossessions } from '../../../../api/possessions'
 import { getAppButtonClass } from '../../../../components/common/AppButton'
+import {
+  CLASS_EMBLEM_ALT,
+  CLASS_EMBLEM_BASE_IMAGE_URLS,
+  CLASS_EMBLEM_IMAGE_URLS,
+} from '../../../../constants/classEmblem'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
 import { getPossessionClassName } from '../../../../constants/possession'
 import { useSongsData } from '../../../../stores/songsData'
@@ -25,6 +31,7 @@ import type {
   PossessionName,
   UserRatingDTO,
 } from '../../../../types/api'
+import { resolveClassEmblemName } from '../../../../utils/classEmblem'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import { resolvePossessionName } from '../../../../utils/possession'
 import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
@@ -232,6 +239,10 @@ export const UserNameplate: Component<Props> = (props) => {
     () => (props.possessionName == null ? true : undefined),
     () => fetchPossessions()
   )
+  const [classEmblemMasters] = createResource(
+    () => (props.playerInfo.class_emblem_id == null ? undefined : true),
+    () => fetchClassEmblems()
+  )
 
   createEffect(() => {
     if (props.records) ensureSongsLoaded()
@@ -242,6 +253,22 @@ export const UserNameplate: Component<Props> = (props) => {
       props.possessionName ??
       resolvePossessionName(props.playerInfo.possession_id, possessions() ?? [])
   )
+  /** 名前の横に表示するクラスエンブレム本体の画像URL。未取得・未解決時は undefined */
+  const classEmblemUrl = createMemo(() => {
+    const name = resolveClassEmblemName(
+      props.playerInfo.class_emblem_id,
+      classEmblemMasters()?.emblems ?? []
+    )
+    return name == null ? undefined : CLASS_EMBLEM_IMAGE_URLS[name]
+  })
+  /** クラスエンブレムの台座の画像URL。未設定・未解決時は undefined */
+  const classEmblemBaseUrl = createMemo(() => {
+    const name = resolveClassEmblemName(
+      props.playerInfo.class_emblem_base_id,
+      classEmblemMasters()?.bases ?? []
+    )
+    return name == null ? undefined : CLASS_EMBLEM_BASE_IMAGE_URLS[name]
+  })
   const playerRatingText = createMemo(() => formatNullablePlayerRating(props.rating.rating))
   const bestRatingText = createMemo(() => formatNullablePlayerRating(props.rating.best_average))
   const newRatingText = createMemo(() => formatNullablePlayerRating(props.rating.new_average))
@@ -352,7 +379,25 @@ export const UserNameplate: Component<Props> = (props) => {
       </Show>
       <div class="mb-2 flex flex-row items-end justify-between">
         <p class="">Lv. {props.playerInfo.level}</p>
-        <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>
+        <div class="flex min-w-0 flex-1 items-center justify-center gap-2">
+          <h1 class="min-w-0 text-xl font-medium text-center">{props.playerInfo.name}</h1>
+          <Show when={classEmblemUrl()}>
+            {(emblemUrl) => (
+              <span class="relative inline-block h-6 w-12 shrink-0">
+                <Show when={classEmblemBaseUrl()}>
+                  {(baseUrl) => (
+                    <img src={baseUrl()} alt="" class="absolute inset-0 h-full w-full" />
+                  )}
+                </Show>
+                <img
+                  src={emblemUrl()}
+                  alt={CLASS_EMBLEM_ALT}
+                  class="absolute inset-0 h-full w-full"
+                />
+              </span>
+            )}
+          </Show>
+        </div>
       </div>
       <hr class="mb-2 border-t" />
       <dl class="space-y-2">

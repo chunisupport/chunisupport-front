@@ -759,6 +759,10 @@ export interface MasterDataDTO {
   achievement_types: AchievementTypeDTO[]
   /** ポゼッション一覧（ID順）。`PlayerDTO.possession_id` の解決に使用する */
   possessions: MasterItemDTO[]
+  /** クラスエンブレム一覧（ID順）。`PlayerDTO.class_emblem_id` の解決に使用する。旧レスポンスでは未返却 */
+  class_emblems?: MasterItemDTO[]
+  /** クラスエンブレム台座一覧（ID順）。`PlayerDTO.class_emblem_base_id` の解決に使用する */
+  class_emblem_bases?: MasterItemDTO[]
 }
 
 export interface VersionDTO {
