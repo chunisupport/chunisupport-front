@@ -20,7 +20,6 @@ import {
   For,
   Show,
 } from 'solid-js'
-import { fetchMe } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import {
@@ -30,15 +29,17 @@ import {
 } from '../../../components/common/AppTabs'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
+import { HeatmapCountCell } from '../../../components/common/HeatmapCountCell'
+import {
+  PLAYER_STATS_ACHIEVEMENT_LABEL,
+  PLAYER_STATS_HEATMAP_AXIS_OPTIONS,
+  type PlayerStatsHeatmapAxis,
+} from '../../../constants/playerStats'
 import { buildSongDetailPath, DASHBOARD_PATH } from '../../../constants/routes'
 import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../../types/api'
-import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
-import {
-  fetchPlayerStatsChartMetadata,
-  type PlayerStatsChartMetadata,
-} from '../../../usecases/overpower/fetchTheoreticalTargetDifficulties'
+import type { PlayerRecordDTO } from '../../../types/api'
+import { fetchOwnPlayerStatsData } from '../../../usecases/playerStats/fetchOwnPlayerStatsData'
 import { formatChartConst } from '../../../utils/chartConstFormat'
 import { getConstDisplay } from '../../../utils/constDisplay'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
@@ -48,15 +49,12 @@ import {
   buildPlayerStatsLevelRows,
   buildPlayerStatsMilestone,
   buildPlayerStatsSummary,
-  calculatePlayerStatsPercent,
   filterPlayerStatsRecords,
   findPlayerStatsCandidates,
   isPlayerStatsFilterModified,
   type PlayerStatsCandidate,
   type PlayerStatsCandidateTarget,
   type PlayerStatsChartConstantRow,
-  type PlayerStatsHeatmapRow,
-  type PlayerStatsLevelAchievement,
   type PlayerStatsLevelRow,
   type PlayerStatsNotesBySongId,
   type PlayerStatsSummary,
@@ -65,30 +63,16 @@ import { formatScoreDifference } from '../../../utils/scoreDifference'
 import { getScoreRank } from '../../../utils/scoreRank'
 import {
   PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS,
-  PLAYER_STATS_ACHIEVEMENT_LABEL,
   PLAYER_STATS_ACHIEVEMENTS,
   PLAYER_STATS_CANDIDATE_LIMIT,
   PLAYER_STATS_CANDIDATE_OPTIONS,
   PLAYER_STATS_COPY,
   PLAYER_STATS_DEFAULT_DIFFICULTY,
-  PLAYER_STATS_HEATMAP_AXIS_OPTIONS,
-  PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT,
   PLAYER_STATS_HEATMAP_METRICS,
   PLAYER_STATS_MILESTONE_OPTIONS,
   type PlayerStatsAchievementGroup,
-  type PlayerStatsHeatmapAxis,
 } from './constants'
 import { PlayerStatsFilterDialog, type PlayerStatsFilterState } from './PlayerStatsFilterDialog'
-
-/** 統計画面の表示に必要なログインユーザーのレコード情報 */
-type PlayerStatsPageData = {
-  records: PlayerRecordDTO[]
-  targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
-  notesBySongId: PlayerStatsNotesBySongId
-  attributesBySongId: PlayerStatsChartMetadata['attributesBySongId']
-  genres: string[]
-  versions: string[]
-}
 
 /** 主要統計カード1件分の表示定義 */
 type SummaryCardDefinition = {
@@ -100,27 +84,6 @@ type SummaryCardDefinition = {
 
 /** 統計画面の各セクションに共通適用するカードクラス */
 const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5'
-
-/**
- * ログインユーザー本人の統計画面用レコードを取得する。
- *
- * @returns 未プレイを含む通常譜面レコードと譜面メタ情報。
- */
-const fetchPlayerStatsPageData = async (): Promise<PlayerStatsPageData> => {
-  const user = await fetchMe()
-  const [record, chartMetadata] = await Promise.all([
-    fetchUserRecordWithCache(user.username),
-    fetchPlayerStatsChartMetadata(),
-  ])
-  return {
-    records: record.standard,
-    targetDifficultyBySongId: chartMetadata.targetDifficultyBySongId,
-    notesBySongId: chartMetadata.notesBySongId,
-    attributesBySongId: chartMetadata.attributesBySongId,
-    genres: chartMetadata.genres,
-    versions: chartMetadata.versions,
-  }
-}
 
 /**
  * サマリー値をカード表示用の定義へ変換する。
@@ -285,51 +248,6 @@ const AchievementSection = (props: { records: PlayerRecordDTO[] }): JSX.Element 
 }
 
 /**
- * ヒートマップセルのテーマ連動背景色を生成する。
- *
- * @param count - 達成件数。
- * @param total - レベル内の全譜面数。
- * @returns color-mixを使った背景色。
- */
-const getHeatmapBackground = (count: number, total: number): string => {
-  const percent = total > 0 ? count / total : 0
-  const mixPercent = Math.round(percent * PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT)
-  return `color-mix(in srgb, var(--cs-color-action-primary) ${mixPercent}%, var(--cs-color-surface))`
-}
-
-/**
- * 達成率分布行の達成セルを件数または達成率の2段表示へ整形する。
- *
- * @param props.row - 表示する達成率分布行。
- * @param props.metric - 表示する到達条件。
- * @param props.showPercent - 上段を達成率で表示するか。
- * @returns 色の濃淡と件数または達成率を併用した表セル。
- */
-const HeatmapCell = (props: {
-  row: PlayerStatsHeatmapRow
-  metric: PlayerStatsLevelAchievement
-  showPercent: boolean
-}): JSX.Element => {
-  const count = () => props.row[props.metric]
-  const percent = () => calculatePlayerStatsPercent(count(), props.row.total)
-  return (
-    <td
-      class="min-w-16 border-l border-border px-2 py-1.5 text-center"
-      style={{ background: getHeatmapBackground(count(), props.row.total) }}
-    >
-      <span class="block font-jost text-sm font-semibold leading-tight tabular-nums text-text">
-        {props.showPercent ? `${formatTruncatedFixed(percent(), 2)}%` : formatInteger(count())}
-      </span>
-      <span class="block font-jost text-xs leading-tight tabular-nums text-text-muted">
-        <Show when={props.showPercent}>{formatInteger(count())}</Show>
-        {PLAYER_STATS_COPY.heatmapCountSeparator}
-        {formatInteger(props.row.total)}
-      </span>
-    </td>
-  )
-}
-
-/**
  * 選択した集計軸ごとの達成率を表形式で表示する。
  *
  * @param props.group - RANK、COMBO、HARDのいずれか。
@@ -373,7 +291,11 @@ const HeatmapTable = (props: {
               </th>
               <For each={props.rows}>
                 {(row) => (
-                  <HeatmapCell row={row} metric={metric.key} showPercent={props.showPercent} />
+                  <HeatmapCountCell
+                    count={row[metric.key]}
+                    total={row.total}
+                    showPercent={props.showPercent}
+                  />
                 )}
               </For>
             </tr>
@@ -689,7 +611,7 @@ const PlayerStatsDashboardPage: Component = () => {
     versions: [],
   })
   const [filterOpen, setFilterOpen] = createSignal(false)
-  const [pageData] = createResource(fetchPlayerStatsPageData)
+  const [pageData] = createResource(fetchOwnPlayerStatsData)
   let filterInitialized = false
 
   createEffect(() => {
