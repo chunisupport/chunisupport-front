@@ -11,6 +11,7 @@ import {
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
+  UNI_FILL_MATRIX_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
@@ -29,6 +30,7 @@ export type ToolLinkIcon =
   | 'list'
   | 'discover'
   | 'friendVs'
+  | 'matrix'
 
 /**
  * 無効化されたツールカードに表示する状態ラベル。
@@ -110,6 +112,13 @@ export const TOOL_LINKS: ToolLink[] = [
     href: DASHBOARD_PATH,
     icon: 'chart',
     description: 'プレイ記録から達成状況と次に狙う譜面を確認できます。',
+  },
+  {
+    title: 'ウニ埋めマトリクス',
+    href: UNI_FILL_MATRIX_PATH,
+    icon: 'matrix',
+    description: 'ジャンル×レベルごとに、何譜面埋め終わっているかをヒートマップで確認できます。',
+    adminOnly: true,
   },
   {
     title: 'フレンドVS',

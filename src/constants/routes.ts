@@ -35,6 +35,8 @@ export const BEST_SLOT_RANKING_PATH = `${TOOLS_PATH}/best-slot-ranking`
 export const ALL_SONG_BEST_FRAME_PATH = `${TOOLS_PATH}/all-song-best-frame`
 /** ダッシュボード画面のパス */
 export const DASHBOARD_PATH = `${TOOLS_PATH}/dashboard`
+/** ウニ埋めマトリクス画面のパス */
+export const UNI_FILL_MATRIX_PATH = `${TOOLS_PATH}/uni-fill-matrix`
 /** EDITOR向け編集メニューのパス */
 export const EDITOR_PATH = '/editor'
 /** EDITOR向け楽曲編集画面のパス */

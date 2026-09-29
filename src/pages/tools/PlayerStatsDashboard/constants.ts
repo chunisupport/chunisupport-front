@@ -72,21 +72,12 @@ export const PLAYER_STATS_DEFAULT_DIFFICULTY: PlayerStatsDifficulty = MASTER_ULT
 /** 達成状況タブの種別 */
 export type PlayerStatsAchievementGroup = 'rank' | 'combo' | 'hard'
 
-/** 達成率分布の集計軸 */
-export type PlayerStatsHeatmapAxis = 'level' | 'chartConstant'
-
 /** 達成状況タブの表示選択肢 */
 export const PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS = [
   { value: 'rank', label: 'RANK' },
   { value: 'combo', label: 'COMBO' },
   { value: 'hard', label: 'HARD' },
 ] as const
-
-/** 達成率分布の集計軸サブタブ */
-export const PLAYER_STATS_HEATMAP_AXIS_OPTIONS = [
-  { value: 'level', label: 'レベル別' },
-  { value: 'chartConstant', label: '譜面定数別' },
-] as const satisfies readonly { value: PlayerStatsHeatmapAxis; label: string }[]
 
 /** 達成状況タブごとの累計到達条件 */
 export const PLAYER_STATS_ACHIEVEMENTS: Record<
@@ -96,26 +87,6 @@ export const PLAYER_STATS_ACHIEVEMENTS: Record<
   rank: ['s', 'sPlus', 'ss', 'ssPlus', 'sss', 'sssPlus', 'max'],
   combo: ['played', 'fc', 'aj', 'max'],
   hard: ['played', 'clear', 'hard', 'brave', 'absolute', 'catastrophe'],
-}
-
-/** 累計到達条件の表示名 */
-export const PLAYER_STATS_ACHIEVEMENT_LABEL: Record<PlayerStatsAchievement, string> = {
-  played: 'プレイ済み',
-  s: 'S',
-  sPlus: 'S+',
-  ss: 'SS',
-  ssPlus: 'SS+',
-  sss: 'SSS',
-  sssPlus: 'SSS+',
-  fc: 'FULL COMBO',
-  aj: 'ALL JUSTICE',
-  ajc: 'ALL JUSTICE CRITICAL',
-  max: 'MAX',
-  clear: 'CLEAR',
-  hard: 'HARD',
-  brave: 'BRAVE',
-  absolute: 'ABSOLUTE',
-  catastrophe: 'CATASTROPHY',
 }
 
 /** 次のマイルストーンの表示選択肢 */
@@ -136,9 +107,6 @@ export const PLAYER_STATS_CANDIDATE_OPTIONS = [
 
 /** 候補リストに表示する最大譜面数 */
 export const PLAYER_STATS_CANDIDATE_LIMIT = 15
-
-/** ヒートマップ背景色へ混ぜるアクセント色の最大割合 */
-export const PLAYER_STATS_HEATMAP_MAX_MIX_PERCENT = 55
 
 /** 達成率分布の行定義 */
 export const PLAYER_STATS_HEATMAP_METRICS: Record<
