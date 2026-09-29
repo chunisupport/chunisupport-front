@@ -1,8 +1,10 @@
+import { Collapsible } from '@kobalte/core/collapsible'
 import { A } from '@solidjs/router'
 import { Gauge, TrendingUp, TriangleAlert } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, For, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
+import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
@@ -23,6 +25,7 @@ import type {
 } from '../../utils/newSongTheoreticalRating'
 import {
   calculateRatingTheoreticalGap,
+  prioritizeBoundaryEntries,
   resolveRatingTheoreticalProgress,
 } from '../../utils/newSongTheoreticalRating'
 import { formatInteger } from '../../utils/numberFormat'
@@ -176,14 +179,26 @@ const resolveChartProgressDisplay = (
 }
 
 /**
+ * 理論値対象譜面のレコードがSSS+に到達しているか判定する。
+ *
+ * @param entry - 理論値対象譜面。
+ * @param records - 照合に使う全通常譜面レコード。
+ * @returns SSS+到達済みならtrue。
+ */
+const isSssPlusAchievedEntry = (
+  entry: RatingTheoreticalEntry,
+  records: readonly PlayerRecordDTO[]
+): boolean => resolveChartProgressDisplay(entry, records)?.scoreRank === 'SSS+'
+
+/**
  * 理論値対象譜面の1行を表示する。SSS+達成済みなら背景をハイライトする。
  *
- * @param props - 対象譜面、順位、全通常譜面レコード。
+ * @param props - 対象譜面、表示順位、全通常譜面レコード。
  * @returns 楽曲詳細へ遷移できる一覧行。
  */
 const TheoreticalChartRow: Component<{
   entry: RatingTheoreticalEntry
-  index: number
+  rank: number
   records: readonly PlayerRecordDTO[]
 }> = (props) => {
   const progress = createMemo(() => resolveChartProgressDisplay(props.entry, props.records))
@@ -200,7 +215,7 @@ const TheoreticalChartRow: Component<{
         }}
       >
         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-muted font-oswald text-lg font-bold text-text-muted">
-          {props.index + 1}
+          {props.rank}
         </span>
         <RecordDifficultyBadge difficulty={props.entry.difficulty} />
         <span class="min-w-0 font-sans">
@@ -244,7 +259,7 @@ const TheoreticalChartRow: Component<{
 /**
  * 全譜面SSS+時にレーティング枠へ採用される譜面を単曲レーティング順に表示する。
  *
- * @param props - SSS+時に採用される譜面一覧と全通常譜面レコード。
+ * @param props - 一覧見出し、SSS+時に採用される譜面一覧、全通常譜面レコード。
  * @returns 楽曲詳細へ遷移できる常時表示の一覧。
  */
 const TheoreticalChartList: Component<{
@@ -263,7 +278,7 @@ const TheoreticalChartList: Component<{
     <ol class="divide-y divide-border border-t border-border">
       <For each={props.entries}>
         {(entry, index) => (
-          <TheoreticalChartRow entry={entry} index={index()} records={props.records} />
+          <TheoreticalChartRow entry={entry} rank={index() + 1} records={props.records} />
         )}
       </For>
     </ol>
@@ -271,10 +286,45 @@ const TheoreticalChartList: Component<{
 )
 
 /**
+ * 下限定数で規定枠数から溢れた譜面を、既定で折りたたまれた独立カードに表示する。
+ *
+ * @param props - 下限定数の枠外譜面一覧、全行に表示する下限順位、全通常譜面レコード。
+ * @returns 開閉できる枠外譜面一覧のカード。
+ */
+const BoundaryChartList: Component<{
+  entries: RatingTheoretical['boundaryEntries']
+  rank: number
+  records: readonly PlayerRecordDTO[]
+}> = (props) => (
+  <Collapsible class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+    <AppDisclosureTrigger
+      class="py-2 font-sans focus-visible:ring-inset"
+      label={NEW_SONG_SSS_PLUS_COPY.boundaryDetailsLabel}
+      labelClass="font-semibold text-text"
+      summary={`${props.entries.length}${NEW_SONG_SSS_PLUS_COPY.chartCountSuffix}`}
+    />
+    <Collapsible.Content>
+      <ol
+        class="divide-y divide-border border-t border-border"
+        aria-label={NEW_SONG_SSS_PLUS_COPY.boundaryDetailsLabel}
+      >
+        <For each={props.entries}>
+          {(entry) => (
+            <TheoreticalChartRow entry={entry} rank={props.rank} records={props.records} />
+          )}
+        </For>
+      </ol>
+    </Collapsible.Content>
+  </Collapsible>
+)
+
+/**
  * レーティング枠の全譜面SSS+時レーティングと現在値からの差を表示する。
  *
+ * 一覧見出しがある場合は、下限定数の譜面をSSS+達成済み優先で並べ替え、枠外譜面を別カードに表示する。
+ *
  * @param props - 現在値、SSS+時レーティング、現在レコード、楽曲データの取得状態。
- * @returns レーティング枠の理論値サマリー。
+ * @returns レーティング枠の理論値サマリーと、下限定数の枠外譜面カード。
  */
 const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (props) => {
   const ratingGap = () =>
@@ -285,73 +335,93 @@ const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (prop
     const gap = ratingGap()
     return gap === undefined ? NEW_SONG_SSS_PLUS_COPY.emptyValue : formatPlayerRating(gap)
   }
+  /** 下限定数の譜面をSSS+達成済み優先で振り分けた採用譜面と枠外譜面 */
+  const prioritized = createMemo(() =>
+    props.theoreticalRating && props.detailsLabel
+      ? prioritizeBoundaryEntries(props.theoreticalRating, (entry) =>
+          isSssPlusAchievedEntry(entry, props.records)
+        )
+      : undefined
+  )
+  /** 取得完了後に表示する下限定数の枠外譜面 */
+  const boundaryEntries = () =>
+    !props.error && !props.loading ? prioritized()?.boundaryEntries : undefined
 
   return (
-    <section
-      class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
-      aria-label={props.ariaLabel}
-    >
-      <Show
-        when={!props.error}
-        fallback={
-          <div class="p-3">
-            <LoadError error={props.error} />
-          </div>
-        }
+    <div class="flex flex-col gap-3">
+      <section
+        class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
+        aria-label={props.ariaLabel}
       >
         <Show
-          when={!props.loading}
+          when={!props.error}
           fallback={
-            <div class="h-20 py-3">
-              <Loading size="inline" ariaLabel={NEW_SONG_SSS_PLUS_COPY.loadingLabel} />
+            <div class="p-3">
+              <LoadError error={props.error} />
             </div>
           }
         >
           <Show
-            when={props.theoreticalRating}
+            when={!props.loading}
             fallback={
-              <p class="px-3 py-4 text-center font-sans text-sm text-text-subtle">
-                {NEW_SONG_SSS_PLUS_COPY.noData}
-              </p>
+              <div class="h-20 py-3">
+                <Loading size="inline" ariaLabel={NEW_SONG_SSS_PLUS_COPY.loadingLabel} />
+              </div>
             }
           >
-            {(theoreticalRating) => (
-              <>
-                <div class="grid grid-cols-2 divide-x divide-border">
-                  <RatingMetric
-                    icon={<Gauge class="h-4 w-4" aria-hidden="true" />}
-                    label={NEW_SONG_SSS_PLUS_COPY.targetRating}
-                    unknown={theoreticalRating().hasUnknownChartConstants}
-                    value={formatPlayerRating(theoreticalRating().rating)}
-                  />
-                  <RatingMetric
-                    icon={<TrendingUp class="h-4 w-4" aria-hidden="true" />}
-                    label={NEW_SONG_SSS_PLUS_COPY.currentGap}
-                    unknown={theoreticalRating().hasUnknownChartConstants}
-                    value={formattedRatingGap()}
-                  />
-                </div>
-                <Show when={theoreticalRating().hasUnknownChartConstants}>
-                  <div class="flex items-center gap-2 border-t border-warning-border bg-warning-bg px-3 py-2 font-sans text-xs text-warning">
-                    <TriangleAlert class="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
-                  </div>
-                </Show>
-                <Show when={props.detailsLabel} keyed>
-                  {(detailsLabel) => (
-                    <TheoreticalChartList
-                      detailsLabel={detailsLabel}
-                      entries={theoreticalRating().entries}
-                      records={props.records}
+            <Show
+              when={props.theoreticalRating}
+              fallback={
+                <p class="px-3 py-4 text-center font-sans text-sm text-text-subtle">
+                  {NEW_SONG_SSS_PLUS_COPY.noData}
+                </p>
+              }
+            >
+              {(theoreticalRating) => (
+                <>
+                  <div class="grid grid-cols-2 divide-x divide-border">
+                    <RatingMetric
+                      icon={<Gauge class="h-4 w-4" aria-hidden="true" />}
+                      label={NEW_SONG_SSS_PLUS_COPY.targetRating}
+                      unknown={theoreticalRating().hasUnknownChartConstants}
+                      value={formatPlayerRating(theoreticalRating().rating)}
                     />
-                  )}
-                </Show>
-              </>
-            )}
+                    <RatingMetric
+                      icon={<TrendingUp class="h-4 w-4" aria-hidden="true" />}
+                      label={NEW_SONG_SSS_PLUS_COPY.currentGap}
+                      unknown={theoreticalRating().hasUnknownChartConstants}
+                      value={formattedRatingGap()}
+                    />
+                  </div>
+                  <Show when={theoreticalRating().hasUnknownChartConstants}>
+                    <div class="flex items-center gap-2 border-t border-warning-border bg-warning-bg px-3 py-2 font-sans text-xs text-warning">
+                      <TriangleAlert class="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
+                    </div>
+                  </Show>
+                  <Show when={props.detailsLabel} keyed>
+                    {(detailsLabel) => (
+                      <TheoreticalChartList
+                        detailsLabel={detailsLabel}
+                        entries={prioritized()?.entries ?? theoreticalRating().entries}
+                        records={props.records}
+                      />
+                    )}
+                  </Show>
+                </>
+              )}
+            </Show>
           </Show>
         </Show>
+      </section>
+      <Show when={boundaryEntries()?.length}>
+        <BoundaryChartList
+          entries={boundaryEntries() ?? []}
+          rank={prioritized()?.entries.length ?? 0}
+          records={props.records}
+        />
       </Show>
-    </section>
+    </div>
   )
 }
 

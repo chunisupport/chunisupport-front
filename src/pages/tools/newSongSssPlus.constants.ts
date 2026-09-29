@@ -11,6 +11,7 @@ export const NEW_SONG_SSS_PLUS_COPY = {
   unknownMarker: '?',
   bestDetailsLabel: 'ベスト枠理論値対象譜面',
   newDetailsLabel: '新曲枠理論値対象譜面',
+  boundaryDetailsLabel: '下限定数の枠外譜面',
   chartCountSuffix: '譜面',
   singleRatingLabel: '単曲RATING',
   chartConstantLabel: '譜面定数',

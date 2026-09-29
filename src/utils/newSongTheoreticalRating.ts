@@ -44,7 +44,15 @@ export type RatingTheoretical = {
   hasUnknownChartConstants: boolean
   /** 理論値へ採用された単曲レーティング降順の譜面一覧 */
   entries: RatingTheoreticalEntry[]
+  /** 採用譜面の下限と同じ譜面定数を持つが、規定枠数から溢れた譜面一覧 */
+  boundaryEntries: RatingTheoreticalEntry[]
 }
+
+/** 下限定数の譜面を優先表示順へ並べ替えた採用譜面と枠外譜面 */
+export type PrioritizedRatingTheoreticalEntries = Pick<
+  RatingTheoretical,
+  'entries' | 'boundaryEntries'
+>
 
 /** 理論値対象譜面に対応する現在レコードの所属 */
 export type RatingTheoreticalProgressSlot = 'current' | 'candidate'
@@ -112,6 +120,17 @@ const compareTheoreticalChartRating = (
 }
 
 /**
+ * 集計用の整数化レーティングを除き、表示用の理論値対象譜面へ変換する。
+ *
+ * @param chart - 集計用の理論単曲レーティング。
+ * @returns 表示用の理論値対象譜面。
+ */
+const toRatingTheoreticalEntry = ({
+  ratingHundredths: _ratingHundredths,
+  ...entry
+}: TheoreticalChartRating): RatingTheoreticalEntry => entry
+
+/**
  * バージョン一覧から基準日時点の現行バージョン稼働開始日を返す。
  *
  * @param versions - 稼働開始日を持つバージョン一覧。
@@ -154,7 +173,7 @@ const calculateTheoreticalRating = (
   songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'charts'>[],
   slotCount: number
 ): RatingTheoretical | undefined => {
-  const theoreticalRatings = songs
+  const sortedRatings = songs
     .flatMap((song) =>
       PLAYER_DATA_DIFFICULTIES.flatMap((difficulty) => {
         const chart = song.charts[difficulty]
@@ -162,9 +181,14 @@ const calculateTheoreticalRating = (
       })
     )
     .sort(compareTheoreticalChartRating)
-    .slice(0, slotCount)
+  const theoreticalRatings = sortedRatings.slice(0, slotCount)
 
   if (theoreticalRatings.length === 0) return undefined
+
+  const boundaryChartConstant = theoreticalRatings[theoreticalRatings.length - 1].chartConstant
+  const boundaryRatings = sortedRatings
+    .slice(slotCount)
+    .filter((chart) => chart.chartConstant === boundaryChartConstant)
 
   const totalRatingHundredths = theoreticalRatings.reduce(
     (total, chart) => total + chart.ratingHundredths,
@@ -177,7 +201,8 @@ const calculateTheoreticalRating = (
   return {
     rating: theoreticalRatingUnits / PLAYER_RATING_SCALE,
     hasUnknownChartConstants: theoreticalRatings.some((chart) => chart.isChartConstantUnknown),
-    entries: theoreticalRatings.map(({ ratingHundredths: _ratingHundredths, ...entry }) => entry),
+    entries: theoreticalRatings.map(toRatingTheoreticalEntry),
+    boundaryEntries: boundaryRatings.map(toRatingTheoreticalEntry),
   }
 }
 
@@ -260,6 +285,42 @@ export const calculateOverallTheoreticalRating = (
     rating: Math.round(totalUnits / entryCount) / PLAYER_RATING_SCALE,
     hasUnknownChartConstants: frames.some((frame) => frame.hasUnknownChartConstants),
     entries: frames.flatMap((frame) => frame.entries),
+    boundaryEntries: frames.flatMap((frame) => frame.boundaryEntries),
+  }
+}
+
+/**
+ * 採用譜面の下限定数と同じ譜面定数を持つ譜面のうち、条件を満たす譜面を採用枠側へ優先して並べ替える。
+ * 下限定数の譜面同士は理論単曲レーティングが同じため、入れ替えても理論値は変わらない。
+ *
+ * @param theoreticalRating - 採用譜面と下限定数の枠外譜面を持つ枠理論値。
+ * @param isPrioritized - 優先表示する譜面か判定する関数。
+ * @returns 採用譜面数を維持したまま、下限定数の譜面を優先順に振り分けた採用譜面と枠外譜面。
+ */
+export const prioritizeBoundaryEntries = (
+  theoreticalRating: PrioritizedRatingTheoreticalEntries,
+  isPrioritized: (entry: RatingTheoreticalEntry) => boolean
+): PrioritizedRatingTheoreticalEntries => {
+  const { entries, boundaryEntries } = theoreticalRating
+  if (boundaryEntries.length === 0) return { entries, boundaryEntries }
+
+  const boundaryChartConstant = boundaryEntries[0].chartConstant
+  const aboveBoundaryEntries = entries.filter(
+    (entry) => entry.chartConstant !== boundaryChartConstant
+  )
+  const boundaryPool = [
+    ...entries.filter((entry) => entry.chartConstant === boundaryChartConstant),
+    ...boundaryEntries,
+  ]
+  const orderedBoundaryPool = [
+    ...boundaryPool.filter(isPrioritized),
+    ...boundaryPool.filter((entry) => !isPrioritized(entry)),
+  ]
+  const adoptedBoundaryCount = entries.length - aboveBoundaryEntries.length
+
+  return {
+    entries: [...aboveBoundaryEntries, ...orderedBoundaryPool.slice(0, adoptedBoundaryCount)],
+    boundaryEntries: orderedBoundaryPool.slice(adoptedBoundaryCount),
   }
 }
 
