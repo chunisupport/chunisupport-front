@@ -1,6 +1,8 @@
+import { useNavigate } from '@solidjs/router'
 import { Grid3X3 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
+import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppSelect } from '../../../components/common/AppSelect'
 import { SegmentedToggleGroup } from '../../../components/common/AppTabs'
@@ -13,15 +15,29 @@ import {
 import { UNI_FILL_MATRIX_PATH } from '../../../constants/routes'
 import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
+import { authSession } from '../../../stores/authSession'
+import { publishStandardRecordFilter } from '../../../stores/standardRecordNavigation'
 import { fetchOwnPlayerStatsData } from '../../../usecases/playerStats/fetchOwnPlayerStatsData'
+import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { filterPlayerStatsRecords } from '../../../utils/playerStatsDashboard'
-import { buildUniFillMatrix, type UniFillMatrix } from '../../../utils/uniFillMatrix'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
+import {
+  buildUniFillMatrix,
+  buildUniFillMatrixRecordFilter,
+  type UniFillMatrix,
+  type UniFillMatrixCell,
+  type UniFillMatrixRecordTarget,
+} from '../../../utils/uniFillMatrix'
+import { buildUserProfilePagePath } from '../../../utils/userProfileRoute'
+import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
 import {
   UNI_FILL_MATRIX_ACHIEVEMENT_OPTIONS,
   UNI_FILL_MATRIX_COPY,
   UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT,
   UNI_FILL_MATRIX_DEFAULT_DIFFICULTY,
   UNI_FILL_MATRIX_DIFFICULTY_OPTIONS,
+  UNI_FILL_MATRIX_RECORD_SORT_QUERY,
   type UniFillMatrixAchievementOption,
   type UniFillMatrixDifficultyOption,
 } from './constants'
@@ -36,112 +52,165 @@ const STICKY_GENRE_CELL_CLASS =
 /** 合計行・合計列の文字を強調するクラス */
 const TOTAL_CELL_CLASS = 'font-semibold'
 
+/** レコード画面で絞り込むマスの位置。未指定の軸は絞り込まない */
+type UniFillMatrixCellTarget = Pick<UniFillMatrixRecordTarget, 'genre' | 'column'>
+
+/**
+ * 未達成の譜面が残っているマスか判定する。
+ *
+ * @param cell - 判定対象のマス。
+ * @returns 未達成の譜面が1件以上ある場合はtrue。
+ */
+const hasUnachievedCharts = (cell: UniFillMatrixCell): boolean => cell.count < cell.total
+
+/**
+ * マスの位置を含むスクリーンリーダー向けの操作文言を作る。
+ *
+ * @param target - 対象マスのジャンルと列。
+ * @returns ジャンル・列見出しと操作内容をつなげた文言。
+ */
+const toCellActionLabel = (target: UniFillMatrixCellTarget): string =>
+  [target.genre, target.column?.label, UNI_FILL_MATRIX_COPY.cellActionLabel]
+    .filter((part) => part !== undefined)
+    .join(' ')
+
 /**
  * ジャンル×横軸の達成状況をヒートマップ表で表示する。
  *
  * @param props.matrix - 集計済みのマトリクス。
  * @param props.caption - 表の読み上げ用説明。
  * @param props.showPercent - 上段を達成率で表示するか。
+ * @param props.onSelectCell - 未達成の譜面が残るマスをクリックしたときの処理。
  * @returns ジャンル列を固定した横スクロール可能なデータ表。
  */
 const UniFillMatrixTable = (props: {
   matrix: UniFillMatrix
   caption: string
   showPercent: boolean
-}): JSX.Element => (
-  <div class="overflow-x-auto rounded-lg border border-border">
-    <table class="w-full border-collapse">
-      <caption class="sr-only">{props.caption}</caption>
-      <thead class="text-xs text-text-muted">
-        <tr>
-          <th scope="col" class={`${STICKY_GENRE_CELL_CLASS} bg-surface-muted font-semibold`}>
-            {UNI_FILL_MATRIX_COPY.genreHeader}
-          </th>
-          <For each={props.matrix.columns}>
-            {(column) => (
-              <th
-                scope="col"
-                class="border-l border-border bg-surface-muted px-3 py-2 text-center font-jost font-semibold"
-              >
-                {column.label}
-              </th>
+  onSelectCell: (target: UniFillMatrixCellTarget) => void
+}): JSX.Element => {
+  /**
+   * 未達成の譜面が残るマスだけにクリック時の処理を割り当てる。
+   *
+   * @param cell - 対象のマス。
+   * @param target - レコード画面で絞り込むマスの位置。
+   * @returns HeatmapCountCell に渡すクリック時の処理。対象外のマスでは undefined。
+   */
+  const selectHandler = (
+    cell: UniFillMatrixCell,
+    target: UniFillMatrixCellTarget
+  ): (() => void) | undefined =>
+    hasUnachievedCharts(cell) ? () => props.onSelectCell(target) : undefined
+
+  return (
+    <div class="overflow-x-auto rounded-lg border border-border">
+      <table class="w-full border-collapse">
+        <caption class="sr-only">{props.caption}</caption>
+        <thead class="text-xs text-text-muted">
+          <tr>
+            <th scope="col" class={`${STICKY_GENRE_CELL_CLASS} bg-surface-muted font-semibold`}>
+              {UNI_FILL_MATRIX_COPY.genreHeader}
+            </th>
+            <For each={props.matrix.columns}>
+              {(column) => (
+                <th
+                  scope="col"
+                  class="border-l border-border bg-surface-muted px-3 py-2 text-center font-jost font-semibold"
+                >
+                  {column.label}
+                </th>
+              )}
+            </For>
+            <th
+              scope="col"
+              class="border-l border-border bg-surface-muted px-3 py-2 text-center font-semibold"
+            >
+              {UNI_FILL_MATRIX_COPY.totalHeader}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <For each={props.matrix.rows}>
+            {(row) => (
+              <tr class="border-t border-border">
+                <th
+                  scope="row"
+                  class={`${STICKY_GENRE_CELL_CLASS} bg-surface font-sans text-sm font-semibold text-text`}
+                >
+                  {row.genre}
+                </th>
+                <For each={row.cells}>
+                  {(cell, index) => {
+                    const target = (): UniFillMatrixCellTarget => ({
+                      genre: row.genre,
+                      column: props.matrix.columns[index()],
+                    })
+                    return (
+                      <HeatmapCountCell
+                        count={cell.count}
+                        total={cell.total}
+                        showPercent={props.showPercent}
+                        showCompleteMark
+                        onSelect={selectHandler(cell, target())}
+                        selectLabel={toCellActionLabel(target())}
+                      />
+                    )
+                  }}
+                </For>
+                <HeatmapCountCell
+                  count={row.total.count}
+                  total={row.total.total}
+                  showPercent={props.showPercent}
+                  showCompleteMark
+                  class={TOTAL_CELL_CLASS}
+                  onSelect={selectHandler(row.total, { genre: row.genre })}
+                  selectLabel={toCellActionLabel({ genre: row.genre })}
+                />
+              </tr>
             )}
           </For>
-          <th
-            scope="col"
-            class="border-l border-border bg-surface-muted px-3 py-2 text-center font-semibold"
-          >
-            {UNI_FILL_MATRIX_COPY.totalHeader}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <For each={props.matrix.rows}>
-          {(row) => (
-            <tr class="border-t border-border">
-              <th
-                scope="row"
-                class={`${STICKY_GENRE_CELL_CLASS} bg-surface font-sans text-sm font-semibold text-text`}
-              >
-                {row.genre}
-              </th>
-              <For each={row.cells}>
-                {(cell) => (
-                  <HeatmapCountCell
-                    count={cell.count}
-                    total={cell.total}
-                    showPercent={props.showPercent}
-                    showCompleteMark
-                  />
-                )}
-              </For>
-              <HeatmapCountCell
-                count={row.total.count}
-                total={row.total.total}
-                showPercent={props.showPercent}
-                showCompleteMark
-                class={TOTAL_CELL_CLASS}
-              />
-            </tr>
-          )}
-        </For>
-      </tbody>
-      <tfoot>
-        <tr class="border-t-2 border-border">
-          <th
-            scope="row"
-            class={`${STICKY_GENRE_CELL_CLASS} bg-surface-muted text-sm font-semibold text-text`}
-          >
-            {UNI_FILL_MATRIX_COPY.totalHeader}
-          </th>
-          <For each={props.matrix.columnTotals}>
-            {(cell) => (
-              <HeatmapCountCell
-                count={cell.count}
-                total={cell.total}
-                showPercent={props.showPercent}
-                showCompleteMark
-                class={TOTAL_CELL_CLASS}
-              />
-            )}
-          </For>
-          <HeatmapCountCell
-            count={props.matrix.grandTotal.count}
-            total={props.matrix.grandTotal.total}
-            showPercent={props.showPercent}
-            showCompleteMark
-            class={TOTAL_CELL_CLASS}
-          />
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-)
+        </tbody>
+        <tfoot>
+          <tr class="border-t-2 border-border">
+            <th
+              scope="row"
+              class={`${STICKY_GENRE_CELL_CLASS} bg-surface-muted text-sm font-semibold text-text`}
+            >
+              {UNI_FILL_MATRIX_COPY.totalHeader}
+            </th>
+            <For each={props.matrix.columnTotals}>
+              {(cell, index) => (
+                <HeatmapCountCell
+                  count={cell.count}
+                  total={cell.total}
+                  showPercent={props.showPercent}
+                  showCompleteMark
+                  class={TOTAL_CELL_CLASS}
+                  onSelect={selectHandler(cell, { column: props.matrix.columns[index()] })}
+                  selectLabel={toCellActionLabel({ column: props.matrix.columns[index()] })}
+                />
+              )}
+            </For>
+            <HeatmapCountCell
+              count={props.matrix.grandTotal.count}
+              total={props.matrix.grandTotal.total}
+              showPercent={props.showPercent}
+              showCompleteMark
+              class={TOTAL_CELL_CLASS}
+              onSelect={selectHandler(props.matrix.grandTotal, {})}
+              selectLabel={toCellActionLabel({})}
+            />
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  )
+}
 
 /**
  * ジャンル×レベル（または譜面定数）ごとに、指定条件を何譜面達成したかを表示するツール画面。
  *
- * @returns 難易度・埋め条件・横軸を切り替えられるウニ埋めマトリクス。
+ * @returns 難易度・埋め条件・横軸を切り替えられ、マスから未達成譜面のレコードへ遷移できるウニ埋めマトリクス。
  */
 const UniFillMatrixPage: Component = () => {
   const [difficulty, setDifficulty] = createSignal<UniFillMatrixDifficultyOption>(
@@ -153,6 +222,10 @@ const UniFillMatrixPage: Component = () => {
   const [axis, setAxis] = createSignal<PlayerStatsHeatmapAxis>('level')
   const [showPercent, setShowPercent] = createSignal(false)
   const [pageData] = createResource(fetchOwnPlayerStatsData)
+  const [masterData] = createResource(fetchMasterData)
+  const [versions] = createResource(fetchVersions)
+  const [recordNavigationError, setRecordNavigationError] = createSignal('')
+  const navigate = useNavigate()
 
   const matrix = createMemo(() => {
     const data = pageData()
@@ -171,6 +244,41 @@ const UniFillMatrixPage: Component = () => {
       achievement().value
     )
   })
+
+  /**
+   * マスの条件で埋め条件を満たしていない譜面を通常レコードへ引き継いで遷移する。
+   *
+   * @param target - レコード画面で絞り込むマスの位置。
+   * @returns 保存と遷移処理の完了時に解決されるPromise。
+   */
+  const handleSelectCell = async (target: UniFillMatrixCellTarget): Promise<void> => {
+    const username = authSession.status === 'authenticated' ? authSession.user?.username : undefined
+    const currentMasterData = masterData()
+    const versionItems = versions()?.versions
+    if (!username || !currentMasterData || !versionItems) return
+
+    setRecordNavigationError('')
+    try {
+      const filter = buildUniFillMatrixRecordFilter(
+        buildDefaultFilter(currentMasterData, versionItems),
+        {
+          ...target,
+          difficulty: difficulty().value,
+          achievement: achievement().value,
+        }
+      )
+      await saveStandardRecordFilterSetting(filter)
+      publishStandardRecordFilter(username, filter)
+      navigate(
+        `${buildUserProfilePagePath(username, 'record_normal')}?${UNI_FILL_MATRIX_RECORD_SORT_QUERY}`
+      )
+      scrollToUserProfileContent()
+    } catch (error) {
+      setRecordNavigationError(
+        toUserFriendlyErrorMessage(error, UNI_FILL_MATRIX_COPY.recordNavigationError)
+      )
+    }
+  }
 
   const tool = getToolLink(UNI_FILL_MATRIX_PATH)
   useDocumentTitle(tool.title)
@@ -247,8 +355,14 @@ const UniFillMatrixPage: Component = () => {
                           : UNI_FILL_MATRIX_COPY.chartConstantCaption
                       }
                       showPercent={showPercent()}
+                      onSelectCell={(target) => void handleSelectCell(target)}
                     />
                   )}
+                </Show>
+                <Show when={recordNavigationError()}>
+                  <p class="font-sans text-sm text-danger" role="alert">
+                    {recordNavigationError()}
+                  </p>
                 </Show>
               </section>
             </main>
