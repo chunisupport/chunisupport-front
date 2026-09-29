@@ -7,6 +7,7 @@ import {
   calculateNewSongTheoreticalRating,
   calculateOverallTheoreticalRating,
   calculateRatingTheoreticalGap,
+  prioritizeBoundaryEntries,
   resolveRatingTheoreticalProgress,
 } from './newSongTheoreticalRating.ts'
 import { formatScoreDifference } from './scoreDifference.ts'
@@ -327,6 +328,7 @@ const createFrameTheoretical = (
     isChartConstantUnknown: hasUnknownChartConstants,
     rating,
   })),
+  boundaryEntries: [],
 })
 
 test('ベスト枠と新曲枠を採用譜面数で重み付けした総合理論値を返すこと', () => {
@@ -360,4 +362,82 @@ test('両枠とも未計算の場合は総合理論値を返さないこと', ()
 
   // Then: 未定義になる。
   assert.equal(result, undefined)
+})
+
+test('採用譜面の下限定数と同じ定数で枠から溢れた譜面を枠外譜面として返すこと', () => {
+  // Given: 定数16.0の1譜面と、下限定数15.0の3譜面、さらに低い定数14.0の1譜面。
+  const songs = [
+    createSong('top', '2026-07-02', [{ value: 16 }]),
+    createSong('tie-a', '2026-07-02', [{ value: 15 }]),
+    createSong('tie-b', '2026-07-02', [{ value: 15 }]),
+    createSong('tie-c', '2026-07-02', [{ value: 15 }]),
+    createSong('low', '2026-07-02', [{ value: 14 }]),
+  ]
+
+  // When: 2枠分の新曲枠理論値を算出する。
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 2)
+
+  // Then: 下限定数15.0で枠から溢れた2譜面だけが枠外譜面になる。
+  assert.deepEqual(
+    result?.entries.map((entry) => entry.songId),
+    ['top', 'tie-a']
+  )
+  assert.deepEqual(
+    result?.boundaryEntries.map((entry) => entry.songId),
+    ['tie-b', 'tie-c']
+  )
+})
+
+test('採用譜面が規定枠数未満の場合は枠外譜面を返さないこと', () => {
+  // Given: 同じ定数の新曲譜面が2件だけ存在する。
+  const songs = [
+    createSong('new-a', '2026-07-02', [{ value: 15 }]),
+    createSong('new-b', '2026-07-02', [{ value: 15 }]),
+  ]
+
+  // When: 20枠分の新曲枠理論値を算出する。
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 20)
+
+  // Then: 全譜面が採用され、枠外譜面は空になる。
+  assert.equal(result?.entries.length, 2)
+  assert.deepEqual(result?.boundaryEntries, [])
+})
+
+test('下限定数の譜面のうち優先譜面を採用枠側へ並べ替えること', () => {
+  // Given: 上位1譜面と下限定数15.0の4譜面のうち、枠外のtie-cとtie-dが優先対象。
+  const songs = [
+    createSong('top', '2026-07-02', [{ value: 16 }]),
+    createSong('tie-a', '2026-07-02', [{ value: 15 }]),
+    createSong('tie-b', '2026-07-02', [{ value: 15 }]),
+    createSong('tie-c', '2026-07-02', [{ value: 15 }]),
+    createSong('tie-d', '2026-07-02', [{ value: 15 }]),
+  ]
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 2)
+  assert.ok(result)
+  const prioritizedIds = new Set(['top', 'tie-c', 'tie-d'])
+
+  // When: 優先対象を上側へ並べ替える。
+  const prioritized = prioritizeBoundaryEntries(result, (entry) => prioritizedIds.has(entry.songId))
+
+  // Then: 上位譜面は維持し、下限定数の優先譜面が採用枠と枠外譜面の先頭に並ぶ。
+  assert.deepEqual(
+    prioritized.entries.map((entry) => entry.songId),
+    ['top', 'tie-c']
+  )
+  assert.deepEqual(
+    prioritized.boundaryEntries.map((entry) => entry.songId),
+    ['tie-d', 'tie-a', 'tie-b']
+  )
+})
+
+test('枠外譜面がない場合は並べ替えずにそのまま返すこと', () => {
+  // Given: 枠外譜面を持たない枠理論値。
+  const theoretical = createFrameTheoretical(17, 3)
+
+  // When: 全譜面を優先対象として並べ替える。
+  const prioritized = prioritizeBoundaryEntries(theoretical, () => true)
+
+  // Then: 採用譜面の順序は変わらない。
+  assert.deepEqual(prioritized.entries, theoretical.entries)
+  assert.deepEqual(prioritized.boundaryEntries, [])
 })
