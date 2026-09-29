@@ -6,6 +6,7 @@ import { useSongsData } from '../stores/songsData'
 import {
   calculateBestTheoreticalRating,
   calculateNewSongTheoreticalRating,
+  calculateOverallTheoreticalRating,
   type RatingTheoretical,
 } from '../utils/newSongTheoreticalRating'
 import { getTodayChunithmDate } from '../utils/versionConverter'
@@ -26,6 +27,8 @@ export type RatingTheoreticalState = {
   bestTheoreticalRating: Accessor<RatingTheoretical | undefined>
   /** 新曲枠理論値の計算結果 */
   newTheoreticalRating: Accessor<RatingTheoretical | undefined>
+  /** ベスト枠と新曲枠を勘案した総合理論値の計算結果 */
+  overallTheoreticalRating: Accessor<RatingTheoretical | undefined>
   /** ベスト枠に必要な楽曲・バージョンデータを取得中か */
   isBestLoading: Accessor<boolean>
   /** 新曲枠に必要な楽曲・バージョンデータを取得中か */
@@ -80,9 +83,14 @@ export const useRatingTheoretical = (): RatingTheoreticalState => {
       : undefined
   })
 
+  const overallTheoreticalRating = createMemo(() =>
+    calculateOverallTheoreticalRating(bestTheoreticalRating(), newTheoreticalRating())
+  )
+
   return {
     bestTheoreticalRating,
     newTheoreticalRating,
+    overallTheoreticalRating,
     isBestLoading: () => isSongsLoading() || versionsResponse.loading,
     isNewLoading: () => isSongsLoading() || versionsResponse.loading,
     bestError: () => songsResponse.error ?? versionsResponse.error,

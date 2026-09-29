@@ -5,6 +5,7 @@ import { calculateCandidateScoreDifference } from './candidateScoreDifference.ts
 import {
   calculateBestTheoreticalRating,
   calculateNewSongTheoreticalRating,
+  calculateOverallTheoreticalRating,
   calculateRatingTheoreticalGap,
   resolveRatingTheoreticalProgress,
 } from './newSongTheoreticalRating.ts'
@@ -299,5 +300,64 @@ test('現在値が未計算の場合は差を返さないこと', () => {
   const result = calculateRatingTheoreticalGap(17.5, currentRating)
 
   // Then: 差は未定義になる。
+  assert.equal(result, undefined)
+})
+
+/**
+ * 総合理論値テスト用に、指定枠数の同一譜面から成る枠理論値を生成する。
+ *
+ * @param rating - 枠理論値。
+ * @param count - 採用譜面数。
+ * @param hasUnknownChartConstants - 推定譜面定数を含むか。
+ * @returns 枠理論値。
+ */
+const createFrameTheoretical = (
+  rating: number,
+  count: number,
+  hasUnknownChartConstants = false
+) => ({
+  rating,
+  hasUnknownChartConstants,
+  entries: Array.from({ length: count }, (_, index) => ({
+    songId: `song-${rating}-${index}`,
+    title: 'title',
+    artist: 'artist',
+    difficulty: 'MASTER' as const,
+    chartConstant: 15,
+    isChartConstantUnknown: hasUnknownChartConstants,
+    rating,
+  })),
+})
+
+test('ベスト枠と新曲枠を採用譜面数で重み付けした総合理論値を返すこと', () => {
+  // Given: ベスト30譜面と新曲20譜面の枠理論値。
+  const best = createFrameTheoretical(17, 30)
+  const newSong = createFrameTheoretical(18, 20, true)
+
+  // When: 総合理論値を算出する。
+  const result = calculateOverallTheoreticalRating(best, newSong)
+
+  // Then: (17*30 + 18*20) / 50 = 17.4 になり、推定値フラグを引き継ぐ。
+  assert.equal(result?.rating, 17.4)
+  assert.equal(result?.hasUnknownChartConstants, true)
+  assert.equal(result?.entries.length, 50)
+})
+
+test('片方の枠理論値のみ計算済みの場合はその値を総合理論値とすること', () => {
+  // Given: ベスト枠のみ計算済み。
+  const best = createFrameTheoretical(17, 30)
+
+  // When: 総合理論値を算出する。
+  const result = calculateOverallTheoreticalRating(best, undefined)
+
+  // Then: ベスト枠の値と一致する。
+  assert.equal(result?.rating, 17)
+})
+
+test('両枠とも未計算の場合は総合理論値を返さないこと', () => {
+  // Given & When: どちらの枠理論値も未定義。
+  const result = calculateOverallTheoreticalRating(undefined, undefined)
+
+  // Then: 未定義になる。
   assert.equal(result, undefined)
 })
