@@ -28,16 +28,16 @@ export const PLAYER_METRIC_HISTORY_RATING_AXIS_CEILING = 18
 export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_CEILING = 100
 
 /** データ範囲に対して上下へ確保する余白の割合 */
-export const PLAYER_METRIC_HISTORY_AXIS_PADDING_RATIO = 1
+export const PLAYER_METRIC_HISTORY_AXIS_PADDING_RATIO = 0.1
 
 /** 公式RATING履歴グラフでデータ範囲が狭いときに確保する最小余白 */
-export const PLAYER_METRIC_HISTORY_RATING_AXIS_MIN_PADDING = 0.5
+export const PLAYER_METRIC_HISTORY_RATING_AXIS_MIN_PADDING = 0.01
 
 /** 公式OVER POWER履歴グラフでデータ範囲が狭いときに確保する最小余白 */
-export const PLAYER_METRIC_HISTORY_OVERPOWER_AXIS_MIN_PADDING = 50
+export const PLAYER_METRIC_HISTORY_OVERPOWER_AXIS_MIN_PADDING = 1
 
 /** 公式OP%履歴グラフでデータ範囲が狭いときに確保する最小余白 */
-export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MIN_PADDING = 5
+export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MIN_PADDING = 0.01
 
 /** 履歴グラフ1枚分の表示定義 */
 export type PlayerMetricHistoryChartDefinition = {
