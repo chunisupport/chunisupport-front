@@ -43,8 +43,10 @@ type RatingTheoreticalSummaryProps = {
   currentRating: number | null
   /** 理論値対象譜面との照合に使う全通常譜面レコード */
   records: readonly PlayerRecordDTO[]
-  /** 理論値対象譜面一覧の見出し */
-  detailsLabel: string
+  /** 理論値対象譜面一覧の見出し。未指定の場合は一覧を表示しない */
+  detailsLabel?: string
+  /** サマリー領域のアクセシビリティラベル */
+  ariaLabel: string
   /** データ取得で発生したエラー。正常時は未定義 */
   error: unknown
   /** 現在データを取得または理論値を計算しているか */
@@ -287,7 +289,7 @@ const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (prop
   return (
     <section
       class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
-      aria-label={NEW_SONG_SSS_PLUS_COPY.ariaLabel}
+      aria-label={props.ariaLabel}
     >
       <Show
         when={!props.error}
@@ -335,11 +337,15 @@ const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (prop
                     <span>{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
                   </div>
                 </Show>
-                <TheoreticalChartList
-                  detailsLabel={props.detailsLabel}
-                  entries={theoreticalRating().entries}
-                  records={props.records}
-                />
+                <Show when={props.detailsLabel} keyed>
+                  {(detailsLabel) => (
+                    <TheoreticalChartList
+                      detailsLabel={detailsLabel}
+                      entries={theoreticalRating().entries}
+                      records={props.records}
+                    />
+                  )}
+                </Show>
               </>
             )}
           </Show>
@@ -392,6 +398,15 @@ const RatingTheoreticalCheckerPage: Component = () => {
         </div>
       </header>
 
+      <RatingTheoreticalSummary
+        ariaLabel={NEW_SONG_SSS_PLUS_COPY.overallAriaLabel}
+        currentRating={rating()?.rating ?? null}
+        error={rating.error ?? theoreticalRatings.bestError()}
+        loading={rating.loading || theoreticalRatings.isBestLoading()}
+        records={playedRecords()}
+        theoreticalRating={theoreticalRatings.overallTheoreticalRating()}
+      />
+
       <SegmentedTabs
         class="flex flex-col gap-3"
         value={selectedFrame()}
@@ -402,6 +417,7 @@ const RatingTheoreticalCheckerPage: Component = () => {
       >
         <AppTabContent value="best">
           <RatingTheoreticalSummary
+            ariaLabel={NEW_SONG_SSS_PLUS_COPY.ariaLabel}
             currentRating={rating()?.best_average ?? null}
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.bestDetailsLabel}
             error={rating.error ?? record.error ?? theoreticalRatings.bestError()}
@@ -412,6 +428,7 @@ const RatingTheoreticalCheckerPage: Component = () => {
         </AppTabContent>
         <AppTabContent value="new">
           <RatingTheoreticalSummary
+            ariaLabel={NEW_SONG_SSS_PLUS_COPY.ariaLabel}
             currentRating={rating()?.new_average ?? null}
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.newDetailsLabel}
             error={rating.error ?? record.error ?? theoreticalRatings.newError()}

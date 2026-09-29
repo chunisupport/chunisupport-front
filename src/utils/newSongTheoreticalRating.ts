@@ -237,6 +237,33 @@ export const calculateNewSongTheoreticalRating = (
 }
 
 /**
+ * ベスト枠と新曲枠の理論値を採用譜面数で重み付けし、総合レーティング理論値を算出する。
+ *
+ * @param best - ベスト枠理論値。
+ * @param newSong - 新曲枠理論値。
+ * @returns 両枠を勘案した総合理論値。両枠とも未計算なら未定義。
+ */
+export const calculateOverallTheoreticalRating = (
+  best: RatingTheoretical | undefined,
+  newSong: RatingTheoretical | undefined
+): RatingTheoretical | undefined => {
+  const frames = [best, newSong].filter((frame) => frame !== undefined)
+  if (frames.length === 0) return undefined
+
+  const entryCount = frames.reduce((total, frame) => total + frame.entries.length, 0)
+  const totalUnits = frames.reduce(
+    (total, frame) => total + Math.round(frame.rating * PLAYER_RATING_SCALE) * frame.entries.length,
+    0
+  )
+
+  return {
+    rating: Math.round(totalUnits / entryCount) / PLAYER_RATING_SCALE,
+    hasUnknownChartConstants: frames.some((frame) => frame.hasUnknownChartConstants),
+    entries: frames.flatMap((frame) => frame.entries),
+  }
+}
+
+/**
  * 理論値対象譜面に対応する現在のレーティング枠・候補枠レコードを解決する。
  *
  * @param entry - 理論値対象の楽曲IDと難易度。
