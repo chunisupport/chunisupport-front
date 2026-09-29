@@ -5,6 +5,7 @@ import {
   FRIEND_VS_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
+  UNI_FILL_MATRIX_PATH,
 } from './routes'
 import { getToolLink, isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
 
@@ -65,6 +66,16 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
   assert.ok(lockedSongDiscovery)
   assert.equal(lockedSongDiscovery.adminOnly, true)
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
+})
+
+test('ウニ埋めマトリクスは ADMIN 限定ツールとして定義されていること', () => {
+  // Given
+  const uniFillMatrix = TOOL_LINKS.find((tool) => tool.href === UNI_FILL_MATRIX_PATH)
+
+  // When / Then
+  assert.ok(uniFillMatrix)
+  assert.equal(uniFillMatrix.adminOnly, true)
+  assert.equal(isPublicToolLink(uniFillMatrix), false)
 })
 
 test('フレンドVSは通常ユーザーにも表示するツールとして定義されていること', () => {

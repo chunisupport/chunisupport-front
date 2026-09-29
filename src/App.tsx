@@ -6,6 +6,7 @@ import {
   Dices,
   Gauge,
   Globe,
+  Grid3X3,
   ListOrdered,
   Lock,
   ScanSearch,
@@ -68,6 +69,7 @@ import {
   REGISTER_SCORE_TEMP_PATH,
   SONGS_PATH,
   TOOLS_PATH,
+  UNI_FILL_MATRIX_PATH,
   WEAK_CHART_INSPECTOR_PATH,
   WORLDSEND_SONGS_PATH,
 } from './constants/routes'
@@ -129,6 +131,7 @@ const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage
 const AllSongBestFramePage = lazy(() => import('./pages/tools/AllSongBestFramePage'))
 const RatingTheoreticalCheckerPage = lazy(() => import('./pages/tools/NewSongSssPlusToolPage'))
 const PlayerStatsDashboardPage = lazy(() => import('./pages/tools/PlayerStatsDashboard'))
+const UniFillMatrixPage = lazy(() => import('./pages/tools/UniFillMatrix'))
 const LockedSongDiscoveryPage = lazy(() => import('./pages/tools/LockedSongDiscoveryPage'))
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
@@ -356,6 +359,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <ScanSearch class={iconClass} aria-hidden="true" />
     case 'friendVs':
       return <Swords class={iconClass} aria-hidden="true" />
+    case 'matrix':
+      return <Grid3X3 class={iconClass} aria-hidden="true" />
   }
 }
 
@@ -752,6 +757,10 @@ const App = () => {
       <Route
         path={DASHBOARD_PATH}
         component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
+      />
+      <Route
+        path={UNI_FILL_MATRIX_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(UniFillMatrixPage)))}
       />
       <Route
         path={LOCKED_SONG_DISCOVERY_PATH}
