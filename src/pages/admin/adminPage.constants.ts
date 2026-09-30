@@ -3,7 +3,7 @@ import {
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
-  ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
+  ADMIN_PREVIEWS_PATH,
   ADMIN_VERSIONS_PATH,
 } from '../../constants/routes'
 
@@ -65,9 +65,9 @@ export const ADMIN_PAGE_LINKS = [
     icon: 'batch',
   },
   {
-    href: ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
-    title: 'レーティング画像DOM',
-    description: '画像化前のベスト枠・新曲枠を確認します。',
+    href: ADMIN_PREVIEWS_PATH,
+    title: 'テスト用ページ集',
+    description: 'プロフィールカードやレーティング画像DOMの表示を確認します。',
     icon: 'ratingImage',
   },
 ] as const

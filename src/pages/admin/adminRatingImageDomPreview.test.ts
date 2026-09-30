@@ -7,7 +7,7 @@ import { RATING_SLOT_COUNT } from '../../constants/rating'
 import {
   RATING_IMAGE_DEFAULT_POSSESSION_OPTION,
   RATING_IMAGE_POSSESSION_OPTIONS,
-} from './AdminRatingImageDomPreviewPage.constants.ts'
+} from './AdminRatingImageDomPreviewPanel.constants.ts'
 import {
   buildRatingImageDomPreviewSample,
   countRatingImagePreviewJackets,

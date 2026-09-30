@@ -1,8 +1,8 @@
 import { Plus } from 'lucide-solid'
 import { AppButton } from '../../../components/common/AppButton'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
+import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
-import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type { MasterItemDTO } from '../../../types/api'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
@@ -95,10 +95,10 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
             props.management.updateCreateDraftField('wiki_page_title', wikiPageTitle)
           }
         >
-          <ManagementTextField
+          <WikiPageTitleField
+            title={draft().title}
             label={FIELD.wikiPageTitle}
             value={draft().wiki_page_title ?? ''}
-            maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
             onInput={(value) =>
               props.management.updateCreateDraftField('wiki_page_title', toOptionalTextInput(value))

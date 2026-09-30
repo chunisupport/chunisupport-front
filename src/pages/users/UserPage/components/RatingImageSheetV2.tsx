@@ -2,6 +2,7 @@ import { Triangle } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
 import placeholderImageUrl from '../../../../assets/placeholder.png'
+import { ClassEmblem } from '../../../../components/common/profile/ClassEmblem'
 import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
 import { normalizePlayerDataDifficulty } from '../../../../constants/difficulty'
 import { getHonorTypeClassName } from '../../../../constants/honors'
@@ -64,6 +65,8 @@ type RatingImageSheetV2Props = {
   showLatestUpdateBadge?: boolean
   /** プレイヤーレベルを隠すかどうか。未指定時は表示する */
   hidePlayerLevel?: boolean
+  /** クラスエンブレムを隠すかどうか。未指定時は表示する */
+  hideClassEmblem?: boolean
   /** 画像化対象のルート要素を受け取るコールバック */
   captureRef: (element: HTMLDivElement) => void
   /** ジャケット画像ごとの準備状態を通知するコールバック */
@@ -474,7 +477,7 @@ const RatingImageV2Grid: Component<RatingImageV2GridProps> = (props) => {
  * プレビューとJPEG出力で共有するベスト枠・新曲枠画像 Ver. 2 を表示する。
  * ヘッダー背景色はポゼッションに応じて切り替える。
  *
- * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、NEW! バッジ表示、レベル非表示、ポゼッション名、参照コールバック。
+ * @param props - プレイヤー情報、称号、レーティング枠、ジャケット表示設定、NEW! バッジ表示、レベル・エンブレム非表示、ポゼッション名、参照コールバック。
  * @returns ジャケットを格子状に並べた固定論理幅の縦長画像レイアウト。
  */
 export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) => {
@@ -512,17 +515,24 @@ export const RatingImageSheetV2: Component<RatingImageSheetV2Props> = (props) =>
         }}
       >
         <div class="min-w-0 flex-1">
-          <div class="flex min-w-0 items-baseline gap-[12px]">
+          <div class="flex min-w-0 items-center gap-[12px]">
             <h1 class="min-w-0 flex-1 truncate font-sans text-[48px] font-bold leading-none">
               {props.playerInfo.name}
             </h1>
             <p
-              class={`user-nameplate-metric-secondary shrink-0 whitespace-nowrap text-[22px] font-medium ${
+              class={`user-nameplate-metric-secondary relative top-[3px] shrink-0 whitespace-nowrap text-[22px] font-medium leading-none ${
                 props.hidePlayerLevel ? 'font-sans' : 'font-jost'
               }`}
             >
               {formatPlayerLevelLabel(props.playerInfo.level, props.hidePlayerLevel ?? false)}
             </p>
+            <Show when={!props.hideClassEmblem}>
+              <ClassEmblem
+                emblem={props.playerInfo.class_emblem}
+                base={props.playerInfo.class_emblem_base}
+                class="relative top-[3px] h-[44px]"
+              />
+            </Show>
           </div>
           <div
             class="rating-image-v2-header-divider flex min-w-0 items-end gap-[24px]"

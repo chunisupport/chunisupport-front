@@ -1,6 +1,7 @@
 import { Play } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { ClassEmblem } from '../../../../components/common/profile/ClassEmblem'
 import { RECORD_CARD_LAMP_BADGE_CLASS } from '../../../../components/common/record/RecordDisplayParts'
 import { getDefaultRecordLampLabel } from '../../../../components/common/record/recordLampLabel'
 import {
@@ -242,6 +243,11 @@ export const RatingImageSheet: Component<RatingImageSheetProps> = (props) => {
           <h1 class="min-w-0 truncate text-center font-sans text-2xl font-bold">
             {props.playerInfo.name}
           </h1>
+          <ClassEmblem
+            emblem={props.playerInfo.class_emblem}
+            base={props.playerInfo.class_emblem_base}
+            class="h-7 self-center"
+          />
         </div>
         <dl class="mt-3 grid grid-cols-3 divide-x divide-border border-t border-border pt-3 text-center">
           <div>

@@ -3,7 +3,7 @@ import { Plus } from 'lucide-solid'
 import { Index, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
-import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
+import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO, VersionSummaryDTO } from '../../../types/api'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
@@ -117,11 +117,11 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                       inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
                       onInput={(value) => props.management.updateDraftField('artist', value)}
                     />
-                    <ManagementTextField
+                    <WikiPageTitleField
                       class="col-span-2 text-sm"
+                      title={currentDraft().title}
                       label={FIELD.wikiPageTitle}
                       value={currentDraft().wiki_page_title ?? ''}
-                      maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
                       inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
                       onInput={(value) =>
                         props.management.updateDraftField(

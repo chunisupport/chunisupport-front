@@ -5,6 +5,7 @@ import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { FormSelect } from '../../../components/common/AppSelect'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
+import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO } from '../../../types/api'
 import { toInputValue } from '../../../utils/rangeInput'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
@@ -22,6 +23,8 @@ import {
 import SongEditSaveButton from './SongEditSaveButton'
 
 type Props = {
+  /** 生成元の曲名 */
+  title: string
   open: boolean
   genres: MasterItemDTO[]
   initialGenre: string | null
@@ -45,28 +48,6 @@ type Props = {
   /** STANDARD楽曲一覧の読み込み中かどうか */
   standardSongsLoading?: boolean
 }
-
-type WikiPageTitleTextFieldProps = {
-  /** 入力中のWikiページタイトル */
-  value: string
-  /** 入力値を反映する処理 */
-  onChange: (value: string) => void
-}
-
-/**
- * 楽曲情報編集ダイアログのWikiページタイトル入力欄を描画する。
- *
- * @param props - 入力値と変更ハンドラ。
- * @returns Wikiページタイトル用の Kobalte TextField。
- */
-const WikiPageTitleTextField: Component<WikiPageTitleTextFieldProps> = (props) => (
-  <TextField value={props.value} onChange={props.onChange}>
-    <TextField.Label class="mb-1 block text-sm text-text-muted">
-      {SONG_EDIT_COPY.wikiPageTitleLabel}
-    </TextField.Label>
-    <TextField.Input class={SONG_EDIT_TEXT_INPUT_CLASS} />
-  </TextField>
-)
 
 type BpmTextFieldProps = {
   /** 入力中のBPM文字列 */
@@ -234,7 +215,13 @@ const SongMetaEditDialog: Component<Props> = (props) => {
               <Show
                 when={props.enableCopyFromStandard}
                 fallback={
-                  <WikiPageTitleTextField value={wikiPageTitle()} onChange={setWikiPageTitle} />
+                  <WikiPageTitleField
+                    title={props.title}
+                    label={SONG_EDIT_COPY.wikiPageTitleLabel}
+                    value={wikiPageTitle()}
+                    inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
+                    onInput={setWikiPageTitle}
+                  />
                 }
               >
                 <CopyFromStandardField
@@ -248,7 +235,13 @@ const SongMetaEditDialog: Component<Props> = (props) => {
                     setValidationMessage('')
                   }}
                 >
-                  <WikiPageTitleTextField value={wikiPageTitle()} onChange={setWikiPageTitle} />
+                  <WikiPageTitleField
+                    title={props.title}
+                    label={SONG_EDIT_COPY.wikiPageTitleLabel}
+                    value={wikiPageTitle()}
+                    inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
+                    onInput={setWikiPageTitle}
+                  />
                 </CopyFromStandardField>
               </Show>
 

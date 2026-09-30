@@ -1,3 +1,5 @@
+import { WIKI_PAGE_TITLE_FULLWIDTH_OFFSET } from '../constants/wiki'
+
 /**
  * WikiのページタイトルからページURLを組み立てる。
  *
@@ -18,3 +20,14 @@ export const buildWikiPageUrl = (
   const encodedPath = normalizedPageTitle.split('/').map(encodeURIComponent).join('/')
   return `${normalizedBaseUrl.replace(/\/+$/, '')}/${encodedPath}`
 }
+
+/**
+ * 曲名に含まれるWikiWikiで使用できない記号だけを全角へ置き換える。
+ *
+ * @param title - 生成元の曲名。
+ * @returns 指定記号を全角にしたWikiページタイトル。
+ */
+export const generateWikiPageTitle = (title: string): string =>
+  title.replace(/["#&<>[\]:]/g, (symbol) =>
+    String.fromCharCode(symbol.charCodeAt(0) + WIKI_PAGE_TITLE_FULLWIDTH_OFFSET)
+  )

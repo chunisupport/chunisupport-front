@@ -23,8 +23,6 @@ export const RATING_IMAGE_DEFAULT_POSSESSION_OPTION: RatingImagePossessionOption
 
 /** レーティング画像DOM確認画面で使用する文言 */
 export const ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY = {
-  pageTitle: 'レーティング画像DOM',
-  heading: 'レーティング画像DOM',
   usernameLabel: 'ユーザー/プレイヤー名',
   usernamePlaceholder: '空欄でサンプル',
   usernameAriaLabel: '確認するユーザー名またはプレイヤー名',

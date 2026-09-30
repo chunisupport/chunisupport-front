@@ -1,8 +1,8 @@
 import { Show } from 'solid-js'
 import { Loading } from '../../../components'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
+import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
-import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type { MasterItemDTO, VersionSummaryDTO } from '../../../types/api'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
@@ -139,11 +139,11 @@ const WorldsendSongEditSection = (props: WorldsendSongEditSectionProps) => {
                         props.management.updateDraftField('wiki_page_title', wikiPageTitle)
                       }
                     >
-                      <ManagementTextField
+                      <WikiPageTitleField
                         class="text-sm"
+                        title={currentDraft().title}
                         label={FIELD.wikiPageTitle}
                         value={currentDraft().wiki_page_title ?? ''}
-                        maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
                         inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
                         onInput={(value) =>
                           props.management.updateDraftField(
