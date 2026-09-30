@@ -51,6 +51,8 @@ type SongSelectionDialogBaseProps<TItem, TFilter> = {
   actionButtonSize?: AppButtonSize
   /** タイトル直下に表示する画面固有の追加ヘッダー */
   headerExtra?: JSX.Element
+  /** 検索ツールバー右端に表示する画面固有の操作 */
+  searchToolbarExtra?: JSX.Element
   renderFilterExtras?: () => JSX.Element
   renderItem: (item: TItem) => JSX.Element
   onSave: () => Promise<void>
@@ -65,7 +67,7 @@ const EMPTY_MESSAGE = '該当する曲がありません'
 /**
  * 楽曲選択画面で共通する全画面Dialog、検索、フィルター、一覧、保存操作を描画する。
  *
- * @param props - 共有状態、フィルター入出力、画面固有の行・追加ヘッダー・追加フィルター。
+ * @param props - 共有状態、フィルター入出力、画面固有の行・追加ヘッダー・追加検索操作・追加フィルター。
  * @returns 楽曲選択ダイアログの共通UI。
  */
 export const SongSelectionDialogBase = <TItem, TFilter>(
@@ -125,6 +127,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
             >
               <ListChecks size={24} aria-hidden="true" />
             </Button>
+            {props.searchToolbarExtra}
           </div>
 
           <div

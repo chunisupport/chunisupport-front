@@ -1,7 +1,9 @@
 import { Button } from '@kobalte/core/button'
-import { Check } from 'lucide-solid'
+import { ToggleButton } from '@kobalte/core/toggle-button'
+import { Check, LockKeyhole, LockKeyholeOpen } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, Show } from 'solid-js'
+import { createMemo, createSignal, Show } from 'solid-js'
+import { getAppIconButtonClass } from '../../../../components/common/AppButton'
 import { AppSelect } from '../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import type {
@@ -38,8 +40,10 @@ import {
 } from '../../components/songSelectionDialog'
 import { hasSameFilterValues } from '../../utils/filterValue'
 import {
+  DEFAULT_LOCKED_SONGS_UNLOCK_REQUIRED_ONLY,
   LOCKED_SONG_PLAY_STATUS_FILTER_COPY,
   LOCKED_SONG_PLAY_STATUS_OPTIONS,
+  LOCKED_SONGS_UNLOCK_REQUIRED_ONLY_LABEL,
   type LockedSongsPlayStatus,
 } from '../constants'
 import { LockedSongsOpComparison } from './LockedSongsOpComparison'
@@ -125,6 +129,9 @@ const isLockedSongsFilterChanged = (
  * @returns 未解禁楽曲設定ダイアログのUI。
  */
 const LockedSongsDialog: Component<Props> = (props) => {
+  const [showUnlockRequiredOnly, setShowUnlockRequiredOnly] = createSignal(
+    DEFAULT_LOCKED_SONGS_UNLOCK_REQUIRED_ONLY
+  )
   const genreOptions = createMemo(() =>
     sortMasterItemsBySortOrder(props.genres).map((genre) => genre.name)
   )
@@ -216,6 +223,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
 
     return searchableSongListItems()
       .filter(({ item, searchableText, searchableReading }) => {
+        if (showUnlockRequiredOnly() && !item.song.unlock_required) return false
         const key = createLockedSongKey(item.song.id, item.isUltima)
         if (model.showSelectedOnly() && !model.draftKeys().has(key)) return false
         if (
@@ -366,6 +374,26 @@ const LockedSongsDialog: Component<Props> = (props) => {
       title="未解禁楽曲設定"
       description={LOCKED_SONG_DESCRIPTION}
       headerExtra={<LockedSongsOpComparison comparison={opComparison} />}
+      searchToolbarExtra={
+        <ToggleButton
+          type="button"
+          pressed={showUnlockRequiredOnly()}
+          onChange={setShowUnlockRequiredOnly}
+          aria-label={LOCKED_SONGS_UNLOCK_REQUIRED_ONLY_LABEL}
+          title={LOCKED_SONGS_UNLOCK_REQUIRED_ONLY_LABEL}
+          class={getAppIconButtonClass({
+            tone: showUnlockRequiredOnly() ? 'primary' : 'surface',
+            class: 'ml-2 shrink-0',
+          })}
+        >
+          <Show
+            when={showUnlockRequiredOnly()}
+            fallback={<LockKeyholeOpen size={20} aria-hidden="true" />}
+          >
+            <LockKeyhole size={20} aria-hidden="true" />
+          </Show>
+        </ToggleButton>
+      }
       searchAriaLabel="未解禁楽曲検索"
       query={model.query}
       setQuery={model.setQuery}
