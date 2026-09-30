@@ -6,6 +6,7 @@ import { AppIconButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { CheckboxField } from '../../components/common/CheckboxField'
+import { ClassEmblem } from '../../components/common/profile/ClassEmblem'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   RecordFullChainCell,
@@ -26,6 +27,7 @@ import type {
   PlayerDataStatisticsDifficulty,
 } from '../../types/api'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
+import { resolveClassEmblemMasterName } from '../../utils/classEmblem'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { captureElementAsImage } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
@@ -445,10 +447,13 @@ const RegisterScoreMetricDelta = (props: RegisterScoreMetricDeltaProps) => (
 /**
  * プレイヤー概要をレポート形式で表示する。
  *
- * @param props - APIから返却された登録結果。
+ * @param props - APIから返却された登録結果と、クラスエンブレムの表示状態。
  * @returns プロフィール概要。
  */
-const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdateResult }) => {
+const RegisterScoreProfileSummary = (props: {
+  result: NormalizedPlayerDataUpdateResult
+  showClassEmblem: boolean
+}) => {
   const [hidePlayerLevel, setHidePlayerLevel] = createSignal(false)
   const ratingDelta = createMemo(() =>
     formatRegisterScoreRatingDelta(props.result.metric_diffs.rating.delta)
@@ -473,6 +478,13 @@ const RegisterScoreProfileSummary = (props: { result: NormalizedPlayerDataUpdate
           </span>
           <span class="min-w-0 truncate text-center">{props.result.profile.name}</span>
         </div>
+        <Show when={props.showClassEmblem}>
+          <ClassEmblem
+            emblem={resolveClassEmblemMasterName(props.result.profile.class_emblem_id)}
+            base={resolveClassEmblemMasterName(props.result.profile.class_emblem_base_id)}
+            class="h-7"
+          />
+        </Show>
       </div>
       <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
         <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_COPY.ratingLabel}</dt>
@@ -626,6 +638,7 @@ const RegisterScoreDisplaySettings = (props: {
   primarySortKey: RegisterScorePrimarySortKey
   primarySortDirection: SortDirection
   hideLampOnlyChanges: boolean
+  showClassEmblem: boolean
   showTotalHighScore: boolean
   showRecordStatistics: boolean
   totalHighScoreRowVisibility: RegisterScoreAggregateRowVisibility
@@ -633,6 +646,7 @@ const RegisterScoreDisplaySettings = (props: {
   onPrimarySortKeyChange: (key: RegisterScorePrimarySortKey) => void
   onPrimarySortDirectionChange: (direction: SortDirection) => void
   onHideLampOnlyChangesChange: (checked: boolean) => void
+  onShowClassEmblemChange: (checked: boolean) => void
   onShowTotalHighScoreChange: (checked: boolean) => void
   onShowRecordStatisticsChange: (checked: boolean) => void
   onTotalHighScoreRowVisibilityChange: (key: RegisterScoreAggregateRowKey, checked: boolean) => void
@@ -657,6 +671,12 @@ const RegisterScoreDisplaySettings = (props: {
         onChange={props.onHideLampOnlyChangesChange}
         textVariant="large"
         label={REGISTER_SCORE_COPY.hideLampOnlyChanges}
+      />
+      <CheckboxField
+        checked={props.showClassEmblem}
+        onChange={props.onShowClassEmblemChange}
+        textVariant="large"
+        label={REGISTER_SCORE_COPY.showClassEmblem}
       />
       <RegisterScoreAggregateVisibilitySettings
         label={REGISTER_SCORE_COPY.totalHighScoreTitle}
@@ -1235,6 +1255,7 @@ export const RegisterScoreResultView = (props: {
         (!hideLampOnlyChanges() || !isLampOnlyRegisterScoreChange(change))
     )
   )
+  const [showClassEmblem, setShowClassEmblem] = createSignal(true)
   const [showTotalHighScore, setShowTotalHighScore] = createSignal(true)
   const [showRecordStatistics, setShowRecordStatistics] = createSignal(true)
   const [totalHighScoreRowVisibility, setTotalHighScoreRowVisibility] =
@@ -1390,6 +1411,7 @@ export const RegisterScoreResultView = (props: {
           primarySortKey={songSortSettings().primaryKey}
           primarySortDirection={songSortSettings().primaryDirection}
           hideLampOnlyChanges={hideLampOnlyChanges()}
+          showClassEmblem={showClassEmblem()}
           showTotalHighScore={showTotalHighScore()}
           showRecordStatistics={showRecordStatistics()}
           totalHighScoreRowVisibility={totalHighScoreRowVisibility()}
@@ -1397,6 +1419,7 @@ export const RegisterScoreResultView = (props: {
           onPrimarySortKeyChange={updatePrimarySortKey}
           onPrimarySortDirectionChange={updatePrimarySortDirection}
           onHideLampOnlyChangesChange={setHideLampOnlyChanges}
+          onShowClassEmblemChange={setShowClassEmblem}
           onShowTotalHighScoreChange={setShowTotalHighScore}
           onShowRecordStatisticsChange={setShowRecordStatistics}
           onTotalHighScoreRowVisibilityChange={updateTotalHighScoreRowVisibility}
@@ -1418,7 +1441,10 @@ export const RegisterScoreResultView = (props: {
             >
               <RegisterScoreReportHeader result={props.result} />
               <div class="px-4 pt-3">
-                <RegisterScoreProfileSummary result={props.result} />
+                <RegisterScoreProfileSummary
+                  result={props.result}
+                  showClassEmblem={showClassEmblem()}
+                />
                 <RegisterScoreAggregateSummary
                   result={props.result}
                   showTotalHighScore={showTotalHighScore()}
