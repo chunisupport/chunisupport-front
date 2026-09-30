@@ -9,31 +9,32 @@ import {
   createResource,
   createSignal,
   For,
+  type JSX,
   onCleanup,
   onMount,
   Show,
 } from 'solid-js'
-import { fetchPossessions } from '../../../../api/possessions'
-import { getAppButtonClass } from '../../../../components/common/AppButton'
-import { HONOR_TYPE_CLASS_NAMES } from '../../../../constants/honors'
-import { getPossessionClassName } from '../../../../constants/possession'
-import { useSongsData } from '../../../../stores/songsData'
+import { fetchPossessions } from '../../../api/possessions'
+import { HONOR_TYPE_CLASS_NAMES } from '../../../constants/honors'
+import { getPossessionClassName } from '../../../constants/possession'
+import { useSongsData } from '../../../stores/songsData'
 import type {
   HonorDTO,
   PlayerDTO,
   PlayerRecordDTO,
   PossessionName,
   UserRatingDTO,
-} from '../../../../types/api'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
-import { resolvePossessionName } from '../../../../utils/possession'
-import { formatNullablePlayerRating } from '../../../../utils/ratingFormat'
-import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../../utils/theoreticalOverPowerTarget'
+} from '../../../types/api'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../../utils/overPowerFormat'
+import { resolvePossessionName } from '../../../utils/possession'
+import { formatNullablePlayerRating } from '../../../utils/ratingFormat'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../utils/theoreticalOverPowerTarget'
 import {
   hasUnknownChartConstants,
   hasUnknownOverPowerChartConstants,
   hasUnknownOverPowerPercentChartConstants,
-} from '../../../../utils/unknownChartConstant'
+} from '../../../utils/unknownChartConstant'
+import { getAppButtonClass } from '../AppButton'
 import {
   USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL,
   USER_NAMEPLATE_HISTORY_LINK_LABEL,
@@ -49,11 +50,15 @@ const SCROLL_DURATION_CSS_VARIABLE = '--honor-title-scroll-duration'
 const VISIBLE_HONOR_LIMIT = 3
 
 type Props = {
+  /** カード配置先に合わせた幅。省略時はマイページの既定幅 */
+  widthClass?: string
+  /** カード下部に表示する操作導線 */
+  footer?: JSX.Element
   playerInfo: PlayerDTO
   honors: HonorDTO[]
   rating: UserRatingDTO
-  /** RATING・OVER POWER・OP%履歴ページへのリンク先 */
-  historyHref: string
+  /** RATING・OVER POWER・OP%履歴ページへのリンク先。省略時は履歴ボタンを表示しない */
+  historyHref?: string
   /** 通常譜面レコード。未取得時はOVER POWER値・達成率の定数未判明判定を行わない */
   records?: readonly PlayerRecordDTO[]
   /** マスタ解決を省略して適用するポゼッション名。確認画面向け */
@@ -223,7 +228,7 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
  * ユーザーの称号、レベル、指標とRATING・OVER POWER・OP%履歴への導線を表示する。
  * カード背景色はポゼッションに応じて切り替える。
  *
- * @param props - プレイヤー情報、称号、計算済みレーティング、通常譜面レコード、履歴ページのリンク先、確認用ポゼッション名。
+ * @param props - プレイヤー情報、称号、指標、履歴リンク、配置幅と下部の操作導線。
  * @returns プロフィールカードの JSX 要素。
  */
 export const UserNameplate: Component<Props> = (props) => {
@@ -312,7 +317,7 @@ export const UserNameplate: Component<Props> = (props) => {
 
   return (
     <div
-      class={`user-nameplate relative mb-2 rounded-md px-3 py-3 shadow-sm ${USER_NAMEPLATE_WIDTH_CLASS} ${getPossessionClassName(
+      class={`user-nameplate relative mb-2 rounded-md px-3 py-3 shadow-sm ${props.widthClass ?? USER_NAMEPLATE_WIDTH_CLASS} ${getPossessionClassName(
         possessionName()
       )}`}
       data-possession={possessionName()}
@@ -352,71 +357,82 @@ export const UserNameplate: Component<Props> = (props) => {
       </Show>
       <div class="mb-2 flex flex-row items-end justify-between">
         <p class="">Lv. {props.playerInfo.level}</p>
-        <h1 class="flex-1 text-xl font-medium text-center">{props.playerInfo.name}</h1>
+        <h1 class="min-w-0 flex-1 break-words text-center font-sans text-xl font-medium">
+          {props.playerInfo.name}
+        </h1>
       </div>
       <hr class="mb-2 border-t" />
-      <dl class="space-y-2">
-        <div>
-          <dt class="text-sm font-medium leading-tight">{USER_NAMEPLATE_METRIC_LABELS.rating}</dt>
-          <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
-            <strong class="font-jost text-2xl font-semibold tracking-tight">
-              <UnknownConstMetricValue
-                value={playerRatingText()}
-                unknown={ratingHasUnknownChartConstants()}
-              />
-            </strong>
-            <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
-              {USER_NAMEPLATE_METRIC_LABELS.best}{' '}
-              <UnknownConstMetricValue
-                value={bestRatingText()}
-                unknown={bestHasUnknownChartConstants()}
-              />
-              {' / '}
-              {USER_NAMEPLATE_METRIC_LABELS.new}{' '}
-              <UnknownConstMetricValue
-                value={newRatingText()}
-                unknown={newHasUnknownChartConstants()}
-              />
-            </span>
-          </dd>
-        </div>
-        <div class="pr-20">
-          <dt class="text-sm font-medium leading-tight">
-            {USER_NAMEPLATE_METRIC_LABELS.overPower}
-          </dt>
-          <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
-            <strong class="font-jost text-2xl font-semibold tracking-tight">
-              <Show when={overPowerValueText() !== undefined}>
+      <div class="relative">
+        <dl class="space-y-2">
+          <div>
+            <dt class="text-sm font-medium leading-tight">{USER_NAMEPLATE_METRIC_LABELS.rating}</dt>
+            <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
+              <strong class="font-jost text-2xl font-semibold tracking-tight">
                 <UnknownConstMetricValue
-                  value={overPowerValueText() ?? ''}
-                  unknown={overPowerHasUnknownChartConstants()}
+                  value={playerRatingText()}
+                  unknown={ratingHasUnknownChartConstants()}
                 />
-              </Show>
-            </strong>
-            <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
-              <Show when={overPowerPercentText() !== undefined} fallback="%">
+              </strong>
+              <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
+                {USER_NAMEPLATE_METRIC_LABELS.best}{' '}
                 <UnknownConstMetricValue
-                  value={`${overPowerPercentText() ?? ''}%`}
-                  unknown={overPowerPercentHasUnknownChartConstants()}
+                  value={bestRatingText()}
+                  unknown={bestHasUnknownChartConstants()}
                 />
-              </Show>
-            </span>
-          </dd>
-        </div>
-      </dl>
-      <A
-        href={props.historyHref}
-        class={getAppButtonClass({
-          variant: 'surface',
-          size: 'xs',
-          shape: 'pill',
-          class: 'absolute right-3 bottom-3',
-        })}
-        aria-label={USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL}
-      >
-        <ChartColumnIncreasing class="h-4 w-4" aria-hidden="true" />
-        <span>{USER_NAMEPLATE_HISTORY_LINK_LABEL}</span>
-      </A>
+                {' / '}
+                {USER_NAMEPLATE_METRIC_LABELS.new}{' '}
+                <UnknownConstMetricValue
+                  value={newRatingText()}
+                  unknown={newHasUnknownChartConstants()}
+                />
+              </span>
+            </dd>
+          </div>
+          <div classList={{ 'pr-20': !!props.historyHref }}>
+            <dt class="text-sm font-medium leading-tight">
+              {USER_NAMEPLATE_METRIC_LABELS.overPower}
+            </dt>
+            <dd class="flex flex-wrap items-baseline gap-x-2 leading-none">
+              <strong class="font-jost text-2xl font-semibold tracking-tight">
+                <Show when={overPowerValueText() !== undefined}>
+                  <UnknownConstMetricValue
+                    value={overPowerValueText() ?? ''}
+                    unknown={overPowerHasUnknownChartConstants()}
+                  />
+                </Show>
+              </strong>
+              <span class="user-nameplate-metric-secondary font-jost text-base font-semibold">
+                <Show when={overPowerPercentText() !== undefined} fallback="%">
+                  <UnknownConstMetricValue
+                    value={`${overPowerPercentText() ?? ''}%`}
+                    unknown={overPowerPercentHasUnknownChartConstants()}
+                  />
+                </Show>
+              </span>
+            </dd>
+          </div>
+        </dl>
+        <Show when={props.historyHref}>
+          {(href) => (
+            <A
+              href={href()}
+              class={getAppButtonClass({
+                variant: 'surface',
+                size: 'xs',
+                shape: 'pill',
+                class: 'absolute right-0 bottom-0',
+              })}
+              aria-label={USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL}
+            >
+              <ChartColumnIncreasing class="h-4 w-4" aria-hidden="true" />
+              <span>{USER_NAMEPLATE_HISTORY_LINK_LABEL}</span>
+            </A>
+          )}
+        </Show>
+      </div>
+      <Show when={props.footer}>
+        <div class="mt-4 border-t border-current/20 pt-3">{props.footer}</div>
+      </Show>
     </div>
   )
 }

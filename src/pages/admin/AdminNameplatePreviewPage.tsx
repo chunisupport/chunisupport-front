@@ -1,7 +1,7 @@
 import { For } from 'solid-js'
+import { UserNameplate } from '../../components/common/profile/UserNameplate'
 import { POSSESSION_NAMES } from '../../constants/possession'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { UserNameplate } from '../users/UserPage/components/UserNameplate'
 import { ADMIN_NAMEPLATE_PREVIEW_COPY } from './AdminNameplatePreviewPage.constants'
 import {
   NAMEPLATE_PREVIEW_HONORS,

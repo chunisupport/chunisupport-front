@@ -12,6 +12,7 @@ import {
 } from '../../../../api/friends'
 import { AppButton, type AppButtonVariant } from '../../../../components/common/AppButton'
 import { showSuccessToast } from '../../../../components/common/AppToast'
+import { USER_NAMEPLATE_WIDTH_CLASS } from '../../../../components/common/profile/UserNameplate.constants'
 import { Loading } from '../../../../components/Loading'
 import {
   friendMutationKeys,
@@ -32,7 +33,6 @@ import {
   PROFILE_FRIEND_DIALOG_COPY,
   type ProfileFriendDialogAction,
 } from './ProfileFriendAction.constants'
-import { USER_NAMEPLATE_WIDTH_CLASS } from './UserNameplate.constants'
 
 type ProfileFriendActionProps = {
   /** 表示中プロフィールのユーザー名 */

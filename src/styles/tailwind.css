@@ -1138,6 +1138,7 @@
   }
 
   .user-nameplate .user-honor-title {
+    width: 100%;
     box-shadow: var(--cs-shadow-honor-title);
   }
 

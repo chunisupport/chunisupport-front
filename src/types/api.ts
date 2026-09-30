@@ -984,6 +984,7 @@ export interface PlayerLatestUpdateResult extends PlayerDataUpdateResult {
   schema_version: number
 }
 
+/** スコア登録・保存済み更新結果のプロフィール。エンブレムは数値IDを返す。 */
 export interface PlayerDataProfile {
   player_id: number
   name: string
@@ -1248,12 +1249,15 @@ export interface PlayerMetricHistoryResponseDTO {
   entries: PlayerMetricHistoryEntryDTO[]
 }
 
+/** 内部APIのプロフィール取得・プレイヤー作成レスポンスで返るプレイヤー情報。 */
 export interface PlayerDTO {
   name: string
   level: number
   rating: number
-  class_emblem_id: number | null
-  class_emblem_base_id: number | null
+  /** 解決済みのクラスエンブレムのマスタ名。未設定・解決不能時はnull */
+  class_emblem: string | null
+  /** 解決済みのクラスエンブレムベースのマスタ名。未設定・解決不能時はnull */
+  class_emblem_base: string | null
   /** ポゼッションID。`MasterDataDTO.possessions` の `id` に対応する */
   possession_id: number
   last_played_at: string | null
