@@ -3,10 +3,8 @@ import {
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../../../constants/chart'
 import { PLAYER_STATS_ACHIEVEMENT_LABEL } from '../../../constants/playerStats'
-import type {
-  PlayerStatsAchievement,
-  PlayerStatsDifficulty,
-} from '../../../utils/playerStatsDashboard'
+import type { PlayerStatsAchievement } from '../../../utils/playerStatsDashboard'
+import type { UniFillMatrixDifficulty } from '../../../utils/uniFillMatrix'
 
 /** ウニ埋めマトリクス画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const UNI_FILL_MATRIX_COPY = {
@@ -18,11 +16,16 @@ export const UNI_FILL_MATRIX_COPY = {
   totalHeader: '合計',
   levelCaption: 'ジャンル×譜面定数から換算したレベルごとの達成状況',
   chartConstantCaption: 'ジャンル×譜面定数ごとの達成状況',
+  cellActionLabel: '未達成の譜面をレコードで表示',
+  recordNavigationError: 'レコード画面へ移動できませんでした。',
 } as const
+
+/** 通常レコード画面へ遷移するときの並び順クエリ（スコア降順） */
+export const UNI_FILL_MATRIX_RECORD_SORT_QUERY = 'sortcol=score&sortorder=desc'
 
 /** 難易度選択肢1件分の値と表示名 */
 export type UniFillMatrixDifficultyOption = {
-  value: Exclude<PlayerStatsDifficulty, 'ALL'>
+  value: UniFillMatrixDifficulty
   label: string
 }
 
@@ -34,6 +37,7 @@ export const UNI_FILL_MATRIX_DEFAULT_DIFFICULTY: UniFillMatrixDifficultyOption =
 
 /** 難易度の選択肢 */
 export const UNI_FILL_MATRIX_DIFFICULTY_OPTIONS: UniFillMatrixDifficultyOption[] = [
+  { value: 'ALL', label: '全難易度' },
   { value: 'BASIC', label: 'BASIC' },
   { value: 'ADVANCED', label: 'ADVANCED' },
   { value: 'EXPERT', label: 'EXPERT' },

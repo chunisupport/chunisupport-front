@@ -31,6 +31,7 @@ import ApplicationAvailabilityGate from './components/availability/ApplicationAv
 import { SelectableCardLink } from './components/common/SelectableCardButton'
 import RequireAuth from './components/guards/RequireAuth'
 import RequireRole from './components/guards/RequireRole'
+import { LandingProfileCard } from './components/LandingProfileCard/LandingProfileCard'
 
 import {
   FOOTER_COPYRIGHT_TEXT,
@@ -294,21 +295,7 @@ const LandingPage = () => {
               </section>
             }
           >
-            {(username) => (
-              <section class="rounded-lg border border-border bg-surface p-6">
-                <h1 class="mb-4 text-2xl font-semibold">ようこそ、{username()}さん</h1>
-                <div class="rounded-md border border-border bg-surface-muted p-4">
-                  <p class="text-sm text-text-muted">プロフィール</p>
-                  <p class="mt-1 text-lg font-semibold text-text">@{username()}</p>
-                  <A
-                    href={`/users/${encodeURIComponent(username())}`}
-                    class="mt-3 inline-block text-sm font-medium text-action-primary underline"
-                  >
-                    マイページを開く
-                  </A>
-                </div>
-              </section>
-            )}
+            {(username) => <LandingProfileCard username={username()} />}
           </Show>
         </Show>
 

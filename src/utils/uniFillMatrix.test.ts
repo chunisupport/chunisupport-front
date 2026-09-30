@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerRecordDTO } from '../types/api'
-import { buildUniFillMatrix } from './uniFillMatrix'
+import { DEFAULT_FILTER } from './recordFilterDefaults'
+import { buildUniFillMatrix, buildUniFillMatrixRecordFilter } from './uniFillMatrix'
 
 /**
  * マトリクステスト用の通常譜面レコードを生成する。
@@ -125,4 +126,122 @@ test('ジャンル情報がない譜面や表示対象外ジャンルの譜面�
   assert.deepEqual(result.columns, [])
   assert.deepEqual(result.rows, [])
   assert.deepEqual(result.grandTotal, { count: 0, total: 0 })
+})
+
+test('レベル別のマスはジャンル・レベル範囲・スコア上限を指定したレコードフィルターになる', () => {
+  // Given
+  const [column] = buildUniFillMatrix(
+    [createRecord({ id: 'pops-1', const: 14.7 })],
+    ATTRIBUTES,
+    GENRES,
+    'level',
+    'sss'
+  ).columns
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'MASTER_ULTIMA',
+    achievement: 'sss',
+    genre: 'POPS & ANIME',
+    column,
+  })
+
+  // Then
+  assert.deepEqual(result.difficulties, ['MASTER', 'ULTIMA'])
+  assert.deepEqual(result.genres, ['POPS & ANIME'])
+  assert.deepEqual(result.const, { min: 14.5, max: 14.9 })
+  assert.equal(result.constFilterMode, 'level')
+  assert.deepEqual(result.score, { min: 0, max: 1_007_499 })
+  assert.equal(result.scoreFilterMode, 'number')
+})
+
+test('レベル6以下の列はフィルターのレベル指定と範囲が異なるため数値指定になる', () => {
+  // Given
+  const [column] = buildUniFillMatrix(
+    [createRecord({ id: 'pops-1', const: 5.5 })],
+    ATTRIBUTES,
+    GENRES,
+    'level',
+    'sss'
+  ).columns
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'BASIC',
+    achievement: 'sss',
+    column,
+  })
+
+  // Then
+  assert.deepEqual(result.const, { min: 5.5, max: 5.9 })
+  assert.equal(result.constFilterMode, 'number')
+})
+
+test('譜面定数別のマスは単一の譜面定数を数値指定したフィルターになる', () => {
+  // Given
+  const [column] = buildUniFillMatrix(
+    [createRecord({ id: 'orig-1', const: 13.2 })],
+    ATTRIBUTES,
+    GENRES,
+    'chartConstant',
+    'aj'
+  ).columns
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'EXPERT',
+    achievement: 'aj',
+    column,
+  })
+
+  // Then
+  assert.deepEqual(result.difficulties, ['EXPERT'])
+  assert.deepEqual(result.genres, DEFAULT_FILTER.genres)
+  assert.deepEqual(result.const, { min: 13.2, max: 13.2 })
+  assert.equal(result.constFilterMode, 'number')
+  assert.deepEqual(result.combo_lamp, ['FULL COMBO', null])
+})
+
+test('OP理論値対象の総合計マスは全難易度の理論値OP対象と未達成ランプ条件だけを指定する', () => {
+  // Given
+  const target = {
+    difficulty: 'OP_TARGET',
+    achievement: 'hard',
+  } as const
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, target)
+
+  // Then
+  assert.deepEqual(result.difficulties, ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'])
+  assert.equal(result.opTargetOnly, true)
+  assert.equal(result.opTargetType, 'theoretical')
+  assert.deepEqual(result.const, DEFAULT_FILTER.const)
+  assert.deepEqual(result.hard_lamp, ['CLEAR', 'FAILED', null])
+})
+
+test('全難易度のマスは全難易度を選択し、OP対象では絞り込まない', () => {
+  // Given
+  const target = { difficulty: 'ALL', achievement: 'fc' } as const
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, target)
+
+  // Then
+  assert.deepEqual(result.difficulties, ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'])
+  assert.equal(result.opTargetOnly, false)
+  assert.deepEqual(result.combo_lamp, [null])
+})
+
+test('AJC未達成はAJCを除いたコンボランプ、未プレイはスコア0だけを表示するフィルターになる', () => {
+  // Given
+  const base = { difficulty: 'MASTER' } as const
+
+  // When
+  const ajc = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, { ...base, achievement: 'ajc' })
+  const played = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, { ...base, achievement: 'played' })
+
+  // Then
+  assert.deepEqual(ajc.combo_lamp, ['ALL JUSTICE', 'FULL COMBO', null])
+  assert.deepEqual(played.score, { min: 0, max: 0 })
 })

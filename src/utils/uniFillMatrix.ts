@@ -1,8 +1,27 @@
+import {
+  MASTER_ULTIMA_FILTER,
+  SCORE_MIN,
+  THEORETICAL_OVER_POWER_TARGET_FILTER,
+} from '../constants/chart'
+import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerStatsHeatmapAxis } from '../constants/playerStats'
 import type { PlayerRecordDTO } from '../types/api'
+import type { NumericRangeFilter } from '../types/record'
+import type { FilterState } from '../types/recordFilter'
 import { formatChartConst, truncateChartConst } from './chartConstFormat'
-import { getChartLevelSortKey, toChartLevelLabel } from './chartLevel'
-import { hasPlayerStatsAchievement, type PlayerStatsAchievement } from './playerStatsDashboard'
+import {
+  getChartLevelConstRange,
+  getChartLevelFilterBoundary,
+  getChartLevelSortKey,
+  toChartLevelLabel,
+} from './chartLevel'
+import { COMBO_LAMP_UNACHIEVED_FILTERS, HARD_LAMP_UNACHIEVED_FILTERS } from './goalLamp'
+import {
+  hasPlayerStatsAchievement,
+  type PlayerStatsAchievement,
+  type PlayerStatsDifficulty,
+} from './playerStatsDashboard'
+import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from './scoreRank'
 
 /** マトリクス1セル分の達成件数と総数 */
 export type UniFillMatrixCell = {
@@ -16,6 +35,10 @@ export type UniFillMatrixColumn = {
   key: number
   /** 列見出しに表示する文字列 */
   label: string
+  /** 列に含まれる譜面定数の範囲 */
+  constRange: NumericRangeFilter
+  /** 通常レコードのフィルターで範囲を表す指定方法 */
+  constFilterMode: FilterState['constFilterMode']
 }
 
 /** ジャンル1件分の行 */
@@ -41,7 +64,7 @@ export type UniFillMatrix = {
  *
  * @param chartConst - 譜面定数。
  * @param axis - レベル別または譜面定数別。
- * @returns 並び替え用のキーと表示ラベル。
+ * @returns 並び替え用のキー、表示ラベル、譜面定数の範囲とフィルターでの指定方法。
  */
 const toUniFillMatrixColumn = (
   chartConst: number,
@@ -49,10 +72,25 @@ const toUniFillMatrixColumn = (
 ): UniFillMatrixColumn => {
   if (axis === 'level') {
     const level = toChartLevelLabel(chartConst)
-    return { key: getChartLevelSortKey(level), label: level }
+    const constRange = getChartLevelConstRange(level)
+    // 6以下はフィルターのレベル指定が「5 = 5.0〜5.9」にまとまるため、範囲が一致しない列は数値指定にする
+    const isFilterLevelRange =
+      getChartLevelFilterBoundary(level, 'min') === constRange.min &&
+      getChartLevelFilterBoundary(level, 'max') === constRange.max
+    return {
+      key: getChartLevelSortKey(level),
+      label: level,
+      constRange,
+      constFilterMode: isFilterLevelRange ? 'level' : 'number',
+    }
   }
   const truncated = truncateChartConst(chartConst)
-  return { key: truncated, label: formatChartConst(truncated) }
+  return {
+    key: truncated,
+    label: formatChartConst(truncated),
+    constRange: { min: truncated, max: truncated },
+    constFilterMode: 'number',
+  }
 }
 
 /**
@@ -120,3 +158,125 @@ export const buildUniFillMatrix = (
     grandTotal: sumUniFillMatrixCells(rows.map((row) => row.total)),
   }
 }
+
+/** マトリクスで選択できる難易度 */
+export type UniFillMatrixDifficulty = PlayerStatsDifficulty
+
+/** 通常レコードへ引き継ぐマトリクスのマス */
+export type UniFillMatrixRecordTarget = {
+  /** マトリクスで選択中の難易度 */
+  difficulty: UniFillMatrixDifficulty
+  /** 埋め終わりとみなす到達条件 */
+  achievement: PlayerStatsAchievement
+  /** 行のジャンル。列合計・総合計のマスでは未指定 */
+  genre?: string
+  /** 横軸の列。ジャンル合計・総合計のマスでは未指定 */
+  column?: UniFillMatrixColumn
+}
+
+/**
+ * マトリクスの難易度を通常レコードの難易度・OP対象条件へ変換する。
+ *
+ * @param difficulty - マトリクスで選択中の難易度。
+ * @returns 通常レコードで選択する難易度とOP対象条件。
+ */
+const resolveUniFillMatrixDifficultyFilter = (
+  difficulty: UniFillMatrixDifficulty
+): Pick<FilterState, 'difficulties' | 'opTargetOnly' | 'opTargetType'> => {
+  if (difficulty === THEORETICAL_OVER_POWER_TARGET_FILTER) {
+    return {
+      difficulties: [...PLAYER_DATA_DIFFICULTIES],
+      opTargetOnly: true,
+      opTargetType: 'theoretical',
+    }
+  }
+  if (difficulty === 'ALL') {
+    return {
+      difficulties: [...PLAYER_DATA_DIFFICULTIES],
+      opTargetOnly: false,
+      opTargetType: 'current',
+    }
+  }
+  return {
+    difficulties: difficulty === MASTER_ULTIMA_FILTER ? ['MASTER', 'ULTIMA'] : [difficulty],
+    opTargetOnly: false,
+    opTargetType: 'current',
+  }
+}
+
+/**
+ * スコア上限を指定した未達成条件を作る。
+ *
+ * @param maxScore - 表示するスコアの上限。
+ * @returns スコア範囲を数値指定にした部分フィルター。
+ */
+const toScoreBelowFilter = (maxScore: number): Pick<FilterState, 'score' | 'scoreFilterMode'> => ({
+  score: { min: SCORE_MIN, max: Math.max(SCORE_MIN, maxScore) },
+  scoreFilterMode: 'number',
+})
+
+/**
+ * 埋め条件を満たしていない譜面だけを表示する条件へ変換する。
+ *
+ * @param achievement - 埋め終わりとみなす到達条件。
+ * @returns 未達成譜面を絞り込む部分フィルター。
+ */
+const resolveUnachievedFilter = (achievement: PlayerStatsAchievement): Partial<FilterState> => {
+  switch (achievement) {
+    case 'played':
+      return toScoreBelowFilter(SCORE_MIN)
+    case 's':
+      return toScoreBelowFilter(SCORE_RANK_MIN_SCORES.S - 1)
+    case 'sPlus':
+      return toScoreBelowFilter(SCORE_RANK_MIN_SCORES['S+'] - 1)
+    case 'ss':
+      return toScoreBelowFilter(SCORE_RANK_MIN_SCORES.SS - 1)
+    case 'ssPlus':
+      return toScoreBelowFilter(SCORE_RANK_MIN_SCORES['SS+'] - 1)
+    case 'sss':
+      return toScoreBelowFilter(SCORE_RANK_MIN_SCORES.SSS - 1)
+    case 'sssPlus':
+      return toScoreBelowFilter(SCORE_RANK_MIN_SCORES['SSS+'] - 1)
+    case 'max':
+      return toScoreBelowFilter(MAX_SCORE - 1)
+    case 'fc':
+      return { combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS.FC] }
+    case 'aj':
+      return { combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS.AJ] }
+    case 'ajc':
+      return { combo_lamp: ['ALL JUSTICE', ...COMBO_LAMP_UNACHIEVED_FILTERS.AJ] }
+    case 'clear':
+      return { hard_lamp: ['FAILED', null] }
+    case 'hard':
+      return { hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS.HRD] }
+    case 'brave':
+      return { hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS.BRV] }
+    case 'absolute':
+      return { hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS.ABS] }
+    case 'catastrophe':
+      return { hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS.CTS] }
+  }
+}
+
+/**
+ * マトリクスのマスから、埋め条件を満たしていない譜面を表示する通常レコード用フィルターを作る。
+ *
+ * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
+ * @param target - 難易度、埋め条件、行ジャンル、列。
+ * @returns マスの条件と未達成条件を反映した通常レコードフィルター。
+ */
+export const buildUniFillMatrixRecordFilter = (
+  defaultFilter: FilterState,
+  target: UniFillMatrixRecordTarget
+): FilterState => ({
+  ...defaultFilter,
+  ...resolveUniFillMatrixDifficultyFilter(target.difficulty),
+  ...resolveUnachievedFilter(target.achievement),
+  ...(target.genre === undefined ? {} : { genres: [target.genre] }),
+  ...(target.column === undefined
+    ? {}
+    : {
+        const: { ...target.column.constRange },
+        constFilterMode: target.column.constFilterMode,
+      }),
+})
