@@ -45,6 +45,12 @@ export const OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES = 5
 /** 未解禁曲を集計対象から除外する操作の表示名 */
 export const OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL = '未解禁曲除外'
 
+/** 未解禁楽曲設定ダイアログで要解禁楽曲だけを表示する初期状態 */
+export const DEFAULT_LOCKED_SONGS_UNLOCK_REQUIRED_ONLY = true
+
+/** 未解禁楽曲設定ダイアログの要解禁楽曲表示操作のラベル */
+export const LOCKED_SONGS_UNLOCK_REQUIRED_ONLY_LABEL = '要解禁楽曲のみ表示'
+
 /** 未解禁楽曲設定ダイアログのプレイ状況フィルター */
 export type LockedSongsPlayStatus = 'played' | 'unplayed'
 
