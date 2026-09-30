@@ -28,6 +28,7 @@ const managedSong: ManagedWorldsendSongDTO = {
   official_idx: '8000',
   jacket: null,
   is_new: false,
+  unlock_required: false,
   charts: {
     WORLDSEND: {
       attribute: '狂',
@@ -175,4 +176,35 @@ test('保存したドラフトを管理用楽曲へ反映し、譜面の更新�
   assert.equal(result.genre, 'ORIGINAL')
   assert.equal(result.charts.WORLDSEND?.attribute, '撃')
   assert.equal(result.charts.WORLDSEND?.updated_at, '2025-02-02T00:00:00Z')
+})
+
+test('要解禁フラグは編集ドラフトへ読み込み、差分判定と更新リクエストに反映すること', () => {
+  // Given: 解禁不要の楽曲から生成したドラフトを要解禁へ変更する。
+  const initial = toWorldsendDraft(managedSong, genres)
+  const draft = { ...initial, unlock_required: true }
+
+  // When
+  const result = buildUpdateWorldsendSongRequest(draft, genres)
+
+  // Then
+  assert.equal(initial.unlock_required, false)
+  assert.equal(hasWorldsendDraftChanges(draft, initial), true)
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.unlock_required, true)
+  assert.equal(applyWorldsendDraftToManagedSong(managedSong, draft, null).unlock_required, true)
+})
+
+test('追加リクエストは要解禁フラグを送ること', () => {
+  // Given
+  const draft = { ...validCreateDraft(), unlock_required: true }
+
+  // When
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then
+  assert.equal(buildCreateWorldsendDraft().unlock_required, false)
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.unlock_required, true)
 })

@@ -35,6 +35,7 @@ const createSong = (
   is_maxop_unknown: false,
   op_target_difficulty: null,
   is_new: false,
+  unlock_required: false,
   charts,
 })
 
@@ -61,6 +62,7 @@ const createWorldsendSong = (
   official_idx: id,
   jacket: null,
   is_new: false,
+  unlock_required: false,
   charts: chart ? { WORLDSEND: chart } : {},
 })
 

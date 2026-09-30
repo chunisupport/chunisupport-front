@@ -60,6 +60,7 @@ const song: SongDTO = {
   is_maxop_unknown: false,
   op_target_difficulty: null,
   is_new: false,
+  unlock_required: false,
   charts: {},
 }
 
@@ -80,6 +81,7 @@ const worldsendSong: WorldsendSongDTO = {
   official_idx: '90001',
   jacket: null,
   is_new: false,
+  unlock_required: false,
   charts: {},
 }
 
@@ -163,6 +165,36 @@ test("WORLD'S END の旧キャッシュに新曲フラグがなければ再取�
   await replaceCachedWorldsendSongs([worldsendSong], songsUpdatedAt)
   const oldSong = { ...worldsendSong }
   delete (oldSong as Partial<WorldsendSongDTO>).is_new
+  await db.worldsendSongs.put({ id: oldSong.id, sortOrder: 0, data: oldSong })
+
+  // When
+  const cached = await readCachedWorldsendSongs(songsUpdatedAt)
+
+  // Then
+  assert.equal(cached, null)
+})
+
+test('通常楽曲の旧キャッシュに要解禁フラグがなければ再取得すること', async () => {
+  // Given: 要解禁フラグ追加前の形式で保存された通常楽曲キャッシュ。
+  const songsUpdatedAt = '2026-06-16T12:00:00Z'
+  await replaceCachedSongs([song], songsUpdatedAt)
+  const oldSong = { ...song }
+  delete (oldSong as Partial<SongDTO>).unlock_required
+  await db.songs.put({ id: oldSong.id, sortOrder: 0, data: oldSong })
+
+  // When
+  const cached = await readCachedSongs(songsUpdatedAt)
+
+  // Then
+  assert.equal(cached, null)
+})
+
+test("WORLD'S END の旧キャッシュに要解禁フラグがなければ再取得すること", async () => {
+  // Given: 要解禁フラグ追加前の形式で保存された WORLD'S END 楽曲キャッシュ。
+  const songsUpdatedAt = '2026-06-16T12:00:00Z'
+  await replaceCachedWorldsendSongs([worldsendSong], songsUpdatedAt)
+  const oldSong = { ...worldsendSong }
+  delete (oldSong as Partial<WorldsendSongDTO>).unlock_required
   await db.worldsendSongs.put({ id: oldSong.id, sortOrder: 0, data: oldSong })
 
   // When

@@ -24,6 +24,7 @@ const cachedSong: SongDTO = {
   is_maxop_unknown: false,
   op_target_difficulty: null,
   is_new: false,
+  unlock_required: false,
   charts: {},
 }
 
@@ -44,6 +45,7 @@ const cachedWorldsendSong: WorldsendSongDTO = {
   official_idx: '90001',
   jacket: null,
   is_new: false,
+  unlock_required: false,
   charts: {},
 }
 

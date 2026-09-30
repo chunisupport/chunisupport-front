@@ -372,6 +372,8 @@ export interface SongDTO {
   op_target_difficulty: PlayerDataDifficulty | null
   /** 最新の2週間ごとの更新で追加された楽曲かどうか */
   is_new: boolean
+  /** 楽曲のプレイに解禁が必要かどうか */
+  unlock_required: boolean
   /** 難易度別譜面。APIは存在しない難易度をnullで返す場合がある */
   charts: Partial<Record<PlayerDataDifficulty, ChartDTO | null>>
 }
@@ -1498,6 +1500,8 @@ export interface WorldsendSongDTO {
   official_idx: string
   jacket: string | null
   is_new: boolean
+  /** 楽曲のプレイに解禁が必要かどうか */
+  unlock_required: boolean
   charts: { WORLDSEND?: WorldsendChartDTO }
   // API仕様書に未記載だが include_deleted=true 時に削除状態の判別に利用
   is_deleted?: boolean
@@ -1536,6 +1540,8 @@ export interface CreateSongRequestDTO {
   jacket: string | null
   /** 最新の2週間ごとの更新で追加された楽曲かどうか。省略時はfalse */
   is_new?: boolean
+  /** 楽曲のプレイに解禁が必要かどうか。省略時はfalse */
+  unlock_required?: boolean
   charts?: CreateSongChartRequestDTO[]
 }
 
@@ -1552,6 +1558,8 @@ export interface UpdateSongRequestDTO {
   jacket: string | null
   /** 最新の2週間ごとの更新で追加された楽曲かどうか。省略またはnullの場合はfalseとして更新 */
   is_new?: boolean | null
+  /** 楽曲のプレイに解禁が必要かどうか。省略またはnullの場合は既存値を維持 */
+  unlock_required?: boolean | null
   charts: Record<string, UpdateChartRequestDTO>
 }
 
@@ -1574,6 +1582,8 @@ export interface CreateWorldsendSongRequestDTO {
   released_at: string | null
   jacket: string | null
   is_new?: boolean
+  /** 楽曲のプレイに解禁が必要かどうか。省略時はfalse */
+  unlock_required?: boolean
   chart?: UpdateWorldsendChartRequestDTO
 }
 
@@ -1589,6 +1599,8 @@ export interface UpdateWorldsendSongRequestDTO {
   released_at: string | null
   jacket: string | null
   is_new: boolean
+  /** 楽曲のプレイに解禁が必要かどうか。省略またはnullの場合は既存値を維持 */
+  unlock_required?: boolean | null
   charts?: {
     WORLDSEND?: UpdateWorldsendChartRequestDTO
   } | null

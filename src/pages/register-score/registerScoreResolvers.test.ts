@@ -31,6 +31,7 @@ const createStandardSong = (): SongDTO => ({
   is_maxop_unknown: false,
   op_target_difficulty: null,
   is_new: false,
+  unlock_required: false,
   charts: { MASTER: { const: 15.4, is_const_unknown: false, notes: null } },
 })
 
@@ -46,6 +47,7 @@ const createWorldsendSong = (): WorldsendSongDTO => ({
   official_idx: 'worldsend-idx',
   jacket: null,
   is_new: false,
+  unlock_required: false,
   charts: { WORLDSEND: { attribute: null, level_star: 5, notes: null } },
 })
 
