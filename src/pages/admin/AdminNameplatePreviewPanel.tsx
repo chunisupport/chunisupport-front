@@ -47,7 +47,7 @@ const AdminNameplatePreviewPanel = () => {
   }))
 
   return (
-    <div class="mx-auto w-full max-w-3xl">
+    <div class="mx-auto w-full max-w-6xl">
       <div class="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <TextField class="col-span-2 sm:col-span-4" value={name()} onChange={setName}>
           <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
@@ -123,7 +123,7 @@ const AdminNameplatePreviewPanel = () => {
       </div>
 
       <h2 class="mb-4 text-xl font-semibold">{ADMIN_NAMEPLATE_PREVIEW_COPY.emblemListHeading}</h2>
-      <div class="mb-10 flex flex-col items-center gap-4">
+      <div class="mb-10 grid grid-cols-1 items-start justify-items-center gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <For each={NAMEPLATE_PREVIEW_EMBLEM_OPTIONS.slice(1)}>
           {(option) => (
             <UserNameplate
@@ -144,10 +144,10 @@ const AdminNameplatePreviewPanel = () => {
       <h2 class="mb-4 text-xl font-semibold">
         {ADMIN_NAMEPLATE_PREVIEW_COPY.possessionListHeading}
       </h2>
-      <div class="flex flex-col items-center gap-8">
+      <div class="grid grid-cols-1 items-start justify-items-center gap-8 sm:grid-cols-2 lg:grid-cols-3">
         <For each={POSSESSION_NAMES}>
           {(possessionName) => (
-            <section class="flex flex-col items-center">
+            <section class="flex w-full min-w-0 flex-col items-center">
               <h3 class="mb-2 text-center font-sans text-sm text-text-muted">{possessionName}</h3>
               <UserNameplate
                 playerInfo={player()}
