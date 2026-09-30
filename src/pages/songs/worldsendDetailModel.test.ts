@@ -24,6 +24,7 @@ const createSong = (overrides: Partial<WorldsendSongDTO> = {}): WorldsendSongDTO
   official_idx: '123',
   jacket: 'jacket-file',
   is_new: false,
+  unlock_required: false,
   charts: {
     WORLDSEND: {
       attribute: '狂',

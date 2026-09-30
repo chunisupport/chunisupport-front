@@ -36,6 +36,7 @@ export const SONG_MANAGEMENT_FIELD_COPY = {
   releasedAt: 'リリース日',
   jacket: 'ジャケットID',
   isNew: '新曲フラグ',
+  unlockRequired: '要解禁',
   attribute: '属性',
   level: 'レベル',
   notes: 'ノーツ',

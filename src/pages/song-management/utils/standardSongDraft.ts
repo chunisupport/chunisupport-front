@@ -45,6 +45,7 @@ export type SongDraft = {
   released_at: string | null
   jacket: string | null
   is_new: boolean
+  unlock_required: boolean
   updated_at: string
   charts: EditableChartDraft[]
 }
@@ -79,6 +80,7 @@ export type CreateSongDraft = {
   released_at: string | null
   jacket: string | null
   is_new: boolean
+  unlock_required: boolean
   charts: CreateSongChartDraft[]
 }
 
@@ -99,6 +101,7 @@ export const buildCreateSongDraft = (): CreateSongDraft => {
     released_at: null,
     jacket: null,
     is_new: false,
+    unlock_required: false,
     charts: PLAYER_DATA_DIFFICULTIES.map((difficultyName) => ({
       difficulty_name: difficultyName,
       enabled: false,
@@ -194,6 +197,7 @@ export const toSongDraft = (
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
     is_new: readSongNewFlag(song),
+    unlock_required: song.unlock_required,
     updated_at: song.updated_at,
     charts: difficulties
       .map((difficulty) => {
@@ -238,6 +242,7 @@ export const hasSongDraftChanges = (
     current.released_at !== initial.released_at ||
     current.jacket !== initial.jacket ||
     current.is_new !== initial.is_new ||
+    current.unlock_required !== initial.unlock_required ||
     current.charts.length !== initial.charts.length
   )
     return true
@@ -287,6 +292,7 @@ export const buildUpdateSongRequest = (
       released_at: normalizedReleasedAt,
       jacket: draft.jacket,
       is_new: draft.is_new,
+      unlock_required: draft.unlock_required,
       charts: Object.fromEntries(
         draft.charts.map((chart) => [
           chart.difficulty_name,
@@ -356,6 +362,7 @@ export const buildCreateSongRequest = (
       released_at: normalizedReleasedAt,
       jacket: toNullableTrimmedString(draft.jacket),
       is_new: draft.is_new,
+      unlock_required: draft.unlock_required,
       charts: draft.charts
         .filter((chart) => chart.enabled)
         .map((chart) => ({
@@ -405,6 +412,7 @@ export const applySongDraftToManagedSong = (
     release: toDateOnly(draft.released_at),
     jacket: draft.jacket,
     is_new: draft.is_new,
+    unlock_required: draft.unlock_required,
     charts,
   }
 }

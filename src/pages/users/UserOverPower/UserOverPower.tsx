@@ -24,6 +24,7 @@ import {
   buildOverPowerChartEntries,
   selectOverPowerChartEntries,
 } from '../../../usecases/overpower/aggregation'
+import { OVER_POWER_THEORETICAL_TARGET } from '../../../usecases/overpower/constants'
 import { buildLockedSongsBatchPayload } from '../../../usecases/overpower/lockedSongsBatch'
 import { buildOverPowerSummary } from '../../../usecases/overpower/overpowerSummary'
 import { buildOverPowerRecordFilter } from '../../../usecases/overpower/recordNavigation'
@@ -190,7 +191,7 @@ const UserOverPower: Component<Props> = (props) => {
       ) ?? OVER_POWER_AGGREGATION_TARGET_OPTIONS[0]
   )
   const countLabel = createMemo(() =>
-    aggregationTarget() === 'OP_TARGET'
+    aggregationTarget() === 'OP_TARGET' || aggregationTarget() === OVER_POWER_THEORETICAL_TARGET
       ? OVER_POWER_CONTROL_LABELS.songCount
       : OVER_POWER_CONTROL_LABELS.chartCount
   )

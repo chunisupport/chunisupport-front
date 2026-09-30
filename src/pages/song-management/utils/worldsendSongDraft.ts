@@ -27,6 +27,7 @@ export type WorldsendDraft = {
   released_at: string | null
   jacket: string | null
   is_new: boolean
+  unlock_required: boolean
   attribute: string | null
   level_star: number | null
   notes: number | null
@@ -47,6 +48,7 @@ export type CreateWorldsendDraft = {
   released_at: string | null
   jacket: string | null
   is_new: boolean
+  unlock_required: boolean
   attribute: string | null
   level_star: number | null
   notes: number | null
@@ -70,6 +72,7 @@ export const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
     released_at: null,
     jacket: null,
     is_new: false,
+    unlock_required: false,
     attribute: null,
     level_star: null,
     notes: null,
@@ -101,6 +104,7 @@ export const toWorldsendDraft = (
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
     is_new: readSongNewFlag(song),
+    unlock_required: song.unlock_required,
     attribute: chart?.attribute ?? null,
     level_star: chart?.level_star ?? null,
     notes: chart?.notes ?? null,
@@ -132,6 +136,7 @@ export const hasWorldsendDraftChanges = (
     current.released_at !== initial.released_at ||
     current.jacket !== initial.jacket ||
     current.is_new !== initial.is_new ||
+    current.unlock_required !== initial.unlock_required ||
     current.attribute !== initial.attribute ||
     current.level_star !== initial.level_star ||
     current.notes !== initial.notes ||
@@ -168,6 +173,7 @@ export const buildUpdateWorldsendSongRequest = (
       released_at: normalizedReleasedAt,
       jacket: draft.jacket,
       is_new: draft.is_new,
+      unlock_required: draft.unlock_required,
       charts: {
         WORLDSEND: {
           attribute: toNullableTrimmedString(draft.attribute),
@@ -245,6 +251,7 @@ export const buildCreateWorldsendSongRequest = (
       released_at: normalizedReleasedAt,
       jacket: toNullableTrimmedString(draft.jacket),
       is_new: draft.is_new,
+      unlock_required: draft.unlock_required,
       chart: hasChartInput
         ? {
             attribute: toNullableTrimmedString(draft.attribute),
@@ -280,6 +287,7 @@ export const applyWorldsendDraftToManagedSong = (
   release: toDateOnly(draft.released_at),
   jacket: draft.jacket,
   is_new: draft.is_new,
+  unlock_required: draft.unlock_required,
   charts: {
     WORLDSEND: {
       attribute: toNullableTrimmedString(draft.attribute),

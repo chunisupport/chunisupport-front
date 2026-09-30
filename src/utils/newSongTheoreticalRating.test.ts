@@ -39,6 +39,7 @@ const createSong = (
   is_maxop_unknown: false,
   op_target_difficulty: null,
   is_new: isNew,
+  unlock_required: false,
   charts: Object.fromEntries(
     chartConstants.map((chart, index) => [
       ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'][index],

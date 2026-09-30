@@ -33,6 +33,21 @@ const hasSongSortOrder = (cachedSongs: (CachedSong | CachedWorldsendSong)[]): bo
   cachedSongs.every((song) => Number.isInteger(song.sortOrder))
 
 /**
+ * 保存済み楽曲キャッシュが現行の楽曲DTOで必須のフラグを持つか判定する。
+ *
+ * @param cachedSongs - IndexedDB から読み込んだ楽曲キャッシュ。
+ * @param flags - 真偽値として保存されている必要があるフラグ名。
+ * @returns すべての楽曲キャッシュが指定フラグを真偽値で持つ場合は true。
+ */
+const hasSongFlags = <TSong extends CachedSong | CachedWorldsendSong>(
+  cachedSongs: TSong[],
+  flags: readonly (keyof TSong['data'])[]
+): boolean =>
+  cachedSongs.every((song) =>
+    flags.every((flag) => typeof (song.data as TSong['data'])[flag] === 'boolean')
+  )
+
+/**
  * 楽曲キャッシュのメタデータが現行スキーマと更新日時に一致するか判定する。
  *
  * @param kind - 判定対象のキャッシュ種別。
@@ -62,7 +77,11 @@ export const readCachedSongs = async (songsUpdatedAt: string | null): Promise<So
   }
 
   const cachedSongs = await db.songs.toArray()
-  if (cachedSongs.length === 0 || !hasSongSortOrder(cachedSongs)) {
+  if (
+    cachedSongs.length === 0 ||
+    !hasSongSortOrder(cachedSongs) ||
+    !hasSongFlags(cachedSongs, ['unlock_required'])
+  ) {
     return null
   }
 
@@ -89,7 +108,7 @@ export const readCachedWorldsendSongs = async (
   if (
     cachedSongs.length === 0 ||
     !hasSongSortOrder(cachedSongs) ||
-    cachedSongs.some((song) => typeof song.data.is_new !== 'boolean')
+    !hasSongFlags(cachedSongs, ['is_new', 'unlock_required'])
   ) {
     return null
   }

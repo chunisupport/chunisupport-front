@@ -1,7 +1,11 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import type { FilterState } from '../../types/recordFilter'
 import { type ChartLevelLabel, getChartLevelConstRange } from '../../utils/chartLevel'
-import { OVER_POWER_MASTER_ULTIMA_DIFFICULTIES, OVER_POWER_MASTER_ULTIMA_TARGET } from './constants'
+import {
+  OVER_POWER_MASTER_ULTIMA_DIFFICULTIES,
+  OVER_POWER_MASTER_ULTIMA_TARGET,
+  OVER_POWER_THEORETICAL_TARGET,
+} from './constants'
 import type { OverPowerAggregationTarget } from './types'
 
 /** OVER POWERサマリーから通常レコードへ引き継げる分類軸 */
@@ -29,6 +33,14 @@ const resolveAggregationTargetFilter = (
       difficulties: [...PLAYER_DATA_DIFFICULTIES],
       opTargetOnly: true,
       opTargetType: 'current',
+    }
+  }
+
+  if (target === OVER_POWER_THEORETICAL_TARGET) {
+    return {
+      difficulties: [...PLAYER_DATA_DIFFICULTIES],
+      opTargetOnly: true,
+      opTargetType: 'theoretical',
     }
   }
 

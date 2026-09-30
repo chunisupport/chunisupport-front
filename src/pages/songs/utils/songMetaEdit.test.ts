@@ -28,6 +28,7 @@ const createSong = (overrides: Partial<SongDTO> = {}): SongDTO => ({
   is_maxop_unknown: false,
   op_target_difficulty: 'MASTER',
   is_new: true,
+  unlock_required: false,
   charts: {
     BASIC: { const: 6, is_const_unknown: false, notes: 818, notes_designer: null },
     MASTER: {
@@ -51,6 +52,7 @@ const createWorldsendSong = (overrides: Partial<WorldsendSongDTO> = {}): Worldse
   official_idx: '123',
   jacket: 'jacket-file',
   is_new: true,
+  unlock_required: false,
   charts: {
     WORLDSEND: {
       attribute: '狂',

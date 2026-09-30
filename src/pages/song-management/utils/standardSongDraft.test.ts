@@ -41,6 +41,7 @@ const managedSong: ManagedSongDTO = {
   is_maxop_unknown: false,
   op_target_difficulty: null,
   is_new: true,
+  unlock_required: false,
   charts: {
     BASIC: { const: 3, is_const_unknown: false, notes: 300, notes_designer: null },
     MASTER: {
@@ -291,4 +292,35 @@ test('保存したドラフトを管理用楽曲へ反映し、譜面の更新�
   assert.equal(result.release, '2025-01-02')
   assert.equal(result.charts.MASTER?.updated_at, '2025-01-03T00:00:00Z')
   assert.equal(result.charts.BASIC?.updated_at, null)
+})
+
+test('要解禁フラグは編集ドラフトへ読み込み、差分判定と更新リクエストに反映すること', () => {
+  // Given: 解禁不要の楽曲から生成したドラフトを要解禁へ変更する。
+  const initial = toSongDraft(managedSong, genres, difficulties)
+  const draft = { ...initial, unlock_required: true }
+
+  // When
+  const result = buildUpdateSongRequest(draft, genres)
+
+  // Then
+  assert.equal(initial.unlock_required, false)
+  assert.equal(hasSongDraftChanges(draft, initial), true)
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.unlock_required, true)
+  assert.equal(applySongDraftToManagedSong(managedSong, draft, null).unlock_required, true)
+})
+
+test('追加リクエストは要解禁フラグを送ること', () => {
+  // Given
+  const draft = { ...validCreateDraft(), unlock_required: true }
+
+  // When
+  const result = buildCreateSongRequest(draft, genres)
+
+  // Then
+  assert.equal(buildCreateSongDraft().unlock_required, false)
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.unlock_required, true)
 })

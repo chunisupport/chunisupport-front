@@ -36,6 +36,7 @@ const standardSong: ManagedSongDTO = {
   is_maxop_unknown: false,
   op_target_difficulty: null,
   is_new: false,
+  unlock_required: false,
   charts: {
     BASIC: chart(100, null),
     ADVANCED: chart(200, null),
@@ -57,6 +58,7 @@ const worldsendSong: ManagedWorldsendSongDTO = {
   official_idx: '2',
   jacket: null,
   is_new: false,
+  unlock_required: false,
   charts: { WORLDSEND: { attribute: '狂', level_star: 3, notes: 500, notes_designer: 'WE担当' } },
   is_deleted: false,
   updated_at: '2025-01-01T00:00:00Z',
