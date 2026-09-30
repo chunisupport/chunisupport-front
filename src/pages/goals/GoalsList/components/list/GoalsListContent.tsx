@@ -14,10 +14,10 @@ import {
   ChevronRight,
   ChevronsDown,
   ChevronsRight,
+  Folder,
   GalleryHorizontal,
   LayoutList,
   Plus,
-  Settings2,
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
@@ -533,7 +533,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
               disabled={props.isReordering}
               onClick={props.onManageGroups}
             >
-              <Settings2 size={18} aria-hidden="true" />
+              <Folder size={18} aria-hidden="true" />
             </AppIconButton>
             <AppIconButton
               aria-label={ADD_GOAL_LABEL}
