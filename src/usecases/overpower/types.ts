@@ -1,6 +1,6 @@
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO } from '../../types/api'
 import type { ChartLevelLabel } from '../../utils/chartLevel'
-import type { OverPowerMasterUltimaTarget } from './constants'
+import type { OVER_POWER_THEORETICAL_TARGET, OverPowerMasterUltimaTarget } from './constants'
 
 export type OverPowerCategory = 'genre' | 'level' | 'version' | 'difficulty'
 
@@ -32,6 +32,7 @@ export type OverPowerAggregationTarget =
   | OverPowerDifficulty
   | OverPowerMasterUltimaTarget
   | 'OP_TARGET'
+  | typeof OVER_POWER_THEORETICAL_TARGET
   | 'ALL'
 
 export type OverPowerLockedSong = {

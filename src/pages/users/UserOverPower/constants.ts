@@ -1,4 +1,7 @@
-import { OVER_POWER_MASTER_ULTIMA_TARGET } from '../../../usecases/overpower/constants'
+import {
+  OVER_POWER_MASTER_ULTIMA_TARGET,
+  OVER_POWER_THEORETICAL_TARGET,
+} from '../../../usecases/overpower/constants'
 import type { OverPowerRecordFilterDimension } from '../../../usecases/overpower/recordNavigation'
 import type { OverPowerSubPage } from '../../../utils/userProfileRoute'
 import type {
@@ -26,6 +29,7 @@ export const OVER_POWER_SUMMARY_OPTIONS: OverPowerSummaryOption[] = [
 /** OVER POWERサマリーの集計対象選択肢 */
 export const OVER_POWER_AGGREGATION_TARGET_OPTIONS: OverPowerAggregationTargetOption[] = [
   { value: 'OP_TARGET', label: 'OVER POWER対象' },
+  { value: OVER_POWER_THEORETICAL_TARGET, label: 'OP理論値対象' },
   { value: 'BASIC', label: 'BASIC' },
   { value: 'ADVANCED', label: 'ADVANCED' },
   { value: 'EXPERT', label: 'EXPERT' },

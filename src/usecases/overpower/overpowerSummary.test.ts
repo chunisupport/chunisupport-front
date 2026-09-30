@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
-import { OVER_POWER_MASTER_ULTIMA_TARGET } from './constants'
+import { OVER_POWER_MASTER_ULTIMA_TARGET, OVER_POWER_THEORETICAL_TARGET } from './constants'
 import { buildOverPowerSummary } from './overpowerSummary'
 
 const versions: VersionSummaryDTO[] = [
@@ -415,4 +415,38 @@ test('ULTIMA未解禁はULTIMA譜面だけを集計から除外する', () => {
     summary.levels.map((row) => row.label),
     ['14']
   )
+})
+
+test('OP理論値対象は現在のOP対象フラグに関係なく楽曲マスタの対象譜面だけを曲ごとに集計する', () => {
+  // Given: 現在のOP対象はEXPERTだが、理論値OP対象はULTIMAの楽曲。
+  const songs = [
+    createSong({
+      id: 'song-a',
+      op_target_difficulty: 'ULTIMA',
+      charts: {
+        EXPERT: { const: 13, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+    createSong({ id: 'song-b', op_target_difficulty: 'ULTIMA' }),
+  ]
+  const records = [
+    createRecord({ id: 'song-a', difficulty: 'EXPERT', overpower: 70, is_op_target: true }),
+    createRecord({ id: 'song-a', difficulty: 'ULTIMA', overpower: 60, is_op_target: false }),
+  ]
+
+  // When: OP理論値対象で集計する。
+  const summary = buildOverPowerSummary(
+    songs,
+    records,
+    versions,
+    [],
+    undefined,
+    OVER_POWER_THEORETICAL_TARGET
+  )
+
+  // Then: 対象難易度の譜面を持たない曲は除外され、ULTIMAだけが集計される。
+  assert.equal(summary.all.count, 1)
+  assert.equal(summary.all.current, 60)
+  assert.equal(summary.all.max, 90)
 })
