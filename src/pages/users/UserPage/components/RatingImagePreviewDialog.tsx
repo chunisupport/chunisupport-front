@@ -82,6 +82,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [showLatestUpdateBadge, setShowLatestUpdateBadge] = createSignal(true)
   const [applyPossession, setApplyPossession] = createSignal(true)
   const [hidePlayerLevel, setHidePlayerLevel] = createSignal(false)
+  const [hideClassEmblem, setHideClassEmblem] = createSignal(false)
   const [v2OptionsOpen, setV2OptionsOpen] = createSignal(readRatingImageV2OptionsOpen())
   let captureRevision = 0
 
@@ -238,6 +239,17 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
    */
   const handleHidePlayerLevelChange = (checked: boolean): void => {
     setHidePlayerLevel(checked)
+    invalidatePreview(false)
+  }
+
+  /**
+   * エンブレムの非表示を切り替え、プレビューを作り直す。
+   *
+   * @param checked - エンブレムを隠す場合は true。
+   * @returns なし。
+   */
+  const handleHideClassEmblemChange = (checked: boolean): void => {
+    setHideClassEmblem(checked)
     invalidatePreview(false)
   }
 
@@ -502,6 +514,13 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                         onChange={handleHidePlayerLevelChange}
                         label={RATING_IMAGE_COPY.hidePlayerLevelLabel}
                       />
+                      <CheckboxField
+                        id="rating-image-hide-class-emblem"
+                        checked={hideClassEmblem()}
+                        disabled={isSharing()}
+                        onChange={handleHideClassEmblemChange}
+                        label={RATING_IMAGE_COPY.hideClassEmblemLabel}
+                      />
                     </div>
                   </div>
                 </Collapsible.Content>
@@ -601,6 +620,7 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
                   showJackets={props.showJackets}
                   showLatestUpdateBadge={showLatestUpdateBadge()}
                   hidePlayerLevel={hidePlayerLevel()}
+                  hideClassEmblem={hideClassEmblem()}
                   possessionName={possessionName()}
                   onJacketReadyChange={handleJacketReadyChange}
                 />

@@ -6,7 +6,12 @@ import type {
 } from '../../types/api'
 import { resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
 
-export type SongManagementMissingField = 'release' | 'bpm' | 'notes' | 'notesDesigner'
+export type SongManagementMissingField =
+  | 'release'
+  | 'bpm'
+  | 'notes'
+  | 'notesDesigner'
+  | 'wikiPageTitle'
 
 /** 楽曲管理フィルターで絞り込む収録状態 */
 export type SongManagementCatalogState = 'included' | 'deleted'
@@ -47,6 +52,7 @@ export const SONG_MANAGEMENT_MISSING_FIELD_OPTIONS: readonly {
   { value: 'bpm', label: 'BPM' },
   { value: 'notes', label: 'ノーツ数' },
   { value: 'notesDesigner', label: 'NOTES DESIGNER' },
+  { value: 'wikiPageTitle', label: 'Wikiページタイトル' },
 ]
 
 export const SONG_MANAGEMENT_CATALOG_STATE_OPTIONS: readonly {
@@ -106,6 +112,7 @@ export const hasMissingManagedSongField = (
 ): boolean => {
   if (field === 'release') return isMissingText(song.release)
   if (field === 'bpm') return song.bpm === null
+  if (field === 'wikiPageTitle') return isMissingText(song.wiki_page_title)
 
   const targetDifficulties =
     field === 'notes' ? REQUIRED_STANDARD_DIFFICULTIES : NOTES_DESIGNER_DIFFICULTIES
@@ -135,6 +142,7 @@ export const hasMissingManagedWorldsendSongField = (
 ): boolean => {
   if (field === 'release') return isMissingText(song.release)
   if (field === 'bpm') return song.bpm === null
+  if (field === 'wikiPageTitle') return isMissingText(song.wiki_page_title)
 
   const chart = song.charts.WORLDSEND
   return field === 'notes' ? chart?.notes === null || !chart : isMissingText(chart?.notes_designer)

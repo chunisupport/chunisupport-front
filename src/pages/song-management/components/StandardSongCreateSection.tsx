@@ -2,7 +2,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { Plus } from 'lucide-solid'
 import { Index } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
-import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
+import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO } from '../../../types/api'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
@@ -73,10 +73,10 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
             onInput={(value) => props.management.updateCreateDraftField('artist', value)}
           />
-          <ManagementTextField
+          <WikiPageTitleField
+            title={draft().title}
             label={FIELD.wikiPageTitle}
             value={draft().wiki_page_title ?? ''}
-            maxLength={SONG_EDIT_INPUT_LIMITS.wikiPageTitle}
             inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
             onInput={(value) =>
               props.management.updateCreateDraftField('wiki_page_title', toOptionalTextInput(value))

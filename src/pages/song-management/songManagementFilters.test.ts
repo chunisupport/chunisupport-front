@@ -159,3 +159,39 @@ test('選択した項目が欠落したWORLD’S END曲だけを表示する', (
   // Then: 欠落曲だけを返す。
   assert.deepEqual(result, [missing])
 })
+
+test('Wikiページタイトル欠落フィルターは通常曲とWORLD’S ENDの未設定・空白値を検出する', () => {
+  const filters = {
+    ...createSongManagementFilters(),
+    missingField: 'wikiPageTitle' as const,
+    missingOnly: true,
+  }
+  const titles = [undefined, null, '', ' 　', '登録済み']
+  const standardSongs = titles.map((wiki_page_title, index) => ({
+    ...standardSong,
+    id: String(index),
+    wiki_page_title,
+  }))
+  const worldsendSongs = titles.map((wiki_page_title, index) => ({
+    ...worldsendSong,
+    id: String(index),
+    wiki_page_title,
+  }))
+  assert.deepEqual(
+    filterManagedSongs(standardSongs, filters, versions).map((song) => song.id),
+    ['0', '1', '2', '3']
+  )
+  assert.deepEqual(
+    filterManagedWorldsendSongs(worldsendSongs, filters, versions).map((song) => song.id),
+    ['0', '1', '2', '3']
+  )
+  assert.equal(
+    filterManagedSongs(standardSongs, { ...filters, missingOnly: false }, versions).length,
+    5
+  )
+  assert.equal(
+    filterManagedWorldsendSongs(worldsendSongs, { ...filters, missingOnly: false }, versions)
+      .length,
+    5
+  )
+})

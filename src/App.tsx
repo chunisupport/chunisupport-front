@@ -44,9 +44,8 @@ import {
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
   ADMIN_MAINTENANCE_PATH,
-  ADMIN_NAMEPLATE_PREVIEW_PATH,
   ADMIN_PATH,
-  ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH,
+  ADMIN_PREVIEWS_PATH,
   ADMIN_VERSIONS_PATH,
   ADMIN_WORLDSEND_CHART_RANKING_PATH,
   ALL_SONG_BEST_FRAME_PATH,
@@ -145,10 +144,7 @@ const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
 const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
 const AdminBatchPage = lazy(() => import('./pages/admin/AdminBatchPage'))
-const AdminRatingImageDomPreviewPage = lazy(
-  () => import('./pages/admin/AdminRatingImageDomPreviewPage')
-)
-const AdminNameplatePreviewPage = lazy(() => import('./pages/admin/AdminNameplatePreviewPage'))
+const AdminPreviewsPage = lazy(() => import('./pages/admin/AdminPreviewsPage'))
 const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
 const EditorSongsPage = lazy(() => import('./pages/editor/EditorSongsPage'))
 const EditorCoursesPage = lazy(() => import('./pages/editor/EditorCoursesPage'))
@@ -424,8 +420,7 @@ const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
 const LoadableAdminBatchPage = withRouteLoadBoundary(AdminBatchPage)
-const LoadableAdminRatingImageDomPreviewPage = withRouteLoadBoundary(AdminRatingImageDomPreviewPage)
-const LoadableAdminNameplatePreviewPage = withRouteLoadBoundary(AdminNameplatePreviewPage)
+const LoadableAdminPreviewsPage = withRouteLoadBoundary(AdminPreviewsPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableEditorCoursesPage = withRouteLoadBoundary(EditorCoursesPage)
@@ -575,24 +570,13 @@ const GuardedAdminVersionsPage = () => (
 )
 
 /**
- * ADMIN 権限を要求してレーティング画像DOM確認画面を表示する。
+ * ADMIN 権限を要求してテスト用ページ集を表示する。
  *
- * @returns 権限制御と route module 読み込み境界を付与したレーティング画像DOM確認画面。
+ * @returns 権限制御と route module 読み込み境界を付与したテスト用ページ集。
  */
-const GuardedAdminRatingImageDomPreviewPage = () => (
+const GuardedAdminPreviewsPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
-    <LoadableAdminRatingImageDomPreviewPage />
-  </RequireRole>
-)
-
-/**
- * ADMIN 権限を要求してポゼッション別プロフィールカード確認画面を表示する。
- *
- * @returns 権限制御と route module 読み込み境界を付与した確認画面。
- */
-const GuardedAdminNameplatePreviewPage = () => (
-  <RequireRole allowedRoles={['ADMIN']}>
-    <LoadableAdminNameplatePreviewPage />
+    <LoadableAdminPreviewsPage />
   </RequireRole>
 )
 
@@ -772,12 +756,17 @@ const App = () => {
       {/* 楽曲バッチ単独だった頃の管理画面URL。ブックマークからの遷移をバッチ管理画面へ移す */}
       <Route path="/admin/song-batch" component={() => <Navigate href={ADMIN_BATCH_PATH} />} />
       <Route
-        path={ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH}
-        component={withNavBar(GuardedAdminRatingImageDomPreviewPage)}
+        path={`${ADMIN_PREVIEWS_PATH}/:tab?`}
+        component={withNavBar(GuardedAdminPreviewsPage)}
+      />
+      {/* テスト用ページ集へ統合する前の個別URL。ブックマークからの遷移を該当タブへ移す */}
+      <Route
+        path="/admin/rating-image-dom"
+        component={() => <Navigate href={`${ADMIN_PREVIEWS_PATH}/rating-image`} />}
       />
       <Route
-        path={ADMIN_NAMEPLATE_PREVIEW_PATH}
-        component={withNavBar(GuardedAdminNameplatePreviewPage)}
+        path="/admin/nameplate-preview"
+        component={() => <Navigate href={ADMIN_PREVIEWS_PATH} />}
       />
 
       {/* 編集 */}

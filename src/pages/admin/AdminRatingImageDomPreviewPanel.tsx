@@ -15,7 +15,6 @@ import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { SearchTextField } from '../../components/common/SearchTextField'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type { PlayerDTO, UserRatingDTO } from '../../types/api'
 import { isForbiddenApiError, isNotFoundApiError } from '../../utils/apiError'
 import { captureElementAsImage, downloadBlobFile } from '../../utils/domImageCapture'
@@ -35,7 +34,7 @@ import {
   RATING_IMAGE_DEFAULT_POSSESSION_OPTION,
   RATING_IMAGE_POSSESSION_OPTIONS,
   type RatingImagePossessionOption,
-} from './AdminRatingImageDomPreviewPage.constants'
+} from './AdminRatingImageDomPreviewPanel.constants'
 import {
   countRatingImagePreviewJackets,
   previewScalePercentToFactor,
@@ -106,9 +105,7 @@ const fetchUserPreview = async (query: string): Promise<UserPreviewResult> => {
  *
  * @returns 画像化前DOM確認画面。
  */
-const AdminRatingImageDomPreviewPage = () => {
-  useDocumentTitle(ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY.pageTitle)
-
+const AdminRatingImageDomPreviewPanel = () => {
   const [usernameInput, setUsernameInput] = createSignal('')
   const [requestedQuery, setRequestedQuery] = createSignal<string | undefined>()
   const [selectedVersionOption, setSelectedVersionOption] = createSignal(
@@ -314,9 +311,7 @@ const AdminRatingImageDomPreviewPage = () => {
   }
 
   return (
-    <main class="flex w-full flex-col gap-4 p-4">
-      <h1 class="text-2xl font-semibold">{ADMIN_RATING_IMAGE_DOM_PREVIEW_COPY.heading}</h1>
-
+    <div class="flex w-full flex-col gap-4">
       <div class="sticky top-0 z-10 flex flex-col gap-3 border-b border-border bg-bg py-3">
         <form class="flex min-w-0 flex-wrap items-end gap-2" onSubmit={handleSearchSubmit}>
           <SearchTextField
@@ -471,8 +466,8 @@ const AdminRatingImageDomPreviewPage = () => {
           )}
         </Show>
       </Show>
-    </main>
+    </div>
   )
 }
 
-export default AdminRatingImageDomPreviewPage
+export default AdminRatingImageDomPreviewPanel

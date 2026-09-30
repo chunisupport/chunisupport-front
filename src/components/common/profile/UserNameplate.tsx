@@ -35,6 +35,7 @@ import {
   hasUnknownOverPowerPercentChartConstants,
 } from '../../../utils/unknownChartConstant'
 import { getAppButtonClass } from '../AppButton'
+import { ClassEmblem } from './ClassEmblem'
 import {
   USER_NAMEPLATE_HISTORY_LINK_ARIA_LABEL,
   USER_NAMEPLATE_HISTORY_LINK_LABEL,
@@ -355,11 +356,15 @@ export const UserNameplate: Component<Props> = (props) => {
           </Button>
         </Show>
       </Show>
-      <div class="mb-2 flex flex-row items-end justify-between">
+      <div class="mb-2 flex flex-row items-end justify-between gap-2">
         <p class="">Lv. {props.playerInfo.level}</p>
         <h1 class="min-w-0 flex-1 break-words text-center font-sans text-xl font-medium">
           {props.playerInfo.name}
         </h1>
+        <ClassEmblem
+          emblem={props.playerInfo.class_emblem}
+          base={props.playerInfo.class_emblem_base}
+        />
       </div>
       <hr class="mb-2 border-t" />
       <div class="relative">

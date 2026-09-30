@@ -27,3 +27,6 @@ export const ADMIN_MAINTENANCE_PAGE_TITLE = 'メンテナンス管理'
 
 /** ADMIN向けバッチ管理画面のタイトル */
 export const ADMIN_BATCH_PAGE_TITLE = 'バッチ管理'
+
+/** ADMIN向けテスト用ページ集のタイトル */
+export const ADMIN_PREVIEWS_PAGE_TITLE = 'テスト用ページ集'

@@ -59,10 +59,8 @@ export const ADMIN_VERSIONS_PATH = `${ADMIN_PATH}/versions`
 export const ADMIN_BATCH_PATH = `${ADMIN_PATH}/batch`
 /** ADMIN向けコース管理画面のパス */
 export const ADMIN_COURSES_PATH = `${ADMIN_PATH}/courses`
-/** ADMIN向けレーティング画像DOM確認画面のパス */
-export const ADMIN_RATING_IMAGE_DOM_PREVIEW_PATH = `${ADMIN_PATH}/rating-image-dom`
-/** ポゼッション別プロフィールカード確認画面のパス。管理メニューには出さない */
-export const ADMIN_NAMEPLATE_PREVIEW_PATH = `${ADMIN_PATH}/nameplate-preview`
+/** ADMIN向けテスト用ページ集のパス。プロフィールカードとレーティング画像DOMの確認タブを持つ */
+export const ADMIN_PREVIEWS_PATH = `${ADMIN_PATH}/previews`
 
 /** 楽曲詳細から譜面詳細へ遷移したことを表すルーター state */
 export const CHART_DETAIL_FROM_SONG_DETAIL_STATE = {

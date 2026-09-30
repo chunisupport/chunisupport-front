@@ -172,6 +172,7 @@ const WorldsendSongInfoCard = (props: Props) => {
       </SongMetaCardLayout>
 
       <SongMetaEditDialog
+        title={props.song.title}
         open={songDialogOpen()}
         genres={props.genres}
         initialGenre={props.song.genre}
