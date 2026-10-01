@@ -19,6 +19,8 @@ const FIREBASE_AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/requires-recent-login': '再認証が必要です。もう一度Googleログインを行ってください。',
   'auth/too-many-requests': 'リクエストが多すぎます。しばらく待ってから再試行してください。',
   'auth/user-disabled': 'このアカウントは利用できません。',
+  'auth/user-not-found': '認証情報が無効です。もう一度ログインしてください。',
+  'auth/wrong-password': '認証情報が無効です。もう一度ログインしてください。',
   'auth/user-mismatch': 'ログイン中のアカウントと異なるアカウントで再認証されました。',
 }
 

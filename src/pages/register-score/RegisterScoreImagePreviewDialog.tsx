@@ -1,26 +1,32 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { RotateCcw, Share2, X } from 'lucide-solid'
+import { Download, RotateCcw, Share2, X } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createEffect, createSignal, onCleanup, Show, untrack } from 'solid-js'
+import { batch, createEffect, createSignal, For, onCleanup, Show, untrack } from 'solid-js'
 import { Loading } from '../../components'
 import {
   AppButton,
   getAppButtonClass,
   getAppIconButtonClass,
 } from '../../components/common/AppButton'
+import { SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { SOCIAL_SHARE_TEXT } from '../../constants/socialShare'
-import { canShareFiles } from '../../utils/domImageCapture'
+import { canShareFiles, downloadBlobFile } from '../../utils/domImageCapture'
 import { REGISTER_SCORE_COPY } from './constants'
+import type {
+  RegisterScoreImageCaptureResult,
+  RegisterScoreImageLayout,
+} from './registerScoreImageCapture'
+import { createRegisterScoreImageFiles } from './registerScoreImageFiles'
 
 type Props = {
   /** プレビュー用画像を生成する処理 */
-  captureImage: () => Promise<Blob>
+  captureImages: (layout: RegisterScoreImageLayout) => Promise<RegisterScoreImageCaptureResult>
   /** 共有するJPEG画像のファイル名 */
   imageFilename: string
 }
 
 /**
- * 更新差分を実画像でプレビューし、JPEGとして共有できるダイアログを表示する。
+ * 更新差分の全ページをプレビューし、まとめて共有または個別に保存する。
  *
  * @param props - 画像生成処理と共有ファイル名。
  * @returns 画像化・共有ボタンとプレビューダイアログ。
@@ -29,9 +35,11 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [isCapturingPreview, setIsCapturingPreview] = createSignal(false)
   const [isSharing, setIsSharing] = createSignal(false)
-  const [previewBlob, setPreviewBlob] = createSignal<Blob>()
-  const [previewUrl, setPreviewUrl] = createSignal<string>()
+  const [previewImages, setPreviewImages] = createSignal<{ file: File; url: string }[]>([])
   const [imageActionError, setImageActionError] = createSignal<string>()
+  const [shareErrorPage, setShareErrorPage] = createSignal<number>()
+  const [imageLayout, setImageLayout] = createSignal<RegisterScoreImageLayout>('split')
+  const [splitPageCount, setSplitPageCount] = createSignal<number>()
   let captureRevision = 0
 
   /**
@@ -42,12 +50,12 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
   const isImageActionRunning = (): boolean => isCapturingPreview() || isSharing()
 
   /**
-   * 現在のブラウザがJPEGファイルの共有に対応しているか返す。
+   * 生成した全ページを1回で共有できるか返す。
    *
    * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
    */
-  const canShareReportImage = (): boolean =>
-    canShareFiles([new File([], 'share-test.jpg', { type: 'image/jpeg' })])
+  const canShareReportImages = (): boolean =>
+    previewImages().length > 0 && canShareFiles(previewImages().map((image) => image.file))
 
   /**
    * プレビュー用Object URLとBlobを破棄する。
@@ -55,11 +63,8 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
    * @returns なし。
    */
   const revokePreview = (): void => {
-    const objectUrl = previewUrl()
-    if (objectUrl) URL.revokeObjectURL(objectUrl)
-
-    setPreviewUrl(undefined)
-    setPreviewBlob(undefined)
+    for (const image of previewImages()) URL.revokeObjectURL(image.url)
+    setPreviewImages([])
   }
 
   /**
@@ -71,14 +76,36 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
   const handleOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen && isImageActionRunning()) return
 
-    captureRevision += 1
-    revokePreview()
-    setImageActionError(undefined)
-    setOpen(nextOpen)
+    batch(() => {
+      captureRevision += 1
+      revokePreview()
+      setImageActionError(undefined)
+      setShareErrorPage(undefined)
+      setImageLayout('split')
+      setSplitPageCount(undefined)
+      setOpen(nextOpen)
+    })
   }
 
   /**
-   * 現在の更新差分をJPEGへ変換し、プレビュー用Object URLを生成する。
+   * 出力形式を切り替え、旧プレビューを破棄して画像を再生成する。
+   *
+   * @param layout - 次に生成する画像の出力形式。
+   * @returns なし。
+   */
+  const changeImageLayout = (layout: RegisterScoreImageLayout): void => {
+    if (isImageActionRunning() || layout === imageLayout()) return
+    batch(() => {
+      captureRevision += 1
+      setImageLayout(layout)
+      revokePreview()
+      setImageActionError(undefined)
+      setShareErrorPage(undefined)
+    })
+  }
+
+  /**
+   * 現在の更新差分をページ順のJPEGへ変換し、全ページのObject URLを生成する。
    *
    * @returns プレビュー生成処理の完了時に解決されるPromise。
    */
@@ -90,17 +117,19 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
     setImageActionError(undefined)
 
     try {
-      const blob = await props.captureImage()
+      const { blobs, splitPageCount: pageCount } = await props.captureImages(imageLayout())
       if (revision !== captureRevision || !open()) return
-
-      const objectUrl = URL.createObjectURL(blob)
-      if (revision !== captureRevision || !open()) {
-        URL.revokeObjectURL(objectUrl)
-        return
+      setSplitPageCount(pageCount)
+      const images: { file: File; url: string }[] = []
+      try {
+        for (const file of createRegisterScoreImageFiles(blobs, props.imageFilename)) {
+          images.push({ file, url: URL.createObjectURL(file) })
+        }
+        setPreviewImages(images)
+      } catch (error) {
+        for (const image of images) URL.revokeObjectURL(image.url)
+        throw error
       }
-
-      setPreviewBlob(blob)
-      setPreviewUrl(objectUrl)
     } catch {
       if (revision === captureRevision) {
         setImageActionError(REGISTER_SCORE_COPY.imagePreviewError)
@@ -116,22 +145,25 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
    * @returns なし。
    */
   const retryPreviewCapture = (): void => {
-    if (open() && !isImageActionRunning() && !previewUrl()) {
+    if (open() && !isImageActionRunning() && previewImages().length === 0) {
       void capturePreviewImage()
     }
   }
 
   /**
-   * プレビュー表示中の画像をWeb Share APIで共有する。
+   * 生成済みの全ページまたは指定ページをユーザー操作で共有する。
    *
+   * @param pageIndex - 個別共有するページ。省略すると全ページを共有する。
    * @returns 共有処理の完了時に解決されるPromise。
    */
-  const shareReportImage = async (): Promise<void> => {
-    const blob = previewBlob()
-    if (!blob || isImageActionRunning()) return
-
-    const imageFile = new File([blob], props.imageFilename, { type: 'image/jpeg' })
-    if (!canShareFiles([imageFile])) {
+  const shareReportImages = async (pageIndex?: number): Promise<void> => {
+    if (previewImages().length === 0 || isImageActionRunning()) return
+    const files =
+      pageIndex === undefined
+        ? previewImages().map((image) => image.file)
+        : [previewImages()[pageIndex].file]
+    setShareErrorPage(pageIndex)
+    if (!canShareFiles(files)) {
       setImageActionError(REGISTER_SCORE_COPY.shareImageError)
       return
     }
@@ -141,7 +173,7 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
 
     try {
       await navigator.share({
-        files: [imageFile],
+        files,
         text: SOCIAL_SHARE_TEXT,
         title: REGISTER_SCORE_COPY.reportTitle,
       })
@@ -156,13 +188,11 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
 
   onCleanup(() => {
     captureRevision += 1
-    const objectUrl = previewUrl()
-    if (objectUrl) URL.revokeObjectURL(objectUrl)
+    revokePreview()
   })
 
-  // ダイアログが開いた後に、表示用と共有用で共通の実画像を1度だけ生成する。
   createEffect(() => {
-    if (!open() || previewUrl() || imageActionError() || isCapturingPreview()) return
+    if (!open() || previewImages().length > 0 || imageActionError() || isCapturingPreview()) return
 
     untrack(() => void capturePreviewImage())
   })
@@ -203,13 +233,36 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
               </Dialog.CloseButton>
             </div>
 
+            <div class="mt-4 shrink-0">
+              <SegmentedToggleGroup
+                ariaLabel={REGISTER_SCORE_COPY.imageLayout}
+                value={imageLayout()}
+                onChange={changeImageLayout}
+                options={[
+                  {
+                    value: 'split',
+                    label:
+                      splitPageCount() === undefined
+                        ? REGISTER_SCORE_COPY.splitImagesPending
+                        : `${splitPageCount()}${REGISTER_SCORE_COPY.splitImagesSuffix}`,
+                    disabled: isImageActionRunning(),
+                  },
+                  {
+                    value: 'single',
+                    label: REGISTER_SCORE_COPY.combineImage,
+                    disabled: isImageActionRunning(),
+                  },
+                ]}
+              />
+            </div>
+
             <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
               <div
                 class="scrollbar-none h-full w-full overflow-y-auto overscroll-contain"
                 aria-busy={isCapturingPreview()}
               >
                 <Show
-                  when={previewUrl()}
+                  when={previewImages().length > 0}
                   fallback={
                     <div class="flex min-h-full items-center justify-center">
                       <Show
@@ -235,41 +288,86 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
                     </div>
                   }
                 >
-                  {(objectUrl) => (
-                    <img
-                      src={objectUrl()}
-                      alt={REGISTER_SCORE_COPY.imagePreviewAlt}
-                      class="h-auto w-full max-w-full shadow-sm [-webkit-touch-callout:default]"
-                    />
-                  )}
+                  <div class="flex flex-col gap-4">
+                    <For each={previewImages()}>
+                      {(image, index) => (
+                        <div class="flex flex-col gap-2">
+                          <img
+                            src={image.url}
+                            alt={`${REGISTER_SCORE_COPY.imagePreviewAlt} ${index() + 1} / ${previewImages().length}`}
+                            class="h-auto w-full max-w-full shadow-sm [-webkit-touch-callout:default]"
+                          />
+                          <div class="flex justify-end gap-2">
+                            <Show when={!canShareReportImages() && canShareFiles([image.file])}>
+                              <AppButton
+                                variant="surface"
+                                size="sm"
+                                class="focus-visible:ring-inset"
+                                disabled={isImageActionRunning()}
+                                onClick={() => void shareReportImages(index())}
+                                leftIcon={<Share2 class="h-4 w-4" aria-hidden="true" />}
+                              >
+                                {REGISTER_SCORE_COPY.shareImage}
+                              </AppButton>
+                            </Show>
+                            <AppButton
+                              variant="surface"
+                              size="sm"
+                              class="focus-visible:ring-inset"
+                              disabled={isImageActionRunning()}
+                              onClick={() => downloadBlobFile(image.file, image.file.name)}
+                              leftIcon={<Download class="h-4 w-4" aria-hidden="true" />}
+                            >
+                              {REGISTER_SCORE_COPY.downloadImage}
+                            </AppButton>
+                          </div>
+                          <Show when={shareErrorPage() === index() && imageActionError()}>
+                            {(message) => (
+                              <p class="text-sm text-danger" role="alert">
+                                {message()}
+                              </p>
+                            )}
+                          </Show>
+                        </div>
+                      )}
+                    </For>
+                  </div>
                 </Show>
               </div>
             </div>
 
             <div class="mt-4 flex shrink-0 flex-col items-end gap-2">
-              <Show when={previewUrl() && imageActionError()}>
+              <Show
+                when={
+                  previewImages().length > 0 && shareErrorPage() === undefined && imageActionError()
+                }
+              >
                 {(message) => (
                   <p class="text-sm text-danger" role="alert">
                     {message()}
                   </p>
                 )}
               </Show>
-              <AppButton
-                variant="primary"
-                size="sm"
-                disabled={!canShareReportImage() || isImageActionRunning() || !previewUrl()}
-                aria-busy={isSharing()}
-                onClick={() => void shareReportImage()}
-                leftIcon={
-                  <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
-                    <Show when={!isSharing()} fallback={<Loading size="inline" ariaHidden />}>
-                      <Share2 class="h-5 w-5" aria-hidden="true" />
-                    </Show>
-                  </span>
-                }
-              >
-                {REGISTER_SCORE_COPY.shareImage}
-              </AppButton>
+              <Show when={canShareReportImages()}>
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  disabled={isImageActionRunning()}
+                  aria-busy={isSharing()}
+                  onClick={() => void shareReportImages()}
+                  leftIcon={
+                    <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
+                      <Show when={!isSharing()} fallback={<Loading size="inline" ariaHidden />}>
+                        <Share2 class="h-5 w-5" aria-hidden="true" />
+                      </Show>
+                    </span>
+                  }
+                >
+                  {previewImages().length > 1
+                    ? REGISTER_SCORE_COPY.shareAllImages
+                    : REGISTER_SCORE_COPY.shareImage}
+                </AppButton>
+              </Show>
             </div>
           </Dialog.Content>
         </Dialog.Portal>

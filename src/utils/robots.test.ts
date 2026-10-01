@@ -2,6 +2,13 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { isNoindexPathname, ROBOTS_NOINDEX_CONTENT, resolveRobotsMetaContent } from './robots.ts'
 
+test('メールログイン画面は検索対象から除外し、通常ログイン画面には波及しない', () => {
+  for (const pathname of ['/staff/login', '/staff/login/', '/STAFF/LOGIN']) {
+    assert.equal(resolveRobotsMetaContent(pathname, null), ROBOTS_NOINDEX_CONTENT)
+  }
+  assert.equal(resolveRobotsMetaContent('/login', null), null)
+})
+
 test('ユーザーページは noindex 対象であること', () => {
   // Given: 個人ページとその配下パス
   const pathnames = [

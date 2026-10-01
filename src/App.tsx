@@ -68,6 +68,7 @@ import {
   REGISTER_SCORE_PATH,
   REGISTER_SCORE_TEMP_PATH,
   SONGS_PATH,
+  STAFF_LOGIN_PATH,
   TOOLS_PATH,
   UNI_FILL_MATRIX_PATH,
   WEAK_CHART_INSPECTOR_PATH,
@@ -90,6 +91,7 @@ import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 
 const Login = lazy(() => import('./pages/auth/Login/Login'))
+const StaffLogin = lazy(() => import('./pages/auth/StaffLogin/StaffLogin'))
 const Register = lazy(() => import('./pages/auth/Register/Register'))
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'))
 const MaintenanceLoginPage = lazy(() => import('./pages/maintenance/MaintenanceLoginPage'))
@@ -623,6 +625,7 @@ const App = () => {
 
       {/* 認証 */}
       <Route path="/login" component={withRouteLoadBoundary(Login)} />
+      <Route path={STAFF_LOGIN_PATH} component={withRouteLoadBoundary(StaffLogin)} />
       <Route path="/register" component={withRouteLoadBoundary(Register)} />
       <Route path="/403" component={withRouteLoadBoundary(ForbiddenPage)} />
       <Route

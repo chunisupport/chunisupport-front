@@ -29,7 +29,6 @@ import type {
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { resolveClassEmblemMasterName } from '../../utils/classEmblem'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import { captureElementAsImage } from '../../utils/domImageCapture'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerLevelLabel } from '../../utils/playerLevel'
 import { formatPlayerRating } from '../../utils/ratingFormat'
@@ -38,6 +37,11 @@ import { REGISTER_SCORE_COPY } from './constants'
 import { RegisterScoreImagePreviewDialog } from './RegisterScoreImagePreviewDialog'
 import { isLampOnlyRegisterScoreChange } from './registerScoreChangeFilter'
 import { courseClassBadgeClass, formatCourseClass } from './registerScoreDisplay'
+import {
+  captureRegisterScoreReportImages,
+  type RegisterScoreImageCaptureResult,
+  type RegisterScoreImageLayout,
+} from './registerScoreImageCapture'
 import { hasRegisterScoreImageChanges } from './registerScoreImageVisibility'
 import {
   formatRegisterScoreOverPowerDelta,
@@ -81,10 +85,6 @@ const REGISTER_SCORE_RESULT_LAYOUT_CLASS =
   'mx-auto grid w-full min-w-0 max-w-[31rem] gap-4 @min-[59rem]:max-w-none @min-[59rem]:grid-cols-[27rem_31rem] @min-[59rem]:items-start @min-[59rem]:justify-center'
 /** 更新差分レポートヘッダに表示するロゴの色 */
 const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
-/** 更新差分画像を原寸で出力するピクセル比 */
-const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
-/** 更新差分JPEG画像の圧縮品質 */
-const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
 /** 更新差分画像のファイル名へ付与する接頭辞 */
 const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
 /** コピー成功時に曲名をアクセントカラーで保持する時間 */
@@ -1129,6 +1129,7 @@ const RegisterScoreChangesSection = (props: {
 }) => (
   <section
     class="min-w-0 pt-4"
+    data-score-image-section
     data-image-capture-excluded={
       props.changes.length > 0 &&
       !hasRegisterScoreImageChanges(
@@ -1151,7 +1152,7 @@ const RegisterScoreChangesSection = (props: {
         </p>
       }
     >
-      <div class="mt-2 grid min-w-0 max-w-full gap-2">
+      <div class="mt-2 grid min-w-0 max-w-full gap-2" data-score-image-cards>
         <For each={props.changes}>
           {(change) => (
             <RegisterScoreChangeRow
@@ -1186,6 +1187,7 @@ const RegisterCourseChangesSection = (props: {
   <Show when={props.changes.length > 0}>
     <section
       class="min-w-0 pt-4"
+      data-score-image-section
       data-image-capture-excluded={
         !hasRegisterScoreImageChanges(
           props.changes,
@@ -1199,7 +1201,7 @@ const RegisterCourseChangesSection = (props: {
       <h2 class="mb-1 whitespace-nowrap text-xl font-bold">
         {REGISTER_SCORE_COPY.changedCoursesTitle}
       </h2>
-      <div class="mt-2 grid min-w-0 max-w-full gap-2">
+      <div class="mt-2 grid min-w-0 max-w-full gap-2" data-score-image-cards>
         <For each={props.changes}>
           {(change) => (
             <RegisterCourseChangeRow
@@ -1361,16 +1363,14 @@ export const RegisterScoreResultView = (props: {
   }
 
   /**
-   * 現在表示中の更新差分レポートを原寸のJPEG画像として生成する。
+   * 現在表示中の更新差分レポートを選択した形式のJPEGへ変換する。
    *
-   * @returns 生成したJPEG画像のBlob。
+   * @param layout - 自動分割または1枚出力。
+   * @returns ページ順に並ぶJPEG画像と自動分割時の枚数。
    */
-  const captureReportImage = async (): Promise<Blob> =>
-    captureElementAsImage(reportRef, {
-      format: 'jpeg',
-      pixelRatio: REGISTER_SCORE_IMAGE_PIXEL_RATIO,
-      quality: REGISTER_SCORE_IMAGE_JPEG_QUALITY,
-    })
+  const captureReportImages = (
+    layout: RegisterScoreImageLayout
+  ): Promise<RegisterScoreImageCaptureResult> => captureRegisterScoreReportImages(reportRef, layout)
 
   onMount(() => {
     /**
@@ -1402,7 +1402,7 @@ export const RegisterScoreResultView = (props: {
       >
         <h1 class="text-2xl font-semibold">{props.pageTitle}</h1>
         <RegisterScoreImagePreviewDialog
-          captureImage={captureReportImage}
+          captureImages={captureReportImages}
           imageFilename={formatRegisterScoreImageFilename(props.result.imported_at)}
         />
       </header>
@@ -1440,7 +1440,7 @@ export const RegisterScoreResultView = (props: {
               class="w-full overflow-hidden rounded-md border border-border bg-surface px-0 pb-4 pt-0 font-sans text-text shadow-sm"
             >
               <RegisterScoreReportHeader result={props.result} />
-              <div class="px-4 pt-3">
+              <div class="px-4 pt-3" data-score-image-body>
                 <RegisterScoreProfileSummary
                   result={props.result}
                   showClassEmblem={showClassEmblem()}

@@ -1,4 +1,4 @@
-import { USERS_PATH } from '../constants/routes'
+import { STAFF_LOGIN_PATH, USERS_PATH } from '../constants/routes'
 import { normalizeRoutePathname } from './routePathname'
 
 /** robots メタタグへ設定する noindex 値 */
@@ -17,16 +17,20 @@ const hasNoindexDirective = (content: string | null): boolean =>
  * 検索エンジンへインデックスさせないパスか判定する。
  *
  * @param pathname - ブラウザーの現在パス。
- * @returns ユーザーページの場合は true。
+ * @returns ユーザーページまたはスタッフログイン画面の場合は true。
  */
 export const isNoindexPathname = (pathname: string): boolean => {
   const normalized = normalizeRoutePathname(pathname)
-  return normalized === USERS_PATH || normalized.startsWith(`${USERS_PATH}/`)
+  return (
+    normalized === STAFF_LOGIN_PATH ||
+    normalized === USERS_PATH ||
+    normalized.startsWith(`${USERS_PATH}/`)
+  )
 }
 
 /**
  * 現在パスと初期 robots 値から、設定すべき robots content を決める。
- * サイト全体の noindex は解除せず、ユーザーページだけ追加で noindex にする。
+ * サイト全体の noindex は解除せず、非公開ページを追加で noindex にする。
  *
  * @param pathname - ブラウザーの現在パス。
  * @param initialRobotsContent - HTML 初期状態の robots content。未設定時は null。
