@@ -30,8 +30,15 @@ import {
   RATING_IMAGE_V2_DIFFICULTY_STRIPE_PX,
   RATING_IMAGE_V2_GAP_PX,
   RATING_IMAGE_V2_HONOR_COLUMN_PX,
-  RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS,
-  RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX,
+  RATING_IMAGE_V2_JACKET_LAMP_BASELINE_RATIO,
+  RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX,
+  RATING_IMAGE_V2_JACKET_LAMP_DIAMOND_PX,
+  RATING_IMAGE_V2_JACKET_LAMP_FONT_PX,
+  RATING_IMAGE_V2_JACKET_LAMP_FRAME_PX,
+  RATING_IMAGE_V2_JACKET_LAMP_LETTER_SPACING_EM,
+  RATING_IMAGE_V2_JACKET_LAMP_OUTLINE_PX,
+  RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX,
+  RATING_IMAGE_V2_JACKET_LAMP_TEXT_FRAME_PX,
   RATING_IMAGE_V2_JACKET_PX,
   RATING_IMAGE_V2_META_GAP_PX,
   RATING_IMAGE_V2_META_TRIANGLE_GAP_PX,
@@ -230,12 +237,117 @@ const RatingImageV2EmptyTile: Component<RatingImageV2EmptyTileProps> = (props) =
   )
 }
 
+/** コンボランプエンブレムの SVG 表示領域の半分（中心座標系の端） */
+const LAMP_CANVAS_HALF_PX = RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX / 2
+/** コンボランプエンブレムの菱形外周の半分 */
+const LAMP_DIAMOND_HALF_PX = RATING_IMAGE_V2_JACKET_LAMP_DIAMOND_PX / 2
+/** コンボランプエンブレムの菱形内側（グラデーション面）の一辺 */
+const LAMP_FACE_PX =
+  RATING_IMAGE_V2_JACKET_LAMP_DIAMOND_PX - RATING_IMAGE_V2_JACKET_LAMP_FRAME_PX * 2
+/** 中心基準の SVG 座標系 */
+const LAMP_VIEW_BOX = `${-LAMP_CANVAS_HALF_PX} ${-LAMP_CANVAS_HALF_PX} ${RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX} ${RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX}`
+/** 菱形として見せるための回転 */
+const LAMP_DIAMOND_TRANSFORM = 'rotate(45)'
 /**
- * レーティング枠画像 Ver. 2 のジャケット左上へコンボランプバッジを表示する。
- * FCは金色、AJはプラチナ色、AJCは虹色の角丸エンブレムとし、略称はバッジから少しはみ出させる。
+ * 菱形内側のグラデーション面の配置。
+ * SnapDOM は SVG の `<defs>` 配下で CSS 変数を解決しないため、面は HTML 要素の背景で描く。
+ */
+const LAMP_FACE_STYLE: JSX.CSSProperties = {
+  left: `${LAMP_CANVAS_HALF_PX - LAMP_FACE_PX / 2}px`,
+  top: `${LAMP_CANVAS_HALF_PX - LAMP_FACE_PX / 2}px`,
+  width: `${LAMP_FACE_PX}px`,
+  height: `${LAMP_FACE_PX}px`,
+  'border-radius': `${RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX - RATING_IMAGE_V2_JACKET_LAMP_FRAME_PX}px`,
+}
+
+type LampSvgLayerProps = {
+  /** SVG 内へ描画する要素 */
+  children: JSX.Element
+}
+
+/**
+ * コンボランプエンブレムの表示領域全体を覆う、中心基準の SVG レイヤーを描画する。
+ *
+ * @param props - SVG 内へ描画する要素。
+ * @returns 表示領域と同寸の SVG。
+ */
+const LampSvgLayer: Component<LampSvgLayerProps> = (props) => (
+  <svg
+    class="rating-image-v2-jacket-lamp-layer absolute inset-0"
+    width={RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX}
+    height={RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX}
+    viewBox={LAMP_VIEW_BOX}
+    aria-hidden="true"
+  >
+    {props.children}
+  </svg>
+)
+
+type LampDiamondRectProps = {
+  /** 回転前の角丸正方形の一辺の半分 */
+  half: number
+  /** 角丸半径 */
+  radius: number
+  /** 塗りを指定するクラス */
+  class: string
+}
+
+/**
+ * コンボランプエンブレムの菱形を構成する、中心基準の角丸正方形を 45° 回転して描画する。
+ *
+ * @param props - 半辺長、角丸半径、塗りクラス。
+ * @returns 菱形の SVG 要素。
+ */
+const LampDiamondRect: Component<LampDiamondRectProps> = (props) => (
+  <rect
+    class={props.class}
+    x={-props.half}
+    y={-props.half}
+    width={props.half * 2}
+    height={props.half * 2}
+    rx={props.radius}
+    transform={LAMP_DIAMOND_TRANSFORM}
+  />
+)
+
+type LampLabelTextProps = {
+  /** 表示する略称 */
+  label: string
+  /** 塗りとフチ色を指定するクラス */
+  class: string
+  /** 文字のフチ幅。0 ならフチなし */
+  strokeWidth: number
+}
+
+/**
+ * コンボランプエンブレムの略称を中央へ描画する。
+ * 同じ文字を外周線・白フチ・本体の順に重ねてシルエット状のフチを作る。
+ *
+ * @param props - 略称、色クラス、フチ幅。
+ * @returns SVG の `<text>`。
+ */
+const LampLabelText: Component<LampLabelTextProps> = (props) => (
+  <text
+    class={`rating-image-v2-jacket-lamp-label ${props.class}`}
+    x={0}
+    y={RATING_IMAGE_V2_JACKET_LAMP_FONT_PX * RATING_IMAGE_V2_JACKET_LAMP_BASELINE_RATIO}
+    text-anchor="middle"
+    font-size={`${RATING_IMAGE_V2_JACKET_LAMP_FONT_PX}px`}
+    letter-spacing={`${RATING_IMAGE_V2_JACKET_LAMP_LETTER_SPACING_EM}em`}
+    stroke-width={props.strokeWidth}
+    stroke-linejoin="round"
+  >
+    {props.label}
+  </text>
+)
+
+/**
+ * レーティング枠画像 Ver. 2 のジャケット左上へコンボランプエンブレムを表示する。
+ * FCは金色、AJはプラチナ色、AJCは虹色の角丸菱形に、菱形から少しはみ出す略称を重ね、
+ * 菱形と略称をまとめて白フチと外周濃色線で囲む。
  *
  * @param props - 表示対象のレコード。
- * @returns コンボランプがある場合のみ左上のバッジ。
+ * @returns コンボランプがある場合のみ左上のエンブレム。
  */
 const RatingImageV2JacketComboLamp: Component<RatingImageV2JacketComboLampProps> = (props) => {
   /**
@@ -247,17 +359,72 @@ const RatingImageV2JacketComboLamp: Component<RatingImageV2JacketComboLampProps>
 
   return (
     <Show when={comboLamp()}>
-      {(lamp) => (
-        <span
-          class={`rating-image-v2-jacket-lamp pointer-events-none absolute top-0 left-0 z-20 ${RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS}`}
-          data-combo-lamp={getRatingImageV2ComboLampVariant(lamp(), props.record.score)}
-          style={{ margin: `${RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX}px` }}
-        >
-          <span class="rating-image-v2-jacket-lamp-label">
-            {getRatingImageV2ComboLampLabel(lamp())}
+      {(lamp) => {
+        /**
+         * 菱形の色と文字色を切り替える装飾種別を返す。
+         *
+         * @returns FC / AJ / AJC の装飾種別。
+         */
+        const variant = () => getRatingImageV2ComboLampVariant(lamp(), props.record.score)
+        /**
+         * エンブレムへ表示する略称を返す。
+         *
+         * @returns FC または AJ。
+         */
+        const label = () => getRatingImageV2ComboLampLabel(lamp())
+        return (
+          <span
+            class="rating-image-v2-jacket-lamp pointer-events-none absolute top-0 left-0 z-20 block"
+            data-combo-lamp={variant()}
+            style={{
+              width: `${RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX}px`,
+              height: `${RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX}px`,
+            }}
+            role="img"
+            aria-label={label()}
+          >
+            <LampSvgLayer>
+              {/* 半透明の外周線が重なって濃くならないよう、不透明で描いてからまとめて透過する */}
+              <g class="rating-image-v2-jacket-lamp-outline-group">
+                <LampDiamondRect
+                  class="rating-image-v2-jacket-lamp-outline"
+                  half={LAMP_DIAMOND_HALF_PX + RATING_IMAGE_V2_JACKET_LAMP_OUTLINE_PX}
+                  radius={
+                    RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX + RATING_IMAGE_V2_JACKET_LAMP_OUTLINE_PX
+                  }
+                />
+                <LampLabelText
+                  label={label()}
+                  class="rating-image-v2-jacket-lamp-outline"
+                  strokeWidth={
+                    (RATING_IMAGE_V2_JACKET_LAMP_TEXT_FRAME_PX +
+                      RATING_IMAGE_V2_JACKET_LAMP_OUTLINE_PX) *
+                    2
+                  }
+                />
+              </g>
+              <LampDiamondRect
+                class="rating-image-v2-jacket-lamp-frame"
+                half={LAMP_DIAMOND_HALF_PX}
+                radius={RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX}
+              />
+              <LampLabelText
+                label={label()}
+                class="rating-image-v2-jacket-lamp-frame"
+                strokeWidth={RATING_IMAGE_V2_JACKET_LAMP_TEXT_FRAME_PX * 2}
+              />
+            </LampSvgLayer>
+            <span class="rating-image-v2-jacket-lamp-face absolute block" style={LAMP_FACE_STYLE} />
+            <LampSvgLayer>
+              <LampLabelText
+                label={label()}
+                class="rating-image-v2-jacket-lamp-text"
+                strokeWidth={0}
+              />
+            </LampSvgLayer>
           </span>
-        </span>
-      )}
+        )
+      }}
     </Show>
   )
 }
