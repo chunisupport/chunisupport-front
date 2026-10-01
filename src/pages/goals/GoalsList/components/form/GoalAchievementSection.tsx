@@ -302,21 +302,23 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
         </div>
       </Show>
 
-      <div class="block space-y-2 text-sm">
-        <p class="mb-1 block text-text-muted">表示形式</p>
-        <CheckboxField
-          class="relative flex items-center gap-2 text-sm text-text-muted"
-          checked={props.invertValue}
-          onChange={props.onInvertValueChange}
-          label={LABEL_INVERT_VALUE}
-        />
-        <CheckboxField
-          class="relative flex items-center gap-2 text-sm text-text-muted"
-          checked={props.invertPercentage}
-          onChange={props.onInvertPercentageChange}
-          label={LABEL_INVERT_PERCENTAGE}
-        />
-      </div>
+      <Show when={props.achievementType !== 'avg_score'}>
+        <div class="block space-y-2 text-sm">
+          <p class="mb-1 block text-text-muted">表示形式</p>
+          <CheckboxField
+            class="relative flex items-center gap-2 text-sm text-text-muted"
+            checked={props.invertValue}
+            onChange={props.onInvertValueChange}
+            label={LABEL_INVERT_VALUE}
+          />
+          <CheckboxField
+            class="relative flex items-center gap-2 text-sm text-text-muted"
+            checked={props.invertPercentage}
+            onChange={props.onInvertPercentageChange}
+            label={LABEL_INVERT_PERCENTAGE}
+          />
+        </div>
+      </Show>
     </div>
   </section>
 )

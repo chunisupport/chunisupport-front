@@ -25,7 +25,12 @@ import { isTheoreticalOverPowerTargetDifficulty } from '../../../utils/theoretic
 import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
 import { calculateGoalOverPowerTotals } from './goalOverPower'
 
+/** 目標の進捗と、実際の集計対象に基づく表示情報。 */
 export interface GoalProgressResult {
+  /** 通常・OP目標では譜面数、虹枠目標では楽曲数。 */
+  targetCount: number
+  /** 平均スコア目標の達成に必要な合計スコアの上積み。 */
+  remainingScore?: number
   current: number
   target: number
   percent: number
@@ -241,7 +246,7 @@ const resolveTotalScoreTarget = (
  * @param filteredRecords - 目標条件に一致したプレイヤーレコード一覧。
  * @param songs - 楽曲マスタ一覧。
  * @param overPowerContext - OVER POWER目標で未解禁曲設定を反映するための追加入力。
- * @returns 目標カード表示に必要な進捗情報。
+ * @returns 対象件数、平均目標の合計不足点数、現在値・目標値・達成判定を含む進捗情報。
  */
 export const calculateGoalProgress = (
   goal: GoalDTO,
@@ -252,7 +257,8 @@ export const calculateGoalProgress = (
   let current = 0
   let target = 1
   let hasUnknownMaxOp = false
-  let hasReachableTarget = true
+  let targetCount = filteredRecords.length
+  let remainingScore: number | undefined
 
   switch (goal.achievement_type) {
     case 'rank_count':
@@ -267,17 +273,14 @@ export const calculateGoalProgress = (
       const reachableRecords = filterRatingReachableRecords(filteredRecords, threshold)
       target = resolveCountTarget(goal.achievement_params, reachableRecords.length)
       current = reachableRecords.filter((record) => record.rating >= threshold).length
-      hasReachableTarget = reachableRecords.length > 0
+      targetCount = reachableRecords.length
       break
     }
     case 'avg_score': {
       target = getNumberGoalTargetParam(goal.achievement_params, 'score')
-      if (filteredRecords.length === 0) {
-        current = 0
-      } else {
-        const sum = filteredRecords.reduce((acc, record) => acc + record.score, 0)
-        current = Math.floor(sum / filteredRecords.length)
-      }
+      const sum = filteredRecords.reduce((acc, record) => acc + record.score, 0)
+      current = targetCount > 0 ? Math.floor(sum / targetCount) : 0
+      remainingScore = Math.max(0, Math.ceil(target * targetCount - sum))
       break
     }
     case 'hardlamp_count': {
@@ -349,6 +352,7 @@ export const calculateGoalProgress = (
       )
       current = totals.current
       hasUnknownMaxOp = totals.hasUnknownMaxOp
+      targetCount = totals.targetCount
       break
     }
     case 'overpower_percent': {
@@ -363,6 +367,7 @@ export const calculateGoalProgress = (
       })
       current = totals.max > 0 ? (totals.current / totals.max) * 100 : 0
       hasUnknownMaxOp = totals.hasUnknownMaxOp
+      targetCount = totals.targetCount
       break
     }
   }
@@ -375,7 +380,9 @@ export const calculateGoalProgress = (
     current,
     target,
     percent,
-    achieved: hasReachableTarget && current >= target,
+    achieved: targetCount > 0 && current >= target,
+    targetCount,
+    ...(remainingScore !== undefined ? { remainingScore } : {}),
     hasUnknownMaxOp,
   }
 }

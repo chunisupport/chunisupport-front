@@ -29,6 +29,8 @@ const EMPTY_MASTER_DATA: MasterDataDTO = {
 
 /** OVER POWER目標の現在値と理論値 */
 export interface GoalOverPowerTotals {
+  /** 未解禁設定と目標条件を反映した集計対象譜面数。 */
+  targetCount: number
   /** 対象譜面の現在OVER POWER合計 */
   current: number
   /** 対象譜面の理論OVER POWER合計 */
@@ -199,7 +201,7 @@ const selectGoalOverPowerChartEntries = (
  * 未解禁曲設定を反映したOVER POWER目標の現在値と理論値を算出する。
  *
  * @param input - レコード、楽曲マスタ、対象条件、未解禁設定。
- * @returns 対象譜面の現在OVER POWER合計と理論OVER POWER合計。
+ * @returns 対象譜面数、現在OVER POWER合計、理論OVER POWER合計。
  */
 export const calculateGoalOverPowerTotals = (
   input: GoalOverPowerCalculationInput
@@ -228,7 +230,7 @@ export const calculateGoalOverPowerTotals = (
     }
   }
 
-  return { current, max, hasUnknownMaxOp }
+  return { current, max, hasUnknownMaxOp, targetCount: selected.length }
 }
 
 /**

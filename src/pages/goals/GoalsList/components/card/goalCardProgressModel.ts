@@ -2,12 +2,15 @@ import type { GoalAchievementType } from '../../../../../types/api'
 import { formatTruncatedFixed, truncateDecimal } from '../../../../../utils/numberFormat'
 import { formatOverPowerPercent } from '../../../../../utils/overPowerFormat'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { GOAL_SCORE_UNIT } from '../../constants'
 
 export interface GoalCardDisplayProgress {
   currentText: string
   targetText: string
   percentPrefixText: string
   percentText: string
+  /** 数値と文字サイズを分けて表示する単位。 */
+  percentSuffixText?: string
   ariaValueText: string
   progressValue: number
 }
@@ -48,7 +51,7 @@ export const formatGoalCardValue = (value: number, type: GoalAchievementType): s
  * @param type - 目標種別。
  * @param invertValue - 実数値の反転表示が有効か。
  * @param invertPercentage - 割合の反転表示が有効か。
- * @returns カードに表示する現在値、目標値、達成率、ゲージ値。
+ * @returns カードに表示する現在値、目標値、達成率または平均目標の残り点数、ゲージ値。
  */
 export const resolveGoalCardDisplayProgress = (
   progress: GoalProgressResult,
@@ -56,9 +59,11 @@ export const resolveGoalCardDisplayProgress = (
   invertValue: boolean,
   invertPercentage: boolean
 ): GoalCardDisplayProgress => {
-  const displayCurrent = invertValue
-    ? Math.max(progress.target - progress.current, 0)
-    : progress.current
+  const isAverageScore = type === 'avg_score'
+  const displayCurrent =
+    invertValue && !isAverageScore
+      ? Math.max(progress.target - progress.current, 0)
+      : progress.current
   const safeTarget = progress.target <= 0 ? 1 : progress.target
   const raw = (progress.current / safeTarget) * 100
   const normalizedPercent = Number.isFinite(raw) ? Math.max(0, raw) : 0
@@ -68,6 +73,19 @@ export const resolveGoalCardDisplayProgress = (
   const progressValue = Math.max(0, Math.min(normalizedPercent, 100))
   const progressValueText = `${formatTruncatedFixed(progressValue, 2)}%`
   const displayPercentText = `${formatTruncatedFixed(displayPercent, 2)}%`
+
+  if (isAverageScore) {
+    const remainingText = `${formatGoalCardValue(progress.remainingScore ?? 0, type)}${GOAL_SCORE_UNIT}`
+    return {
+      currentText: formatGoalCardValue(progress.current, type),
+      targetText: formatGoalCardValue(progress.target, type),
+      percentPrefixText: REMAINING_PERCENTAGE_PREFIX,
+      percentText: formatGoalCardValue(progress.remainingScore ?? 0, type),
+      percentSuffixText: GOAL_SCORE_UNIT,
+      ariaValueText: `達成率 ${progressValueText}、${REMAINING_PERCENTAGE_PREFIX}${remainingText}`,
+      progressValue,
+    }
+  }
 
   return {
     currentText: formatGoalCardValue(displayCurrent, type),

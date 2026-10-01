@@ -131,6 +131,7 @@ test('必須譜面がすべてAJの楽曲だけを虹枠達成数へ数える', 
   // Then
   assert.equal(result.current, 1)
   assert.equal(result.target, 2)
+  assert.equal(result.targetCount, 2)
   assert.equal(result.achieved, false)
 })
 
@@ -143,6 +144,19 @@ test('固定件数は対象楽曲数が減っても維持する', () => {
 
   // Then
   assert.equal(result.target, 3)
+  assert.equal(result.achieved, false)
+})
+
+test('対象楽曲が0件の虹枠目標は未達成として扱う', () => {
+  // Given
+  const goal = createGoal({})
+
+  // When
+  const result = calculateRainbowGoalProgress(goal, [], [])
+
+  // Then
+  assert.equal(result.target, 0)
+  assert.equal(result.targetCount, 0)
   assert.equal(result.achieved, false)
 })
 
@@ -160,5 +174,6 @@ test('残数と割合は対象楽曲数から既存の件数目標と同様に�
 
   // Then
   assert.equal(remainingResult.target, 2)
+  assert.equal(remainingResult.targetCount, 3)
   assert.equal(percentResult.target, 2)
 })

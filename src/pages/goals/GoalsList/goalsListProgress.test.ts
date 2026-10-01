@@ -65,6 +65,7 @@ test('データ未取得時の下書き進捗は未達成の初期値を返す',
     target: 1,
     percent: 0,
     achieved: false,
+    targetCount: 0,
     hasUnknownMaxOp: false,
   })
 })
