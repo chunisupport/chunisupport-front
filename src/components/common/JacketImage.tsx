@@ -21,6 +21,8 @@ type Props = {
   ariaHidden?: boolean
   /** CORS画像の取得モード */
   crossOrigin?: 'anonymous' | 'use-credentials'
+  /** DOM画像化で元画像を取得できなかったときに埋め込む代替画像URL */
+  imageCaptureFallbackSrc?: string
   /** DOM画像の読み込み完了時に呼び出す処理 */
   onLoad?: JSX.EventHandlerUnion<HTMLImageElement, Event>
   /** キャッシュ回避後の最終的な読み込み状態を通知する処理 */
@@ -84,6 +86,7 @@ export const JacketImage: Component<Props> = (props) => {
         alt={props.alt}
         class={props.imageClass}
         crossOrigin={props.crossOrigin}
+        data-image-capture-fallback-src={props.imageCaptureFallbackSrc}
         onLoad={props.onLoad}
       />
       {props.fallback !== undefined && (

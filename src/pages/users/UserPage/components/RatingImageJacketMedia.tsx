@@ -94,6 +94,7 @@ export const RatingImageJacketMedia: Component<RatingImageJacketMediaProps> = (p
       class={props.class}
       ariaHidden={true}
       crossOrigin="anonymous"
+      imageCaptureFallbackSrc={placeholderImageUrl}
       imageClass={props.imageClass}
       onLoad={handleJacketLoad}
       onLoadingStatusChange={handleJacketLoadingStatusChange}

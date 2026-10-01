@@ -6,6 +6,8 @@ const IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 const IMAGE_CAPTURE_EXCLUDED_SELECTOR = '[data-image-capture-excluded="true"]'
 /** クリップボードへ書き込む画像のMIMEタイプ */
 const CLIPBOARD_PNG_MIME_TYPE = 'image/png'
+/** 画像化用DOMへ埋め込む画像を取得するときのタイムアウト */
+const INLINE_IMAGE_FETCH_TIMEOUT_MS = 15_000
 /** 画像クリップボードコピー成功表示を戻すまでの時間 */
 export const IMAGE_CLIPBOARD_COPY_FEEDBACK_MS = 2_000
 
@@ -44,6 +46,83 @@ export const calculateImageCaptureScale = (
   height: number,
   maxCssSide: number = DEFAULT_IMAGE_CAPTURE_MAX_CSS_SIDE
 ): number => Math.min(1, maxCssSide / width, maxCssSide / height)
+
+/**
+ * 画像URLをHTTPキャッシュ優先で取得し、data URLへ変換する。
+ *
+ * @param url - 取得する画像URL。
+ * @returns 画像のdata URL。
+ */
+const fetchImageAsDataUrl = async (url: string): Promise<string> => {
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), INLINE_IMAGE_FETCH_TIMEOUT_MS)
+  let blob: Blob
+  try {
+    const response = await fetch(url, { cache: 'force-cache', signal: controller.signal })
+    if (!response.ok) throw new Error(`Image fetch failed: ${response.status}`)
+    blob = await response.blob()
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
+ * 要素内の画像をdata URLとして埋め込み、SnapDOMによる再取得を不要にする。
+ *
+ * SnapDOMの画像取得は3秒でタイムアウトし、失敗した画像はプレースホルダーになる。
+ * 表示済みの画像はHTTPキャッシュから元のバイト列のまま取得し、劣化させずに埋め込む。
+ * 取得に失敗した画像は `data-image-capture-fallback-src` の代替画像を埋め込む。
+ * 代替画像を持たない画像は元のURLのまま残し、SnapDOMの再取得に任せる。
+ *
+ * @param element - 画像化用に複製した要素。
+ * @returns すべての画像の埋め込み試行が完了したときに解決されるPromise。
+ */
+const inlineElementImages = async (element: HTMLElement): Promise<void> => {
+  const dataUrls = new Map<string, Promise<string>>()
+
+  /**
+   * 同じURLの取得を1回にまとめてdata URLを返す。
+   *
+   * @param url - 取得する画像URL。
+   * @returns 画像のdata URL。
+   */
+  const getDataUrl = (url: string): Promise<string> => {
+    let dataUrl = dataUrls.get(url)
+    if (!dataUrl) {
+      dataUrl = fetchImageAsDataUrl(url)
+      dataUrls.set(url, dataUrl)
+    }
+    return dataUrl
+  }
+
+  await Promise.all(
+    Array.from(element.querySelectorAll('img')).map(async (image) => {
+      const url = image.src
+      if (!url || url.startsWith('data:') || url.startsWith('blob:')) return
+
+      const fallbackSrc = image.dataset.imageCaptureFallbackSrc
+      try {
+        image.src = await getDataUrl(url)
+      } catch {
+        if (!fallbackSrc) return
+        try {
+          image.src = await getDataUrl(new URL(fallbackSrc, document.baseURI).href)
+        } catch {
+          return
+        }
+      }
+      image.removeAttribute('srcset')
+      image.removeAttribute('sizes')
+    })
+  )
+}
 
 /**
  * 表示用transformと画像除外要素を取り除いた固定幅のDOMを作る。
@@ -146,12 +225,15 @@ export const captureElementAsImage = async (
   )
 
   try {
+    await inlineElementImages(capture.element)
     const { snapdom } = await import('@zumer/snapdom')
     const captureResult = await snapdom(capture.element, {
       backgroundColor: getComputedStyle(sourceElement).backgroundColor,
       dpr: options.pixelRatio,
       embedFonts: true,
       format: options.format,
+      // 取得できなかった画像は灰色の "img" ではなく、何も描画しない。
+      placeholders: false,
       quality: options.quality,
       reconcile: true,
     })
