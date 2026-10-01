@@ -4,16 +4,18 @@ import base2 from '../../../assets/classEmblem/base_2.svg'
 import base3 from '../../../assets/classEmblem/base_3.svg'
 import base4 from '../../../assets/classEmblem/base_4.svg'
 import base5 from '../../../assets/classEmblem/base_5.svg'
+import baseExtra from '../../../assets/classEmblem/base_extra.svg'
 import baseInf from '../../../assets/classEmblem/base_inf.svg'
 import emblem1 from '../../../assets/classEmblem/emblem_1.svg'
 import emblem2 from '../../../assets/classEmblem/emblem_2.svg'
 import emblem3 from '../../../assets/classEmblem/emblem_3.svg'
 import emblem4 from '../../../assets/classEmblem/emblem_4.svg'
 import emblem5 from '../../../assets/classEmblem/emblem_5.svg'
+import emblemExtra from '../../../assets/classEmblem/emblem_extra.svg'
 import emblemInf from '../../../assets/classEmblem/emblem_inf.svg'
 import { CLASS_EMBLEM_LABEL } from './ClassEmblem.constants'
 
-/** クラスエンブレムのマスタ名とSVGの対応 */
+/** クラスエンブレムのマスタ名とSVGの対応。`extra` はゲーム内に存在しないEXクラス用の独自デザイン */
 const CLASS_EMBLEM_SRC: Record<string, string> = {
   '1': emblem1,
   '2': emblem2,
@@ -21,9 +23,10 @@ const CLASS_EMBLEM_SRC: Record<string, string> = {
   '4': emblem4,
   '5': emblem5,
   inf: emblemInf,
+  extra: emblemExtra,
 }
 
-/** クラスエンブレムベースのマスタ名とSVGの対応 */
+/** クラスエンブレムベースのマスタ名とSVGの対応。`extra` はゲーム内に存在しないEXクラス用の独自デザイン */
 const CLASS_EMBLEM_BASE_SRC: Record<string, string> = {
   '1': base1,
   '2': base2,
@@ -31,6 +34,7 @@ const CLASS_EMBLEM_BASE_SRC: Record<string, string> = {
   '4': base4,
   '5': base5,
   inf: baseInf,
+  extra: baseExtra,
 }
 
 type Props = {
