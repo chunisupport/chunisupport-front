@@ -52,7 +52,7 @@ export const REGISTER_SCORE_COPY = {
 } as const
 
 /** 更新差分画像の余白とページ番号を含む論理高さ上限 */
-export const REGISTER_SCORE_IMAGE_MAX_HEIGHT = 1_200
+export const REGISTER_SCORE_IMAGE_MAX_HEIGHT = 1_800
 /** 更新差分画像を原寸で出力するピクセル比 */
 export const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
 /** 更新差分JPEG画像の圧縮品質 */
