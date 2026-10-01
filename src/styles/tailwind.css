@@ -566,10 +566,10 @@
   --cs-size-rating-image-v2-position-flag-height: 32px;
   --cs-size-rating-image-v2-position-flag-slant: 12px;
   --cs-size-rating-image-v2-position-flag-font: 22px;
-  --cs-size-rating-image-v2-jacket-lamp: 18px;
-  --cs-size-rating-image-v2-jacket-lamp-font: 13px;
-  --cs-size-rating-image-v2-jacket-lamp-border: 2px;
-  --cs-size-rating-image-v2-jacket-lamp-radius: 4px;
+  --cs-color-rating-image-v2-jacket-lamp-frame: var(--color-white);
+  --cs-color-rating-image-v2-jacket-lamp-outline: var(--color-gray-900);
+  --cs-opacity-rating-image-v2-jacket-lamp-outline: 0.8;
+  --cs-color-rating-image-v2-jacket-lamp-text: var(--color-gray-900);
   --cs-shadow-rating-image-v2-header: 0 4px 12px rgb(0 0 0 / 22%);
   --cs-shadow-rating-image-v2-position: 0 1px 2px rgb(0 0 0 / 70%);
   --cs-shadow-rating-image-v2-new-badge: 0 1px 2px rgb(0 0 0 / 75%);
@@ -1252,48 +1252,54 @@
     border-top-color: var(--cs-color-possession-divider);
   }
 
-  .rating-image-v2-jacket-lamp {
-    position: relative;
-    box-sizing: border-box;
+  .rating-image-v2-jacket-lamp-layer {
     overflow: visible;
-    width: var(--cs-size-rating-image-v2-jacket-lamp);
-    height: var(--cs-size-rating-image-v2-jacket-lamp);
-    border: var(--cs-size-rating-image-v2-jacket-lamp-border) solid var(--color-white);
-    border-radius: var(--cs-size-rating-image-v2-jacket-lamp-radius);
+  }
+
+  .rating-image-v2-jacket-lamp-outline-group {
+    opacity: var(--cs-opacity-rating-image-v2-jacket-lamp-outline);
+  }
+
+  .rating-image-v2-jacket-lamp-outline {
+    fill: var(--cs-color-rating-image-v2-jacket-lamp-outline);
+    stroke: var(--cs-color-rating-image-v2-jacket-lamp-outline);
+  }
+
+  .rating-image-v2-jacket-lamp-frame {
+    fill: var(--cs-color-rating-image-v2-jacket-lamp-frame);
+    stroke: var(--cs-color-rating-image-v2-jacket-lamp-frame);
+  }
+
+  .rating-image-v2-jacket-lamp-face {
     transform: rotate(45deg);
   }
 
-  .rating-image-v2-jacket-lamp[data-combo-lamp="fc"] {
+  .rating-image-v2-jacket-lamp[data-combo-lamp="fc"] .rating-image-v2-jacket-lamp-face {
     background-color: var(--cs-color-ranking-gold-bg);
     background-image: var(--cs-gradient-ranking-gold-bg);
-    color: var(--color-gray-900);
   }
 
-  .rating-image-v2-jacket-lamp[data-combo-lamp="aj"] {
+  .rating-image-v2-jacket-lamp[data-combo-lamp="aj"] .rating-image-v2-jacket-lamp-face {
     background-color: var(--cs-color-possession-platina-bg);
     background-image: var(--cs-gradient-possession-platina-bg);
-    color: var(--color-gray-900);
   }
 
-  .rating-image-v2-jacket-lamp[data-combo-lamp="ajc"] {
+  .rating-image-v2-jacket-lamp[data-combo-lamp="ajc"] .rating-image-v2-jacket-lamp-face {
     background-color: var(--cs-color-lamp-all-justice-critical-rainbow-1);
     background-image: var(--cs-gradient-lamp-all-justice-critical-bg);
-    color: var(--cs-color-lamp-all-justice-critical-text);
   }
 
   .rating-image-v2-jacket-lamp-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 1;
-    overflow: visible;
     font-family: var(--font-oswald);
-    font-size: var(--cs-size-rating-image-v2-jacket-lamp-font);
-    font-weight: 800;
-    line-height: 1;
-    white-space: nowrap;
-    text-wrap: nowrap;
-    transform: translate(-50%, -50%) rotate(-45deg);
+    font-weight: 700;
+  }
+
+  .rating-image-v2-jacket-lamp-text {
+    fill: var(--cs-color-rating-image-v2-jacket-lamp-text);
+  }
+
+  .rating-image-v2-jacket-lamp[data-combo-lamp="ajc"] .rating-image-v2-jacket-lamp-text {
+    fill: var(--cs-color-lamp-all-justice-critical-text);
   }
 
   .rating-image-v2-backdrop {

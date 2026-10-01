@@ -24,14 +24,30 @@ export const RATING_IMAGE_V2_META_GAP_PX = 6
 export const RATING_IMAGE_V2_META_TRIANGLE_PX = 12
 /** レーティング枠画像 Ver. 2 の譜面定数・三角形・レーティングの間隔 */
 export const RATING_IMAGE_V2_META_TRIANGLE_GAP_PX = 8
-/** レーティング枠画像 Ver. 2 のジャケット左上ランプバッジ余白 */
-export const RATING_IMAGE_V2_JACKET_LAMP_MARGIN_PX = 5
 /**
- * レーティング枠画像 Ver. 2 のジャケット左上コンボランプバッジ。
- * FC / AJ / AJC の略称を、角丸の白いフチ菱形から少しはみ出させて強調する。
+ * レーティング枠画像 Ver. 2 のジャケット左上コンボランプエンブレムの SVG 表示領域一辺。
+ * ジャケット左上へ配置し、この領域の中心をエンブレムの中心とする。
  */
-export const RATING_IMAGE_V2_JACKET_LAMP_BADGE_CLASS =
-  'inline-flex shrink-0 items-center justify-center'
+export const RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX = 28
+/** コンボランプエンブレムの菱形（回転前の角丸正方形）一辺 */
+export const RATING_IMAGE_V2_JACKET_LAMP_DIAMOND_PX = 18
+/** コンボランプエンブレムの菱形の白フチ幅 */
+export const RATING_IMAGE_V2_JACKET_LAMP_FRAME_PX = 2
+/** コンボランプエンブレムの菱形の角丸半径 */
+export const RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX = 4
+/** コンボランプエンブレムの菱形と文字をまとめて囲む外周濃色線の幅 */
+export const RATING_IMAGE_V2_JACKET_LAMP_OUTLINE_PX = 0.9
+/** コンボランプエンブレムの文字を囲む白フチ幅 */
+export const RATING_IMAGE_V2_JACKET_LAMP_TEXT_FRAME_PX = 1.6
+/** コンボランプエンブレムの文字サイズ。菱形から少しはみ出す大きさにする。 */
+export const RATING_IMAGE_V2_JACKET_LAMP_FONT_PX = 16
+/** コンボランプエンブレムの文字間隔（em） */
+export const RATING_IMAGE_V2_JACKET_LAMP_LETTER_SPACING_EM = -0.02
+/**
+ * コンボランプエンブレムの文字ベースライン位置（中心からの下方向オフセット、文字サイズ比）。
+ * Oswald の字形メトリクスで大文字が菱形の中央へ来る値。
+ */
+export const RATING_IMAGE_V2_JACKET_LAMP_BASELINE_RATIO = 0.452
 
 /**
  * レーティング枠画像 Ver. 2 の最新更新 NEW! バッジ。

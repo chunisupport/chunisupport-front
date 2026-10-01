@@ -195,6 +195,10 @@ SnapDOM は画像、CSS の背景画像、フォントなどを取得して出�
 
 外部アセットが欠落した場合に画像生成全体を失敗させるか、プレースホルダーで継続するかは、機能ごとに明示します。
 
+SnapDOM は表示済みの `<img>` も再取得し、3秒で取得できないと灰色の "img" プレースホルダーへ置き換えます。回線が遅いスマートフォンで多数のジャケットを含む画像を作ると発生しやすいため、`src/utils/domImageCapture.ts` の `captureElementAsImage` は SnapDOM へ渡す前に、画像化用DOM内の画像を HTTPキャッシュ優先で取得して data URL へ置き換えます。data URL は SnapDOM が再取得しないため、タイムアウトの影響を受けません。
+
+それでも取得できなかった画像は、`<img>` の `data-image-capture-fallback-src` に指定した代替画像へ置き換えます。ジャケットでは `JacketImage` の `imageCaptureFallbackSrc` で、楽曲詳細画面などの読み込み中表示と同じ `src/assets/placeholder.png` を指定しています。代替画像を持たない画像（クラスエンブレムなど）は、SnapDOM の `placeholders: false` により何も描画しません。
+
 ## 背景色とテーマ
 
 透明背景を意図しない場合は、画像化対象の算出済み背景色を渡します。

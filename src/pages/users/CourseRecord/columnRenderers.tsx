@@ -1,4 +1,5 @@
-import { RECORD_COMPACT_BADGE_CLASS } from '../../../components/common/record/RecordBadges'
+import { Show } from 'solid-js'
+import { ClassEmblem } from '../../../components/common/profile/ClassEmblem'
 import {
   type ColumnRenderer,
   RECORD_CELL_BASE_CLASS,
@@ -9,19 +10,40 @@ import {
   RecordUpdatedAtCell,
 } from '../../../components/common/record/RecordDisplayParts'
 import type { CourseRecordDTO } from '../../../types/api'
-import { courseClassBadgeClass, formatCourseClass } from '../../../utils/courseClassDisplay'
+import {
+  courseClassBadgeClass,
+  formatCourseClass,
+  resolveCourseClassEmblemName,
+} from '../../../utils/courseClassDisplay'
 import { getCourseScoreRank } from '../../../utils/courseScoreRank'
 import { formatUpdatedAt } from '../../../utils/recordUpdatedAt'
 import type { CourseRecordColumnId } from './columns'
+import { COURSE_RECORD_CLASS_CIRCLE_BADGE_CLASS } from './constants'
 
 /** コースレコードの列IDごとのセル描画処理 */
 const courseRecordColumnRenderers: Record<CourseRecordColumnId, ColumnRenderer<CourseRecordDTO>> = {
   title: (record) => <RecordTitleCell title={record.name} />,
   courseClass: (record) => (
     <div class={`${RECORD_CELL_BASE_CLASS} font-oswald text-sm font-semibold`}>
-      <span class={`${RECORD_COMPACT_BADGE_CLASS} ${courseClassBadgeClass(record.class)}`}>
-        {formatCourseClass(record.class)}
-      </span>
+      <Show
+        when={resolveCourseClassEmblemName(record.class)}
+        fallback={
+          <span
+            class={`${COURSE_RECORD_CLASS_CIRCLE_BADGE_CLASS} ${courseClassBadgeClass(record.class)}`}
+          >
+            {formatCourseClass(record.class)}
+          </span>
+        }
+      >
+        {(emblem) => (
+          <ClassEmblem
+            emblem={emblem()}
+            base={null}
+            class="h-8"
+            label={formatCourseClass(record.class)}
+          />
+        )}
+      </Show>
     </div>
   ),
   score: (record) => <RecordScoreCell record={record} getRank={getCourseScoreRank} />,
