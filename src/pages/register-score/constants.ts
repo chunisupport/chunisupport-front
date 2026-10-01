@@ -35,6 +35,12 @@ export const REGISTER_SCORE_COPY = {
   retryImagePreview: '再試行',
   closeImagePreview: '閉じる',
   shareImage: '共有',
+  downloadImage: '保存',
+  shareAllImages: 'まとめて共有',
+  imageLayout: '画像の分割方法',
+  splitImagesPending: '分割',
+  splitImagesSuffix: '枚に分割',
+  combineImage: '1枚にまとめる',
   shareImageError: '共有に失敗しました。',
   copySongTitleSuccess: '曲名をコピーしました。',
   copySongTitleError: '曲名のコピーに失敗しました。',
@@ -44,6 +50,16 @@ export const REGISTER_SCORE_COPY = {
   hidePlayerLevel: 'レベルを非表示',
   showPlayerLevel: 'レベルを表示',
 } as const
+
+/** 更新差分画像の余白とページ番号を含む論理高さ上限 */
+export const REGISTER_SCORE_IMAGE_MAX_HEIGHT = 1_200
+/** 更新差分画像を原寸で出力するピクセル比 */
+export const REGISTER_SCORE_IMAGE_PIXEL_RATIO = 1
+/** 更新差分JPEG画像の圧縮品質 */
+export const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
+/** 更新差分画像下部のページ番号の共通スタイル */
+export const REGISTER_SCORE_IMAGE_PAGE_NUMBER_CLASS =
+  'px-4 pt-3 text-center font-jost text-sm leading-5 text-text-muted whitespace-nowrap'
 
 /**
  * 楽曲カードの主ソート選択肢に表示するラベル。

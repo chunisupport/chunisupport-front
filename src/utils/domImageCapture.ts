@@ -46,19 +46,16 @@ export const calculateImageCaptureScale = (
 ): number => Math.min(1, maxCssSide / width, maxCssSide / height)
 
 /**
- * 画像化対象を祖先の表示用transformから切り離し、固定寸法で複製する。
+ * 表示用transformと画像除外要素を取り除いた固定幅のDOMを作る。
  *
  * @param sourceElement - 画面に表示中の画像化対象。
- * @param maxCssSide - 画像化用DOMの一辺へ許容する最大CSSピクセル数。
- * @returns 画像化対象の複製と破棄処理。
+ * @returns 接続済みの複製要素と一時DOMの破棄処理。
  */
-const createImageCaptureTarget = (
-  sourceElement: HTMLElement,
-  maxCssSide: number
-): ImageCaptureTarget => {
+export const createImageCaptureClone = (
+  sourceElement: HTMLElement
+): { element: HTMLElement; dispose: () => void } => {
   const sourceWidth = sourceElement.offsetWidth
   const captureHost = document.createElement('div')
-  const captureElement = document.createElement('div')
   const sourceClone = sourceElement.cloneNode(true) as HTMLElement
 
   sourceClone.querySelectorAll(IMAGE_CAPTURE_EXCLUDED_SELECTOR).forEach((element) => {
@@ -74,11 +71,32 @@ const createImageCaptureTarget = (
   Object.assign(sourceClone.style, {
     maxWidth: 'none',
     width: `${sourceWidth}px`,
+    transform: 'none',
   })
   captureHost.setAttribute('aria-hidden', 'true')
-  captureElement.appendChild(sourceClone)
-  captureHost.appendChild(captureElement)
+  captureHost.appendChild(sourceClone)
   document.body.appendChild(captureHost)
+
+  return { element: sourceClone, dispose: () => captureHost.remove() }
+}
+
+/**
+ * 固定幅の複製をCanvas上限へ収める。
+ *
+ * @param sourceElement - 画面に表示中の画像化対象。
+ * @param maxCssSide - 画像化用DOMの一辺へ許容する最大CSSピクセル数。
+ * @returns 画像化対象の複製と破棄処理。
+ */
+const createImageCaptureTarget = (
+  sourceElement: HTMLElement,
+  maxCssSide: number
+): ImageCaptureTarget => {
+  const capture = createImageCaptureClone(sourceElement)
+  const sourceClone = capture.element
+  const sourceWidth = sourceElement.offsetWidth
+  const captureElement = document.createElement('div')
+  sourceClone.replaceWith(captureElement)
+  captureElement.appendChild(sourceClone)
 
   const sourceHeight = sourceClone.offsetHeight
   const captureScale = calculateImageCaptureScale(sourceWidth, sourceHeight, maxCssSide)
@@ -95,7 +113,7 @@ const createImageCaptureTarget = (
 
   return {
     element: captureElement,
-    dispose: () => captureHost.remove(),
+    dispose: capture.dispose,
   }
 }
 
@@ -105,7 +123,7 @@ const createImageCaptureTarget = (
  * @param element - 画像を含む画像化対象。
  * @returns すべての画像のデコード試行が完了したときに解決されるPromise。
  */
-const waitForElementImages = async (element: HTMLElement): Promise<void> => {
+export const waitForElementImages = async (element: HTMLElement): Promise<void> => {
   const images = Array.from(element.querySelectorAll('img'))
   await Promise.all(images.map((image) => image.decode().catch(() => undefined)))
 }

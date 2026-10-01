@@ -1,4 +1,4 @@
-import { MAINTENANCE_LOGIN_PATH } from '../../constants/routes'
+import { MAINTENANCE_LOGIN_PATH, STAFF_LOGIN_PATH } from '../../constants/routes'
 import type { AuthStatus } from '../../stores/authSession'
 import type { AvailabilityState } from '../../stores/availability'
 import type { AccountType } from '../../types/api'
@@ -39,7 +39,8 @@ export const isMaintenanceSessionResolved = (options: ResolveMaintenanceSessionO
 export const resolveAvailabilityView = (
   options: ResolveAvailabilityViewOptions
 ): AvailabilityView => {
-  if (normalizeRoutePathname(options.pathname) === MAINTENANCE_LOGIN_PATH) {
+  const pathname = normalizeRoutePathname(options.pathname)
+  if (pathname === MAINTENANCE_LOGIN_PATH || pathname === STAFF_LOGIN_PATH) {
     return 'application'
   }
   if (options.isBootstrapping || options.state.kind === 'checking') {

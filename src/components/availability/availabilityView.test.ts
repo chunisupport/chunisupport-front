@@ -134,6 +134,21 @@ test('後発メンテナンスのスタッフセッション復元中は一般�
   assert.equal(resolveAvailabilityView(options), 'loading')
 })
 
+test('メールログイン画面は未認証の一般利用者もメンテナンス中に表示できる', () => {
+  const pathnames = ['/staff/login', '/staff/login/', '/staff//login', '/STAFF/LOGIN']
+  for (const pathname of pathnames) {
+    assert.equal(
+      resolveAvailabilityView({
+        pathname,
+        state: maintenanceState,
+        isBootstrapping: true,
+        accountType: 'PLAYER',
+      }),
+      'application'
+    )
+  }
+})
+
 test('API接続不能時はメンテナンスと区別した画面を表示する', () => {
   // Given: APIへの接続確認に失敗した状態
   const options = {

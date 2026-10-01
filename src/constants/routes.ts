@@ -1,4 +1,6 @@
 export const LOGIN_PATH = '/login'
+/** 公開導線を持たないメール・パスワードログイン画面のパス */
+export const STAFF_LOGIN_PATH = '/staff/login'
 /** スタッフ向けメンテナンス時ログイン画面のパス */
 export const MAINTENANCE_LOGIN_PATH = '/maintenance/login'
 /** ユーザーページのベースパス */

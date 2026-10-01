@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+test('メール認証のアカウント有無とパスワード不一致は同じ案内で内部情報を隠す', () => {
+  const codes = ['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password']
+  const messages = codes.map((code) => toUserFriendlyErrorMessage({ code, message: 'secret' }))
+  assert.equal(new Set(messages).size, 1)
+  assert.ok(messages.every((message) => !message.includes('secret')))
+})
+
 import { toUserFriendlyErrorMessage } from './errorMessage'
 
 test('APIエラーコードがある場合は対応するユーザー向け文言に変換されること', () => {
