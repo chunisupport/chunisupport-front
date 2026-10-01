@@ -36,7 +36,7 @@ type ImageBlock = {
  *
  * @param source - 現在の表示設定を反映したレポート。
  * @param layout - 高さ上限で分割するか、全内容を1枚へまとめるか。
- * @returns ページ番号を含むJPEGと自動分割時の枚数。
+ * @returns 選択した形式のJPEGと自動分割時の枚数。
  */
 export const captureRegisterScoreReportImages = async (
   source: HTMLElement,
@@ -65,12 +65,14 @@ export const captureRegisterScoreReportImages = async (
      * @param items - ページへ含める表示単位。
      * @param pageIndex - 0から始まるページ番号。
      * @param pageCount - 全ページ数。
+     * @param includePageNumber - ページ番号を画像へ含めるか。
      * @returns 接続済みのページDOM。
      */
     const renderPage = (
       items: readonly ImageBlock[],
       pageIndex: number,
-      pageCount: number
+      pageCount: number,
+      includePageNumber = true
     ): HTMLElement => {
       page?.remove()
       page = report.cloneNode(false) as HTMLElement
@@ -103,10 +105,12 @@ export const captureRegisterScoreReportImages = async (
         }
         contentContainer.appendChild(item.content.cloneNode(true))
       }
-      const footer = document.createElement('div')
-      footer.className = REGISTER_SCORE_IMAGE_PAGE_NUMBER_CLASS
-      footer.textContent = `${pageIndex + 1} / ${pageCount}`
-      page.appendChild(footer)
+      if (includePageNumber) {
+        const footer = document.createElement('div')
+        footer.className = REGISTER_SCORE_IMAGE_PAGE_NUMBER_CLASS
+        footer.textContent = `${pageIndex + 1} / ${pageCount}`
+        page.appendChild(footer)
+      }
       return page
     }
 
@@ -124,7 +128,7 @@ export const captureRegisterScoreReportImages = async (
     const pages = layout === 'single' ? [blocks] : (splitPages ?? [])
     const blobs: Blob[] = []
     for (const [index, items] of pages.entries()) {
-      const target = renderPage(items, index, pages.length)
+      const target = renderPage(items, index, pages.length, layout === 'split')
       if (layout === 'split' && target.offsetHeight > REGISTER_SCORE_IMAGE_MAX_HEIGHT) {
         throw new Error('Image page exceeds page height')
       }
