@@ -16,6 +16,7 @@ export interface GoalWithProgress {
 }
 
 const EMPTY_DRAFT_GOAL_PROGRESS: GoalProgressResult = {
+  targetCount: 0,
   current: 0,
   target: 1,
   percent: 0,

@@ -90,6 +90,7 @@ test('件数目標のcountが欠落している場合は現在の対象譜面数
 
   assert.equal(progress.current, 2)
   assert.equal(progress.target, 3)
+  assert.equal(progress.targetCount, 3)
   assert.equal(progress.percent, (2 / 3) * 100)
   assert.equal(progress.achieved, false)
 })
@@ -108,6 +109,7 @@ test('件数目標のcountが指定されている場合は固定目標値を維
 
   assert.equal(progress.current, 2)
   assert.equal(progress.target, 2)
+  assert.equal(progress.targetCount, 3)
   assert.equal(progress.achieved, true)
 })
 
@@ -150,6 +152,67 @@ test('件数目標のpercentを最大件数に掛けて目標値にする', () =
   assert.equal(progress.achieved, true)
 })
 
+test('平均スコア目標は必要点数を譜面合計から端数切り上げで算出する', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'avg_score',
+    achievement_params: { score: 1000000.25 },
+  })
+  const records = [
+    createRecord({ id: 'one', score: 1000000 }),
+    createRecord({ id: 'two', score: 1000000 }),
+  ]
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 1000000)
+  assert.equal(progress.targetCount, 2)
+  assert.equal(progress.remainingScore, 1)
+  assert.equal(progress.achieved, false)
+})
+
+test('平均表示の切り捨て値から逆算せずスコア合計から必要点数を求める', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'avg_score',
+    achievement_params: { score: 1000000 },
+  })
+  const records = [
+    createRecord({ id: 'one', score: 1000000 }),
+    createRecord({ id: 'two', score: 999999 }),
+  ]
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 999999)
+  assert.equal(progress.remainingScore, 1)
+  assert.equal(progress.achieved, false)
+})
+
+test('平均スコア目標を達成した場合の必要点数は0点', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'avg_score',
+    achievement_params: { score: 1000000 },
+  })
+  const records = [
+    createRecord({ id: 'one', score: 1010000 }),
+    createRecord({ id: 'two', score: 1000000 }),
+  ]
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 1005000)
+  assert.equal(progress.remainingScore, 0)
+  assert.equal(progress.achieved, true)
+})
+
 test('単曲レート達成数は到達可能譜面だけを動的分母にして現在値を数える', () => {
   // Given: 18.00へ届かない定数15.8と、届く定数15.9以上の譜面。
   const records = [
@@ -171,6 +234,7 @@ test('単曲レート達成数は到達可能譜面だけを動的分母にし�
     target: 2,
     percent: 50,
     achieved: false,
+    targetCount: 2,
     hasUnknownMaxOp: false,
   })
 })
@@ -203,6 +267,37 @@ test('単曲レート達成数の残数と割合は到達可能譜面数から�
   assert.equal(percentProgress.achieved, true)
 })
 
+test('目標値が0かつ対象件数が0の各種目標を達成扱いにしない', () => {
+  // Given
+  const goals = [
+    createGoal({ achievement_type: 'rank_count', achievement_params: { score: 1000000 } }),
+    createGoal({ achievement_type: 'score_count', achievement_params: { score: 1000000 } }),
+    createGoal({ achievement_type: 'rating_count', achievement_params: { rating: 18 } }),
+    createGoal({ achievement_type: 'hardlamp_count', achievement_params: { lamp: 'HRD' } }),
+    createGoal({ achievement_type: 'combolamp_count', achievement_params: { lamp: 'FC' } }),
+    createGoal({ achievement_type: 'fullchain_count', achievement_params: { lamp: 'GOLD' } }),
+    createGoal({ achievement_type: 'total_score', achievement_params: {} }),
+    createGoal({ achievement_type: 'overpower_value', achievement_params: {} }),
+    createGoal({ achievement_type: 'overpower_percent', achievement_params: { total: 0 } }),
+  ]
+
+  // When / Then
+  for (const goal of goals) {
+    const progress = calculateGoalProgress(goal, [], [])
+    assert.equal(progress.target, 0, goal.achievement_type)
+    assert.equal(progress.targetCount, 0, goal.achievement_type)
+    assert.equal(progress.achieved, false, goal.achievement_type)
+  }
+
+  const averageProgress = calculateGoalProgress(
+    createGoal({ achievement_type: 'avg_score', achievement_params: { score: 1000000 } }),
+    [],
+    []
+  )
+  assert.equal(averageProgress.targetCount, 0)
+  assert.equal(averageProgress.achieved, false)
+})
+
 test('単曲レートへ到達可能な譜面がなくなった場合は未達成として扱う', () => {
   // Given: 保存後の定数変更で18.00へ到達できる譜面が0件になった状態。
   const goal = createGoal({
@@ -216,6 +311,7 @@ test('単曲レートへ到達可能な譜面がなくなった場合は未達�
   // Then
   assert.equal(progress.current, 0)
   assert.equal(progress.target, 0)
+  assert.equal(progress.targetCount, 0)
   assert.equal(progress.percent, 0)
   assert.equal(progress.achieved, false)
 })
@@ -279,6 +375,7 @@ test('FULL CHAIN目標は指定種別と完全一致する譜面だけを数え�
   // Then
   assert.equal(progress.current, 2)
   assert.equal(progress.target, 2)
+  assert.equal(progress.targetCount, 4)
   assert.equal(progress.achieved, true)
 })
 
@@ -332,6 +429,7 @@ test('総スコア目標のtotalが欠落している場合は対象譜面数か
 
   assert.equal(progress.current, 2010000)
   assert.equal(progress.target, 2020000)
+  assert.equal(progress.targetCount, 2)
 })
 
 test('総スコア目標のremainingを理論値から差し引いて目標値にする', () => {
@@ -381,6 +479,7 @@ test('OVER POWER合計目標のtotalが欠落している場合は対象譜面�
 
   assert.equal(progress.current, 16)
   assert.equal(progress.target, 165)
+  assert.equal(progress.targetCount, 2)
 })
 
 test('OP対象条件では曲ごとのOP対象難易度に一致するレコードだけを抽出する', () => {
@@ -537,6 +636,7 @@ test('OP対象のOVER POWER合計は曲ごとの現在OP対象レコードOPを�
   // Then
   assert.equal(progress.current, 145)
   assert.equal(progress.target, 175)
+  assert.equal(progress.targetCount, 2)
 })
 
 test('OP対象フラグが全てfalseの場合は曲内最大OPで目標進捗を計算する', () => {
@@ -568,6 +668,7 @@ test('OP対象フラグが全てfalseの場合は曲内最大OPで目標進捗�
   // Then
   assert.equal(progress.current, 90)
   assert.equal(progress.target, 95)
+  assert.equal(progress.targetCount, 1)
 })
 
 test('未解禁曲設定はOVER POWER達成率の分母から差し引く', () => {
@@ -624,4 +725,5 @@ test('未解禁曲設定はOVER POWER達成率の分母から差し引く', () =
   // Then
   assert.equal(progress.current, (80 / 85) * 100)
   assert.equal(progress.target, 100)
+  assert.equal(progress.targetCount, 1)
 })

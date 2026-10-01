@@ -34,7 +34,14 @@ const createGoal = (id: number, groupId: number | null, sortOrder: number): Goal
     sort_order: sortOrder,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO,
-  progress: { current: 0, target: 1, percent: 0, achieved: false, hasUnknownMaxOp: false },
+  progress: {
+    current: 0,
+    target: 1,
+    percent: 0,
+    achieved: false,
+    targetCount: 0,
+    hasUnknownMaxOp: false,
+  },
 })
 
 test('グループ順に目標を分類し未分類を末尾へ追加する', () => {

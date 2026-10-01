@@ -2,6 +2,7 @@ import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { GOAL_NO_TARGET_LABEL } from '../../constants'
 import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
 /** 目標カードの進捗表示に必要なプロパティ */
@@ -32,16 +33,16 @@ type GoalCardProgressPercentageProps = Pick<
 const INVERT_PROGRESS_LABEL = '残り'
 
 /**
- * 折りたたんだ目標カード向けに、設定を反映した割合だけを表示する。
+ * 折りたたんだ目標カードに割合・平均目標の残り点数・対象なしの状態を表示する。
  *
  * @param props - 目標種別、反転設定、進捗情報。
- * @returns 折りたたみ時の割合表示 JSX 要素。
+ * @returns 折りたたみ時の進捗要約 JSX 要素。
  */
 export const GoalCardProgressPercentage: Component<GoalCardProgressPercentageProps> = (props) => {
   /**
    * 目標の設定を反映した表示用進捗を取得する。
    *
-   * @returns 反転設定を適用した割合表示情報。
+   * @returns 目標種別に応じた進捗要約の表示情報。
    */
   const displayProgress = () =>
     resolveGoalCardDisplayProgress(
@@ -52,12 +53,20 @@ export const GoalCardProgressPercentage: Component<GoalCardProgressPercentagePro
     )
 
   return (
-    <span class="goal-card-progress-secondary flex shrink-0 items-baseline pt-1 text-right font-oswald font-semibold leading-none">
-      <Show when={displayProgress().percentPrefixText}>
-        <span class="text-sm">{displayProgress().percentPrefixText}</span>
-      </Show>
-      <span class="text-lg">{displayProgress().percentText}</span>
-    </span>
+    <Show
+      when={props.progress.targetCount > 0}
+      fallback={<span class="pt-1 font-sans text-sm text-text-muted">{GOAL_NO_TARGET_LABEL}</span>}
+    >
+      <span class="goal-card-progress-secondary flex shrink-0 items-baseline pt-1 text-right font-oswald font-semibold leading-none">
+        <Show when={displayProgress().percentPrefixText}>
+          <span class="text-sm">{displayProgress().percentPrefixText}</span>
+        </Show>
+        <span class="text-lg">{displayProgress().percentText}</span>
+        <Show when={displayProgress().percentSuffixText}>
+          <span class="text-sm">{displayProgress().percentSuffixText}</span>
+        </Show>
+      </span>
+    </Show>
   )
 }
 
@@ -78,39 +87,52 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
 
   return (
     <div class="mt-2">
-      <Show when={props.showValues ?? true}>
-        <div class="flex items-baseline gap-1">
-          {props.invertValue && (
-            <span class="text-base font-medium leading-none text-text">
-              {INVERT_PROGRESS_LABEL}
+      <Show
+        when={props.progress.targetCount > 0}
+        fallback={
+          (props.showValues ?? true) ? (
+            <p class="font-sans text-sm text-text-muted">{GOAL_NO_TARGET_LABEL}</p>
+          ) : undefined
+        }
+      >
+        <Show when={props.showValues ?? true}>
+          <div class="flex items-baseline gap-1">
+            {props.invertValue && props.achievementType !== 'avg_score' && (
+              <span class="text-base font-medium leading-none text-text">
+                {INVERT_PROGRESS_LABEL}
+              </span>
+            )}
+            <span class="font-oswald text-3xl font-bold leading-none text-text">
+              {displayProgress().currentText}
             </span>
-          )}
-          <span class="font-oswald text-3xl font-bold leading-none text-text">
-            {displayProgress().currentText}
-          </span>
-        </div>
-        <div class="-mt-1.5 mb-2 flex items-end justify-between gap-3">
-          <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
-            <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
-            <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
-              {displayProgress().targetText}
-            </div>
-            <div class="goal-card-progress-secondary ml-auto flex items-baseline pb-0.5 text-right font-oswald font-semibold leading-none">
-              <Show when={displayProgress().percentPrefixText}>
-                <span class="text-sm">{displayProgress().percentPrefixText}</span>
-              </Show>
-              <span class="text-lg">{displayProgress().percentText}</span>
+          </div>
+          <div class="-mt-1.5 mb-2 flex items-end justify-between gap-3">
+            <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
+              <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
+              <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
+                {displayProgress().targetText}
+              </div>
+              {/* 右側の行高を縮めても、負の上余白がある下段と左側の位置を維持する。 */}
+              <div class="goal-card-progress-secondary ml-auto flex min-h-7.5 items-end pb-0.5 text-right font-oswald font-semibold leading-none">
+                <Show when={displayProgress().percentPrefixText}>
+                  <span class="text-sm leading-none">{displayProgress().percentPrefixText}</span>
+                </Show>
+                <span class="text-lg leading-none">{displayProgress().percentText}</span>
+                <Show when={displayProgress().percentSuffixText}>
+                  <span class="text-sm leading-none">{displayProgress().percentSuffixText}</span>
+                </Show>
+              </div>
             </div>
           </div>
-        </div>
+        </Show>
+        <progress
+          class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
+          value={displayProgress().progressValue}
+          max={100}
+          aria-label={`${props.title} 進捗`}
+          aria-valuetext={displayProgress().ariaValueText}
+        />
       </Show>
-      <progress
-        class="h-2 w-full rounded appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded [&::-webkit-progress-bar]:bg-action-secondary [&::-webkit-progress-value]:rounded [&::-webkit-progress-value]:bg-action-primary [&::-moz-progress-bar]:rounded [&::-moz-progress-bar]:bg-action-primary"
-        value={displayProgress().progressValue}
-        max={100}
-        aria-label={`${props.title} 進捗`}
-        aria-valuetext={displayProgress().ariaValueText}
-      />
     </div>
   )
 }

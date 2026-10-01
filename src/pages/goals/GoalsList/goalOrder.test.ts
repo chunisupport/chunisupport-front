@@ -22,7 +22,14 @@ const createGoalWithProgress = (id: number): GoalWithProgress => ({
     sort_order: id,
     created_at: '2026-01-01T00:00:00Z',
   },
-  progress: { current: 0, target: 1, percent: 0, achieved: false, hasUnknownMaxOp: false },
+  progress: {
+    current: 0,
+    target: 1,
+    percent: 0,
+    achieved: false,
+    targetCount: 0,
+    hasUnknownMaxOp: false,
+  },
 })
 
 test('ドラッグした目標をドロップ先の位置へ移動する', () => {

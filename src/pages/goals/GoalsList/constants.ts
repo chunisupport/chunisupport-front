@@ -186,3 +186,9 @@ export const buildGoalGroupReorderAnnouncement = (
   position: number,
   total: number
 ): string => `${name}を${total}件中${position}番目に移動しました`
+
+/** 集計対象が存在しない目標の表示文言。 */
+export const GOAL_NO_TARGET_LABEL = '対象譜面なし'
+
+/** 平均スコア目標の残り点数に付ける単位。 */
+export const GOAL_SCORE_UNIT = '点'

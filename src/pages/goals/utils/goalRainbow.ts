@@ -57,7 +57,7 @@ export const filterRainbowTargetSongs = (
  * @param goal - 計算対象の虹枠目標。
  * @param targetSongs - ジャンル・バージョン条件に一致する対象楽曲。
  * @param records - プレイヤーの通常譜面レコード。
- * @returns 目標カード表示に必要な進捗情報。
+ * @returns 対象楽曲数と、対象がない場合は未達成とする進捗情報。
  */
 export const calculateRainbowGoalProgress = (
   goal: GoalDTO,
@@ -83,7 +83,8 @@ export const calculateRainbowGoalProgress = (
     current,
     target,
     percent: Number.isFinite(percent) ? percent : 0,
-    achieved: current >= target,
+    achieved: targetSongs.length > 0 && current >= target,
+    targetCount: targetSongs.length,
     hasUnknownMaxOp: false,
   }
 }

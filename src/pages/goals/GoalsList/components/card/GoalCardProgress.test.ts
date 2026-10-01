@@ -9,6 +9,7 @@ test('折りたたみ表示の達成率は反転設定に応じた接頭辞を�
     target: 100,
     percent: 30,
     achieved: false,
+    targetCount: 100,
     hasUnknownMaxOp: false,
   }
 
@@ -22,6 +23,33 @@ test('折りたたみ表示の達成率は反転設定に応じた接頭辞を�
     [invertedProgress.percentPrefixText, invertedProgress.percentText],
     ['あと', '70.00%']
   )
+})
+
+test('平均スコア目標は残り点数を固定表示し、反転設定を適用しない', () => {
+  // Given
+  const progress = {
+    current: 1008000,
+    target: 1010000,
+    percent: 99.8,
+    achieved: false,
+    targetCount: 2,
+    remainingScore: 1234,
+    hasUnknownMaxOp: false,
+  }
+
+  // When
+  const display = resolveGoalCardDisplayProgress(progress, 'avg_score', true, true)
+
+  // Then
+  assert.deepEqual(display, {
+    currentText: '1,008,000',
+    targetText: '1,010,000',
+    percentPrefixText: 'あと',
+    percentText: '1,234',
+    percentSuffixText: '点',
+    ariaValueText: '達成率 99.80%、あと1,234点',
+    progressValue: (1008000 / 1010000) * 100,
+  })
 })
 
 test('OVER POWER値は小数点以下3桁で表示される', () => {
@@ -61,6 +89,7 @@ test('実数値と割合の反転表示を独立して適用し、ゲージ値�
     target: 100,
     percent: 30,
     achieved: false,
+    targetCount: 100,
     hasUnknownMaxOp: false,
   }
 
