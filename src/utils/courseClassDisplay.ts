@@ -70,3 +70,17 @@ export const courseClassBadgeClass = (courseClass: string): string => {
     ? `${bgClass} text-course-class-text text-shadow-badge`
     : 'bg-success-bg text-success text-shadow-badge'
 }
+
+/** エンブレム表示に対応するコースクラス。EXは独自デザインのためバッジ表示のままとする */
+const COURSE_CLASS_EMBLEM_NAMES: readonly string[] = ['1', '2', '3', '4', '5', 'inf']
+
+/**
+ * コースクラスを表示するクラスエンブレムのマスタ名へ変換する。
+ *
+ * @param courseClass - APIから返却されたコースクラス。
+ * @returns エンブレムのマスタ名。EXや未対応値の場合は null。
+ */
+export const resolveCourseClassEmblemName = (courseClass: string): string | null => {
+  const normalized = courseClass.toLowerCase()
+  return COURSE_CLASS_EMBLEM_NAMES.includes(normalized) ? normalized : null
+}

@@ -44,13 +44,15 @@ type Props = {
   base: string | null
   /** 表示サイズなどの追加クラス。既定は高さ 2rem（元SVGの縦横比 94:46 を維持） */
   class?: string
+  /** スクリーンリーダー向けラベル。未指定時は汎用の「クラスエンブレム」 */
+  label?: string
 }
 
 /**
  * クラスエンブレムの台座と本体を重ねて表示する。
  * 両方とも未設定・未対応の名前の場合は何も描画しない。
  *
- * @param props - エンブレム名・ベース名と追加クラス。
+ * @param props - エンブレム名・ベース名・追加クラスとスクリーンリーダー向けラベル。
  * @returns エンブレムの JSX 要素。
  */
 export const ClassEmblem: Component<Props> = (props) => {
@@ -62,7 +64,7 @@ export const ClassEmblem: Component<Props> = (props) => {
       <span
         class={`relative inline-block aspect-[94/46] shrink-0 ${props.class ?? 'h-8'}`}
         role="img"
-        aria-label={CLASS_EMBLEM_LABEL}
+        aria-label={props.label ?? CLASS_EMBLEM_LABEL}
       >
         <Show when={baseSrc()}>
           {(src) => <img src={src()} alt="" class="absolute inset-0 h-full w-full" />}
