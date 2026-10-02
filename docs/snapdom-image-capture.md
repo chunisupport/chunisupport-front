@@ -195,9 +195,13 @@ SnapDOM は画像、CSS の背景画像、フォントなどを取得して出�
 
 外部アセットが欠落した場合に画像生成全体を失敗させるか、プレースホルダーで継続するかは、機能ごとに明示します。
 
-SnapDOM は表示済みの `<img>` も再取得し、3秒で取得できないと灰色の "img" プレースホルダーへ置き換えます。回線が遅いスマートフォンで多数のジャケットを含む画像を作ると発生しやすいため、`src/utils/domImageCapture.ts` の `captureElementAsImage` は SnapDOM へ渡す前に、画像化用DOM内の画像を HTTPキャッシュ優先で取得して data URL へ置き換えます。data URL は SnapDOM が再取得しないため、タイムアウトの影響を受けません。
+SnapDOM は表示済みの `<img>` も再取得し、3秒で取得できないと灰色の "img" プレースホルダーへ置き換えます。回線が遅いスマートフォンで多数のジャケットを含む画像を作ると発生しやすいため、`src/utils/domImageCapture.ts` の `captureElementAsImage` は SnapDOM へ渡す前に、画像化用DOM内の画像を data URL へ置き換えます。data URL は SnapDOM が再取得しないため、タイムアウトの影響を受けません。
 
-それでも取得できなかった画像は、`<img>` の `data-image-capture-fallback-src` に指定した代替画像へ置き換えます。ジャケットでは `JacketImage` の `imageCaptureFallbackSrc` で、楽曲詳細画面などの読み込み中表示と同じ `src/assets/placeholder.png` を指定しています。代替画像を持たない画像（クラスエンブレムなど）は、SnapDOM の `placeholders: false` により何も描画しません。
+- 画面に表示済みのラスター画像（ジャケットなど）は、ネットワークを使わず表示中の `<img>` を原寸の Canvas へ描画し、PNG の data URL にします。ジャケットは `crossOrigin="anonymous"` で読み込み、配信元が `Access-Control-Allow-Origin` を返すため Canvas は汚染されません。画像化対象に外部オリジンのラスター画像を追加する場合は、表示中の `<img>` に必ず `crossOrigin="anonymous"` を付けてください。Canvas が汚染されると `fetch` による再取得へ切り替わり、この対策が効かなくなります。
+- 画像化のたびに数十枚のジャケットを `fetch` で再取得すると、HTTPキャッシュが使われない環境やレート制限で一部だけ失敗し、生成のたびに異なるジャケットが代替画像になることがありました。表示済み画像の再取得はしないでください。
+- SVG（クラスエンブレムなど）は原寸で Canvas へ描くと拡大時にぼやけるため、表示済みでない画像と同じく HTTPキャッシュ優先で取得し、元のバイト列のまま埋め込みます。
+
+それでも埋め込めなかった画像は、`<img>` の `data-image-capture-fallback-src` に指定した代替画像へ置き換えます。ジャケットでは `JacketImage` の `imageCaptureFallbackSrc` で、楽曲詳細画面などの読み込み中表示と同じ `src/assets/placeholder.png` を指定しています。代替画像を持たない画像（クラスエンブレムなど）は、SnapDOM の `placeholders: false` により何も描画しません。
 
 ## 背景色とテーマ
 

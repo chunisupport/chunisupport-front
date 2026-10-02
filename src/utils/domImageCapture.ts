@@ -48,6 +48,20 @@ export const calculateImageCaptureScale = (
 ): number => Math.min(1, maxCssSide / width, maxCssSide / height)
 
 /**
+ * Blobをdata URLへ変換する。
+ *
+ * @param blob - 変換するBlob。
+ * @returns Blobのdata URL。
+ */
+const readBlobAsDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(blob)
+  })
+
+/**
  * 画像URLをHTTPキャッシュ優先で取得し、data URLへ変換する。
  *
  * @param url - 取得する画像URL。
@@ -65,38 +79,82 @@ const fetchImageAsDataUrl = async (url: string): Promise<string> => {
     window.clearTimeout(timeoutId)
   }
 
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(blob)
+  return readBlobAsDataUrl(blob)
+}
+
+/**
+ * 読み込み済みの画像を原寸のCanvasへ描画し、PNGのdata URLへ変換する。
+ *
+ * 多数の画像を変換してもメインスレッドを止めないよう、非同期の `toBlob` でエンコードする。
+ *
+ * @param image - CORSを満たして読み込み済みのラスター画像。
+ * @returns 画像のPNG data URL。Canvasが汚染された場合は拒否されるPromise。
+ */
+const drawImageAsDataUrl = async (image: HTMLImageElement): Promise<string> => {
+  const canvas = document.createElement('canvas')
+  canvas.width = image.naturalWidth
+  canvas.height = image.naturalHeight
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Canvas 2D context is unavailable')
+
+  context.drawImage(image, 0, 0)
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+  if (!blob) throw new Error('Canvas encoding failed')
+  return readBlobAsDataUrl(blob)
+}
+
+/**
+ * 画面に表示済みのラスター画像をURLごとに集める。
+ *
+ * SVGは原寸でCanvasへ描くと拡大時にぼやけるため対象外にする。
+ *
+ * @param element - 画面に表示中の画像化対象。
+ * @returns 画像URLと読み込み済み画像要素の対応。
+ */
+const collectLoadedRasterImages = (element: HTMLElement): Map<string, HTMLImageElement> => {
+  const images = new Map<string, HTMLImageElement>()
+  element.querySelectorAll('img').forEach((image) => {
+    if (!image.src || !image.complete || image.naturalWidth === 0) return
+    if (new URL(image.src).pathname.endsWith('.svg')) return
+    images.set(image.src, image)
   })
+  return images
 }
 
 /**
  * 要素内の画像をdata URLとして埋め込み、SnapDOMによる再取得を不要にする。
  *
  * SnapDOMの画像取得は3秒でタイムアウトし、失敗した画像はプレースホルダーになる。
- * 表示済みの画像はHTTPキャッシュから元のバイト列のまま取得し、劣化させずに埋め込む。
- * 取得に失敗した画像は `data-image-capture-fallback-src` の代替画像を埋め込む。
+ * 画面に表示済みのラスター画像はネットワークを使わず、原寸のCanvasから可逆形式で埋め込む。
+ * Canvasが汚染されるなどして描画できない画像は、HTTPキャッシュ優先の取得へ切り替える。
+ * 表示済みでない画像とSVGはHTTPキャッシュ優先で取得し、元のバイト列のまま埋め込む。
+ * 埋め込めなかった画像は `data-image-capture-fallback-src` の代替画像を埋め込む。
  * 代替画像を持たない画像は元のURLのまま残し、SnapDOMの再取得に任せる。
  *
  * @param element - 画像化用に複製した要素。
+ * @param sourceElement - 読み込み済み画像を参照する、画面に表示中の画像化対象。
  * @returns すべての画像の埋め込み試行が完了したときに解決されるPromise。
  */
-const inlineElementImages = async (element: HTMLElement): Promise<void> => {
+const inlineElementImages = async (
+  element: HTMLElement,
+  sourceElement: HTMLElement
+): Promise<void> => {
+  const loadedImages = collectLoadedRasterImages(sourceElement)
   const dataUrls = new Map<string, Promise<string>>()
 
   /**
-   * 同じURLの取得を1回にまとめてdata URLを返す。
+   * 同じURLの変換を1回にまとめてdata URLを返す。
    *
-   * @param url - 取得する画像URL。
+   * @param url - 埋め込む画像URL。
    * @returns 画像のdata URL。
    */
   const getDataUrl = (url: string): Promise<string> => {
     let dataUrl = dataUrls.get(url)
     if (!dataUrl) {
-      dataUrl = fetchImageAsDataUrl(url)
+      const loadedImage = loadedImages.get(url)
+      dataUrl = loadedImage
+        ? drawImageAsDataUrl(loadedImage).catch(() => fetchImageAsDataUrl(url))
+        : fetchImageAsDataUrl(url)
       dataUrls.set(url, dataUrl)
     }
     return dataUrl
@@ -225,7 +283,7 @@ export const captureElementAsImage = async (
   )
 
   try {
-    await inlineElementImages(capture.element)
+    await inlineElementImages(capture.element, sourceElement)
     const { snapdom } = await import('@zumer/snapdom')
     const captureResult = await snapdom(capture.element, {
       backgroundColor: getComputedStyle(sourceElement).backgroundColor,
