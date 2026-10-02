@@ -1289,11 +1289,6 @@
     background-image: var(--cs-gradient-lamp-all-justice-critical-bg);
   }
 
-  .rating-image-v2-jacket-lamp-label {
-    font-family: var(--font-oswald);
-    font-weight: 700;
-  }
-
   .rating-image-v2-jacket-lamp-text {
     fill: var(--cs-color-rating-image-v2-jacket-lamp-text);
   }

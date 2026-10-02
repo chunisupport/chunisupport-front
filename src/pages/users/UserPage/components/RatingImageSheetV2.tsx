@@ -30,12 +30,10 @@ import {
   RATING_IMAGE_V2_DIFFICULTY_STRIPE_PX,
   RATING_IMAGE_V2_GAP_PX,
   RATING_IMAGE_V2_HONOR_COLUMN_PX,
-  RATING_IMAGE_V2_JACKET_LAMP_BASELINE_RATIO,
   RATING_IMAGE_V2_JACKET_LAMP_CANVAS_PX,
   RATING_IMAGE_V2_JACKET_LAMP_DIAMOND_PX,
-  RATING_IMAGE_V2_JACKET_LAMP_FONT_PX,
   RATING_IMAGE_V2_JACKET_LAMP_FRAME_PX,
-  RATING_IMAGE_V2_JACKET_LAMP_LETTER_SPACING_EM,
+  RATING_IMAGE_V2_JACKET_LAMP_LABEL_PATHS,
   RATING_IMAGE_V2_JACKET_LAMP_OUTLINE_PX,
   RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX,
   RATING_IMAGE_V2_JACKET_LAMP_TEXT_FRAME_PX,
@@ -310,9 +308,9 @@ const LampDiamondRect: Component<LampDiamondRectProps> = (props) => (
   />
 )
 
-type LampLabelTextProps = {
-  /** 表示する略称 */
-  label: string
+type LampLabelPathProps = {
+  /** 略称をアウトライン化した SVG パス */
+  d: string
   /** 塗りとフチ色を指定するクラス */
   class: string
   /** 文字のフチ幅。0 ならフチなし */
@@ -320,25 +318,14 @@ type LampLabelTextProps = {
 }
 
 /**
- * コンボランプエンブレムの略称を中央へ描画する。
- * 同じ文字を外周線・白フチ・本体の順に重ねてシルエット状のフチを作る。
+ * コンボランプエンブレムの略称をアウトライン化したパスで中央へ描画する。
+ * 同じパスを外周線・白フチ・本体の順に重ねてシルエット状のフチを作る。
  *
- * @param props - 略称、色クラス、フチ幅。
- * @returns SVG の `<text>`。
+ * @param props - 略称のパス、色クラス、フチ幅。
+ * @returns SVG の `<path>`。
  */
-const LampLabelText: Component<LampLabelTextProps> = (props) => (
-  <text
-    class={`rating-image-v2-jacket-lamp-label ${props.class}`}
-    x={0}
-    y={RATING_IMAGE_V2_JACKET_LAMP_FONT_PX * RATING_IMAGE_V2_JACKET_LAMP_BASELINE_RATIO}
-    text-anchor="middle"
-    font-size={`${RATING_IMAGE_V2_JACKET_LAMP_FONT_PX}px`}
-    letter-spacing={`${RATING_IMAGE_V2_JACKET_LAMP_LETTER_SPACING_EM}em`}
-    stroke-width={props.strokeWidth}
-    stroke-linejoin="round"
-  >
-    {props.label}
-  </text>
+const LampLabelPath: Component<LampLabelPathProps> = (props) => (
+  <path class={props.class} d={props.d} stroke-width={props.strokeWidth} stroke-linejoin="round" />
 )
 
 /**
@@ -372,6 +359,12 @@ const RatingImageV2JacketComboLamp: Component<RatingImageV2JacketComboLampProps>
          * @returns FC または AJ。
          */
         const label = () => getRatingImageV2ComboLampLabel(lamp())
+        /**
+         * エンブレムへ描画する略称のアウトラインパスを返す。
+         *
+         * @returns FC または AJ の SVG パス。
+         */
+        const labelPath = () => RATING_IMAGE_V2_JACKET_LAMP_LABEL_PATHS[lamp()]
         return (
           <span
             class="rating-image-v2-jacket-lamp pointer-events-none absolute top-0 left-0 z-20 block"
@@ -393,8 +386,8 @@ const RatingImageV2JacketComboLamp: Component<RatingImageV2JacketComboLampProps>
                     RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX + RATING_IMAGE_V2_JACKET_LAMP_OUTLINE_PX
                   }
                 />
-                <LampLabelText
-                  label={label()}
+                <LampLabelPath
+                  d={labelPath()}
                   class="rating-image-v2-jacket-lamp-outline"
                   strokeWidth={
                     (RATING_IMAGE_V2_JACKET_LAMP_TEXT_FRAME_PX +
@@ -408,16 +401,16 @@ const RatingImageV2JacketComboLamp: Component<RatingImageV2JacketComboLampProps>
                 half={LAMP_DIAMOND_HALF_PX}
                 radius={RATING_IMAGE_V2_JACKET_LAMP_RADIUS_PX}
               />
-              <LampLabelText
-                label={label()}
+              <LampLabelPath
+                d={labelPath()}
                 class="rating-image-v2-jacket-lamp-frame"
                 strokeWidth={RATING_IMAGE_V2_JACKET_LAMP_TEXT_FRAME_PX * 2}
               />
             </LampSvgLayer>
             <span class="rating-image-v2-jacket-lamp-face absolute block" style={LAMP_FACE_STYLE} />
             <LampSvgLayer>
-              <LampLabelText
-                label={label()}
+              <LampLabelPath
+                d={labelPath()}
                 class="rating-image-v2-jacket-lamp-text"
                 strokeWidth={0}
               />
