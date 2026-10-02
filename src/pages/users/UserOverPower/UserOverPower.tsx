@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ArrowLeftRight, ChartBarBig, LockKeyhole, LockKeyholeOpen, Table2 } from 'lucide-solid'
+import { ChartBarBig, LockKeyhole, LockKeyholeOpen, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
   createMemo,
@@ -347,7 +347,7 @@ const UserOverPower: Component<Props> = (props) => {
                       variant="surface"
                       size="sm"
                       shape="pill"
-                      class="h-10 min-w-16 focus-visible:ring-offset-2"
+                      class="h-10 w-10 shrink-0 focus-visible:ring-offset-2"
                       aria-label={`${
                         nextSummaryViewMode() === 'graph'
                           ? OVER_POWER_CONTROL_LABELS.graph
@@ -360,7 +360,6 @@ const UserOverPower: Component<Props> = (props) => {
                       }表示に切り替え`}
                       onClick={handleToggleSummaryViewMode}
                     >
-                      <ArrowLeftRight class="h-4 w-4" aria-hidden="true" />
                       <Show
                         when={nextSummaryViewMode() === 'graph'}
                         fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
