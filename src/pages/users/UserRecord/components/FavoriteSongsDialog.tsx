@@ -9,11 +9,7 @@ import type {
   VersionDTO,
 } from '../../../../types/api'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
-import {
-  normalizeForReadingSearch,
-  normalizeForSearch,
-  normalizeQuery,
-} from '../../../../utils/searchUtils'
+import { buildSearchableItems, filterSearchableItems } from '../../../../utils/searchHelpers'
 import {
   filterReleasedVersions,
   getShortVersionName,
@@ -81,31 +77,16 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
       )
   )
   const searchableSongs = createMemo(() =>
-    sortSongSelectionCandidates(props.songs).map((song) => ({
-      song,
-      searchableText: normalizeForSearch(`${song.id} ${song.title} ${song.artist}`),
-      searchableReading: normalizeForReadingSearch(
-        song.reading?.trim() ? song.reading : song.title
-      ),
-    }))
+    buildSearchableItems(sortSongSelectionCandidates(props.songs))
   )
   const filteredSongs = createMemo(() => {
-    const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(model.query())
     const currentFilters = model.filters()
 
-    return searchableSongs()
-      .filter(({ song, searchableText, searchableReading }) => {
-        if (model.showSelectedOnly() && !model.draftKeys().has(song.id)) return false
-        if (!currentFilters.genres.includes(song.genre)) return false
-        if (!currentFilters.versions.includes(songVersionById().get(song.id) ?? '不明'))
-          return false
-        if (!normalizedQuery) return true
-        return (
-          searchableText.includes(normalizedQuery) ||
-          searchableReading.includes(normalizedReadingQuery)
-        )
-      })
-      .map(({ song }) => song)
+    return filterSearchableItems(searchableSongs(), model.query()).filter((song) => {
+      if (model.showSelectedOnly() && !model.draftKeys().has(song.id)) return false
+      if (!currentFilters.genres.includes(song.genre)) return false
+      return currentFilters.versions.includes(songVersionById().get(song.id) ?? '不明')
+    })
   })
   const selectionSummary = createMemo(
     () =>
