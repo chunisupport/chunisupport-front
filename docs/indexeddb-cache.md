@@ -20,11 +20,10 @@ API サーバーと DB の負荷が高くなった場合でも、画面表示の
 
 ## 基本方針
 
-- **Dexie** を IndexedDB ラッパーとして採用する。
-- localStorage は API キャッシュには使わない。容量・構造化・将来の拡張性の観点で IndexedDB に寄せる。
+- API キャッシュは **Dexie** を介して IndexedDB に保存する。
 - IndexedDB 操作は `src/lib/db/`（DB 定義）と `src/repositories/`（IndexedDB 操作）に閉じ込める。
 - API 呼び出しとキャッシュ判定は `src/usecases/cache/` に置く。コンポーネントや `createResource` の fetcher から IndexedDB を直接触らない。
-- **SWR（Stale-While-Revalidate）パターンは採用しない。** キャッシュが有効なら API 本体を呼ばずにキャッシュを返す。キャッシュが無効なら API 本体を呼んで最新データを返す。古いデータを先に表示して後から差し替える挙動は入れない。
+- キャッシュが有効なら API 本体を呼ばずにキャッシュを返す。キャッシュが無効なら API 本体の取得完了を待って最新データを返す。
 - キャッシュ判定には、既存 API の `updated-at` を使う。
 - `updated-at` 取得に失敗した場合、古いキャッシュは表示せず、通常どおり本 API を呼ぶ。
 - キャッシュデータにはアプリ内の `schemaVersion`（`CLIENT_CACHE_SCHEMA_VERSION`）を持たせ、フロント側のデータ構造変更時に古いキャッシュを破棄できるようにする。
@@ -33,13 +32,14 @@ API サーバーと DB の負荷が高くなった場合でも、画面表示の
 - IndexedDB の読み込みや保存に失敗しても画面操作自体は壊さない。常に API 直呼び出しにフォールバックする。
 - ユーザー系キャッシュはログインユーザー本人のみ保存する。他人のユーザーページは API 直呼び出しにする。
 - ログアウト時・退会時は IndexedDB の全データを削除する。
-- `updated-at` 以外の明示的なキャッシュ無効化ロジックは現時点では持たない。
+- 楽曲の更新・削除後は、楽曲更新日時のメモリキャッシュと IndexedDB の楽曲キャッシュを無効化する。再取得時は `forceRefresh` で既存キャッシュの参照を省略する。無効化前に開始した取得結果は楽曲キャッシュへ保存しない。
+- 楽曲管理画面での通常楽曲・WORLD'S END 楽曲の作成後は、管理一覧の再取得に成功してから公開楽曲キャッシュを無効化する。作成 API が成功しても管理一覧の再取得に失敗した場合は、エラーを表示して処理を終了し、公開楽曲キャッシュの無効化は行わない。この場合、IndexedDB と表示中の共有楽曲データには作成前の内容が残る。
 
-## 採用ライブラリ: Dexie
+## IndexedDB ラッパー: Dexie
 
 IndexedDB をローカル DB として扱いやすくするラッパーです。テーブル定義、インデックス、マイグレーション、検索が読みやすくなります。
 
-楽曲・ユーザー API レスポンス・画面設定など保存対象が複数種類にわたるため、idb のような薄いラッパーではなく Dexie を選択しています。Dexie への依存は `src/lib/db/` と `src/repositories/` に閉じ込め、アプリ全体には広げません。
+Dexie への依存は `src/lib/db/` と `src/repositories/` に閉じ込めます。
 
 テスト時は `fake-indexeddb` を併用します。
 
@@ -54,9 +54,9 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 
 `GET /internal/songs/updated-at` は `songs`, `charts`, `worldsend_charts` の `updated_at` 最大値を返します。そのため、通常楽曲と WORLD'S END 楽曲の共通更新判定として使います。
 
-`GET /internal/users/{username}/updated-at` は、プロフィール更新日時と通常/WORLD'S END レコード更新日時の最大値を返します。レコード専用の更新判定ではないが、現行実装では複雑さを減らすためこの API を使います。
+`GET /internal/users/{username}/updated-at` は、プロフィール更新日時と通常/WORLD'S END レコード更新日時の最大値を返します。このため、プロフィール更新時もユーザー系キャッシュを再検証します。
 
-レーティング API は、ホームやマイページ初期表示で高速に読み込むためにレコード API と分離されています。IndexedDB キャッシュ導入後も、レーティング表示のために重いレコード API から導出することはしません。
+ホームやマイページ初期表示では、レーティング API のレスポンスを使ってレーティングを高速に読み込みます。
 
 ## キャッシュ対象と保存粒度
 
@@ -183,28 +183,25 @@ src/
 - `src/lib/db/cacheDB.ts`: Dexie インスタンス、ストア定義、DB バージョン管理。
 - `src/repositories/*`: IndexedDB の読み書きのみ。
 - `src/usecases/cache/*`: `updated-at` 判定、API 呼び出し、フォールバック制御。
-- コンポーネント: `createResource` の fetcher を usecase に差し替えるだけにする。
+- コンポーネント: `createResource` の fetcher から usecase を呼び出す。
 
-## 既存コードとの統合
+## 画面・ストアからの利用
 
 ### 楽曲ストア
 
-`src/stores/songsData.ts` の `fetchAllSongs` / `fetchWorldsendSongs` を、キャッシュ対応 usecase に差し替えています。
+`src/stores/songsData.ts` は `fetchAllSongsWithCache` / `fetchWorldsendSongsWithCache` を利用しています。
 
 ### ユーザーページ
 
-`src/pages/users/UserPage/UserPage.tsx` では、以下をキャッシュ対応 usecase に差し替えています。
-
-- `fetchUserRating(username)` → `fetchUserRatingWithCache(username)`
-- `fetchUserRecord(username)` → `fetchUserRecordWithCache(username)`
+`src/pages/users/UserPage/UserPage.tsx` は `fetchUserRatingWithCache(username)` と `fetchUserRecordWithCache(username)` を利用しています。
 
 ログインユーザー本人以外の username が指定された場合、usecase 内で API 直呼び出しにします。
 
 ### レコード画面・OVER POWER・目標画面
 
-既存の `UserRecordDTO` を受け取る構造は変えていません。キャッシュヒット時も API レスポンスと同じ DTO を返すため、コンポーネント側のデータ構造変更は不要です。
+コンポーネントは `UserRecordDTO` を受け取ります。キャッシュヒット時も API レスポンスと同じ DTO を返します。
 
-目標画面（`src/pages/goals/GoalsList/GoalsList.tsx`）でも `fetchAllSongsWithCache` と `fetchUserRecordWithCache` を利用しています。
+目標画面のデータ取得処理（`src/pages/goals/GoalsList/goalsListResource.ts`）でも `fetchAllSongsWithCache` と `fetchUserRecordWithCache` を利用しています。
 
 ## ログアウト時の削除
 
@@ -218,19 +215,10 @@ await clearClientCache()
 
 ## 実装時の注意
 
-- キャッシュ読み込み・保存処理は TDD で進めています。テストには `fake-indexeddb` を使用します。
+- キャッシュ読み込み・保存処理のテストには `fake-indexeddb` を使用します。
 - IndexedDB の実装詳細は `src/lib/db/` と `src/repositories/` に閉じ込めます。
 - キャッシュ判定のロジックはコンポーネントに置きません。
 - API レスポンスの型変更に備えて `schemaVersion` を必ず持たせます。
 - private browsing、容量不足、IndexedDB 破損などで保存に失敗しても画面を止めず、API 直呼び出しにフォールバックします。
 - Dexie のバージョンアップ（マイグレーション）は `db.version(n).stores()` で管理します。古いスキーマのデータは破棄してよいです。
 - 難易度文字列は既存ルールどおり `BASIC`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA` の大文字を維持します。
-
-## 将来検討
-
-- `GET /internal/users/{username}/record/updated-at` を追加し、プロフィール更新だけでレコードキャッシュが無効化されないようにする。
-- `GET /internal/cache-manifest` のような manifest API を追加し、`songsUpdatedAt` と `userUpdatedAt` を 1 リクエストで取得する。
-- 楽曲差分取得 API を追加し、`songs` / `worldsendSongs` store を差分更新できるようにする。
-- 楽曲詳細 API を `songs` / `worldsendSongs` store から返せるようにする。
-- `fetchMasterData` や `fetchVersions` を IndexedDB キャッシュ対象に含める。
-- rating API の DB 負荷が十分下がらない場合、rating 専用のより軽量な更新判定 API を検討する。
