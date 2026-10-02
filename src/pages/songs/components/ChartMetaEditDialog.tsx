@@ -16,6 +16,7 @@ import {
 import {
   buildChartDraftsFromSong,
   type ChartMetaEditDraft,
+  canMarkChartConstUnknown,
   hasNotesDesigner,
   normalizeNonNegativeIntegerInput,
   parseChartMetaDrafts,
@@ -111,81 +112,90 @@ const ChartMetaEditDialog: Component<Props> = (props) => {
 
           <form class="mt-5 flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
             <div class="min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
-              <Index each={drafts()}>
-                {(draft) => (
-                  <section class="space-y-3 rounded-md border border-border p-3">
-                    <DifficultyBadge difficulty={draft().difficulty} />
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Index each={drafts()}>
+                  {(draft) => (
+                    <section class="space-y-3 rounded-md border border-border p-3">
+                      <DifficultyBadge difficulty={draft().difficulty} />
 
-                    <div class="grid grid-cols-2 gap-3">
-                      <TextField>
-                        <TextField.Label class="mb-1 block text-sm text-text-muted">
-                          {SONG_EDIT_COPY.constLabel}
-                        </TextField.Label>
-                        <TextField.Input
-                          value={draft().const}
-                          inputMode="decimal"
-                          class={SONG_EDIT_NUMBER_INPUT_CLASS}
-                          onInput={(event) => {
-                            const next = normalizeChartConstRangeInput(event.currentTarget.value)
-                            if (next === null) return
-                            setDrafts((current) =>
-                              patchChartDraft(current, draft().difficulty, { const: next })
-                            )
-                          }}
-                        />
-                      </TextField>
+                      <div class="grid grid-cols-2 gap-3">
+                        <TextField>
+                          <TextField.Label class="mb-1 block text-sm text-text-muted">
+                            {SONG_EDIT_COPY.constLabel}
+                          </TextField.Label>
+                          <TextField.Input
+                            value={draft().const}
+                            inputMode="decimal"
+                            class={SONG_EDIT_NUMBER_INPUT_CLASS}
+                            onInput={(event) => {
+                              const next = normalizeChartConstRangeInput(event.currentTarget.value)
+                              if (next === null) return
+                              setDrafts((current) =>
+                                patchChartDraft(current, draft().difficulty, { const: next })
+                              )
+                            }}
+                          />
+                        </TextField>
 
-                      <TextField>
-                        <TextField.Label class="mb-1 block text-sm text-text-muted">
-                          {SONG_EDIT_COPY.notesLabel}
-                        </TextField.Label>
-                        <TextField.Input
-                          value={draft().notes}
-                          inputMode="numeric"
-                          class={SONG_EDIT_NUMBER_INPUT_CLASS}
-                          onInput={(event) => {
-                            const next = normalizeNonNegativeIntegerInput(event.currentTarget.value)
-                            if (next === null) return
-                            setDrafts((current) =>
-                              patchChartDraft(current, draft().difficulty, { notes: next })
-                            )
-                          }}
-                        />
-                      </TextField>
-                    </div>
+                        <TextField>
+                          <TextField.Label class="mb-1 block text-sm text-text-muted">
+                            {SONG_EDIT_COPY.notesLabel}
+                          </TextField.Label>
+                          <TextField.Input
+                            value={draft().notes}
+                            inputMode="numeric"
+                            class={SONG_EDIT_NUMBER_INPUT_CLASS}
+                            onInput={(event) => {
+                              const next = normalizeNonNegativeIntegerInput(
+                                event.currentTarget.value
+                              )
+                              if (next === null) return
+                              setDrafts((current) =>
+                                patchChartDraft(current, draft().difficulty, { notes: next })
+                              )
+                            }}
+                          />
+                        </TextField>
+                      </div>
 
-                    <CheckboxField
-                      checked={draft().is_const_unknown}
-                      label={SONG_EDIT_COPY.constUnknownLabel}
-                      onChange={(checked) =>
-                        setDrafts((current) =>
-                          patchChartDraft(current, draft().difficulty, {
-                            is_const_unknown: checked,
-                          })
-                        )
-                      }
-                    />
-
-                    <TextField disabled={!hasNotesDesigner(draft().difficulty)}>
-                      <TextField.Label class="mb-1 block text-sm text-text-muted">
-                        {SONG_EDIT_COPY.notesDesignerLabel}
-                      </TextField.Label>
-                      <TextField.Input
-                        value={draft().notes_designer}
-                        maxLength={SONG_EDIT_INPUT_LIMITS.notesDesigner}
-                        class={SONG_EDIT_TEXT_INPUT_CLASS}
-                        onInput={(event) =>
+                      <CheckboxField
+                        checked={
+                          draft().is_const_unknown && canMarkChartConstUnknown(draft().const)
+                        }
+                        disabled={!canMarkChartConstUnknown(draft().const)}
+                        label={SONG_EDIT_COPY.constUnknownLabel}
+                        onChange={(checked) =>
                           setDrafts((current) =>
                             patchChartDraft(current, draft().difficulty, {
-                              notes_designer: event.currentTarget.value,
+                              is_const_unknown: checked,
                             })
                           )
                         }
                       />
-                    </TextField>
-                  </section>
-                )}
-              </Index>
+
+                      <Show when={hasNotesDesigner(draft().difficulty)}>
+                        <TextField>
+                          <TextField.Label class="mb-1 block text-sm text-text-muted">
+                            {SONG_EDIT_COPY.notesDesignerLabel}
+                          </TextField.Label>
+                          <TextField.Input
+                            value={draft().notes_designer}
+                            maxLength={SONG_EDIT_INPUT_LIMITS.notesDesigner}
+                            class={SONG_EDIT_TEXT_INPUT_CLASS}
+                            onInput={(event) =>
+                              setDrafts((current) =>
+                                patchChartDraft(current, draft().difficulty, {
+                                  notes_designer: event.currentTarget.value,
+                                })
+                              )
+                            }
+                          />
+                        </TextField>
+                      </Show>
+                    </section>
+                  )}
+                </Index>
+              </div>
 
               <Show when={errorMessage()}>
                 <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">

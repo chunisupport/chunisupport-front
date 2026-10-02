@@ -59,7 +59,7 @@ const WorldsendSongInfoCard = (props: Props) => {
   /**
    * 楽曲情報の編集結果を保存する。
    *
-   * @param values - 編集後のジャンル、BPM、リリース日。
+   * @param values - 編集後のジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトル。
    * @returns なし。
    */
   const handleSongMetaSubmit = async (values: SongMetaEditValues): Promise<void> => {
@@ -103,6 +103,7 @@ const WorldsendSongInfoCard = (props: Props) => {
       <SongMetaCardLayout
         title={props.song.title}
         jacket={props.song.jacket}
+        unlockRequired={props.song.unlock_required}
         infoItems={getWorldsendSongInfoItems(props.song, props.versionName)}
         infoAction={
           canEdit() ? (
@@ -178,6 +179,7 @@ const WorldsendSongInfoCard = (props: Props) => {
         initialGenre={props.song.genre}
         initialBpm={props.song.bpm}
         initialRelease={props.song.release}
+        initialUnlockRequired={props.song.unlock_required}
         initialWikiPageTitle={props.song.wiki_page_title ?? null}
         requireGenre={false}
         saving={savingSong()}

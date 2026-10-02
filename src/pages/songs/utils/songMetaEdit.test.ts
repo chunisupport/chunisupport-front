@@ -7,6 +7,7 @@ import {
   buildSongMetaUpdateRequest,
   buildWorldsendChartMetaUpdateRequest,
   buildWorldsendSongMetaUpdateRequest,
+  canMarkChartConstUnknown,
   hasNotesDesigner,
   parseChartMetaDrafts,
   parseOptionalNonNegativeInteger,
@@ -92,7 +93,13 @@ test('parseOptionalNonNegativeInteger: 空欄をnull、不正値をinvalidにす
 
 test('parseSongMetaEditValues: 通常楽曲はジャンル必須でBPMとリリース日を正規化すること', () => {
   // Given
-  const input = { genreName: null, bpm: '198', releasedAt: '2025-06-19', wikiPageTitle: ' Page ' }
+  const input = {
+    genreName: null,
+    bpm: '198',
+    releasedAt: '2025-06-19',
+    wikiPageTitle: ' Page ',
+    unlockRequired: false,
+  }
 
   // When
   const missingGenre = parseSongMetaEditValues(input, true)
@@ -107,13 +114,20 @@ test('parseSongMetaEditValues: 通常楽曲はジャンル必須でBPMとリリ�
       bpm: 198,
       releasedAt: '2025-06-19',
       wikiPageTitle: 'Page',
+      unlockRequired: false,
     })
   }
 })
 
 test('parseSongMetaEditValues: 空白だけのWikiページタイトルはnullとして扱うこと', () => {
   // Given: Wikiページタイトルを空欄にした入力。
-  const input = { genreName: null, bpm: '', releasedAt: '', wikiPageTitle: '   ' }
+  const input = {
+    genreName: null,
+    bpm: '',
+    releasedAt: '',
+    wikiPageTitle: '   ',
+    unlockRequired: false,
+  }
 
   // When
   const parsed = parseSongMetaEditValues(input, false)
@@ -127,7 +141,7 @@ test('parseSongMetaEditValues: 空白だけのWikiページタイトルはnull�
 
 test('parseSongMetaEditValues: Wikiページタイトルは300文字まで許可すること', () => {
   // Given: サロゲートペアを含む300文字と301文字のWikiページタイトル。
-  const base = { genreName: null, bpm: '', releasedAt: '' }
+  const base = { genreName: null, bpm: '', releasedAt: '', unlockRequired: false }
   const maxTitle = '𠮷'.repeat(300)
 
   // When
@@ -149,6 +163,7 @@ test('buildSongMetaUpdateRequest: 楽曲情報だけ更新し譜面は空マッ�
     bpm: 200,
     releasedAt: '2025-07-01',
     wikiPageTitle: 'Wiki Page',
+    unlockRequired: true,
   })
 
   // Then
@@ -158,6 +173,7 @@ test('buildSongMetaUpdateRequest: 楽曲情報だけ更新し譜面は空マッ�
   assert.equal(request.bpm, 200)
   assert.equal(request.released_at, '2025-07-01')
   assert.equal(request.wiki_page_title, 'Wiki Page')
+  assert.equal(request.unlock_required, true)
   assert.equal(request.is_new, true)
   assert.deepEqual(request.charts, {})
 })
@@ -172,6 +188,7 @@ test('buildWorldsendSongMetaUpdateRequest: 譜面フィールドを載せない�
     bpm: null,
     releasedAt: null,
     wikiPageTitle: null,
+    unlockRequired: true,
   })
 
   // Then
@@ -180,6 +197,7 @@ test('buildWorldsendSongMetaUpdateRequest: 譜面フィールドを載せない�
   assert.equal(request.is_new, true)
   assert.equal(request.released_at, null)
   assert.equal(request.wiki_page_title, null)
+  assert.equal(request.unlock_required, true)
   assert.equal('charts' in request, false)
 })
 
@@ -216,6 +234,36 @@ test('parseChartMetaDrafts: 空の定数はエラー、ノーツ空欄はnullに
     assert.equal(parsed.value.MASTER?.const, 15.7)
   }
   assert.equal(invalid.ok, false)
+})
+
+test('canMarkChartConstUnknown: 定数10以上のときだけ定数不明を設定できること', () => {
+  // Given / When / Then
+  assert.equal(canMarkChartConstUnknown(''), false)
+  assert.equal(canMarkChartConstUnknown('9.9'), false)
+  assert.equal(canMarkChartConstUnknown('10'), true)
+  assert.equal(canMarkChartConstUnknown('10.0'), true)
+  assert.equal(canMarkChartConstUnknown('15.7'), true)
+})
+
+test('parseChartMetaDrafts: 定数10未満の譜面は定数不明をfalseにすること', () => {
+  // Given
+  const [basicDraft, masterDraft] = buildChartDraftsFromSong(createSong())
+  assert.ok(basicDraft)
+  assert.ok(masterDraft)
+  const drafts = [
+    { ...basicDraft, is_const_unknown: true },
+    { ...masterDraft, is_const_unknown: true },
+  ]
+
+  // When
+  const parsed = parseChartMetaDrafts(drafts)
+
+  // Then
+  assert.equal(parsed.ok, true)
+  if (parsed.ok) {
+    assert.equal(parsed.value.BASIC?.is_const_unknown, false)
+    assert.equal(parsed.value.MASTER?.is_const_unknown, true)
+  }
 })
 
 test('buildChartMetaUpdateRequest: 楽曲フィールドは現行値、譜面は編集結果を載せること', () => {
@@ -290,3 +338,34 @@ test('buildWorldsendChartMetaUpdateRequest: WORLDSEND譜面だけを更新対象
     },
   })
 })
+
+for (const unlockRequired of [true, false]) {
+  test(`要解禁フラグ${unlockRequired}をフォームから通常曲・WORLD'S ENDの更新へ反映すること`, () => {
+    // Given: 要解禁フラグだけを切り替えた入力。
+    const input = {
+      genreName: 'ORIGINAL',
+      bpm: '198',
+      releasedAt: '2025-06-19',
+      wikiPageTitle: '',
+      unlockRequired,
+    }
+
+    // When
+    const parsed = parseSongMetaEditValues(input, true)
+    assert.equal(parsed.ok, true)
+    if (!parsed.ok) return
+    const request = buildSongMetaUpdateRequest(
+      createSong({ unlock_required: !unlockRequired }),
+      parsed.value
+    )
+    const worldsendRequest = buildWorldsendSongMetaUpdateRequest(
+      createWorldsendSong({ unlock_required: !unlockRequired }),
+      parsed.value
+    )
+
+    // Then: falseも省略せず送り、既存の要解禁フラグを解除できる。
+    assert.equal(parsed.value.unlockRequired, unlockRequired)
+    assert.equal(request.unlock_required, unlockRequired)
+    assert.equal(worldsendRequest.unlock_required, unlockRequired)
+  })
+}

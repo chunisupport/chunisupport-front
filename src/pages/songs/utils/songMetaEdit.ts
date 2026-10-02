@@ -1,4 +1,8 @@
-import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
+import {
+  CHART_LEVEL_10_CONST_MIN,
+  WORLDSEND_LEVEL_STAR_MAX,
+  WORLDSEND_LEVEL_STAR_MIN,
+} from '../../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
 import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type {
@@ -22,6 +26,7 @@ export type SongMetaEditValues = {
   bpm: number | null
   releasedAt: string | null
   wikiPageTitle: string | null
+  unlockRequired: boolean
 }
 
 export type SongMetaEditFormInput = {
@@ -29,6 +34,7 @@ export type SongMetaEditFormInput = {
   bpm: string
   releasedAt: string
   wikiPageTitle: string
+  unlockRequired: boolean
 }
 
 export type ChartMetaEditDraft = {
@@ -64,6 +70,16 @@ export type SongMetaEditParseResult<T> =
  */
 export const hasNotesDesigner = (difficulty: PlayerDataDifficulty): boolean =>
   difficulty !== 'BASIC' && difficulty !== 'ADVANCED'
+
+/**
+ * 定数不明フラグを設定できる譜面定数かどうかを判定する。
+ * 定数不明はレベル10以上の譜面だけが対象のため、10未満や未入力では設定できない。
+ *
+ * @param constInput - 譜面定数の入力値。
+ * @returns 定数不明フラグを設定できる場合は true。
+ */
+export const canMarkChartConstUnknown = (constInput: string): boolean =>
+  constInput.trim() !== '' && Number(constInput) >= CHART_LEVEL_10_CONST_MIN
 
 /**
  * 空文字を null に正規化したトリム済み文字列を返す。
@@ -139,7 +155,7 @@ export const parseOptionalNonNegativeInteger = (value: string): number | null | 
 /**
  * 楽曲情報編集フォームの入力を更新リクエスト用の値へ正規化する。
  *
- * @param input - ジャンル、BPM、リリース日、Wikiページタイトルの入力値。
+ * @param input - ジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトルの入力値。
  * @param requireGenre - ジャンル選択を必須にするか。
  * @returns 正規化済みの値、またはエラーメッセージ。
  */
@@ -174,6 +190,7 @@ export const parseSongMetaEditValues = (
       bpm,
       releasedAt,
       wikiPageTitle,
+      unlockRequired: input.unlockRequired,
     },
   }
 }
@@ -182,7 +199,7 @@ export const parseSongMetaEditValues = (
  * 通常楽曲の楽曲情報だけを更新する PUT リクエストを組み立てる。
  *
  * @param song - 表示中の通常楽曲。
- * @param values - 編集後のジャンル、BPM、リリース日、Wikiページタイトル。
+ * @param values - 編集後のジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトル。
  * @returns 譜面を変更しない通常楽曲更新リクエスト。
  */
 export const buildSongMetaUpdateRequest = (
@@ -197,6 +214,7 @@ export const buildSongMetaUpdateRequest = (
   bpm: values.bpm,
   released_at: values.releasedAt,
   wiki_page_title: values.wikiPageTitle,
+  unlock_required: values.unlockRequired,
   jacket: song.jacket,
   is_new: song.is_new,
   charts: {},
@@ -206,7 +224,7 @@ export const buildSongMetaUpdateRequest = (
  * WORLD'S END 楽曲の楽曲情報だけを更新する PUT リクエストを組み立てる。
  *
  * @param song - 表示中の WORLD'S END 楽曲。
- * @param values - 編集後のジャンル、BPM、リリース日、Wikiページタイトル。
+ * @param values - 編集後のジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトル。
  * @returns 譜面を変更しない WORLD'S END 楽曲更新リクエスト。
  */
 export const buildWorldsendSongMetaUpdateRequest = (
@@ -221,6 +239,7 @@ export const buildWorldsendSongMetaUpdateRequest = (
   bpm: values.bpm,
   released_at: values.releasedAt,
   wiki_page_title: values.wikiPageTitle,
+  unlock_required: values.unlockRequired,
   jacket: song.jacket,
   is_new: song.is_new,
 })
@@ -275,7 +294,7 @@ export const parseChartMetaDrafts = (
 
     charts[draft.difficulty] = {
       const: chartConst,
-      is_const_unknown: draft.is_const_unknown,
+      is_const_unknown: draft.is_const_unknown && canMarkChartConstUnknown(draft.const),
       notes,
       notes_designer: toNullableTrimmedString(draft.notes_designer),
     }

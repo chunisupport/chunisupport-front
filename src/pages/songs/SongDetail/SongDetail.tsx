@@ -190,6 +190,8 @@ const SongDetail = () => {
         <SongDetailLayout
           song={song()}
           isSongLoading={songState.loading}
+          favoriteSongId={song()?.id}
+          hasUltima={Boolean(song()?.charts.ULTIMA)}
           title={song()?.title ?? '-'}
           artist={song()?.artist || '-'}
           wikiPageTitle={song()?.wiki_page_title}
