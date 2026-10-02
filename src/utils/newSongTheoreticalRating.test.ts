@@ -332,7 +332,7 @@ const createFrameTheoretical = (
   boundaryEntries: [],
 })
 
-test('ベスト枠と新曲枠を採用譜面数で重み付けした総合理論値を返すこと', () => {
+test('ベスト枠と新曲枠の単曲レーティング合計を50枠で割った総合理論値を返すこと', () => {
   // Given: ベスト30譜面と新曲20譜面の枠理論値。
   const best = createFrameTheoretical(17, 30)
   const newSong = createFrameTheoretical(18, 20, true)
@@ -346,15 +346,28 @@ test('ベスト枠と新曲枠を採用譜面数で重み付けした総合理�
   assert.equal(result?.entries.length, 50)
 })
 
-test('片方の枠理論値のみ計算済みの場合はその値を総合理論値とすること', () => {
+test('新曲枠が規定枠数未満の場合も空き枠を0として50枠で割ること', () => {
+  // Given: ベスト30譜面と、新曲枠に1譜面だけ採用された枠理論値。
+  const best = createFrameTheoretical(17.5, 30)
+  const newSong = createFrameTheoretical(17.15, 1)
+
+  // When: 総合理論値を算出する。
+  const result = calculateOverallTheoreticalRating(best, newSong)
+
+  // Then: (17.5*30 + 17.15) / 50 = 10.843 になる。
+  assert.equal(result?.rating, 10.843)
+  assert.equal(result?.entries.length, 31)
+})
+
+test('片方の枠理論値のみ計算済みの場合は未計算の枠を0として50枠で割ること', () => {
   // Given: ベスト枠のみ計算済み。
   const best = createFrameTheoretical(17, 30)
 
   // When: 総合理論値を算出する。
   const result = calculateOverallTheoreticalRating(best, undefined)
 
-  // Then: ベスト枠の値と一致する。
-  assert.equal(result?.rating, 17)
+  // Then: 17*30 / 50 = 10.2 になる。
+  assert.equal(result?.rating, 10.2)
 })
 
 test('両枠とも未計算の場合は総合理論値を返さないこと', () => {
