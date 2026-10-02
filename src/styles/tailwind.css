@@ -748,6 +748,15 @@
   --cs-color-score-rank-d-text: var(--color-gray-500);
 
   /* ===== ランプ（FULL COMBO / ALL JUSTICE / ALL JUSTICE CRITICAL / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
+  --cs-gradient-record-lamp-badge-gloss: linear-gradient(
+    135deg in oklab,
+    rgb(255 255 255 / 15%) 0%,
+    rgb(255 255 255 / 65%) 28%,
+    rgb(255 255 255 / 10%) 46%,
+    rgb(0 0 0 / 8%) 54%,
+    rgb(255 255 255 / 30%) 76%,
+    rgb(0 0 0 / 12%) 100%
+  );
   --cs-color-lamp-full-combo-bg: var(--color-yellow-300);
   --cs-color-lamp-full-combo-text: var(--color-yellow-900);
   --cs-color-lamp-all-justice-bg: #fdf5a7;
@@ -1029,6 +1038,15 @@
 }
 
 @layer utilities {
+  .record-lamp-badge-gloss:where(
+    .bg-lamp-full-combo-bg,
+    .bg-lamp-all-justice-bg,
+    .bg-lamp-brave-bg,
+    .bg-lamp-absolute-bg,
+    .bg-lamp-catastrophy-bg
+  ) {
+    background-image: var(--cs-gradient-record-lamp-badge-gloss);
+  }
   .text-shadow-badge {
     text-shadow: var(--cs-shadow-course-class-text);
   }
