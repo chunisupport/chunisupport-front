@@ -9,6 +9,8 @@ import { WIKI_BASE_URL } from '../../../config'
 import { buildWikiPageUrl } from '../../../utils/wiki'
 import { buildSongYoutubeSearchUrl } from '../../../utils/youtube'
 import { SONG_DETAIL_LINK_COPY } from '../constants'
+import SongFavoriteButton from './SongFavoriteButton'
+import SongLockedButtons from './SongLockedButtons'
 import { getSongDetailViewState } from './songDetailLayoutModel'
 
 type Props<TSong> = {
@@ -16,6 +18,8 @@ type Props<TSong> = {
   isSongLoading: boolean
   songErrorMessage?: string
   title: string
+  favoriteSongId?: string
+  hasUltima?: boolean
   artist: string
   /** Wikiのページタイトル。未設定の場合はWikiリンクを表示しない */
   wikiPageTitle?: string | null
@@ -45,7 +49,7 @@ const SongDetailExternalLink = (props: SongDetailExternalLinkProps) => (
     target="_blank"
     rel="noopener noreferrer"
     aria-label={props.ariaLabel}
-    class={getAppButtonClass({ variant: 'surface', size: 'md', class: 'font-semibold' })}
+    class={getAppButtonClass({ variant: 'surface', size: 'md', class: 'h-9 font-semibold' })}
   >
     {props.label}
     <ExternalLink class="h-4 w-4" aria-hidden="true" />
@@ -91,7 +95,7 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
             <div class="space-y-1">
               <h1 class="mb-1 font-sans text-2xl font-semibold">{props.title}</h1>
               <div class="font-sans text-text-muted">{props.artist}</div>
-              <div class="mt-2 flex flex-wrap gap-2">
+              <div class="mt-2 flex flex-wrap items-start gap-2">
                 <Show when={wikiPageUrl()}>
                   {(url) => (
                     <SongDetailExternalLink
@@ -101,11 +105,21 @@ const SongDetailLayout = <TSong,>(props: Props<TSong>) => {
                     />
                   )}
                 </Show>
-                <SongDetailExternalLink
-                  href={youtubeSearchUrl()}
-                  label={SONG_DETAIL_LINK_COPY.youtube}
-                  ariaLabel={SONG_DETAIL_LINK_COPY.youtubeAriaLabel}
-                />
+                <div class="flex items-start gap-2">
+                  <SongDetailExternalLink
+                    href={youtubeSearchUrl()}
+                    label={SONG_DETAIL_LINK_COPY.youtube}
+                    ariaLabel={SONG_DETAIL_LINK_COPY.youtubeAriaLabel}
+                  />
+                  <Show when={props.favoriteSongId}>
+                    {(id) => (
+                      <>
+                        <SongFavoriteButton songId={id()} />
+                        <SongLockedButtons songId={id()} hasUltima={props.hasUltima ?? false} />
+                      </>
+                    )}
+                  </Show>
+                </div>
               </div>
             </div>
 

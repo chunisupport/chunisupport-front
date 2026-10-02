@@ -1,23 +1,13 @@
 # 仕様確認が必要なテスト
 
-再検証日: 2026-09-09
+再検証日: 2026-10-03
 調査対象: `develop`
 
 この文書は、現在の実装・テストを固定しているものの、期待値を仕様として確定してよいか判断が必要な項目だけを記録する。
 
 ## 優先度: 高
 
-### 1. OVER POWER合計目標の理論値
-
-- `calculateGoalOverPowerChartMax`は、通常条件では各`record.const`から譜面ごとの理論OVER POWERを算出し、`chart_target: 'OP_TARGET'`の場合だけ楽曲ごとの`song.maxop`を重複なく合計する。
-- 一方、`calculateGoalProgress`の`overpower_value`で保存済みの`total`がない場合、通常条件でも各レコードに対応する`song.maxop`を合計して動的な目標値を求める。
-- `src/pages/goals/utils/goalOverPower.test.ts`と`src/pages/goals/utils/goalProgress.test.ts`も、それぞれ異なる定義を固定している。
-- 確認事項:
-  - 通常条件の理論値は対象譜面ごとの`record.const`から算出するか。
-  - `song.maxop`は`chart_target: 'OP_TARGET'`の場合だけ使用するか。
-  - 目標作成時の最大値、保存値がない場合の再計算、目標カードの進捗計算を同じ定義へ統一するか。
-
-### 2. 検索語末尾の全角英字を無条件に1文字削除
+### 1. 検索語末尾の全角英字を無条件に1文字削除
 
 - `removeTrailingFullwidthAlphabet`は、検索語の末尾が全角英字なら常に1文字削除する。
 - `src/utils/searchUtils.test.ts`も、この動作を明示的に固定している。
@@ -28,16 +18,18 @@
 
 ## 優先度: 中
 
-### 3. 四分位数の算出方法
+### 2. 四分位数の算出方法
 
-- `getRecordStats`は、Q1を`floor((n - 1) × 0.25)`、Q3を`floor((n - 1) × 0.75)`番目の値として選ぶ。
+- `getRecordStats`（`src/pages/users/utils/recordStats.ts`）は、Q1を`floor((n - 1) × 0.25)`、Q3を`floor((n - 1) × 0.75)`番目の値として選ぶ。
 - そのため、2件のスコアではQ1とQ3の両方が最小値になる。
 - `src/pages/users/UserRecord/utils/recordStats.test.ts`も、この結果を固定している。
+- 一方、苦手譜面インスペクターの`inspectWeakCharts`（`src/utils/weakChartInspector.ts`）は線形補間で四分位数を求めており、`src/utils/weakChartInspector.test.ts`もその値（例: Q1=1000250）を前提にしている。
+- 同じ「四分位数」でも画面によって定義が異なる。
 - 確認事項:
   - 現在のインデックス切り捨て方式をフィルター統計の正式な四分位数定義とするか。
-  - 中央値分割や線形補間など別の定義へ変更するか。
+  - 苦手譜面インスペクターと同じ線形補間へ統一するか。
 
-### 4. 複数ソート条件のキー重複
+### 3. 複数ソート条件のキー重複
 
 - `createInitialSortConditions`は、第1条件だけを指定値へ置き換えるため、指定キーが既定の第2条件以降と同じ場合でも重複を除去しない。
 - `src/utils/sortConditions.test.ts`は`level`が第1・第2条件へ重複する結果を固定している。
@@ -47,15 +39,15 @@
   - 重複キーを許可して表示どおり保持するか。
   - 後続の重複キーを除外し、別の既定条件で補完するか。
 
-### 5. J数なしレコード同士の並び順
+### 4. J数なしレコード同士の並び順
 
-- `src/pages/users/WorldsendRecord/utils/sorting.test.ts`は、J数なしのレコードをJ数ソートの昇順・降順に関係なくスコア降順で並べる期待を持つ。
+- 通常譜面とWORLD'S ENDのJ数ソートは、共通の`compareMissingJusticeCountRecords`（`src/pages/users/utils/justiceCountSorting.ts`）でJ数なし同士を「既プレイ優先、スコア降順」に並べる。
+- `src/pages/users/WorldsendRecord/utils/sorting.test.ts`も、J数ソートの昇順・降順に関係なくこの順になることを固定している。
 - そのため、J数なし同士では後続のソート条件よりスコアが優先される。
 - 確認事項:
   - J数なし同士は常にスコア降順、元順維持、または次のソート条件へ委譲するか。
-  - 通常譜面とWORLD'S ENDで同じ規則を採用するか。
 
-### 6. ボーダー計算の`targetJustice`の境界条件と命名
+### 5. ボーダー計算の`targetJustice`の境界条件と命名
 
 - `src/utils/borderCalculator.test.ts`は`targetJustice: 100`に対して、指定値そのものではなく`justice > targetJustice`となる候補を期待している。
 - 実装も指定値を含めない厳密な下限として扱う。
@@ -64,15 +56,25 @@
   - 下限値そのものを含む`justice >= targetJustice`とするか、現在どおり`justice > targetJustice`を維持するか。
   - 厳密な下限を維持する場合、変数名やUI文言をその意味に合わせるか。
 
-### 7. 更新日のタイムゾーンと日付妥当性
+### 6. 更新日のタイムゾーンと日付妥当性
 
-- `toRecordDateString`はISO 8601文字列の先頭にある`YYYY-MM-DD`をそのまま抽出し、タイムゾーン変換をしない。
+- `toRecordDateString`はISO 8601文字列の先頭にある`YYYY-MM-DD`をそのまま抽出し、タイムゾーン変換をしない。同じ関数を使う`findLatestRecordDate`（レーティング画像Ver.2の最新更新日）も同じ扱いになる。
 - `src/utils/dateFilter.test.ts`は`2026-05-31T23:59:59Z`を6月1日の下限から除外する。日本時間では6月1日だが、文字列上の日付である5月31日として扱う仕様になっている。
-- `formatUpdatedAt`も先頭の年月日が正規表現へ一致すればそのまま表示するため、`2026-99-99...`のようなカレンダー上存在しない日付を表示用には拒否しない。
+- レコード表示用の`formatUpdatedAt`（`src/utils/recordUpdatedAt.ts`）も先頭の年月日が正規表現へ一致すればそのまま表示するため、`2026-99-99...`のようなカレンダー上存在しない日付を表示用には拒否しない。
 - 一方、更新日ソートは`Date.parse`を使用するため、不正日付を無効値として扱う。
+- また、楽曲管理の`formatUpdatedAt`（`src/pages/song-management/utils/songDraftCommon.ts`）、称号管理の登録日時、譜面統計の生成日時は日本時間へ変換して表示し、各テストもそれを固定している。
 - 確認事項:
-  - 更新日の表示・フィルター基準を日本時間、UTC、文字列上の日付のどれにするか。
+  - レコード更新日の表示・フィルター基準を日本時間、UTC、文字列上の日付のどれにするか。
   - 表示・フィルター・ソートで日付妥当性の判定を統一するか。
+
+### 7. コースレコードのEXクラスをエンブレム表示しない
+
+- `resolveCourseClassEmblemName`は`1`〜`5`と`inf`だけをエンブレム名へ変換し、`extra`は`null`としてバッジ表示へフォールバックする。
+- `src/utils/courseClassDisplay.test.ts`も「EXと未対応値のコースクラスはエンブレム対象外になること」として`extra`→`null`を固定している。
+- 一方、EXクラス専用のエンブレムSVG（`emblem_extra.svg` / `base_extra.svg`）が追加され、`ClassEmblem`にも`extra`が登録されているが、現在`extra`を渡す呼び出し元はない。
+- 確認事項:
+  - コースレコードのEXクラスも専用エンブレムで表示するか。
+  - EXだけバッジ表示を維持する場合、未使用のEX用エンブレムを残す理由を明確にするか。
 
 ## 優先度: 低
 
@@ -84,25 +86,7 @@
   - `0点`と`AAA`の間をAAAへまとめる仕様とするか。
   - `AAA未満`などの専用値を追加するか。
 
-### 9. フレンド画面のレーティング丸め
-
-- `formatFriendRating`は`toFixed(2)`を使用し、小数点以下2桁へ丸める。
-- 共通のレーティング表示は小数点以下2桁の切り捨てを使用しており、表示規則が一致していない。
-- `src/pages/friends/friendshipDisplay.test.ts`は桁数を検証するが、丸め境界を固定していない。
-- 確認事項:
-  - フレンド画面だけ丸める仕様とするか。
-  - 共通のレーティング表示規則へ統一するか。
-
-### 10. リリース日未設定・不正曲の配置
-
-- `sortByReleaseDateDescWithMissingFirst`は、リリース日未設定または不正な楽曲を先頭へ配置する。
-- 一方、共有楽曲データの`sortSongsByReleaseDescAndIdxDesc`は、同じ未設定・不正値を末尾へ配置する。
-- どちらもリリース日降順の用途だが、欠損値の配置規則が逆になっている。
-- 確認事項:
-  - 管理・確認用途など画面ごとに意図的に規則を分けるか。
-  - 同じ「リリース日降順」として配置規則を統一するか。
-
-### 11. マスタ外ジャンル・バージョンのOVER POWER集計
+### 9. マスタ外ジャンル・バージョンのOVER POWER集計
 
 - `src/usecases/overpower/overpowerSummary.test.ts`は、不明ジャンル・不明バージョンの値をALLへ含める一方、各内訳から除外する期待を持つ。
 - そのため、ALLと表示中の内訳合計が一致しない。
@@ -111,7 +95,7 @@
   - ALLから除外するか。
   - 現状を仕様とする場合、合計が一致しないことをUI上で許容するか。
 
-### 12. 固定件数目標が対象数を超えた場合
+### 10. 固定件数目標が対象数を超えた場合
 
 - `src/pages/goals/utils/goalRainbow.test.ts`は、保存済みの固定件数が現在の対象楽曲数を超えても固定値を維持する期待を持つ。
 - たとえば対象が1曲まで減っても固定目標3曲が残り、達成不能な目標になる。
@@ -120,15 +104,15 @@
   - 現在の対象数へ上限補正するか。
   - 達成不能状態をUIで明示するか。
 
-### 13. 降順ソート時のマスタ外ジャンル
+### 11. 降順ソート時のマスタ外ジャンル
 
 - `compareMasterItemNames`はマスタ順序にない名称を既知の項目より後へ配置し、`src/utils/masterData.test.ts`もその規則を固定している。
-- 楽曲一覧の`sortSongs`はジャンル比較結果へ降順係数を掛けるため、降順ではマスタ外ジャンルが先頭側へ反転する。
+- 楽曲一覧とWORLD'S END楽曲一覧の`sortSongs`はジャンル比較結果へ降順係数を掛けるため、降順ではマスタ外ジャンルが先頭側へ反転する。
 - 確認事項:
   - マスタ外ジャンルは昇順・降順とも末尾へ固定するか。
   - 降順ではマスタ項目と一緒に順序を反転させるか。
 
-### 14. OVER POWER達成率の表示桁数
+### 12. OVER POWER達成率の表示桁数
 
 - 共通の`formatOverPowerPercent`は、桁数を省略した場合に小数点以下5桁で表示する。
 - 目標カードは`OVER_POWER_PERCENT_DECIMAL_PLACES = 3`をローカルに定義し、小数点以下3桁を明示的に指定している。

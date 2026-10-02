@@ -8,7 +8,7 @@ import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWi
 import { buildUserProfilePagePath } from '../../utils/userProfileRoute'
 import { AppButton, getAppButtonClass } from '../common/AppButton'
 import { UserNameplate } from '../common/profile/UserNameplate'
-import { USER_NAMEPLATE_WIDTH_CLASS } from '../common/profile/UserNameplate.constants'
+import { USER_NAMEPLATE_MAX_WIDTH_CLASS } from '../common/profile/UserNameplate.constants'
 import Loading from '../Loading/Loading'
 import { DATA_REGISTRATION_HELP_URL } from '../PlayerDataEmptyState/constants'
 import { LANDING_PROFILE_COPY } from './constants'
@@ -51,7 +51,10 @@ export const LandingProfileCard = (props: { username: string }) => {
   )
 
   return (
-    <section class={USER_NAMEPLATE_WIDTH_CLASS} aria-label={LANDING_PROFILE_COPY.heading}>
+    <section
+      class={`mx-auto w-full ${USER_NAMEPLATE_MAX_WIDTH_CLASS}`}
+      aria-label={LANDING_PROFILE_COPY.heading}
+    >
       <Show
         when={!profile.loading}
         fallback={

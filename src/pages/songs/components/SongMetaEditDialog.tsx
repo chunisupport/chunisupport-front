@@ -4,6 +4,7 @@ import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { FormSelect } from '../../../components/common/AppSelect'
+import { CheckboxField } from '../../../components/common/CheckboxField'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
 import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO } from '../../../types/api'
@@ -32,6 +33,8 @@ type Props = {
   initialRelease: string | null
   /** 編集前のWikiページタイトル */
   initialWikiPageTitle: string | null
+  /** 編集前の要解禁フラグ */
+  initialUnlockRequired: boolean
   requireGenre: boolean
   saving: boolean
   apiErrorMessage: string
@@ -63,7 +66,7 @@ type BpmTextFieldProps = {
  * @returns BPM用の Kobalte TextField。
  */
 const BpmTextField: Component<BpmTextFieldProps> = (props) => (
-  <TextField>
+  <TextField class="min-w-0">
     <TextField.Label class="mb-1 block text-sm text-text-muted">
       {SONG_EDIT_COPY.bpmLabel}
     </TextField.Label>
@@ -81,7 +84,7 @@ const BpmTextField: Component<BpmTextFieldProps> = (props) => (
 )
 
 /**
- * 楽曲情報（ジャンル、BPM、リリース日、Wikiページタイトル）を編集するダイアログを描画する。
+ * 楽曲情報（ジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトル）を編集するダイアログを描画する。
  * WORLD'S ENDでは同じ曲名・アーティスト名のSTANDARD楽曲からBPM・Wikiページタイトルを取り込める。
  *
  * @param props - 開閉状態、初期値、ジャンル候補、保存ハンドラ、STANDARD取り込み設定。
@@ -91,6 +94,7 @@ const SongMetaEditDialog: Component<Props> = (props) => {
   const [genreName, setGenreName] = createSignal<string | null>(null)
   const [bpm, setBpm] = createSignal('')
   const [releasedAt, setReleasedAt] = createSignal('')
+  const [unlockRequired, setUnlockRequired] = createSignal(false)
   const [wikiPageTitle, setWikiPageTitle] = createSignal('')
   const [validationMessage, setValidationMessage] = createSignal('')
   const [initialValues, setInitialValues] = createSignal({
@@ -98,6 +102,7 @@ const SongMetaEditDialog: Component<Props> = (props) => {
     bpm: '',
     releasedAt: '',
     wikiPageTitle: '',
+    unlockRequired: false,
   })
 
   const selectedGenre = createMemo(
@@ -109,7 +114,8 @@ const SongMetaEditDialog: Component<Props> = (props) => {
       genreName() !== initialValues().genreName ||
       bpm() !== initialValues().bpm ||
       releasedAt() !== initialValues().releasedAt ||
-      wikiPageTitle() !== initialValues().wikiPageTitle
+      wikiPageTitle() !== initialValues().wikiPageTitle ||
+      unlockRequired() !== initialValues().unlockRequired
   )
 
   createEffect(() => {
@@ -119,12 +125,14 @@ const SongMetaEditDialog: Component<Props> = (props) => {
       bpm: toInputValue(props.initialBpm),
       releasedAt: toDateInputValue(props.initialRelease),
       wikiPageTitle: props.initialWikiPageTitle ?? '',
+      unlockRequired: props.initialUnlockRequired,
     }
     setInitialValues(values)
     setGenreName(values.genreName)
     setBpm(values.bpm)
     setReleasedAt(values.releasedAt)
     setWikiPageTitle(values.wikiPageTitle)
+    setUnlockRequired(values.unlockRequired)
     setValidationMessage('')
   })
 
@@ -143,6 +151,7 @@ const SongMetaEditDialog: Component<Props> = (props) => {
         bpm: bpm(),
         releasedAt: releasedAt(),
         wikiPageTitle: wikiPageTitle(),
+        unlockRequired: unlockRequired(),
       },
       props.requireGenre
     )
@@ -169,48 +178,61 @@ const SongMetaEditDialog: Component<Props> = (props) => {
 
           <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
             <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <FormSelect<MasterItemDTO>
-                label={SONG_EDIT_COPY.genreLabel}
-                options={props.genres}
-                optionValue="name"
-                optionTextValue="name"
-                value={selectedGenre()}
-                onChange={(genre: MasterItemDTO | null) => setGenreName(genre?.name ?? null)}
-                placeholder={SONG_EDIT_COPY.genrePlaceholder}
-                contentZIndexClass="z-60"
-                formatLabel={(genre) => genre.name}
-              />
-
-              <Show
-                when={props.enableCopyFromStandard}
-                fallback={<BpmTextField value={bpm()} onInput={setBpm} />}
-              >
-                <CopyFromStandardField
-                  field="bpm"
-                  songs={props.standardSongs ?? []}
-                  title={props.copyTitle ?? ''}
-                  artist={props.copyArtist ?? ''}
-                  songsLoading={props.standardSongsLoading}
-                  onCopied={(nextBpm) => {
-                    setBpm(toInputValue(nextBpm))
-                    setValidationMessage('')
-                  }}
-                >
-                  <BpmTextField value={bpm()} onInput={setBpm} />
-                </CopyFromStandardField>
-              </Show>
-
-              <TextField>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {SONG_EDIT_COPY.releaseLabel}
-                </TextField.Label>
-                <TextField.Input
-                  type="date"
-                  value={releasedAt()}
-                  class={SONG_EDIT_TEXT_INPUT_CLASS}
-                  onInput={(event) => setReleasedAt(event.currentTarget.value)}
+              <div class="grid grid-cols-2 gap-4">
+                <FormSelect<MasterItemDTO>
+                  rootClass="min-w-0"
+                  label={SONG_EDIT_COPY.genreLabel}
+                  options={props.genres}
+                  optionValue="name"
+                  optionTextValue="name"
+                  value={selectedGenre()}
+                  onChange={(genre: MasterItemDTO | null) => setGenreName(genre?.name ?? null)}
+                  placeholder={SONG_EDIT_COPY.genrePlaceholder}
+                  contentZIndexClass="z-60"
+                  formatLabel={(genre) => genre.name}
                 />
-              </TextField>
+
+                <Show
+                  when={props.enableCopyFromStandard}
+                  fallback={<BpmTextField value={bpm()} onInput={setBpm} />}
+                >
+                  <CopyFromStandardField
+                    class="min-w-0"
+                    field="bpm"
+                    songs={props.standardSongs ?? []}
+                    title={props.copyTitle ?? ''}
+                    artist={props.copyArtist ?? ''}
+                    songsLoading={props.standardSongsLoading}
+                    onCopied={(nextBpm) => {
+                      setBpm(toInputValue(nextBpm))
+                      setValidationMessage('')
+                    }}
+                  >
+                    <BpmTextField value={bpm()} onInput={setBpm} />
+                  </CopyFromStandardField>
+                </Show>
+
+                <TextField class="min-w-0">
+                  <TextField.Label class="mb-1 block text-sm text-text-muted">
+                    {SONG_EDIT_COPY.releaseLabel}
+                  </TextField.Label>
+                  <TextField.Input
+                    type="date"
+                    value={releasedAt()}
+                    class={SONG_EDIT_TEXT_INPUT_CLASS}
+                    onInput={(event) => setReleasedAt(event.currentTarget.value)}
+                  />
+                </TextField>
+
+                <CheckboxField
+                  checked={unlockRequired()}
+                  label={SONG_EDIT_COPY.unlockRequiredLabel}
+                  onChange={setUnlockRequired}
+                  class="min-w-0 self-end py-2"
+                  controlClass="peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring"
+                  inputClass="peer"
+                />
+              </div>
 
               <Show
                 when={props.enableCopyFromStandard}

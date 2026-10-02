@@ -362,9 +362,9 @@ const UserOverPower: Component<Props> = (props) => {
                     >
                       <Show
                         when={nextSummaryViewMode() === 'graph'}
-                        fallback={<Table2 class="h-4 w-4" aria-hidden="true" />}
+                        fallback={<Table2 class="h-5 w-5 shrink-0" aria-hidden="true" />}
                       >
-                        <ChartBarBig class="h-4 w-4" aria-hidden="true" />
+                        <ChartBarBig class="h-5 w-5 shrink-0" aria-hidden="true" />
                       </Show>
                     </AppButton>
 

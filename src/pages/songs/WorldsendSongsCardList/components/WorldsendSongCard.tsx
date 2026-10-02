@@ -5,6 +5,7 @@ import { JacketImage } from '../../../../components/common/JacketImage'
 import { buildWorldsendSongDetailPath } from '../../../../constants/routes'
 import type { VersionSummaryDTO, WorldsendChartDTO, WorldsendSongDTO } from '../../../../types/api'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
+import SongUnlockRequiredIcon from '../../components/SongUnlockRequiredIcon'
 import {
   SONG_CARD_CHART_ROW_HEIGHT_PX,
   SONG_CARD_HEIGHT_PX,
@@ -72,7 +73,7 @@ const WorldsendSongCardChartRow = (props: WorldsendSongCardChartRowProps) => {
  * WORLD'S END 楽曲1曲分のカードを表示し、楽曲詳細へ遷移する。
  *
  * @param props - 表示する楽曲とバージョン一覧。
- * @returns 上段にジャケットとメタ情報、下段に属性・星・ノーツ数を置いたカード。
+ * @returns 上段にジャケットとメタ情報（要解禁楽曲は右上に南京錠）、下段に属性・星・ノーツ数を置いたカード。
  */
 const WorldsendSongCard = (props: WorldsendSongCardProps) => {
   const jacketUrl = () => buildChunithmJacketUrl(props.song.jacket)
@@ -105,9 +106,17 @@ const WorldsendSongCard = (props: WorldsendSongCardProps) => {
           fallback={<img src={placeholderImageUrl} alt="" class="h-full w-full object-cover" />}
         />
         <div class="flex min-w-0 flex-1 flex-col gap-0.5 p-2">
-          <p class="min-w-0 truncate font-sans text-sm font-semibold" title={props.song.title}>
-            {props.song.title}
-          </p>
+          <div class="flex min-w-0 items-start gap-1">
+            <p
+              class="min-w-0 flex-1 truncate font-sans text-sm font-semibold"
+              title={props.song.title}
+            >
+              {props.song.title}
+            </p>
+            <Show when={props.song.unlock_required}>
+              <SongUnlockRequiredIcon class="text-text-muted" />
+            </Show>
+          </div>
           <p class="min-w-0 truncate font-sans text-xs text-text-muted" title={props.song.artist}>
             {props.song.artist}
           </p>

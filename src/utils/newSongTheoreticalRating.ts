@@ -1,4 +1,5 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
+import { RATING_SLOT_COUNT } from '../constants/rating'
 import type {
   ChartDTO,
   PlayerDataDifficulty,
@@ -262,7 +263,9 @@ export const calculateNewSongTheoreticalRating = (
 }
 
 /**
- * ベスト枠と新曲枠の理論値を採用譜面数で重み付けし、総合レーティング理論値を算出する。
+ * ベスト枠と新曲枠の採用譜面から、総合レーティング理論値を算出する。
+ * プレイヤーレーティングと同じく、採用譜面の単曲レーティング合計を規定枠数の合計（50枠）で割り、
+ * 空き枠や未計算の枠は0として扱う。
  *
  * @param best - ベスト枠理論値。
  * @param newSong - 新曲枠理論値。
@@ -275,14 +278,15 @@ export const calculateOverallTheoreticalRating = (
   const frames = [best, newSong].filter((frame) => frame !== undefined)
   if (frames.length === 0) return undefined
 
-  const entryCount = frames.reduce((total, frame) => total + frame.entries.length, 0)
-  const totalUnits = frames.reduce(
-    (total, frame) => total + Math.round(frame.rating * PLAYER_RATING_SCALE) * frame.entries.length,
-    0
-  )
+  const totalRatingHundredths = frames
+    .flatMap((frame) => frame.entries)
+    .reduce((total, entry) => total + Math.round(entry.rating * RATING_SCALE), 0)
+  const totalSlotCount = RATING_SLOT_COUNT.best + RATING_SLOT_COUNT.new
 
   return {
-    rating: Math.round(totalUnits / entryCount) / PLAYER_RATING_SCALE,
+    rating:
+      Math.floor((totalRatingHundredths * PLAYER_RATING_SCALE) / RATING_SCALE / totalSlotCount) /
+      PLAYER_RATING_SCALE,
     hasUnknownChartConstants: frames.some((frame) => frame.hasUnknownChartConstants),
     entries: frames.flatMap((frame) => frame.entries),
     boundaryEntries: frames.flatMap((frame) => frame.boundaryEntries),
