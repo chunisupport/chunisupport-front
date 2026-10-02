@@ -50,6 +50,19 @@
   --cs-color-accent-900: var(--color-orange-900);
 }
 
+[data-accent="sky-blue"] {
+  --cs-color-accent-50: var(--color-sky-50);
+  --cs-color-accent-100: var(--color-sky-100);
+  --cs-color-accent-200: var(--color-sky-200);
+  --cs-color-accent-300: var(--color-sky-300);
+  --cs-color-accent-400: var(--color-sky-400);
+  --cs-color-accent-500: var(--color-sky-500);
+  --cs-color-accent-600: var(--color-sky-600);
+  --cs-color-accent-700: var(--color-sky-700);
+  --cs-color-accent-800: var(--color-sky-800);
+  --cs-color-accent-900: var(--color-sky-900);
+}
+
 [data-accent="blue"] {
   /* ===== アクセント色（プライマリ操作 / 選択状態 / フォーカス / リンク） ===== */
   --cs-color-accent-50: var(--color-blue-50);
@@ -544,6 +557,20 @@
   --cs-color-song-list-title: var(--color-primary-600);
 }
 
+/* 明るい背景では水色のボタン文字とリンクのコントラストを確保する。 */
+:is(
+  :root:not([data-theme]),
+  [data-theme="light"],
+  [data-theme="pastel-orange"]
+)[data-accent="sky-blue"] {
+  --cs-color-focus-ring: var(--color-primary-600);
+  --cs-color-action-primary: var(--color-primary-700);
+  --cs-color-action-primary-hover: var(--color-primary-800);
+  --cs-color-link: var(--color-primary-700);
+  --cs-color-link-hover: var(--color-primary-800);
+  --cs-color-song-list-title: var(--color-primary-700);
+}
+
 :root,
 [data-theme="light"],
 [data-theme="dark"],
@@ -748,6 +775,15 @@
   --cs-color-score-rank-d-text: var(--color-gray-500);
 
   /* ===== ランプ（FULL COMBO / ALL JUSTICE / ALL JUSTICE CRITICAL / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
+  --cs-gradient-record-lamp-badge-gloss: linear-gradient(
+    135deg in oklab,
+    rgb(255 255 255 / 15%) 0%,
+    rgb(255 255 255 / 65%) 28%,
+    rgb(255 255 255 / 10%) 46%,
+    rgb(0 0 0 / 8%) 54%,
+    rgb(255 255 255 / 30%) 76%,
+    rgb(0 0 0 / 12%) 100%
+  );
   --cs-color-lamp-full-combo-bg: var(--color-yellow-300);
   --cs-color-lamp-full-combo-text: var(--color-yellow-900);
   --cs-color-lamp-all-justice-bg: #fdf5a7;
@@ -1029,6 +1065,15 @@
 }
 
 @layer utilities {
+  .record-lamp-badge-gloss:where(
+    .bg-lamp-full-combo-bg,
+    .bg-lamp-all-justice-bg,
+    .bg-lamp-brave-bg,
+    .bg-lamp-absolute-bg,
+    .bg-lamp-catastrophy-bg
+  ) {
+    background-image: var(--cs-gradient-record-lamp-badge-gloss);
+  }
   .text-shadow-badge {
     text-shadow: var(--cs-shadow-course-class-text);
   }

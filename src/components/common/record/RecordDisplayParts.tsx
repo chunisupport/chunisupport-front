@@ -61,11 +61,11 @@ export const RECORD_ROW_HOVER_WITH_TOP_BORDER_CLASS = `${RECORD_ROW_HOVER_CLASS}
 /** レコードカードのホバー背景色クラス */
 export const RECORD_CARD_HOVER_CLASS = `${RECORD_HOVER_TRANSITION_CLASS} group-hover:bg-interactive-row-hover`
 /**
- * レコードカード内で使うコンボランプバッジの共通寸法。
+ * レコードカード内で使うコンボランプバッジの共通寸法と光沢装飾。
  * 表の固定幅バッジより小型化し、行内テキストに埋めても行高を膨らませない。
  */
 export const RECORD_CARD_LAMP_BADGE_CLASS =
-  'inline-flex min-w-7 shrink-0 items-center justify-center rounded-lg px-1.5 py-0.5 align-middle text-xs font-extrabold leading-none'
+  'record-lamp-badge-gloss inline-flex min-w-7 shrink-0 items-center justify-center rounded-lg px-1.5 py-0.5 align-middle text-xs font-extrabold leading-none'
 /** 仮想スクロールで使うレコード1行の高さ */
 export const RECORD_ROW_HEIGHT = 34
 const RECORD_ROW_MIN_HEIGHT_CLASS_BY_HEIGHT = {
@@ -83,9 +83,9 @@ export const RECORD_CELL_BASE_CLASS = `flex ${RECORD_ROW_MIN_HEIGHT_CLASS} items
 export const RECORD_CELL_CENTER_TEXT_CLASS = `${RECORD_CELL_BASE_CLASS} text-center ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`
 /** レコードのランプ列に使うフォントと文字サイズの共通クラス */
 export const RECORD_LAMP_COLUMN_CLASS = 'font-oswald text-sm font-semibold'
-/** レコードのランプバッジに共通する固定幅と文字配置のクラス */
+/** レコードのランプバッジに共通する固定幅・文字配置・光沢装飾のクラス */
 const RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS =
-  'inline-flex w-[34px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
+  'record-lamp-badge-gloss inline-flex w-[34px] items-center justify-center rounded-lg py-1 text-sm font-extrabold'
 const HARD_LAMP_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
 const FULL_CHAIN_BADGE_CLASS = RECORD_LAMP_BADGE_FIXED_WIDTH_CLASS
 const LAMP_NONE_ACCESSIBLE_LABEL = 'なし'
