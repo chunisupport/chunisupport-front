@@ -221,6 +221,11 @@ test('スコアが負の値の場合はエラーをスローすること', () =>
 
 ## 7. Resources & References (ドキュメント)
 
+### 資料の参照方針
+
+- `_report/` は一時的な調査・設計資料の置き場です。内容は古い・未実装・却下済みである可能性があるため、現在仕様の根拠として扱わないでください。
+- 現在の仕様は `docs/`、コード、README を参照してください。正式ドキュメントとソースコメントは、現在の仕様・制約・実装上必要な理由に絞り、将来案は必要に応じて Issue で管理してください。
+
 - **SnapDOMによるDOM画像化ガイド**: [docs/snapdom-image-capture.md](./docs/snapdom-image-capture.md)
 - **Rsbuild Documentation**: https://rsbuild.rs/llms.txt
 - **Rspack Documentation**: https://rspack.rs/llms.txt
