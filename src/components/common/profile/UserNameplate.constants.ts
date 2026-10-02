@@ -1,5 +1,8 @@
-/** プロフィールカードと、その下に置く独立した操作ボタンの幅 */
-export const USER_NAMEPLATE_WIDTH_CLASS = 'mx-auto w-[min(380px,calc(100%-2rem))]'
+/** プロフィールカードと操作ボタンで共通の最大幅。 */
+export const USER_NAMEPLATE_MAX_WIDTH_CLASS = 'max-w-[380px]'
+
+/** 親に左右余白がない場合のプロフィールカードと操作ボタンの幅。 */
+export const USER_NAMEPLATE_WIDTH_CLASS = `mx-auto w-[calc(100%-2rem)] ${USER_NAMEPLATE_MAX_WIDTH_CLASS}`
 
 /** プロフィールカードの指標表示で使用するラベル */
 export const USER_NAMEPLATE_METRIC_LABELS = {
