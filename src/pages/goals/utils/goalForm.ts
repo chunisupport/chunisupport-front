@@ -10,7 +10,7 @@ import type {
 import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
 import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
 
-// ID(code) -> 表示名の辞書。将来は言語キーを増やすだけでi18n対応できる
+/** 目標達成種別のコードに対応する日本語表示名。 */
 export const GOAL_ACHIEVEMENT_TYPE_LABELS = {
   ja: {
     rank_count: 'ランク達成数',

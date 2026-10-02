@@ -20,7 +20,7 @@ IndexedDB の DB 設計全体については [IndexedDB キャッシュ](./index
 | 保存済みフィルター | サーバー API `/internal/me/record-filters` | 名前付きプリセットの作成・呼出・編集・削除 |
 | URL クエリ | ブラウザ URL | 通常レコードの範囲条件のみを共有可能な形で表現する |
 
-保存済みフィルターは localStorage ではなく、認証済みユーザーのサーバーデータとして `/internal/me/record-filters` API に保存します。
+保存済みフィルターは、認証済みユーザーのサーバーデータとして `/internal/me/record-filters` API に保存します。
 API 上は `filter_type` で通常レコードと WORLD'S END を区別し、`filter` に各画面のフィルター状態 JSON を内包します。
 
 URL クエリでは内部 JSON をそのまま入れず、通常レコードの範囲条件だけをフラットなキーへ変換します。ソート条件（`sortcol`, `sortorder`）は URL クエリで扱いますが、IndexedDB には保存しません。
@@ -38,7 +38,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 ## IndexedDB による現在適用中設定の永続化
 
 通常レコード画面と WORLD'S END レコード画面の「現在適用中」のフィルター・列表示設定は、IndexedDB の `viewSettings` store に保存します。
-`src/api/recordFilters.ts` の保存済みフィルター（名前付きプリセット）とは別物です。サーバー側の保存済みフィルター機能は今後も維持します。
+`src/api/recordFilters.ts` が扱うサーバー側の保存済みフィルター（名前付きプリセット）とは独立しています。
 
 ### 保存対象とキー
 
@@ -555,14 +555,3 @@ URL クエリによるフィルター同期は、現行コードでは通常レ�
 ```
 
 `const.max`, `score.max`, `justiceCount.min`, `overPower.max` がデフォルト値のため、それぞれ `constMax`, `scoreMax`, `justiceCountMin`, `overPowerMax` は省略されます。
-
-## 旧仕様
-
-過去には通常レコードの保存済みフィルターを localStorage の `chunisup_saved_filters` に保存していました。
-また、WORLD'S END の保存済みフィルターを localStorage の `chunisup_saved_worldsend_filters` に保存していました。
-現行コードではこれらの localStorage キーを読み込みません。
-
-過去には `FilterState` 直下に `constMin` / `constMax`, `scoreMin` / `scoreMax`, `justiceCountMin` / `justiceCountMax`, `overPowerMin` / `overPowerMax` を持つ保存形式がありました。
-現行仕様ではこの形式を復元しません。
-
-過去に記載されていた `chunisup_tracking_condition` は現行コードでは使用していません。
