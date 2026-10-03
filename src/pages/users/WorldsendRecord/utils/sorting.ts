@@ -4,12 +4,7 @@ import {
   updatedAtTimestamp,
 } from '../../../../utils/recordUpdatedAt'
 import { compareSongsByReading } from '../../../../utils/songTitleSorting'
-import {
-  createInitialSortConditions,
-  nextPrimarySortCondition,
-  normalizeSortConditions,
-  type SortCondition,
-} from '../../../../utils/sortConditions'
+import { normalizeSortConditions, type SortCondition } from '../../../../utils/sortConditions'
 import {
   parseSortQuery,
   type SortDirection,
@@ -86,31 +81,6 @@ export const parseWorldsendSortParams = (searchParams: SortParamsSource) => {
     initialSortOrder: parsed.sortDirection,
   }
 }
-
-/**
- * クエリ文字列から取得した第1ソートと既定の第2〜第4ソートを組み合わせる。
- *
- * @param sortKey - 初期表示で第1ソートにする列キー。
- * @param sortDirection - 初期表示で第1ソートにする方向。
- * @returns 4条件を持つ初期ソート条件。
- */
-export const createInitialWorldsendRecordSortConditions = (
-  sortKey: WorldsendRecordSortKey,
-  sortDirection: SortDirection
-): WorldsendRecordSortCondition[] =>
-  createInitialSortConditions(sortKey, sortDirection, DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS)
-
-/**
- * 列ヘッダークリック時に第1ソートだけを更新する。
- *
- * @param currentSortCondition - 現在の第1ソート条件。
- * @param nextKey - 次に第1ソート対象にする列キー。
- * @returns 空状態を作らない次の第1ソート条件。
- */
-export const nextPrimaryWorldsendRecordSortCondition = (
-  currentSortCondition: WorldsendRecordSortCondition | null,
-  nextKey: WorldsendRecordSortKey
-): WorldsendRecordSortCondition => nextPrimarySortCondition(currentSortCondition, nextKey)
 
 /**
  * 1つのソート条件で WORLD'S END レコードを比較する。

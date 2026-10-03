@@ -2,10 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { WorldsendRecordDTO } from '../../../../types/api'
+import { createInitialSortConditions } from '../../../../utils/sortConditions'
 import {
-  createInitialWorldsendRecordSortConditions,
   DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
-  nextPrimaryWorldsendRecordSortCondition,
   normalizeWorldsendRecordSortConditions,
   sortWorldsendRecords,
   sortWorldsendRecordsByConditions,
@@ -67,7 +66,11 @@ test("WORLD'S ENDの初期ソートは第1ソートだけクエリ指定で置�
   ]
 
   // When
-  const result = createInitialWorldsendRecordSortConditions(sortKey, sortDirection)
+  const result = createInitialSortConditions(
+    sortKey,
+    sortDirection,
+    DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS
+  )
 
   // Then
   assert.deepEqual(result, expectedSortConditions)
@@ -93,31 +96,6 @@ test("WORLD'S ENDの第4ソートは入力値に関わらず曲名昇順固定�
 
   // Then
   assert.deepEqual(result, expectedSortConditions)
-})
-
-test("WORLD'S ENDの列クリックは第1ソートだけを切り替える", () => {
-  // Given
-  const ascendingScoreSort = { key: 'score', direction: 'asc' } as const
-  const descendingScoreSort = { key: 'score', direction: 'desc' } as const
-
-  // When
-  const resultFromAsc = nextPrimaryWorldsendRecordSortCondition(ascendingScoreSort, 'score')
-  const resultFromDesc = nextPrimaryWorldsendRecordSortCondition(descendingScoreSort, 'score')
-  const resultFromEmpty = nextPrimaryWorldsendRecordSortCondition(null, 'title')
-
-  // Then
-  assert.deepEqual(resultFromAsc, {
-    key: 'score',
-    direction: 'desc',
-  })
-  assert.deepEqual(resultFromDesc, {
-    key: 'score',
-    direction: 'asc',
-  })
-  assert.deepEqual(resultFromEmpty, {
-    key: 'title',
-    direction: 'asc',
-  })
 })
 
 test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条件で並べる", () => {

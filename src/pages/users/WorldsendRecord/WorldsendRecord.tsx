@@ -1,6 +1,5 @@
 import { useSearchParams } from '@solidjs/router'
 import {
-  createEffect,
   createMemo,
   createResource,
   createSignal,
@@ -12,15 +11,14 @@ import {
 
 import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
-import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
+import { createRecordViewState } from '../../../hooks/createRecordViewState'
 import {
   readWorldsendRecordColumnsSetting,
   saveWorldsendRecordColumnsSetting,
   saveWorldsendRecordFilterSetting,
 } from '../../../repositories/viewSettingsRepository'
 import { useSongsData } from '../../../stores/songsData'
-import type { WorldsendRecordDTO } from '../../../types/api'
-import { sanitizeSortQuery } from '../../../utils/sortingQuery'
+import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
 import FilterStats from '../components/FilterStats'
 import FilterToolbar from '../components/FilterToolbar'
 import { getRecordStats } from '../utils/recordStats'
@@ -42,14 +40,7 @@ import {
 } from './utils/filtering'
 import { restoreInitialWorldsendRecordFilter } from './utils/initialFilter'
 import { attachWorldsendSongMetaToRecords } from './utils/songMeta'
-import {
-  createInitialWorldsendRecordSortConditions,
-  DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
-  nextPrimaryWorldsendRecordSortCondition,
-  normalizeWorldsendRecordSortConditions,
-  parseWorldsendSortParams,
-  type WorldsendRecordSortCondition,
-} from './utils/sorting'
+import { DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS, parseWorldsendSortParams } from './utils/sorting'
 import WorldsendColumnSettingsDialog from './WorldsendColumnSettingsDialog'
 
 type Props = {
@@ -59,10 +50,18 @@ type Props = {
   onReadyChange: (ready: boolean) => void
 }
 
-const useRecordSortState = createHistoryViewState<WorldsendRecordSortCondition[]>()
-const useRecordStatsState = createHistoryViewState<boolean>()
+/** WORLD'S END フィルターの復元に必要なデータ */
+type WorldsendFilterRestoreSource = {
+  songs: WorldsendSongDTO[]
+  versions: VersionSummaryDTO[]
+}
 
-type WorldsendSortKey = WorldsendRecordSortKey
+const useWorldsendRecordViewState = createRecordViewState<
+  WorldsendFilterState,
+  WorldsendRecordColumnId,
+  WorldsendRecordSortKey,
+  WorldsendFilterRestoreSource
+>()
 
 /**
  * WORLD'S END レコード一覧とフィルター操作 UI を表示する。
@@ -77,120 +76,56 @@ const WorldsendRecord = (props: Props) => {
     isWorldsendSongsLoading,
   } = useSongsData()
   const [versionData] = createResource(fetchVersions)
-  const [filters, setFilters] = createSignal<WorldsendFilterState>({
-    ...DEFAULT_WORLDSEND_FILTER,
-  })
-  const [filterReady, setFilterReady] = createSignal(false)
-  const [columnsReady, setColumnsReady] = createSignal(false)
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
-  const [filterStatsOpen, setFilterStatsOpen] = useRecordStatsState(
-    () => props.username,
-    () => false
-  )
-  const [visibleColumnIds, setVisibleColumnIds] = createSignal<WorldsendRecordColumnId[]>(
-    sanitizeVisibleWorldsendColumnIds(getDefaultVisibleWorldsendColumnIds())
-  )
-
-  // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const { initialSortKey, initialSortOrder } = parseWorldsendSortParams(searchParams)
-  const [sortConditions, setSortConditions] = useRecordSortState(
-    () => props.username,
-    () => createInitialWorldsendRecordSortConditions(initialSortKey, initialSortOrder)
-  )
-
-  // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
-  onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
-  onMount(() => {
-    ensureWorldsendSongsLoaded()
-  })
 
   const defaultFilter = createMemo(() =>
     buildDefaultWorldsendFilter(worldsendSongs()?.songs ?? [], versionData()?.versions ?? [])
   )
+
+  const {
+    filters,
+    applyFilters,
+    visibleColumnIds,
+    applyVisibleColumns,
+    sortConditions,
+    setSortConditions,
+    handleSortChange,
+    resetFiltersAndSort,
+    filterStatsOpen,
+    setFilterStatsOpen,
+    ready,
+  } = useWorldsendRecordViewState({
+    key: () => props.username,
+    initialFilter: { ...DEFAULT_WORLDSEND_FILTER },
+    filterRestoreSource: () => {
+      const songs = worldsendSongs()
+      const versions = versionData()
+      return songs && versions ? { songs: songs.songs, versions: versions.versions } : undefined
+    },
+    restoreFilter: ({ songs, versions }) => restoreInitialWorldsendRecordFilter(songs, versions),
+    defaultFilter,
+    saveFilter: saveWorldsendRecordFilterSetting,
+    defaultColumnIds: getDefaultVisibleWorldsendColumnIds(),
+    sanitizeColumnIds: sanitizeVisibleWorldsendColumnIds,
+    readColumns: readWorldsendRecordColumnsSetting,
+    saveColumns: saveWorldsendRecordColumnsSetting,
+    defaultSortConditions: DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
+    parseSortParams: parseWorldsendSortParams,
+    searchParams,
+    setSearchParams,
+  })
+
+  onMount(() => {
+    ensureWorldsendSongsLoaded()
+  })
+
   const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
   const hasFilterOptionChanges = createMemo(() =>
     isWorldsendFilterOptionsChanged(filters(), defaultFilter())
   )
-
-  let filterRestored = false
-
-  createEffect(() => {
-    const songs = worldsendSongs()
-    const versions = versionData()
-    if (filterRestored || !songs || !versions) return
-    filterRestored = true
-    void restoreInitialWorldsendRecordFilter(songs.songs, versions.versions)
-      .then(setFilters)
-      .finally(() => setFilterReady(true))
-  })
-
-  onMount(() => {
-    void readWorldsendRecordColumnsSetting()
-      .then((savedColumnIds) => {
-        if (Array.isArray(savedColumnIds)) {
-          setVisibleColumnIds(
-            sanitizeVisibleWorldsendColumnIds(savedColumnIds as WorldsendRecordColumnId[])
-          )
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => setColumnsReady(true))
-  })
-
-  /**
-   * WORLD'S END レコードの現在フィルターを画面へ反映し、IndexedDB へ保存する。
-   *
-   * @param nextFilters - 次に適用するフィルター状態。
-   * @returns なし。
-   */
-  const applyFilters = (nextFilters: WorldsendFilterState) => {
-    setFilters(nextFilters)
-    void saveWorldsendRecordFilterSetting(nextFilters).catch(() => undefined)
-  }
-
-  /**
-   * WORLD'S END レコードのフィルターとソート条件を既定値へ戻し、保存済み設定へ反映する。
-   *
-   * @returns なし。
-   */
-  const resetFiltersAndSort = () => {
-    applyFilters(defaultFilter())
-    setSortConditions(
-      DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS.map((condition) => ({ ...condition }))
-    )
-  }
-
-  /**
-   * WORLD'S END レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
-   *
-   * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
-   * @returns なし。
-   */
-  const applyVisibleColumns = (nextVisibleColumnIds: WorldsendRecordColumnId[]) => {
-    const sanitizedColumnIds = sanitizeVisibleWorldsendColumnIds(nextVisibleColumnIds)
-    setVisibleColumnIds(sanitizedColumnIds)
-    void saveWorldsendRecordColumnsSetting(sanitizedColumnIds).catch(() => undefined)
-  }
-
-  /**
-   * 指定された列で WORLD'S END レコードの第1ソート状態を進める。
-   *
-   * @param nextKey - 次に第1ソート対象にする列ID。
-   * @returns なし。
-   */
-  const handleSortChange = (nextKey: WorldsendSortKey): void => {
-    const nextPrimarySort = nextPrimaryWorldsendRecordSortCondition(
-      sortConditions()[0] ?? null,
-      nextKey
-    )
-
-    setSortConditions((currentSortConditions) =>
-      normalizeWorldsendRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1)])
-    )
-  }
 
   const recordsWithSongMeta = createMemo(() => {
     const songs = worldsendSongs()
@@ -217,7 +152,7 @@ const WorldsendRecord = (props: Props) => {
           fallback={<LoadError error={worldsendSongs.error ?? versionData.error} />}
         >
           <Show
-            when={!isWorldsendSongsLoading() && versionData() && filterReady() && columnsReady()}
+            when={!isWorldsendSongsLoading() && versionData() && ready()}
             fallback={<Loading />}
           >
             <div class="mx-2 text-sm">

@@ -18,7 +18,7 @@ import {
   fetchUserLockedSongs,
 } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
-import { createHistoryViewState } from '../../../hooks/createHistoryViewState'
+import { createRecordViewState } from '../../../hooks/createRecordViewState'
 import {
   readStandardRecordColumnsSetting,
   readStandardRecordFilterSetting,
@@ -32,14 +32,13 @@ import {
   pendingStandardRecordFilter,
 } from '../../../stores/standardRecordNavigation'
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
-import type { FilterState, RecordColumnId, RecordSortCondition } from '../../../types/recordFilter'
+import type { FilterState, RecordColumnId, RecordSortKey } from '../../../types/recordFilter'
 import { createLockedSongKey } from '../../../usecases/overpower/lockedSongsBatch'
 import {
   buildDefaultFilter,
   DEFAULT_FILTER,
   normalizeFilterState,
 } from '../../../utils/recordFilterDefaults'
-import { sanitizeSortQuery } from '../../../utils/sortingQuery'
 import FilterStats from '../components/FilterStats'
 import FilterToolbar from '../components/FilterToolbar'
 import RecordDataTable from '../components/RecordDataTable'
@@ -59,11 +58,7 @@ import {
   isRecordFilterOptionsChanged,
 } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
-import {
-  createInitialRecordSortConditions,
-  DEFAULT_RECORD_SORT_CONDITIONS,
-  parseSortParams,
-} from './utils/sorting'
+import { DEFAULT_RECORD_SORT_CONDITIONS, parseSortParams } from './utils/sorting'
 
 type Props = {
   username: string
@@ -72,8 +67,18 @@ type Props = {
   onReadyChange: (ready: boolean) => void
 }
 
-const useRecordSortState = createHistoryViewState<RecordSortCondition[]>()
-const useRecordStatsState = createHistoryViewState<boolean>()
+/** 通常レコードフィルターの復元に必要なデータ */
+type StandardFilterRestoreSource = {
+  masterData: MasterDataDTO
+  versions: VersionSummaryDTO[]
+}
+
+const useStandardRecordViewState = createRecordViewState<
+  FilterState,
+  RecordColumnId,
+  RecordSortKey,
+  StandardFilterRestoreSource
+>()
 
 /**
  * 通常レコードの初期フィルターを保存済み設定、または既定値から決定する。
@@ -109,20 +114,8 @@ const UserRecord: Component<Props> = (props) => {
   const [masterData] = createResource(fetchMasterData)
   const [versionData] = createResource(fetchVersions)
 
-  // フィルターの状態
-  const [filters, setFilters] = createSignal<FilterState>({
-    // createEffect内で初期化されるので、ここでは仮の値をセット
-    ...DEFAULT_FILTER,
-  })
-  const [filterReady, setFilterReady] = createSignal(false)
-  const [columnsReady, setColumnsReady] = createSignal(false)
-
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
-  const [filterStatsOpen, setFilterStatsOpen] = useRecordStatsState(
-    () => props.username,
-    () => false
-  )
   const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
   const [favoriteSongsOpen, setFavoriteSongsOpen] = createSignal(false)
@@ -158,18 +151,51 @@ const UserRecord: Component<Props> = (props) => {
     }
   )
 
-  // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
 
-  const [sortConditions, setSortConditions] = useRecordSortState(
-    () => props.username,
-    () => createInitialRecordSortConditions(initialSortKey, initialSortOrder)
-  )
-  const primarySort = () => sortConditions()[0] ?? null
-  const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
-    sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
-  )
+  const defaultFilter = createMemo(() => {
+    const md = masterData()
+    const vs = versionData()?.versions
+    return md && vs ? buildDefaultFilter(md, vs) : DEFAULT_FILTER
+  })
+
+  const {
+    filters,
+    setFilters,
+    applyFilters,
+    overrideFilter,
+    visibleColumnIds,
+    applyVisibleColumns,
+    sortConditions,
+    setSortConditions,
+    primarySort,
+    handleSortChange,
+    resetFiltersAndSort,
+    filterStatsOpen,
+    setFilterStatsOpen,
+    ready,
+  } = useStandardRecordViewState({
+    key: () => props.username,
+    initialFilter: { ...DEFAULT_FILTER },
+    filterRestoreSource: () => {
+      const md = masterData()
+      const versions = versionData()
+      return md && versions ? { masterData: md, versions: versions.versions } : undefined
+    },
+    restoreFilter: ({ masterData: md, versions }) =>
+      restoreInitialStandardRecordFilter(md, versions),
+    defaultFilter,
+    saveFilter: saveStandardRecordFilterSetting,
+    defaultColumnIds: getDefaultVisibleColumnIds(),
+    sanitizeColumnIds: sanitizeVisibleColumnIds,
+    readColumns: readStandardRecordColumnsSetting,
+    saveColumns: saveStandardRecordColumnsSetting,
+    defaultSortConditions: DEFAULT_RECORD_SORT_CONDITIONS,
+    parseSortParams,
+    searchParams,
+    setSearchParams,
+  })
+
   const visibleColumns = createMemo(() => getVisibleColumns(visibleColumnIds()))
   const favoriteSongIds = createMemo<ReadonlySet<string>>(
     () => new Set(favoriteSongs()?.items.map((item) => item.id) ?? [])
@@ -181,11 +207,6 @@ const UserRecord: Component<Props> = (props) => {
       )
   )
 
-  const defaultFilter = createMemo(() => {
-    const md = masterData()
-    const vs = versionData()?.versions
-    return md && vs ? buildDefaultFilter(md, vs) : DEFAULT_FILTER
-  })
   const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
   const hasFilterOptionChanges = createMemo(() =>
     isRecordFilterOptionsChanged(filters(), defaultFilter())
@@ -194,35 +215,8 @@ const UserRecord: Component<Props> = (props) => {
     isRecordDifficultyFilterOnlyChanged(filters(), defaultFilter()) ? 'difficulty-only' : undefined
   )
 
-  // クエリパラメータのソートを反映してからURLをクリーン化する。
-  createEffect(() => {
-    const sortColumn = searchParams.sortcol
-    const sortOrder = searchParams.sortorder
-    if (!sortColumn && !sortOrder) return
-
-    const { initialSortKey: nextSortKey, initialSortOrder: nextSortOrder } =
-      parseSortParams(searchParams)
-    setSortConditions(createInitialRecordSortConditions(nextSortKey, nextSortOrder))
-    sanitizeSortQuery(searchParams, setSearchParams)
-  })
   onMount(() => {
     ensureSongsLoaded()
-  })
-
-  let filterRestored = false
-  let transferredFilterApplied = false
-
-  // マスタデータ取得後に保存済みフィルター、またはデフォルトフィルターを反映する。
-  createEffect(() => {
-    const md = masterData()
-    const versions = versionData()
-    if (filterRestored || !md || !versions) return
-    filterRestored = true
-    void restoreInitialStandardRecordFilter(md, versions.versions)
-      .then((restoredFilter) => {
-        if (!transferredFilterApplied) setFilters(restoredFilter)
-      })
-      .finally(() => setFilterReady(true))
   })
 
   // forceMount済みの通常レコードへOVER POWER画面から渡されたフィルターを反映する。
@@ -230,9 +224,7 @@ const UserRecord: Component<Props> = (props) => {
     const pendingFilter = pendingStandardRecordFilter()
     if (!pendingFilter || pendingFilter.username !== props.username) return
 
-    transferredFilterApplied = true
-    setFilters(normalizeFilterState(pendingFilter.filter))
-    setFilterReady(true)
+    overrideFilter(normalizeFilterState(pendingFilter.filter))
     consumeStandardRecordFilter(pendingFilter)
   })
 
@@ -246,61 +238,15 @@ const UserRecord: Component<Props> = (props) => {
     setFilters((current) => ({ ...current, excludeLockedSongs: false }))
   })
 
-  onMount(() => {
-    void readStandardRecordColumnsSetting()
-      .then((savedColumnIds) => {
-        if (Array.isArray(savedColumnIds)) {
-          setVisibleColumnIds(sanitizeVisibleColumnIds(savedColumnIds as RecordColumnId[]))
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => setColumnsReady(true))
+  const { sortedRecords, totalCount, filteredCount, stats } = useUserRecordPageModel({
+    songs: allSongs,
+    versions: versionData,
+    sourceRecords: () => props.record.standard,
+    filters,
+    favoriteSongIds,
+    lockedSongKeys,
+    sortConditions,
   })
-
-  /**
-   * 通常レコードの現在フィルターを画面へ反映し、保存可能な場合は IndexedDB へ保存する。
-   *
-   * @param nextFilters - 次に適用するフィルター状態。
-   * @returns なし。
-   */
-  const applyFilters = (nextFilters: FilterState) => {
-    setFilters(nextFilters)
-    void saveStandardRecordFilterSetting(nextFilters).catch(() => undefined)
-  }
-
-  /**
-   * 通常レコードのフィルターとソート条件を既定値へ戻し、保存済み設定へ反映する。
-   *
-   * @returns なし。
-   */
-  const resetFiltersAndSort = () => {
-    applyFilters(defaultFilter())
-    setSortConditions(DEFAULT_RECORD_SORT_CONDITIONS.map((condition) => ({ ...condition })))
-  }
-
-  /**
-   * 通常レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
-   *
-   * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
-   * @returns なし。
-   */
-  const applyVisibleColumns = (nextVisibleColumnIds: RecordColumnId[]) => {
-    const sanitizedColumnIds = sanitizeVisibleColumnIds(nextVisibleColumnIds)
-    setVisibleColumnIds(sanitizedColumnIds)
-    void saveStandardRecordColumnsSetting(sanitizedColumnIds).catch(() => undefined)
-  }
-
-  const { sortedRecords, totalCount, filteredCount, stats, handleSortChange } =
-    useUserRecordPageModel({
-      songs: allSongs,
-      versions: versionData,
-      sourceRecords: () => props.record.standard,
-      filters,
-      favoriteSongIds,
-      lockedSongKeys,
-      sortConditions,
-      setSortConditions,
-    })
 
   /**
    * お気に入り楽曲の差分を解除、追加の順に保存する。
@@ -339,8 +285,7 @@ const UserRecord: Component<Props> = (props) => {
               !isSongsLoading() &&
               masterData() &&
               versionData() &&
-              filterReady() &&
-              columnsReady() &&
+              ready() &&
               (!filters().favoriteSongsOnly || (!favoriteSongs.loading && favoriteSongs())) &&
               (!filters().excludeLockedSongs || (!lockedSongs.loading && lockedSongs()))
             }
