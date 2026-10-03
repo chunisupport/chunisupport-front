@@ -3,10 +3,9 @@ import test from 'node:test'
 
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { createInitialSortConditions } from '../../../../utils/sortConditions.ts'
 import {
-  createInitialRecordSortConditions,
   DEFAULT_RECORD_SORT_CONDITIONS,
-  nextPrimaryRecordSortCondition,
   normalizeRecordSortConditions,
   parseSortParams,
   sortRecords,
@@ -91,7 +90,7 @@ test('初期ソートは第1ソートだけクエリ指定で置き換える', (
   ]
 
   // When
-  const result = createInitialRecordSortConditions(sortKey, sortDirection)
+  const result = createInitialSortConditions(sortKey, sortDirection, DEFAULT_RECORD_SORT_CONDITIONS)
 
   // Then
   assert.deepEqual(result, expectedSortConditions)
@@ -202,31 +201,6 @@ test('複数ソートは不足条件を補って曲名昇順まで評価する',
 
   // Then
   assert.deepEqual(result, ['alpha', 'beta'])
-})
-
-test('列クリックの第1ソートはascからdesc、最後にascへ戻る', () => {
-  // Given
-  const ascendingScoreSort = { key: 'score', direction: 'asc' } as const
-  const descendingScoreSort = { key: 'score', direction: 'desc' } as const
-
-  // When
-  const resultFromAsc = nextPrimaryRecordSortCondition(ascendingScoreSort, 'score')
-  const resultFromDesc = nextPrimaryRecordSortCondition(descendingScoreSort, 'score')
-  const resultFromEmpty = nextPrimaryRecordSortCondition(null, 'title')
-
-  // Then
-  assert.deepEqual(resultFromAsc, {
-    key: 'score',
-    direction: 'desc',
-  })
-  assert.deepEqual(resultFromDesc, {
-    key: 'score',
-    direction: 'asc',
-  })
-  assert.deepEqual(resultFromEmpty, {
-    key: 'title',
-    direction: 'asc',
-  })
 })
 
 test('スコアソートは昇順でも未プレイを末尾に寄せる', () => {
