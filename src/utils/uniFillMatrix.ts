@@ -15,6 +15,7 @@ import {
   getChartLevelSortKey,
   toChartLevelLabel,
 } from './chartLevel'
+import { formatFileTimestamp } from './fileTimestamp'
 import { COMBO_LAMP_UNACHIEVED_FILTERS, HARD_LAMP_UNACHIEVED_FILTERS } from './goalLamp'
 import {
   hasPlayerStatsAchievement,
@@ -298,3 +299,32 @@ export const countUniFillMatrixChecks = (matrix: UniFillMatrix): UniFillMatrixCe
   }
   return checks
 }
+
+/** マトリクス画像のファイル名の接頭辞 */
+const UNI_FILL_MATRIX_IMAGE_FILENAME_PREFIX = 'chunisupport-uni-fill-matrix'
+
+/**
+ * 表示条件と日時を含むマトリクス画像のファイル名を生成する。
+ *
+ * @param condition - 画像化した難易度・埋め条件・縦軸。
+ * @param date - ファイル名へ付与する日時。省略時は現在時刻。
+ * @returns `chunisupport-uni-fill-matrix-{難易度}-{埋め条件}-{縦軸}-{YYYYMMDDhhmmss}.png` 形式の小文字のファイル名。
+ */
+export const formatUniFillMatrixImageFilename = (
+  condition: {
+    difficulty: UniFillMatrixDifficulty
+    achievement: PlayerStatsAchievement
+    axis: PlayerStatsHeatmapAxis
+  },
+  date: Date = new Date()
+): string =>
+  [
+    UNI_FILL_MATRIX_IMAGE_FILENAME_PREFIX,
+    condition.difficulty.replaceAll('_', '-'),
+    condition.achievement,
+    condition.axis,
+    formatFileTimestamp(date),
+  ]
+    .join('-')
+    .toLowerCase()
+    .concat('.png')

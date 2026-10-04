@@ -20,8 +20,15 @@ export const UNI_FILL_MATRIX_COPY = {
   cellActionLabel: '未達成の譜面をレコードで表示',
   recordNavigationError: 'レコード画面へ移動できませんでした。',
   imageSaveLabel: '画像化',
-  imageSaveError: '画像を保存できませんでした。',
+  imageSaveError: '画像を生成できませんでした。',
+  imageShareError: '画像を共有できませんでした。',
   imageCapturingLabel: '画像を生成中',
+  imagePreviewTitle: 'ウニ埋めマトリクス画像',
+  imagePreviewAlt: 'ウニ埋めマトリクス画像のプレビュー',
+  closeImagePreview: '閉じる',
+  retryImagePreview: '再試行',
+  downloadImage: '保存',
+  shareImage: '共有',
   imageChecksLabel: '達成マス数',
 } as const
 
@@ -96,6 +103,3 @@ export const UNI_FILL_MATRIX_IMAGE_PADDING = 24
 
 /** 長い譜面定数表でCanvasのメモリ使用量を抑える出力ピクセル比。 */
 export const UNI_FILL_MATRIX_IMAGE_PIXEL_RATIO = 1
-
-/** マトリクス画像のPNGファイル名。 */
-export const UNI_FILL_MATRIX_IMAGE_FILENAME = 'uni-fill-matrix.png'

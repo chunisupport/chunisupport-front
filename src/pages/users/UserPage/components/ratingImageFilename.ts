@@ -1,23 +1,7 @@
+import { formatFileTimestamp } from '../../../../utils/fileTimestamp'
 import type { RatingImageVersion } from '../UserProfileView.constants'
 
 const RATING_IMAGE_FILENAME_PREFIX = 'chunisupport-best-new'
-
-/**
- * 日付を画像ダウンロード名用のローカル時刻文字列へ変換する。
- *
- * @param date - 変換対象の日時。
- * @returns `YYYYMMDDhhmmss` 形式の日時文字列。
- */
-const formatRatingImageTimestamp = (date: Date): string => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  const seconds = String(date.getSeconds()).padStart(2, '0')
-
-  return `${year}${month}${day}${hours}${minutes}${seconds}`
-}
 
 /**
  * ベスト枠・新曲枠画像のダウンロードファイル名を生成する。
@@ -34,5 +18,5 @@ export const formatRatingImageFilename = (
 ): string => {
   const versionSegment = version === 'v1' ? '' : `-${version}`
 
-  return `${RATING_IMAGE_FILENAME_PREFIX}${versionSegment}-${username}-${formatRatingImageTimestamp(date)}.jpg`
+  return `${RATING_IMAGE_FILENAME_PREFIX}${versionSegment}-${username}-${formatFileTimestamp(date)}.jpg`
 }
