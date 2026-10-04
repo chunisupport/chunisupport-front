@@ -1,30 +1,17 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { Dialog } from '@kobalte/core/dialog'
-import { ImageDown, RotateCcw, Share2, X } from 'lucide-solid'
+import { ImageDown, Share2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  on,
-  onCleanup,
-  Show,
-  untrack,
-} from 'solid-js'
+import { createEffect, createMemo, createResource, createSignal, on, Show } from 'solid-js'
 import { fetchPossessions } from '../../../../api/possessions'
 import { Loading } from '../../../../components'
-import {
-  AppButton,
-  getAppButtonClass,
-  getAppIconButtonClass,
-} from '../../../../components/common/AppButton'
+import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../components/common/AppDisclosureTrigger'
 import { AppSelect } from '../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { ImagePreviewDialog } from '../../../../components/common/ImagePreviewDialog'
 import { DEFAULT_POSSESSION_NAME } from '../../../../constants/possession'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
-import { SOCIAL_SHARE_TEXT } from '../../../../constants/socialShare'
+import { createImagePreview } from '../../../../hooks/createImagePreview'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import { canShareFiles, captureElementAsImage } from '../../../../utils/domImageCapture'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
@@ -69,12 +56,6 @@ type Props = {
  * @returns 画像化プレビューを開くボタンとダイアログ。
  */
 export const RatingImagePreviewDialog: Component<Props> = (props) => {
-  const [open, setOpen] = createSignal(false)
-  const [isSharing, setIsSharing] = createSignal(false)
-  const [isCapturingPreview, setIsCapturingPreview] = createSignal(false)
-  const [previewBlob, setPreviewBlob] = createSignal<Blob>()
-  const [previewUrl, setPreviewUrl] = createSignal<string>()
-  const [imageActionError, setImageActionError] = createSignal<string>()
   const [imageSheet, setImageSheet] = createSignal<HTMLDivElement>()
   const [selectedVersionOption, setSelectedVersionOption] = createSignal(
     RATING_IMAGE_DEFAULT_VERSION_OPTION
@@ -84,12 +65,61 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   const [hidePlayerLevel, setHidePlayerLevel] = createSignal(false)
   const [hideClassEmblem, setHideClassEmblem] = createSignal(false)
   const [v2OptionsOpen, setV2OptionsOpen] = createSignal(readRatingImageV2OptionsOpen())
-  let captureRevision = 0
 
   const [readyJacketCount, setReadyJacketCount] = createSignal(0)
   const readyJacketKeys = new Set<string>()
+
+  /**
+   * ジャケット画像の準備状態を初期化する。
+   *
+   * @returns なし。
+   */
+  const resetJacketReadiness = (): void => {
+    readyJacketKeys.clear()
+    setReadyJacketCount(0)
+  }
+
+  /**
+   * 画像をファイル名付きのJPEGファイルとして返す。ファイル名には呼び出し時点の日時を使う。
+   *
+   * @param blob - JPEG画像。
+   * @returns ファイル名を設定したJPEGファイル。
+   */
+  const createRatingImageFile = (blob: Blob): File =>
+    new File(
+      [blob],
+      formatRatingImageFilename(props.username, new Date(), selectedVersionOption().value),
+      { type: 'image/jpeg' }
+    )
+
+  const preview = createImagePreview({
+    capture: () => {
+      const sheet = imageSheet()
+      if (!sheet) return Promise.reject(new Error('Rating image sheet is not ready'))
+
+      return captureElementAsImage(sheet, {
+        format: 'jpeg',
+        pixelRatio: RATING_IMAGE_PIXEL_RATIO,
+        quality: RATING_IMAGE_JPEG_QUALITY,
+      })
+    },
+    // 共有時は共有時点の日時でファイル名を付け直すため、ここでのファイル名はプレビュー用。
+    toFiles: (blob) => [createRatingImageFile(blob)],
+    canCapture: () => imageSheet() !== undefined && isPreviewReady(),
+    onOpenChange: (nextOpen) => {
+      if (nextOpen) {
+        resetJacketReadiness()
+      } else {
+        setImageSheet(undefined)
+      }
+    },
+    captureErrorMessage: RATING_IMAGE_COPY.previewError,
+    shareErrorMessage: RATING_IMAGE_COPY.shareError,
+    shareTitle: RATING_IMAGE_COPY.dialogTitle,
+  })
+
   const [possessions] = createResource(
-    () => (open() && selectedVersionOption().value === 'v2' ? true : undefined),
+    () => (preview.open() && selectedVersionOption().value === 'v2' ? true : undefined),
     fetchPossessions
   )
   /** レーティング枠画像 Ver. 2 のヘッダーへ渡すポゼッション名 */
@@ -136,32 +166,12 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     readyJacketCount() >= expectedJacketCount() && isPossessionReady()
 
   /**
-   * 共有またはプレビュー生成を実行中か返す。
-   *
-   * @returns 画像に関する処理を実行中の場合はtrue。
-   */
-  const isImageActionRunning = (): boolean => isSharing() || isCapturingPreview()
-
-  /**
    * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。
    *
    * @returns Web Share APIでJPEGファイルを共有できる場合はtrue。
    */
   const canShareRatingImage = (): boolean =>
     canShareFiles([new File([], 'share-test.jpg', { type: 'image/jpeg' })])
-
-  /**
-   * プレビュー用のObject URLを破棄する。
-   *
-   * @returns なし。
-   */
-  const revokePreviewUrl = (): void => {
-    const objectUrl = previewUrl()
-    if (objectUrl) URL.revokeObjectURL(objectUrl)
-
-    setPreviewUrl(undefined)
-    setPreviewBlob(undefined)
-  }
 
   /**
    * ジャケット画像ごとの準備状態を集約する。
@@ -182,18 +192,14 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   /**
    * プレビュー画像を破棄し、準備完了後に再生成できるようにする。
    *
+   * ジャケット準備状態を先に初期化し、破棄直後に古い準備状態で再生成されないようにする。
+   *
    * @param resetJackets - ジャケット準備状態も初期化する場合は true。
    * @returns なし。
    */
   const invalidatePreview = (resetJackets: boolean): void => {
-    captureRevision += 1
-    if (resetJackets) {
-      readyJacketKeys.clear()
-      setReadyJacketCount(0)
-    }
-    setIsCapturingPreview(false)
-    revokePreviewUrl()
-    setImageActionError(undefined)
+    if (resetJackets) resetJacketReadiness()
+    preview.reset()
   }
 
   /**
@@ -265,145 +271,23 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
-   * ダイアログの開閉状態を更新し、閉じるときは一時画像とエラーを破棄する。
-   *
-   * @param nextOpen - 次のダイアログ開閉状態。
-   * @returns なし。
-   */
-  const handleOpenChange = (nextOpen: boolean): void => {
-    if (!nextOpen && isSharing()) return
-
-    if (nextOpen) {
-      invalidatePreview(true)
-    } else {
-      captureRevision += 1
-      setIsCapturingPreview(false)
-      revokePreviewUrl()
-      setImageSheet(undefined)
-      setImageActionError(undefined)
-    }
-    setOpen(nextOpen)
-  }
-
-  /**
-   * 画面外の画像化対象をJPEGへ変換し、プレビュー表示と共有操作で同一の画像にする。
-   *
-   * @returns プレビュー生成処理の完了時に解決されるPromise。
-   */
-  const capturePreviewImage = async (): Promise<void> => {
-    const sheet = imageSheet()
-    if (!sheet || !open() || !isPreviewReady()) return
-
-    const revision = ++captureRevision
-    setIsCapturingPreview(true)
-    setImageActionError(undefined)
-
-    try {
-      const blob = await captureElementAsImage(sheet, {
-        format: 'jpeg',
-        pixelRatio: RATING_IMAGE_PIXEL_RATIO,
-        quality: RATING_IMAGE_JPEG_QUALITY,
-      })
-      if (revision !== captureRevision || !open()) return
-
-      const oldUrl = previewUrl()
-      if (oldUrl) URL.revokeObjectURL(oldUrl)
-
-      const objectUrl = URL.createObjectURL(blob)
-      if (revision !== captureRevision || !open()) {
-        URL.revokeObjectURL(objectUrl)
-        return
-      }
-      setPreviewBlob(blob)
-      setPreviewUrl(objectUrl)
-    } catch {
-      if (revision !== captureRevision) return
-
-      setImageActionError(RATING_IMAGE_COPY.previewError)
-    } finally {
-      if (revision === captureRevision) setIsCapturingPreview(false)
-    }
-  }
-
-  /**
-   * プレビュー生成に失敗した画像化を再試行する。
+   * プレビュー表示中の画像を、共有時点の日時をファイル名に付けてWeb Share APIで共有する。
    *
    * @returns なし。
    */
-  const retryPreviewCapture = (): void => {
-    if (open() && !isCapturingPreview() && !previewUrl()) {
-      void capturePreviewImage()
-    }
+  const shareRatingImage = (): void => {
+    const image = preview.previews()[0]
+    if (preview.isBusy() || !image) return
+
+    void preview.share([createRatingImageFile(image.file)])
   }
-
-  /**
-   * プレビュー表示中の画像をファイル名付きのJPEGファイルとして返す。
-   *
-   * @returns ファイル名を設定したJPEGファイル。
-   */
-  const createRatingImageFile = (): File => {
-    const blob = previewBlob()
-    if (!blob) throw new Error('Rating preview image is not ready')
-
-    return new File(
-      [blob],
-      formatRatingImageFilename(props.username, new Date(), selectedVersionOption().value),
-      { type: 'image/jpeg' }
-    )
-  }
-
-  /**
-   * プレビュー表示中の画像をWeb Share APIで共有する。
-   *
-   * プレビュー時点で画像が確定しているため、クリック操作内でファイルを組み立てる。
-   *
-   * @returns 共有処理の完了時に解決されるPromise。
-   */
-  const shareRatingImage = async (): Promise<void> => {
-    if (isImageActionRunning() || !previewUrl()) return
-
-    let imageFile: File
-    try {
-      imageFile = createRatingImageFile()
-    } catch {
-      setImageActionError(RATING_IMAGE_COPY.shareError)
-      return
-    }
-    if (!canShareFiles([imageFile])) {
-      setImageActionError(RATING_IMAGE_COPY.shareError)
-      return
-    }
-
-    setIsSharing(true)
-    setImageActionError(undefined)
-
-    try {
-      await navigator.share({
-        files: [imageFile],
-        text: SOCIAL_SHARE_TEXT,
-        title: RATING_IMAGE_COPY.dialogTitle,
-      })
-    } catch (error) {
-      if (!(error instanceof DOMException && error.name === 'AbortError')) {
-        setImageActionError(RATING_IMAGE_COPY.shareError)
-      }
-    } finally {
-      setIsSharing(false)
-    }
-  }
-
-  onCleanup(() => {
-    captureRevision += 1
-    const objectUrl = previewUrl()
-    if (objectUrl) URL.revokeObjectURL(objectUrl)
-  })
 
   // 画像内容の変更時はプレビューを破棄し、ジャケット準備完了後に再生成する。
   createEffect(
     on(
       () => [props.rating, props.playerInfo, props.honors, props.showJackets],
       () => {
-        if (!open()) return
+        if (!preview.open()) return
 
         invalidatePreview(true)
       },
@@ -411,224 +295,160 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     )
   )
 
-  // 画面外の画像化対象の準備が整い次第、表示用の実画像を生成する。
-  createEffect(() => {
-    if (!open()) return
-    if (!isPreviewReady()) return
-
-    const sheet = imageSheet()
-    if (!sheet || previewUrl() || isCapturingPreview()) return
-
-    untrack(() => void capturePreviewImage())
-  })
-
   return (
-    <Dialog open={open()} onOpenChange={handleOpenChange} preventScroll={false}>
-      <Dialog.Trigger
-        as="button"
-        type="button"
-        class={getAppButtonClass({
-          variant: 'surface',
-          shape: 'pill',
-          class: 'h-10 focus-visible:ring-offset-2',
-        })}
-      >
-        <ImageDown class="h-5 w-5" aria-hidden="true" />
-        <span>{RATING_IMAGE_COPY.openPreview}</span>
-      </Dialog.Trigger>
-      <Show when={open()}>
-        <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-          <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-            <div class="flex shrink-0 items-start justify-between gap-4">
-              <div class="min-w-0">
-                <Dialog.Title class="text-lg font-bold text-text">
-                  {RATING_IMAGE_COPY.dialogTitle}
-                </Dialog.Title>
-                <Dialog.Description class="mt-1 text-sm text-text-muted">
-                  {RATING_IMAGE_COPY.dialogDescription}
-                </Dialog.Description>
-              </div>
-              <Dialog.CloseButton
-                class={getAppIconButtonClass({ tone: 'ghost', class: 'shrink-0' })}
-                aria-label={RATING_IMAGE_COPY.close}
-                disabled={isSharing()}
-              >
-                <X class="h-5 w-5" aria-hidden="true" />
-              </Dialog.CloseButton>
-            </div>
+    <ImagePreviewDialog
+      open={preview.open()}
+      onOpenChange={preview.handleOpenChange}
+      triggerClass={getAppButtonClass({
+        variant: 'surface',
+        shape: 'pill',
+        class: 'h-10 focus-visible:ring-offset-2',
+      })}
+      triggerIcon={<ImageDown class="h-5 w-5" aria-hidden="true" />}
+      triggerLabel={RATING_IMAGE_COPY.openPreview}
+      title={RATING_IMAGE_COPY.dialogTitle}
+      description={RATING_IMAGE_COPY.dialogDescription}
+      closeLabel={RATING_IMAGE_COPY.close}
+      closeDisabled={preview.isCloseLocked()}
+      controls={
+        <>
+          <div class="mt-3 w-36 shrink-0">
+            <AppSelect<RatingImageVersionOption>
+              options={RATING_IMAGE_VERSION_OPTIONS}
+              optionValue="value"
+              optionTextValue="label"
+              value={selectedVersionOption()}
+              onChange={handleVersionChange}
+              label={RATING_IMAGE_COPY.versionLabel}
+              labelVariant="srOnly"
+              formatLabel={(option) => option.label}
+              triggerClass="h-10"
+              itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
+              contentZIndexClass="z-70"
+              disabled={preview.isSharing()}
+            />
+          </div>
 
-            <div class="mt-3 w-36 shrink-0">
-              <AppSelect<RatingImageVersionOption>
-                options={RATING_IMAGE_VERSION_OPTIONS}
-                optionValue="value"
-                optionTextValue="label"
-                value={selectedVersionOption()}
-                onChange={handleVersionChange}
-                label={RATING_IMAGE_COPY.versionLabel}
-                labelVariant="srOnly"
-                formatLabel={(option) => option.label}
-                triggerClass="h-10"
-                itemClass="hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
-                contentZIndexClass="z-70"
-                disabled={isSharing()}
-              />
-            </div>
-
-            <Show when={selectedVersionOption().value === 'v2'}>
-              <Collapsible
-                class="mt-3 w-full shrink-0 rounded-lg border border-border-strong bg-surface"
-                open={v2OptionsOpen()}
-                onOpenChange={handleV2OptionsOpenChange}
-                disabled={isSharing()}
-              >
-                <AppDisclosureTrigger class="gap-1.5" label={RATING_IMAGE_COPY.v2OptionsLegend} />
-                <Collapsible.Content>
-                  <div class="border-t border-border p-3">
-                    <div class="flex flex-col items-start gap-2">
-                      <CheckboxField
-                        id="rating-image-show-latest-update-badge"
-                        checked={showLatestUpdateBadge()}
-                        disabled={isSharing()}
-                        onChange={handleShowLatestUpdateBadgeChange}
-                        label={
-                          <span class="inline-flex items-center gap-1.5">
-                            <span class={`shrink-0 ${RATING_IMAGE_V2_NEW_BADGE_CLASS}`}>
-                              {RATING_IMAGE_COPY.latestUpdateBadge}
-                            </span>
-                            <span>{RATING_IMAGE_COPY.showLatestUpdateBadgeLabel}</span>
+          <Show when={selectedVersionOption().value === 'v2'}>
+            <Collapsible
+              class="mt-3 w-full shrink-0 rounded-lg border border-border-strong bg-surface"
+              open={v2OptionsOpen()}
+              onOpenChange={handleV2OptionsOpenChange}
+              disabled={preview.isSharing()}
+            >
+              <AppDisclosureTrigger class="gap-1.5" label={RATING_IMAGE_COPY.v2OptionsLegend} />
+              <Collapsible.Content>
+                <div class="border-t border-border p-3">
+                  <div class="flex flex-col items-start gap-2">
+                    <CheckboxField
+                      id="rating-image-show-latest-update-badge"
+                      checked={showLatestUpdateBadge()}
+                      disabled={preview.isSharing()}
+                      onChange={handleShowLatestUpdateBadgeChange}
+                      label={
+                        <span class="inline-flex items-center gap-1.5">
+                          <span class={`shrink-0 ${RATING_IMAGE_V2_NEW_BADGE_CLASS}`}>
+                            {RATING_IMAGE_COPY.latestUpdateBadge}
                           </span>
-                        }
-                      />
-                      <CheckboxField
-                        id="rating-image-apply-possession"
-                        checked={applyPossession()}
-                        disabled={isSharing()}
-                        onChange={handleApplyPossessionChange}
-                        label={RATING_IMAGE_COPY.applyPossessionLabel}
-                      />
-                      <CheckboxField
-                        id="rating-image-hide-player-level"
-                        checked={hidePlayerLevel()}
-                        disabled={isSharing()}
-                        onChange={handleHidePlayerLevelChange}
-                        label={RATING_IMAGE_COPY.hidePlayerLevelLabel}
-                      />
-                      <CheckboxField
-                        id="rating-image-hide-class-emblem"
-                        checked={hideClassEmblem()}
-                        disabled={isSharing()}
-                        onChange={handleHideClassEmblemChange}
-                        label={RATING_IMAGE_COPY.hideClassEmblemLabel}
-                      />
-                    </div>
-                  </div>
-                </Collapsible.Content>
-              </Collapsible>
-            </Show>
-
-            <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
-              <div
-                class="scrollbar-none h-full w-full overflow-y-auto overscroll-contain"
-                aria-busy={!previewUrl()}
-              >
-                <Show
-                  when={previewUrl()}
-                  fallback={
-                    <div class="flex min-h-full items-center justify-center">
-                      <Show
-                        when={!imageActionError()}
-                        fallback={
-                          <div class="flex flex-col items-center gap-3 text-center">
-                            <p class="text-sm text-danger" role="alert">
-                              {imageActionError()}
-                            </p>
-                            <AppButton
-                              variant="surface"
-                              size="sm"
-                              leftIcon={<RotateCcw class="h-4 w-4" aria-hidden="true" />}
-                              onClick={retryPreviewCapture}
-                            >
-                              {RATING_IMAGE_COPY.retryPreview}
-                            </AppButton>
-                          </div>
-                        }
-                      >
-                        <Loading ariaLabel={RATING_IMAGE_COPY.preparingPreview} />
-                      </Show>
-                    </div>
-                  }
-                >
-                  {(objectUrl) => (
-                    <img
-                      src={objectUrl()}
-                      alt={RATING_IMAGE_COPY.previewAlt}
-                      class="h-auto w-full max-w-full shadow-sm [-webkit-touch-callout:default]"
+                          <span>{RATING_IMAGE_COPY.showLatestUpdateBadgeLabel}</span>
+                        </span>
+                      }
                     />
-                  )}
+                    <CheckboxField
+                      id="rating-image-apply-possession"
+                      checked={applyPossession()}
+                      disabled={preview.isSharing()}
+                      onChange={handleApplyPossessionChange}
+                      label={RATING_IMAGE_COPY.applyPossessionLabel}
+                    />
+                    <CheckboxField
+                      id="rating-image-hide-player-level"
+                      checked={hidePlayerLevel()}
+                      disabled={preview.isSharing()}
+                      onChange={handleHidePlayerLevelChange}
+                      label={RATING_IMAGE_COPY.hidePlayerLevelLabel}
+                    />
+                    <CheckboxField
+                      id="rating-image-hide-class-emblem"
+                      checked={hideClassEmblem()}
+                      disabled={preview.isSharing()}
+                      onChange={handleHideClassEmblemChange}
+                      label={RATING_IMAGE_COPY.hideClassEmblemLabel}
+                    />
+                  </div>
+                </div>
+              </Collapsible.Content>
+            </Collapsible>
+          </Show>
+        </>
+      }
+      hasPreview={preview.previews().length > 0}
+      previewBusy={preview.previews().length === 0}
+      loadingLabel={RATING_IMAGE_COPY.preparingPreview}
+      captureError={preview.captureError()}
+      retryLabel={RATING_IMAGE_COPY.retryPreview}
+      onRetry={preview.retryCapture}
+      footerError={preview.shareError()}
+      footer={
+        <div class="flex flex-wrap justify-end gap-2">
+          <AppButton
+            variant="primary"
+            size="sm"
+            disabled={!canShareRatingImage() || preview.isBusy() || preview.previews().length === 0}
+            aria-busy={preview.isSharing()}
+            onClick={shareRatingImage}
+            leftIcon={
+              <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
+                <Show when={!preview.isSharing()} fallback={<Loading size="inline" ariaHidden />}>
+                  <Share2 class="h-5 w-5" aria-hidden="true" />
                 </Show>
-              </div>
-            </div>
-
-            <div class="mt-4 flex shrink-0 flex-col items-end gap-2">
-              <Show when={previewUrl() && imageActionError()}>
-                {(message) => (
-                  <p class="text-sm text-danger" role="alert">
-                    {message()}
-                  </p>
-                )}
-              </Show>
-              <div class="flex flex-wrap justify-end gap-2">
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  disabled={!canShareRatingImage() || isImageActionRunning() || !previewUrl()}
-                  aria-busy={isSharing()}
-                  onClick={() => void shareRatingImage()}
-                  leftIcon={
-                    <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
-                      <Show when={!isSharing()} fallback={<Loading size="inline" ariaHidden />}>
-                        <Share2 class="h-5 w-5" aria-hidden="true" />
-                      </Show>
-                    </span>
-                  }
-                >
-                  {RATING_IMAGE_COPY.share}
-                </AppButton>
-              </div>
-            </div>
-
-            <div class="pointer-events-none fixed left-[-100000px] top-0" aria-hidden="true">
-              <Show
-                when={selectedVersionOption().value === 'v2'}
-                fallback={
-                  <RatingImageSheet
-                    captureRef={(element) => setImageSheet(element)}
-                    playerInfo={props.playerInfo}
-                    honors={props.honors}
-                    rating={props.rating}
-                    showJackets={props.showJackets}
-                    onJacketReadyChange={handleJacketReadyChange}
-                  />
-                }
-              >
-                <RatingImageSheetV2
-                  captureRef={(element) => setImageSheet(element)}
-                  playerInfo={props.playerInfo}
-                  honors={props.honors}
-                  rating={props.rating}
-                  showJackets={props.showJackets}
-                  showLatestUpdateBadge={showLatestUpdateBadge()}
-                  hidePlayerLevel={hidePlayerLevel()}
-                  hideClassEmblem={hideClassEmblem()}
-                  possessionName={possessionName()}
-                  onJacketReadyChange={handleJacketReadyChange}
-                />
-              </Show>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
+              </span>
+            }
+          >
+            {RATING_IMAGE_COPY.share}
+          </AppButton>
+        </div>
+      }
+      captureTarget={
+        <div class="pointer-events-none fixed left-[-100000px] top-0" aria-hidden="true">
+          <Show
+            when={selectedVersionOption().value === 'v2'}
+            fallback={
+              <RatingImageSheet
+                captureRef={(element) => setImageSheet(element)}
+                playerInfo={props.playerInfo}
+                honors={props.honors}
+                rating={props.rating}
+                showJackets={props.showJackets}
+                onJacketReadyChange={handleJacketReadyChange}
+              />
+            }
+          >
+            <RatingImageSheetV2
+              captureRef={(element) => setImageSheet(element)}
+              playerInfo={props.playerInfo}
+              honors={props.honors}
+              rating={props.rating}
+              showJackets={props.showJackets}
+              showLatestUpdateBadge={showLatestUpdateBadge()}
+              hidePlayerLevel={hidePlayerLevel()}
+              hideClassEmblem={hideClassEmblem()}
+              possessionName={possessionName()}
+              onJacketReadyChange={handleJacketReadyChange}
+            />
+          </Show>
+        </div>
+      }
+    >
+      <Show when={preview.previews()[0]}>
+        {(image) => (
+          <img
+            src={image().url}
+            alt={RATING_IMAGE_COPY.previewAlt}
+            class="h-auto w-full max-w-full shadow-sm [-webkit-touch-callout:default]"
+          />
+        )}
       </Show>
-    </Dialog>
+    </ImagePreviewDialog>
   )
 }

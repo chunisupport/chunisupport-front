@@ -1,4 +1,4 @@
-import { formatFileTimestamp } from '../../../../utils/fileTimestamp'
+import { formatFileTimestamp } from '../../../../utils/localDateTime'
 import type { RatingImageVersion } from '../UserProfileView.constants'
 
 const RATING_IMAGE_FILENAME_PREFIX = 'chunisupport-best-new'

@@ -15,8 +15,8 @@ import {
   getChartLevelSortKey,
   toChartLevelLabel,
 } from './chartLevel'
-import { formatFileTimestamp } from './fileTimestamp'
 import { COMBO_LAMP_UNACHIEVED_FILTERS, HARD_LAMP_UNACHIEVED_FILTERS } from './goalLamp'
+import { formatFileTimestamp } from './localDateTime'
 import {
   hasPlayerStatsAchievement,
   type PlayerStatsAchievement,
