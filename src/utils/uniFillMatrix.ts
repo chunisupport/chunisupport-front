@@ -280,3 +280,21 @@ export const buildUniFillMatrixRecordFilter = (
         constFilterMode: target.column.constFilterMode,
       }),
 })
+
+/**
+ * ジャンルとレベル・譜面定数が交差するマスのチェック数を集計する。
+ *
+ * @param matrix - 集計済みのマトリクス。合計行・合計列と対象譜面がないマスは数えない。
+ * @returns 全件達成マス数をcount、対象譜面があるマス数をtotalとした集計。
+ */
+export const countUniFillMatrixChecks = (matrix: UniFillMatrix): UniFillMatrixCell => {
+  const checks = { count: 0, total: 0 }
+  for (const row of matrix.rows) {
+    for (const cell of row.cells) {
+      if (cell.total === 0) continue
+      checks.total += 1
+      if (cell.count === cell.total) checks.count += 1
+    }
+  }
+  return checks
+}
