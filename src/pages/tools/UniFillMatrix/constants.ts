@@ -10,14 +10,19 @@ import type { UniFillMatrixDifficulty } from '../../../utils/uniFillMatrix'
 export const UNI_FILL_MATRIX_COPY = {
   difficultyLabel: '難易度',
   achievementLabel: '埋め条件',
-  axisLabel: '横軸',
+  axisLabel: '縦軸',
   percentToggle: '%表示',
-  genreHeader: 'ジャンル',
+  levelHeader: 'レベル',
+  chartConstantHeader: '譜面定数',
   totalHeader: '合計',
-  levelCaption: 'ジャンル×譜面定数から換算したレベルごとの達成状況',
-  chartConstantCaption: 'ジャンル×譜面定数ごとの達成状況',
+  levelCaption: '縦軸が譜面定数から換算したレベル、横軸がジャンルの達成状況',
+  chartConstantCaption: '縦軸が譜面定数、横軸がジャンルの達成状況',
   cellActionLabel: '未達成の譜面をレコードで表示',
   recordNavigationError: 'レコード画面へ移動できませんでした。',
+  imageSaveLabel: '画像化',
+  imageSaveError: '画像を保存できませんでした。',
+  imageCapturingLabel: '画像を生成中',
+  imageChecksLabel: '達成マス数',
 } as const
 
 /** 通常レコード画面へ遷移するときの並び順クエリ（スコア降順） */
@@ -79,3 +84,18 @@ export const UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT: UniFillMatrixAchievementOption
   value: 'sss',
   label: PLAYER_STATS_ACHIEVEMENT_LABEL.sss,
 }
+
+/** ジャンル・合計列の幅を1としたときの縦軸列の幅。 */
+export const UNI_FILL_MATRIX_AXIS_COLUMN_WEIGHT = 0.5
+
+/** 共通ヒートマップセルの最小幅（min-w-16）に合わせる余白単位数。 */
+export const UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING = 16
+
+/** 画像内の左右余白（p-6相当）。 */
+export const UNI_FILL_MATRIX_IMAGE_PADDING = 24
+
+/** 長い譜面定数表でCanvasのメモリ使用量を抑える出力ピクセル比。 */
+export const UNI_FILL_MATRIX_IMAGE_PIXEL_RATIO = 1
+
+/** マトリクス画像のPNGファイル名。 */
+export const UNI_FILL_MATRIX_IMAGE_FILENAME = 'uni-fill-matrix.png'

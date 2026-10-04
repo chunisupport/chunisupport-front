@@ -2,7 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerRecordDTO } from '../types/api'
 import { DEFAULT_FILTER } from './recordFilterDefaults'
-import { buildUniFillMatrix, buildUniFillMatrixRecordFilter } from './uniFillMatrix'
+import {
+  buildUniFillMatrix,
+  buildUniFillMatrixRecordFilter,
+  countUniFillMatrixChecks,
+} from './uniFillMatrix'
 
 /**
  * マトリクステスト用の通常譜面レコードを生成する。
@@ -244,4 +248,57 @@ test('AJC未達成はAJCを除いたコンボランプ、未プレイはスコ�
   // Then
   assert.deepEqual(ajc.combo_lamp, ['ALL JUSTICE', 'FULL COMBO', null])
   assert.deepEqual(played.score, { min: 0, max: 0 })
+})
+
+test('チェック数は対象譜面のある通常マスだけを数え、未達成マスと合計のチェックを区別する', () => {
+  // Given
+  const matrix = buildUniFillMatrix(
+    [
+      createRecord({ id: 'pops-1', const: 14.5, score: 1_009_000 }),
+      createRecord({ id: 'pops-2', const: 14.9, score: 1_007_000 }),
+      createRecord({ id: 'orig-1', const: 13.2, score: 1_009_500 }),
+    ],
+    ATTRIBUTES,
+    GENRES,
+    'level',
+    'sss'
+  )
+
+  // When
+  const result = countUniFillMatrixChecks(matrix)
+
+  // Then
+  assert.deepEqual(result, { count: 1, total: 2 })
+})
+
+test('全件達成時のチェック数は譜面数ではなくマス数となり、空マスや合計を含めない', () => {
+  // Given
+  const matrix = buildUniFillMatrix(
+    [
+      createRecord({ id: 'pops-1', const: 14.5 }),
+      createRecord({ id: 'pops-2', const: 14.9 }),
+      createRecord({ id: 'orig-1', const: 13.2 }),
+    ],
+    ATTRIBUTES,
+    GENRES,
+    'level',
+    'played'
+  )
+
+  // When
+  const result = countUniFillMatrixChecks(matrix)
+
+  // Then
+  assert.deepEqual(result, { count: 2, total: 2 })
+})
+
+test('対象譜面がないマトリクスのチェック数は0 / 0となる', () => {
+  // Given
+  const matrix = buildUniFillMatrix([], ATTRIBUTES, GENRES, 'chartConstant', 'played')
+
+  // When
+  const result = countUniFillMatrixChecks(matrix)
+
+  // Then
+  assert.deepEqual(result, { count: 0, total: 0 })
 })

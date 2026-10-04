@@ -34,6 +34,8 @@ type HeatmapCountCellProps = {
   showPercent: boolean
   /** 全件達成時に数値の代わりにチェックアイコンを表示するか */
   showCompleteMark?: boolean
+  /** 集計対象がないセルを全件達成時と同じ背景色と大きめの白い記号で表示するか */
+  showEmptyAsComplete?: boolean
   /** セルに追加で適用する Tailwind クラス */
   class?: string
   /** 指定時はセル全体をボタンにし、クリックで呼び出す */
@@ -43,10 +45,10 @@ type HeatmapCountCellProps = {
 }
 
 /**
- * 達成件数と総数を色の濃淡付きの2段表示で描画する表セル。
+ * 達成件数と総数を色の濃淡付きで描画する表セル。
  *
- * @param props - 達成件数、総数、達成率表示の有無、全件達成マークの有無、追加クラス、クリック時の処理。
- * @returns 上段に件数または達成率、下段に件数/総数を表示するセル。総数が0件の場合は記号のみ、
+ * @param props - 達成件数、総数、達成率表示の有無、全件達成マークの有無、空セルの背景色指定、追加クラス、クリック時の処理。
+ * @returns 上段に件数または達成率、下段に件数/総数を表示するセル。総数が0件の場合は記号のみ表示し、showEmptyAsComplete指定時は全件達成時の背景色と大きめの白い記号で表示する。
  * 全件達成マーク有効時に全件達成していればチェックアイコンのみ表示する。onSelect 指定時はセル全体がボタンになる。
  */
 export const HeatmapCountCell = (props: HeatmapCountCellProps): JSX.Element => {
@@ -87,7 +89,8 @@ export const HeatmapCountCell = (props: HeatmapCountCellProps): JSX.Element => {
       when={props.total > 0}
       fallback={
         <td
-          class={`${HEATMAP_CELL_CLASS} ${HEATMAP_CELL_PADDING_CLASS} text-sm text-text-subtle ${props.class ?? ''}`}
+          class={`${HEATMAP_CELL_CLASS} ${HEATMAP_CELL_PADDING_CLASS} ${props.showEmptyAsComplete ? 'text-base text-white' : 'text-sm text-text-subtle'} ${props.class ?? ''}`}
+          style={{ background: props.showEmptyAsComplete ? getHeatmapBackground(1, 1) : undefined }}
         >
           {HEATMAP_EMPTY_TEXT}
         </td>
