@@ -55,13 +55,21 @@ const createSongsStore = () => {
     }
   )
 
-  /** 通常楽曲が未要求の場合に初回ロードを開始する */
+  /** 通常楽曲が未要求の場合に初回ロードを開始し、前回の取得が失敗していれば再試行する */
   const ensureSongsLoaded = (): void => {
+    if (untrack(() => songsResponse.state) === 'errored') {
+      void refetchSongs(false)
+      return
+    }
     setSongsRequested(true)
   }
 
-  /** WORLD'S END 楽曲が未要求の場合に初回ロードを開始する */
+  /** WORLD'S END 楽曲が未要求の場合に初回ロードを開始し、前回の取得が失敗していれば再試行する */
   const ensureWorldsendSongsLoaded = (): void => {
+    if (untrack(() => worldsendSongsResponse.state) === 'errored') {
+      void refetchWorldsendSongs(false)
+      return
+    }
     setWorldsendSongsRequested(true)
   }
 
