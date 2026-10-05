@@ -46,6 +46,101 @@ const ATTRIBUTES = new Map([
 
 const GENRES = ['POPS & ANIME', 'niconico', 'ORIGINAL']
 
+test('バージョン横軸はPLUSを分けて一覧順に集計し、公開対象外と属性不明の譜面を除く', () => {
+  // Given
+  const attributes = new Map([
+    ['base', { genre: 'ORIGINAL', version: 'VERSE' }],
+    ['plus', { genre: 'POPS & ANIME', version: 'VERSE PLUS' }],
+    ['future', { genre: 'ORIGINAL', version: '未来' }],
+    ['unknown', { genre: 'ORIGINAL', version: '不明' }],
+  ])
+  const records = [
+    createRecord({ id: 'plus', const: 14.5, is_played: false, score: 0 }),
+    createRecord({ id: 'base', const: 13.0 }),
+    createRecord({ id: 'base', difficulty: 'ULTIMA', const: 14.5 }),
+    createRecord({ id: 'future', const: 15.0 }),
+    createRecord({ id: 'unknown', const: 15.0 }),
+    createRecord({ id: 'missing', const: 15.0 }),
+  ]
+
+  // When
+  const matrix = buildUniFillMatrix(records, attributes, GENRES, 'level', 'sss', {
+    axis: 'version',
+    versions: ['空のバージョン', 'VERSE', 'VERSE PLUS'],
+  })
+
+  // Then
+  assert.deepEqual(matrix.rows, [
+    {
+      version: 'VERSE',
+      cells: [
+        { count: 1, total: 1 },
+        { count: 1, total: 1 },
+      ],
+      total: { count: 2, total: 2 },
+    },
+    {
+      version: 'VERSE PLUS',
+      cells: [
+        { count: 0, total: 1 },
+        { count: 0, total: 0 },
+      ],
+      total: { count: 0, total: 1 },
+    },
+  ])
+  assert.deepEqual(matrix.columnTotals, [
+    { count: 1, total: 2 },
+    { count: 1, total: 1 },
+  ])
+  assert.deepEqual(matrix.grandTotal, { count: 2, total: 3 })
+  assert.deepEqual(countUniFillMatrixChecks(matrix), { count: 2, total: 3 })
+})
+
+test('バージョンの通常マスと合計マスはバージョン条件を引き継ぐ', () => {
+  // Given
+  const [column] = buildUniFillMatrix(
+    [createRecord({ id: 'orig-1' })],
+    ATTRIBUTES,
+    GENRES,
+    'chartConstant',
+    'sss'
+  ).columns
+
+  // When
+  const cellFilter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'MASTER_ULTIMA',
+    achievement: 'sss',
+    version: 'VERSE PLUS',
+    column,
+  })
+  const totalFilter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'MASTER_ULTIMA',
+    achievement: 'sss',
+    version: 'VERSE PLUS',
+  })
+
+  // Then
+  assert.deepEqual(cellFilter.versions, ['VERSE PLUS'])
+  assert.deepEqual(cellFilter.genres, DEFAULT_FILTER.genres)
+  assert.deepEqual(cellFilter.const, { min: 14.5, max: 14.5 })
+  assert.deepEqual(totalFilter.versions, ['VERSE PLUS'])
+  assert.deepEqual(totalFilter.const, DEFAULT_FILTER.const)
+})
+
+test('バージョン横軸の画像ファイル名にはversionが入る', () => {
+  // Given
+  const date = new Date(2026, 9, 6, 9, 5, 7)
+
+  // When
+  const filename = formatUniFillMatrixImageFilename(
+    { difficulty: 'MASTER', achievement: 'sss', axis: 'level', horizontalAxis: 'version' },
+    date
+  )
+
+  // Then
+  assert.equal(filename, 'chunisupport-uni-fill-matrix-master-sss-level-version-20261006090507.png')
+})
+
 test('レベル別ではジャンル×レベルごとに達成件数と総数を集計し、レベルが高い順に並べる', () => {
   // Given
   const records = [
