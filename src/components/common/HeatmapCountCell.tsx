@@ -12,8 +12,8 @@ const HEATMAP_COUNT_SEPARATOR = '/'
 /** 集計対象がないセルに表示する記号 */
 const HEATMAP_EMPTY_TEXT = '-'
 
-/** ヒートマップセルの基本クラス */
-const HEATMAP_CELL_CLASS = 'min-w-16 border-l border-border text-center'
+/** sr-only の絶対配置が表のスクロール領域を越えて表示領域を広げないよう、セルを配置基準にする。 */
+const HEATMAP_CELL_CLASS = 'relative min-w-16 border-l border-border text-center'
 
 /** ヒートマップセル内容の余白クラス */
 const HEATMAP_CELL_PADDING_CLASS = 'px-2 py-1.5'
