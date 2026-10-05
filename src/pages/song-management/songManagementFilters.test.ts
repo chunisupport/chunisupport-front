@@ -64,7 +64,7 @@ const worldsendSong: ManagedWorldsendSongDTO = {
   updated_at: '2025-01-01T00:00:00Z',
 }
 
-const versions = [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }]
+const versions = [{ name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' }]
 
 test('通常曲のノーツ数はBASICからMASTERと存在するULTIMAの欠落を判定する', () => {
   // Given: 必須譜面のノーツが揃い、ULTIMAを持たない通常曲。

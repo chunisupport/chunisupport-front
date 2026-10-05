@@ -54,6 +54,7 @@ const createRecord = (overrides: Partial<PlayerRecordDTO> = {}): PlayerRecordDTO
 const versions: VersionSummaryDTO[] = [
   {
     name: 'CHUNITHM VERSE',
+    short_name: 'VRS',
     released_at: '2024-01-01',
   },
 ]

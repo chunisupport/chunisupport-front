@@ -6,9 +6,9 @@ import { OVER_POWER_MASTER_ULTIMA_TARGET, OVER_POWER_THEORETICAL_TARGET } from '
 import { buildOverPowerSummary } from './overpowerSummary'
 
 const versions: VersionSummaryDTO[] = [
-  { name: 'CHUNITHM', released_at: '2015-07-16' },
-  { name: 'CHUNITHM NEW', released_at: '2021-11-04' },
-  { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+  { name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
+  { name: 'CHUNITHM NEW', short_name: 'NEW', released_at: '2021-11-04' },
+  { name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
 ]
 
 /**

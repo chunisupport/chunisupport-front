@@ -12,8 +12,8 @@ const MASTER_DATA = {
   ],
 } as MasterDataDTO
 const VERSIONS = [
-  { id: 1, name: 'A', released_at: '2024-01-01' },
-  { id: 2, name: 'B', released_at: '2025-01-01' },
+  { id: 1, name: 'A', short_name: 'A', released_at: '2024-01-01' },
+  { id: 2, name: 'B', short_name: 'B', released_at: '2025-01-01' },
 ]
 
 /**
