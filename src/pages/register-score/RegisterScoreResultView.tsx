@@ -29,6 +29,7 @@ import type {
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
 import { resolveClassEmblemMasterName } from '../../utils/classEmblem'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
+import { formatFileTimestamp, formatLocalDateTime } from '../../utils/localDateTime'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerLevelLabel } from '../../utils/playerLevel'
 import { formatPlayerRating } from '../../utils/ratingFormat'
@@ -262,18 +263,7 @@ const formatScoreDelta = (change: PlayerDataRecordChange): string => {
  * @param isoDateTime - APIから返却されたISO形式の日時。
  * @returns `YYYY/MM/DD HH:mm:ss` 形式の日時文字列。
  */
-const formatImportedAt = (isoDateTime: string): string => {
-  const date = new Date(isoDateTime)
-
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  const seconds = String(date.getSeconds()).padStart(2, '0')
-
-  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
-}
+const formatImportedAt = (isoDateTime: string): string => formatLocalDateTime(new Date(isoDateTime))
 
 /**
  * 更新日時からJPEG画像のファイル名を生成する。
@@ -281,14 +271,8 @@ const formatImportedAt = (isoDateTime: string): string => {
  * @param isoDateTime - APIから返却されたISO形式の更新日時。
  * @returns `chunisupport-score-update-YYYYMMDD-HHmmss.jpg` 形式のファイル名。
  */
-const formatRegisterScoreImageFilename = (isoDateTime: string): string => {
-  const timestamp = formatImportedAt(isoDateTime)
-    .replaceAll('/', '')
-    .replaceAll(':', '')
-    .replace(' ', '-')
-
-  return `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${timestamp}.jpg`
-}
+const formatRegisterScoreImageFilename = (isoDateTime: string): string =>
+  `${REGISTER_SCORE_IMAGE_FILENAME_PREFIX}-${formatFileTimestamp(new Date(isoDateTime), '-')}.jpg`
 
 /**
  * 難易度を短縮表記へ変換する。

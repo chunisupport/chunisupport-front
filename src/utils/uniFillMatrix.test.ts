@@ -6,6 +6,7 @@ import {
   buildUniFillMatrix,
   buildUniFillMatrixRecordFilter,
   countUniFillMatrixChecks,
+  formatUniFillMatrixImageFilename,
 } from './uniFillMatrix'
 
 /**
@@ -301,4 +302,23 @@ test('対象譜面がないマトリクスのチェック数は0 / 0となる', 
 
   // Then
   assert.deepEqual(result, { count: 0, total: 0 })
+})
+
+test('画像ファイル名は表示条件と日時を含む小文字の名前になる', () => {
+  // Given
+  const condition = {
+    difficulty: 'MASTER_ULTIMA',
+    achievement: 'sssPlus',
+    axis: 'chartConstant',
+  } as const
+  const date = new Date(2026, 9, 4, 9, 5, 7)
+
+  // When
+  const result = formatUniFillMatrixImageFilename(condition, date)
+
+  // Then
+  assert.equal(
+    result,
+    'chunisupport-uni-fill-matrix-master-ultima-sssplus-chartconstant-20261004090507.png'
+  )
 })
