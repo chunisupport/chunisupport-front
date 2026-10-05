@@ -59,8 +59,8 @@ import { UniFillMatrixImagePreviewDialog } from './UniFillMatrixImagePreviewDial
 /** ページ内セクションに共通適用するカードクラス */
 const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5'
 
-/** 縦軸見出しの改行禁止・中央揃え・枠線の共通クラス */
-const AXIS_CELL_CLASS = 'whitespace-nowrap border-r border-border py-2 text-center'
+/** 縦軸見出しの左右余白・改行禁止・中央揃え・枠線の共通クラス */
+const AXIS_CELL_CLASS = 'whitespace-nowrap border-r border-border px-2 py-2 text-center'
 
 /** 合計行・合計列の文字を強調するクラス */
 const TOTAL_CELL_CLASS = 'font-semibold'
@@ -88,7 +88,7 @@ const toCellActionLabel = (target: UniFillMatrixCellTarget): string =>
     .join(' ')
 
 /**
- * レベル・譜面定数を縦軸、ジャンルまたはバージョンを横軸にした達成状況を表示する。
+ * レベル・譜面定数を縦軸、ジャンルまたはバージョンを横軸にし、APIの短縮名を見出しに表示する。
  *
  * @param props.matrix - 集計済みのマトリクス。
  * @param props.caption - 表の読み上げ用説明。
@@ -156,7 +156,7 @@ const UniFillMatrixTable = (props: {
         </colgroup>
         <thead class="text-xs text-text-muted">
           <tr>
-            <th scope="col" class={`${axisCellClass()} bg-surface-muted px-1 font-semibold`}>
+            <th scope="col" class={`${axisCellClass()} bg-surface-muted font-semibold`}>
               <span class="sr-only">{props.axisHeader}</span>
             </th>
             <For each={props.matrix.rows}>
@@ -165,7 +165,7 @@ const UniFillMatrixTable = (props: {
                   scope="col"
                   class="whitespace-nowrap border-l border-border bg-surface-muted px-2 py-2 text-center font-sans font-semibold"
                 >
-                  {row.genre ?? row.version}
+                  {row.label}
                 </th>
               )}
             </For>
@@ -183,7 +183,7 @@ const UniFillMatrixTable = (props: {
               <tr class="border-t border-border">
                 <th
                   scope="row"
-                  class={`${axisCellClass()} bg-surface px-0 font-jost text-sm font-semibold text-text`}
+                  class={`${axisCellClass()} bg-surface font-jost text-sm font-semibold text-text`}
                 >
                   {column.label}
                 </th>
@@ -227,7 +227,7 @@ const UniFillMatrixTable = (props: {
           <tr class="border-t-2 border-border">
             <th
               scope="row"
-              class={`${axisCellClass()} bg-surface-muted px-1 text-sm font-semibold text-text`}
+              class={`${axisCellClass()} bg-surface-muted text-sm font-semibold text-text`}
             >
               {UNI_FILL_MATRIX_COPY.totalHeader}
             </th>
@@ -312,7 +312,11 @@ const UniFillMatrixPage: Component = () => {
       data.genres,
       axis(),
       achievement().value,
-      { axis: horizontalAxis(), versions: data.versions }
+      {
+        axis: horizontalAxis(),
+        versions: data.versions,
+        shortNames: data.shortNames[horizontalAxis()],
+      }
     )
   })
 

@@ -19,12 +19,14 @@ export type PlayerStatsChartMetadata = {
   attributesBySongId: ReadonlyMap<string, PlayerStatsRecordAttribute>
   genres: string[]
   versions: string[]
+  /** 集計用の名称からAPIの短縮名への対応 */
+  shortNames: { genre: ReadonlyMap<string, string>; version: ReadonlyMap<string, string> }
 }
 
 /**
  * 楽曲マスタをカプセル化し、統計ダッシュボード用の譜面情報を取得する。
  *
- * @returns 曲IDごとの譜面情報と、フィルター用のジャンル・バージョン一覧。
+ * @returns 曲IDごとの譜面情報と、フィルター用のジャンル・バージョン一覧、表示用の短縮名。
  */
 export const fetchPlayerStatsChartMetadata = async (): Promise<PlayerStatsChartMetadata> => {
   const [{ songs }, masterData, versionData] = await Promise.all([
@@ -55,6 +57,15 @@ export const fetchPlayerStatsChartMetadata = async (): Promise<PlayerStatsChartM
         },
       ])
     ),
+    shortNames: {
+      genre: new Map(masterData.genres.map((genre) => [genre.name, genre.short_name])),
+      version: new Map(
+        versionData.versions.map((version) => [
+          getShortVersionName(version.name),
+          version.short_name,
+        ])
+      ),
+    },
     genres: masterData.genres.map((genre) => genre.name),
     versions: filterReleasedVersions(versionData.versions).map((version) =>
       getShortVersionName(version.name)

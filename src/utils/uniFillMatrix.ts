@@ -50,6 +50,8 @@ export type UniFillMatrixRow = (
   | { genre: string; version?: never }
   | { version: string; genre?: never }
 ) & {
+  /** 見出しに表示するAPIの短縮名。未指定時は集計用の名称 */
+  label: string
   /** 列の並びに対応するセル */
   cells: UniFillMatrixCell[]
   /** 横軸属性内の合計 */
@@ -118,7 +120,7 @@ const sumUniFillMatrixCells = (cells: readonly UniFillMatrixCell[]): UniFillMatr
  * @param genres - 行の表示順に並べたジャンル。ここに含まれないジャンルの譜面は集計せず、譜面が存在しないジャンルは行に含めない。
  * @param axis - 画面の縦軸をレベル別にするか譜面定数別にするか。
  * @param achievement - 埋め終わりとみなす到達条件。
- * @param horizontal - 画面の横軸と、稼働順に並べた公開済みバージョン一覧。
+ * @param horizontal - 画面の横軸、稼働順に並べた公開済みバージョン一覧、集計用の名称に対応する短縮名。
  * @returns レベル・譜面定数が高い順の列、横軸属性の集計、合計。
  */
 export const buildUniFillMatrix = (
@@ -127,7 +129,11 @@ export const buildUniFillMatrix = (
   genres: readonly string[],
   axis: PlayerStatsHeatmapAxis,
   achievement: PlayerStatsAchievement,
-  horizontal: { axis: UniFillMatrixHorizontalAxis; versions: readonly string[] } = {
+  horizontal: {
+    axis: UniFillMatrixHorizontalAxis
+    versions: readonly string[]
+    shortNames?: ReadonlyMap<string, string>
+  } = {
     axis: 'genre',
     versions: [],
   }
@@ -158,7 +164,14 @@ export const buildUniFillMatrix = (
 
     const rowCells = columns.map((column) => cells.get(column.key) ?? { count: 0, total: 0 })
     const attribute = horizontal.axis === 'version' ? { version: group } : { genre: group }
-    return [{ ...attribute, cells: rowCells, total: sumUniFillMatrixCells(rowCells) }]
+    return [
+      {
+        ...attribute,
+        label: horizontal.shortNames?.get(group) ?? group,
+        cells: rowCells,
+        total: sumUniFillMatrixCells(rowCells),
+      },
+    ]
   })
 
   return {

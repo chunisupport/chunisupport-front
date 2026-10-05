@@ -73,6 +73,7 @@ test('バージョン横軸はPLUSを分けて一覧順に集計し、公開対�
   assert.deepEqual(matrix.rows, [
     {
       version: 'VERSE',
+      label: 'VERSE',
       cells: [
         { count: 1, total: 1 },
         { count: 1, total: 1 },
@@ -81,6 +82,7 @@ test('バージョン横軸はPLUSを分けて一覧順に集計し、公開対�
     },
     {
       version: 'VERSE PLUS',
+      label: 'VERSE PLUS',
       cells: [
         { count: 0, total: 1 },
         { count: 0, total: 0 },
@@ -160,6 +162,7 @@ test('レベル別ではジャンル×レベルごとに達成件数と総数を
   assert.deepEqual(result.rows, [
     {
       genre: 'POPS & ANIME',
+      label: 'POPS & ANIME',
       cells: [
         { count: 1, total: 2 },
         { count: 0, total: 0 },
@@ -168,6 +171,7 @@ test('レベル別ではジャンル×レベルごとに達成件数と総数を
     },
     {
       genre: 'ORIGINAL',
+      label: 'ORIGINAL',
       cells: [
         { count: 0, total: 0 },
         { count: 1, total: 1 },
@@ -416,4 +420,36 @@ test('画像ファイル名は表示条件と日時を含む小文字の名前�
     result,
     'chunisupport-uni-fill-matrix-master-ultima-sssplus-chartconstant-20261004090507.png'
   )
+})
+
+test('APIの短縮名は見出しに使い、ジャンル・バージョンの集計とフィルター条件を維持する', () => {
+  // Given
+  const attributes = new Map([['song-1', { genre: 'POPS & ANIME', version: 'VERSE PLUS' }]])
+  const records = [createRecord()]
+  const cases = [
+    { axis: 'genre', name: 'POPS & ANIME', shortName: 'P&A' },
+    { axis: 'version', name: 'VERSE PLUS', shortName: 'VRS+' },
+  ] as const
+
+  for (const { axis, name, shortName } of cases) {
+    // When
+    const matrix = buildUniFillMatrix(records, attributes, GENRES, 'level', 'sss', {
+      axis,
+      versions: ['VERSE PLUS'],
+      shortNames: new Map([[name, shortName]]),
+    })
+    const [row] = matrix.rows
+    const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+      difficulty: 'MASTER',
+      achievement: 'sss',
+      genre: row.genre,
+      version: row.version,
+    })
+
+    // Then
+    assert.equal(row.label, shortName)
+    assert.equal(row[axis], name)
+    assert.deepEqual(row.total, { count: 1, total: 1 })
+    assert.deepEqual(axis === 'genre' ? filter.genres : filter.versions, [name])
+  }
 })

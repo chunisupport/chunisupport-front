@@ -104,7 +104,7 @@ export const UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT: UniFillMatrixAchievementOption
 }
 
 /** ジャンル・合計列の幅を1としたときの縦軸列の幅。 */
-export const UNI_FILL_MATRIX_AXIS_COLUMN_WEIGHT = 0.5
+export const UNI_FILL_MATRIX_AXIS_COLUMN_WEIGHT = 0.75
 
 /** 共通ヒートマップセルの最小幅（min-w-16）に合わせる余白単位数。 */
 export const UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING = 16
