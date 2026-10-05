@@ -66,6 +66,9 @@ export const PLAYER_STATS_DIFFICULTY_OPTIONS: PlayerStatsDifficultyOption[] = [
   { value: 'ULTIMA', label: 'ULTIMA' },
 ]
 
+/** 集計対象フィルターの入力欄IDの接頭辞 */
+export const PLAYER_STATS_FILTER_ID_PREFIX = 'player-stats-filter'
+
 /** 統計画面で初期集計する難易度 */
 export const PLAYER_STATS_DEFAULT_DIFFICULTY: PlayerStatsDifficulty = MASTER_ULTIMA_FILTER
 

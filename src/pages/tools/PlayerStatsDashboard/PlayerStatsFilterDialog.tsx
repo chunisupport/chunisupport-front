@@ -4,15 +4,21 @@ import { createEffect, createMemo, createSignal } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import { MultiSelectField, toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import { AppSelect } from '../../../components/common/AppSelect'
+import ChartConstRangeField from '../../../components/common/ChartConstRangeField'
+import {
+  type ChartConstRangeSelection,
+  createChartConstRangeDraft,
+} from '../../../hooks/createChartConstRangeDraft'
 import type { PlayerStatsDifficulty } from '../../../utils/playerStatsDashboard'
 import {
   PLAYER_STATS_COPY,
   PLAYER_STATS_DIFFICULTY_OPTIONS,
+  PLAYER_STATS_FILTER_ID_PREFIX,
   type PlayerStatsDifficultyOption,
 } from './constants'
 
 /** 統計ダッシュボードへ適用する集計対象フィルター */
-export type PlayerStatsFilterState = {
+export type PlayerStatsFilterState = ChartConstRangeSelection & {
   difficulty: PlayerStatsDifficulty
   genres: string[]
   versions: string[]
@@ -31,7 +37,7 @@ type PlayerStatsFilterDialogProps = {
 const FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 
 /**
- * ダッシュボードの難易度・ジャンル・バージョンを編集するダイアログを表示する。
+ * ダッシュボードの難易度・レベル/譜面定数・ジャンル・バージョンを編集するダイアログを表示する。
  *
  * @param props - 開閉状態、適用済み条件、選択肢、変更通知。
  * @returns 適用まで編集内容を保持するフィルターダイアログ。
@@ -43,14 +49,19 @@ export const PlayerStatsFilterDialog: Component<PlayerStatsFilterDialogProps> = 
       PLAYER_STATS_DIFFICULTY_OPTIONS.find((option) => option.value === draft().difficulty) ??
       PLAYER_STATS_DIFFICULTY_OPTIONS[0]
   )
+  const constRangeDraft = createChartConstRangeDraft({
+    get: () => draft(),
+    set: (next) => setDraft((current) => ({ ...current, ...next })),
+  })
 
   createEffect(() => {
     if (props.open) {
       setDraft({
-        difficulty: props.filters.difficulty,
+        ...props.filters,
         genres: [...props.filters.genres],
         versions: [...props.filters.versions],
       })
+      constRangeDraft.sync(props.filters.constRange)
     }
   })
 
@@ -84,6 +95,10 @@ export const PlayerStatsFilterDialog: Component<PlayerStatsFilterDialogProps> = 
               label={PLAYER_STATS_COPY.difficultyLabel}
               formatLabel={(option) => option.label}
               contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+            />
+            <ChartConstRangeField
+              idPrefix={PLAYER_STATS_FILTER_ID_PREFIX}
+              {...constRangeDraft.fieldProps}
             />
             <MultiSelectField
               label={PLAYER_STATS_COPY.genreLabel}

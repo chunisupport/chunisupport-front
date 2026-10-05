@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { MASTER_ULTIMA_FILTER, THEORETICAL_OVER_POWER_TARGET_FILTER } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
+import { createFullChartConstRange } from './chartLevel'
 import {
   buildPlayerStatsAchievementProgress,
   buildPlayerStatsChartConstantRows,
@@ -203,6 +204,7 @@ test('統計フィルターは難易度と全選択項目が初期状態なら�
     difficulty: MASTER_ULTIMA_FILTER,
     genres: ['GAME', 'POPS & ANIME'],
     versions: ['VERSE', 'LUMINOUS'],
+    constRange: createFullChartConstRange(),
   } as const
 
   // When
@@ -225,7 +227,12 @@ test('統計フィルターは難易度・ジャンル・バージョンのい�
   // When
   const results = [
     isPlayerStatsFilterModified(
-      { difficulty: 'EXPERT', genres: defaultGenres, versions: defaultVersions },
+      {
+        difficulty: 'EXPERT',
+        genres: defaultGenres,
+        versions: defaultVersions,
+        constRange: createFullChartConstRange(),
+      },
       MASTER_ULTIMA_FILTER,
       defaultGenres,
       defaultVersions
@@ -235,6 +242,7 @@ test('統計フィルターは難易度・ジャンル・バージョンのい�
         difficulty: MASTER_ULTIMA_FILTER,
         genres: ['GAME'],
         versions: defaultVersions,
+        constRange: createFullChartConstRange(),
       },
       MASTER_ULTIMA_FILTER,
       defaultGenres,
@@ -245,6 +253,7 @@ test('統計フィルターは難易度・ジャンル・バージョンのい�
         difficulty: MASTER_ULTIMA_FILTER,
         genres: defaultGenres,
         versions: ['VERSE'],
+        constRange: createFullChartConstRange(),
       },
       MASTER_ULTIMA_FILTER,
       defaultGenres,
@@ -254,6 +263,50 @@ test('統計フィルターは難易度・ジャンル・バージョンのい�
 
   // Then
   assert.deepEqual(results, [true, true, true])
+})
+
+test('統計フィルターは譜面定数範囲が全範囲でなければ変更済みになる', () => {
+  // Given
+  const defaultGenres = ['POPS & ANIME']
+  const defaultVersions = ['VERSE']
+
+  // When
+  const modified = isPlayerStatsFilterModified(
+    {
+      difficulty: MASTER_ULTIMA_FILTER,
+      genres: defaultGenres,
+      versions: defaultVersions,
+      constRange: { min: 14.5, max: 16 },
+    },
+    MASTER_ULTIMA_FILTER,
+    defaultGenres,
+    defaultVersions
+  )
+
+  // Then
+  assert.equal(modified, true)
+})
+
+test('譜面定数範囲を指定すると両端を含む範囲内の譜面だけを返す', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'below', const: 14.4 }),
+    createRecord({ id: 'min', const: 14.5 }),
+    createRecord({ id: 'max', const: 14.9 }),
+    createRecord({ id: 'above', const: 15.0 }),
+  ]
+
+  // When
+  const filtered = filterPlayerStatsRecords(records, 'ALL', new Map(), undefined, {
+    min: 14.5,
+    max: 14.9,
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['min', 'max']
+  )
 })
 
 test('サマリーは未プレイを母数に含め、トータルハイスコアと平均スコアからは除外する', () => {
