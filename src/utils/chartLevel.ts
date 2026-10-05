@@ -92,3 +92,22 @@ export const getChartLevelFilterBoundary = (
   const range = getChartLevelConstRange(label)
   return range[endpoint]
 }
+
+/**
+ * 譜面定数範囲が全範囲（未指定）から変更されているか判定する。
+ *
+ * @param range - 判定する譜面定数範囲。
+ * @returns 下限または上限が全範囲の端点と異なる場合はtrue。
+ */
+export const isChartConstRangeModified = (range: NumericRangeFilter): boolean =>
+  range.min !== CHART_CONST_MIN || range.max !== CHART_CONST_MAX
+
+/**
+ * 全範囲（未指定）を表す譜面定数範囲を生成する。
+ *
+ * @returns 独立した全範囲の譜面定数範囲。
+ */
+export const createFullChartConstRange = (): NumericRangeFilter => ({
+  min: CHART_CONST_MIN,
+  max: CHART_CONST_MAX,
+})

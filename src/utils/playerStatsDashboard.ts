@@ -5,8 +5,14 @@ import {
 } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTY_ORDER } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
+import type { NumericRangeFilter } from '../types/record'
 import { truncateChartConst } from './chartConstFormat'
-import { type ChartLevelLabel, getChartLevelSortKey, toChartLevelLabel } from './chartLevel'
+import {
+  type ChartLevelLabel,
+  getChartLevelSortKey,
+  isChartConstRangeModified,
+  toChartLevelLabel,
+} from './chartLevel'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from './scoreRank'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 
@@ -126,6 +132,7 @@ export type PlayerStatsFilterSelection = {
   difficulty: PlayerStatsDifficulty
   genres: readonly string[]
   versions: readonly string[]
+  constRange: NumericRangeFilter
 }
 
 /** 次の目標達成に近い譜面と数値上の残量 */
@@ -195,7 +202,7 @@ const hasSamePlayerStatsSelections = (
  * @param defaultDifficulty - 初期選択する難易度。
  * @param defaultGenres - 初期選択する全ジャンル。
  * @param defaultVersions - 初期選択する全バージョン。
- * @returns いずれかの条件が初期状態と異なる場合はtrue。
+ * @returns いずれかの条件が初期状態と異なる場合はtrue。譜面定数範囲は全範囲を初期状態とする。
  */
 export const isPlayerStatsFilterModified = (
   filters: PlayerStatsFilterSelection,
@@ -204,6 +211,7 @@ export const isPlayerStatsFilterModified = (
   defaultVersions: readonly string[]
 ): boolean =>
   filters.difficulty !== defaultDifficulty ||
+  isChartConstRangeModified(filters.constRange) ||
   !hasSamePlayerStatsSelections(filters.genres, defaultGenres) ||
   !hasSamePlayerStatsSelections(filters.versions, defaultVersions)
 
@@ -253,13 +261,15 @@ export const hasPlayerStatsAchievement = (
  * @param difficulty - 全難易度、通常難易度、MASTERとULTIMAの合算、または理論値OP対象。
  * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
  * @param attributeFilter - 楽曲ごとの属性と、選択中のジャンル・バージョン。
- * @returns 選択難易度に一致する新しい配列。
+ * @param constRange - 譜面定数の範囲。省略時または全範囲の場合は定数で絞り込まない。
+ * @returns 選択条件すべてに一致する新しい配列。
  */
 export const filterPlayerStatsRecords = (
   records: PlayerRecordDTO[],
   difficulty: PlayerStatsDifficulty,
   targetDifficultyBySongId: ReadonlyMap<string, PlayerDataDifficulty> = new Map(),
-  attributeFilter?: PlayerStatsAttributeFilter
+  attributeFilter?: PlayerStatsAttributeFilter,
+  constRange?: NumericRangeFilter
 ): PlayerRecordDTO[] => {
   return records.filter((record) => {
     const recordDifficulty = record.difficulty.toUpperCase() as PlayerDataDifficulty
@@ -279,6 +289,9 @@ export const filterPlayerStatsRecords = (
 
     return (
       matchesDifficulty &&
+      (!constRange ||
+        !isChartConstRangeModified(constRange) ||
+        (record.const >= constRange.min && record.const <= constRange.max)) &&
       (!attributeFilter ||
         (attribute !== undefined &&
           attributeFilter.genres.includes(attribute.genre) &&

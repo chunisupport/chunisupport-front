@@ -1,4 +1,3 @@
-import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
 import type {
   ChartStats,
   ChartStatsClear,
@@ -7,6 +6,7 @@ import type {
   WorldsendChartStats,
 } from '../types/chartStats'
 import type { NumericRangeFilter } from '../types/record'
+import { createFullChartConstRange, isChartConstRangeModified } from './chartLevel'
 import { normalizeForSearch } from './searchUtils'
 import { compareSongsByReading } from './songTitleSorting'
 import type { SortDirection } from './sortingQuery'
@@ -282,7 +282,7 @@ export const createDefaultChartStatsAttributeFilter = (): ChartStatsAttributeFil
   genres: null,
   versions: null,
   constFilterMode: 'level',
-  constRange: { min: CHART_CONST_MIN, max: CHART_CONST_MAX },
+  constRange: createFullChartConstRange(),
 })
 
 /**
@@ -292,10 +292,7 @@ export const createDefaultChartStatsAttributeFilter = (): ChartStatsAttributeFil
  * @returns いずれかが指定されている場合はtrue。
  */
 export const isChartStatsAttributeFilterActive = (filter: ChartStatsAttributeFilter): boolean =>
-  filter.genres !== null ||
-  filter.versions !== null ||
-  filter.constRange.min !== CHART_CONST_MIN ||
-  filter.constRange.max !== CHART_CONST_MAX
+  filter.genres !== null || filter.versions !== null || isChartConstRangeModified(filter.constRange)
 
 /**
  * 楽曲マスタからsong_idをキーとする属性マップを生成する。

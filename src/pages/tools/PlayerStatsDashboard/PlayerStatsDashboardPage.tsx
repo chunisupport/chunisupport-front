@@ -41,6 +41,7 @@ import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import type { PlayerRecordDTO } from '../../../types/api'
 import { fetchOwnPlayerStatsData } from '../../../usecases/playerStats/fetchOwnPlayerStatsData'
 import { formatChartConst } from '../../../utils/chartConstFormat'
+import { createFullChartConstRange } from '../../../utils/chartLevel'
 import { getConstDisplay } from '../../../utils/constDisplay'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import {
@@ -607,6 +608,8 @@ const CandidateSection = (props: {
 const PlayerStatsDashboardPage: Component = () => {
   const [filters, setFilters] = createSignal<PlayerStatsFilterState>({
     difficulty: PLAYER_STATS_DEFAULT_DIFFICULTY,
+    constFilterMode: 'level',
+    constRange: createFullChartConstRange(),
     genres: [],
     versions: [],
   })
@@ -620,6 +623,8 @@ const PlayerStatsDashboardPage: Component = () => {
 
     setFilters({
       difficulty: PLAYER_STATS_DEFAULT_DIFFICULTY,
+      constFilterMode: 'level',
+      constRange: createFullChartConstRange(),
       genres: [...data.genres],
       versions: [...data.versions],
     })
@@ -637,7 +642,8 @@ const PlayerStatsDashboardPage: Component = () => {
             genres: filters().genres,
             versions: filters().versions,
           }
-        : undefined
+        : undefined,
+      filters().constRange
     )
   )
   const summary = createMemo(() => buildPlayerStatsSummary(filteredRecords()))
