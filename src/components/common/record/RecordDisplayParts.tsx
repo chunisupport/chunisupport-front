@@ -170,6 +170,7 @@ const LAMP_DOT_PLACEHOLDER_CLASS = 'bg-surface-hover'
 /**
  * ハード・コンボ・FULL CHAINの3種類のランプを、バッジと同じ背景色の小さなドットで表示する。
  * ランプの重要度が低い画面で達成状況を示し、ホバー時に元のバッジラベルを表示する。
+ * 読み上げ用テキストの絶対配置で表示領域が広がらないよう、ラッパーを配置基準にする。
  *
  * @param props - 表示対象のランプ状態と追加クラス。
  * @returns 3つのドットを横並びにした要素。
@@ -197,7 +198,7 @@ export const RecordLampDots = (props: {
   }
 
   return (
-    <div class={`flex ${props.class ?? ''}`}>
+    <div class={`relative flex ${props.class ?? ''}`}>
       <span class="sr-only">{getRecordLampsAccessibleLabel(props.record)}</span>
       <div class="flex gap-1.5" aria-hidden="true">
         <span
@@ -221,6 +222,7 @@ export const RecordLampDots = (props: {
 
 /**
  * ハード・コンボ・FULL CHAINの3種類のランプバッジをまとめて表示する。
+ * 読み上げ用テキストの絶対配置で表示領域が広がらないよう、ラッパーを配置基準にする。
  *
  * @param props - 表示対象のランプ状態と追加クラス。
  * @returns 3種類のランプバッジを横並びにした要素。
@@ -229,7 +231,7 @@ export const DefaultRecordLampBadges = (props: {
   record: DefaultRecordLampBadgesRecord
   class?: string
 }) => (
-  <div class={`flex ${RECORD_LAMP_COLUMN_CLASS} ${props.class ?? ''}`}>
+  <div class={`relative flex ${RECORD_LAMP_COLUMN_CLASS} ${props.class ?? ''}`}>
     <span class="sr-only">{getRecordLampsAccessibleLabel(props.record)}</span>
     <div class="flex gap-2" aria-hidden="true">
       {renderDefaultRecordHardLampBadge(props.record.clear_lamp)}
