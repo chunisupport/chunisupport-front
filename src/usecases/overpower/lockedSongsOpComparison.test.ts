@@ -11,7 +11,9 @@ import {
   matchesOfficialOverPowerDisplay,
 } from './lockedSongsOpComparison'
 
-const versions: VersionSummaryDTO[] = [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }]
+const versions: VersionSummaryDTO[] = [
+  { name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
+]
 
 /**
  * 照合テストで使う楽曲DTOを生成する。

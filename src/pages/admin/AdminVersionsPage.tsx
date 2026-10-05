@@ -52,6 +52,7 @@ const VERSION_INPUT_CLASS =
  */
 const buildVersionFormValue = (version: VersionDTO | null): CreateVersionRequestDTO => ({
   name: version?.name ?? '',
+  short_name: version?.short_name ?? '',
   released_at: version?.released_at.slice(0, 10) ?? '',
 })
 
@@ -98,7 +99,11 @@ const VersionFormDialog: Component<VersionFormDialogProps> = (props): JSX.Elemen
   const handleSubmit = (event: SubmitEvent): void => {
     event.preventDefault()
     const current = formValue()
-    props.onSubmit({ name: current.name.trim(), released_at: current.released_at })
+    props.onSubmit({
+      name: current.name.trim(),
+      short_name: current.short_name.trim(),
+      released_at: current.released_at,
+    })
   }
 
   /**
@@ -109,6 +114,7 @@ const VersionFormDialog: Component<VersionFormDialogProps> = (props): JSX.Elemen
   const isSubmitDisabled = (): boolean =>
     props.saving ||
     formValue().name.trim().length === 0 ||
+    formValue().short_name.trim().length === 0 ||
     (props.mode === 'create' && formValue().released_at.length === 0)
 
   return (
@@ -141,6 +147,21 @@ const VersionFormDialog: Component<VersionFormDialogProps> = (props): JSX.Elemen
                   required
                   disabled={props.saving}
                   onInput={(event) => updateField('name', event.currentTarget.value)}
+                  class={VERSION_INPUT_CLASS}
+                />
+              </TextField>
+
+              <TextField required>
+                <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
+                  {ADMIN_VERSIONS_COPY.shortNameLabel}
+                </TextField.Label>
+                <TextField.Input
+                  name="version-short-name"
+                  value={formValue().short_name}
+                  maxLength={VERSION_INPUT_CONSTRAINTS.shortNameMaxLength}
+                  required
+                  disabled={props.saving}
+                  onInput={(event) => updateField('short_name', event.currentTarget.value)}
                   class={VERSION_INPUT_CLASS}
                 />
               </TextField>
@@ -315,7 +336,7 @@ const AdminVersionsPage = (): JSX.Element => {
         await createVersion(request)
         showSuccessToast(ADMIN_VERSIONS_COPY.createSuccess)
       } else if (version) {
-        await renameVersion(version.id, { name: request.name })
+        await renameVersion(version.id, { name: request.name, short_name: request.short_name })
         showSuccessToast(ADMIN_VERSIONS_COPY.editSuccess)
       }
       setFormMode(null)
@@ -403,6 +424,9 @@ const AdminVersionsPage = (): JSX.Element => {
                   </th>
                   <th class="px-3 py-2 text-left">{ADMIN_VERSIONS_COPY.nameLabel}</th>
                   <th class="whitespace-nowrap px-3 py-2 text-left">
+                    {ADMIN_VERSIONS_COPY.shortNameLabel}
+                  </th>
+                  <th class="whitespace-nowrap px-3 py-2 text-left">
                     {ADMIN_VERSIONS_COPY.releasedAtLabel}
                   </th>
                 </tr>
@@ -448,6 +472,7 @@ const AdminVersionsPage = (): JSX.Element => {
                           </Show>
                         </div>
                       </td>
+                      <td class="whitespace-nowrap px-3 py-2 font-sans">{version.short_name}</td>
                       <td class="whitespace-nowrap px-3 py-2 font-jost">
                         <time datetime={toDisplayReleasedAt(version.released_at)}>
                           {toDisplayReleasedAt(version.released_at)}

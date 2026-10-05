@@ -30,8 +30,8 @@ import {
 import { MAX_SCORE } from './scoreRank.ts'
 
 const versions: VersionDTO[] = [
-  { id: 1, name: 'CHUNITHM', released_at: '2015-07-16' },
-  { id: 2, name: 'CHUNITHM NEW', released_at: '2021-11-04' },
+  { id: 1, name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
+  { id: 2, name: 'CHUNITHM NEW', short_name: 'NEW', released_at: '2021-11-04' },
 ]
 
 const createSong = (overrides: Partial<SongDTO>): SongDTO => ({

@@ -3,8 +3,8 @@ import test from 'node:test'
 import { createSongFilters, filterSongs } from './songFilters'
 
 const versions = [
-  { name: 'CHUNITHM', released_at: '2015-07-16' },
-  { name: 'CHUNITHM PLUS', released_at: '2016-02-04' },
+  { name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
+  { name: 'CHUNITHM PLUS', short_name: 'ORI+', released_at: '2016-02-04' },
 ]
 const songs = [
   { genre: 'A', bpm: 150, release: '2015-07-16' },

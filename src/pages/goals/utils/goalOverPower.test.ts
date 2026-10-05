@@ -8,7 +8,7 @@ import {
 } from './goalOverPower'
 
 const MASTER_DATA: MasterDataDTO = {
-  genres: [{ id: 1, name: 'POPS' }],
+  genres: [{ id: 1, name: 'POPS', short_name: 'POPS' }],
   difficulties: [
     { id: 1, name: 'BASIC' },
     { id: 2, name: 'ADVANCED' },

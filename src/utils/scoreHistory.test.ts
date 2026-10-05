@@ -63,10 +63,10 @@ test('稼働日をまたぐ位置と最古履歴の末尾へバージョン行�
     createHistoryEntry('2025-01-10T12:00:00+09:00', 1_000_000),
   ]
   const versions = [
-    { name: 'CHUNITHM X-VERSE-X', released_at: '2026-06-18' },
-    { name: 'CHUNITHM X-VERSE', released_at: '2025-12-11' },
-    { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
-    { name: 'CHUNITHM LUMINOUS PLUS', released_at: '2024-06-20' },
+    { name: 'CHUNITHM X-VERSE-X', short_name: 'XVSX', released_at: '2026-06-18' },
+    { name: 'CHUNITHM X-VERSE', short_name: 'XVRS', released_at: '2025-12-11' },
+    { name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
+    { name: 'CHUNITHM LUMINOUS PLUS', short_name: 'LMN+', released_at: '2024-06-20' },
   ]
 
   // When
@@ -86,8 +86,8 @@ test('稼働日当日の履歴を新バージョン側へ含める', () => {
     createHistoryEntry('2026-06-17T23:59:59+09:00', 1_005_000),
   ]
   const versions = [
-    { name: 'CHUNITHM X-VERSE-X', released_at: '2026-06-18' },
-    { name: 'CHUNITHM X-VERSE', released_at: '2025-12-11' },
+    { name: 'CHUNITHM X-VERSE-X', short_name: 'XVSX', released_at: '2026-06-18' },
+    { name: 'CHUNITHM X-VERSE', short_name: 'XVRS', released_at: '2025-12-11' },
   ]
 
   // When
@@ -104,7 +104,7 @@ test('履歴が空の場合はバージョン行を表示しない', () => {
   // Given / When
   const result = buildScoreHistoryTableRows(
     [],
-    [{ name: 'CHUNITHM X-VERSE-X', released_at: '2026-06-18' }]
+    [{ name: 'CHUNITHM X-VERSE-X', short_name: 'XVSX', released_at: '2026-06-18' }]
   )
 
   // Then
@@ -119,9 +119,9 @@ test('不正日時を含む履歴でもバージョン行を重複させない',
     createHistoryEntry('2025-01-10T12:00:00+09:00', 1_005_000),
   ]
   const versions = [
-    { name: 'CHUNITHM X-VERSE-X', released_at: '2026-06-18' },
-    { name: 'CHUNITHM X-VERSE', released_at: '2025-12-11' },
-    { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+    { name: 'CHUNITHM X-VERSE-X', short_name: 'XVSX', released_at: '2026-06-18' },
+    { name: 'CHUNITHM X-VERSE', short_name: 'XVRS', released_at: '2025-12-11' },
+    { name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
   ]
 
   // When

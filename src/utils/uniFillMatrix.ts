@@ -42,17 +42,23 @@ export type UniFillMatrixColumn = {
   constFilterMode: FilterState['constFilterMode']
 }
 
-/** ジャンル1件分の行 */
-export type UniFillMatrixRow = {
-  /** 行見出しのジャンル名 */
-  genre: string
+/** 画面の横軸に使う楽曲属性 */
+export type UniFillMatrixHorizontalAxis = 'genre' | 'version'
+
+/** 画面の横軸1件分の集計 */
+export type UniFillMatrixRow = (
+  | { genre: string; version?: never }
+  | { version: string; genre?: never }
+) & {
+  /** 見出しに表示するAPIの短縮名。未指定時は集計用の名称 */
+  label: string
   /** 列の並びに対応するセル */
   cells: UniFillMatrixCell[]
-  /** ジャンル内の合計 */
+  /** 横軸属性内の合計 */
   total: UniFillMatrixCell
 }
 
-/** ジャンル×レベル（または譜面定数）の達成状況マトリクス */
+/** ジャンルまたは追加バージョン×レベル・譜面定数の達成状況 */
 export type UniFillMatrix = {
   columns: UniFillMatrixColumn[]
   rows: UniFillMatrixRow[]
@@ -107,47 +113,65 @@ const sumUniFillMatrixCells = (cells: readonly UniFillMatrixCell[]): UniFillMatr
   })
 
 /**
- * 通常譜面レコードをジャンル×レベル（または譜面定数）で集計する。
+ * 通常譜面レコードをジャンルまたは追加バージョンとレベル・譜面定数で集計する。
  *
  * @param records - 集計対象の通常譜面レコード。
- * @param attributesBySongId - 曲IDごとのジャンル。
+ * @param attributesBySongId - 曲IDごとのジャンルと追加バージョン。
  * @param genres - 行の表示順に並べたジャンル。ここに含まれないジャンルの譜面は集計せず、譜面が存在しないジャンルは行に含めない。
- * @param axis - 横軸をレベル別にするか譜面定数別にするか。
+ * @param axis - 画面の縦軸をレベル別にするか譜面定数別にするか。
  * @param achievement - 埋め終わりとみなす到達条件。
- * @returns 横軸が高い順の列、ジャンル行、列合計、総合計。
+ * @param horizontal - 画面の横軸、稼働順に並べた公開済みバージョン一覧、集計用の名称に対応する短縮名。
+ * @returns レベル・譜面定数が高い順の列、横軸属性の集計、合計。
  */
 export const buildUniFillMatrix = (
   records: readonly PlayerRecordDTO[],
-  attributesBySongId: ReadonlyMap<string, { genre: string }>,
+  attributesBySongId: ReadonlyMap<string, { genre: string; version?: string }>,
   genres: readonly string[],
   axis: PlayerStatsHeatmapAxis,
-  achievement: PlayerStatsAchievement
+  achievement: PlayerStatsAchievement,
+  horizontal: {
+    axis: UniFillMatrixHorizontalAxis
+    versions: readonly string[]
+    shortNames?: ReadonlyMap<string, string>
+  } = {
+    axis: 'genre',
+    versions: [],
+  }
 ): UniFillMatrix => {
-  const targetGenres = new Set(genres)
+  const groups = horizontal.axis === 'version' ? horizontal.versions : genres
+  const targetGroups = new Set(groups)
   const columnsByKey = new Map<number, UniFillMatrixColumn>()
-  const cellsByGenre = new Map<string, Map<number, UniFillMatrixCell>>()
+  const cellsByGroup = new Map<string, Map<number, UniFillMatrixCell>>()
 
   for (const record of records) {
-    const genre = attributesBySongId.get(record.id)?.genre
-    if (genre === undefined || !targetGenres.has(genre)) continue
+    const group = attributesBySongId.get(record.id)?.[horizontal.axis]
+    if (group === undefined || !targetGroups.has(group)) continue
 
     const column = toUniFillMatrixColumn(record.const, axis)
     columnsByKey.set(column.key, column)
-    const cells = cellsByGenre.get(genre) ?? new Map<number, UniFillMatrixCell>()
+    const cells = cellsByGroup.get(group) ?? new Map<number, UniFillMatrixCell>()
     const cell = cells.get(column.key) ?? { count: 0, total: 0 }
     cell.total += 1
     if (hasPlayerStatsAchievement(record, achievement)) cell.count += 1
     cells.set(column.key, cell)
-    cellsByGenre.set(genre, cells)
+    cellsByGroup.set(group, cells)
   }
 
   const columns = [...columnsByKey.values()].sort((left, right) => right.key - left.key)
-  const rows = genres.flatMap((genre): UniFillMatrixRow[] => {
-    const cells = cellsByGenre.get(genre)
+  const rows = groups.flatMap((group): UniFillMatrixRow[] => {
+    const cells = cellsByGroup.get(group)
     if (!cells) return []
 
     const rowCells = columns.map((column) => cells.get(column.key) ?? { count: 0, total: 0 })
-    return [{ genre, cells: rowCells, total: sumUniFillMatrixCells(rowCells) }]
+    const attribute = horizontal.axis === 'version' ? { version: group } : { genre: group }
+    return [
+      {
+        ...attribute,
+        label: horizontal.shortNames?.get(group) ?? group,
+        cells: rowCells,
+        total: sumUniFillMatrixCells(rowCells),
+      },
+    ]
   })
 
   return {
@@ -171,6 +195,8 @@ export type UniFillMatrixRecordTarget = {
   achievement: PlayerStatsAchievement
   /** 行のジャンル。列合計・総合計のマスでは未指定 */
   genre?: string
+  /** 横軸の追加バージョン。合計列では未指定 */
+  version?: string
   /** 横軸の列。ジャンル合計・総合計のマスでは未指定 */
   column?: UniFillMatrixColumn
 }
@@ -263,7 +289,7 @@ const resolveUnachievedFilter = (achievement: PlayerStatsAchievement): Partial<F
  * マトリクスのマスから、埋め条件を満たしていない譜面を表示する通常レコード用フィルターを作る。
  *
  * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
- * @param target - 難易度、埋め条件、行ジャンル、列。
+ * @param target - 難易度、埋め条件、ジャンルまたは追加バージョン、レベル・譜面定数。
  * @returns マスの条件と未達成条件を反映した通常レコードフィルター。
  */
 export const buildUniFillMatrixRecordFilter = (
@@ -274,6 +300,7 @@ export const buildUniFillMatrixRecordFilter = (
   ...resolveUniFillMatrixDifficultyFilter(target.difficulty),
   ...resolveUnachievedFilter(target.achievement),
   ...(target.genre === undefined ? {} : { genres: [target.genre] }),
+  ...(target.version === undefined ? {} : { versions: [target.version] }),
   ...(target.column === undefined
     ? {}
     : {
@@ -283,7 +310,7 @@ export const buildUniFillMatrixRecordFilter = (
 })
 
 /**
- * ジャンルとレベル・譜面定数が交差するマスのチェック数を集計する。
+ * 横軸の属性とレベル・譜面定数が交差するマスのチェック数を集計する。
  *
  * @param matrix - 集計済みのマトリクス。合計行・合計列と対象譜面がないマスは数えない。
  * @returns 全件達成マス数をcount、対象譜面があるマス数をtotalとした集計。
@@ -306,15 +333,16 @@ const UNI_FILL_MATRIX_IMAGE_FILENAME_PREFIX = 'chunisupport-uni-fill-matrix'
 /**
  * 表示条件と日時を含むマトリクス画像のファイル名を生成する。
  *
- * @param condition - 画像化した難易度・埋め条件・縦軸。
+ * @param condition - 画像化した難易度・埋め条件・縦軸・横軸。
  * @param date - ファイル名へ付与する日時。省略時は現在時刻。
- * @returns `chunisupport-uni-fill-matrix-{難易度}-{埋め条件}-{縦軸}-{YYYYMMDDhhmmss}.png` 形式の小文字のファイル名。
+ * @returns 表示条件と日時を含む小文字のファイル名。バージョン横軸では日時の前にversionを付ける。
  */
 export const formatUniFillMatrixImageFilename = (
   condition: {
     difficulty: UniFillMatrixDifficulty
     achievement: PlayerStatsAchievement
     axis: PlayerStatsHeatmapAxis
+    horizontalAxis?: UniFillMatrixHorizontalAxis
   },
   date: Date = new Date()
 ): string =>
@@ -323,6 +351,7 @@ export const formatUniFillMatrixImageFilename = (
     condition.difficulty.replaceAll('_', '-'),
     condition.achievement,
     condition.axis,
+    ...(condition.horizontalAxis === 'version' ? ['version'] : []),
     formatFileTimestamp(date),
   ]
     .join('-')

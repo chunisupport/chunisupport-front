@@ -9,8 +9,8 @@ import {
 import { createRandomSongRecordMap, type RandomSongCandidate } from './randomSongSelector'
 
 const versions: VersionDTO[] = [
-  { id: 1, name: 'CHUNITHM', released_at: '2015-07-16' },
-  { id: 2, name: 'CHUNITHM NEW', released_at: '2021-11-04' },
+  { id: 1, name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
+  { id: 2, name: 'CHUNITHM NEW', short_name: 'NEW', released_at: '2021-11-04' },
 ]
 
 const masterData: GoalFilterOptions = {
@@ -18,7 +18,7 @@ const masterData: GoalFilterOptions = {
     { id: 1, name: 'BASIC' },
     { id: 2, name: 'MASTER' },
   ],
-  genres: [{ id: 10, name: 'POPS & ANIME' }],
+  genres: [{ id: 10, name: 'POPS & ANIME', short_name: 'P&A' }],
 }
 
 /**

@@ -664,6 +664,11 @@ export interface MasterItemDTO {
   sort_order?: number
 }
 
+/** ジャンルマスタ。表示幅を抑えるための超ショート名（例: P&A）を持つ */
+export interface GenreDTO extends MasterItemDTO {
+  short_name: string
+}
+
 export interface RatingBandDTO {
   id: number
   label: string
@@ -753,7 +758,7 @@ export interface AchievementTypeDTO {
 export type PossessionName = 'normal' | 'silver' | 'gold' | 'platina' | 'rainbow'
 
 export interface MasterDataDTO {
-  genres: MasterItemDTO[]
+  genres: GenreDTO[]
   difficulties: MasterItemDTO[]
   versions: VersionDTO[]
   account_types: MasterItemDTO[]
@@ -766,22 +771,28 @@ export interface MasterDataDTO {
 export interface VersionDTO {
   id: number
   name: string
+  /** 表示幅を抑えるための超ショート名（例: CRY+） */
+  short_name: string
   released_at: string
 }
 
 /** 管理者向けバージョン作成リクエスト */
 export interface CreateVersionRequestDTO {
   name: string
+  short_name: string
   released_at: string
 }
 
 /** 管理者向けバージョン改名リクエスト */
 export interface RenameVersionRequestDTO {
   name: string
+  short_name: string
 }
 
 export interface VersionSummaryDTO {
   name: string
+  /** 表示幅を抑えるための超ショート名（例: CRY+） */
+  short_name: string
   released_at: string
 }
 

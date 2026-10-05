@@ -20,7 +20,7 @@ export const fetchAdminVersions = async (): Promise<VersionDTO[]> => {
 /**
  * バージョンを新規作成する。
  *
- * @param request - バージョン名と稼働日。
+ * @param request - バージョン名、超ショート名と稼働日。
  * @returns 作成したバージョン。
  */
 export const createVersion = async (request: CreateVersionRequestDTO): Promise<VersionDTO> => {
@@ -36,10 +36,10 @@ export const createVersion = async (request: CreateVersionRequestDTO): Promise<V
 }
 
 /**
- * 指定したバージョンの名前を変更する。
+ * 指定したバージョンの名前と超ショート名を変更する。
  *
  * @param id - 更新対象のバージョンID。
- * @param request - 変更後のバージョン名。
+ * @param request - 変更後のバージョン名と超ショート名。
  * @returns 更新したバージョン。
  */
 export const renameVersion = async (

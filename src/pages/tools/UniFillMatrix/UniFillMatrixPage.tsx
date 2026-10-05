@@ -34,6 +34,7 @@ import {
   formatUniFillMatrixImageFilename,
   type UniFillMatrix,
   type UniFillMatrixCell,
+  type UniFillMatrixHorizontalAxis,
   type UniFillMatrixRecordTarget,
 } from '../../../utils/uniFillMatrix'
 import { buildUserProfilePagePath } from '../../../utils/userProfileRoute'
@@ -46,6 +47,7 @@ import {
   UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT,
   UNI_FILL_MATRIX_DEFAULT_DIFFICULTY,
   UNI_FILL_MATRIX_DIFFICULTY_OPTIONS,
+  UNI_FILL_MATRIX_HORIZONTAL_AXIS_OPTIONS,
   UNI_FILL_MATRIX_IMAGE_PADDING,
   UNI_FILL_MATRIX_IMAGE_PIXEL_RATIO,
   UNI_FILL_MATRIX_RECORD_SORT_QUERY,
@@ -57,14 +59,14 @@ import { UniFillMatrixImagePreviewDialog } from './UniFillMatrixImagePreviewDial
 /** ページ内セクションに共通適用するカードクラス */
 const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5'
 
-/** レベル・譜面定数列の中央揃えと枠線のクラス */
-const AXIS_CELL_CLASS = 'border-r border-border py-2 text-center'
+/** 縦軸見出しの左右余白・改行禁止・中央揃え・枠線の共通クラス */
+const AXIS_CELL_CLASS = 'whitespace-nowrap border-r border-border px-2 py-2 text-center'
 
 /** 合計行・合計列の文字を強調するクラス */
 const TOTAL_CELL_CLASS = 'font-semibold'
 
 /** レコード画面で絞り込むマスの位置。未指定の軸は絞り込まない */
-type UniFillMatrixCellTarget = Pick<UniFillMatrixRecordTarget, 'genre' | 'column'>
+type UniFillMatrixCellTarget = Pick<UniFillMatrixRecordTarget, 'genre' | 'version' | 'column'>
 
 /**
  * 未達成の譜面が残っているマスか判定する。
@@ -77,16 +79,16 @@ const hasUnachievedCharts = (cell: UniFillMatrixCell): boolean => cell.count < c
 /**
  * マスの位置を含むスクリーンリーダー向けの操作文言を作る。
  *
- * @param target - 対象マスのジャンルと列。
- * @returns ジャンル・列見出しと操作内容をつなげた文言。
+ * @param target - 対象マスのジャンルまたはバージョンと列。
+ * @returns 横軸・縦軸の見出しと操作内容をつなげた文言。
  */
 const toCellActionLabel = (target: UniFillMatrixCellTarget): string =>
-  [target.genre, target.column?.label, UNI_FILL_MATRIX_COPY.cellActionLabel]
+  [target.genre ?? target.version, target.column?.label, UNI_FILL_MATRIX_COPY.cellActionLabel]
     .filter((part) => part !== undefined)
     .join(' ')
 
 /**
- * レベル・譜面定数を縦軸、ジャンルを横軸にした達成状況をヒートマップ表で表示する。
+ * レベル・譜面定数を縦軸、ジャンルまたはバージョンを横軸にし、APIの短縮名を見出しに表示する。
  *
  * @param props.matrix - 集計済みのマトリクス。
  * @param props.caption - 表の読み上げ用説明。
@@ -154,22 +156,22 @@ const UniFillMatrixTable = (props: {
         </colgroup>
         <thead class="text-xs text-text-muted">
           <tr>
-            <th scope="col" class={`${axisCellClass()} bg-surface-muted px-1 font-semibold`}>
-              {props.axisHeader}
+            <th scope="col" class={`${axisCellClass()} bg-surface-muted font-semibold`}>
+              <span class="sr-only">{props.axisHeader}</span>
             </th>
             <For each={props.matrix.rows}>
               {(row) => (
                 <th
                   scope="col"
-                  class="border-l border-border bg-surface-muted px-2 py-2 text-center font-sans font-semibold"
+                  class="whitespace-nowrap border-l border-border bg-surface-muted px-2 py-2 text-center font-sans font-semibold"
                 >
-                  {row.genre}
+                  {row.label}
                 </th>
               )}
             </For>
             <th
               scope="col"
-              class="border-l border-border bg-surface-muted px-3 py-2 text-center font-semibold"
+              class="whitespace-nowrap border-l border-border bg-surface-muted px-3 py-2 text-center font-semibold"
             >
               {UNI_FILL_MATRIX_COPY.totalHeader}
             </th>
@@ -181,7 +183,7 @@ const UniFillMatrixTable = (props: {
               <tr class="border-t border-border">
                 <th
                   scope="row"
-                  class={`${axisCellClass()} whitespace-nowrap bg-surface px-0 font-jost text-sm font-semibold text-text`}
+                  class={`${axisCellClass()} bg-surface font-jost text-sm font-semibold text-text`}
                 >
                   {column.label}
                 </th>
@@ -193,7 +195,7 @@ const UniFillMatrixTable = (props: {
                      * @returns 達成件数と総数。
                      */
                     const cell = () => row.cells[columnIndex()]
-                    const target = { genre: row.genre, column }
+                    const target = { genre: row.genre, version: row.version, column }
                     return (
                       <HeatmapCountCell
                         count={cell().count}
@@ -225,7 +227,7 @@ const UniFillMatrixTable = (props: {
           <tr class="border-t-2 border-border">
             <th
               scope="row"
-              class={`${axisCellClass()} bg-surface-muted px-1 text-sm font-semibold text-text`}
+              class={`${axisCellClass()} bg-surface-muted text-sm font-semibold text-text`}
             >
               {UNI_FILL_MATRIX_COPY.totalHeader}
             </th>
@@ -238,8 +240,8 @@ const UniFillMatrixTable = (props: {
                   showCompleteMark
                   showEmptyAsComplete
                   class={TOTAL_CELL_CLASS}
-                  onSelect={selectHandler(row.total, { genre: row.genre })}
-                  selectLabel={toCellActionLabel({ genre: row.genre })}
+                  onSelect={selectHandler(row.total, { genre: row.genre, version: row.version })}
+                  selectLabel={toCellActionLabel({ genre: row.genre, version: row.version })}
                 />
               )}
             </For>
@@ -261,9 +263,9 @@ const UniFillMatrixTable = (props: {
 }
 
 /**
- * ジャンル×レベル（または譜面定数）ごとに、指定条件を何譜面達成したかを表示するツール画面。
+ * ジャンルまたは追加バージョン×レベル・譜面定数ごとに達成状況を表示する。
  *
- * @returns 難易度・埋め条件・縦軸を切り替えられ、マスから未達成譜面のレコードへ遷移できるウニ埋めマトリックス。
+ * @returns 難易度・埋め条件・両軸を切り替えられ、マスから未達成譜面へ遷移できる画面。
  */
 const UniFillMatrixPage: Component = () => {
   const [difficulty, setDifficulty] = createSignal<UniFillMatrixDifficultyOption>(
@@ -273,6 +275,20 @@ const UniFillMatrixPage: Component = () => {
     UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT
   )
   const [axis, setAxis] = createSignal<PlayerStatsHeatmapAxis>('level')
+  const [horizontalAxis, setHorizontalAxis] = createSignal<UniFillMatrixHorizontalAxis>('genre')
+  /**
+   * 選択中の両軸に対応する読み上げ用説明を返す。
+   *
+   * @returns 表の縦軸と横軸を表す説明。
+   */
+  const matrixCaption = () =>
+    horizontalAxis() === 'version'
+      ? axis() === 'level'
+        ? UNI_FILL_MATRIX_COPY.versionLevelCaption
+        : UNI_FILL_MATRIX_COPY.versionChartConstantCaption
+      : axis() === 'level'
+        ? UNI_FILL_MATRIX_COPY.levelCaption
+        : UNI_FILL_MATRIX_COPY.chartConstantCaption
   const [showPercent, setShowPercent] = createSignal(false)
   const [pageData] = createResource(fetchOwnPlayerStatsData)
   const [masterData] = createResource(fetchMasterData)
@@ -295,7 +311,12 @@ const UniFillMatrixPage: Component = () => {
       data.attributesBySongId,
       data.genres,
       axis(),
-      achievement().value
+      achievement().value,
+      {
+        axis: horizontalAxis(),
+        versions: data.versions,
+        shortNames: data.shortNames[horizontalAxis()],
+      }
     )
   })
 
@@ -358,10 +379,7 @@ const UniFillMatrixPage: Component = () => {
       axis() === 'level'
         ? UNI_FILL_MATRIX_COPY.levelHeader
         : UNI_FILL_MATRIX_COPY.chartConstantHeader
-    const caption =
-      axis() === 'level'
-        ? UNI_FILL_MATRIX_COPY.levelCaption
-        : UNI_FILL_MATRIX_COPY.chartConstantCaption
+    const caption = matrixCaption()
 
     const host = document.createElement('div')
     host.className = 'pointer-events-none fixed top-0'
@@ -448,6 +466,7 @@ const UniFillMatrixPage: Component = () => {
       difficulty: difficulty().value,
       achievement: achievement().value,
       axis: axis(),
+      horizontalAxis: horizontalAxis(),
     })
 
   return (
@@ -494,6 +513,19 @@ const UniFillMatrixPage: Component = () => {
                     formatLabel={(option) => option.label}
                     rootClass="md:w-60"
                   />
+                  <div class="flex flex-col gap-1">
+                    <span class="font-sans text-sm text-text-muted">
+                      {UNI_FILL_MATRIX_COPY.horizontalAxisLabel}
+                    </span>
+                    <SegmentedToggleGroup
+                      value={horizontalAxis()}
+                      onChange={setHorizontalAxis}
+                      options={UNI_FILL_MATRIX_HORIZONTAL_AXIS_OPTIONS}
+                      ariaLabel={UNI_FILL_MATRIX_COPY.horizontalAxisLabel}
+                      class="w-full sm:w-auto"
+                      itemClass="flex-1 sm:flex-none"
+                    />
+                  </div>
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-center md:ml-auto">
                     <CheckboxField
                       checked={showPercent()}
@@ -525,11 +557,7 @@ const UniFillMatrixPage: Component = () => {
                       tableRef={(element) => {
                         matrixTable = element
                       }}
-                      caption={
-                        axis() === 'level'
-                          ? UNI_FILL_MATRIX_COPY.levelCaption
-                          : UNI_FILL_MATRIX_COPY.chartConstantCaption
-                      }
+                      caption={matrixCaption()}
                       axisHeader={
                         axis() === 'level'
                           ? UNI_FILL_MATRIX_COPY.levelHeader

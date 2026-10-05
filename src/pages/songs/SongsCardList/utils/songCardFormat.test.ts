@@ -29,7 +29,7 @@ test('追加日が未設定ならハイフンを返すこと', () => {
 test('追加日があるときフルバージョン名を返すこと', () => {
   // Given: 追加日とバージョン一覧。
   const release = '2024-03-07'
-  const versions = [{ name: 'CHUNITHM LUMINOUS', released_at: '2024-03-07' }]
+  const versions = [{ name: 'CHUNITHM LUMINOUS', short_name: 'LMN', released_at: '2024-03-07' }]
 
   // When: カード用のバージョン名を作る。
   const result = formatSongCardReleaseVersion(release, versions)
@@ -50,7 +50,7 @@ test('追加日が未設定ならバージョン名はnullであること', () =
 test('追加日の後ろにフルバージョン名を空白区切りで付けること', () => {
   // Given: 追加日とバージョン一覧。
   const release = '2024-03-07'
-  const versions = [{ name: 'CHUNITHM LUMINOUS', released_at: '2024-03-07' }]
+  const versions = [{ name: 'CHUNITHM LUMINOUS', short_name: 'LMN', released_at: '2024-03-07' }]
 
   // When: カード用の追加日行を作る。
   const result = formatSongCardReleaseLine(release, versions)

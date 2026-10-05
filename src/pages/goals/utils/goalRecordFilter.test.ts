@@ -14,8 +14,8 @@ const MASTER_DATA: MasterDataDTO = {
     { id: 4, name: 'ULTIMA' },
   ],
   genres: [
-    { id: 10, name: 'POPS & ANIME' },
-    { id: 11, name: 'niconico' },
+    { id: 10, name: 'POPS & ANIME', short_name: 'P&A' },
+    { id: 11, name: 'niconico', short_name: 'nico' },
   ],
   versions: [],
   account_types: [],
@@ -25,8 +25,8 @@ const MASTER_DATA: MasterDataDTO = {
 }
 
 const VERSIONS: VersionDTO[] = [
-  { id: 100, name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' },
-  { id: 101, name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+  { id: 100, name: 'CHUNITHM LUMINOUS', short_name: 'LMN', released_at: '2023-12-14' },
+  { id: 101, name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
 ]
 
 /**

@@ -8,7 +8,7 @@ const MASTER_DATA: MasterDataDTO = {
     { id: 1, name: 'BASIC' },
     { id: 2, name: 'EXPERT' },
   ],
-  genres: [{ id: 10, name: 'POPS & ANIME' }],
+  genres: [{ id: 10, name: 'POPS & ANIME', short_name: 'P&A' }],
   versions: [],
   account_types: [],
   rating_bands: [],

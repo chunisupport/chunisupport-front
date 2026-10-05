@@ -1,13 +1,14 @@
 /** バージョン管理画面で使用する表示文言 */
 export const ADMIN_VERSIONS_COPY = {
   pageTitle: 'バージョン管理',
-  pageDescription: 'バージョン名と稼働日を管理します。',
+  pageDescription: 'バージョン名、超ショート名、稼働日を管理します。',
   createButton: 'バージョンを追加',
   createDialogTitle: 'バージョンを追加',
-  createDialogDescription: 'バージョン名と稼働日を入力します。',
-  editDialogTitle: 'バージョン名を編集',
-  editDialogDescription: '稼働日は変更せず、バージョン名だけを更新します。',
+  createDialogDescription: 'バージョン名、超ショート名、稼働日を入力します。',
+  editDialogTitle: 'バージョンを編集',
+  editDialogDescription: '稼働日は変更せず、バージョン名と超ショート名を更新します。',
   nameLabel: 'バージョン名',
+  shortNameLabel: '超ショート名',
   releasedAtLabel: '稼働日',
   cancelButton: 'キャンセル',
   createSubmit: '追加する',
@@ -21,8 +22,8 @@ export const ADMIN_VERSIONS_COPY = {
   emptyState: '登録されているバージョンがありません。',
   createSuccess: 'バージョンを追加しました。',
   createError: 'バージョンの追加に失敗しました。',
-  editSuccess: 'バージョン名を更新しました。',
-  editError: 'バージョン名の更新に失敗しました。',
+  editSuccess: 'バージョンを更新しました。',
+  editError: 'バージョンの更新に失敗しました。',
   deleteSuccess: 'バージョンを削除しました。',
   deleteError: 'バージョンの削除に失敗しました。',
   deleteDialogTitle: '最新版を削除しますか？',
@@ -35,6 +36,7 @@ export const ADMIN_VERSIONS_COPY = {
 export const VERSION_INPUT_CONSTRAINTS = {
   nameMaxLength: 50,
   namePattern: 'CHUNITHM .+',
+  shortNameMaxLength: 10,
 } as const
 
 /**
