@@ -4,6 +4,7 @@ import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
 import { render } from 'solid-js/web'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import logoSingle from '../../../assets/logo_single.svg'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppSelect } from '../../../components/common/AppSelect'
 import { SegmentedToggleGroup } from '../../../components/common/AppTabs'
@@ -14,6 +15,7 @@ import {
   type PlayerStatsHeatmapAxis,
 } from '../../../constants/playerStats'
 import { UNI_FILL_MATRIX_PATH } from '../../../constants/routes'
+import { SITE_NAME } from '../../../constants/site'
 import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
@@ -261,7 +263,7 @@ const UniFillMatrixTable = (props: {
 /**
  * ジャンル×レベル（または譜面定数）ごとに、指定条件を何譜面達成したかを表示するツール画面。
  *
- * @returns 難易度・埋め条件・縦軸を切り替えられ、マスから未達成譜面のレコードへ遷移できるウニ埋めマトリクス。
+ * @returns 難易度・埋め条件・縦軸を切り替えられ、マスから未達成譜面のレコードへ遷移できるウニ埋めマトリックス。
  */
 const UniFillMatrixPage: Component = () => {
   const [difficulty, setDifficulty] = createSignal<UniFillMatrixDifficultyOption>(
@@ -336,7 +338,7 @@ const UniFillMatrixPage: Component = () => {
   useDocumentTitle(tool.title)
 
   /**
-   * 表の見た目を保ち、チェック数をヘッダーに加えたPNGを生成する。
+   * 表の見た目を保ち、ロゴ・埋め条件・チェック数と生成元を加えたPNGを生成する。
    *
    * @returns 生成したPNG画像。マトリクスが未集計の場合は拒否されるPromise。
    */
@@ -379,11 +381,27 @@ const UniFillMatrixPage: Component = () => {
             style={{ width: `${imageWidth}px`, padding: `${UNI_FILL_MATRIX_IMAGE_PADDING}px` }}
           >
             <header class="flex flex-wrap items-center justify-between gap-6">
-              <div class="min-w-0 space-y-2">
-                <h1 class="text-2xl font-semibold">{tool.title}</h1>
-                <p class="text-sm text-text-muted">
-                  {difficultyLabel} / {achievementLabel} / {axisHeader}
-                </p>
+              <div class="min-w-0 flex-1 space-y-2">
+                <div class="flex items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    class="h-10 w-10 shrink-0 bg-text"
+                    style={{
+                      'mask-image': `url(${logoSingle})`,
+                      'mask-position': 'center',
+                      'mask-repeat': 'no-repeat',
+                      'mask-size': 'contain',
+                    }}
+                  />
+                  <h1 class="min-w-0 flex-1 text-2xl font-semibold">{tool.title}</h1>
+                </div>
+                <div class="text-sm text-text-muted">
+                  <p class="whitespace-nowrap">{difficultyLabel}</p>
+                  <p class="whitespace-nowrap">
+                    <strong class="font-bold">{UNI_FILL_MATRIX_COPY.imageGoalLabel}</strong>
+                    {`: ${achievementLabel}`}
+                  </p>
+                </div>
               </div>
               <p class="shrink-0 whitespace-nowrap font-jost tabular-nums">
                 <span class="sr-only">{UNI_FILL_MATRIX_COPY.imageChecksLabel}</span>
@@ -400,6 +418,12 @@ const UniFillMatrixPage: Component = () => {
               showPercent={currentShowPercent}
               imageMode
             />
+            <footer class="text-right text-sm text-text-muted">
+              <span class="whitespace-nowrap">
+                {UNI_FILL_MATRIX_COPY.imageGeneratedBy}{' '}
+                <strong class="font-bold">{SITE_NAME}</strong>
+              </span>
+            </footer>
           </div>
         ),
         host

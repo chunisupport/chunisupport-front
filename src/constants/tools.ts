@@ -114,13 +114,6 @@ export const TOOL_LINKS: ToolLink[] = [
     description: 'プレイ記録から達成状況と次に狙う譜面を確認できます。',
   },
   {
-    title: 'ウニ埋めマトリクス',
-    href: UNI_FILL_MATRIX_PATH,
-    icon: 'matrix',
-    description: 'ジャンル×レベルごとに、何譜面埋め終わっているかをヒートマップで確認できます。',
-    adminOnly: true,
-  },
-  {
     title: 'フレンドVS',
     href: FRIEND_VS_PATH,
     icon: 'friendVs',
@@ -180,5 +173,11 @@ export const TOOL_LINKS: ToolLink[] = [
     href: RATING_THEORETICAL_CHECKER_PATH,
     icon: 'gauge',
     description: '全譜面SSS+時の理論値レーティングを確認できます。',
+  },
+  {
+    title: 'ウニ埋めマトリックス',
+    href: UNI_FILL_MATRIX_PATH,
+    icon: 'matrix',
+    description: 'ジャンル×レベルごとに、何譜面埋め終わっているかをヒートマップで確認できます。',
   },
 ]
