@@ -3,7 +3,6 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { defineConfig, loadEnv } from '@rsbuild/core'
 import { pluginBabel } from '@rsbuild/plugin-babel'
-import { pluginSolid } from '@rsbuild/plugin-solid'
 
 const REQUIRED_PUBLIC_ENV_KEYS = [
   'PUBLIC_BACKEND_URL',
@@ -214,8 +213,10 @@ export default defineConfig(({ env, envMode }) => {
       frontendVersionPlugin(),
       pluginBabel({
         include: /\.(?:jsx|tsx)$/,
+        babelLoaderOptions: {
+          plugins: [['@solidjs/babel-plugin', { generate: 'dom', dev: env === 'development' }]],
+        },
       }),
-      pluginSolid(),
     ],
   }
 })
