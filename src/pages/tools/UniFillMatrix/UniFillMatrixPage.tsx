@@ -76,6 +76,9 @@ const LINE_HEADER_CELL_CLASS = 'whitespace-nowrap px-2 py-2 text-center'
 const STICKY_LINE_HEADER_CELL_CLASS =
   'sticky left-0 z-10 after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-border'
 
+/** 固定した左端列の右罫線と2本重ならないよう、隣の列の左罫線を消す表のクラス */
+const STICKY_LINE_HEADER_TABLE_CLASS = '[&_tr>:nth-child(2)]:border-l-0'
+
 /** 合計行・合計列の文字を強調するクラス */
 const TOTAL_CELL_CLASS = 'font-semibold'
 
@@ -200,7 +203,7 @@ const UniFillMatrixTable = (props: {
     <div class="overflow-x-auto rounded-lg border border-border">
       <table
         ref={props.tableRef}
-        class="w-full table-fixed border-collapse"
+        class={`w-full table-fixed border-collapse ${props.imageMode ? '' : STICKY_LINE_HEADER_TABLE_CLASS}`}
         style={{
           'min-width': `calc(var(--spacing) * ${UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING} * ${columnWeight()})`,
         }}
