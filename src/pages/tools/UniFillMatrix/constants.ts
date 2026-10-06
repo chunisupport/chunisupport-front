@@ -12,6 +12,7 @@ import type {
   UniFillMatrixDifficulty,
   UniFillMatrixDimension,
   UniFillMatrixHeader,
+  UniFillMatrixViewSettings,
 } from '../../../utils/uniFillMatrix'
 
 /** ウニ埋めマトリックス画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
@@ -65,6 +66,18 @@ export const UNI_FILL_MATRIX_DEFAULT_VERTICAL: UniFillMatrixDimension = 'levelCo
 
 /** 初期選択する横軸 */
 export const UNI_FILL_MATRIX_DEFAULT_HORIZONTAL: UniFillMatrixDimension = 'genre'
+
+/** 保存済みの値がない場合に使う表示設定（縦軸・横軸・レベル別/定数別・%表示） */
+export const UNI_FILL_MATRIX_DEFAULT_VIEW_SETTINGS: UniFillMatrixViewSettings = {
+  vertical: UNI_FILL_MATRIX_DEFAULT_VERTICAL,
+  horizontal: UNI_FILL_MATRIX_DEFAULT_HORIZONTAL,
+  levelConstAxis: 'level',
+  showPercent: false,
+}
+
+/** ウニ埋めマトリックスの表示設定を保存する localStorage キー */
+export const UNI_FILL_MATRIX_VIEW_SETTINGS_STORAGE_KEY =
+  'chunisupport-uni-fill-matrix-view-settings'
 
 /** 左端の見出し列の名前に使う、レベル・譜面定数の軸の名前 */
 const UNI_FILL_MATRIX_LEVEL_CONST_NAMES: Record<PlayerStatsHeatmapAxis, string> = {

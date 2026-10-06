@@ -8,10 +8,12 @@ import {
   buildUniFillMatrixRecordFilter,
   countUniFillMatrixChecks,
   formatUniFillMatrixImageFilename,
+  normalizeUniFillMatrixViewSettings,
   type UniFillMatrix,
   type UniFillMatrixLayout,
   type UniFillMatrixLevelConst,
   type UniFillMatrixSongAttributes,
+  type UniFillMatrixViewSettings,
 } from './uniFillMatrix'
 
 /**
@@ -617,5 +619,79 @@ test('画像ファイル名は難易度・埋め条件・縦軸・横軸・日�
 
     // Then
     assert.equal(result, expected)
+  }
+})
+
+/** 表示設定の正規化テストで使う既定値 */
+const VIEW_SETTINGS_FALLBACK: UniFillMatrixViewSettings = {
+  vertical: 'levelConst',
+  horizontal: 'genre',
+  levelConstAxis: 'level',
+  showPercent: false,
+}
+
+test('保存済みの表示設定が正しい場合はそのまま復元されること', () => {
+  // Given
+  const saved = {
+    vertical: 'version',
+    horizontal: 'nameFolder',
+    levelConstAxis: 'chartConstant',
+    showPercent: true,
+  }
+
+  // When
+  const result = normalizeUniFillMatrixViewSettings(saved, VIEW_SETTINGS_FALLBACK)
+
+  // Then
+  assert.deepEqual(result, saved)
+})
+
+test('表示設定が未保存または不正な形式の場合は既定値になること', () => {
+  // Given
+  const invalidValues = [null, 'levelConst', 1]
+
+  // When
+  const results = invalidValues.map((value) =>
+    normalizeUniFillMatrixViewSettings(value, VIEW_SETTINGS_FALLBACK)
+  )
+
+  // Then
+  for (const result of results) assert.deepEqual(result, VIEW_SETTINGS_FALLBACK)
+})
+
+test('項目ごとに不正値だけが既定値へ戻ること', () => {
+  // Given
+  const saved = {
+    vertical: 'genre',
+    horizontal: 'version',
+    levelConstAxis: 'unknown',
+    showPercent: 'true',
+  }
+
+  // When
+  const result = normalizeUniFillMatrixViewSettings(saved, VIEW_SETTINGS_FALLBACK)
+
+  // Then
+  assert.deepEqual(result, {
+    vertical: 'genre',
+    horizontal: 'version',
+    levelConstAxis: 'level',
+    showPercent: false,
+  })
+})
+
+test('縦軸と横軸が同じ属性または片方が不正な場合は両軸とも既定値になること', () => {
+  // Given
+  const sameAxes = { vertical: 'version', horizontal: 'version' }
+  const invalidAxis = { vertical: 'version', horizontal: 'unknown' }
+
+  // When
+  const sameAxesResult = normalizeUniFillMatrixViewSettings(sameAxes, VIEW_SETTINGS_FALLBACK)
+  const invalidAxisResult = normalizeUniFillMatrixViewSettings(invalidAxis, VIEW_SETTINGS_FALLBACK)
+
+  // Then
+  for (const result of [sameAxesResult, invalidAxisResult]) {
+    assert.equal(result.vertical, 'levelConst')
+    assert.equal(result.horizontal, 'genre')
   }
 })
