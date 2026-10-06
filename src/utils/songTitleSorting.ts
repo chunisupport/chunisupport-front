@@ -1,3 +1,5 @@
+import { normalizeSongReading } from './songReading'
+
 /** 読み順ソートに必要な楽曲情報 */
 export type SongTitleSortItem = {
   title: string
@@ -12,17 +14,6 @@ const READING_CATEGORY = {
   NUMBER: 2,
   OTHER: 3,
 } as const
-
-/**
- * 楽曲の読みをソート用に正規化する。
- *
- * @param song - 読み順の比較対象となる楽曲。
- * @returns 前後の空白を除去してNFKC正規化した読み。未設定または空欄の場合は曲名。
- */
-const getNormalizedReading = (song: SongTitleSortItem): string => {
-  const reading = song.reading?.trim()
-  return (reading || song.title.trim()).normalize('NFKC')
-}
 
 /**
  * reading の先頭文字からソート分類を取得する。
@@ -50,8 +41,8 @@ export const compareSongsByReading = (
   left: SongTitleSortItem,
   right: SongTitleSortItem
 ): number => {
-  const leftReading = getNormalizedReading(left)
-  const rightReading = getNormalizedReading(right)
+  const leftReading = normalizeSongReading(left)
+  const rightReading = normalizeSongReading(right)
   const categoryComparison = getReadingCategory(leftReading) - getReadingCategory(rightReading)
   if (categoryComparison !== 0) return categoryComparison
 
