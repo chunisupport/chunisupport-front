@@ -178,7 +178,6 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'ウニ埋めマトリックス',
     href: UNI_FILL_MATRIX_PATH,
     icon: 'matrix',
-    description:
-      'ジャンル・バージョン・楽曲名×レベルごとに、何譜面埋め終わっているかをヒートマップで確認できます。',
+    description: '細かい組み合わせごとに、何譜面埋め終わっているかを確認できます。',
   },
 ]

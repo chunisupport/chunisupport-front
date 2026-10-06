@@ -31,60 +31,68 @@ export type UniFillMatrixCell = {
   total: number
 }
 
-/** マトリクスの列（レベルまたは譜面定数） */
-export type UniFillMatrixColumn = {
-  /** 列の並び替えと同一判定に使う数値 */
+/** マトリクスのレベルまたは譜面定数1件分の範囲 */
+export type UniFillMatrixLevelConst = {
+  /** 並び替えと同一判定に使う数値 */
   key: number
-  /** 列見出しに表示する文字列 */
+  /** 見出しに表示する文字列 */
   label: string
-  /** 列に含まれる譜面定数の範囲 */
+  /** 含まれる譜面定数の範囲 */
   constRange: NumericRangeFilter
   /** 通常レコードのフィルターで範囲を表す指定方法 */
   constFilterMode: FilterState['constFilterMode']
 }
 
-/** 画面の横軸に使う楽曲属性 */
-export type UniFillMatrixHorizontalAxis = 'genre' | 'version' | 'nameFolder'
+/** 縦軸・横軸に選べる属性。levelConst はレベルまたは譜面定数 */
+export type UniFillMatrixDimension = 'levelConst' | 'genre' | 'version' | 'nameFolder'
 
-/** 横軸1件分の属性。横軸に対応するプロパティだけを持つ */
-type UniFillMatrixRowAttribute =
-  | { genre: string; version?: never; nameFolder?: never }
-  | { version: string; genre?: never; nameFolder?: never }
-  | { nameFolder: NameFolderKey; genre?: never; version?: never }
+/** 楽曲の属性から決まる軸 */
+type UniFillMatrixSongDimension = Exclude<UniFillMatrixDimension, 'levelConst'>
 
-/** 画面の横軸1件分の集計 */
-export type UniFillMatrixRow = UniFillMatrixRowAttribute & {
-  /** 見出しに表示する短縮名・表示名。未指定時は集計用の名称 */
-  label: string
-  /** 列の並びに対応するセル */
-  cells: UniFillMatrixCell[]
-  /** 横軸属性内の合計 */
-  total: UniFillMatrixCell
+/** 曲IDごとの楽曲属性 */
+export type UniFillMatrixSongAttributes = {
+  genre: string
+  version?: string
+  nameFolder?: NameFolderKey
 }
 
-/** ジャンル・追加バージョン・名前順フォルダ×レベル・譜面定数の達成状況 */
-export type UniFillMatrix = {
-  columns: UniFillMatrixColumn[]
-  rows: UniFillMatrixRow[]
-  columnTotals: UniFillMatrixCell[]
-  grandTotal: UniFillMatrixCell
+/** 表示用の見出し。axis はレベル・譜面定数、group はジャンル・バージョン・名前順フォルダ */
+export type UniFillMatrixHeader = {
+  label: string
+  kind: 'axis' | 'group'
+}
+
+/** マトリクスを組み立てる条件 */
+export type UniFillMatrixLayout = {
+  /** 縦軸（左端の見出し）に使う属性 */
+  vertical: UniFillMatrixDimension
+  /** 横軸（上端の見出し）に使う属性 */
+  horizontal: UniFillMatrixDimension
+  /** レベル・定数の軸をレベル別にするか譜面定数別にするか */
+  levelConstAxis: PlayerStatsHeatmapAxis
+  /** 表示順に並べたジャンル。ここに含まれないジャンルの譜面は集計しない */
+  genres: readonly string[]
+  /** 稼働順に並べた公開済みバージョン。ここに含まれないバージョンの譜面は集計しない */
+  versions: readonly string[]
+  /** 集計用の名称に対応する見出しの短縮名・表示名。未指定時は集計用の名称 */
+  labels?: Partial<Record<UniFillMatrixSongDimension, ReadonlyMap<string, string>>>
 }
 
 /**
- * 譜面定数を横軸の列へ変換する。
+ * 譜面定数をレベルまたは譜面定数1件分の範囲へ変換する。
  *
  * @param chartConst - 譜面定数。
  * @param axis - レベル別または譜面定数別。
  * @returns 並び替え用のキー、表示ラベル、譜面定数の範囲とフィルターでの指定方法。
  */
-const toUniFillMatrixColumn = (
+const toUniFillMatrixLevelConst = (
   chartConst: number,
   axis: PlayerStatsHeatmapAxis
-): UniFillMatrixColumn => {
+): UniFillMatrixLevelConst => {
   if (axis === 'level') {
     const level = toChartLevelLabel(chartConst)
     const constRange = getChartLevelConstRange(level)
-    // 6以下はフィルターのレベル指定が「5 = 5.0〜5.9」にまとまるため、範囲が一致しない列は数値指定にする
+    // 6以下はフィルターのレベル指定が「5 = 5.0〜5.9」にまとまるため、範囲が一致しない項目は数値指定にする
     const isFilterLevelRange =
       getChartLevelFilterBoundary(level, 'min') === constRange.min &&
       getChartLevelFilterBoundary(level, 'max') === constRange.max
@@ -116,103 +124,170 @@ const sumUniFillMatrixCells = (cells: readonly UniFillMatrixCell[]): UniFillMatr
     total: 0,
   })
 
+/** 軸の1項目。order の昇順に並べる */
+type UniFillMatrixAxisItem = {
+  /** 集計時の同一判定に使うキー */
+  key: string
+  /** 並び順。小さいほど先頭 */
+  order: number
+  header: UniFillMatrixHeader
+  /** レコード画面で絞り込む位置。通常レコードで絞り込めない項目では未指定 */
+  position?: UniFillMatrixCellPosition
+}
+
 /**
- * 横軸1件分の属性を行のプロパティへ変換する。
+ * 楽曲属性の軸の名称を、通常レコードで絞り込む位置へ変換する。
  *
- * @param axis - 画面の横軸。
- * @param group - 集計用の名称。名前順フォルダでは内部キー。
- * @returns 横軸に対応するプロパティだけを持つオブジェクト。
+ * @param dimension - 楽曲の属性から決まる軸。
+ * @param group - 集計用の名称。
+ * @returns 絞り込み位置。名前順フォルダは通常レコードで絞り込めないため undefined。
  */
-const toUniFillMatrixRowAttribute = (
-  axis: UniFillMatrixHorizontalAxis,
+const toSongDimensionPosition = (
+  dimension: UniFillMatrixSongDimension,
   group: string
-): UniFillMatrixRowAttribute => {
-  switch (axis) {
+): UniFillMatrixCellPosition | undefined => {
+  switch (dimension) {
     case 'genre':
       return { genre: group }
     case 'version':
       return { version: group }
     case 'nameFolder':
-      return { nameFolder: group as NameFolderKey }
+      return undefined
   }
 }
 
 /**
- * 通常譜面レコードをジャンル・追加バージョン・名前順フォルダとレベル・譜面定数で集計する。
+ * 譜面が属する軸の項目を求める関数を作る。
+ *
+ * @param dimension - 縦軸または横軸に使う属性。
+ * @param layout - マトリクスの条件。
+ * @param attributesBySongId - 曲IDごとの楽曲属性。
+ * @returns 譜面から軸の項目を求める関数。集計対象外の譜面では undefined を返す。
+ */
+const createAxisItemResolver = (
+  dimension: UniFillMatrixDimension,
+  layout: UniFillMatrixLayout,
+  attributesBySongId: ReadonlyMap<string, UniFillMatrixSongAttributes>
+): ((record: PlayerRecordDTO) => UniFillMatrixAxisItem | undefined) => {
+  if (dimension === 'levelConst') {
+    return (record) => {
+      const levelConst = toUniFillMatrixLevelConst(record.const, layout.levelConstAxis)
+      return {
+        key: String(levelConst.key),
+        // レベル・譜面定数は高い順に並べる
+        order: -levelConst.key,
+        header: { label: levelConst.label, kind: 'axis' },
+        position: { levelConst },
+      }
+    }
+  }
+  const groups: readonly string[] =
+    dimension === 'genre'
+      ? layout.genres
+      : dimension === 'version'
+        ? layout.versions
+        : NAME_FOLDER_KEYS
+  const orders = new Map(groups.map((group, index) => [group, index]))
+  const labels = layout.labels?.[dimension]
+  return (record) => {
+    const group = attributesBySongId.get(record.id)?.[dimension]
+    const order = group === undefined ? undefined : orders.get(group)
+    if (group === undefined || order === undefined) return undefined
+    return {
+      key: group,
+      order,
+      header: { label: labels?.get(group) ?? group, kind: 'group' },
+      position: toSongDimensionPosition(dimension, group),
+    }
+  }
+}
+
+/**
+ * 縦軸と横軸の絞り込み位置を合わせる。
+ *
+ * @param line - 縦軸の項目の絞り込み位置。
+ * @param column - 横軸の項目の絞り込み位置。
+ * @returns 両方の条件を持つ位置。どちらかが絞り込めない場合は undefined。
+ */
+const mergeCellPositions = (
+  line: UniFillMatrixCellPosition | undefined,
+  column: UniFillMatrixCellPosition | undefined
+): UniFillMatrixCellPosition | undefined => line && column && { ...line, ...column }
+
+/**
+ * 軸の項目を並び順に並べる。
+ *
+ * @param items - キーごとの軸の項目。
+ * @returns order の昇順に並べた項目。
+ */
+const sortAxisItems = (items: ReadonlyMap<string, UniFillMatrixAxisItem>) =>
+  [...items.values()].sort((left, right) => left.order - right.order)
+
+/**
+ * 通常譜面レコードを、選択した縦軸・横軸の属性で集計した表示用の表にする。
  *
  * @param records - 集計対象の通常譜面レコード。
  * @param attributesBySongId - 曲IDごとのジャンル、追加バージョン、名前順フォルダ。
- * @param genres - 行の表示順に並べたジャンル。ここに含まれないジャンルの譜面は集計せず、譜面が存在しないジャンルは行に含めない。
- * @param axis - 画面の縦軸をレベル別にするか譜面定数別にするか。
  * @param achievement - 埋め終わりとみなす到達条件。
- * @param horizontal - 画面の横軸、稼働順に並べた公開済みバージョン一覧、集計用の名称に対応する短縮名・表示名。
- * @returns レベル・譜面定数が高い順の列、横軸属性の集計、合計。
+ * @param layout - 縦軸・横軸の属性、レベル別か譜面定数別か、ジャンル・バージョンの一覧と見出しの表示名。
+ * @returns 列見出し、行、最下段の合計行、総合計を持つ表。譜面がない行・列と、どちらかの軸で集計対象外の譜面は含めない。
  */
 export const buildUniFillMatrix = (
   records: readonly PlayerRecordDTO[],
-  attributesBySongId: ReadonlyMap<
-    string,
-    { genre: string; version?: string; nameFolder?: NameFolderKey }
-  >,
-  genres: readonly string[],
-  axis: PlayerStatsHeatmapAxis,
+  attributesBySongId: ReadonlyMap<string, UniFillMatrixSongAttributes>,
   achievement: PlayerStatsAchievement,
-  horizontal: {
-    axis: UniFillMatrixHorizontalAxis
-    versions: readonly string[]
-    shortNames?: ReadonlyMap<string, string>
-  } = {
-    axis: 'genre',
-    versions: [],
-  }
+  layout: UniFillMatrixLayout
 ): UniFillMatrix => {
-  const groups: readonly string[] =
-    horizontal.axis === 'version'
-      ? horizontal.versions
-      : horizontal.axis === 'nameFolder'
-        ? NAME_FOLDER_KEYS
-        : genres
-  const targetGroups = new Set(groups)
-  const columnsByKey = new Map<number, UniFillMatrixColumn>()
-  const cellsByGroup = new Map<string, Map<number, UniFillMatrixCell>>()
+  const resolveLineItem = createAxisItemResolver(layout.vertical, layout, attributesBySongId)
+  const resolveColumnItem = createAxisItemResolver(layout.horizontal, layout, attributesBySongId)
+  const lineItems = new Map<string, UniFillMatrixAxisItem>()
+  const columnItems = new Map<string, UniFillMatrixAxisItem>()
+  const cellsByLine = new Map<string, Map<string, UniFillMatrixCell>>()
 
   for (const record of records) {
-    const group = attributesBySongId.get(record.id)?.[horizontal.axis]
-    if (group === undefined || !targetGroups.has(group)) continue
+    const lineItem = resolveLineItem(record)
+    const columnItem = resolveColumnItem(record)
+    if (!lineItem || !columnItem) continue
 
-    const column = toUniFillMatrixColumn(record.const, axis)
-    columnsByKey.set(column.key, column)
-    const cells = cellsByGroup.get(group) ?? new Map<number, UniFillMatrixCell>()
-    const cell = cells.get(column.key) ?? { count: 0, total: 0 }
+    lineItems.set(lineItem.key, lineItem)
+    columnItems.set(columnItem.key, columnItem)
+    const cells = cellsByLine.get(lineItem.key) ?? new Map<string, UniFillMatrixCell>()
+    const cell = cells.get(columnItem.key) ?? { count: 0, total: 0 }
     cell.total += 1
     if (hasPlayerStatsAchievement(record, achievement)) cell.count += 1
-    cells.set(column.key, cell)
-    cellsByGroup.set(group, cells)
+    cells.set(columnItem.key, cell)
+    cellsByLine.set(lineItem.key, cells)
   }
 
-  const columns = [...columnsByKey.values()].sort((left, right) => right.key - left.key)
-  const rows = groups.flatMap((group): UniFillMatrixRow[] => {
-    const cells = cellsByGroup.get(group)
-    if (!cells) return []
-
-    const rowCells = columns.map((column) => cells.get(column.key) ?? { count: 0, total: 0 })
-    return [
-      {
-        ...toUniFillMatrixRowAttribute(horizontal.axis, group),
-        label: horizontal.shortNames?.get(group) ?? group,
-        cells: rowCells,
-        total: sumUniFillMatrixCells(rowCells),
+  const sortedColumnItems = sortAxisItems(columnItems)
+  const lines = sortAxisItems(lineItems).map((lineItem): UniFillMatrixLine => {
+    const cells = cellsByLine.get(lineItem.key)
+    const lineCells = sortedColumnItems.map((columnItem) => ({
+      cell: cells?.get(columnItem.key) ?? { count: 0, total: 0 },
+      position: mergeCellPositions(lineItem.position, columnItem.position),
+    }))
+    return {
+      header: lineItem.header,
+      cells: lineCells,
+      total: {
+        cell: sumUniFillMatrixCells(lineCells.map((gridCell) => gridCell.cell)),
+        position: lineItem.position,
       },
-    ]
+    }
   })
 
   return {
-    columns,
-    rows,
-    columnTotals: columns.map((_, index) =>
-      sumUniFillMatrixCells(rows.map((row) => row.cells[index]))
-    ),
-    grandTotal: sumUniFillMatrixCells(rows.map((row) => row.total)),
+    lineHeaderKind: layout.vertical === 'levelConst' ? 'axis' : 'group',
+    columnHeaders: sortedColumnItems.map((columnItem) => columnItem.header),
+    lines,
+    totals: sortedColumnItems.map((columnItem, index) => ({
+      cell: sumUniFillMatrixCells(lines.map((line) => line.cells[index].cell)),
+      position: columnItem.position,
+    })),
+    grandTotal: {
+      cell: sumUniFillMatrixCells(lines.map((line) => line.total.cell)),
+      position: {},
+    },
   }
 }
 
@@ -225,12 +300,12 @@ export type UniFillMatrixRecordTarget = {
   difficulty: UniFillMatrixDifficulty
   /** 埋め終わりとみなす到達条件 */
   achievement: PlayerStatsAchievement
-  /** 行のジャンル。列合計・総合計のマスでは未指定 */
+  /** ジャンル。ジャンルの軸を含まないマスや合計のマスでは未指定 */
   genre?: string
-  /** 横軸の追加バージョン。合計列では未指定 */
+  /** 追加バージョン。バージョンの軸を含まないマスや合計のマスでは未指定 */
   version?: string
-  /** 横軸の列。ジャンル合計・総合計のマスでは未指定 */
-  column?: UniFillMatrixColumn
+  /** レベル・譜面定数。レベル・定数の軸を含まないマスや合計のマスでは未指定 */
+  levelConst?: UniFillMatrixLevelConst
 }
 
 /**
@@ -321,7 +396,7 @@ const resolveUnachievedFilter = (achievement: PlayerStatsAchievement): Partial<F
  * マトリクスのマスから、埋め条件を満たしていない譜面を表示する通常レコード用フィルターを作る。
  *
  * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
- * @param target - 難易度、埋め条件、ジャンルまたは追加バージョン、レベル・譜面定数。
+ * @param target - 難易度、埋め条件と、マスが表すジャンル・追加バージョン・レベル・譜面定数。
  * @returns マスの条件と未達成条件を反映した通常レコードフィルター。
  */
 export const buildUniFillMatrixRecordFilter = (
@@ -333,24 +408,55 @@ export const buildUniFillMatrixRecordFilter = (
   ...resolveUnachievedFilter(target.achievement),
   ...(target.genre === undefined ? {} : { genres: [target.genre] }),
   ...(target.version === undefined ? {} : { versions: [target.version] }),
-  ...(target.column === undefined
+  ...(target.levelConst === undefined
     ? {}
     : {
-        const: { ...target.column.constRange },
-        constFilterMode: target.column.constFilterMode,
+        const: { ...target.levelConst.constRange },
+        constFilterMode: target.levelConst.constFilterMode,
       }),
 })
 
+/** レコード画面で絞り込むマスの位置。未指定の軸は絞り込まない */
+export type UniFillMatrixCellPosition = Pick<
+  UniFillMatrixRecordTarget,
+  'genre' | 'version' | 'levelConst'
+>
+
+/** 表示用の1マス */
+export type UniFillMatrixGridCell = {
+  cell: UniFillMatrixCell
+  /** レコード画面で絞り込む位置。通常レコードで絞り込めないマスでは未指定 */
+  position?: UniFillMatrixCellPosition
+}
+
+/** 表示用の1行 */
+export type UniFillMatrixLine = {
+  header: UniFillMatrixHeader
+  cells: UniFillMatrixGridCell[]
+  total: UniFillMatrixGridCell
+}
+
+/** 縦軸・横軸の属性で集計した表示用の表 */
+export type UniFillMatrix = {
+  /** 左端の見出しの種類 */
+  lineHeaderKind: UniFillMatrixHeader['kind']
+  columnHeaders: UniFillMatrixHeader[]
+  lines: UniFillMatrixLine[]
+  /** 最下段の合計行のマス */
+  totals: UniFillMatrixGridCell[]
+  grandTotal: UniFillMatrixGridCell
+}
+
 /**
- * 横軸の属性とレベル・譜面定数が交差するマスのチェック数を集計する。
+ * 縦軸と横軸の属性が交差するマスのチェック数を集計する。
  *
  * @param matrix - 集計済みのマトリクス。合計行・合計列と対象譜面がないマスは数えない。
  * @returns 全件達成マス数をcount、対象譜面があるマス数をtotalとした集計。
  */
 export const countUniFillMatrixChecks = (matrix: UniFillMatrix): UniFillMatrixCell => {
   const checks = { count: 0, total: 0 }
-  for (const row of matrix.rows) {
-    for (const cell of row.cells) {
+  for (const line of matrix.lines) {
+    for (const { cell } of line.cells) {
       if (cell.total === 0) continue
       checks.total += 1
       if (cell.count === cell.total) checks.count += 1
@@ -362,29 +468,42 @@ export const countUniFillMatrixChecks = (matrix: UniFillMatrix): UniFillMatrixCe
 /** マトリクス画像のファイル名の接頭辞 */
 const UNI_FILL_MATRIX_IMAGE_FILENAME_PREFIX = 'chunisupport-uni-fill-matrix'
 
-/** 横軸ごとに縦軸の後へ付けるファイル名の要素。ジャンルは既定のため付けない */
-const UNI_FILL_MATRIX_IMAGE_FILENAME_HORIZONTAL_SUFFIX: Record<
-  UniFillMatrixHorizontalAxis,
-  readonly string[]
-> = {
-  genre: [],
-  version: ['version'],
-  nameFolder: ['name'],
+/** 楽曲属性の軸ごとのファイル名の要素 */
+const UNI_FILL_MATRIX_IMAGE_FILENAME_SONG_DIMENSION: Record<UniFillMatrixSongDimension, string> = {
+  genre: 'genre',
+  version: 'version',
+  nameFolder: 'name',
 }
+
+/**
+ * 軸の属性をファイル名の要素へ変換する。
+ *
+ * @param dimension - 縦軸または横軸の属性。
+ * @param levelConstAxis - レベル別または譜面定数別。
+ * @returns レベル・定数ではlevelまたはchartConstant、それ以外は属性の名前。
+ */
+const toImageFilenameDimension = (
+  dimension: UniFillMatrixDimension,
+  levelConstAxis: PlayerStatsHeatmapAxis
+): string =>
+  dimension === 'levelConst'
+    ? levelConstAxis
+    : UNI_FILL_MATRIX_IMAGE_FILENAME_SONG_DIMENSION[dimension]
 
 /**
  * 表示条件と日時を含むマトリクス画像のファイル名を生成する。
  *
- * @param condition - 画像化した難易度・埋め条件・縦軸・横軸。
+ * @param condition - 画像化した難易度・埋め条件・レベル別か譜面定数別か・縦軸・横軸。
  * @param date - ファイル名へ付与する日時。省略時は現在時刻。
- * @returns 表示条件と日時を含む小文字のファイル名。バージョン横軸ではversion、楽曲名横軸ではnameを日時の前に付ける。
+ * @returns 難易度・埋め条件・縦軸・横軸・日時を含む小文字のファイル名。
  */
 export const formatUniFillMatrixImageFilename = (
   condition: {
     difficulty: UniFillMatrixDifficulty
     achievement: PlayerStatsAchievement
-    axis: PlayerStatsHeatmapAxis
-    horizontalAxis?: UniFillMatrixHorizontalAxis
+    levelConstAxis: PlayerStatsHeatmapAxis
+    vertical: UniFillMatrixDimension
+    horizontal: UniFillMatrixDimension
   },
   date: Date = new Date()
 ): string =>
@@ -392,8 +511,8 @@ export const formatUniFillMatrixImageFilename = (
     UNI_FILL_MATRIX_IMAGE_FILENAME_PREFIX,
     condition.difficulty.replaceAll('_', '-'),
     condition.achievement,
-    condition.axis,
-    ...UNI_FILL_MATRIX_IMAGE_FILENAME_HORIZONTAL_SUFFIX[condition.horizontalAxis ?? 'genre'],
+    toImageFilenameDimension(condition.vertical, condition.levelConstAxis),
+    toImageFilenameDimension(condition.horizontal, condition.levelConstAxis),
     formatFileTimestamp(date),
   ]
     .join('-')
