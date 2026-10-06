@@ -1928,7 +1928,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 The following npm package may be included in this product:
 
- - solid-js@1.9.13
+ - solid-js@1.9.15
 
 This package contains the following license:
 
