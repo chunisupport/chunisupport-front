@@ -66,8 +66,15 @@ import { UniFillMatrixImagePreviewDialog } from './UniFillMatrixImagePreviewDial
 /** ページ内セクションに共通適用するカードクラス */
 const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5'
 
-/** 左端の見出しの左右余白・改行禁止・中央揃え・枠線の共通クラス */
-const LINE_HEADER_CELL_CLASS = 'whitespace-nowrap border-r border-border px-2 py-2 text-center'
+/** 左端の見出しの左右余白・改行禁止・中央揃えの共通クラス */
+const LINE_HEADER_CELL_CLASS = 'whitespace-nowrap px-2 py-2 text-center'
+
+/**
+ * 横スクロールで固定する左端セルのクラス。
+ * border-collapse の罫線は固定セルに追従せずスクロールで消えるため、右罫線は疑似要素で描く。
+ */
+const STICKY_LINE_HEADER_CELL_CLASS =
+  'sticky left-0 z-10 after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-border'
 
 /** 合計行・合計列の文字を強調するクラス */
 const TOTAL_CELL_CLASS = 'font-semibold'
@@ -164,10 +171,10 @@ const UniFillMatrixTable = (props: {
   /**
    * 画像では通常配置に、画面では横スクロールに追従する左端セルのクラスを取得する。
    *
-   * @returns 中央揃え・枠線と、画面表示時だけ左端固定を適用するクラス。
+   * @returns 中央揃えと、画像では通常の右罫線、画面表示時は左端固定と追従する右罫線を適用するクラス。
    */
   const lineHeaderCellClass = () =>
-    `${LINE_HEADER_CELL_CLASS} ${props.imageMode ? '' : 'sticky left-0 z-10'}`
+    `${LINE_HEADER_CELL_CLASS} ${props.imageMode ? 'border-r border-border' : STICKY_LINE_HEADER_CELL_CLASS}`
 
   /**
    * 表示用のマスを共通ヒートマップセルとして表示する。
