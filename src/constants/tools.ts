@@ -179,6 +179,6 @@ export const TOOL_LINKS: ToolLink[] = [
     href: UNI_FILL_MATRIX_PATH,
     icon: 'matrix',
     description:
-      'ジャンル・バージョン×レベルごとに、何譜面埋め終わっているかをヒートマップで確認できます。',
+      'ジャンル・バージョン・楽曲名×レベルごとに、何譜面埋め終わっているかをヒートマップで確認できます。',
   },
 ]

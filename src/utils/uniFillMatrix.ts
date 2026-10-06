@@ -17,6 +17,7 @@ import {
 } from './chartLevel'
 import { COMBO_LAMP_UNACHIEVED_FILTERS, HARD_LAMP_UNACHIEVED_FILTERS } from './goalLamp'
 import { formatFileTimestamp } from './localDateTime'
+import { NAME_FOLDER_KEYS, type NameFolderKey } from './nameFolder'
 import {
   hasPlayerStatsAchievement,
   type PlayerStatsAchievement,
@@ -43,14 +44,17 @@ export type UniFillMatrixColumn = {
 }
 
 /** 画面の横軸に使う楽曲属性 */
-export type UniFillMatrixHorizontalAxis = 'genre' | 'version'
+export type UniFillMatrixHorizontalAxis = 'genre' | 'version' | 'nameFolder'
+
+/** 横軸1件分の属性。横軸に対応するプロパティだけを持つ */
+type UniFillMatrixRowAttribute =
+  | { genre: string; version?: never; nameFolder?: never }
+  | { version: string; genre?: never; nameFolder?: never }
+  | { nameFolder: NameFolderKey; genre?: never; version?: never }
 
 /** 画面の横軸1件分の集計 */
-export type UniFillMatrixRow = (
-  | { genre: string; version?: never }
-  | { version: string; genre?: never }
-) & {
-  /** 見出しに表示するAPIの短縮名。未指定時は集計用の名称 */
+export type UniFillMatrixRow = UniFillMatrixRowAttribute & {
+  /** 見出しに表示する短縮名・表示名。未指定時は集計用の名称 */
   label: string
   /** 列の並びに対応するセル */
   cells: UniFillMatrixCell[]
@@ -58,7 +62,7 @@ export type UniFillMatrixRow = (
   total: UniFillMatrixCell
 }
 
-/** ジャンルまたは追加バージョン×レベル・譜面定数の達成状況 */
+/** ジャンル・追加バージョン・名前順フォルダ×レベル・譜面定数の達成状況 */
 export type UniFillMatrix = {
   columns: UniFillMatrixColumn[]
   rows: UniFillMatrixRow[]
@@ -113,19 +117,43 @@ const sumUniFillMatrixCells = (cells: readonly UniFillMatrixCell[]): UniFillMatr
   })
 
 /**
- * 通常譜面レコードをジャンルまたは追加バージョンとレベル・譜面定数で集計する。
+ * 横軸1件分の属性を行のプロパティへ変換する。
+ *
+ * @param axis - 画面の横軸。
+ * @param group - 集計用の名称。名前順フォルダでは内部キー。
+ * @returns 横軸に対応するプロパティだけを持つオブジェクト。
+ */
+const toUniFillMatrixRowAttribute = (
+  axis: UniFillMatrixHorizontalAxis,
+  group: string
+): UniFillMatrixRowAttribute => {
+  switch (axis) {
+    case 'genre':
+      return { genre: group }
+    case 'version':
+      return { version: group }
+    case 'nameFolder':
+      return { nameFolder: group as NameFolderKey }
+  }
+}
+
+/**
+ * 通常譜面レコードをジャンル・追加バージョン・名前順フォルダとレベル・譜面定数で集計する。
  *
  * @param records - 集計対象の通常譜面レコード。
- * @param attributesBySongId - 曲IDごとのジャンルと追加バージョン。
+ * @param attributesBySongId - 曲IDごとのジャンル、追加バージョン、名前順フォルダ。
  * @param genres - 行の表示順に並べたジャンル。ここに含まれないジャンルの譜面は集計せず、譜面が存在しないジャンルは行に含めない。
  * @param axis - 画面の縦軸をレベル別にするか譜面定数別にするか。
  * @param achievement - 埋め終わりとみなす到達条件。
- * @param horizontal - 画面の横軸、稼働順に並べた公開済みバージョン一覧、集計用の名称に対応する短縮名。
+ * @param horizontal - 画面の横軸、稼働順に並べた公開済みバージョン一覧、集計用の名称に対応する短縮名・表示名。
  * @returns レベル・譜面定数が高い順の列、横軸属性の集計、合計。
  */
 export const buildUniFillMatrix = (
   records: readonly PlayerRecordDTO[],
-  attributesBySongId: ReadonlyMap<string, { genre: string; version?: string }>,
+  attributesBySongId: ReadonlyMap<
+    string,
+    { genre: string; version?: string; nameFolder?: NameFolderKey }
+  >,
   genres: readonly string[],
   axis: PlayerStatsHeatmapAxis,
   achievement: PlayerStatsAchievement,
@@ -138,7 +166,12 @@ export const buildUniFillMatrix = (
     versions: [],
   }
 ): UniFillMatrix => {
-  const groups = horizontal.axis === 'version' ? horizontal.versions : genres
+  const groups: readonly string[] =
+    horizontal.axis === 'version'
+      ? horizontal.versions
+      : horizontal.axis === 'nameFolder'
+        ? NAME_FOLDER_KEYS
+        : genres
   const targetGroups = new Set(groups)
   const columnsByKey = new Map<number, UniFillMatrixColumn>()
   const cellsByGroup = new Map<string, Map<number, UniFillMatrixCell>>()
@@ -163,10 +196,9 @@ export const buildUniFillMatrix = (
     if (!cells) return []
 
     const rowCells = columns.map((column) => cells.get(column.key) ?? { count: 0, total: 0 })
-    const attribute = horizontal.axis === 'version' ? { version: group } : { genre: group }
     return [
       {
-        ...attribute,
+        ...toUniFillMatrixRowAttribute(horizontal.axis, group),
         label: horizontal.shortNames?.get(group) ?? group,
         cells: rowCells,
         total: sumUniFillMatrixCells(rowCells),
@@ -330,12 +362,22 @@ export const countUniFillMatrixChecks = (matrix: UniFillMatrix): UniFillMatrixCe
 /** マトリクス画像のファイル名の接頭辞 */
 const UNI_FILL_MATRIX_IMAGE_FILENAME_PREFIX = 'chunisupport-uni-fill-matrix'
 
+/** 横軸ごとに縦軸の後へ付けるファイル名の要素。ジャンルは既定のため付けない */
+const UNI_FILL_MATRIX_IMAGE_FILENAME_HORIZONTAL_SUFFIX: Record<
+  UniFillMatrixHorizontalAxis,
+  readonly string[]
+> = {
+  genre: [],
+  version: ['version'],
+  nameFolder: ['name'],
+}
+
 /**
  * 表示条件と日時を含むマトリクス画像のファイル名を生成する。
  *
  * @param condition - 画像化した難易度・埋め条件・縦軸・横軸。
  * @param date - ファイル名へ付与する日時。省略時は現在時刻。
- * @returns 表示条件と日時を含む小文字のファイル名。バージョン横軸では日時の前にversionを付ける。
+ * @returns 表示条件と日時を含む小文字のファイル名。バージョン横軸ではversion、楽曲名横軸ではnameを日時の前に付ける。
  */
 export const formatUniFillMatrixImageFilename = (
   condition: {
@@ -351,7 +393,7 @@ export const formatUniFillMatrixImageFilename = (
     condition.difficulty.replaceAll('_', '-'),
     condition.achievement,
     condition.axis,
-    ...(condition.horizontalAxis === 'version' ? ['version'] : []),
+    ...UNI_FILL_MATRIX_IMAGE_FILENAME_HORIZONTAL_SUFFIX[condition.horizontalAxis ?? 'genre'],
     formatFileTimestamp(date),
   ]
     .join('-')

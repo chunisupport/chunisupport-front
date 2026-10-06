@@ -143,6 +143,51 @@ test('バージョン横軸の画像ファイル名にはversionが入る', () =
   assert.equal(filename, 'chunisupport-uni-fill-matrix-master-sss-level-version-20261006090507.png')
 })
 
+test('楽曲名横軸は名前順フォルダの表示順に集計し、譜面がないフォルダを除く', () => {
+  // Given
+  const attributes = new Map([
+    ['kana', { genre: 'ORIGINAL', nameFolder: 'A' as const }],
+    ['number', { genre: 'ORIGINAL', nameFolder: 'NUMBER' as const }],
+    ['alphabet', { genre: 'POPS & ANIME', nameFolder: 'ABCD' as const }],
+  ])
+  const records = [
+    createRecord({ id: 'number', const: 14.0 }),
+    createRecord({ id: 'kana', const: 14.0, score: 1_000_000 }),
+    createRecord({ id: 'alphabet', const: 14.0 }),
+  ]
+
+  // When
+  const matrix = buildUniFillMatrix(records, attributes, GENRES, 'level', 'sss', {
+    axis: 'nameFolder',
+    versions: [],
+    shortNames: new Map([['A', 'あ行']]),
+  })
+
+  // Then
+  assert.deepEqual(
+    matrix.rows.map((row) => [row.nameFolder, row.label, row.total]),
+    [
+      ['ABCD', 'ABCD', { count: 1, total: 1 }],
+      ['A', 'あ行', { count: 0, total: 1 }],
+      ['NUMBER', 'NUMBER', { count: 1, total: 1 }],
+    ]
+  )
+})
+
+test('楽曲名横軸の画像ファイル名にはnameが入る', () => {
+  // Given
+  const date = new Date(2026, 9, 6, 9, 5, 7)
+
+  // When
+  const filename = formatUniFillMatrixImageFilename(
+    { difficulty: 'MASTER', achievement: 'sss', axis: 'level', horizontalAxis: 'nameFolder' },
+    date
+  )
+
+  // Then
+  assert.equal(filename, 'chunisupport-uni-fill-matrix-master-sss-level-name-20261006090507.png')
+})
+
 test('レベル別ではジャンル×レベルごとに達成件数と総数を集計し、レベルが高い順に並べる', () => {
   // Given
   const records = [

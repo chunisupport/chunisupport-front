@@ -2,9 +2,16 @@ import {
   MASTER_ULTIMA_FILTER,
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../../../constants/chart'
-import { PLAYER_STATS_ACHIEVEMENT_LABEL } from '../../../constants/playerStats'
+import { NAME_FOLDER_LABELS } from '../../../constants/nameFolder'
+import {
+  PLAYER_STATS_ACHIEVEMENT_LABEL,
+  type PlayerStatsHeatmapAxis,
+} from '../../../constants/playerStats'
 import type { PlayerStatsAchievement } from '../../../utils/playerStatsDashboard'
-import type { UniFillMatrixDifficulty } from '../../../utils/uniFillMatrix'
+import type {
+  UniFillMatrixDifficulty,
+  UniFillMatrixHorizontalAxis,
+} from '../../../utils/uniFillMatrix'
 
 /** ウニ埋めマトリックス画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const UNI_FILL_MATRIX_COPY = {
@@ -16,10 +23,6 @@ export const UNI_FILL_MATRIX_COPY = {
   levelHeader: 'レベル',
   chartConstantHeader: '譜面定数',
   totalHeader: '合計',
-  levelCaption: '縦軸が譜面定数から換算したレベル、横軸がジャンルの達成状況',
-  chartConstantCaption: '縦軸が譜面定数、横軸がジャンルの達成状況',
-  versionLevelCaption: '縦軸が譜面定数から換算したレベル、横軸が追加バージョンの達成状況',
-  versionChartConstantCaption: '縦軸が譜面定数、横軸が追加バージョンの達成状況',
   cellActionLabel: '未達成の譜面をレコードで表示',
   recordNavigationError: 'レコード画面へ移動できませんでした。',
   imageSaveLabel: '画像化・共有',
@@ -41,7 +44,32 @@ export const UNI_FILL_MATRIX_COPY = {
 export const UNI_FILL_MATRIX_HORIZONTAL_AXIS_OPTIONS = [
   { value: 'genre', label: 'ジャンル' },
   { value: 'version', label: 'バージョン' },
+  { value: 'nameFolder', label: '楽曲名' },
 ] as const
+
+/** 横軸・縦軸の組み合わせごとの表の読み上げ用説明 */
+export const UNI_FILL_MATRIX_CAPTIONS: Record<
+  UniFillMatrixHorizontalAxis,
+  Record<PlayerStatsHeatmapAxis, string>
+> = {
+  genre: {
+    level: '縦軸が譜面定数から換算したレベル、横軸がジャンルの達成状況',
+    chartConstant: '縦軸が譜面定数、横軸がジャンルの達成状況',
+  },
+  version: {
+    level: '縦軸が譜面定数から換算したレベル、横軸が追加バージョンの達成状況',
+    chartConstant: '縦軸が譜面定数、横軸が追加バージョンの達成状況',
+  },
+  nameFolder: {
+    level: '縦軸が譜面定数から換算したレベル、横軸が名前順フォルダの達成状況',
+    chartConstant: '縦軸が譜面定数、横軸が名前順フォルダの達成状況',
+  },
+}
+
+/** 名前順フォルダの内部キーから見出しへの対応 */
+export const UNI_FILL_MATRIX_NAME_FOLDER_LABELS: ReadonlyMap<string, string> = new Map(
+  Object.entries(NAME_FOLDER_LABELS)
+)
 
 /** 通常レコード画面へ遷移するときの並び順クエリ（スコア降順） */
 export const UNI_FILL_MATRIX_RECORD_SORT_QUERY = 'sortcol=score&sortorder=desc'

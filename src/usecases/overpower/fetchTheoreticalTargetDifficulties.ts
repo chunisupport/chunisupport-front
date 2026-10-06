@@ -1,5 +1,6 @@
 import { fetchMasterData, fetchVersions } from '../../api/songs'
 import type { PlayerDataDifficulty } from '../../types/api'
+import { type NameFolderKey, resolveNameFolder } from '../../utils/nameFolder'
 import type {
   PlayerStatsNotesBySongId,
   PlayerStatsRecordAttribute,
@@ -16,7 +17,11 @@ import { fetchAllSongsWithCache } from '../cache/fetchAllSongsWithCache'
 export type PlayerStatsChartMetadata = {
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
   notesBySongId: PlayerStatsNotesBySongId
-  attributesBySongId: ReadonlyMap<string, PlayerStatsRecordAttribute>
+  /** 曲IDごとのジャンル・追加バージョンと、読みから判定した名前順フォルダ */
+  attributesBySongId: ReadonlyMap<
+    string,
+    PlayerStatsRecordAttribute & { nameFolder: NameFolderKey }
+  >
   genres: string[]
   versions: string[]
   /** 集計用の名称からAPIの短縮名への対応 */
@@ -26,7 +31,7 @@ export type PlayerStatsChartMetadata = {
 /**
  * 楽曲マスタをカプセル化し、統計ダッシュボード用の譜面情報を取得する。
  *
- * @returns 曲IDごとの譜面情報と、フィルター用のジャンル・バージョン一覧、表示用の短縮名。
+ * @returns 曲IDごとの譜面情報と名前順フォルダ、フィルター用のジャンル・バージョン一覧、表示用の短縮名。
  */
 export const fetchPlayerStatsChartMetadata = async (): Promise<PlayerStatsChartMetadata> => {
   const [{ songs }, masterData, versionData] = await Promise.all([
@@ -54,6 +59,7 @@ export const fetchPlayerStatsChartMetadata = async (): Promise<PlayerStatsChartM
           version: getShortVersionName(
             resolveVersionNameByReleaseDate(song.release, versionData.versions)
           ),
+          nameFolder: resolveNameFolder(song),
         },
       ])
     ),

@@ -36,12 +36,14 @@ import {
   type UniFillMatrixCell,
   type UniFillMatrixHorizontalAxis,
   type UniFillMatrixRecordTarget,
+  type UniFillMatrixRow,
 } from '../../../utils/uniFillMatrix'
 import { buildUserProfilePagePath } from '../../../utils/userProfileRoute'
 import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
 import {
   UNI_FILL_MATRIX_ACHIEVEMENT_OPTIONS,
   UNI_FILL_MATRIX_AXIS_COLUMN_WEIGHT,
+  UNI_FILL_MATRIX_CAPTIONS,
   UNI_FILL_MATRIX_COPY,
   UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING,
   UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT,
@@ -50,6 +52,7 @@ import {
   UNI_FILL_MATRIX_HORIZONTAL_AXIS_OPTIONS,
   UNI_FILL_MATRIX_IMAGE_PADDING,
   UNI_FILL_MATRIX_IMAGE_PIXEL_RATIO,
+  UNI_FILL_MATRIX_NAME_FOLDER_LABELS,
   UNI_FILL_MATRIX_RECORD_SORT_QUERY,
   type UniFillMatrixAchievementOption,
   type UniFillMatrixDifficultyOption,
@@ -77,6 +80,14 @@ type UniFillMatrixCellTarget = Pick<UniFillMatrixRecordTarget, 'genre' | 'versio
 const hasUnachievedCharts = (cell: UniFillMatrixCell): boolean => cell.count < cell.total
 
 /**
+ * 通常レコードのフィルターで絞り込める横軸の行か判定する。
+ *
+ * @param row - 判定対象の行。
+ * @returns 名前順フォルダの行は通常レコードで絞り込めないためfalse。
+ */
+const isRecordFilterableRow = (row: UniFillMatrixRow): boolean => row.nameFolder === undefined
+
+/**
  * マスの位置を含むスクリーンリーダー向けの操作文言を作る。
  *
  * @param target - 対象マスのジャンルまたはバージョンと列。
@@ -88,13 +99,13 @@ const toCellActionLabel = (target: UniFillMatrixCellTarget): string =>
     .join(' ')
 
 /**
- * レベル・譜面定数を縦軸、ジャンルまたはバージョンを横軸にし、APIの短縮名を見出しに表示する。
+ * レベル・譜面定数を縦軸、ジャンル・バージョン・名前順フォルダを横軸にし、短縮名を見出しに表示する。
  *
  * @param props.matrix - 集計済みのマトリクス。
  * @param props.caption - 表の読み上げ用説明。
  * @param props.axisHeader - 縦軸の見出し。
  * @param props.showPercent - 上段を達成率で表示するか。
- * @param props.onSelectCell - 未達成の譜面が残るマスをクリックしたときの処理。
+ * @param props.onSelectCell - 未達成の譜面が残るマスをクリックしたときの処理。名前順フォルダの行と最下段合計のマスでは呼ばれない。
  * @param props.imageMode - 画像用に固定見出しと操作を無効にするか。
  * @param props.tableRef - 表の論理幅を取得するための参照設定。
  * @returns レベル・譜面定数列を固定した横スクロール可能なデータ表。
@@ -203,7 +214,9 @@ const UniFillMatrixTable = (props: {
                         showPercent={props.showPercent}
                         showCompleteMark
                         showEmptyAsComplete
-                        onSelect={selectHandler(cell(), target)}
+                        onSelect={
+                          isRecordFilterableRow(row) ? selectHandler(cell(), target) : undefined
+                        }
                         selectLabel={toCellActionLabel(target)}
                       />
                     )
@@ -240,7 +253,11 @@ const UniFillMatrixTable = (props: {
                   showCompleteMark
                   showEmptyAsComplete
                   class={TOTAL_CELL_CLASS}
-                  onSelect={selectHandler(row.total, { genre: row.genre, version: row.version })}
+                  onSelect={
+                    isRecordFilterableRow(row)
+                      ? selectHandler(row.total, { genre: row.genre, version: row.version })
+                      : undefined
+                  }
                   selectLabel={toCellActionLabel({ genre: row.genre, version: row.version })}
                 />
               )}
@@ -263,7 +280,7 @@ const UniFillMatrixTable = (props: {
 }
 
 /**
- * ジャンルまたは追加バージョン×レベル・譜面定数ごとに達成状況を表示する。
+ * ジャンル・追加バージョン・名前順フォルダ×レベル・譜面定数ごとに達成状況を表示する。
  *
  * @returns 難易度・埋め条件・両軸を切り替えられ、マスから未達成譜面へ遷移できる画面。
  */
@@ -281,14 +298,7 @@ const UniFillMatrixPage: Component = () => {
    *
    * @returns 表の縦軸と横軸を表す説明。
    */
-  const matrixCaption = () =>
-    horizontalAxis() === 'version'
-      ? axis() === 'level'
-        ? UNI_FILL_MATRIX_COPY.versionLevelCaption
-        : UNI_FILL_MATRIX_COPY.versionChartConstantCaption
-      : axis() === 'level'
-        ? UNI_FILL_MATRIX_COPY.levelCaption
-        : UNI_FILL_MATRIX_COPY.chartConstantCaption
+  const matrixCaption = () => UNI_FILL_MATRIX_CAPTIONS[horizontalAxis()][axis()]
   const [showPercent, setShowPercent] = createSignal(false)
   const [pageData] = createResource(fetchOwnPlayerStatsData)
   const [masterData] = createResource(fetchMasterData)
@@ -301,6 +311,7 @@ const UniFillMatrixPage: Component = () => {
     const data = pageData()
     if (!data) return undefined
 
+    const currentHorizontalAxis = horizontalAxis()
     const records = filterPlayerStatsRecords(
       data.records,
       difficulty().value,
@@ -313,9 +324,12 @@ const UniFillMatrixPage: Component = () => {
       axis(),
       achievement().value,
       {
-        axis: horizontalAxis(),
+        axis: currentHorizontalAxis,
         versions: data.versions,
-        shortNames: data.shortNames[horizontalAxis()],
+        shortNames:
+          currentHorizontalAxis === 'nameFolder'
+            ? UNI_FILL_MATRIX_NAME_FOLDER_LABELS
+            : data.shortNames[currentHorizontalAxis],
       }
     )
   })
