@@ -22,7 +22,7 @@
 | 取得箇所 | 実際に必要なフィールド | 用途 |
 | --- | --- | --- |
 | `pages/songs/components/useSongDetailBase.ts` | 通常詳細: `genres`, `difficulties`, `rating_bands`。WORLD'S END詳細: `genres`, `rating_bands` | 編集フォームのジャンル、通常譜面タブ、統計のレーティング帯。バージョン名は別の `fetchVersions` で解決 |
-| `pages/song-management/SongManagementPage.tsx` | `genres`, `difficulties`, `versions` | ジャンル・難易度IDの解決、ULTIMA追加、編集フォームのバージョン選択肢 |
+| `pages/song-management/SongManagementPage.tsx` | `genres`, `difficulties` | ジャンル・難易度IDの解決、ULTIMA追加。バージョン選択肢・絞り込みは別の `fetchVersions` を共有 |
 | `pages/goals/GoalsList/goalsListResource.ts` | `genres`, `difficulties`, `achievement_types` | 目標フォーム、条件IDの名称解決、進捗計算、レコードへの遷移条件。バージョンは別取得 |
 | `pages/users/UserRecord/UserRecord.tsx` | `genres`, `difficulties` | フィルターの初期値・選択肢、お気に入り楽曲ダイアログのジャンル選択肢。バージョンは別取得 |
 
@@ -30,6 +30,7 @@
 
 | 関数・定義箇所 | 利用先 | 必要なフィールド | 通信として全件取得に依存するか |
 | --- | --- | --- | --- |
+| `fetchVersions` / `api/songs.ts` | 楽曲管理、楽曲詳細、目標、レコード等 | バージョン一覧 | 依存しない。`/internal/master/versions` を利用 |
 | `fetchGenres` / `api/genres.ts` | 通常・WORLD'S END楽曲一覧、OVER POWER、未解禁曲の探索、UniFillMatrix | ジャンル一覧 | 依存しない。`/internal/master/genres` を利用 |
 | `fetchRatingBands` / `api/ratingBands.ts` | ベスト枠ランキング、オンライン苦手譜面インスペクター | `rating_bands` | 依存する |
 | `fetchPossessions` / `api/possessions.ts` | 共通 `UserNameplate`、フレンド画面、レーティング画像プレビュー | `possessions` | 依存する。`UserNameplate` は表示名が渡されている場合は取得しない |
@@ -44,7 +45,7 @@
 | --- | --- | --- |
 | `genres` | 最も広い範囲で利用。名前だけでなくID、表示順、短縮名 `short_name` が必要。ジャンルのみを使う画面は `fetchGenres` へ移行済み。難易度等も必要な画面（楽曲詳細・楽曲管理・目標・レコード・ランダム選曲・統計用メタデータ）は全マスタの `genres` を使用 | `/internal/master/genres` があり、フロントでも利用済み。レスポンスに `sort_order` は含まれず、表示順は配列順。フロントの `sortMasterItemsBySortOrder` は `sort_order` が無いためID順へ並べ直す（全マスタ経由と同じ挙動） |
 | `difficulties` | 通常譜面タブ、レコード選択肢、楽曲管理・目標のID解決 | なし |
-| `versions` | 多くは `fetchVersions` へ分離済み。ただし楽曲管理の画面と両管理hookでは全マスタの値を使用 | `/internal/master/versions` があり、フロントでも利用済み |
+| `versions` | `fetchVersions` へ分離済み。楽曲管理も画面で取得した一覧を両管理hookと選択肢へ共有 | `/internal/master/versions` があり、フロントでも利用済み |
 | `achievement_types` | 目標フォームの目標種別選択肢。全件取得ラッパーで文字列・オブジェクト形式を正規化 | なし |
 | `rating_bands` | 通常・WORLD'S END詳細の統計、ベスト枠ランキング、苦手譜面インスペクター | なし。フロントの用途別関数のみ存在 |
 | `possessions` | IDからポゼッション名を解決し、プロフィール系表示や画像生成で使用 | なし。フロントの用途別関数のみ存在 |
@@ -64,8 +65,8 @@
 | `pages/goals/utils/goalProgress.ts`, `goalOverPower.ts`, `goalRecordFilter.ts` | `difficulties`, `genres` |
 | `pages/goals/utils/goalRainbow.ts` | `genres` |
 | `pages/goals/utils/goalForm.ts` の `formatGoalAttributesLabel` | `difficulties`, `genres`。現在は定義・テストのみで、本番コードからの呼び出しなし |
-| `pages/song-management/hooks/createStandardSongManagement.ts` | `genres`, `difficulties`, `versions` |
-| `pages/song-management/hooks/createWorldsendSongManagement.ts` | `genres`, `versions` |
+| `pages/song-management/hooks/createStandardSongManagement.ts` | `genres`, `difficulties` に入力型を限定。バージョン一覧は別引数 |
+| `pages/song-management/hooks/createWorldsendSongManagement.ts` | `genres` に入力型を限定。バージョン一覧は別引数 |
 
 `utils/recordFilterDefaults.ts` の `buildDefaultFilter` は全マスタではなくジャンル配列を受け取る形へ縮小済み。
 
@@ -79,7 +80,6 @@
 
 | 優先度 | 候補 | 効果・注意点 |
 | --- | --- | --- |
-| 高 | 楽曲管理の `versions` を既存 `fetchVersions` へ移す | 既存APIで対応できる。ただしジャンル・難易度の依存は別途残る |
 | 中 | 名前順フォルダを既存個別APIへ移す | API追加は不要。統計用メタデータにはジャンル取得も残るため、この変更だけでは全件取得はなくならない |
 | 中 | 楽曲詳細の `rating_bands` を既存 `fetchRatingBands` に寄せる | 画面から直接フィールドを読む箇所を減らせる。全件通信を減らすにはラッパー内部の個別API化も必要 |
 | 中 | 目標関連を `GoalFilterOptions` と成果種別に分離する | `MasterDataDTO` を進捗・条件解決・フォームへ広く伝播させる構成を縮小できる |

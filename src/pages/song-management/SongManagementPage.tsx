@@ -1,5 +1,5 @@
 import { createResource, Show } from 'solid-js'
-import { fetchMasterData } from '../../api/songs'
+import { fetchMasterData, fetchVersions } from '../../api/songs'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import StandardSongCreateSection from './components/StandardSongCreateSection'
 import StandardSongEditSection from './components/StandardSongEditSection'
@@ -28,11 +28,12 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   useDocumentTitle(props.title)
 
   const [masterData] = createResource(fetchMasterData)
-  const standard = createStandardSongManagement(masterData)
-  const worldsend = createWorldsendSongManagement(masterData)
+  const [versionsResponse] = createResource(fetchVersions)
+  const versions = () => versionsResponse()?.versions ?? []
+  const standard = createStandardSongManagement(masterData, versions)
+  const worldsend = createWorldsendSongManagement(masterData, versions)
 
   const genres = () => masterData()?.genres ?? []
-  const versions = () => masterData()?.versions ?? []
 
   return (
     <div class="song-management mx-auto w-full max-w-6xl p-4 space-y-6">
@@ -55,7 +56,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
 
       <StandardSongEditSection
         management={standard}
-        masterDataLoading={masterData.loading}
+        masterDataLoading={masterData.loading || versionsResponse.loading}
         genres={genres()}
         versions={versions()}
         canDelete={props.canDelete}
@@ -66,7 +67,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         management={worldsend}
         standardSongs={standard.songs()}
         standardSongsLoading={standard.songsLoading()}
-        masterDataLoading={masterData.loading}
+        masterDataLoading={masterData.loading || versionsResponse.loading}
         genres={genres()}
         versions={versions()}
         canDelete={props.canDelete}

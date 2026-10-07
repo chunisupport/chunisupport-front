@@ -10,7 +10,7 @@ import {
 import { showErrorToast, showSuccessToast } from '../../../components/common/AppToast'
 import { SONG_DATA_REFRESH_ERROR_MESSAGE } from '../../../constants/songMaster'
 import { useSongsData } from '../../../stores/songsData'
-import type { ManagedWorldsendSongDTO, MasterDataDTO } from '../../../types/api'
+import type { ManagedWorldsendSongDTO, MasterDataDTO, VersionSummaryDTO } from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { buildSearchableItems, filterSearchableItems } from '../../../utils/searchHelpers'
 import { SONG_MANAGEMENT_MESSAGES } from '../constants'
@@ -32,10 +32,14 @@ import {
  * 楽曲管理画面の WORLD'S END 楽曲について、一覧・選択・編集・追加・削除・復活の状態と操作をまとめる。
  * 管理一覧の再取得は resource.refetch を使わず mutate で差し替え、画面の再マウントを避ける。
  *
- * @param masterData ジャンル・バージョンを含むマスターデータ
+ * @param masterData ジャンルを含むマスターデータ
+ * @param versions 個別APIから取得したバージョン一覧
  * @returns WORLD'S END 楽曲管理の状態と操作
  */
-export const createWorldsendSongManagement = (masterData: Accessor<MasterDataDTO | undefined>) => {
+export const createWorldsendSongManagement = (
+  masterData: Accessor<Pick<MasterDataDTO, 'genres'> | undefined>,
+  versions: Accessor<readonly VersionSummaryDTO[]>
+) => {
   const songsData = useSongsData()
   const [songsResponse, { mutate: mutateManagedSongs }] = createResource(fetchManagedWorldsendSongs)
 
@@ -57,7 +61,7 @@ export const createWorldsendSongManagement = (masterData: Accessor<MasterDataDTO
     filterManagedWorldsendSongs(
       filterSearchableItems(searchableSongs(), searchQuery()),
       filters(),
-      masterData()?.versions ?? []
+      versions()
     )
   )
   const selectedSong = createMemo(() => {

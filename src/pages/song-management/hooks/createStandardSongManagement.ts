@@ -11,7 +11,7 @@ import { showErrorToast, showSuccessToast } from '../../../components/common/App
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import { SONG_DATA_REFRESH_ERROR_MESSAGE } from '../../../constants/songMaster'
 import { useSongsData } from '../../../stores/songsData'
-import type { ManagedSongDTO, MasterDataDTO } from '../../../types/api'
+import type { ManagedSongDTO, MasterDataDTO, VersionSummaryDTO } from '../../../types/api'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { buildSearchableItems, filterSearchableItems } from '../../../utils/searchHelpers'
 import { SONG_MANAGEMENT_MESSAGES } from '../constants'
@@ -36,10 +36,14 @@ import {
  * 楽曲管理画面の通常楽曲について、一覧・選択・編集・追加・削除・復活の状態と操作をまとめる。
  * 管理一覧の再取得は resource.refetch を使わず mutate で差し替え、画面の再マウントを避ける。
  *
- * @param masterData ジャンル・難易度・バージョンを含むマスターデータ
+ * @param masterData ジャンル・難易度を含むマスターデータ
+ * @param versions 個別APIから取得したバージョン一覧
  * @returns 通常楽曲管理の状態と操作
  */
-export const createStandardSongManagement = (masterData: Accessor<MasterDataDTO | undefined>) => {
+export const createStandardSongManagement = (
+  masterData: Accessor<Pick<MasterDataDTO, 'genres' | 'difficulties'> | undefined>,
+  versions: Accessor<readonly VersionSummaryDTO[]>
+) => {
   const songsData = useSongsData()
   const [songsResponse, { mutate: mutateManagedSongs }] = createResource(fetchManagedSongs)
 
@@ -59,7 +63,7 @@ export const createStandardSongManagement = (masterData: Accessor<MasterDataDTO 
     filterManagedSongs(
       filterSearchableItems(searchableSongs(), searchQuery()),
       filters(),
-      masterData()?.versions ?? []
+      versions()
     )
   )
   const selectedSong = createMemo(() => {
