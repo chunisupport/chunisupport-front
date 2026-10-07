@@ -227,6 +227,9 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     (value.excludeLockedSongs === undefined || typeof value.excludeLockedSongs === 'boolean') &&
     isStringArray(value.genres) &&
     isStringArray(value.versions) &&
+    (value.nameFolders === undefined ||
+      value.nameFolders === null ||
+      isStringArray(value.nameFolders)) &&
     isRequiredNumberRange(value.const, CHART_CONST_MIN, CHART_CONST_MAX) &&
     (value.constFilterMode === 'level' || value.constFilterMode === 'number') &&
     isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&

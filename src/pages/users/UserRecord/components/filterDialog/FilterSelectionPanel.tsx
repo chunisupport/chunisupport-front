@@ -16,7 +16,7 @@ import {
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../../constants/recordFilterOptions'
-import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
+import type { MasterDataDTO, NameFolderDTO, VersionSummaryDTO } from '../../../../../types/api'
 import type { FilterState } from '../../../../../types/recordFilter'
 import {
   type ChartLevelLabel,
@@ -42,7 +42,11 @@ import {
   OVER_POWER_RANGE_FILTER,
   SINGLE_RATING_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
-import { toggleArray } from '../../../utils/filterValue'
+import {
+  toggleArray,
+  toNullableAllDisplaySelection,
+  toNullableAllFilterSelection,
+} from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import DifficultySection from './sections/DifficultySection'
@@ -53,6 +57,8 @@ type FilterSelectionPanelProps = {
   setFilters: Setter<FilterState>
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders?: NameFolderDTO[]
   defaultFilter: FilterState
   resetKey: number
   /** 編集中のフィルター名。null の場合は編集中でない */
@@ -255,6 +261,11 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
   const versions = () =>
     filterReleasedVersions(props.versions ?? []).map((version) => getShortVersionName(version.name))
+  /** @returns 楽曲名順フォルダのコード一覧（マスターデータの並び順） */
+  const nameFolderCodes = () => props.nameFolders?.map((nameFolder) => nameFolder.code) ?? []
+  /** @returns 楽曲名順フォルダのコードから表示名を引く対応表 */
+  const nameFolderNameByCode = () =>
+    new Map(props.nameFolders?.map((nameFolder) => [nameFolder.code, nameFolder.name]))
 
   /**
    * JUSTICE数の入力値をフィルター状態へ反映する。
@@ -634,6 +645,19 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           props.setFilters((prev) => ({
             ...prev,
             versions: selectedVersions,
+          }))
+        }
+      />
+      <MultiSelectFilterSection
+        title="楽曲名順"
+        options={nameFolderCodes()}
+        selected={toNullableAllDisplaySelection(props.filters.nameFolders, nameFolderCodes())}
+        formatLabel={(code) => nameFolderNameByCode().get(code) ?? code}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onChange={(selectedNameFolders) =>
+          props.setFilters((prev) => ({
+            ...prev,
+            nameFolders: toNullableAllFilterSelection(selectedNameFolders, nameFolderCodes()),
           }))
         }
       />

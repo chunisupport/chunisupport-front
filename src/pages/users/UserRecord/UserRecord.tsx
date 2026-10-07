@@ -10,6 +10,7 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
+import { fetchNameFolders } from '../../../api/nameFolders'
 import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import {
   addMyFavoriteSong,
@@ -113,6 +114,7 @@ const UserRecord: Component<Props> = (props) => {
   const { songsResponse: allSongs, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [masterData] = createResource(fetchMasterData)
   const [versionData] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
 
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
@@ -340,6 +342,7 @@ const UserRecord: Component<Props> = (props) => {
                 onChange={applyFilters}
                 masterData={masterData()}
                 versions={versionData()?.versions}
+                nameFolders={nameFolders()}
                 defaultFilter={defaultFilter()}
                 onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
                 favoriteSongsDisabled={

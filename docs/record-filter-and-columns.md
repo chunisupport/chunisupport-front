@@ -139,6 +139,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
   "excludeLockedSongs": false,
   "genres": [],
   "versions": [],
+  "nameFolders": null,
   "const": {
     "min": 1,
     "max": 16
@@ -180,6 +181,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `excludeLockedSongs` | `boolean` | はい | `true` の場合、未解禁設定に登録された楽曲とULTIMA譜面を除外します。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
 | `versions` | `string[]` | はい | 対象バージョン名の配列です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。空配列なら全バージョン対象です。 |
+| `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
 | `const` | `{ min: number, max: number }` | はい | 譜面定数の範囲です。 |
 | `constFilterMode` | `"level"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `const.min` / `const.max` を参照します。 |
 | `score` | `{ min: number, max: number }` | はい | スコア範囲です。未プレイ譜面はスコア `0` として判定します。 |
@@ -204,14 +206,15 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 6. `excludeLockedSongs` が `true` のとき、未解禁設定の通常楽曲ではなく、ULTIMAの場合は未解禁設定のULTIMA譜面でもないこと。
 7. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
 8. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
-9. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
-10. スコアが `score.min` 以上かつ `score.max` 以下であること。
-11. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
-12. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
-13. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
-14. FULL CHAIN ランプが `chain_lamp` に含まれること。
-15. クリアランプが `hard_lamp` に含まれること。
-16. `updatedAt` で指定した最終更新日の範囲内であること。
+9. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
+10. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
+11. スコアが `score.min` 以上かつ `score.max` 以下であること。
+12. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
+13. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
+14. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
+15. FULL CHAIN ランプが `chain_lamp` に含まれること。
+16. クリアランプが `hard_lamp` に含まれること。
+17. `updatedAt` で指定した最終更新日の範囲内であること。
 
 ### 通常レコードのデフォルト値
 
@@ -223,6 +226,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `excludeLockedSongs`: `false`
 - `genres`: ジャンル API (`/internal/master/genres`) から取得した全ジャンル名
 - `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名を短縮した名前
+- `nameFolders`: `null`（全フォルダ対象）
 - `const.min`: `1`
 - `const.max`: `16`
 - `constFilterMode`: `"level"`
@@ -378,7 +382,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 {
   "name": "高難度FC狙い",
   "filter_type": "standard",
-  "schema_version": 8,
+  "schema_version": 10,
   "filter": {
     "title": "",
     "difficulties": ["MASTER", "ULTIMA"],
@@ -388,6 +392,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
     "excludeLockedSongs": true,
     "genres": [],
     "versions": ["CHUNITHM VERSE", "CHUNITHM X-VERSE"],
+    "nameFolders": ["A", "KA"],
     "const": {
       "min": 14,
       "max": 16
@@ -422,7 +427,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 | --- | --- | --- |
 | `name` | `string` | 保存済みフィルター名です。前後空白を除いて1〜30文字、制御文字不可です。 |
 | `filter_type` | `"standard"` \| `"worldsend"` | 通常レコードは `"standard"`、WORLD'S END は `"worldsend"` を使います。 |
-| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `8`、WORLD'S END が `4` です。 |
+| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `10`、WORLD'S END が `4` です。 |
 | `filter` | `object` | `filter_type` に対応するフィルター状態 JSON です。 |
 
 サーバーは `filter` の内部フィールドを解釈しません。
@@ -438,7 +443,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
       "id": "11111111-1111-1111-1111-111111111111",
       "name": "高難度FC狙い",
       "filter_type": "standard",
-      "schema_version": 8,
+      "schema_version": 10,
       "filter": {
         "title": "",
         "difficulties": ["MASTER", "ULTIMA"]
@@ -458,7 +463,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 
 ### フロント側の復元ルール
 
-- 通常レコードは現行の `schema_version: 8` に加え、互換対象の `3`, `4`, `5`, `6`, `7` を有効として扱います。
+- 通常レコードは現行の `schema_version: 10` に加え、互換対象の `3`, `4`, `5`, `6`, `7`, `8`, `9` を有効として扱います。`nameFolders` を持たない保存値は全フォルダ対象 (`null`) として補完します。
 - WORLD'S END は現行の `schema_version: 4` に加え、互換対象の `2`, `3` を有効として扱います。
 - 互換対象の `schema_version: 3`, `4`, `5` では、保存済みの `ALL JUSTICE` 条件へ `ALL JUSTICE CRITICAL` を補完し、AJC 選択肢追加前と同じ対象範囲を維持します。
 - `filter` が `null` ではないオブジェクトの場合だけ、各画面の `normalizeFilterState` / `normalizeWorldsendFilterState` で補完します。
