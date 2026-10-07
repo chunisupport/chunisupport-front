@@ -11,14 +11,10 @@ import {
 } from './sorting'
 
 /**
- * Test helper to build a WorldsendRecordDTO with default field values.
+ * 必須フィールドに既定値を入れたテスト用の WORLD'S END レコードを生成する。
  *
- * Creates a complete WorldsendRecordDTO object with sensible defaults for all required fields
- * (is_played, updated_at, id, title, artist, level_star, attribute, notes, score, img, clear_lamp,
- * combo_lamp, full_chain), allowing tests to override specific fields as needed.
- *
- * @param overrides - Optional partial object to override default field values
- * @returns A complete WorldsendRecordDTO test object
+ * @param overrides - 既定値から上書きするフィールド。
+ * @returns テスト用の WORLD'S END レコード。
  */
 const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRecordDTO => ({
   is_played: true,
