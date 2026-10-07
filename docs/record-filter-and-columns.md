@@ -221,7 +221,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `opTargetType`: `"current"`
 - `favoriteSongsOnly`: `false`
 - `excludeLockedSongs`: `false`
-- `genres`: マスターデータ上の全ジャンル
+- `genres`: ジャンル API (`/internal/master/genres`) から取得した全ジャンル名
 - `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名を短縮した名前
 - `const.min`: `1`
 - `const.max`: `16`

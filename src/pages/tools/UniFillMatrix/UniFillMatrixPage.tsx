@@ -3,7 +3,8 @@ import { ArrowLeftRight, ArrowUpDown, Grid3X3 } from 'lucide-solid'
 import type { Accessor, Component, JSX, Setter } from 'solid-js'
 import { batch, createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
 import { render } from 'solid-js/web'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { fetchGenres } from '../../../api/genres'
+import { fetchVersions } from '../../../api/songs'
 import logoSingle from '../../../assets/logo_single.svg'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
@@ -346,7 +347,7 @@ const UniFillMatrixPage: Component = () => {
     })
   const [showPercent, setShowPercent] = createSignal(false)
   const [pageData] = createResource(fetchOwnPlayerStatsData)
-  const [masterData] = createResource(fetchMasterData)
+  const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
   const navigate = useNavigate()
@@ -380,20 +381,17 @@ const UniFillMatrixPage: Component = () => {
    */
   const handleSelectCell = async (target: UniFillMatrixCellPosition): Promise<void> => {
     const username = authSession.status === 'authenticated' ? authSession.user?.username : undefined
-    const currentMasterData = masterData()
+    const genreItems = genres()
     const versionItems = versions()?.versions
-    if (!username || !currentMasterData || !versionItems) return
+    if (!username || !genreItems || !versionItems) return
 
     setRecordNavigationError('')
     try {
-      const filter = buildUniFillMatrixRecordFilter(
-        buildDefaultFilter(currentMasterData, versionItems),
-        {
-          ...target,
-          difficulty: difficulty().value,
-          achievement: achievement().value,
-        }
-      )
+      const filter = buildUniFillMatrixRecordFilter(buildDefaultFilter(genreItems, versionItems), {
+        ...target,
+        difficulty: difficulty().value,
+        achievement: achievement().value,
+      })
       await saveStandardRecordFilterSetting(filter)
       publishStandardRecordFilter(username, filter)
       navigate(

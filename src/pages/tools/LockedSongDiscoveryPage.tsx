@@ -14,7 +14,8 @@ import {
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, For, onMount, Show } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
-import { fetchMasterData, fetchVersions } from '../../api/songs'
+import { fetchGenres } from '../../api/genres'
+import { fetchVersions } from '../../api/songs'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { SegmentedToggleGroup } from '../../components/common/AppTabs'
@@ -286,7 +287,7 @@ const LockedSongDiscoveryPage: Component = () => {
     authSession.status === 'authenticated' ? authSession.user?.username : undefined
   const { songsResponse, ensureSongsLoaded } = useSongsData()
   const [record] = createResource(username, fetchUserRecordWithCache)
-  const [masterData] = createResource(fetchMasterData)
+  const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
   const [selectedDifficulty, setSelectedDifficulty] =
     createSignal<LockedSongDiscoveryDifficulty>('MASTER')
@@ -300,14 +301,14 @@ const LockedSongDiscoveryPage: Component = () => {
   const tool = getToolLink(LOCKED_SONG_DISCOVERY_PATH)
   useDocumentTitle(tool.title)
   useAppMainScrollRestoration(
-    () => !record.loading && !songsResponse.loading && !masterData.loading && !versions.loading
+    () => !record.loading && !songsResponse.loading && !genres.loading && !versions.loading
   )
 
   const loadError = createMemo(
-    () => record.error ?? songsResponse.error ?? masterData.error ?? versions.error
+    () => record.error ?? songsResponse.error ?? genres.error ?? versions.error
   )
   const loading = createMemo(
-    () => record.loading || songsResponse.loading || masterData.loading || versions.loading
+    () => record.loading || songsResponse.loading || genres.loading || versions.loading
   )
   const recordsComplete = createMemo(() =>
     hasCompleteLockedSongDiscoveryRecords(songsResponse()?.songs ?? [], record()?.standard ?? [])
@@ -323,14 +324,14 @@ const LockedSongDiscoveryPage: Component = () => {
     const songs = songsResponse()?.songs
     const currentRecord = record()?.standard
     const versionItems = versions()?.versions
-    const genres = masterData()?.genres
-    if (!songs || !currentRecord || !versionItems || !genres) return undefined
+    const genreItems = genres()
+    if (!songs || !currentRecord || !versionItems || !genreItems) return undefined
     const masterSummary = buildOverPowerSummary(
       songs,
       currentRecord,
       versionItems,
       [],
-      genres,
+      genreItems,
       'MASTER'
     )
     const ultimaSummary = buildOverPowerSummary(
@@ -338,7 +339,7 @@ const LockedSongDiscoveryPage: Component = () => {
       currentRecord,
       versionItems,
       [],
-      genres,
+      genreItems,
       'ULTIMA'
     )
     return { MASTER: masterSummary, ULTIMA: ultimaSummary }
@@ -473,14 +474,14 @@ const LockedSongDiscoveryPage: Component = () => {
    */
   const handleOpenRecords = async (candidate: LockedSongDiscoveryCell): Promise<void> => {
     const currentUsername = username()
-    const currentMasterData = masterData()
+    const genreItems = genres()
     const versionItems = versions()?.versions
-    if (!currentUsername || !currentMasterData || !versionItems) return
+    if (!currentUsername || !genreItems || !versionItems) return
 
     setRecordNavigationError('')
     try {
       const filter = buildLockedSongCandidateRecordFilter(
-        buildDefaultFilter(currentMasterData, versionItems),
+        buildDefaultFilter(genreItems, versionItems),
         candidate
       )
       await saveStandardRecordFilterSetting(filter)

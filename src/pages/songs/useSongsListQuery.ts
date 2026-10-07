@@ -1,5 +1,6 @@
 import { createMemo, createResource, createSignal, onMount } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../api/songs'
+import { fetchGenres } from '../../api/genres'
+import { fetchVersions } from '../../api/songs'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import { buildSearchableItems, filterSearchableItems } from '../../utils/searchHelpers'
 import { createSongFilters, filterSongs, type SongFilters } from './songFilters'
@@ -11,7 +12,7 @@ import { createSongFilters, filterSongs, type SongFilters } from './songFilters'
  */
 export const useSongsListQuery = () => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
-  const [masterData] = createResource(fetchMasterData)
+  const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
   const [filters, setFilters] = createSignal<SongFilters>(createSongFilters())
   const [searchQuery, setSearchQuery] = createSignal('')
@@ -20,7 +21,7 @@ export const useSongsListQuery = () => {
     ensureSongsLoaded()
   })
 
-  const loadError = createMemo(() => songsResponse.error ?? masterData.error ?? versions.error)
+  const loadError = createMemo(() => songsResponse.error ?? genres.error ?? versions.error)
 
   const defaultSortedSongs = createMemo(() => {
     const songs = songsResponse()?.songs ?? []
@@ -42,7 +43,6 @@ export const useSongsListQuery = () => {
   ])
 
   const versionOptions = createMemo(() => versions()?.versions ?? [])
-  const genres = createMemo(() => masterData()?.genres)
 
   return {
     isSongsLoading,
