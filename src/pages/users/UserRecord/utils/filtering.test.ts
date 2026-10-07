@@ -460,11 +460,19 @@ test('isRecordMatched は楽曲名順が指定されている場合に一致す�
   assert.equal(isRecordMatched(createRecord({ name_folder_code: null }), filters), false)
 })
 
-test('isRecordMatched は楽曲名順が空配列の場合に全フォルダを対象にする', () => {
+test('isRecordMatched は楽曲名順が null の場合に全フォルダを対象にする', () => {
   // Given
-  const filters: FilterState = { ...getDefaultFilter(), nameFolders: [] }
+  const filters: FilterState = { ...getDefaultFilter(), nameFolders: null }
 
   // When & Then
   assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), true)
   assert.equal(isRecordMatched(createRecord({ name_folder_code: null }), filters), true)
+})
+
+test('isRecordMatched は楽曲名順が空配列の場合にどのレコードにも一致しない', () => {
+  // Given
+  const filters: FilterState = { ...getDefaultFilter(), nameFolders: [] }
+
+  // When & Then
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), false)
 })

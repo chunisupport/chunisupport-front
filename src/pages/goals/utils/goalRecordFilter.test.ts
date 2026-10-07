@@ -117,7 +117,7 @@ test('属性未指定時は全難易度・全定数・全ジャンル・全バ�
   assert.deepEqual(filter.const, { min: 1, max: 16 })
   assert.deepEqual(filter.genres, [])
   assert.deepEqual(filter.versions, [])
-  assert.deepEqual(filter.nameFolders, [])
+  assert.equal(filter.nameFolders, null)
 })
 
 test('属性が空配列の場合はレコード遷移を無効にし、どの譜面にも一致しない条件にする', () => {

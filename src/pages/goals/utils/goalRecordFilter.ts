@@ -192,7 +192,7 @@ export const buildGoalRecordFilter = (
             const versionName = versionNameMap.get(versionId)
             return versionName ? [versionName] : []
           }),
-    nameFolders: hasNoSelectedCharts || !nameFolderCodes ? [] : [...nameFolderCodes],
+    nameFolders: nameFolderCodes ? [...nameFolderCodes] : null,
     const: {
       min: goal.attributes.const?.min ?? CHART_CONST_MIN,
       max: goal.attributes.const?.max ?? CHART_CONST_MAX,

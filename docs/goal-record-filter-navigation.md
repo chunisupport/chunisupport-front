@@ -41,7 +41,7 @@
 | `difficulties` | 指定された難易度。未指定時は全難易度 |
 | `genres` | 指定されたジャンル。未指定時は `[]`（全ジャンル） |
 | `versions` | 指定されたバージョン。未指定時は `[]`（全バージョン） |
-| `nameFolders` | 指定された楽曲名順フォルダのコード。未指定時は `[]`（全フォルダ） |
+| `nameFolders` | 指定された楽曲名順フォルダのコード。未指定時は `null`（全フォルダ） |
 | `const.min` | 指定値。未指定時は `CONST_MIN` |
 | `const.max` | 指定値。未指定時は `CONST_MAX` |
 | `constFilterMode` | `'number'` |

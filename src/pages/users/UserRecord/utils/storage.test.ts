@@ -179,7 +179,7 @@ test('toSavedFilter はschema 9へ楽曲名順の全フォルダ対象を補完�
 
   // Then
   assert.equal(result.isValid, true)
-  assert.deepEqual(result.filter?.nameFolders, [])
+  assert.equal(result.filter?.nameFolders, null)
 })
 
 test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {

@@ -1,5 +1,5 @@
 import type { FilterState } from '../../../../types/recordFilter'
-import { hasSameFilterValues } from '../../utils/filterValue'
+import { hasSameFilterValues, hasSameNullableFilterValues } from '../../utils/filterValue'
 
 export {
   hasSameFilterValues,
@@ -72,7 +72,7 @@ export function isRecordFilterOptionsChanged(
     !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) ||
     !hasSameFilterValues(current.genres, defaultFilter.genres) ||
     !hasSameFilterValues(current.versions, defaultFilter.versions) ||
-    !hasSameFilterValues(current.nameFolders, defaultFilter.nameFolders) ||
+    !hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
     !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) ||
@@ -113,7 +113,7 @@ export function isRecordDifficultyFilterOnlyChanged(
     !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) &&
     hasSameFilterValues(current.genres, defaultFilter.genres) &&
     hasSameFilterValues(current.versions, defaultFilter.versions) &&
-    hasSameFilterValues(current.nameFolders, defaultFilter.nameFolders) &&
+    hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) &&
     hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) &&
     hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) &&
     hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) &&

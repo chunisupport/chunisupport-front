@@ -139,7 +139,7 @@ export function isRecordMatchedWithTitleMatcher(
 
   // 楽曲名順
   if (
-    filters.nameFolders.length > 0 &&
+    filters.nameFolders !== null &&
     (record.name_folder_code === null || !filters.nameFolders.includes(record.name_folder_code))
   ) {
     return false
