@@ -55,3 +55,19 @@ export const VersionMultiSelect = <TValue extends AppMultiSelectValue>(
     placeholder={props.placeholder ?? 'バージョンを選択'}
   />
 )
+
+/**
+ * 楽曲名順選択用の複数選択フィールドを表示する。
+ *
+ * @param props - 楽曲名順の選択肢、選択状態、更新ハンドラーを含む設定。
+ * @returns 楽曲名順用 MultiSelectField。
+ */
+export const NameFolderMultiSelect = <TValue extends AppMultiSelectValue>(
+  props: DomainMultiSelectProps<TValue>
+): JSX.Element => (
+  <MultiSelectField
+    {...props}
+    label={props.label ?? '楽曲名順'}
+    placeholder={props.placeholder ?? '楽曲名順を選択'}
+  />
+)

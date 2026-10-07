@@ -209,6 +209,7 @@ export const buildGoalRecordFilter = (
 
 /**
  * 目標を曲単位の未達成フィルターへ変換できるか判定する。
+ * 楽曲名順はレコードフィルターで表現できないため、指定がある目標は遷移対象外とする。
  *
  * @param goal - 判定対象の目標。
  * @returns 通常レコードへのフィルター付き遷移が可能な場合は true。
@@ -217,6 +218,7 @@ export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.diff)) &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.genre)) &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.ver)) &&
+  goal.attributes.name_folder === undefined &&
   NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type) &&
   (goal.achievement_type !== 'hardlamp_count' || isNavigableHardLampGoal(goal)) &&
   (goal.achievement_type !== 'combolamp_count' || isNavigableComboLampGoal(goal)) &&

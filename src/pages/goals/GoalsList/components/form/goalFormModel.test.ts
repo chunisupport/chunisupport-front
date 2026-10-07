@@ -13,6 +13,7 @@ const selectionFallbacks = {
   allDifficultySelections: ['1', '2', '3'],
   allGenreSelections: ['10', '20'],
   allVersionSelections: ['1', '2'],
+  allNameFolderSelections: ['A', 'KA', 'SA'],
   defaultDifficultySelections: ['3'],
 }
 
@@ -33,6 +34,7 @@ test('作成フォームの初期状態はMASTER/ULTIMA選択と標準値で作�
   assert.deepEqual(result.diffs, selectionFallbacks.defaultDifficultySelections)
   assert.deepEqual(result.genres, selectionFallbacks.allGenreSelections)
   assert.deepEqual(result.versions, selectionFallbacks.allVersionSelections)
+  assert.deepEqual(result.nameFolders, selectionFallbacks.allNameFolderSelections)
 })
 
 test('作成フォームの難易度初期選択はMASTERとULTIMAだけを含む', () => {
@@ -87,6 +89,7 @@ test('編集フォームの初期状態は保存済み目標から復元され�
       const: { min: 13.5, max: 15 },
       genre: [10],
       ver: [2],
+      name_folder: 'KA',
     },
     invert_value: true,
     invert_percentage: false,
@@ -110,6 +113,7 @@ test('編集フォームの初期状態は保存済み目標から復元され�
   assert.equal(result.constMax, '15')
   assert.deepEqual(result.genres, ['10'])
   assert.deepEqual(result.versions, ['2'])
+  assert.deepEqual(result.nameFolders, ['KA'])
 })
 
 test('対象属性は通常条件とOP対象条件をAPI送信用に変換する', () => {
@@ -122,6 +126,8 @@ test('対象属性は通常条件とOP対象条件をAPI送信用に変換する
     constMax: '15',
     genres: ['10'],
     versions: ['1', '2'],
+    nameFolders: ['A', 'KA', 'SA'],
+    allNameFolders: ['A', 'KA', 'SA'],
   })
   const opTargetAttributes = buildGoalFormAttributes({
     achievementType: 'overpower_value',
@@ -131,6 +137,8 @@ test('対象属性は通常条件とOP対象条件をAPI送信用に変換する
     constMax: '',
     genres: [],
     versions: ['2'],
+    nameFolders: ['A', 'KA', 'SA'],
+    allNameFolders: ['A', 'KA', 'SA'],
   })
 
   // Then
@@ -157,13 +165,40 @@ test('虹枠目標の対象属性から難易度・定数・OP対象を除外す
     constMax: '15',
     genres: ['10'],
     versions: ['2'],
+    nameFolders: ['SA', 'A'],
+    allNameFolders: ['A', 'KA', 'SA'],
   })
 
   // Then
   assert.deepEqual(attributes, {
     genre: 10,
     ver: 2,
+    name_folder: ['A', 'SA'],
   })
+})
+
+test('楽曲名順は全選択なら属性から省略し、1件なら単一コードで送信する', () => {
+  // Given
+  const baseInput = {
+    achievementType: 'score_count' as const,
+    chartTargetMode: 'normal' as const,
+    diffs: ['4'],
+    constMin: '',
+    constMax: '',
+    genres: ['10'],
+    versions: ['2'],
+    allNameFolders: ['A', 'KA', 'SA'],
+  }
+
+  // When
+  const allSelected = buildGoalFormAttributes({ ...baseInput, nameFolders: ['SA', 'KA', 'A'] })
+  const singleSelected = buildGoalFormAttributes({ ...baseInput, nameFolders: ['KA'] })
+  const noneSelected = buildGoalFormAttributes({ ...baseInput, nameFolders: [] })
+
+  // Then
+  assert.equal('name_folder' in allSelected, false)
+  assert.equal(singleSelected.name_folder, 'KA')
+  assert.deepEqual(noneSelected.name_folder, [])
 })
 
 test('成果パラメータは目標種別と指定方法に応じて組み立てられる', () => {

@@ -102,6 +102,38 @@ test('BASICからMASTERが揃いジャンルとバージョンに一致する楽
   )
 })
 
+test('楽曲名順を指定した虹枠目標は対象フォルダの楽曲だけを対象にする', () => {
+  // Given
+  const aSong = createSong({ id: 'a', name_folder_code: 'A' })
+  const kaSong = createSong({ id: 'ka', name_folder_code: 'KA' })
+  const numberSong = createSong({ id: 'number', name_folder_code: 'NUMBER' })
+
+  // When
+  const result = filterRainbowTargetSongs(
+    [aSong, kaSong, numberSong],
+    { name_folder: ['A', 'NUMBER'] },
+    MASTER_DATA,
+    VERSIONS
+  )
+
+  // Then
+  assert.deepEqual(
+    result.map((song) => song.id),
+    ['a', 'number']
+  )
+})
+
+test('楽曲名順が空配列の虹枠目標は対象楽曲なしとして扱う', () => {
+  // Given
+  const song = createSong({ name_folder_code: 'A' })
+
+  // When
+  const result = filterRainbowTargetSongs([song], { name_folder: [] }, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.deepEqual(result, [])
+})
+
 test('ULTIMAが存在する楽曲ではULTIMAも必須難易度に含める', () => {
   // Given
   const song = createSong({ charts: { ...createSong().charts, ULTIMA: CHART } })

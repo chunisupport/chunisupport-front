@@ -150,6 +150,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [constMax, setConstMax] = createSignal('')
   const [genres, setGenres] = createSignal<string[]>([])
   const [versions, setVersions] = createSignal<string[]>([])
+  const [nameFolders, setNameFolders] = createSignal<string[]>([])
 
   const [errorMessage, setErrorMessage] = createSignal('')
   const displayErrorMessage = createMemo(() => errorMessage() || props.apiErrorMessage)
@@ -162,11 +163,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   )
   const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
   const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
+  const allNameFolderSelections = createMemo(() =>
+    props.masterData.name_folders.map((nameFolder) => nameFolder.code)
+  )
   const genreSelectOptions = createMemo(() =>
     props.masterData.genres.map((genre) => createMultiSelectOption(String(genre.id), genre.name))
   )
   const versionSelectOptions = createMemo(() =>
     versionOptions().map((option) => createMultiSelectOption(option.value, option.label))
+  )
+  const nameFolderSelectOptions = createMemo(() =>
+    props.masterData.name_folders.map((nameFolder) =>
+      createMultiSelectOption(nameFolder.code, nameFolder.name)
+    )
   )
   const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
     props.masterData.achievement_types
@@ -226,6 +235,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       allDifficultySelections: allDifficultySelections(),
       allGenreSelections: allGenreSelections(),
       allVersionSelections: allVersionSelections(),
+      allNameFolderSelections: allNameFolderSelections(),
       defaultDifficultySelections: defaultDifficultySelections(),
     })
 
@@ -250,6 +260,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setConstMax(nextState.constMax)
     setGenres(nextState.genres)
     setVersions(nextState.versions)
+    setNameFolders(nextState.nameFolders)
   })
 
   const getDraftAttributes = (): GoalRequest['attributes'] =>
@@ -261,6 +272,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       constMax: constMax(),
       genres: genres(),
       versions: versions(),
+      nameFolders: nameFolders(),
+      allNameFolders: allNameFolderSelections(),
     })
 
   /**
@@ -495,6 +508,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               selectedGenres={genres()}
               versionOptions={versionSelectOptions()}
               selectedVersions={versions()}
+              nameFolderOptions={nameFolderSelectOptions()}
+              selectedNameFolders={nameFolders()}
               targetCountText={targetCountText()}
               onClearDifficulty={() => {
                 setChartTargetMode('normal')
@@ -512,6 +527,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               }}
               onGenresChange={setGenres}
               onVersionsChange={setVersions}
+              onNameFoldersChange={setNameFolders}
               onConstMinChange={setConstMin}
               onConstMaxChange={setConstMax}
             />

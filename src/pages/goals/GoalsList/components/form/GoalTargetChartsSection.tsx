@@ -4,6 +4,7 @@ import { AppButton } from '../../../../../components/common/AppButton'
 import type { AppMultiSelectOption } from '../../../../../components/common/AppMultiSelect'
 import {
   GenreMultiSelect,
+  NameFolderMultiSelect,
   VersionMultiSelect,
 } from '../../../../../components/common/DomainMultiSelect'
 import {
@@ -36,12 +37,18 @@ interface GoalTargetChartsSectionProps {
   selectedGenres: string[]
   versionOptions: AppMultiSelectOption<string>[]
   selectedVersions: string[]
+  /** 楽曲名順フォルダの選択肢 */
+  nameFolderOptions: AppMultiSelectOption<string>[]
+  /** 選択中の楽曲名順フォルダのコード */
+  selectedNameFolders: string[]
   targetCountText: string
   onClearDifficulty: () => void
   onToggleOpTarget: (checked: boolean) => void
   onToggleDifficulty: (id: number, checked: boolean) => void
   onGenresChange: (genres: string[]) => void
   onVersionsChange: (versions: string[]) => void
+  /** 楽曲名順フォルダの選択変更時に呼ばれる */
+  onNameFoldersChange: (nameFolders: string[]) => void
   onConstMinChange: (value: string) => void
   onConstMaxChange: (value: string) => void
 }
@@ -136,6 +143,15 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
             />
           </fieldset>
         </Show>
+
+        <fieldset class="block space-y-1 text-sm">
+          <NameFolderMultiSelect
+            options={props.nameFolderOptions}
+            selected={props.selectedNameFolders}
+            contentZIndexClass={GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS}
+            onChange={props.onNameFoldersChange}
+          />
+        </fieldset>
 
         <Show when={!props.isRainbowGoal}>
           <TextRangeInput

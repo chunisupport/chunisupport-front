@@ -186,6 +186,28 @@ test('OP対象目標は楽曲マスタで指定された対象難易度だけに
   )
 })
 
+test('楽曲名順を指定した目標は対象フォルダの候補だけに絞り込むこと', () => {
+  // Given: 楽曲名順の異なる未達成譜面がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a', name_folder_code: 'A' }) }),
+    createCandidate({ song: createSong({ id: 'song-b', name_folder_code: 'KA' }) }),
+  ]
+  const records = createRandomSongRecordMap([
+    createRecord({ id: 'song-a', score: 0 }),
+    createRecord({ id: 'song-b', score: 0 }),
+  ])
+  const goal = createGoal({ attributes: { name_folder: 'KA' } })
+
+  // When: 保存済み目標を候補へ適用する。
+  const filtered = filterRandomSongCandidatesByGoal(candidates, records, goal, masterData, versions)
+
+  // Then: 指定した楽曲名順の譜面だけが残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.song.id),
+    ['song-b']
+  )
+})
+
 test('目標属性のいずれかが空選択なら候補を返さないこと', () => {
   // Given: 難易度が明示的な空配列で保存された目標がある。
   const goal = createGoal({ attributes: { diff: [] } })

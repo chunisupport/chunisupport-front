@@ -322,6 +322,17 @@ test('集計系目標ではレコード遷移を無効にする', () => {
   assert.equal(isGoalRecordNavigationEnabled(createGoal()), true)
 })
 
+test('楽曲名順を指定した目標ではレコード遷移を無効にする', () => {
+  // Given
+  const goal = createGoal({ attributes: { name_folder: 'A' } })
+
+  // When
+  const result = isGoalRecordNavigationEnabled(goal)
+
+  // Then
+  assert.equal(result, false)
+})
+
 test('OP対象目標ではOP理論値対象を固定した通常レコードフィルターへ遷移できる', () => {
   // Given
   const goal = createGoal({

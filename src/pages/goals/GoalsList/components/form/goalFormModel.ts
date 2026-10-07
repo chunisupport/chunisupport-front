@@ -11,6 +11,7 @@ import type {
   GoalAttributes,
   GoalDTO,
 } from '../../../../../types/api'
+import { normalizeGoalNameFolderCodes } from '../../../../../utils/goalAttributes'
 import {
   type ComboLampGoalValue,
   type FullChainGoalValue,
@@ -52,12 +53,16 @@ export interface GoalFormState {
   constMax: string
   genres: string[]
   versions: string[]
+  /** 選択中の楽曲名順フォルダのコード */
+  nameFolders: string[]
 }
 
 interface GoalFormSelectionFallbacks {
   allDifficultySelections: string[]
   allGenreSelections: string[]
   allVersionSelections: string[]
+  /** マスタの表示順に並べた全楽曲名順フォルダのコード */
+  allNameFolderSelections: string[]
   /** 作成フォームで初期選択する難易度ID */
   defaultDifficultySelections: string[]
 }
@@ -70,6 +75,10 @@ export interface GoalFormAttributesInput {
   constMax: string
   genres: string[]
   versions: string[]
+  /** 選択中の楽曲名順フォルダのコード */
+  nameFolders: string[]
+  /** マスタの表示順に並べた全楽曲名順フォルダのコード */
+  allNameFolders: readonly string[]
 }
 
 export interface GoalFormAchievementParamsInput {
@@ -215,6 +224,24 @@ export const parseAttributeSelection = (selectedValues: string[]): number | numb
 }
 
 /**
+ * フォームで選択された楽曲名順フォルダをAPI属性で使うコード指定へ変換する。
+ *
+ * @param selectedCodes - フォーム上で選択されている楽曲名順フォルダのコード。
+ * @param allCodes - マスタの表示順に並べた全楽曲名順フォルダのコード。
+ * @returns 全選択なら条件なしとしてundefined、1件なら単一コード、それ以外は表示順のコード配列。
+ */
+export const parseNameFolderSelection = (
+  selectedCodes: string[],
+  allCodes: readonly string[]
+): string | string[] | undefined => {
+  const selected = new Set(selectedCodes)
+  const normalized = allCodes.filter((code) => selected.has(code))
+  if (normalized.length === allCodes.length) return undefined
+  if (normalized.length === 1) return normalized[0]
+  return normalized
+}
+
+/**
  * マスタデータのID一覧をフォーム用の全選択値へ変換する。
  *
  * @param items - IDを持つマスタデータ一覧。
@@ -304,6 +331,7 @@ export const createDefaultGoalFormState = (
   constMax: String(CHART_CONST_MAX),
   genres: fallbacks.allGenreSelections,
   versions: fallbacks.allVersionSelections,
+  nameFolders: fallbacks.allNameFolderSelections,
 })
 
 /**
@@ -375,6 +403,9 @@ export const createGoalFormInitialState = (
         : String(CHART_CONST_MAX),
     genres: resolveInitialAttributeSelection(goal.attributes.genre, fallbacks.allGenreSelections),
     versions: resolveInitialAttributeSelection(goal.attributes.ver, fallbacks.allVersionSelections),
+    nameFolders:
+      normalizeGoalNameFolderCodes(goal.attributes.name_folder) ??
+      fallbacks.allNameFolderSelections,
   }
 }
 
@@ -384,24 +415,28 @@ export const createGoalFormInitialState = (
  * @param input - 対象譜面セクションのフォーム値。
  * @returns API送信値と同じ形の対象属性。
  */
-export const buildGoalFormAttributes = (input: GoalFormAttributesInput): GoalAttributes => ({
-  ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'op_target'
-    ? { chart_target: 'OP_TARGET' as const }
-    : {}),
-  ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'normal'
-    ? { diff: parseAttributeSelection(input.diffs) }
-    : {}),
-  ...(input.achievementType !== 'rainbow_count' && (input.constMin || input.constMax)
-    ? {
-        const: {
-          ...(input.constMin ? { min: Number(input.constMin) } : {}),
-          ...(input.constMax ? { max: Number(input.constMax) } : {}),
-        },
-      }
-    : {}),
-  genre: parseAttributeSelection(input.genres),
-  ver: parseAttributeSelection(input.versions),
-})
+export const buildGoalFormAttributes = (input: GoalFormAttributesInput): GoalAttributes => {
+  const nameFolder = parseNameFolderSelection(input.nameFolders, input.allNameFolders)
+  return {
+    ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'op_target'
+      ? { chart_target: 'OP_TARGET' as const }
+      : {}),
+    ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'normal'
+      ? { diff: parseAttributeSelection(input.diffs) }
+      : {}),
+    ...(input.achievementType !== 'rainbow_count' && (input.constMin || input.constMax)
+      ? {
+          const: {
+            ...(input.constMin ? { min: Number(input.constMin) } : {}),
+            ...(input.constMax ? { max: Number(input.constMax) } : {}),
+          },
+        }
+      : {}),
+    genre: parseAttributeSelection(input.genres),
+    ver: parseAttributeSelection(input.versions),
+    ...(nameFolder === undefined ? {} : { name_folder: nameFolder }),
+  }
+}
 
 /**
  * 現在のフォーム入力値から保存・プレビュー共通の成果パラメータを組み立てる。

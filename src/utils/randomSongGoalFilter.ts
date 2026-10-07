@@ -1,7 +1,11 @@
 import type { GoalFilterOptions } from '../api/songs'
 import { normalizePlayerDataDifficulty } from '../constants/difficulty'
 import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO, VersionDTO } from '../types/api'
-import { normalizeGoalAttributeIds } from './goalAttributes'
+import {
+  isGoalNameFolderMatched,
+  normalizeGoalAttributeIds,
+  normalizeGoalNameFolderCodes,
+} from './goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
   FULL_CHAIN_UNACHIEVED_FILTERS,
@@ -81,6 +85,8 @@ type ResolvedRandomSongGoalAttributes = {
   difficulties?: ReadonlySet<PlayerDataDifficulty>
   genres?: ReadonlySet<string>
   versions?: ReadonlySet<string>
+  /** 対象楽曲名順フォルダのコード。未指定なら全楽曲名順 */
+  nameFolderCodes?: readonly string[]
   constMin?: number
   constMax?: number
 }
@@ -102,11 +108,15 @@ const resolveRandomSongGoalAttributes = (
   const difficultyIds = isRainbowGoal ? undefined : normalizeGoalAttributeIds(goal.attributes.diff)
   const genreIds = normalizeGoalAttributeIds(goal.attributes.genre)
   const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
+  const nameFolderCodes = normalizeGoalNameFolderCodes(goal.attributes.name_folder)
   const versionNameMap = buildGoalVersionNameMap(versions)
 
   return {
     hasNoSelectedCharts:
-      difficultyIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0,
+      difficultyIds?.length === 0 ||
+      genreIds?.length === 0 ||
+      versionIds?.length === 0 ||
+      nameFolderCodes?.length === 0,
     opTargetOnly: !isRainbowGoal && goal.attributes.chart_target === 'OP_TARGET',
     difficulties: difficultyIds
       ? new Set(
@@ -128,6 +138,7 @@ const resolveRandomSongGoalAttributes = (
     versions: versionIds
       ? new Set(versionIds.flatMap((id) => versionNameMap.get(id) ?? []))
       : undefined,
+    nameFolderCodes,
     constMin: isRainbowGoal ? undefined : goal.attributes.const?.min,
     constMax: isRainbowGoal ? undefined : goal.attributes.const?.max,
   }
@@ -158,6 +169,9 @@ const isRandomSongCandidateMatchedByGoalAttributes = (
     return false
   if (attributes.genres && !attributes.genres.has(candidate.genre)) return false
   if (attributes.versions && !attributes.versions.has(candidate.version)) return false
+  if (!isGoalNameFolderMatched(candidate.song.name_folder_code, attributes.nameFolderCodes)) {
+    return false
+  }
 
   return true
 }

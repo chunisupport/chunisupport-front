@@ -11,7 +11,11 @@ import {
   selectOverPowerChartEntries,
 } from '../../../usecases/overpower/aggregation'
 import type { OverPowerChartEntry, OverPowerLockedSong } from '../../../usecases/overpower/types'
-import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
+import {
+  isGoalNameFolderMatched,
+  normalizeGoalAttributeIds,
+  normalizeGoalNameFolderCodes,
+} from '../../../utils/goalAttributes'
 import { resolveGoalVersionValueByReleaseDate } from '../../../utils/goalVersion'
 
 const OVERPOWER_CHART_CONST_BONUS = 3
@@ -81,13 +85,14 @@ const resolveRemainingTheoreticalChartConst = (songEntries: OverPowerChartEntry[
 }
 
 /**
- * 目標属性のジャンル・バージョン・定数が楽曲に一致するか判定する。
+ * 目標属性のジャンル・バージョン・楽曲名順・定数が楽曲に一致するか判定する。
  *
  * @param song - 判定対象の楽曲。
  * @param chartConst - 条件比較に使う譜面定数。
  * @param attributes - 目標の対象条件。
  * @param genreNames - 対象ジャンル名。
  * @param versionIds - 対象バージョン番号。
+ * @param nameFolderCodes - 対象楽曲名順フォルダのコード。
  * @param versions - バージョン一覧。
  * @returns 条件に一致する場合はtrue。
  */
@@ -97,6 +102,7 @@ const isSongMatchedByGoalAttributes = (
   attributes: GoalAttributes,
   genreNames: Set<string> | undefined,
   versionIds: number[] | undefined,
+  nameFolderCodes: string[] | undefined,
   versions: VersionDTO[]
 ): boolean => {
   const constMin = attributes.const?.min
@@ -104,6 +110,7 @@ const isSongMatchedByGoalAttributes = (
   if (typeof constMin === 'number' && chartConst < constMin) return false
   if (typeof constMax === 'number' && chartConst > constMax) return false
   if (genreNames && (!song.genre || !genreNames.has(song.genre))) return false
+  if (!isGoalNameFolderMatched(song.name_folder_code, nameFolderCodes)) return false
   if (versionIds && versionIds.length > 0) {
     const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
     if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
@@ -129,8 +136,14 @@ const selectGoalOverPowerChartEntries = (
   const diffIds = normalizeGoalAttributeIds(attributes.diff)
   const genreIds = normalizeGoalAttributeIds(attributes.genre)
   const versionIds = normalizeGoalAttributeIds(attributes.ver)
+  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
 
-  if (diffIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0) {
+  if (
+    diffIds?.length === 0 ||
+    genreIds?.length === 0 ||
+    versionIds?.length === 0 ||
+    nameFolderCodes?.length === 0
+  ) {
     return []
   }
 
@@ -174,6 +187,7 @@ const selectGoalOverPowerChartEntries = (
           attributes,
           genreNames,
           versionIds,
+          nameFolderCodes,
           versions
         )
       ) {
@@ -193,6 +207,7 @@ const selectGoalOverPowerChartEntries = (
       attributes,
       genreNames,
       versionIds,
+      nameFolderCodes,
       versions
     )
   })

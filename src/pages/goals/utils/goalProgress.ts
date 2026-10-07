@@ -8,7 +8,11 @@ import type {
   VersionDTO,
 } from '../../../types/api'
 import type { OverPowerLockedSong } from '../../../usecases/overpower/types'
-import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
+import {
+  isGoalNameFolderMatched,
+  normalizeGoalAttributeIds,
+  normalizeGoalNameFolderCodes,
+} from '../../../utils/goalAttributes'
 import {
   COMBO_LAMP_ORDER,
   HARD_LAMP_ORDER,
@@ -115,14 +119,16 @@ const getOverPowerTargetChartConst = (song: SongDTO): number | undefined => {
  * @param attributes - 目標に設定された対象条件。
  * @param genreNames - ジャンルIDから解決した対象ジャンル名。
  * @param versionIds - 対象バージョン番号。
+ * @param nameFolderCodes - 対象楽曲名順フォルダのコード。
  * @param versions - version API から返されたバージョン一覧。
- * @returns OP対象譜面の定数、曲ジャンル、曲バージョンが条件に一致する場合はtrue。
+ * @returns OP対象譜面の定数、曲ジャンル、曲バージョン、楽曲名順が条件に一致する場合はtrue。
  */
 const isOverPowerTargetSongMatched = (
   song: SongDTO | undefined,
   attributes: GoalAttributes,
   genreNames: Set<string> | undefined,
   versionIds: number[] | undefined,
+  nameFolderCodes: string[] | undefined,
   versions: VersionDTO[]
 ): song is SongDTO => {
   if (!song?.op_target_difficulty) return false
@@ -135,6 +141,7 @@ const isOverPowerTargetSongMatched = (
   if (typeof constMax === 'number' && targetConst > constMax) return false
 
   if (genreNames && (!song.genre || !genreNames.has(song.genre))) return false
+  if (!isGoalNameFolderMatched(song.name_folder_code, nameFolderCodes)) return false
 
   if (versionIds && versionIds.length > 0) {
     const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
@@ -167,9 +174,15 @@ export const filterRecordsByAttributes = (
   const diffIds = normalizeGoalAttributeIds(attributes.diff)
   const genreIds = normalizeGoalAttributeIds(attributes.genre)
   const versionIds = normalizeGoalAttributeIds(attributes.ver)
+  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
   const opTargetOnly = attributes.chart_target === 'OP_TARGET'
 
-  if (diffIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0) {
+  if (
+    diffIds?.length === 0 ||
+    genreIds?.length === 0 ||
+    versionIds?.length === 0 ||
+    nameFolderCodes?.length === 0
+  ) {
     return []
   }
 
@@ -197,7 +210,16 @@ export const filterRecordsByAttributes = (
     const song = songMap.get(record.id)
 
     if (opTargetOnly) {
-      if (!isOverPowerTargetSongMatched(song, attributes, genreNames, versionIds, versions)) {
+      if (
+        !isOverPowerTargetSongMatched(
+          song,
+          attributes,
+          genreNames,
+          versionIds,
+          nameFolderCodes,
+          versions
+        )
+      ) {
         return false
       }
       return (
@@ -213,6 +235,7 @@ export const filterRecordsByAttributes = (
     if (typeof constMax === 'number' && record.const > constMax) return false
 
     if (genreNames && (!song?.genre || !genreNames.has(song.genre))) return false
+    if (!isGoalNameFolderMatched(song?.name_folder_code, nameFolderCodes)) return false
 
     if (versionIds && versionIds.length > 0) {
       if (!song) return false
