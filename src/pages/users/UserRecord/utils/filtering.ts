@@ -137,6 +137,14 @@ export function isRecordMatchedWithTitleMatcher(
     return false
   }
 
+  // 楽曲名順
+  if (
+    filters.nameFolders.length > 0 &&
+    (record.name_folder_code === null || !filters.nameFolders.includes(record.name_folder_code))
+  ) {
+    return false
+  }
+
   // 定数
   if (record.const < filters.const.min) return false
   if (record.const > filters.const.max) return false

@@ -34,6 +34,7 @@ const createRecord = (
   full_chain: null,
   slot: null,
   genre: 'POPS & ANIME',
+  name_folder_code: 'SA',
   release: '2024-01-01',
   release_version: 'VERSE',
   notes: 2000,

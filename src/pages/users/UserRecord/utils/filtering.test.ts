@@ -36,6 +36,7 @@ const createRecord = (
     full_chain: null,
     slot: null,
     genre: 'POPS & ANIME',
+    name_folder_code: 'SA',
     release: '2024-01-01',
     release_version: 'VERSE',
     notes: 1200,
@@ -447,4 +448,23 @@ test('isRecordMatched は未プレイ除外と未プレイのスコア0扱いを
     isRecordMatched(record, { ...minScoreFilter, score: { ...minScoreFilter.score, min: 1 } }),
     false
   )
+})
+
+test('isRecordMatched は楽曲名順が指定されている場合に一致するフォルダだけを対象にする', () => {
+  // Given
+  const filters: FilterState = { ...getDefaultFilter(), nameFolders: ['A', 'KA'] }
+
+  // When & Then
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'KA' }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), false)
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: null }), filters), false)
+})
+
+test('isRecordMatched は楽曲名順が空配列の場合に全フォルダを対象にする', () => {
+  // Given
+  const filters: FilterState = { ...getDefaultFilter(), nameFolders: [] }
+
+  // When & Then
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: null }), filters), true)
 })

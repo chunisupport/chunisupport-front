@@ -32,3 +32,25 @@ export function hasSameFilterValues<T>(left: T[], right: T[]): boolean {
 export function toggleArray<T>(arr: T[], value: T): T[] {
   return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value]
 }
+
+/**
+ * 空配列を全選択として扱うフィルター値を、複数選択UIに表示する選択状態へ変換する。
+ *
+ * @param selected - フィルターに保存された選択値。空配列は全選択を表す。
+ * @param allValues - 選択可能なすべての値。
+ * @returns 複数選択UIに表示する選択値。
+ */
+export function toAllAsEmptyDisplaySelection<T>(selected: T[], allValues: T[]): T[] {
+  return selected.length > 0 ? selected : [...allValues]
+}
+
+/**
+ * 複数選択UIの選択状態を、全選択を空配列で表すフィルター値へ変換する。
+ *
+ * @param selected - 複数選択UIで選択された値。
+ * @param allValues - 選択可能なすべての値。
+ * @returns 全選択なら空配列、それ以外は選択値。
+ */
+export function toAllAsEmptyFilterSelection<T>(selected: T[], allValues: T[]): T[] {
+  return hasSameFilterValues(selected, allValues) ? [] : selected
+}

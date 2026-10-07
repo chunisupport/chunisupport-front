@@ -69,6 +69,8 @@ export interface FilterState {
   excludeLockedSongs: boolean
   genres: string[]
   versions: string[]
+  /** 対象とする楽曲名順フォルダのコード。空配列は全フォルダ対象を表す */
+  nameFolders: string[]
   const: NumericRangeFilter
   constFilterMode: 'level' | 'number'
   score: NumericRangeFilter

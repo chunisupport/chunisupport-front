@@ -36,7 +36,7 @@ test('buildSavedFilterRequest は通常レコード用の保存リクエスト�
   // Then
   assert.equal(result.name, '高難度FC狙い')
   assert.equal(result.filter_type, 'standard')
-  assert.equal(result.schema_version, 9)
+  assert.equal(result.schema_version, 10)
   assert.deepEqual(result.filter, filter)
 })
 
@@ -158,6 +158,28 @@ test('toSavedFilter はschema 8へ単曲レート範囲の既定値を補完す�
   // Then
   assert.equal(result.isValid, true)
   assert.deepEqual(result.filter?.rating, { min: null, max: null })
+})
+
+test('toSavedFilter はschema 9へ楽曲名順の全フォルダ対象を補完する', async () => {
+  // Given
+  const { nameFolders: _nameFolders, ...legacyFilter } = getDefaultFilter()
+  const { toSavedFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '55555555-5555-5555-5555-555555555555',
+    name: 'schema 9',
+    filter_type: 'standard',
+    schema_version: 9,
+    filter: legacyFilter,
+    created_at: '2026-10-07T00:00:00Z',
+    updated_at: '2026-10-07T00:00:00Z',
+  }
+
+  // When
+  const result = toSavedFilter(dto)
+
+  // Then
+  assert.equal(result.isValid, true)
+  assert.deepEqual(result.filter?.nameFolders, [])
 })
 
 test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {

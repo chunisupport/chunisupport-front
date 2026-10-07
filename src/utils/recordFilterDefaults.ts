@@ -20,6 +20,7 @@ export const DEFAULT_FILTER: FilterState = {
   excludeLockedSongs: false,
   genres: [],
   versions: [],
+  nameFolders: [],
   const: {
     min: CHART_CONST_MIN,
     max: CHART_CONST_MAX,
@@ -86,6 +87,7 @@ export const buildDefaultFilter = (
 ): FilterState => ({
   ...DEFAULT_FILTER,
   ...getMasterDataDefaults(genres, versions, referenceDate),
+  nameFolders: [],
   const: { ...DEFAULT_FILTER.const },
   score: { ...DEFAULT_FILTER.score },
   rating: { ...DEFAULT_FILTER.rating },
@@ -120,6 +122,7 @@ export const normalizeFilterState = (
     opTargetType: filter.opTargetType ?? DEFAULT_FILTER.opTargetType,
     favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
     excludeLockedSongs: filter.excludeLockedSongs ?? DEFAULT_FILTER.excludeLockedSongs,
+    nameFolders: filter.nameFolders ?? [],
     combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
     chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],
     hard_lamp: filter.hard_lamp ?? [...RECORD_HARD_LAMP_OPTIONS],

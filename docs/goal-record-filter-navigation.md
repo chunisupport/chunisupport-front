@@ -19,8 +19,6 @@
 - `overpower_value`
 - `overpower_percent`
 
-楽曲名順（`name_folder`）を指定した目標も、通常レコードフィルターに楽曲名順の条件がないため、タイトルを操作できないテキストとして表示します。楽曲名順を全選択して保存した目標は `name_folder` を持たないため遷移できます。
-
 ## 遷移処理
 
 遷移時は次の順序で処理します。
@@ -43,6 +41,7 @@
 | `difficulties` | 指定された難易度。未指定時は全難易度 |
 | `genres` | 指定されたジャンル。未指定時は `[]`（全ジャンル） |
 | `versions` | 指定されたバージョン。未指定時は `[]`（全バージョン） |
+| `nameFolders` | 指定された楽曲名順フォルダのコード。未指定時は `[]`（全フォルダ） |
 | `const.min` | 指定値。未指定時は `CONST_MIN` |
 | `const.max` | 指定値。未指定時は `CONST_MAX` |
 | `constFilterMode` | `'number'` |
@@ -60,9 +59,10 @@
 | `diff` | `difficulties` | マスターデータの ID から難易度名へ変換し、大文字に統一する |
 | `genre` | `genres` | マスターデータの ID からジャンル名へ変換する |
 | `ver` | `versions` | リリース日順の 1 始まり番号として解釈し、`buildGoalVersionNameMap` で短縮バージョン名へ変換する |
+| `name_folder` | `nameFolders` | 楽曲名順フォルダのコードをそのまま使用する |
 | `const.min` / `const.max` | `const.min` / `const.max` | 指定値をそのまま使用する |
 
-`diff`、`genre`、`ver` は単一値と配列の両方を受け付け、有効な整数 ID の配列へ正規化します。難易度は `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA` のような大文字のドメイン値として扱います。
+`diff`、`genre`、`ver` は単一値と配列の両方を受け付け、有効な整数 ID の配列へ正規化します。`name_folder` も単一コードと配列の両方を受け付け、コード配列へ正規化します。`diff`、`genre`、`ver`、`name_folder` のいずれかが空配列の目標は対象譜面がないため、タイトルを操作できないテキストとして表示します。難易度は `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA` のような大文字のドメイン値として扱います。
 
 ## 目標種別ごとの未達成条件
 
