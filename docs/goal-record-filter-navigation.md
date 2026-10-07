@@ -114,9 +114,10 @@ score.max = max(0, achievement_params.score - 1)
 | --- | --- |
 | `src/pages/goals/utils/goalRecordFilter.ts` | 目標からフィルターへの変換と遷移可否判定 |
 | `src/pages/goals/utils/goalRecordFilter.test.ts` | 属性変換、未達成条件、遷移可否の単体テスト |
-| `src/pages/goals/GoalsList/components/GoalCard.tsx` | 操作可能な目標タイトルの表示 |
-| `src/pages/goals/GoalsList/GoalsList.tsx` | フィルター保存と通常レコードへの遷移 |
+| `src/pages/goals/GoalsList/components/card/GoalCard.tsx` | 操作可能な目標タイトルの表示 |
+| `src/pages/goals/GoalsList/GoalsList.tsx` | 通常レコードへの遷移 |
+| `src/pages/goals/GoalsList/goalsListNavigation.ts` | フィルター保存と遷移先パスの生成 |
 | `src/repositories/viewSettingsRepository.ts` | 通常レコードフィルターの IndexedDB 保存 |
-| `src/pages/users/UserPage/profilePageQuery.ts` | 通常レコード画面のパス生成 |
+| `src/utils/userProfileRoute.ts` | 通常レコード画面のパス生成 |
 
 通常レコードの `FilterState` と IndexedDB 永続化の詳細は [レコードフィルター・列表示設定](./record-filter-and-columns.md) を参照してください。

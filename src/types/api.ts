@@ -337,7 +337,12 @@ export const errorMessages: Record<ErrorCode, string> = {
   maintenance_mode: '現在メンテナンス中です',
 }
 
-// エラーコードからメッセージを取得するヘルパー関数
+/**
+ * エラーレスポンスのエラーコードに対応する表示用メッセージを取得する。
+ *
+ * @param error - APIのエラーレスポンス。
+ * @returns 対応するメッセージ。未知のエラーコードでは汎用メッセージ。
+ */
 export const getErrorMessage = (error: ErrorResponse): string => {
   const code = error.error?.code
   if (code && code in errorMessages) {

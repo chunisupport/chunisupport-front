@@ -33,8 +33,7 @@ async function createLicenseNoticeText() {
   const toolGeneratedText = await getLicenseFileText(INPUT_PACKAGE_JSON)
   const header = readFileSync(HEADER_FILE, 'utf8')
 
-  // ツール生成分 + ヘッダー + 改行を組み合わせて出力
-  // （ヘッダーは「先頭」に置きたいので、手動で結合）
+  // ツールの出力には独自ヘッダーを差し込めないため、ヘッダーを先頭に置いて手動で結合する
   return [
     header.trimEnd(),
     '',
