@@ -55,7 +55,6 @@ import {
   UNI_FILL_MATRIX_IMAGE_PIXEL_RATIO,
   UNI_FILL_MATRIX_LEVEL_CONST_AXIS_OPTIONS,
   UNI_FILL_MATRIX_LINE_HEADER_WEIGHT,
-  UNI_FILL_MATRIX_NAME_FOLDER_LABELS,
   UNI_FILL_MATRIX_RECORD_SORT_QUERY,
   type UniFillMatrixAchievementOption,
   type UniFillMatrixDifficultyOption,
@@ -368,7 +367,8 @@ const UniFillMatrixPage: Component = () => {
       levelConstAxis: levelConstAxis(),
       genres: data.genres,
       versions: data.versions,
-      labels: { ...data.shortNames, nameFolder: UNI_FILL_MATRIX_NAME_FOLDER_LABELS },
+      nameFolders: data.nameFolders,
+      labels: data.shortNames,
     })
   })
 

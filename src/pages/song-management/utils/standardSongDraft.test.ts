@@ -30,6 +30,7 @@ const managedSong: ManagedSongDTO = {
   id: 'song-1',
   title: '通常曲',
   reading: 'つうじょうきょく',
+  name_folder_code: 'NUMBER',
   wiki_page_title: null,
   artist: 'artist',
   genre: 'ORIGINAL',

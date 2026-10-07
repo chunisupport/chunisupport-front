@@ -10,6 +10,7 @@ const MASTER_DATA: MasterDataDTO = {
   ],
   genres: [{ id: 10, name: 'POPS & ANIME', short_name: 'P&A' }],
   versions: [],
+  name_folders: [],
   account_types: [],
   rating_bands: [],
   achievement_types: [],

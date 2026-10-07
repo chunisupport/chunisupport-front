@@ -365,6 +365,8 @@ export interface SongDTO {
   /** Wikiのページタイトル。未設定の場合はnull。フィールド追加前のキャッシュでは省略される */
   wiki_page_title?: string | null
   reading: string | null
+  /** APIが判定した楽曲名順フォルダのコード */
+  name_folder_code: string
   artist: string
   genre: string
   bpm: number | null
@@ -762,7 +764,16 @@ export interface AchievementTypeDTO {
 /** ポゼッションのマスタ名称 */
 export type PossessionName = 'normal' | 'silver' | 'gold' | 'platina' | 'rainbow'
 
+/** 楽曲名順フォルダのマスタ。内部数値IDは公開しない。 */
+export interface NameFolderDTO {
+  code: string
+  name: string
+  sort_order: number
+}
+
 export interface MasterDataDTO {
+  /** 楽曲名順フォルダ一覧（sort_order昇順） */
+  name_folders: NameFolderDTO[]
   genres: GenreDTO[]
   difficulties: MasterItemDTO[]
   versions: VersionDTO[]
@@ -1509,6 +1520,8 @@ export interface WorldsendSongDTO {
   /** Wikiのページタイトル。未設定の場合はnull。フィールド追加前のキャッシュでは省略される */
   wiki_page_title?: string | null
   reading: string | null
+  /** APIが判定した楽曲名順フォルダのコード */
+  name_folder_code: string
   artist: string
   genre: string | null
   bpm: number | null

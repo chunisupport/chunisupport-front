@@ -82,6 +82,7 @@ test('単曲レート入力の変更に応じて到達可能譜面数を再解�
       difficulties: [],
       genres: [],
       versions: [],
+      name_folders: [],
       account_types: [],
       rating_bands: [],
       achievement_types: [],

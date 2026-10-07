@@ -72,6 +72,7 @@ const build = (
     levelConstAxis: 'level',
     genres: GENRES,
     versions: [],
+    nameFolders: ['ABCD', 'A', 'NUMBER'],
     ...layout,
   })
 
@@ -316,7 +317,11 @@ test('楽曲名の軸は名前順フォルダの表示順に集計し、譜面�
   const result = build(
     records,
     'sss',
-    { vertical: 'nameFolder', labels: { nameFolder: new Map([['A', 'あ行']]) } },
+    {
+      vertical: 'nameFolder',
+      nameFolders: ['NUMBER', 'A', 'ABCD', 'UNUSED'],
+      labels: { nameFolder: new Map([['A', 'APIのあ行']]) },
+    },
     attributes
   )
 
@@ -324,9 +329,9 @@ test('楽曲名の軸は名前順フォルダの表示順に集計し、譜面�
   assert.deepEqual(
     result.lines.map((line) => [line.header.label, line.total.cell]),
     [
-      ['ABCD', { count: 1, total: 1 }],
-      ['あ行', { count: 0, total: 1 }],
       ['NUMBER', { count: 1, total: 1 }],
+      ['APIのあ行', { count: 0, total: 1 }],
+      ['ABCD', { count: 1, total: 1 }],
     ]
   )
 })

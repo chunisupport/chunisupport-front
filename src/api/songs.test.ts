@@ -420,3 +420,19 @@ test('fetchMasterData は所持状況マスタが無い場合に空配列へ正�
   // Then: 呼び出し側が未定義を扱わずに済む。
   assert.deepEqual(result.possessions, [])
 })
+
+test('楽曲名順フォルダはAPIの表示名を保持してsort_order順に取得する', async () => {
+  // Given
+  const folders = [
+    { code: 'CUSTOM', name: 'APIの分類', sort_order: 20 },
+    { code: 'A', name: 'APIのあ行', sort_order: 10 },
+  ]
+  installFetchRecorder(() => Response.json({ name_folders: folders }))
+  const { fetchMasterData } = await loadSongsApi()
+
+  // When
+  const result = await fetchMasterData()
+
+  // Then
+  assert.deepEqual(result.name_folders, [folders[1], folders[0]])
+})

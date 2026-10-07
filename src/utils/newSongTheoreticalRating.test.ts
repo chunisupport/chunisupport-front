@@ -30,6 +30,7 @@ const createSong = (
   id,
   title: id,
   reading: null,
+  name_folder_code: 'NUMBER',
   artist: 'artist',
   genre: 'POPS & ANIME',
   bpm: null,

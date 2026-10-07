@@ -18,6 +18,7 @@ const MASTER_DATA: MasterDataDTO = {
     { id: 11, name: 'niconico', short_name: 'nico' },
   ],
   versions: [],
+  name_folders: [],
   account_types: [],
   rating_bands: [],
   achievement_types: [],

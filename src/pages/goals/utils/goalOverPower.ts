@@ -21,6 +21,7 @@ const EMPTY_MASTER_DATA: MasterDataDTO = {
   genres: [],
   difficulties: [],
   versions: [],
+  name_folders: [],
   account_types: [],
   rating_bands: [],
   achievement_types: [],
