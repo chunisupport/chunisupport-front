@@ -2,7 +2,6 @@ import {
   MASTER_ULTIMA_FILTER,
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../../../constants/chart'
-import { NAME_FOLDER_LABELS } from '../../../constants/nameFolder'
 import {
   PLAYER_STATS_ACHIEVEMENT_LABEL,
   type PlayerStatsHeatmapAxis,
@@ -123,11 +122,6 @@ export const formatUniFillMatrixCaption = (
   )
   return `縦軸が${verticalName}、横軸が${horizontalName}の達成状況`
 }
-
-/** 名前順フォルダの内部キーから見出しへの対応 */
-export const UNI_FILL_MATRIX_NAME_FOLDER_LABELS: ReadonlyMap<string, string> = new Map(
-  Object.entries(NAME_FOLDER_LABELS)
-)
 
 /** 通常レコード画面へ遷移するときの並び順クエリ（スコア降順） */
 export const UNI_FILL_MATRIX_RECORD_SORT_QUERY = 'sortcol=score&sortorder=desc'

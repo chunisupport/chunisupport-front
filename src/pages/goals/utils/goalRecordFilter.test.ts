@@ -18,6 +18,7 @@ const MASTER_DATA: MasterDataDTO = {
     { id: 11, name: 'niconico', short_name: 'nico' },
   ],
   versions: [],
+  name_folders: [],
   account_types: [],
   rating_bands: [],
   achievement_types: [],
@@ -220,7 +221,7 @@ test('不正なFULL CHAIN値ではレコード遷移を無効にする', () => {
 
   // When
   const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
-  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
 
   // Then
   assert.equal(isGoalRecordNavigationEnabled(goal), false)
@@ -236,7 +237,7 @@ test('不正なハードランプ値ではレコード遷移を無効にし、�
 
   // When
   const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
-  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
 
   // Then
   assert.equal(isGoalRecordNavigationEnabled(goal), false)
@@ -252,7 +253,7 @@ test('不正なコンボランプ値ではレコード遷移を無効にし、�
 
   // When
   const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
-  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
 
   // Then
   assert.equal(isGoalRecordNavigationEnabled(goal), false)
@@ -268,7 +269,7 @@ test('ランプ目標の成果パラメータ形式が不正でもフィルタ�
 
   // When
   const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
-  const defaultFilter = buildDefaultFilter(MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
 
   // Then
   assert.equal(isGoalRecordNavigationEnabled(goal), false)

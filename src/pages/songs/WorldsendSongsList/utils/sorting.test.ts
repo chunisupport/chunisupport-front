@@ -7,6 +7,7 @@ const createSong = (overrides: Partial<WorldsendSongDTO>): WorldsendSongDTO => (
   id: overrides.id ?? 'song',
   title: overrides.title ?? '楽曲',
   reading: overrides.reading ?? null,
+  name_folder_code: 'NUMBER',
   artist: overrides.artist ?? 'アーティスト',
   genre: overrides.genre === undefined ? 'ジャンル' : overrides.genre,
   bpm: overrides.bpm === undefined ? 120 : overrides.bpm,

@@ -153,7 +153,7 @@ export const buildGoalRecordFilter = (
   const genreIds = normalizeGoalAttributeIds(goal.attributes.genre)
   const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
   const versionNameMap = buildGoalVersionNameMap(versions)
-  const defaultFilter = buildDefaultFilter(masterData, versions)
+  const defaultFilter = buildDefaultFilter(masterData.genres, versions)
   const isOpTargetGoal = goal.attributes.chart_target === 'OP_TARGET'
   const hasNoSelectedCharts =
     hasNoSelectedAttributeIds(difficultyIds) ||

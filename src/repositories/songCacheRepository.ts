@@ -80,7 +80,8 @@ export const readCachedSongs = async (songsUpdatedAt: string | null): Promise<So
   if (
     cachedSongs.length === 0 ||
     !hasSongSortOrder(cachedSongs) ||
-    !hasSongFlags(cachedSongs, ['unlock_required'])
+    !hasSongFlags(cachedSongs, ['unlock_required']) ||
+    !cachedSongs.every((song) => typeof song.data.name_folder_code === 'string')
   ) {
     return null
   }
@@ -108,7 +109,8 @@ export const readCachedWorldsendSongs = async (
   if (
     cachedSongs.length === 0 ||
     !hasSongSortOrder(cachedSongs) ||
-    !hasSongFlags(cachedSongs, ['is_new', 'unlock_required'])
+    !hasSongFlags(cachedSongs, ['is_new', 'unlock_required']) ||
+    !cachedSongs.every((song) => typeof song.data.name_folder_code === 'string')
   ) {
     return null
   }

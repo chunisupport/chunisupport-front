@@ -91,7 +91,7 @@ const restoreInitialStandardRecordFilter = async (
   masterData: MasterDataDTO,
   versions: VersionSummaryDTO[]
 ): Promise<FilterState> => {
-  const defaultFilter = buildDefaultFilter(masterData, versions)
+  const defaultFilter = buildDefaultFilter(masterData.genres, versions)
 
   try {
     const savedFilter = await readStandardRecordFilterSetting()
@@ -156,7 +156,7 @@ const UserRecord: Component<Props> = (props) => {
   const defaultFilter = createMemo(() => {
     const md = masterData()
     const vs = versionData()?.versions
-    return md && vs ? buildDefaultFilter(md, vs) : DEFAULT_FILTER
+    return md && vs ? buildDefaultFilter(md.genres, vs) : DEFAULT_FILTER
   })
 
   const {

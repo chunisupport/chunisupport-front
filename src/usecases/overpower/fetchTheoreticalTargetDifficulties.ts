@@ -1,6 +1,5 @@
 import { fetchMasterData, fetchVersions } from '../../api/songs'
 import type { PlayerDataDifficulty } from '../../types/api'
-import { type NameFolderKey, resolveNameFolder } from '../../utils/nameFolder'
 import type {
   PlayerStatsNotesBySongId,
   PlayerStatsRecordAttribute,
@@ -17,21 +16,24 @@ import { fetchAllSongsWithCache } from '../cache/fetchAllSongsWithCache'
 export type PlayerStatsChartMetadata = {
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
   notesBySongId: PlayerStatsNotesBySongId
-  /** 曲IDごとのジャンル・追加バージョンと、読みから判定した名前順フォルダ */
-  attributesBySongId: ReadonlyMap<
-    string,
-    PlayerStatsRecordAttribute & { nameFolder: NameFolderKey }
-  >
+  /** 曲IDごとのジャンル・追加バージョンと、APIが判定した名前順フォルダ */
+  attributesBySongId: ReadonlyMap<string, PlayerStatsRecordAttribute & { nameFolder: string }>
   genres: string[]
   versions: string[]
-  /** 集計用の名称からAPIの短縮名への対応 */
-  shortNames: { genre: ReadonlyMap<string, string>; version: ReadonlyMap<string, string> }
+  /** APIマスタの表示順に並べた名前順フォルダのコード */
+  nameFolders: string[]
+  /** 集計用の名称・コードからAPIの短縮名・表示名への対応 */
+  shortNames: {
+    genre: ReadonlyMap<string, string>
+    version: ReadonlyMap<string, string>
+    nameFolder: ReadonlyMap<string, string>
+  }
 }
 
 /**
  * 楽曲マスタをカプセル化し、統計ダッシュボード用の譜面情報を取得する。
  *
- * @returns 曲IDごとの譜面情報と名前順フォルダ、フィルター用のジャンル・バージョン一覧、表示用の短縮名。
+ * @returns 曲IDごとの譜面情報と名前順フォルダ、フィルター用のジャンル・バージョン一覧、表示順のフォルダ一覧と表示名。
  */
 export const fetchPlayerStatsChartMetadata = async (): Promise<PlayerStatsChartMetadata> => {
   const [{ songs }, masterData, versionData] = await Promise.all([
@@ -59,11 +61,13 @@ export const fetchPlayerStatsChartMetadata = async (): Promise<PlayerStatsChartM
           version: getShortVersionName(
             resolveVersionNameByReleaseDate(song.release, versionData.versions)
           ),
-          nameFolder: resolveNameFolder(song),
+          nameFolder: song.name_folder_code,
         },
       ])
     ),
+    nameFolders: masterData.name_folders.map((folder) => folder.code),
     shortNames: {
+      nameFolder: new Map(masterData.name_folders.map((folder) => [folder.code, folder.name])),
       genre: new Map(masterData.genres.map((genre) => [genre.name, genre.short_name])),
       version: new Map(
         versionData.versions.map((version) => [

@@ -489,6 +489,9 @@ const fetchMasterDataFromApi = async (): Promise<MasterDataDTO> => {
   return {
     ...raw,
     genres: sortMasterItemsBySortOrder(raw.genres ?? []),
+    name_folders: [...(raw.name_folders ?? [])].sort(
+      (left, right) => left.sort_order - right.sort_order
+    ),
     possessions: sortMasterItemsBySortOrder(raw.possessions ?? []),
     achievement_types: achievementTypes,
   }

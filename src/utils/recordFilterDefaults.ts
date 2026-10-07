@@ -4,7 +4,7 @@ import {
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../constants/recordFilterOptions'
-import type { MasterDataDTO, MasterItemDTO, VersionSummaryDTO } from '../types/api'
+import type { MasterItemDTO, VersionSummaryDTO } from '../types/api'
 import type { FilterState } from '../types/recordFilter'
 import { sortMasterItemsBySortOrder } from './masterData'
 import { MAX_SCORE } from './scoreRank'
@@ -55,17 +55,17 @@ export const DEFAULT_FILTER: FilterState = {
 /**
  * マスタデータに依存するフィルター初期値を作成する。
  *
- * @param masterData - ジャンルなどのマスタデータ。
+ * @param genres - ジャンル一覧。表示順に並べた全ジャンル名を初期値にする。
  * @param versions - バージョン一覧。未来分は除外して初期値にする。
  * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns マスタデータから作成したジャンルとバージョンの初期値。
  */
 export const getMasterDataDefaults = (
-  masterData?: MasterDataDTO,
+  genres?: readonly MasterItemDTO[],
   versions?: VersionSummaryDTO[],
   referenceDate?: string
 ) => ({
-  genres: sortMasterItemsBySortOrder(masterData?.genres ?? []).map((g: MasterItemDTO) => g.name),
+  genres: sortMasterItemsBySortOrder(genres ?? []).map((genre) => genre.name),
   versions: filterReleasedVersions(versions ?? [], referenceDate).map((version) =>
     getShortVersionName(version.name)
   ),
@@ -74,18 +74,18 @@ export const getMasterDataDefaults = (
 /**
  * レコードフィルターのデフォルト状態を作成する。
  *
- * @param masterData - ジャンルなどのマスタデータ。
+ * @param genres - ジャンル一覧。表示順に並べた全ジャンル名を初期値にする。
  * @param versions - バージョン一覧。未来分は除外して初期値にする。
  * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns 配列と範囲条件を複製したレコードフィルターの初期状態。
  */
 export const buildDefaultFilter = (
-  masterData?: MasterDataDTO,
+  genres?: readonly MasterItemDTO[],
   versions?: VersionSummaryDTO[],
   referenceDate?: string
 ): FilterState => ({
   ...DEFAULT_FILTER,
-  ...getMasterDataDefaults(masterData, versions, referenceDate),
+  ...getMasterDataDefaults(genres, versions, referenceDate),
   const: { ...DEFAULT_FILTER.const },
   score: { ...DEFAULT_FILTER.score },
   rating: { ...DEFAULT_FILTER.rating },

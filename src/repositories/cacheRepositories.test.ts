@@ -51,6 +51,7 @@ const song: SongDTO = {
   id: 'song-1',
   title: 'テスト楽曲',
   reading: null,
+  name_folder_code: 'NUMBER',
   artist: 'テスト',
   genre: 'POPS & ANIME',
   bpm: null,
@@ -74,6 +75,7 @@ const worldsendSong: WorldsendSongDTO = {
   id: 'worldsend-song-1',
   title: "テストWORLD'S END楽曲",
   reading: null,
+  name_folder_code: 'NUMBER',
   artist: 'テスト',
   genre: 'POPS & ANIME',
   bpm: null,
@@ -486,4 +488,26 @@ test('画面設定は現行 schemaVersion の保存値だけ読み込まれる�
   // Then
   assert.deepEqual(columns, ['title', 'score'])
   assert.equal(filter, null)
+})
+
+test("フォルダコードのない旧楽曲キャッシュは通常曲とWORLD'S ENDの両方で無効になる", async () => {
+  // Given
+  await replaceCachedSongs([song], 'songs-1')
+  await replaceCachedWorldsendSongs([worldsendSong], 'songs-1')
+  const legacySong = { ...song } as Partial<SongDTO>
+  const legacyWorldsendSong = { ...worldsendSong } as Partial<WorldsendSongDTO>
+  delete legacySong.name_folder_code
+  delete legacyWorldsendSong.name_folder_code
+  await db.songs.update(song.id, { data: legacySong as SongDTO })
+  await db.worldsendSongs.update(worldsendSong.id, {
+    data: legacyWorldsendSong as WorldsendSongDTO,
+  })
+
+  // When
+  const normal = await readCachedSongs('songs-1')
+  const worldsend = await readCachedWorldsendSongs('songs-1')
+
+  // Then
+  assert.equal(normal, null)
+  assert.equal(worldsend, null)
 })

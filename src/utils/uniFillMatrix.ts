@@ -17,7 +17,6 @@ import {
 } from './chartLevel'
 import { COMBO_LAMP_UNACHIEVED_FILTERS, HARD_LAMP_UNACHIEVED_FILTERS } from './goalLamp'
 import { formatFileTimestamp } from './localDateTime'
-import { NAME_FOLDER_KEYS, type NameFolderKey } from './nameFolder'
 import {
   hasPlayerStatsAchievement,
   type PlayerStatsAchievement,
@@ -53,7 +52,7 @@ type UniFillMatrixSongDimension = Exclude<UniFillMatrixDimension, 'levelConst'>
 export type UniFillMatrixSongAttributes = {
   genre: string
   version?: string
-  nameFolder?: NameFolderKey
+  nameFolder?: string
 }
 
 /** 表示用の見出し。axis はレベル・譜面定数、group はジャンル・バージョン・名前順フォルダ */
@@ -74,6 +73,8 @@ export type UniFillMatrixLayout = {
   genres: readonly string[]
   /** 稼働順に並べた公開済みバージョン。ここに含まれないバージョンの譜面は集計しない */
   versions: readonly string[]
+  /** APIマスタの表示順に並べた楽曲名順フォルダのコード */
+  nameFolders: readonly string[]
   /** 集計用の名称に対応する見出しの短縮名・表示名。未指定時は集計用の名称 */
   labels?: Partial<Record<UniFillMatrixSongDimension, ReadonlyMap<string, string>>>
 }
@@ -186,7 +187,7 @@ const createAxisItemResolver = (
       ? layout.genres
       : dimension === 'version'
         ? layout.versions
-        : NAME_FOLDER_KEYS
+        : layout.nameFolders
   const orders = new Map(groups.map((group, index) => [group, index]))
   const labels = layout.labels?.[dimension]
   return (record) => {

@@ -8,6 +8,7 @@ const createSong = (overrides: Partial<SongDTO> = {}): SongDTO => ({
   id: 'song-1',
   title: 'マスタ曲名',
   reading: 'マスタヨミ',
+  name_folder_code: 'NUMBER',
   artist: 'Master Artist',
   genre: 'POPS & ANIME',
   bpm: 180,

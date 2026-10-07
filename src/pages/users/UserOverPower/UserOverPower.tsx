@@ -10,7 +10,8 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { fetchGenres } from '../../../api/genres'
+import { fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
@@ -84,7 +85,7 @@ type Props = {
  */
 const UserOverPower: Component<Props> = (props) => {
   const { songsResponse: allSongs, ensureSongsLoaded } = useSongsData()
-  const [masterData] = createResource(fetchMasterData)
+  const [genres] = createResource(fetchGenres)
   const [versionData] = createResource(fetchVersions)
   const [summaryViewMode, setSummaryViewMode] = createSignal<OverPowerSummaryViewMode>(
     DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE
@@ -131,16 +132,16 @@ const UserOverPower: Component<Props> = (props) => {
 
   const summary = createMemo(() => {
     const songs = allSongs()
-    const md = masterData()
+    const genreItems = genres()
     const versions = versionData()
     const currentLockedSongs = lockedSongs()
-    if (!songs || !md || !versions || !currentLockedSongs) return undefined
+    if (!songs || !genreItems || !versions || !currentLockedSongs) return undefined
     return buildOverPowerSummary(
       songs.songs,
       props.record.standard,
       versions.versions,
       excludeLockedSongs() ? currentLockedSongs.items : [],
-      md.genres,
+      genreItems,
       aggregationTarget()
     )
   })
@@ -252,14 +253,14 @@ const UserOverPower: Component<Props> = (props) => {
     row: OverPowerSummaryRow,
     useCurrentSummaryTab: boolean
   ): Promise<void> => {
-    const md = masterData()
+    const genreItems = genres()
     const versions = versionData()?.versions
-    if (!md || !versions) return
+    if (!genreItems || !versions) return
 
     setRecordNavigationError('')
     try {
       const filter = buildOverPowerRecordFilter({
-        defaultFilter: buildDefaultFilter(md, versions),
+        defaultFilter: buildDefaultFilter(genreItems, versions),
         dimension: useCurrentSummaryTab
           ? overPowerRecordFilterDimensionBySummaryTab[selectedSummaryTab()]
           : 'all',
@@ -303,10 +304,10 @@ const UserOverPower: Component<Props> = (props) => {
     <Suspense fallback={<Loading />}>
       <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
         <Show
-          when={!allSongs.error && !masterData.error && !versionData.error && !lockedSongs.error}
+          when={!allSongs.error && !genres.error && !versionData.error && !lockedSongs.error}
           fallback={
             <LoadError
-              error={allSongs.error ?? masterData.error ?? versionData.error ?? lockedSongs.error}
+              error={allSongs.error ?? genres.error ?? versionData.error ?? lockedSongs.error}
             />
           }
         >
@@ -501,7 +502,7 @@ const UserOverPower: Component<Props> = (props) => {
                     open={lockedSongsDialogOpen()}
                     songs={allSongs()?.songs ?? []}
                     records={props.record.standard}
-                    genres={masterData()?.genres ?? []}
+                    genres={genres() ?? []}
                     versions={versionData()?.versions ?? []}
                     lockedSongs={lockedSongs()?.items ?? []}
                     officialOverPower={props.player.official_overpower}

@@ -7,6 +7,7 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   id: overrides.id ?? 'song',
   title: overrides.title ?? '楽曲',
   reading: overrides.reading ?? null,
+  name_folder_code: 'NUMBER',
   artist: overrides.artist ?? 'アーティスト',
   genre: overrides.genre ?? 'ジャンル',
   bpm: overrides.bpm === undefined ? 120 : overrides.bpm,
