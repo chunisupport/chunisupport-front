@@ -189,10 +189,13 @@ export const UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT: UniFillMatrixAchievementOption
   label: PLAYER_STATS_ACHIEVEMENT_LABEL.sss,
 }
 
-/** データ・合計列の幅を1としたときの左端の見出し列の幅。見出しの種類ごとに決める。 */
+/**
+ * データ・合計列の幅を1としたときの左端の見出し列の幅。見出しの種類ごとに決める。
+ * group は最も長い名前順フォルダ「UVWXYZ」が最小幅の列でも収まる比率にする。
+ */
 export const UNI_FILL_MATRIX_LINE_HEADER_WEIGHT: Record<UniFillMatrixHeader['kind'], number> = {
   axis: 0.75,
-  group: 1,
+  group: 1.25,
 }
 
 /** 共通ヒートマップセルの最小幅（min-w-16）に合わせる余白単位数。 */
