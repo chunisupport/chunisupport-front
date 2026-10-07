@@ -40,16 +40,32 @@ type RatingTheoreticalFrame = (typeof RATING_THEORETICAL_TAB_OPTIONS)[number]['v
 /** 履歴で戻った際に選択中の表示枠を復元する Primitive */
 const useSelectedFrameState = createHistoryViewState<RatingTheoreticalFrame>()
 
-/** 枠理論値サマリーの計算結果、現在レコード、取得状態を受け取るプロパティ */
-type RatingTheoreticalSummaryProps = {
-  /** 現在の枠平均レーティング。未計算の場合はnull */
+/** 理論値サマリーの1区画に表示する枠の計算結果と取得状態 */
+type RatingTheoreticalFigureProps = {
+  /** 区画の見出し */
+  label: string
+  /** 見出しの前に表示する装飾アイコン */
+  icon?: JSX.Element
+  /** 総合理論値として大きく表示するか */
+  primary?: boolean
+  /** 配置や区切り線を指定する追加クラス */
+  class?: string
+  /** 現在の平均レーティング。未計算の場合はnull */
   currentRating: number | null
+  /** データ取得で発生したエラー。正常時は未定義 */
+  error: unknown
+  /** 現在データを取得または理論値を計算しているか */
+  loading: boolean
+  /** 計算済みの理論値。対象譜面がない場合は未定義 */
+  theoreticalRating: RatingTheoretical | undefined
+}
+
+/** 枠ごとの理論値対象譜面一覧に表示する計算結果、現在レコード、取得状態 */
+type RatingTheoreticalChartsProps = {
   /** 理論値対象譜面との照合に使う全通常譜面レコード */
   records: readonly PlayerRecordDTO[]
-  /** 理論値対象譜面一覧の見出し。未指定の場合は一覧を表示しない */
-  detailsLabel?: string
-  /** サマリー領域のアクセシビリティラベル */
-  ariaLabel: string
+  /** 理論値対象譜面一覧の見出し */
+  detailsLabel: string
   /** データ取得で発生したエラー。正常時は未定義 */
   error: unknown
   /** 現在データを取得または理論値を計算しているか */
@@ -68,48 +84,83 @@ type ChartProgressDisplay = {
   scoreGap: number | null
 }
 
-/** 理論値サマリー内の1指標に表示するアイコン、文言、値、推定状態 */
-type RatingMetricProps = {
-  /** 指標名の前に表示する装飾アイコン */
-  icon: JSX.Element
-  /** 指標の表示名 */
-  label: string
-  /** 未確定の譜面定数を含む推定値として強調するか */
-  unknown: boolean
-  /** 指標として表示する整形済みの値 */
-  value: string
-}
-
 /**
- * レーティング枠の指標をアイコン付きで表示する。
+ * 理論値と現在値からの差を表示する。推定値の場合は未確定マーカーを付けて強調する。
  *
- * @param props - 指標のアイコン、ラベル、表示値、推定値状態。
- * @returns 理論値サマリー内の1指標。
+ * @param props - 見出し、表示サイズ、現在値、理論値、取得状態。
+ * @returns 理論値サマリーの1区画。
  */
-const RatingMetric: Component<RatingMetricProps> = (props) => (
-  <div class="flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-3 text-center">
-    <p class="flex items-center gap-1.5 whitespace-nowrap font-sans text-xs font-medium text-text-muted">
-      {props.icon}
-      {props.label}
-    </p>
-    <p
-      class="font-jost text-xl font-bold tabular-nums text-text data-[unknown=true]:italic data-[unknown=true]:text-danger"
-      data-unknown={props.unknown}
+const RatingTheoreticalFigure: Component<RatingTheoreticalFigureProps> = (props) => {
+  /**
+   * 理論値と現在値の差を表示用に整形する。
+   *
+   * @param theoreticalRating - 計算済みの理論値。
+   * @returns 整形済みの差。現在値がなければ空表示。
+   */
+  const formatRatingGap = (theoreticalRating: RatingTheoretical) => {
+    const gap = calculateRatingTheoreticalGap(theoreticalRating.rating, props.currentRating)
+    return gap === undefined ? NEW_SONG_SSS_PLUS_COPY.emptyValue : formatPlayerRating(gap)
+  }
+
+  return (
+    <div
+      class={`flex min-w-0 flex-col items-center justify-center gap-0.5 px-3 py-2 text-center ${props.class ?? ''}`}
     >
-      {props.value}
-      <Show when={props.unknown}>
-        <sup
-          class="ml-0.5 align-super font-sans text-[0.55em]"
-          title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
-          aria-hidden="true"
+      <p class="flex items-center gap-1.5 whitespace-nowrap font-sans text-xs font-medium text-text-muted">
+        {props.icon}
+        {props.label}
+      </p>
+      <Show when={!props.error} fallback={<LoadError error={props.error} />}>
+        <Show
+          when={!props.loading}
+          fallback={
+            <div class="h-8 w-full">
+              <Loading size="inline" ariaLabel={NEW_SONG_SSS_PLUS_COPY.loadingLabel} />
+            </div>
+          }
         >
-          {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
-        </sup>
-        <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
+          <Show
+            when={props.theoreticalRating}
+            fallback={
+              <p class="font-sans text-sm text-text-subtle">{NEW_SONG_SSS_PLUS_COPY.noData}</p>
+            }
+          >
+            {(theoreticalRating) => (
+              <div class="flex flex-wrap items-baseline justify-center gap-x-2">
+                <p
+                  class="font-jost font-bold tabular-nums text-text data-[unknown=true]:italic data-[unknown=true]:text-danger"
+                  classList={{ 'text-3xl': props.primary, 'text-xl': !props.primary }}
+                  data-unknown={theoreticalRating().hasUnknownChartConstants}
+                >
+                  {formatPlayerRating(theoreticalRating().rating)}
+                  <Show when={theoreticalRating().hasUnknownChartConstants}>
+                    <sup
+                      class="ml-0.5 align-super font-sans text-[0.55em]"
+                      title={NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}
+                      aria-hidden="true"
+                    >
+                      {NEW_SONG_SSS_PLUS_COPY.unknownMarker}
+                    </sup>
+                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
+                  </Show>
+                </p>
+                <p
+                  class="flex items-baseline gap-1 font-jost font-medium tabular-nums text-text-muted"
+                  classList={{ 'text-base': props.primary, 'text-sm': !props.primary }}
+                  title={NEW_SONG_SSS_PLUS_COPY.currentGap}
+                >
+                  <TrendingUp class="h-4 w-4 shrink-0 self-center" aria-hidden="true" />
+                  <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.currentGap}</span>
+                  {formatRatingGap(theoreticalRating())}
+                </p>
+              </div>
+            )}
+          </Show>
+        </Show>
       </Show>
-    </p>
-  </div>
-)
+    </div>
+  )
+}
 
 /**
  * SSS+対象譜面の現在スコアをランク色、SSS+ボーダーとの差を差分色で表示する。
@@ -267,7 +318,7 @@ const TheoreticalChartList: Component<{
   entries: RatingTheoretical['entries']
   records: readonly PlayerRecordDTO[]
 }> = (props) => (
-  <section class="border-t border-border" aria-label={props.detailsLabel}>
+  <section aria-label={props.detailsLabel}>
     <div class="flex items-center justify-between px-3 py-2 font-sans">
       <h2 class="text-sm font-semibold text-text">{props.detailsLabel}</h2>
       <span class="text-xs text-text-muted">
@@ -319,25 +370,17 @@ const BoundaryChartList: Component<{
 )
 
 /**
- * レーティング枠の全譜面SSS+時レーティングと現在値からの差を表示する。
+ * レーティング枠の全譜面SSS+時に採用される譜面一覧を表示する。
  *
- * 一覧見出しがある場合は、下限定数の譜面をSSS+達成済み優先で並べ替え、枠外譜面を別カードに表示する。
+ * 下限定数の譜面をSSS+達成済み優先で並べ替え、枠外譜面を別カードに表示する。
  *
- * @param props - 現在値、SSS+時レーティング、現在レコード、楽曲データの取得状態。
- * @returns レーティング枠の理論値サマリーと、下限定数の枠外譜面カード。
+ * @param props - 一覧見出し、SSS+時レーティング、現在レコード、楽曲データの取得状態。
+ * @returns 理論値対象譜面一覧のカードと、下限定数の枠外譜面カード。
  */
-const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (props) => {
-  const ratingGap = () =>
-    props.theoreticalRating
-      ? calculateRatingTheoreticalGap(props.theoreticalRating.rating, props.currentRating)
-      : undefined
-  const formattedRatingGap = () => {
-    const gap = ratingGap()
-    return gap === undefined ? NEW_SONG_SSS_PLUS_COPY.emptyValue : formatPlayerRating(gap)
-  }
+const RatingTheoreticalCharts: Component<RatingTheoreticalChartsProps> = (props) => {
   /** 下限定数の譜面をSSS+達成済み優先で振り分けた採用譜面と枠外譜面 */
   const prioritized = createMemo(() =>
-    props.theoreticalRating && props.detailsLabel
+    props.theoreticalRating
       ? prioritizeBoundaryEntries(props.theoreticalRating, (entry) =>
           isSssPlusAchievedEntry(entry, props.records)
         )
@@ -349,10 +392,7 @@ const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (prop
 
   return (
     <div class="flex flex-col gap-3">
-      <section
-        class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
-        aria-label={props.ariaLabel}
-      >
+      <div class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
         <Show
           when={!props.error}
           fallback={
@@ -370,50 +410,24 @@ const RatingTheoreticalSummary: Component<RatingTheoreticalSummaryProps> = (prop
             }
           >
             <Show
-              when={props.theoreticalRating}
+              when={prioritized()}
               fallback={
                 <p class="px-3 py-4 text-center font-sans text-sm text-text-subtle">
                   {NEW_SONG_SSS_PLUS_COPY.noData}
                 </p>
               }
             >
-              {(theoreticalRating) => (
-                <>
-                  <div class="grid grid-cols-2 divide-x divide-border">
-                    <RatingMetric
-                      icon={<Gauge class="h-4 w-4" aria-hidden="true" />}
-                      label={NEW_SONG_SSS_PLUS_COPY.targetRating}
-                      unknown={theoreticalRating().hasUnknownChartConstants}
-                      value={formatPlayerRating(theoreticalRating().rating)}
-                    />
-                    <RatingMetric
-                      icon={<TrendingUp class="h-4 w-4" aria-hidden="true" />}
-                      label={NEW_SONG_SSS_PLUS_COPY.currentGap}
-                      unknown={theoreticalRating().hasUnknownChartConstants}
-                      value={formattedRatingGap()}
-                    />
-                  </div>
-                  <Show when={theoreticalRating().hasUnknownChartConstants}>
-                    <div class="flex items-center gap-2 border-t border-warning-border bg-warning-bg px-3 py-2 font-sans text-xs text-warning">
-                      <TriangleAlert class="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span>{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
-                    </div>
-                  </Show>
-                  <Show when={props.detailsLabel} keyed>
-                    {(detailsLabel) => (
-                      <TheoreticalChartList
-                        detailsLabel={detailsLabel}
-                        entries={prioritized()?.entries ?? theoreticalRating().entries}
-                        records={props.records}
-                      />
-                    )}
-                  </Show>
-                </>
+              {(current) => (
+                <TheoreticalChartList
+                  detailsLabel={props.detailsLabel}
+                  entries={current().entries}
+                  records={props.records}
+                />
               )}
             </Show>
           </Show>
         </Show>
-      </section>
+      </div>
       <Show when={boundaryEntries()?.length}>
         <BoundaryChartList
           entries={boundaryEntries() ?? []}
@@ -468,14 +482,50 @@ const RatingTheoreticalCheckerPage: Component = () => {
         </div>
       </header>
 
-      <RatingTheoreticalSummary
-        ariaLabel={NEW_SONG_SSS_PLUS_COPY.overallAriaLabel}
-        currentRating={rating()?.rating ?? null}
-        error={rating.error ?? theoreticalRatings.bestError()}
-        loading={rating.loading || theoreticalRatings.isBestLoading()}
-        records={playedRecords()}
-        theoreticalRating={theoreticalRatings.overallTheoreticalRating()}
-      />
+      <section
+        class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
+        aria-label={NEW_SONG_SSS_PLUS_COPY.summaryAriaLabel}
+      >
+        <div class="grid grid-cols-2 sm:grid-rows-2">
+          <RatingTheoreticalFigure
+            class="col-span-2 border-b border-border sm:col-span-1 sm:row-span-2 sm:border-r sm:border-b-0"
+            label={NEW_SONG_SSS_PLUS_COPY.targetRating}
+            icon={<Gauge class="h-4 w-4" aria-hidden="true" />}
+            primary
+            currentRating={rating()?.rating ?? null}
+            error={rating.error ?? theoreticalRatings.bestError()}
+            loading={rating.loading || theoreticalRatings.isBestLoading()}
+            theoreticalRating={theoreticalRatings.overallTheoreticalRating()}
+          />
+          <RatingTheoreticalFigure
+            class="border-r border-border sm:border-r-0 sm:border-b"
+            label={NEW_SONG_SSS_PLUS_COPY.bestLabel}
+            currentRating={rating()?.best_average ?? null}
+            error={rating.error ?? theoreticalRatings.bestError()}
+            loading={rating.loading || theoreticalRatings.isBestLoading()}
+            theoreticalRating={theoreticalRatings.bestTheoreticalRating()}
+          />
+          <RatingTheoreticalFigure
+            label={NEW_SONG_SSS_PLUS_COPY.newLabel}
+            currentRating={rating()?.new_average ?? null}
+            error={rating.error ?? theoreticalRatings.newError()}
+            loading={rating.loading || theoreticalRatings.isNewLoading()}
+            theoreticalRating={theoreticalRatings.newTheoreticalRating()}
+          />
+        </div>
+        <Show
+          when={
+            !rating.error &&
+            !rating.loading &&
+            theoreticalRatings.overallTheoreticalRating()?.hasUnknownChartConstants
+          }
+        >
+          <div class="flex items-center gap-2 border-t border-warning-border bg-warning-bg px-3 py-2 font-sans text-xs text-warning">
+            <TriangleAlert class="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
+          </div>
+        </Show>
+      </section>
 
       <SegmentedTabs
         class="flex flex-col gap-3"
@@ -486,23 +536,19 @@ const RatingTheoreticalCheckerPage: Component = () => {
         triggerClass="flex-1 sm:flex-none"
       >
         <AppTabContent value="best">
-          <RatingTheoreticalSummary
-            ariaLabel={NEW_SONG_SSS_PLUS_COPY.ariaLabel}
-            currentRating={rating()?.best_average ?? null}
+          <RatingTheoreticalCharts
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.bestDetailsLabel}
-            error={rating.error ?? record.error ?? theoreticalRatings.bestError()}
-            loading={rating.loading || record.loading || theoreticalRatings.isBestLoading()}
+            error={record.error ?? theoreticalRatings.bestError()}
+            loading={record.loading || theoreticalRatings.isBestLoading()}
             records={playedRecords()}
             theoreticalRating={theoreticalRatings.bestTheoreticalRating()}
           />
         </AppTabContent>
         <AppTabContent value="new">
-          <RatingTheoreticalSummary
-            ariaLabel={NEW_SONG_SSS_PLUS_COPY.ariaLabel}
-            currentRating={rating()?.new_average ?? null}
+          <RatingTheoreticalCharts
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.newDetailsLabel}
-            error={rating.error ?? record.error ?? theoreticalRatings.newError()}
-            loading={rating.loading || record.loading || theoreticalRatings.isNewLoading()}
+            error={record.error ?? theoreticalRatings.newError()}
+            loading={record.loading || theoreticalRatings.isNewLoading()}
             records={playedRecords()}
             theoreticalRating={theoreticalRatings.newTheoreticalRating()}
           />

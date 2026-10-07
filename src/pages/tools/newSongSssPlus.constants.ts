@@ -1,7 +1,8 @@
 /** ベスト枠・新曲枠理論値チェッカーで使用する文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const NEW_SONG_SSS_PLUS_COPY = {
-  ariaLabel: 'レーティング枠理論値チェック',
-  overallAriaLabel: '総合レーティング理論値',
+  summaryAriaLabel: 'レーティング枠理論値',
+  bestLabel: 'ベスト枠',
+  newLabel: '新曲枠',
   targetRating: '理論値',
   currentGap: '現在との差',
   loadingLabel: 'レーティング枠理論値を計算中',
@@ -23,6 +24,6 @@ export const NEW_SONG_SSS_PLUS_COPY = {
 
 /** 理論値チェッカーの表示枠タブ */
 export const RATING_THEORETICAL_TAB_OPTIONS = [
-  { value: 'best', label: 'ベスト枠' },
-  { value: 'new', label: '新曲枠' },
+  { value: 'best', label: NEW_SONG_SSS_PLUS_COPY.bestLabel },
+  { value: 'new', label: NEW_SONG_SSS_PLUS_COPY.newLabel },
 ] as const
