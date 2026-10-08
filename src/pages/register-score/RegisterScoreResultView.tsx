@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import { Eye, EyeOff, Play } from 'lucide-solid'
+import { Copy, Eye, EyeOff, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import logoSingle from '../../assets/logo_single.svg'
 import { AppIconButton } from '../../components/common/AppButton'
@@ -948,7 +948,7 @@ const RegisterScoreChangeRow = (props: {
           </Show>
           <h3 class="min-w-0 flex-1">
             <Button
-              class={`block w-full min-w-0 truncate border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
+              class={`flex w-fit min-w-0 max-w-full items-center gap-1 border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
                 isCopyHighlighted()
                   ? 'text-action-primary transition-none'
                   : 'text-text transition-colors duration-700 motion-reduce:transition-none'
@@ -957,7 +957,12 @@ const RegisterScoreChangeRow = (props: {
               title={props.songTitle}
               onClick={handleCopySongTitle}
             >
-              {props.songTitle}
+              <span class="min-w-0 truncate">{props.songTitle}</span>
+              <Copy
+                class="h-3.5 w-3.5 shrink-0"
+                aria-hidden="true"
+                data-image-capture-excluded="true"
+              />
             </Button>
           </h3>
         </div>
