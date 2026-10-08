@@ -34,7 +34,11 @@ import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPo
 import { formatPlayerLevelLabel } from '../../utils/playerLevel'
 import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat'
 import type { SortDirection } from '../../utils/sortingQuery'
-import { REGISTER_SCORE_COPY, REGISTER_SCORE_SHOW_METRICS } from './constants'
+import {
+  REGISTER_SCORE_COPY,
+  REGISTER_SCORE_SHOW_SONG_METRICS,
+  REGISTER_SCORE_SHOW_SONG_OP_PERCENT,
+} from './constants'
 import { RegisterScoreImagePreviewDialog } from './RegisterScoreImagePreviewDialog'
 import { isLampOnlyRegisterScoreChange } from './registerScoreChangeFilter'
 import { courseClassBadgeClass, formatCourseClass } from './registerScoreDisplay'
@@ -483,45 +487,43 @@ const RegisterScoreProfileSummary = (props: {
           />
         </Show>
       </div>
-      <Show when={REGISTER_SCORE_SHOW_METRICS}>
-        <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
-          <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_COPY.ratingLabel}</dt>
-          <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
-            <span>{formatNullableRating(props.result.summary.rating)}</span>
-            <RegisterScoreMetricDelta
-              delta={props.result.metric_diffs.rating.delta}
-              formattedDelta={ratingDelta()}
-            />
-          </dd>
-          <dt class="whitespace-nowrap font-extrabold text-text-muted">
-            {REGISTER_SCORE_COPY.overPowerLabel}
-          </dt>
-          <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
-            <Show when={props.result.summary.overpower_value !== null} fallback={NO_DATA_TEXT}>
-              <span>{formatOverPowerValue(props.result.summary.overpower_value ?? 0)}</span>
-            </Show>
-            <RegisterScoreMetricDelta
-              delta={props.result.metric_diffs.overpower_value.delta}
-              formattedDelta={overPowerDelta()}
-            />
-          </dd>
-          <dt class="font-extrabold text-text-muted">
-            <span aria-hidden="true">{REGISTER_SCORE_COPY.overPowerPercentLabel}</span>
-            <span class="sr-only">{REGISTER_SCORE_COPY.overPowerPercentAccessibleLabel}</span>
-          </dt>
-          <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
-            <Show when={props.result.summary.overpower_percentage !== null} fallback={NO_DATA_TEXT}>
-              <span>{formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%</span>
-            </Show>
-            <RegisterScoreMetricDelta
-              delta={props.result.metric_diffs.overpower_percent.delta}
-              formattedDelta={overPowerPercentDelta()}
-              unit={REGISTER_SCORE_COPY.percentagePointUnit}
-              accessibleUnit={REGISTER_SCORE_COPY.percentagePointAccessibleUnit}
-            />
-          </dd>
-        </dl>
-      </Show>
+      <dl class="grid grid-cols-[7rem_1fr] gap-x-3 px-5 pt-2 text-base leading-6">
+        <dt class="font-extrabold text-text-muted">{REGISTER_SCORE_COPY.ratingLabel}</dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <span>{formatNullableRating(props.result.summary.rating)}</span>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.rating.delta}
+            formattedDelta={ratingDelta()}
+          />
+        </dd>
+        <dt class="whitespace-nowrap font-extrabold text-text-muted">
+          {REGISTER_SCORE_COPY.overPowerLabel}
+        </dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <Show when={props.result.summary.overpower_value !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerValue(props.result.summary.overpower_value ?? 0)}</span>
+          </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_value.delta}
+            formattedDelta={overPowerDelta()}
+          />
+        </dd>
+        <dt class="font-extrabold text-text-muted">
+          <span aria-hidden="true">{REGISTER_SCORE_COPY.overPowerPercentLabel}</span>
+          <span class="sr-only">{REGISTER_SCORE_COPY.overPowerPercentAccessibleLabel}</span>
+        </dt>
+        <dd class={`${PROFILE_VALUE_CLASS} flex items-baseline gap-2 whitespace-nowrap`}>
+          <Show when={props.result.summary.overpower_percentage !== null} fallback={NO_DATA_TEXT}>
+            <span>{formatOverPowerPercent(props.result.summary.overpower_percentage ?? 0)}%</span>
+          </Show>
+          <RegisterScoreMetricDelta
+            delta={props.result.metric_diffs.overpower_percent.delta}
+            formattedDelta={overPowerPercentDelta()}
+            unit={REGISTER_SCORE_COPY.percentagePointUnit}
+            accessibleUnit={REGISTER_SCORE_COPY.percentagePointAccessibleUnit}
+          />
+        </dd>
+      </dl>
     </section>
   )
 }
@@ -898,13 +900,13 @@ const RegisterScoreImageExclusionButton = (props: {
 )
 
 /**
- * 前後のスコアの下に単曲レーティング、OP値、OP%を表示する。
+ * 前後のスコアの下に単曲レーティングとOP値を横並びで表示する。
  *
  * @param props - 一方の記録のメトリクス。新規記録の更新前はnull。
  * @returns ラベルと固定桁の数値を並べた表示。
  */
 const RegisterScoreSongMetricValues = (props: { metrics: RegisterScoreSongMetrics | null }) => (
-  <dl class="mt-1.5 grid grid-cols-[auto_1fr] items-baseline gap-x-2 whitespace-nowrap text-sm leading-5">
+  <dl class="mt-1.5 grid grid-cols-[auto_1fr_auto_1fr] items-baseline gap-x-2 whitespace-nowrap text-sm leading-5">
     <dt class="font-sans text-xs text-text-muted" title={REGISTER_SCORE_COPY.songRatingLabel}>
       {REGISTER_SCORE_COPY.ratingLabel}
     </dt>
@@ -915,15 +917,19 @@ const RegisterScoreSongMetricValues = (props: { metrics: RegisterScoreSongMetric
     <dd class="text-right font-oswald">
       {props.metrics ? formatOverPowerValue(props.metrics.overPower) : NO_DATA_TEXT}
     </dd>
-    <dt
-      class="font-sans text-xs text-text-muted"
-      title={REGISTER_SCORE_COPY.overPowerPercentAccessibleLabel}
-    >
-      {REGISTER_SCORE_COPY.overPowerPercentLabel}
-    </dt>
-    <dd class="text-right font-oswald">
-      {props.metrics ? `${formatOverPowerPercent(props.metrics.overPowerPercent)}%` : NO_DATA_TEXT}
-    </dd>
+    <Show when={REGISTER_SCORE_SHOW_SONG_OP_PERCENT}>
+      <dt
+        class="font-sans text-xs text-text-muted"
+        title={REGISTER_SCORE_COPY.overPowerPercentAccessibleLabel}
+      >
+        {REGISTER_SCORE_COPY.overPowerPercentLabel}
+      </dt>
+      <dd class="text-right font-oswald">
+        {props.metrics
+          ? `${formatOverPowerPercent(props.metrics.overPowerPercent)}%`
+          : NO_DATA_TEXT}
+      </dd>
+    </Show>
   </dl>
 )
 
@@ -1028,13 +1034,13 @@ const RegisterScoreChangeRow = (props: {
             >
               {(before) => <RecordLampBadges state={before()} />}
             </Show>
-            <Show when={REGISTER_SCORE_SHOW_METRICS && metrics()}>
+            <Show when={REGISTER_SCORE_SHOW_SONG_METRICS && metrics()}>
               <RegisterScoreSongMetricValues metrics={metrics()?.before ?? null} />
             </Show>
           </div>
           <div
             class="flex w-20 flex-col items-center gap-1"
-            classList={{ 'self-start': REGISTER_SCORE_SHOW_METRICS && metrics() !== null }}
+            classList={{ 'self-start': REGISTER_SCORE_SHOW_SONG_METRICS && metrics() !== null }}
           >
             <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
             <Show when={formatScoreDelta(props.change)}>
@@ -1046,7 +1052,7 @@ const RegisterScoreChangeRow = (props: {
           <div class="w-fit">
             <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
             <RecordLampBadges state={props.change.after} />
-            <Show when={REGISTER_SCORE_SHOW_METRICS && metrics()}>
+            <Show when={REGISTER_SCORE_SHOW_SONG_METRICS && metrics()}>
               <RegisterScoreSongMetricValues metrics={metrics()?.after ?? null} />
             </Show>
           </div>

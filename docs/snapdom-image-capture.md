@@ -168,7 +168,7 @@ SnapDOM は、生成する SVG の画像デコード上限または Canvas 上�
 
 ## 更新差分画像のページ分割
 
-更新差分の上部サマリーと楽曲カードでは、RATING・OP・OP%を画面と画像の両方で非表示にしています。表示コードと計算処理は保持し、`REGISTER_SCORE_SHOW_METRICS` で表示を制御します。
+更新差分の上部プロフィールには、RATING・OVER POWER・OP%とそれぞれの差分を表示します。楽曲カードではRATINGとOPを横並びで表示し、OP%は画面と画像の両方で非表示にしています。楽曲カードの表示コードと計算処理は保持し、`REGISTER_SCORE_SHOW_SONG_METRICS` と `REGISTER_SCORE_SHOW_SONG_OP_PERCENT` で表示を制御します。
 
 更新差分の曲名右横にはコピーアイコンを表示し、曲名またはアイコンのタップで曲名をコピーできます。コピーアイコンは画像に含めません。
 
