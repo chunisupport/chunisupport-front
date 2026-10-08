@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
+import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../../constants/songMaster.ts'
 import { db } from '../../lib/db/cacheDB.ts'
 import {
   clearCachedSongData,
@@ -10,6 +11,8 @@ import {
 import type { SongDTO, WorldsendSongDTO } from '../../types/api.ts'
 
 const SONGS_UPDATED_AT = '2026-07-20T09:00:00Z'
+/** 外部更新後を想定したサーバー側の楽曲更新日時 */
+const EXTERNALLY_UPDATED_SONGS_UPDATED_AT = '2026-08-03T09:00:00Z'
 
 const cachedSong: SongDTO = {
   id: 'cached-song',
@@ -229,3 +232,93 @@ test('楽曲更新日時APIの失敗時は一覧DTOを返してIndexedDBを更�
   assert.equal(await db.songs.count(), 0)
   assert.equal(await db.cacheMetadata.get('songs'), undefined)
 })
+
+/** TTL 経過後の再検証テストで共通化する、楽曲種別ごとのテスト対象 */
+const revalidationTargets = [
+  {
+    label: '通常楽曲',
+    songsPath: '/internal/songs',
+    cachedSong,
+    fetchedSong,
+    fetchWithCache: async () => (await loadSongsCacheUsecases()).fetchAllSongsWithCache(),
+    replaceCache: (updatedAt: string) => replaceCachedSongs([cachedSong], updatedAt),
+  },
+  {
+    label: "WORLD'S END楽曲",
+    songsPath: '/internal/worldsend-songs',
+    cachedSong: cachedWorldsendSong,
+    fetchedSong: fetchedWorldsendSong,
+    fetchWithCache: async () => (await loadSongsCacheUsecases()).fetchWorldsendSongsWithCache(),
+    replaceCache: (updatedAt: string) =>
+      replaceCachedWorldsendSongs([cachedWorldsendSong], updatedAt),
+  },
+] as const
+
+/**
+ * 楽曲更新日時 API と楽曲一覧 API を差し替え、呼び出し回数を記録する。
+ *
+ * @param songsPath - 楽曲一覧 API のパス。
+ * @param getUpdatedAt - 呼び出し時点でサーバーが返す楽曲更新日時。
+ * @param songs - 楽曲一覧 API が返す楽曲。
+ * @returns 楽曲一覧 API の呼び出し回数を返す関数。
+ */
+const installSongsApi = (
+  songsPath: string,
+  getUpdatedAt: () => string,
+  songs: unknown[]
+): (() => number) => {
+  let songsFetchCount = 0
+  globalThis.fetch = async (input) => {
+    const url = String(input)
+    if (url.endsWith('/internal/songs/updated-at')) {
+      return Response.json({ updated_at: getUpdatedAt() })
+    }
+    if (url.endsWith(songsPath)) {
+      songsFetchCount += 1
+      return Response.json({ songs })
+    }
+    throw new Error(`unexpected fetch: ${url}`)
+  }
+  return () => songsFetchCount
+}
+
+for (const target of revalidationTargets) {
+  test(`${target.label}はTTL経過後に外部更新を検知して旧IndexedDBキャッシュを返さないこと`, async (t) => {
+    // Given: 更新日時 T1 で楽曲キャッシュとメモリ上の更新日時が揃っている。
+    t.mock.timers.enable({ apis: ['Date'], now: 0 })
+    await target.replaceCache(SONGS_UPDATED_AT)
+    let serverUpdatedAt = SONGS_UPDATED_AT
+    const getSongsFetchCount = installSongsApi(target.songsPath, () => serverUpdatedAt, [
+      target.fetchedSong,
+    ])
+    const beforeUpdate = await target.fetchWithCache()
+
+    // When: 外部経路で T2 に更新され、TTL 経過後に再度キャッシュ付き取得を行う。
+    serverUpdatedAt = EXTERNALLY_UPDATED_SONGS_UPDATED_AT
+    t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
+    const afterUpdate = await target.fetchWithCache()
+
+    // Then: 初回は T1 のキャッシュを返し、TTL 経過後は API から最新一覧を取得する。
+    assert.deepEqual(beforeUpdate.songs, [target.cachedSong])
+    assert.deepEqual(afterUpdate.songs, [target.fetchedSong])
+    assert.equal(getSongsFetchCount(), 1)
+  })
+
+  test(`${target.label}はTTL経過後も更新日時が同じならIndexedDBキャッシュを再利用すること`, async (t) => {
+    // Given: 更新日時 T1 で楽曲キャッシュとメモリ上の更新日時が揃っている。
+    t.mock.timers.enable({ apis: ['Date'], now: 0 })
+    await target.replaceCache(SONGS_UPDATED_AT)
+    const getSongsFetchCount = installSongsApi(target.songsPath, () => SONGS_UPDATED_AT, [
+      target.fetchedSong,
+    ])
+    await target.fetchWithCache()
+
+    // When: サーバー側の更新がないまま TTL 経過後に再度取得する。
+    t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
+    const response = await target.fetchWithCache()
+
+    // Then: 楽曲一覧 API は呼ばず、IndexedDB キャッシュを返す。
+    assert.deepEqual(response.songs, [target.cachedSong])
+    assert.equal(getSongsFetchCount(), 0)
+  })
+}

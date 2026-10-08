@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config'
+import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../constants/songMaster'
 import type {
   AchievementTypeDTO,
   CourseDTO,
@@ -36,7 +37,13 @@ const INTERNAL_FRIEND_RANKINGS_PATH = `${API_BASE_URL}/internal/friend-rankings`
 
 let cachedVersionsResponse: VersionsResponse | undefined
 let versionsResponsePromise: Promise<VersionsResponse> | undefined
-let cachedSongsUpdatedAtResponse: UpdatedAtResponseDTO | undefined
+/** メモリ上に保持する楽曲更新日時と、その取得完了時刻 */
+type CachedSongsUpdatedAt = {
+  response: UpdatedAtResponseDTO
+  fetchedAt: number
+}
+
+let cachedSongsUpdatedAt: CachedSongsUpdatedAt | undefined
 let songsUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
 let coursesUpdatedAtResponsePromise: Promise<UpdatedAtResponseDTO> | undefined
 let cachedMasterDataResponse: MasterDataDTO | undefined
@@ -107,20 +114,28 @@ export const fetchCoursesUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => 
  * @returns 通常楽曲と WORLD'S END 楽曲の共通更新日時レスポンス。
  */
 const fetchSongsUpdatedAtFromApi = async (): Promise<UpdatedAtResponseDTO> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs/updated-at`)
+  // TTL 経過後の再検証がブラウザの HTTP キャッシュで古い値にならないよう、毎回サーバーへ確認する。
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs/updated-at`, {
+    cache: 'no-cache',
+  })
 
   return response.json()
 }
 
 /**
- * セッション中に楽曲更新日時を一度だけ取得し、メモリ上に保持する。
+ * 楽曲更新日時を取得し、TTL の間だけメモリ上に保持する。
+ * TTL 経過後は API で再検証するため、外部で楽曲が更新されると
+ * 更新日時を基準にした IndexedDB キャッシュは一致しなくなり再取得される。
  * 同時呼び出しは同一リクエストにまとめる。
  *
- * @returns キャッシュ済み、または API から取得した更新日時レスポンス。
+ * @returns TTL 内のキャッシュ済み、または API から取得した更新日時レスポンス。
  */
 export const fetchSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
-  if (cachedSongsUpdatedAtResponse) {
-    return cachedSongsUpdatedAtResponse
+  if (
+    cachedSongsUpdatedAt &&
+    Date.now() - cachedSongsUpdatedAt.fetchedAt < SONGS_UPDATED_AT_CACHE_TTL_MS
+  ) {
+    return cachedSongsUpdatedAt.response
   }
 
   const responsePromise = songsUpdatedAtResponsePromise ?? fetchSongsUpdatedAtFromApi()
@@ -129,7 +144,7 @@ export const fetchSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
   try {
     const response = await responsePromise
     if (songsUpdatedAtResponsePromise === responsePromise) {
-      cachedSongsUpdatedAtResponse = response
+      cachedSongsUpdatedAt = { response, fetchedAt: Date.now() }
       songsUpdatedAtResponsePromise = undefined
     }
     return response
@@ -142,13 +157,13 @@ export const fetchSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
 }
 
 /**
- * 楽曲更新後に、セッション中の楽曲更新日時キャッシュを無効化する。
+ * 楽曲更新後に、メモリ上の楽曲更新日時キャッシュを TTL を待たずに無効化する。
  * 無効化前に開始したリクエストの結果も、以後のキャッシュには採用しない。
  *
  * @returns なし。
  */
 export const invalidateSongsUpdatedAtCache = (): void => {
-  cachedSongsUpdatedAtResponse = undefined
+  cachedSongsUpdatedAt = undefined
   songsUpdatedAtResponsePromise = undefined
 }
 
