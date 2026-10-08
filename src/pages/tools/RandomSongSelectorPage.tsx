@@ -31,7 +31,10 @@ import {
   VersionMultiSelect,
 } from '../../components/common/DomainMultiSelect'
 import { TextRangeInput } from '../../components/common/RangeInput'
-import { DefaultRecordLampBadges } from '../../components/common/record/RecordDisplayParts'
+import {
+  DefaultRecordLampBadges,
+  RECORD_CARD_HOVER_CLASS,
+} from '../../components/common/record/RecordDisplayParts'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { RANDOM_SONG_SELECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
@@ -90,6 +93,9 @@ import {
 
 const FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50'
+/** 選曲結果カード全体を譜面詳細へのリンクにするためのクラス */
+const RESULT_CARD_LINK_CLASS =
+  'group block rounded-lg text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2'
 const RESULT_CARD_CLASS =
   'grid gap-3 rounded-lg border border-border bg-surface p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'
 const RESULT_RECORD_BADGE_CLASS =
@@ -1670,37 +1676,37 @@ const RandomSongSelectorPage = (): JSX.Element => {
               <div class="flex flex-col gap-2">
                 <For each={results()}>
                   {(candidate) => (
-                    <article class={RESULT_CARD_CLASS}>
-                      <div class="min-w-0">
-                        <div class="mb-2 flex flex-wrap items-center gap-2">
-                          <DifficultyBadge difficulty={candidate.difficulty} compact />
-                          <span class="rounded bg-surface-muted px-2 py-0.5 text-xs font-medium text-text-muted">
-                            {candidate.levelLabel}
-                          </span>
-                          <span class="text-xs tabular-nums text-text-muted">
-                            {formatChartConst(candidate.chartConst)}
-                          </span>
-                        </div>
-                        <h3 class="truncate font-sans font-semibold text-text">
-                          <A
-                            href={`/songs/${encodeURIComponent(candidate.song.id)}?diff=${encodeURIComponent(candidate.difficulty)}`}
-                            class="text-link hover:underline"
-                          >
-                            {candidate.song.title}
-                          </A>
-                        </h3>
-                        <p class="truncate font-sans text-sm text-text-muted">
-                          {candidate.song.artist}
-                        </p>
-                      </div>
-                      <Show when={shouldShowRecord()}>
-                        <div class="flex flex-col gap-2 sm:items-end">
-                          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
-                            {renderRandomSongRecordSummary(recordForCandidate(candidate))}
+                    <A
+                      href={`/songs/${encodeURIComponent(candidate.song.id)}?diff=${encodeURIComponent(candidate.difficulty)}`}
+                      class={RESULT_CARD_LINK_CLASS}
+                    >
+                      <article class={`${RESULT_CARD_CLASS} ${RECORD_CARD_HOVER_CLASS}`}>
+                        <div class="min-w-0">
+                          <div class="mb-2 flex flex-wrap items-center gap-2">
+                            <DifficultyBadge difficulty={candidate.difficulty} compact />
+                            <span class="rounded bg-surface-muted px-2 py-0.5 text-xs font-medium text-text-muted">
+                              {candidate.levelLabel}
+                            </span>
+                            <span class="text-xs tabular-nums text-text-muted">
+                              {formatChartConst(candidate.chartConst)}
+                            </span>
                           </div>
+                          <h3 class="truncate font-sans font-semibold text-link group-hover:underline">
+                            {candidate.song.title}
+                          </h3>
+                          <p class="truncate font-sans text-sm text-text-muted">
+                            {candidate.song.artist}
+                          </p>
                         </div>
-                      </Show>
-                    </article>
+                        <Show when={shouldShowRecord()}>
+                          <div class="flex flex-col gap-2 sm:items-end">
+                            <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+                              {renderRandomSongRecordSummary(recordForCandidate(candidate))}
+                            </div>
+                          </div>
+                        </Show>
+                      </article>
+                    </A>
                   )}
                 </For>
               </div>
