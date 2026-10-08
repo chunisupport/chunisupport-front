@@ -4,7 +4,10 @@ import {
   THEORETICAL_OVER_POWER_TARGET_FILTER,
 } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
-import type { PlayerStatsHeatmapAxis } from '../constants/playerStats'
+import {
+  PLAYER_STATS_HEATMAP_AXIS_OPTIONS,
+  type PlayerStatsHeatmapAxis,
+} from '../constants/playerStats'
 import type { PlayerRecordDTO } from '../types/api'
 import type { NumericRangeFilter } from '../types/record'
 import type { FilterState } from '../types/recordFilter'
@@ -42,8 +45,52 @@ export type UniFillMatrixLevelConst = {
   constFilterMode: FilterState['constFilterMode']
 }
 
+/** 縦軸・横軸に選べる属性の一覧 */
+const UNI_FILL_MATRIX_DIMENSIONS = ['levelConst', 'genre', 'version', 'nameFolder'] as const
+
 /** 縦軸・横軸に選べる属性。levelConst はレベルまたは譜面定数 */
-export type UniFillMatrixDimension = 'levelConst' | 'genre' | 'version' | 'nameFolder'
+export type UniFillMatrixDimension = (typeof UNI_FILL_MATRIX_DIMENSIONS)[number]
+
+/** ウニ埋めマトリックスの保存対象となる表示設定 */
+export type UniFillMatrixViewSettings = {
+  /** 縦軸の属性 */
+  vertical: UniFillMatrixDimension
+  /** 横軸の属性 */
+  horizontal: UniFillMatrixDimension
+  /** レベル・定数の軸をレベル別にするか定数別にするか */
+  levelConstAxis: PlayerStatsHeatmapAxis
+  /** 達成件数の代わりに達成率を表示するか */
+  showPercent: boolean
+}
+
+/**
+ * 保存済みの値をウニ埋めマトリックスの表示設定として正規化する。
+ * 項目ごとに不正値を既定値へ戻し、縦軸と横軸が同じ属性になる場合は両軸とも既定値へ戻す。
+ *
+ * @param value - localStorage などから読み込んだ未検証の値。
+ * @param fallback - 未設定・不正値のときに使う既定の表示設定。
+ * @returns 正規化した表示設定。
+ */
+export const normalizeUniFillMatrixViewSettings = (
+  value: unknown,
+  fallback: UniFillMatrixViewSettings
+): UniFillMatrixViewSettings => {
+  const source: Partial<Record<keyof UniFillMatrixViewSettings, unknown>> =
+    typeof value === 'object' && value !== null ? value : {}
+  const vertical = UNI_FILL_MATRIX_DIMENSIONS.find((dimension) => dimension === source.vertical)
+  const horizontal = UNI_FILL_MATRIX_DIMENSIONS.find((dimension) => dimension === source.horizontal)
+  const hasValidAxes = vertical !== undefined && horizontal !== undefined && vertical !== horizontal
+
+  return {
+    vertical: hasValidAxes ? vertical : fallback.vertical,
+    horizontal: hasValidAxes ? horizontal : fallback.horizontal,
+    levelConstAxis:
+      PLAYER_STATS_HEATMAP_AXIS_OPTIONS.find(({ value }) => value === source.levelConstAxis)
+        ?.value ?? fallback.levelConstAxis,
+    showPercent:
+      typeof source.showPercent === 'boolean' ? source.showPercent : fallback.showPercent,
+  }
+}
 
 /** 楽曲の属性から決まる軸 */
 type UniFillMatrixSongDimension = Exclude<UniFillMatrixDimension, 'levelConst'>
