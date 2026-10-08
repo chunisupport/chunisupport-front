@@ -78,7 +78,7 @@ export const REGISTER_SCORE_SORT_DIRECTION_LABELS = {
 } as const
 
 /** 表示コードを保持したまま、更新差分の楽曲カードのRATING・OP・OP%表示を制御する。 */
-export const REGISTER_SCORE_SHOW_SONG_METRICS = true
+export const REGISTER_SCORE_SHOW_SONG_METRICS = false
 
 /** 表示コードを保持したまま、更新差分の楽曲カードのOP%表示を制御する。 */
 export const REGISTER_SCORE_SHOW_SONG_OP_PERCENT = false
