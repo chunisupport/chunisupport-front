@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../constants/songMaster'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 /**
@@ -47,7 +48,9 @@ test('バージョン更新後は公開バージョン一覧をAPIから再取�
   assert.deepEqual(afterMutation, responseBodies[1])
 })
 
-test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中に再利用する', async () => {
+test('fetchSongsUpdatedAt はTTL内であれば取得済みの更新日時を再利用する', async (t) => {
+  // Given: 更新日時を一度取得済みで、TTL 直前まで時間が経過している。
+  t.mock.timers.enable({ apis: ['Date'], now: 0 })
   const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
   let fetchCount = 0
   installFetchRecorder((input) => {
@@ -57,13 +60,43 @@ test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中
     }
     throw new Error(`unexpected fetch: ${String(input)}`)
   })
-
   const { fetchSongsUpdatedAt } = await loadSongsApi()
   const first = await fetchSongsUpdatedAt()
+  t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS - 1)
+
+  // When: 再度更新日時を取得する。
   const second = await fetchSongsUpdatedAt()
 
+  // Then: API は再実行されず、同じレスポンスを返す。
   assert.equal(fetchCount, 1)
   assert.equal(first, second)
+})
+
+test('fetchSongsUpdatedAt はTTL経過後にAPIから更新日時を再検証する', async (t) => {
+  // Given: 更新日時 T1 を取得済みで、その後サーバー側が T2 に更新されている。
+  t.mock.timers.enable({ apis: ['Date'], now: 0 })
+  const responseBodies = [
+    { updated_at: '2026-06-16T12:00:00Z' },
+    { updated_at: '2026-07-20T09:00:00Z' },
+  ]
+  let fetchCount = 0
+  const calls = installFetchRecorder(() => {
+    const responseBody = responseBodies[fetchCount]
+    fetchCount += 1
+    return Response.json(responseBody)
+  })
+  const { fetchSongsUpdatedAt } = await loadSongsApi()
+  await fetchSongsUpdatedAt()
+
+  // When: TTL 経過後に更新日時を取得する。
+  t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
+  const revalidated = await fetchSongsUpdatedAt()
+
+  // Then: HTTP キャッシュを使わずに API を再実行し、T2 を返す。
+  assert.equal(fetchCount, 2)
+  assert.deepEqual(revalidated, responseBodies[1])
+  assert.equal(String(calls[1]?.input), 'http://localhost:3000/internal/songs/updated-at')
+  assert.equal(calls[1]?.init?.cache, 'no-cache')
 })
 
 test('全曲APIは指定されたHTTPキャッシュ設定を利用する', async () => {

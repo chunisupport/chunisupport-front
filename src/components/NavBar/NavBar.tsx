@@ -6,6 +6,7 @@ import { A, useLocation, useNavigate } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
 import {
   BadgeQuestionMark,
+  ClipboardList,
   Ellipsis,
   ExternalLink,
   FlagTriangleRight,
@@ -30,6 +31,7 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
+import { CONTACT_FORM } from '../../constants/contactForm'
 import { DISCORD_COMMUNITY } from '../../constants/discordCommunity'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
 import { EDITOR_MENU_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
@@ -153,6 +155,11 @@ const NavBar = (props: NavBarProps) => {
         label: 'ヘルプ',
         icon: () => <BadgeQuestionMark class="h-4 w-4" aria-hidden="true" />,
         path: DOCUMENTATION_BASE_URL,
+      },
+      {
+        label: CONTACT_FORM.label,
+        icon: () => <ClipboardList class="h-4 w-4" aria-hidden="true" />,
+        path: CONTACT_FORM.url,
       },
       {
         label: DISCORD_COMMUNITY.label,

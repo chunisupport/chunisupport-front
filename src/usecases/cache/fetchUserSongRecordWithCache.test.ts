@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
+import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../../constants/songMaster.ts'
 import { db } from '../../lib/db/cacheDB.ts'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession.ts'
 import type { PlayerRecordDTO, UserDTO } from '../../types/api.ts'
@@ -94,4 +95,43 @@ test('通常楽曲詳細の単曲レコード取得は2回目にIndexedDBキャ�
   assert.deepEqual(second, [record])
   assert.equal(requestedUrls.filter((url) => url.includes('/record/songs/song%2F1')).length, 1)
   assert.equal(await db.userSongRecords.count(), 1)
+})
+
+test('単曲レコード取得はTTL経過後に楽曲の外部更新を検知してIndexedDBキャッシュを使わないこと', async (t) => {
+  // Given: 楽曲更新日時 T1 で単曲レコードをキャッシュ済み。
+  t.mock.timers.enable({ apis: ['Date'], now: 0 })
+  setupApiTestEnv()
+  const [{ invalidateSongsUpdatedAtCache }, { fetchUserStandardSongRecordWithCache }] =
+    await Promise.all([import('../../api/songs.ts'), import('./fetchUserSongRecordWithCache.ts')])
+  invalidateSongsUpdatedAtCache()
+  setAuthenticatedUser(user)
+  let songsUpdatedAt = '2026-07-06T00:00:00Z'
+  let recordFetchCount = 0
+  globalThis.fetch = async (input) => {
+    const url = String(input)
+    if (url.endsWith('/internal/users/alice/updated-at')) {
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+    }
+    if (url.endsWith('/internal/songs/updated-at')) {
+      return Response.json({ updated_at: songsUpdatedAt })
+    }
+    if (url === `${API_BASE_URL}/internal/users/alice/record/songs/song%2F1`) {
+      recordFetchCount += 1
+      return Response.json({
+        standard: [record],
+        meta: { updated_at: '2026-07-06T00:00:00Z' },
+      })
+    }
+
+    throw new Error(`unexpected fetch: ${url}`)
+  }
+  await fetchUserStandardSongRecordWithCache('alice', 'song/1')
+
+  // When: 外部経路で楽曲更新日時が T2 になり、TTL 経過後に再取得する。
+  songsUpdatedAt = '2026-08-03T00:00:00Z'
+  t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
+  await fetchUserStandardSongRecordWithCache('alice', 'song/1')
+
+  // Then: 旧楽曲更新日時のキャッシュは使わず、レコード API を再実行する。
+  assert.equal(recordFetchCount, 2)
 })

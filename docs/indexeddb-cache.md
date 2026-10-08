@@ -113,6 +113,8 @@ ChuniSupportCache
 
 通常楽曲と WORLD'S END 楽曲は、共通で `GET /internal/songs/updated-at` を使います。
 
+`songsUpdatedAt` は取得から5分間（`SONGS_UPDATED_AT_CACHE_TTL_MS`）メモリ上で再利用し、経過後は HTTP キャッシュを使わず（`cache: 'no-cache'`）API で再検証します。ユーザー系キャッシュの判定も同じ値を使うため、song-batch など外部経路での楽曲更新は、同じタブでも最大5分で検知されます。
+
 ```
 1. GET /internal/songs/updated-at を呼び、songsUpdatedAt を取得する。
 2. cacheMetadata.songs または cacheMetadata.worldsendSongs を読む。
