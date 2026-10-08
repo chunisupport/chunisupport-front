@@ -288,6 +288,20 @@ export const RecordTitleCell = (props: RecordTitleCellProps) => {
 }
 
 /**
+ * スコアの下に表示するランクの文字サイズと色を揃える。
+ *
+ * @param props - 表示するランクと配置用の追加クラス。
+ * @returns ランク表示。
+ */
+export const RecordScoreRank = (props: { rank: ScoreRank; class?: string }): JSX.Element => (
+  <span
+    class={`mt-0.5 text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[props.rank]} ${props.class ?? ''}`}
+  >
+    {props.rank}
+  </span>
+)
+
+/**
  * レコードのスコアとランクを表示する。
  *
  * @param props - プレイ状態とスコアを含むレコード、および任意のランク判定関数。
@@ -316,11 +330,7 @@ export const RecordScoreCell = (props: {
       <span class="w-full text-right leading-none">
         {props.record.score.toLocaleString('ja-JP')}
       </span>
-      <span
-        class={`mt-0.5 w-full text-right text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
-      >
-        {scoreRank}
-      </span>
+      <RecordScoreRank rank={scoreRank} class="w-full text-right" />
     </div>
   )
 }

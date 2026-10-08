@@ -1,14 +1,16 @@
 import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
+import { RecordScoreRank } from '../../components/common/record/RecordDisplayParts'
 import type { FriendVsItem } from '../../utils/friendVs'
 import { formatInteger } from '../../utils/numberFormat'
+import { getScoreRank } from '../../utils/scoreRank'
 import { FRIEND_VS_COPY, FRIEND_VS_RESULT_TONES } from './friendVs.constants'
 
 /**
  * カードと表で共通のスコア表記を表示する。
  *
  * @param props - 比較行、表示する側、表示サイズ。
- * @returns 未プレイの読み上げと勝者の強調を含むスコア。
+ * @returns 未プレイの読み上げ、勝者の強調、表表示時のランクを含むスコア。
  */
 export const FriendVsScore = (props: {
   item: FriendVsItem
@@ -38,10 +40,15 @@ export const FriendVsScore = (props: {
         </span>
       }
     >
-      <span
-        class={`font-jost tabular-nums ${props.size === 'card' ? 'text-lg sm:text-xl' : ''} ${scoreWeight()} ${winner() ? FRIEND_VS_RESULT_TONES[props.item.result].text : ''}`}
-      >
-        {formatInteger(record().score)}
+      <span class="flex flex-col items-center font-jost tabular-nums">
+        <span
+          class={`${props.size === 'card' ? 'text-lg sm:text-xl' : 'leading-none'} ${scoreWeight()} ${winner() ? FRIEND_VS_RESULT_TONES[props.item.result].text : ''}`}
+        >
+          {formatInteger(record().score)}
+        </span>
+        <Show when={props.size === 'table'}>
+          <RecordScoreRank rank={getScoreRank(record().score)} class="self-end" />
+        </Show>
       </span>
     </Show>
   )
