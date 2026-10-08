@@ -3,6 +3,8 @@
  */
 export const REGISTER_SCORE_COPY = {
   ratingLabel: 'RATING',
+  songRatingLabel: '単曲レーティング',
+  songOverPowerLabel: 'OP',
   overPowerLabel: 'OVER POWER',
   overPowerPercentLabel: 'OP%',
   overPowerPercentAccessibleLabel: 'OVER POWER達成率',

@@ -2,11 +2,13 @@ import type {
   CourseDTO,
   PlayerDataCourseRecordChange,
   PlayerDataRecordChange,
+  PlayerDataRecordState,
   PlayerDataSongRecordChange,
   SongDTO,
   WorldsendSongDTO,
 } from '../../types/api'
 import { getChartLevelSortKey, toChartLevelLabel } from '../../utils/chartLevel'
+import { calculateSingleOverPower } from '../../utils/singleOverPower'
 import { calculateSingleRatingHundredths } from '../../utils/singleRating'
 import { formatWorldsendChartLevel, REGISTER_SCORE_UNKNOWN_TITLE } from './registerScoreDisplay'
 import type { RegisterScoreSongSortValues } from './registerScoreSorting'
@@ -100,3 +102,57 @@ export const resolveRegisterScoreCourseTitle = (
   courses: Pick<CourseDTO, 'idx' | 'name'>[]
 ): string =>
   courses.find((course) => course.idx === change.idx)?.name ?? REGISTER_SCORE_UNKNOWN_TITLE
+
+/** 更新差分カードに表示する単曲レーティングとOVER POWER。 */
+export interface RegisterScoreSongMetrics {
+  singleRating: number
+  overPower: number
+  overPowerPercent: number
+}
+
+/** 前後の記録がない場合はnullとなる単曲メトリクス。 */
+export interface RegisterScoreSongMetricChange {
+  before: RegisterScoreSongMetrics | null
+  after: RegisterScoreSongMetrics
+}
+
+/**
+ * 記録のスコアとコンボランプからカード表示用の数値を算出する。
+ *
+ * @param state - 登録前または登録後の記録。
+ * @param chartConstant - 閲覧時の譜面定数。
+ * @returns 単曲レーティング、OP値、譜面別OP達成率。
+ */
+const calculateSongMetrics = (
+  state: PlayerDataRecordState,
+  chartConstant: number
+): RegisterScoreSongMetrics => {
+  const overPower = calculateSingleOverPower(state.score, chartConstant, state.combo_lamp)
+  return {
+    singleRating: calculateSingleRatingHundredths(state.score, chartConstant) / 100,
+    overPower: overPower.value,
+    overPowerPercent: overPower.percent,
+  }
+}
+
+/**
+ * 閲覧時の通常楽曲マスタで更新前後の単曲メトリクスを解決する。
+ *
+ * @param change - 通常譜面またはWORLD'S ENDの更新差分。
+ * @param standardSongs - 取得済みの通常楽曲マスタ。
+ * @returns 更新前後の値。対象外または譜面未取得の場合はnull。
+ */
+export const resolveRegisterScoreSongMetrics = (
+  change: PlayerDataSongRecordChange,
+  standardSongs: SongDTO[]
+): RegisterScoreSongMetricChange | null => {
+  if (change.record_type !== 'standard' || change.diff === 'WE') return null
+  const chart = standardSongs.find((song) => song.official_idx === change.idx)?.charts?.[
+    change.diff
+  ]
+  if (!chart) return null
+  return {
+    before: change.before ? calculateSongMetrics(change.before, chart.const) : null,
+    after: calculateSongMetrics(change.after, chart.const),
+  }
+}

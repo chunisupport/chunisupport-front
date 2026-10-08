@@ -32,7 +32,7 @@ import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { formatFileTimestamp, formatLocalDateTime } from '../../utils/localDateTime'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerLevelLabel } from '../../utils/playerLevel'
-import { formatPlayerRating } from '../../utils/ratingFormat'
+import { formatPlayerRating, formatRatingFixed2 } from '../../utils/ratingFormat'
 import type { SortDirection } from '../../utils/sortingQuery'
 import { REGISTER_SCORE_COPY } from './constants'
 import { RegisterScoreImagePreviewDialog } from './RegisterScoreImagePreviewDialog'
@@ -50,6 +50,10 @@ import {
   formatRegisterScoreRatingDelta,
   getRegisterScoreMetricDeltaClass,
 } from './registerScoreMetricDiff'
+import type {
+  RegisterScoreSongMetricChange,
+  RegisterScoreSongMetrics,
+} from './registerScoreResolvers'
 import {
   DEFAULT_REGISTER_SCORE_SORT_SETTINGS,
   REGISTER_SCORE_PRIMARY_SORT_OPTIONS,
@@ -133,6 +137,15 @@ export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) =
 export type RegisterScoreSongSortValuesResolver = (
   change: PlayerDataSongRecordChange
 ) => RegisterScoreSongSortValues
+/**
+ * 更新差分の前後の単曲メトリクスを解決する。
+ *
+ * @param change - 対象の楽曲差分。
+ * @returns 前後の値。対象外または未取得の場合はnull。
+ */
+export type RegisterScoreSongMetricsResolver = (
+  change: PlayerDataSongRecordChange
+) => RegisterScoreSongMetricChange | null
 /** コース差分からコースタイトルを解決する関数 */
 export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
 
@@ -883,19 +896,51 @@ const RegisterScoreImageExclusionButton = (props: {
 )
 
 /**
+ * 前後のスコアの下に単曲レーティング、OP値、OP%を表示する。
+ *
+ * @param props - 一方の記録のメトリクス。新規記録の更新前はnull。
+ * @returns ラベルと固定桁の数値を並べた表示。
+ */
+const RegisterScoreSongMetricValues = (props: { metrics: RegisterScoreSongMetrics | null }) => (
+  <dl class="mt-1.5 grid grid-cols-[auto_1fr] items-baseline gap-x-2 whitespace-nowrap text-sm leading-5">
+    <dt class="font-sans text-xs text-text-muted" title={REGISTER_SCORE_COPY.songRatingLabel}>
+      {REGISTER_SCORE_COPY.ratingLabel}
+    </dt>
+    <dd class="text-right font-oswald">
+      {props.metrics ? formatRatingFixed2(props.metrics.singleRating) : NO_DATA_TEXT}
+    </dd>
+    <dt class="font-sans text-xs text-text-muted">{REGISTER_SCORE_COPY.songOverPowerLabel}</dt>
+    <dd class="text-right font-oswald">
+      {props.metrics ? formatOverPowerValue(props.metrics.overPower) : NO_DATA_TEXT}
+    </dd>
+    <dt
+      class="font-sans text-xs text-text-muted"
+      title={REGISTER_SCORE_COPY.overPowerPercentAccessibleLabel}
+    >
+      {REGISTER_SCORE_COPY.overPowerPercentLabel}
+    </dt>
+    <dd class="text-right font-oswald">
+      {props.metrics ? `${formatOverPowerPercent(props.metrics.overPowerPercent)}%` : NO_DATA_TEXT}
+    </dd>
+  </dl>
+)
+
+/**
  * 1譜面分の登録差分をスクリーンショットに近い行表示にする。
  *
- * @param props - 表示対象の差分、解決済み楽曲タイトル、譜面レベル、画像除外状態、操作処理。
+ * @param props - 表示対象の差分、楽曲タイトル、譜面レベル、単曲メトリクス、画像除外状態、操作処理。
  * @returns 差分行。
  */
 const RegisterScoreChangeRow = (props: {
   change: PlayerDataSongRecordChange
   songTitle: string
   chartLevel?: string
+  metrics: RegisterScoreSongMetricChange | null
   excludedFromImage: boolean
   onCopySongTitle: (songTitle: string) => Promise<boolean>
   onExcludedFromImageChange: (excluded: boolean) => void
 }) => {
+  const metrics = createMemo(() => props.metrics)
   const [isCopyHighlighted, setIsCopyHighlighted] = createSignal(false)
   let copyHighlightTimerId: number | undefined
 
@@ -981,8 +1026,14 @@ const RegisterScoreChangeRow = (props: {
             >
               {(before) => <RecordLampBadges state={before()} />}
             </Show>
+            <Show when={metrics()}>
+              <RegisterScoreSongMetricValues metrics={metrics()?.before ?? null} />
+            </Show>
           </div>
-          <div class="flex w-20 flex-col items-center gap-1">
+          <div
+            class="flex w-20 flex-col items-center gap-1"
+            classList={{ 'self-start': metrics() !== null }}
+          >
             <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
             <Show when={formatScoreDelta(props.change)}>
               {(delta) => (
@@ -993,6 +1044,9 @@ const RegisterScoreChangeRow = (props: {
           <div class="w-fit">
             <span class="font-jost font-semibold">{formatScore(props.change.after.score)}</span>
             <RecordLampBadges state={props.change.after} />
+            <Show when={metrics()}>
+              <RegisterScoreSongMetricValues metrics={metrics()?.after ?? null} />
+            </Show>
           </div>
         </div>
       </div>
@@ -1111,6 +1165,7 @@ const RegisterScoreChangesSection = (props: {
   changes: PlayerDataSongRecordChange[]
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
+  resolveSongMetrics: RegisterScoreSongMetricsResolver
   emptyMessage?: string
   excludedChangeKeys: ReadonlySet<string>
   onCopySongTitle: (songTitle: string) => Promise<boolean>
@@ -1148,6 +1203,7 @@ const RegisterScoreChangesSection = (props: {
               change={change}
               songTitle={props.resolveSongTitle(change)}
               chartLevel={props.resolveChartLevel?.(change)}
+              metrics={props.resolveSongMetrics(change)}
               excludedFromImage={props.excludedChangeKeys.has(createRegisterScoreChangeKey(change))}
               onCopySongTitle={props.onCopySongTitle}
               onExcludedFromImageChange={(excluded) =>
@@ -1219,6 +1275,7 @@ export const RegisterScoreResultView = (props: {
   result: NormalizedPlayerDataUpdateResult
   resolveSongTitle: RegisterScoreSongTitleResolver
   resolveChartLevel?: RegisterScoreChartLevelResolver
+  resolveSongMetrics: RegisterScoreSongMetricsResolver
   resolveSongSortValues: RegisterScoreSongSortValuesResolver
   resolveCourseTitle: RegisterScoreCourseTitleResolver
   changedSongsEmptyMessage?: string
@@ -1445,6 +1502,7 @@ export const RegisterScoreResultView = (props: {
                   changes={songChanges()}
                   resolveSongTitle={props.resolveSongTitle}
                   resolveChartLevel={props.resolveChartLevel}
+                  resolveSongMetrics={props.resolveSongMetrics}
                   emptyMessage={
                     hideLampOnlyChanges()
                       ? REGISTER_SCORE_COPY.filteredChangedSongsEmpty

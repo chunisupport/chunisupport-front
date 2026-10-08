@@ -21,6 +21,7 @@ import { RegisterScoreResultView } from './RegisterScoreResultView'
 import {
   resolveRegisterScoreChartLevel,
   resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongMetrics,
   resolveRegisterScoreSongSortValues,
   resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
@@ -180,6 +181,12 @@ const RegisterScorePage = () => {
                 resolveSongTitle={songTitleByIdx}
                 resolveChartLevel={chartLevelByIdx}
                 resolveSongSortValues={songSortValuesByIdx}
+                resolveSongMetrics={(change) =>
+                  resolveRegisterScoreSongMetrics(
+                    change,
+                    songsData.songsResponse.latest?.songs ?? []
+                  )
+                }
                 resolveCourseTitle={(change) => courseTitleByIdx(change, courses)}
               />
             )
