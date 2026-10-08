@@ -64,6 +64,7 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
 
   // When / Then
   assert.ok(lockedSongDiscovery)
+  assert.equal(TOOL_LINKS[TOOL_LINKS.length - 1], lockedSongDiscovery)
   assert.equal(lockedSongDiscovery.adminOnly, true)
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
 })
@@ -71,11 +72,12 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
 test('ウニ埋めマトリックスは通常ユーザーにも表示する公開ツールとして定義されていること', () => {
   // Given
   const uniFillMatrix = TOOL_LINKS.find((tool) => tool.href === UNI_FILL_MATRIX_PATH)
+  const publicTools = TOOL_LINKS.filter(isPublicToolLink)
 
   // When / Then
   assert.ok(uniFillMatrix)
   assert.equal(uniFillMatrix.title, 'ウニ埋めマトリックス')
-  assert.equal(TOOL_LINKS[TOOL_LINKS.length - 1], uniFillMatrix)
+  assert.equal(publicTools[publicTools.length - 1], uniFillMatrix)
   assert.equal(uniFillMatrix.adminOnly, undefined)
   assert.equal(isPublicToolLink(uniFillMatrix), true)
   for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {
