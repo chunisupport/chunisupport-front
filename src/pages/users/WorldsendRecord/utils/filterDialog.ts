@@ -1,4 +1,4 @@
-import { hasSameFilterValues } from '../../utils/filterValue'
+import { hasSameFilterValues, hasSameNullableFilterValues } from '../../utils/filterValue'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
 /**
@@ -54,6 +54,7 @@ export function isWorldsendFilterOptionsChanged(
     !hasSameFilterValues(current.attributes, defaultFilter.attributes) ||
     !hasSameFilterValues(current.genres, defaultFilter.genres) ||
     !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
     !hasSameFilterValues(current.hard_lamp, defaultFilter.hard_lamp) ||

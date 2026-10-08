@@ -608,7 +608,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
         pointRadius: AVERAGE_SCORE_CHART_POINT_RADIUS,
         pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
         borderWidth: 2,
-        tension: 0.2,
+        tension: 0,
         spanGaps: true,
       },
       {
@@ -624,7 +624,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
         pointHoverRadius: AVERAGE_SCORE_CHART_POINT_HOVER_RADIUS,
         borderWidth: 2,
         borderDash: MEDIAN_SCORE_CHART_BORDER_DASH,
-        tension: 0.2,
+        tension: 0,
         spanGaps: true,
       },
     ]

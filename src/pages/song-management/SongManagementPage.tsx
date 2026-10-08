@@ -1,4 +1,5 @@
 import { createResource, Show } from 'solid-js'
+import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchMasterData, fetchVersions } from '../../api/songs'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import StandardSongCreateSection from './components/StandardSongCreateSection'
@@ -30,6 +31,8 @@ const SongManagementPage = (props: SongManagementPageProps) => {
   const [masterData] = createResource(fetchMasterData)
   const [versionsResponse] = createResource(fetchVersions)
   const versions = () => versionsResponse()?.versions ?? []
+  const [nameFoldersResponse] = createResource(fetchNameFolders)
+  const nameFolders = () => nameFoldersResponse() ?? []
   const standard = createStandardSongManagement(masterData, versions)
   const worldsend = createWorldsendSongManagement(masterData, versions)
 
@@ -59,6 +62,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         masterDataLoading={masterData.loading || versionsResponse.loading}
         genres={genres()}
         versions={versions()}
+        nameFolders={nameFolders()}
         canDelete={props.canDelete}
         showAdvancedFilters={props.showAdvancedFilters}
       />
@@ -70,6 +74,7 @@ const SongManagementPage = (props: SongManagementPageProps) => {
         masterDataLoading={masterData.loading || versionsResponse.loading}
         genres={genres()}
         versions={versions()}
+        nameFolders={nameFolders()}
         canDelete={props.canDelete}
         showAdvancedFilters={props.showAdvancedFilters}
       />

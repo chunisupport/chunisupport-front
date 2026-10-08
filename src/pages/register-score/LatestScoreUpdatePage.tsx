@@ -23,6 +23,7 @@ import { RegisterScoreResultView } from './RegisterScoreResultView'
 import {
   resolveRegisterScoreChartLevel,
   resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongMetrics,
   resolveRegisterScoreSongSortValues,
   resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
@@ -132,6 +133,12 @@ const LatestScoreUpdatePage = () => {
                     }
                     resolveSongSortValues={(change) =>
                       resolveRegisterScoreSongSortValues(
+                        change,
+                        songsData.songsResponse.latest?.songs ?? []
+                      )
+                    }
+                    resolveSongMetrics={(change) =>
+                      resolveRegisterScoreSongMetrics(
                         change,
                         songsData.songsResponse.latest?.songs ?? []
                       )

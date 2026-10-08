@@ -529,6 +529,60 @@ test('OP対象条件では曲ごとのOP対象難易度に一致するレコー�
   )
 })
 
+test('楽曲名順条件では通常・OP対象のどちらも対象フォルダの楽曲だけを抽出する', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'song-a', difficulty: 'MASTER' }),
+    createRecord({ id: 'song-ka', difficulty: 'MASTER' }),
+  ]
+  const songs = [
+    createSong({
+      id: 'song-a',
+      name_folder_code: 'A',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+    createSong({
+      id: 'song-ka',
+      name_folder_code: 'KA',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+  const masterData = {
+    genres: [],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+
+  // When
+  const normal = filterRecordsByAttributes(records, { name_folder: 'KA' }, masterData, songs, [])
+  const opTarget = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET', name_folder: ['A'] },
+    masterData,
+    songs,
+    []
+  )
+  const empty = filterRecordsByAttributes(records, { name_folder: [] }, masterData, songs, [])
+
+  // Then
+  assert.deepEqual(
+    normal.map((record) => record.id),
+    ['song-ka']
+  )
+  assert.deepEqual(
+    opTarget.map((record) => record.id),
+    ['song-a']
+  )
+  assert.deepEqual(empty, [])
+})
+
 test('属性が空配列の場合は対象レコードなしとして扱う', () => {
   // Given
   const records = [

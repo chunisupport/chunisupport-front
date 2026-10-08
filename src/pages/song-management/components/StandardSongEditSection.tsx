@@ -4,7 +4,7 @@ import { Index, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
 import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
-import type { MasterItemDTO, VersionSummaryDTO } from '../../../types/api'
+import type { MasterItemDTO, NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
   SONG_MANAGEMENT_ACTION_COPY,
@@ -39,6 +39,8 @@ type StandardSongEditSectionProps = {
   genres: MasterItemDTO[]
   /** バージョン一覧 */
   versions: readonly VersionSummaryDTO[]
+  /** 楽曲名順フォルダ一覧 */
+  nameFolders: readonly NameFolderDTO[]
   /** 削除操作を許可するか */
   canDelete: boolean
   /** 管理用の属性・欠落フィルターを表示するか */
@@ -78,6 +80,7 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
               onFiltersChange={props.management.setFilters}
               genres={props.genres.map((genre) => genre.name)}
               versions={props.versions}
+              nameFolders={props.nameFolders}
             />
           </div>
 

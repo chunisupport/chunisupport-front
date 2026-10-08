@@ -1,5 +1,6 @@
 import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
+import { isNullableSelectionMatched } from '../../../../utils/filterSelection'
 import {
   matchesNormalizedSearchQuery,
   normalizeForReadingSearch,
@@ -61,6 +62,7 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
     return false
   if (filters.versions.length > 0 && !filters.versions.includes(record.release_version))
     return false
+  if (!isNullableSelectionMatched(record.name_folder_code, filters.nameFolders)) return false
 
   const score = record.is_played ? record.score : 0
   if (score < filters.score.min) return false

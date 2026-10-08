@@ -32,6 +32,7 @@ const SongsList = () => {
     genres,
     versionOptions,
     genreFilterOptions,
+    nameFolderOptions,
     filters,
     setFilters,
     searchQuery,
@@ -105,6 +106,7 @@ const SongsList = () => {
                     onChange={setFilters}
                     genres={genreFilterOptions()}
                     versions={versionOptions()}
+                    nameFolders={nameFolderOptions()}
                   />
                   <Show when={!isCardView()}>
                     <AppIconButton

@@ -40,7 +40,8 @@ const SCORE_HISTORY_TICK_INTERVAL = 1_000
 const CHART_POINT_RADIUS = 3
 const CHART_POINT_HOVER_RADIUS = 5
 const CHART_BORDER_WIDTH = 2
-const CHART_TENSION = 0.2
+/** 時系列で線が過去側へ戻らないよう直線 (0) にする */
+const CHART_TENSION = 0
 
 /**
  * スコア履歴を横軸日時の昇順へ並べ替える。

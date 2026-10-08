@@ -40,10 +40,6 @@ export const PLAYER_STATS_COPY = {
   filterButtonActiveLabel: '集計対象を絞り込む（条件変更あり）',
   filterTitle: '集計対象フィルター',
   difficultyLabel: '難易度',
-  genreLabel: 'ジャンル',
-  versionLabel: 'バージョン',
-  genrePlaceholder: 'ジャンルを選択',
-  versionPlaceholder: 'バージョンを選択',
   cancel: 'キャンセル',
   apply: '適用',
 } as const

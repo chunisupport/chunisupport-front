@@ -6,13 +6,17 @@ import { AppButton, AppIconButton } from '../../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import { AppSelect } from '../../../components/common/AppSelect'
 import { CheckboxField } from '../../../components/common/CheckboxField'
-import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common/DomainMultiSelect'
+import {
+  GenreMultiSelect,
+  NameFolderFilterMultiSelect,
+  VersionMultiSelect,
+} from '../../../components/common/DomainMultiSelect'
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
 import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
 import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
 import { SONG_FILTER_INPUT_CLASS } from '../../../components/common/filterStyles'
 import { RangeControlRow } from '../../../components/common/RangeInput'
-import type { VersionSummaryDTO } from '../../../types/api'
+import type { NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
 import { getShortVersionName } from '../../../utils/versionConverter'
 import {
   createSongManagementFilters,
@@ -30,6 +34,8 @@ type Props = {
   filters: SongManagementFilters
   genres: string[]
   versions: readonly VersionSummaryDTO[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders: readonly NameFolderDTO[]
   onChange: (filters: SongManagementFilters) => void
 }
 
@@ -55,6 +61,7 @@ export default function SongManagementFilterPanel(props: Props) {
       filters.releaseMax.length > 0 ||
       filters.genres !== null ||
       filters.versions !== null ||
+      filters.nameFolders !== null ||
       filters.missingOnly ||
       filters.catalogOnly
     )
@@ -164,6 +171,12 @@ export default function SongManagementFilterPanel(props: Props) {
                     value.length > 0 && value.length === props.versions.length ? null : value
                   )
                 }
+                placeholder={LABELS.unselected}
+              />
+              <NameFolderFilterMultiSelect
+                nameFolders={props.nameFolders}
+                selected={draft().nameFolders}
+                onChange={(value) => update('nameFolders', value)}
                 placeholder={LABELS.unselected}
               />
               <fieldset class="min-w-0">

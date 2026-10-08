@@ -3,6 +3,7 @@ import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { AppButton } from '../../../../components/common/AppButton'
 import FilterResetDialog from '../../../../components/common/FilterResetDialog'
+import type { NameFolderDTO } from '../../../../types/api'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 import WorldsendFilterSelectionPanel from './WorldsendFilterSelectionPanel'
@@ -14,6 +15,8 @@ type WorldsendFilterDialogProps = {
   filters: WorldsendFilterState
   onChange: (filters: WorldsendFilterState) => void
   defaultFilter: WorldsendFilterState
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders?: NameFolderDTO[]
 }
 
 /**
@@ -106,6 +109,7 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
             filters={filters()}
             setFilters={setFilters}
             defaultFilter={props.defaultFilter}
+            nameFolders={props.nameFolders}
           />
           <div class="mt-6 flex justify-end">
             <div class="flex gap-2">

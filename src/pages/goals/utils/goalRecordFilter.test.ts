@@ -80,6 +80,7 @@ const createRecord = (
   full_chain: null,
   slot: null,
   genre: 'POPS & ANIME',
+  name_folder_code: 'SA',
   release: '2024-12-12',
   release_version: 'VERSE',
   notes: 1000,
@@ -116,6 +117,7 @@ test('属性未指定時は全難易度・全定数・全ジャンル・全バ�
   assert.deepEqual(filter.const, { min: 1, max: 16 })
   assert.deepEqual(filter.genres, [])
   assert.deepEqual(filter.versions, [])
+  assert.equal(filter.nameFolders, null)
 })
 
 test('属性が空配列の場合はレコード遷移を無効にし、どの譜面にも一致しない条件にする', () => {
@@ -320,6 +322,44 @@ test('集計系目標ではレコード遷移を無効にする', () => {
     assert.equal(isGoalRecordNavigationEnabled(goal), false)
   })
   assert.equal(isGoalRecordNavigationEnabled(createGoal()), true)
+})
+
+test('楽曲名順を指定した目標は楽曲名順フィルター付きでレコード遷移できる', () => {
+  // Given
+  const goal = createGoal({ attributes: { name_folder: ['A', 'SA'] } })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.deepEqual(filter.nameFolders, ['A', 'SA'])
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'KA' }), filter), false)
+})
+
+test('楽曲名順が単一コードの目標は1件の楽曲名順フィルターへ変換する', () => {
+  // Given
+  const goal = createGoal({ attributes: { name_folder: 'KA' } })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.deepEqual(filter.nameFolders, ['KA'])
+})
+
+test('楽曲名順が空配列の目標ではレコード遷移を無効にする', () => {
+  // Given
+  const goal = createGoal({ attributes: { name_folder: [] } })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.difficulties, [])
+  assert.deepEqual(filter.nameFolders, [])
 })
 
 test('OP対象目標ではOP理論値対象を固定した通常レコードフィルターへ遷移できる', () => {

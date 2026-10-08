@@ -113,5 +113,5 @@ export const PLAYER_METRIC_HISTORY_POINT_HOVER_RADIUS = 5
 export const PLAYER_METRIC_HISTORY_POINT_HIT_RADIUS = 12
 /** 折れ線グラフの線幅 */
 export const PLAYER_METRIC_HISTORY_BORDER_WIDTH = 2
-/** 折れ線グラフの曲線補間量 */
-export const PLAYER_METRIC_HISTORY_LINE_TENSION = 0.2
+/** 折れ線グラフの曲線補間量。時系列で線が過去側へ戻らないよう直線 (0) にする */
+export const PLAYER_METRIC_HISTORY_LINE_TENSION = 0

@@ -164,11 +164,14 @@ export const renderDefaultRecordFullChainBadge = (
 const getRecordLampsAccessibleLabel = (record: DefaultRecordLampBadgesRecord): string =>
   `ハードランプ ${record.clear_lamp ?? LAMP_NONE_ACCESSIBLE_LABEL}、コンボランプ ${getDefaultRecordLampAccessibleLabel(record.combo_lamp, record.score)}、FULL CHAIN ${record.full_chain ?? LAMP_NONE_ACCESSIBLE_LABEL}`
 
+/** バッジと同じ光沢装飾を適用するランプドットの共通クラス */
+const RECORD_LAMP_DOT_CLASS = 'record-lamp-badge-gloss size-3 rounded-full'
+
 /** ランプ未達成のドットに使う背景色クラス */
 const LAMP_DOT_PLACEHOLDER_CLASS = 'bg-surface-hover'
 
 /**
- * ハード・コンボ・FULL CHAINの3種類のランプを、バッジと同じ背景色の小さなドットで表示する。
+ * ハード・コンボ・FULL CHAINの3種類のランプを、バッジと同じ背景色と光沢の小さなドットで表示する。
  * ランプの重要度が低い画面で達成状況を示し、ホバー時に元のバッジラベルを表示する。
  * 読み上げ用テキストの絶対配置で表示領域が広がらないよう、ラッパーを配置基準にする。
  *
@@ -202,17 +205,17 @@ export const RecordLampDots = (props: {
       <span class="sr-only">{getRecordLampsAccessibleLabel(props.record)}</span>
       <div class="flex gap-1.5" aria-hidden="true">
         <span
-          class={`size-3 rounded-full ${hardClass()}`}
+          class={`${RECORD_LAMP_DOT_CLASS} ${hardClass()}`}
           title={getDefaultRecordHardLampLabel(props.record.clear_lamp) || undefined}
         />
         <span
-          class={`size-3 rounded-full ${comboClass()}`}
+          class={`${RECORD_LAMP_DOT_CLASS} ${comboClass()}`}
           title={
             getDefaultRecordLampLabel(props.record.combo_lamp, props.record.score) || undefined
           }
         />
         <span
-          class={`size-3 rounded-full ${fullChainClass()}`}
+          class={`${RECORD_LAMP_DOT_CLASS} ${fullChainClass()}`}
           title={getDefaultRecordFullChainLabel(props.record.full_chain) || undefined}
         />
       </div>
@@ -288,6 +291,20 @@ export const RecordTitleCell = (props: RecordTitleCellProps) => {
 }
 
 /**
+ * スコアの下に表示するランクの文字サイズと色を揃える。
+ *
+ * @param props - 表示するランクと配置用の追加クラス。
+ * @returns ランク表示。
+ */
+export const RecordScoreRank = (props: { rank: ScoreRank; class?: string }): JSX.Element => (
+  <span
+    class={`mt-0.5 text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[props.rank]} ${props.class ?? ''}`}
+  >
+    {props.rank}
+  </span>
+)
+
+/**
  * レコードのスコアとランクを表示する。
  *
  * @param props - プレイ状態とスコアを含むレコード、および任意のランク判定関数。
@@ -316,11 +333,7 @@ export const RecordScoreCell = (props: {
       <span class="w-full text-right leading-none">
         {props.record.score.toLocaleString('ja-JP')}
       </span>
-      <span
-        class={`mt-0.5 w-full text-right text-[10px] font-semibold leading-none ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}
-      >
-        {scoreRank}
-      </span>
+      <RecordScoreRank rank={scoreRank} class="w-full text-right" />
     </div>
   )
 }

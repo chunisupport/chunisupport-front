@@ -2,6 +2,7 @@ import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
 import ChartConstRangeField from '../../../../../components/common/ChartConstRangeField'
+import { NameFolderFilterMultiSelect } from '../../../../../components/common/DomainMultiSelect'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../../components/common/filterStyles'
 import {
   CHART_CONST_MAX,
@@ -16,7 +17,7 @@ import {
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../../constants/recordFilterOptions'
-import type { MasterDataDTO, VersionSummaryDTO } from '../../../../../types/api'
+import type { MasterDataDTO, NameFolderDTO, VersionSummaryDTO } from '../../../../../types/api'
 import type { FilterState } from '../../../../../types/recordFilter'
 import {
   type ChartLevelLabel,
@@ -53,6 +54,8 @@ type FilterSelectionPanelProps = {
   setFilters: Setter<FilterState>
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders?: NameFolderDTO[]
   defaultFilter: FilterState
   resetKey: number
   /** 編集中のフィルター名。null の場合は編集中でない */
@@ -636,6 +639,13 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             versions: selectedVersions,
           }))
         }
+      />
+      <NameFolderFilterMultiSelect
+        nameFolders={props.nameFolders ?? []}
+        selected={props.filters.nameFolders}
+        labelClass="text-text"
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onChange={(nameFolders) => props.setFilters((prev) => ({ ...prev, nameFolders }))}
       />
     </div>
   )

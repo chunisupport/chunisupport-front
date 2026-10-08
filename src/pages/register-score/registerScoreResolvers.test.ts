@@ -12,6 +12,7 @@ import { calculateSingleRatingHundredths } from '../../utils/singleRating'
 import {
   resolveRegisterScoreChartLevel,
   resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongMetrics,
   resolveRegisterScoreSongSortValues,
   resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
@@ -171,4 +172,45 @@ test('コース名を解決し、未登録コースではプレースホルダ�
   // Then: マスタにある名前またはプレースホルダーを返す。
   assert.equal(resolvedTitle, 'テストコース')
   assert.equal(unknownTitle, '-')
+})
+
+test('前後のスコアとランプから単曲レーティング・OP値・OP%を算出する', () => {
+  // Given: 同スコアでFCからAJに更新された記録。
+  const change: PlayerDataSongRecordChange = {
+    ...standardChange,
+    change_type: 'updated',
+    before: { ...standardChange.after, combo_lamp: 'FULL COMBO' },
+    after: { ...standardChange.after, combo_lamp: 'ALL JUSTICE' },
+  }
+  // When: 閲覧時の定数15.4で前後の値を解決する。
+  const result = resolveRegisterScoreSongMetrics(change, [createStandardSong()])
+  // Then: レーティングは同じでもOP値とOP%はランプ更新を反映する。
+  assert.deepEqual(result, {
+    before: { singleRating: 16.4, overPower: 82.5, overPowerPercent: 89.67391 },
+    after: { singleRating: 16.4, overPower: 83, overPowerPercent: 90.21739 },
+  })
+})
+
+test('新規記録の更新前はnullとし、取得したマスタで更新後を解決できる', () => {
+  // Given: 新規記録とまだ取得できていないマスタ。
+  assert.equal(resolveRegisterScoreSongMetrics(standardChange, []), null)
+  // When: マスタ取得後に同じ記録を解決する。
+  const result = resolveRegisterScoreSongMetrics(standardChange, [createStandardSong()])
+  // Then: 未記録の前値と、計算できた後値を区別する。
+  assert.equal(result?.before, null)
+  assert.deepEqual(result?.after, {
+    singleRating: 16.4,
+    overPower: 82,
+    overPowerPercent: 89.13043,
+  })
+})
+
+test('WORLD’S ENDと未解決譜面には単曲メトリクスを返さない', () => {
+  // Given: 通常マスタで計算できない種別または難易度。
+  // When / Then: 対象外は0を計算せずnullを返す。
+  assert.equal(resolveRegisterScoreSongMetrics(worldsendChange, [createStandardSong()]), null)
+  assert.equal(
+    resolveRegisterScoreSongMetrics({ ...standardChange, diff: 'ULTIMA' }, [createStandardSong()]),
+    null
+  )
 })

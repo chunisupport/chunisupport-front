@@ -9,9 +9,14 @@ import {
   getAppButtonClass,
 } from '../../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
-import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common/DomainMultiSelect'
+import {
+  GenreMultiSelect,
+  NameFolderFilterMultiSelect,
+  VersionMultiSelect,
+} from '../../../components/common/DomainMultiSelect'
 import { SearchTextField } from '../../../components/common/SearchTextField'
 import Loading from '../../../components/Loading/Loading'
+import type { NameFolderDTO } from '../../../types/api'
 import {
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
@@ -41,11 +46,17 @@ type SongSelectionDialogBaseProps<TItem, TFilter> = {
   hasChanges: Accessor<boolean>
   genres: Accessor<string[]>
   versions: Accessor<string[]>
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders: Accessor<readonly NameFolderDTO[]>
   filters: Accessor<TFilter>
   selectedGenres: (filter: TFilter) => string[]
   selectedVersions: (filter: TFilter) => string[]
+  /** フィルターから楽曲名順の選択値を取り出す。null は全選択を表す */
+  selectedNameFolders: (filter: TFilter) => string[] | null
   setGenres: (genres: string[]) => void
   setVersions: (versions: string[]) => void
+  /** 楽曲名順の選択値を更新する。全選択時は null を受け取る */
+  setNameFolders: (nameFolders: string[] | null) => void
   resetFilters: () => void
   showFilterCloseButton?: boolean
   actionButtonSize?: AppButtonSize
@@ -198,6 +209,13 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
                     labelClass="text-text"
                     contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
                     onChange={props.setVersions}
+                  />
+                  <NameFolderFilterMultiSelect
+                    nameFolders={props.nameFolders()}
+                    selected={props.selectedNameFolders(props.filters())}
+                    labelClass="text-text"
+                    contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+                    onChange={props.setNameFolders}
                   />
                   {props.renderFilterExtras?.()}
                 </div>

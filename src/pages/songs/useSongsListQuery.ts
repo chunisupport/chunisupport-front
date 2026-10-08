@@ -1,5 +1,6 @@
 import { createMemo, createResource, createSignal, onMount } from 'solid-js'
 import { fetchGenres } from '../../api/genres'
+import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchVersions } from '../../api/songs'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import { buildSearchableItems, filterSearchableItems } from '../../utils/searchHelpers'
@@ -14,6 +15,7 @@ export const useSongsListQuery = () => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
   const [filters, setFilters] = createSignal<SongFilters>(createSongFilters())
   const [searchQuery, setSearchQuery] = createSignal('')
 
@@ -43,12 +45,14 @@ export const useSongsListQuery = () => {
   ])
 
   const versionOptions = createMemo(() => versions()?.versions ?? [])
+  const nameFolderOptions = createMemo(() => nameFolders() ?? [])
 
   return {
     isSongsLoading,
     loadError,
     genres,
     versionOptions,
+    nameFolderOptions,
     genreFilterOptions,
     filters,
     setFilters,

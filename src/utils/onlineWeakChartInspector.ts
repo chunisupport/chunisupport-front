@@ -6,6 +6,7 @@ import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import { formatChartConst } from './chartConstFormat'
+import { isNullableSelectionMatched } from './filterSelection'
 import { formatInteger } from './numberFormat'
 import { formatScoreDifference } from './scoreDifference'
 import { compareSongsByReading } from './songTitleSorting'
@@ -47,12 +48,16 @@ export interface OnlineWeakChartFilter {
   constMax: number
   genres: readonly string[] | null
   versions: readonly string[] | null
+  /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
+  nameFolders: readonly string[] | null
 }
 
-/** 比較表をジャンル・バージョンで絞り込むための楽曲属性。 */
+/** 比較表をジャンル・バージョン・楽曲名順で絞り込むための楽曲属性。 */
 export type OnlineWeakChartSongAttributes = {
   genre: string | null
   version: string
+  /** 楽曲名順フォルダのコード。不明な場合は null */
+  nameFolder: string | null
 }
 
 /** 苦手譜面インスペクター Online の比較表で利用できるソートキー */
@@ -133,12 +138,19 @@ export const filterOnlineWeakChartEntries = (
     return difficultyMatched && record.const >= filter.constMin && record.const <= filter.constMax
   })
 
-  if (!attributesBySongId || (filter.genres === null && filter.versions === null)) {
+  if (
+    !attributesBySongId ||
+    (filter.genres === null && filter.versions === null && filter.nameFolders === null)
+  ) {
     return filteredEntries
   }
 
   return filteredEntries.filter(({ record }) => {
-    const attributes = attributesBySongId.get(record.id) ?? { genre: null, version: '不明' }
+    const attributes = attributesBySongId.get(record.id) ?? {
+      genre: null,
+      version: '不明',
+      nameFolder: null,
+    }
     if (
       filter.genres !== null &&
       (attributes.genre === null || !filter.genres.includes(attributes.genre))
@@ -148,7 +160,7 @@ export const filterOnlineWeakChartEntries = (
     if (filter.versions !== null && !filter.versions.includes(attributes.version)) {
       return false
     }
-    return true
+    return isNullableSelectionMatched(attributes.nameFolder, filter.nameFolders)
   })
 }
 

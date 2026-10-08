@@ -15,6 +15,7 @@ import {
   Show,
 } from 'solid-js'
 import { fetchChartScores } from '../../api/chartScores'
+import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchRatingBands } from '../../api/ratingBands'
 import { fetchVersions } from '../../api/songs'
 import { LoadError, Loading } from '../../components'
@@ -24,7 +25,11 @@ import { AppSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
+import {
+  GenreMultiSelect,
+  NameFolderFilterMultiSelect,
+  VersionMultiSelect,
+} from '../../components/common/DomainMultiSelect'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
   COMPACT_VIRTUAL_TABLE_CELL_CLASS,
@@ -521,6 +526,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   useDocumentTitle(tool.title)
   const [ratingBandsResource] = createResource(fetchRatingBands)
   const [versionsResource] = createResource(fetchVersions)
+  const [nameFoldersResource] = createResource(fetchNameFolders)
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const username = () => authSession.user?.username ?? null
   const [ownRating] = createResource(username, fetchUserRatingWithCache)
@@ -536,6 +542,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   const [editConstMax, setEditConstMax] = createSignal('')
   const [editGenres, setEditGenres] = createSignal<string[] | null>(null)
   const [editVersions, setEditVersions] = createSignal<string[] | null>(null)
+  const [editNameFolders, setEditNameFolders] = createSignal<string[] | null>(null)
   let settingsContentRef!: HTMLDivElement
   const [scoreSnapshots] = createResource(
     () => [...filter().difficulties],
@@ -637,6 +644,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     setEditConstMax(String(currentFilter.constMax))
     setEditGenres(currentFilter.genres === null ? null : [...currentFilter.genres])
     setEditVersions(currentFilter.versions === null ? null : [...currentFilter.versions])
+    setEditNameFolders(currentFilter.nameFolders === null ? null : [...currentFilter.nameFolders])
     setSettingsOpen(true)
   }
 
@@ -652,6 +660,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     setEditConstMax(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.constMax))
     setEditGenres(null)
     setEditVersions(null)
+    setEditNameFolders(null)
   }
 
   /**
@@ -673,6 +682,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
       constMax: Math.max(constMin, constMax),
       genres: editGenres(),
       versions: editVersions(),
+      nameFolders: editNameFolders(),
     })
     setSettingsOpen(false)
   }
@@ -804,6 +814,13 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
                     value.length > 0 && value.length === versionNames().length ? null : [...value]
                   )
                 }
+                placeholder={ONLINE_WEAK_CHART_COPY.filterUnselected}
+                disabled={attributesBySongId() === undefined}
+              />
+              <NameFolderFilterMultiSelect
+                nameFolders={nameFoldersResource() ?? []}
+                selected={editNameFolders()}
+                onChange={setEditNameFolders}
                 placeholder={ONLINE_WEAK_CHART_COPY.filterUnselected}
                 disabled={attributesBySongId() === undefined}
               />

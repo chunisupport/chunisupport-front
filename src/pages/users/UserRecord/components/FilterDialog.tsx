@@ -3,7 +3,7 @@ import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { AppButton } from '../../../../components/common/AppButton'
 import FilterResetDialog from '../../../../components/common/FilterResetDialog'
-import type { MasterDataDTO, VersionSummaryDTO } from '../../../../types/api'
+import type { MasterDataDTO, NameFolderDTO, VersionSummaryDTO } from '../../../../types/api'
 import type { FilterState } from '../../../../types/recordFilter'
 import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
 import type { EditingFilter } from '../../components/SavedRecordFiltersDialog'
@@ -24,6 +24,8 @@ interface FilterDialogProps {
   onChange: (filters: FilterState) => void
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders?: NameFolderDTO[]
   defaultFilter: FilterState
   /** お気に入り楽曲設定を開く */
   onOpenFavoriteSongs?: () => void
@@ -141,6 +143,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             setFilters={setFilters}
             masterData={props.masterData}
             versions={props.versions}
+            nameFolders={props.nameFolders}
             defaultFilter={props.defaultFilter}
             resetKey={resetKey()}
             editingFilterName={editingFilter()?.name ?? null}

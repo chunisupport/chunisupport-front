@@ -17,7 +17,7 @@ export type PlayerStatsChartMetadata = {
   targetDifficultyBySongId: Map<string, PlayerDataDifficulty>
   notesBySongId: PlayerStatsNotesBySongId
   /** 曲IDごとのジャンル・追加バージョンと、APIが判定した名前順フォルダ */
-  attributesBySongId: ReadonlyMap<string, PlayerStatsRecordAttribute & { nameFolder: string }>
+  attributesBySongId: ReadonlyMap<string, PlayerStatsRecordAttribute>
   genres: string[]
   versions: string[]
   /** APIマスタの表示順に並べた名前順フォルダのコード */

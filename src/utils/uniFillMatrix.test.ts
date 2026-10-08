@@ -336,17 +336,27 @@ test('楽曲名の軸は名前順フォルダの表示順に集計し、譜面�
   )
 })
 
-test('名前順フォルダを含むマスと合計は通常レコードで絞り込めないため位置を持たない', () => {
+test('名前順フォルダを含むマスと合計はフォルダのコードと表示名を位置に持つ', () => {
   // Given
   const attributes = new Map([['kana', { genre: 'ORIGINAL', nameFolder: 'A' as const }]])
   const records = [createRecord({ id: 'kana', const: 14.0, score: 1_000_000 })]
+  const nameFolder = { code: 'A', label: 'あ行' }
 
   // When
-  const result = build(records, 'sss', { vertical: 'nameFolder', horizontal: 'genre' }, attributes)
+  const result = build(
+    records,
+    'sss',
+    {
+      vertical: 'nameFolder',
+      horizontal: 'genre',
+      labels: { nameFolder: new Map([['A', 'あ行']]) },
+    },
+    attributes
+  )
 
   // Then
-  assert.equal(result.lines[0].cells[0].position, undefined)
-  assert.equal(result.lines[0].total.position, undefined)
+  assert.deepEqual(result.lines[0].cells[0].position, { nameFolder, genre: 'ORIGINAL' })
+  assert.deepEqual(result.lines[0].total.position, { nameFolder })
   assert.deepEqual(result.totals[0].position, { genre: 'ORIGINAL' })
   assert.deepEqual(result.grandTotal.position, {})
 })
@@ -464,6 +474,33 @@ test('ジャンルとバージョンが交差するマスは両方の条件を�
   assert.deepEqual(result.genres, ['ORIGINAL'])
   assert.deepEqual(result.versions, ['VERSE PLUS'])
   assert.deepEqual(result.const, DEFAULT_FILTER.const)
+})
+
+test('名前順フォルダのマスはフォルダのコードで楽曲名順を絞り込む', () => {
+  // Given
+  const target = {
+    difficulty: 'MASTER_ULTIMA',
+    achievement: 'sss',
+    nameFolder: { code: 'KA', label: 'か行' },
+  } as const
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, target)
+
+  // Then
+  assert.deepEqual(result.nameFolders, ['KA'])
+  assert.deepEqual(result.genres, DEFAULT_FILTER.genres)
+})
+
+test('名前順フォルダの軸を含まないマスは楽曲名順を全フォルダ対象のままにする', () => {
+  // Given
+  const target = { difficulty: 'MASTER_ULTIMA', achievement: 'sss', genre: 'ORIGINAL' } as const
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, target)
+
+  // Then
+  assert.equal(result.nameFolders, null)
 })
 
 test('レベル6以下はフィルターのレベル指定と範囲が異なるため数値指定になる', () => {

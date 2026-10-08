@@ -4,10 +4,12 @@ import type { Component, JSX } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type {
   MasterItemDTO,
+  NameFolderDTO,
   PlayerFavoriteSongResponseItem,
   SongDTO,
   VersionDTO,
 } from '../../../../types/api'
+import { isNullableSelectionMatched } from '../../../../utils/filterSelection'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import { buildSearchableItems, filterSearchableItems } from '../../../../utils/searchHelpers'
 import {
@@ -29,6 +31,8 @@ type Props = {
   songs: SongDTO[]
   genres: MasterItemDTO[]
   versions: VersionDTO[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders: NameFolderDTO[]
   favoriteSongs: PlayerFavoriteSongResponseItem[]
   onOpenChange: (open: boolean) => void
   onSave: (displayIds: string[]) => Promise<void>
@@ -85,6 +89,9 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
     return filterSearchableItems(searchableSongs(), model.query()).filter((song) => {
       if (model.showSelectedOnly() && !model.draftKeys().has(song.id)) return false
       if (!currentFilters.genres.includes(song.genre)) return false
+      if (!isNullableSelectionMatched(song.name_folder_code, currentFilters.nameFolders)) {
+        return false
+      }
       return currentFilters.versions.includes(songVersionById().get(song.id) ?? '不明')
     })
   })
@@ -160,11 +167,14 @@ const FavoriteSongsDialog: Component<Props> = (props) => {
       hasChanges={model.hasChanges}
       genres={genreOptions}
       versions={versionOptions}
+      nameFolders={() => props.nameFolders}
       filters={model.filters}
       selectedGenres={(filter) => filter.genres}
       selectedVersions={(filter) => filter.versions}
+      selectedNameFolders={(filter) => filter.nameFolders}
       setGenres={(genres) => model.setFilters((current) => ({ ...current, genres }))}
       setVersions={(versions) => model.setFilters((current) => ({ ...current, versions }))}
+      setNameFolders={(nameFolders) => model.setFilters((current) => ({ ...current, nameFolders }))}
       resetFilters={model.resetFilters}
       renderItem={renderSong}
       onSave={model.save}

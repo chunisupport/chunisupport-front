@@ -10,7 +10,10 @@ const MASTER_DATA: MasterDataDTO = {
   ],
   genres: [{ id: 10, name: 'POPS & ANIME', short_name: 'P&A' }],
   versions: [],
-  name_folders: [],
+  name_folders: [
+    { code: 'A', name: 'あ行', sort_order: 7 },
+    { code: 'KA', name: 'か行', sort_order: 8 },
+  ],
   account_types: [],
   rating_bands: [],
   achievement_types: [],
@@ -55,6 +58,22 @@ test('空配列の条件は対象譜面なしとして表示する', () => {
     MASTER_DATA,
     VERSIONS
   )
+
+  // Then
+  assert.equal(result, '対象譜面なし')
+})
+
+test('楽曲名順の条件はマスタの表示名で表示する', () => {
+  // Given / When
+  const result = formatGoalAttributesLabel({ name_folder: ['A', 'KA'] }, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(result, '楽曲名順: あ行, か行')
+})
+
+test('楽曲名順が空配列の条件は対象譜面なしとして表示する', () => {
+  // Given / When
+  const result = formatGoalAttributesLabel({ name_folder: [] }, MASTER_DATA, VERSIONS)
 
   // Then
   assert.equal(result, '対象譜面なし')

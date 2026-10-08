@@ -4,11 +4,16 @@ import { createSignal, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import ChartConstRangeField from '../../../components/common/ChartConstRangeField'
-import { GenreMultiSelect, VersionMultiSelect } from '../../../components/common/DomainMultiSelect'
+import {
+  GenreMultiSelect,
+  NameFolderFilterMultiSelect,
+  VersionMultiSelect,
+} from '../../../components/common/DomainMultiSelect'
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
 import FilterResetHoldIndicator from '../../../components/common/filterReset/FilterResetHoldIndicator'
 import { useFilterResetLongPress } from '../../../components/common/filterReset/useFilterResetLongPress'
 import { createChartConstRangeDraft } from '../../../hooks/createChartConstRangeDraft'
+import type { NameFolderDTO } from '../../../types/api'
 import {
   type ChartStatsAttributeFilter,
   type ChartStatsVersionMeta,
@@ -21,7 +26,7 @@ import { CHART_STATS_COPY } from './constants'
 type ChartStatsFilterPanelProps = {
   /** ダイアログと操作要素のID接頭辞 */
   idPrefix: string
-  /** 現在適用中のレベル・譜面定数・バージョン・ジャンル条件 */
+  /** 現在適用中のレベル・譜面定数・バージョン・ジャンル・楽曲名順条件 */
   filters: ChartStatsAttributeFilter
   /** フィルター確定時の通知先 */
   onChange: (filters: ChartStatsAttributeFilter) => void
@@ -29,6 +34,8 @@ type ChartStatsFilterPanelProps = {
   genres: readonly string[]
   /** バージョン選択肢（フルネームと稼働開始日） */
   versions: readonly ChartStatsVersionMeta[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders: readonly NameFolderDTO[]
   /** 楽曲マスタ取得前など操作を無効化する場合はtrue */
   disabled?: boolean
   /** レベル・譜面定数範囲を表示する場合はtrue */
@@ -164,6 +171,12 @@ export const ChartStatsFilterPanel = (props: ChartStatsFilterPanelProps) => {
                     value.length > 0 && value.length === versionNames().length ? null : [...value]
                   )
                 }
+                placeholder={CHART_STATS_COPY.filterUnselected}
+              />
+              <NameFolderFilterMultiSelect
+                nameFolders={props.nameFolders}
+                selected={draft().nameFolders}
+                onChange={(value) => update('nameFolders', value)}
                 placeholder={CHART_STATS_COPY.filterUnselected}
               />
             </div>

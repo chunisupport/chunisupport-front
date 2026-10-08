@@ -32,6 +32,7 @@ const createRecord = (
   combo_lamp: 'FULL COMBO',
   full_chain: null,
   genre: 'POPS',
+  name_folder_code: 'TA',
   reading: 'てすとがっきょく',
   release: '2026-01-01',
   release_version: 'LUMINOUS',
@@ -177,4 +178,38 @@ test("WORLD'S END フィルターはALL JUSTICE CRITICALをコンボランプ条
   // Then: 理論値の ALL JUSTICE だけが一致する。
   assert.equal(matched, true)
   assert.equal(nonCritical, false)
+})
+
+test("WORLD'S END フィルターは楽曲名順を判定できる", () => {
+  // Given: 楽曲名順を指定したフィルターと、全フォルダ対象・全解除のフィルター。
+  const baseFilter = { attributes: ['狂'], levelStarRange: { min: 4, max: 4 } }
+  const selected = normalizeWorldsendFilterState({ ...baseFilter, nameFolders: ['TA'] })
+  const all = normalizeWorldsendFilterState({ ...baseFilter, nameFolders: null })
+  const cleared = normalizeWorldsendFilterState({ ...baseFilter, nameFolders: [] })
+
+  // When: 楽曲名順が異なるレコードや楽曲マスタにないレコードを判定する。
+  const matched = isWorldsendRecordMatchedWithTitleMatcher(createRecord(), selected, matcher())
+  const otherFolder = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ name_folder_code: 'A' }),
+    selected,
+    matcher()
+  )
+  const unknownFolder = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ name_folder_code: null }),
+    selected,
+    matcher()
+  )
+  const unknownFolderWithAll = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ name_folder_code: null }),
+    all,
+    matcher()
+  )
+  const clearedResult = isWorldsendRecordMatchedWithTitleMatcher(createRecord(), cleared, matcher())
+
+  // Then: 指定フォルダだけ一致し、全フォルダ対象は不明も含め一致し、全解除は一致しない。
+  assert.equal(matched, true)
+  assert.equal(otherFolder, false)
+  assert.equal(unknownFolder, false)
+  assert.equal(unknownFolderWithAll, true)
+  assert.equal(clearedResult, false)
 })

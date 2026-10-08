@@ -1,6 +1,7 @@
 import { ChartColumnStacked } from 'lucide-solid'
 import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchChartStats } from '../../../api/chartStats'
+import { fetchNameFolders } from '../../../api/nameFolders'
 import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import {
@@ -58,6 +59,7 @@ const ChartStatsContent = (props: {
   const { songsResponse, worldsendSongsResponse, ensureSongsLoaded, ensureWorldsendSongsLoaded } =
     useSongsData()
   const [versions] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
 
   onMount(() => {
     ensureSongsLoaded()
@@ -117,6 +119,7 @@ const ChartStatsContent = (props: {
             onChange={setAttributeFilter}
             genres={genreOptions()}
             versions={versionOptions()}
+            nameFolders={nameFolders() ?? []}
             disabled={attributesBySongId() === undefined}
             showConstFilter={props.difficulty !== "WORLD'S END"}
           />

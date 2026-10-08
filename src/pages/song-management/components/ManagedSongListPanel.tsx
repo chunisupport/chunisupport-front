@@ -2,7 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
 import { Search } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import type { VersionSummaryDTO } from '../../../types/api'
+import type { NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
 import { SONG_MANAGEMENT_SECTION_COPY } from '../constants'
 import type { SongManagementFilters } from '../songManagementFilters'
 import SongManagementFilterPanel from './SongManagementFilterPanel'
@@ -41,6 +41,8 @@ type ManagedSongListPanelProps<T extends ManagedSongListItem> = {
   genres: string[]
   /** フィルター候補のバージョン */
   versions: readonly VersionSummaryDTO[]
+  /** フィルター候補の楽曲名順フォルダ */
+  nameFolders: readonly NameFolderDTO[]
 }
 
 /**
@@ -95,6 +97,7 @@ const ManagedSongListPanel = <T extends ManagedSongListItem>(
             onChange={props.onFiltersChange}
             genres={props.genres}
             versions={props.versions}
+            nameFolders={props.nameFolders}
           />
         </Show>
       </div>

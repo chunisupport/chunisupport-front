@@ -162,13 +162,6 @@ export const TOOL_LINKS: ToolLink[] = [
     description: '全曲・全譜面から、単曲レート上位30曲・上位50曲を計算します。',
   },
   {
-    title: '未解禁曲ディスカバー',
-    href: LOCKED_SONG_DISCOVERY_PATH,
-    icon: 'discover',
-    description: '分類別の筐体OVER POWERを照合し、未解禁曲がある範囲を絞り込みます。',
-    adminOnly: true,
-  },
-  {
     title: 'ベスト枠・新曲枠理論値チェッカー',
     href: RATING_THEORETICAL_CHECKER_PATH,
     icon: 'gauge',
@@ -179,5 +172,12 @@ export const TOOL_LINKS: ToolLink[] = [
     href: UNI_FILL_MATRIX_PATH,
     icon: 'matrix',
     description: '細かい組み合わせごとに、何譜面埋め終わっているかを確認できます。',
+  },
+  {
+    title: '未解禁曲ディスカバー',
+    href: LOCKED_SONG_DISCOVERY_PATH,
+    icon: 'discover',
+    description: '分類別の筐体OVER POWERを照合し、未解禁曲がある範囲を絞り込みます。',
+    adminOnly: true,
   },
 ]

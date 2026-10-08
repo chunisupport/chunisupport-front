@@ -7,7 +7,10 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../types/api'
-import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
+import {
+  normalizeGoalAttributeIds,
+  normalizeGoalNameFolderCodes,
+} from '../../../utils/goalAttributes'
 import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
 
 /** 目標達成種別のコードに対応する日本語表示名。 */
@@ -82,8 +85,12 @@ export const formatGoalAttributesLabel = (
   const diffIds = normalizeGoalAttributeIds(attributes.diff)
   const genreIds = normalizeGoalAttributeIds(attributes.genre)
   const versionIds = normalizeGoalAttributeIds(attributes.ver)
+  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
   const hasNoSelectedCharts =
-    diffIds?.length === 0 || genreIds?.length === 0 || versionIds?.length === 0
+    diffIds?.length === 0 ||
+    genreIds?.length === 0 ||
+    versionIds?.length === 0 ||
+    nameFolderCodes?.length === 0
 
   const difficultyNameMap = new Map(masterData.difficulties.map((item) => [item.id, item.name]))
   const genreNameMap = new Map(masterData.genres.map((item) => [item.id, item.name]))
@@ -109,6 +116,13 @@ export const formatGoalAttributesLabel = (
 
   if (versionIds && versionIds.length > 0) {
     parts.push(`バージョン: ${formatNames(versionIds, versionNameMap)}`)
+  }
+
+  if (nameFolderCodes && nameFolderCodes.length > 0) {
+    const nameFolderNameMap = new Map(masterData.name_folders.map((item) => [item.code, item.name]))
+    parts.push(
+      `楽曲名順: ${nameFolderCodes.map((code) => nameFolderNameMap.get(code) ?? code).join(', ')}`
+    )
   }
 
   return parts.length > 0 ? parts.join(' / ') : '条件なし（全譜面）'

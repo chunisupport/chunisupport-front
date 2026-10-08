@@ -155,17 +155,19 @@ test('OP対象フィルターは楽曲マスタの理論値対象難易度だけ
   )
 })
 
-test('ジャンルとバージョンのフィルターは両方に一致する譜面だけを返す', () => {
+test('ジャンル・バージョン・楽曲名順のフィルターはすべてに一致する譜面だけを返す', () => {
   // Given
   const records = [
-    createRecord({ id: 'pops-verse' }),
-    createRecord({ id: 'pops-luminous' }),
-    createRecord({ id: 'game-verse' }),
+    createRecord({ id: 'pops-verse-a' }),
+    createRecord({ id: 'pops-verse-ka' }),
+    createRecord({ id: 'pops-luminous-a' }),
+    createRecord({ id: 'game-verse-a' }),
   ]
   const attributesBySongId = new Map([
-    ['pops-verse', { genre: 'POPS & ANIME', version: 'VERSE' }],
-    ['pops-luminous', { genre: 'POPS & ANIME', version: 'LUMINOUS' }],
-    ['game-verse', { genre: 'GAME', version: 'VERSE' }],
+    ['pops-verse-a', { genre: 'POPS & ANIME', version: 'VERSE', nameFolder: 'A' }],
+    ['pops-verse-ka', { genre: 'POPS & ANIME', version: 'VERSE', nameFolder: 'KA' }],
+    ['pops-luminous-a', { genre: 'POPS & ANIME', version: 'LUMINOUS', nameFolder: 'A' }],
+    ['game-verse-a', { genre: 'GAME', version: 'VERSE', nameFolder: 'A' }],
   ])
 
   // When
@@ -173,114 +175,107 @@ test('ジャンルとバージョンのフィルターは両方に一致する�
     attributesBySongId,
     genres: ['POPS & ANIME'],
     versions: ['VERSE'],
+    nameFolders: ['A'],
   })
 
   // Then
   assert.deepEqual(
     filtered.map((record) => record.id),
-    ['pops-verse']
+    ['pops-verse-a']
   )
 })
 
-test('ジャンルまたはバージョンが未選択の場合は集計対象を返さない', () => {
+test('全選択（null）の属性では絞り込まず、楽曲マスタにない譜面は除外する', () => {
   // Given
-  const records = [createRecord({ id: 'song-1' })]
-  const attributesBySongId = new Map([['song-1', { genre: 'POPS & ANIME', version: 'VERSE' }]])
+  const records = [createRecord({ id: 'song-1' }), createRecord({ id: 'unknown' })]
+  const attributesBySongId = new Map([
+    ['song-1', { genre: 'POPS & ANIME', version: 'VERSE', nameFolder: 'A' }],
+  ])
 
   // When
   const filtered = filterPlayerStatsRecords(records, 'ALL', new Map(), {
     attributesBySongId,
-    genres: [],
-    versions: ['VERSE'],
+    genres: null,
+    versions: null,
+    nameFolders: null,
   })
 
   // Then
-  assert.deepEqual(filtered, [])
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['song-1']
+  )
 })
 
-test('統計フィルターは難易度と全選択項目が初期状態なら未変更と判定する', () => {
+test('ジャンル・バージョン・楽曲名順のいずれかをすべて解除した場合は集計対象を返さない', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1' })]
+  const attributesBySongId = new Map([
+    ['song-1', { genre: 'POPS & ANIME', version: 'VERSE', nameFolder: 'A' }],
+  ])
+  const allSelected = { attributesBySongId, genres: null, versions: null, nameFolders: null }
+
+  // When
+  const results = [
+    filterPlayerStatsRecords(records, 'ALL', new Map(), { ...allSelected, genres: [] }),
+    filterPlayerStatsRecords(records, 'ALL', new Map(), { ...allSelected, versions: [] }),
+    filterPlayerStatsRecords(records, 'ALL', new Map(), { ...allSelected, nameFolders: [] }),
+  ]
+
+  // Then
+  assert.deepEqual(results, [[], [], []])
+})
+
+test('統計フィルターは難易度が初期値で属性が全選択（null）なら未変更と判定する', () => {
   // Given
   const filters = {
     difficulty: MASTER_ULTIMA_FILTER,
-    genres: ['GAME', 'POPS & ANIME'],
-    versions: ['VERSE', 'LUMINOUS'],
+    genres: null,
+    versions: null,
+    nameFolders: null,
     constRange: createFullChartConstRange(),
   } as const
 
   // When
-  const modified = isPlayerStatsFilterModified(
-    filters,
-    MASTER_ULTIMA_FILTER,
-    ['POPS & ANIME', 'GAME'],
-    ['LUMINOUS', 'VERSE']
-  )
+  const modified = isPlayerStatsFilterModified(filters, MASTER_ULTIMA_FILTER)
 
   // Then
   assert.equal(modified, false)
 })
 
-test('統計フィルターは難易度・ジャンル・バージョンのいずれかが異なると変更済みになる', () => {
+test('統計フィルターは難易度・ジャンル・バージョン・楽曲名順のいずれかが異なると変更済みになる', () => {
   // Given
-  const defaultGenres = ['POPS & ANIME', 'GAME']
-  const defaultVersions = ['LUMINOUS', 'VERSE']
+  const defaultFilters = {
+    difficulty: MASTER_ULTIMA_FILTER,
+    genres: null,
+    versions: null,
+    nameFolders: null,
+    constRange: createFullChartConstRange(),
+  } as const
 
   // When
   const results = [
-    isPlayerStatsFilterModified(
-      {
-        difficulty: 'EXPERT',
-        genres: defaultGenres,
-        versions: defaultVersions,
-        constRange: createFullChartConstRange(),
-      },
-      MASTER_ULTIMA_FILTER,
-      defaultGenres,
-      defaultVersions
-    ),
-    isPlayerStatsFilterModified(
-      {
-        difficulty: MASTER_ULTIMA_FILTER,
-        genres: ['GAME'],
-        versions: defaultVersions,
-        constRange: createFullChartConstRange(),
-      },
-      MASTER_ULTIMA_FILTER,
-      defaultGenres,
-      defaultVersions
-    ),
-    isPlayerStatsFilterModified(
-      {
-        difficulty: MASTER_ULTIMA_FILTER,
-        genres: defaultGenres,
-        versions: ['VERSE'],
-        constRange: createFullChartConstRange(),
-      },
-      MASTER_ULTIMA_FILTER,
-      defaultGenres,
-      defaultVersions
-    ),
+    isPlayerStatsFilterModified({ ...defaultFilters, difficulty: 'EXPERT' }, MASTER_ULTIMA_FILTER),
+    isPlayerStatsFilterModified({ ...defaultFilters, genres: ['GAME'] }, MASTER_ULTIMA_FILTER),
+    isPlayerStatsFilterModified({ ...defaultFilters, versions: ['VERSE'] }, MASTER_ULTIMA_FILTER),
+    isPlayerStatsFilterModified({ ...defaultFilters, nameFolders: [] }, MASTER_ULTIMA_FILTER),
   ]
 
   // Then
-  assert.deepEqual(results, [true, true, true])
+  assert.deepEqual(results, [true, true, true, true])
 })
 
 test('統計フィルターは譜面定数範囲が全範囲でなければ変更済みになる', () => {
-  // Given
-  const defaultGenres = ['POPS & ANIME']
-  const defaultVersions = ['VERSE']
-
-  // When
+  // Given / When
   const modified = isPlayerStatsFilterModified(
     {
       difficulty: MASTER_ULTIMA_FILTER,
-      genres: defaultGenres,
-      versions: defaultVersions,
+      genres: null,
+      versions: null,
+      nameFolders: null,
       constRange: { min: 14.5, max: 16 },
     },
-    MASTER_ULTIMA_FILTER,
-    defaultGenres,
-    defaultVersions
+    MASTER_ULTIMA_FILTER
   )
 
   // Then

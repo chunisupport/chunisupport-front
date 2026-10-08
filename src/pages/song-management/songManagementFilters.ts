@@ -4,6 +4,7 @@ import type {
   PlayerDataDifficulty,
   VersionSummaryDTO,
 } from '../../types/api'
+import { isNullableSelectionMatched } from '../../utils/filterSelection'
 import { resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
 
 export type SongManagementMissingField =
@@ -21,6 +22,8 @@ export type SongManagementFilters = {
   releaseMax: string
   genres: string[] | null
   versions: string[] | null
+  /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
+  nameFolders: string[] | null
   missingField: SongManagementMissingField
   missingOnly: boolean
   catalogState: SongManagementCatalogState
@@ -85,6 +88,7 @@ export const createSongManagementFilters = (): SongManagementFilters => ({
   releaseMax: '',
   genres: null,
   versions: null,
+  nameFolders: null,
   missingField: 'release',
   missingOnly: false,
   catalogState: 'included',
@@ -157,7 +161,12 @@ export const hasMissingManagedWorldsendSongField = (
  * @returns 共通属性条件をすべて満たす場合は true。
  */
 const matchesManagementAttributes = (
-  song: { genre: string | null; release: string | null; is_deleted: boolean },
+  song: {
+    genre: string | null
+    release: string | null
+    name_folder_code: string
+    is_deleted: boolean
+  },
   filters: SongManagementFilters,
   versions: readonly VersionSummaryDTO[]
 ): boolean => {
@@ -171,6 +180,7 @@ const matchesManagementAttributes = (
     !filters.versions.includes(resolveVersionNameByReleaseDate(song.release, versions))
   )
     return false
+  if (!isNullableSelectionMatched(song.name_folder_code, filters.nameFolders)) return false
   if (filters.catalogOnly && song.is_deleted !== (filters.catalogState === 'deleted')) return false
   return true
 }

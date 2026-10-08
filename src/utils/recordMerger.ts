@@ -7,6 +7,8 @@ export interface PlayerRecordWithSongMeta extends PlayerRecordDTO {
   artist: string
   reading: string | null
   genre: string
+  /** 楽曲名順フォルダのコード。楽曲マスタにない場合は null */
+  name_folder_code: string | null
   release: string | null
   release_version: string
   notes: number | null
@@ -37,6 +39,7 @@ export function attachSongMetaToRecords(
       artist: song?.artist ?? record.artist,
       reading: song?.reading ?? null,
       genre: song?.genre ?? '不明',
+      name_folder_code: song?.name_folder_code ?? null,
       release,
       notes,
       release_version: getShortVersionName(resolveVersionNameByReleaseDate(release, versions)),

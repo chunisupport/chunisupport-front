@@ -834,6 +834,8 @@ export interface GoalAttributes {
   }
   genre?: number | number[]
   ver?: number | number[]
+  /** 楽曲名順フォルダのコード。未指定時は全楽曲名順が対象 */
+  name_folder?: string | string[]
 }
 
 export type GoalAchievementParams =

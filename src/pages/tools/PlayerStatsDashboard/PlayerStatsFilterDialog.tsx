@@ -2,14 +2,27 @@ import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
-import { MultiSelectField, toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
+import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import { AppSelect } from '../../../components/common/AppSelect'
 import ChartConstRangeField from '../../../components/common/ChartConstRangeField'
+import {
+  GenreMultiSelect,
+  NameFolderFilterMultiSelect,
+  VersionMultiSelect,
+} from '../../../components/common/DomainMultiSelect'
 import {
   type ChartConstRangeSelection,
   createChartConstRangeDraft,
 } from '../../../hooks/createChartConstRangeDraft'
-import type { PlayerStatsDifficulty } from '../../../utils/playerStatsDashboard'
+import type { NameFolderDTO } from '../../../types/api'
+import {
+  toNullableAllDisplaySelection,
+  toNullableAllFilterSelection,
+} from '../../../utils/filterSelection'
+import type {
+  PlayerStatsAttributeSelection,
+  PlayerStatsDifficulty,
+} from '../../../utils/playerStatsDashboard'
 import {
   PLAYER_STATS_COPY,
   PLAYER_STATS_DIFFICULTY_OPTIONS,
@@ -17,18 +30,21 @@ import {
   type PlayerStatsDifficultyOption,
 } from './constants'
 
-/** 統計ダッシュボードへ適用する集計対象フィルター */
-export type PlayerStatsFilterState = ChartConstRangeSelection & {
-  difficulty: PlayerStatsDifficulty
-  genres: string[]
-  versions: string[]
-}
+/** 統計ダッシュボードへ適用する集計対象フィルター。ジャンル・バージョン・楽曲名順の null は全選択を表す */
+export type PlayerStatsFilterState = ChartConstRangeSelection &
+  PlayerStatsAttributeSelection & {
+    difficulty: PlayerStatsDifficulty
+  }
 
 type PlayerStatsFilterDialogProps = {
   open: boolean
   filters: PlayerStatsFilterState
+  /** 表示順に並べたジャンル名 */
   genreOptions: readonly string[]
+  /** 稼働順に並べた公開済みバージョンの短縮名 */
   versionOptions: readonly string[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders: readonly NameFolderDTO[]
   onOpenChange: (open: boolean) => void
   onApply: (filters: PlayerStatsFilterState) => void
 }
@@ -37,7 +53,7 @@ type PlayerStatsFilterDialogProps = {
 const FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-60'
 
 /**
- * ダッシュボードの難易度・レベル/譜面定数・ジャンル・バージョンを編集するダイアログを表示する。
+ * ダッシュボードの難易度・レベル/譜面定数・ジャンル・バージョン・楽曲名順を編集するダイアログを表示する。
  *
  * @param props - 開閉状態、適用済み条件、選択肢、変更通知。
  * @returns 適用まで編集内容を保持するフィルターダイアログ。
@@ -56,11 +72,7 @@ export const PlayerStatsFilterDialog: Component<PlayerStatsFilterDialogProps> = 
 
   createEffect(() => {
     if (props.open) {
-      setDraft({
-        ...props.filters,
-        genres: [...props.filters.genres],
-        versions: [...props.filters.versions],
-      })
+      setDraft({ ...props.filters })
       constRangeDraft.sync(props.filters.constRange)
     }
   })
@@ -100,23 +112,36 @@ export const PlayerStatsFilterDialog: Component<PlayerStatsFilterDialogProps> = 
               idPrefix={PLAYER_STATS_FILTER_ID_PREFIX}
               {...constRangeDraft.fieldProps}
             />
-            <MultiSelectField
-              label={PLAYER_STATS_COPY.genreLabel}
+            <GenreMultiSelect
               labelClass="text-text"
               options={toMultiSelectOptions(props.genreOptions)}
-              selected={draft().genres}
-              placeholder={PLAYER_STATS_COPY.genrePlaceholder}
+              selected={toNullableAllDisplaySelection(draft().genres, props.genreOptions)}
               contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-              onChange={(genres) => setDraft((current) => ({ ...current, genres }))}
+              onChange={(selected) =>
+                setDraft((current) => ({
+                  ...current,
+                  genres: toNullableAllFilterSelection(selected, props.genreOptions),
+                }))
+              }
             />
-            <MultiSelectField
-              label={PLAYER_STATS_COPY.versionLabel}
+            <VersionMultiSelect
               labelClass="text-text"
               options={toMultiSelectOptions(props.versionOptions)}
-              selected={draft().versions}
-              placeholder={PLAYER_STATS_COPY.versionPlaceholder}
+              selected={toNullableAllDisplaySelection(draft().versions, props.versionOptions)}
               contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-              onChange={(versions) => setDraft((current) => ({ ...current, versions }))}
+              onChange={(selected) =>
+                setDraft((current) => ({
+                  ...current,
+                  versions: toNullableAllFilterSelection(selected, props.versionOptions),
+                }))
+              }
+            />
+            <NameFolderFilterMultiSelect
+              labelClass="text-text"
+              nameFolders={props.nameFolders}
+              selected={draft().nameFolders}
+              contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+              onChange={(nameFolders) => setDraft((current) => ({ ...current, nameFolders }))}
             />
           </div>
           <div class="mt-6 flex shrink-0 justify-end gap-2">

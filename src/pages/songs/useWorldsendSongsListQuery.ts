@@ -1,5 +1,6 @@
 import { createMemo, createResource, createSignal, onMount } from 'solid-js'
 import { fetchGenres } from '../../api/genres'
+import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchVersions } from '../../api/songs'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import { buildSearchableItems, filterSearchableItems } from '../../utils/searchHelpers'
@@ -15,6 +16,7 @@ export const useWorldsendSongsListQuery = () => {
     useSongsData()
   const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
   const [filters, setFilters] = createSignal<SongFilters>(createSongFilters())
   const [searchQuery, setSearchQuery] = createSignal('')
 
@@ -48,12 +50,14 @@ export const useWorldsendSongsListQuery = () => {
   ])
 
   const versionOptions = createMemo(() => versions()?.versions ?? [])
+  const nameFolderOptions = createMemo(() => nameFolders() ?? [])
 
   return {
     isWorldsendSongsLoading,
     loadError,
     genres,
     versionOptions,
+    nameFolderOptions,
     genreFilterOptions,
     filters,
     setFilters,

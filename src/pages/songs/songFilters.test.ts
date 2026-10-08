@@ -7,10 +7,10 @@ const versions = [
   { name: 'CHUNITHM PLUS', short_name: 'ORI+', released_at: '2016-02-04' },
 ]
 const songs = [
-  { genre: 'A', bpm: 150, release: '2015-07-16' },
-  { genre: 'B', bpm: 180.5, release: '2016-02-03T00:00:00+09:00' },
-  { genre: 'C', bpm: 200, release: '2016-02-04' },
-  { genre: 'A', bpm: null, release: null },
+  { genre: 'A', bpm: 150, release: '2015-07-16', name_folder_code: 'A' },
+  { genre: 'B', bpm: 180.5, release: '2016-02-03T00:00:00+09:00', name_folder_code: 'KA' },
+  { genre: 'C', bpm: 200, release: '2016-02-04', name_folder_code: 'A' },
+  { genre: 'A', bpm: null, release: null, name_folder_code: 'NUMBER' },
 ]
 
 test('未指定では不明値も含め元の順序ですべて返す', () => {
@@ -79,7 +79,7 @@ test('リセット用の初期状態は全選択を表す', () => {
 })
 
 test('WORLD’S ENDのジャンル不明値は条件指定時だけ除外する', () => {
-  const unknown = [{ genre: null, bpm: 150, release: '2015-07-16' }]
+  const unknown = [{ genre: null, bpm: 150, release: '2015-07-16', name_folder_code: 'A' }]
   assert.deepEqual(filterSongs(unknown, createSongFilters(), versions), unknown)
   assert.deepEqual(filterSongs(unknown, { ...createSongFilters(), genres: ['A'] }, versions), [])
 })
@@ -87,4 +87,26 @@ test('WORLD’S ENDのジャンル不明値は条件指定時だけ除外する'
 test('すべて解除したジャンルまたはバージョンでは該当なしとなる', () => {
   assert.deepEqual(filterSongs(songs, { ...createSongFilters(), genres: [] }, versions), [])
   assert.deepEqual(filterSongs(songs, { ...createSongFilters(), versions: [] }, versions), [])
+})
+
+test('楽曲名順は選択したフォルダの楽曲だけを返すこと', () => {
+  // Given
+  const filters = { ...createSongFilters(), nameFolders: ['A', 'NUMBER'] }
+
+  // When
+  const result = filterSongs(songs, filters, versions)
+
+  // Then
+  assert.deepEqual(result, [songs[0], songs[2], songs[3]])
+})
+
+test('楽曲名順をすべて解除した場合は該当なしとなること', () => {
+  // Given
+  const filters = { ...createSongFilters(), nameFolders: [] }
+
+  // When
+  const result = filterSongs(songs, filters, versions)
+
+  // Then
+  assert.deepEqual(result, [])
 })

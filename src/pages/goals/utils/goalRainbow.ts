@@ -6,7 +6,11 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../../../types/api'
-import { normalizeGoalAttributeIds } from '../../../utils/goalAttributes'
+import {
+  isGoalNameFolderMatched,
+  normalizeGoalAttributeIds,
+  normalizeGoalNameFolderCodes,
+} from '../../../utils/goalAttributes'
 import {
   getRainbowRequiredDifficulties,
   hasRainbowRequiredCharts,
@@ -16,7 +20,7 @@ import { resolveGoalDynamicTarget } from './goalCountTarget'
 import type { GoalProgressResult } from './goalProgress'
 
 /**
- * 虹枠目標のジャンル・バージョン条件に一致する楽曲を抽出する。
+ * 虹枠目標のジャンル・バージョン・楽曲名順条件に一致する楽曲を抽出する。
  *
  * @param songs - 通常楽曲一覧。
  * @param attributes - 虹枠目標の対象条件。
@@ -32,7 +36,10 @@ export const filterRainbowTargetSongs = (
 ): SongDTO[] => {
   const genreIds = normalizeGoalAttributeIds(attributes.genre)
   const versionIds = normalizeGoalAttributeIds(attributes.ver)
-  if (genreIds?.length === 0 || versionIds?.length === 0) return []
+  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
+  if (genreIds?.length === 0 || versionIds?.length === 0 || nameFolderCodes?.length === 0) {
+    return []
+  }
 
   const genreNames = genreIds
     ? new Set(
@@ -43,6 +50,7 @@ export const filterRainbowTargetSongs = (
   return songs.filter((song) => {
     if (!hasRainbowRequiredCharts(song)) return false
     if (genreNames && !genreNames.has(song.genre)) return false
+    if (!isGoalNameFolderMatched(song.name_folder_code, nameFolderCodes)) return false
     if (versionIds) {
       const version = resolveGoalVersionValueByReleaseDate(song.release, versions)
       if (!version || !versionIds.includes(version)) return false
@@ -55,7 +63,7 @@ export const filterRainbowTargetSongs = (
  * 虹枠目標の現在値、目標値、達成率を計算する。
  *
  * @param goal - 計算対象の虹枠目標。
- * @param targetSongs - ジャンル・バージョン条件に一致する対象楽曲。
+ * @param targetSongs - ジャンル・バージョン・楽曲名順条件に一致する対象楽曲。
  * @param records - プレイヤーの通常譜面レコード。
  * @returns 対象楽曲数と、対象がない場合は未達成とする進捗情報。
  */

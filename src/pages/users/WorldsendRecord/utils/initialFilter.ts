@@ -1,7 +1,7 @@
 import { readWorldsendRecordFilterSetting } from '../../../../repositories/viewSettingsRepository'
 import type { VersionSummaryDTO, WorldsendSongDTO } from '../../../../types/api'
 import { isValidSavedWorldsendFilter } from '../../components/savedRecordFilters'
-import { buildDefaultWorldsendFilter } from '../types/filterDefaults'
+import { buildDefaultWorldsendFilter, normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
 /**
@@ -9,7 +9,7 @@ import type { WorldsendFilterState } from '../types/filterTypes'
  *
  * @param songs - フィルター既定値の構築に使う WORLD'S END 楽曲一覧。
  * @param versions - フィルター既定値の構築に使うバージョン一覧。
- * @returns 初回表示に適用する WORLD'S END フィルター状態。
+ * @returns 初回表示に適用する WORLD'S END フィルター状態。保存済み設定は現行スキーマへ補完する。
  */
 export const restoreInitialWorldsendRecordFilter = async (
   songs: WorldsendSongDTO[],
@@ -19,7 +19,9 @@ export const restoreInitialWorldsendRecordFilter = async (
 
   try {
     const savedFilter = await readWorldsendRecordFilterSetting()
-    return isValidSavedWorldsendFilter(savedFilter) ? savedFilter : defaultFilter
+    return isValidSavedWorldsendFilter(savedFilter)
+      ? normalizeWorldsendFilterState(savedFilter)
+      : defaultFilter
   } catch {
     return defaultFilter
   }
