@@ -69,7 +69,7 @@
 
 ### レコードのランプバッジ
 
-FC・AJ・BRV・ABS・CTS・FCH（GOLD / PLATINUM）のテキストバッジは、意味固定色の背景に `--cs-gradient-record-lamp-badge-gloss` を重ねて光沢を表現します。共通の `record-lamp-badge-gloss` クラスを表とカードのバッジに適用します。プロフィールのレーティングタブで使う小型カードバッジも、FC・AJに同じ光沢を適用します。AJCは専用の虹色グラデーションを使用し、CLR・HRD、ランプのドット、統計グラフには光沢を適用しません。
+FC・AJ・BRV・ABS・CTS・FCH（GOLD / PLATINUM）のテキストバッジは、意味固定色の背景に `--cs-gradient-record-lamp-badge-gloss` を重ねて光沢を表現します。共通の `record-lamp-badge-gloss` クラスを表とカードのバッジに適用します。プロフィールのレーティングタブで使う小型カードバッジも、FC・AJに同じ光沢を適用します。フレンドVSのカード表示にあるランプのドットにも、同じ対象の光沢を適用します。AJCは専用の虹色グラデーションを使用し、CLR・HRD、未達成のドット、統計グラフには光沢を適用しません。
 
 ## 判断手順
 

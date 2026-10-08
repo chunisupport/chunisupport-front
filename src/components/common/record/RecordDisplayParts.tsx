@@ -164,11 +164,14 @@ export const renderDefaultRecordFullChainBadge = (
 const getRecordLampsAccessibleLabel = (record: DefaultRecordLampBadgesRecord): string =>
   `ハードランプ ${record.clear_lamp ?? LAMP_NONE_ACCESSIBLE_LABEL}、コンボランプ ${getDefaultRecordLampAccessibleLabel(record.combo_lamp, record.score)}、FULL CHAIN ${record.full_chain ?? LAMP_NONE_ACCESSIBLE_LABEL}`
 
+/** バッジと同じ光沢装飾を適用するランプドットの共通クラス */
+const RECORD_LAMP_DOT_CLASS = 'record-lamp-badge-gloss size-3 rounded-full'
+
 /** ランプ未達成のドットに使う背景色クラス */
 const LAMP_DOT_PLACEHOLDER_CLASS = 'bg-surface-hover'
 
 /**
- * ハード・コンボ・FULL CHAINの3種類のランプを、バッジと同じ背景色の小さなドットで表示する。
+ * ハード・コンボ・FULL CHAINの3種類のランプを、バッジと同じ背景色と光沢の小さなドットで表示する。
  * ランプの重要度が低い画面で達成状況を示し、ホバー時に元のバッジラベルを表示する。
  * 読み上げ用テキストの絶対配置で表示領域が広がらないよう、ラッパーを配置基準にする。
  *
@@ -202,17 +205,17 @@ export const RecordLampDots = (props: {
       <span class="sr-only">{getRecordLampsAccessibleLabel(props.record)}</span>
       <div class="flex gap-1.5" aria-hidden="true">
         <span
-          class={`size-3 rounded-full ${hardClass()}`}
+          class={`${RECORD_LAMP_DOT_CLASS} ${hardClass()}`}
           title={getDefaultRecordHardLampLabel(props.record.clear_lamp) || undefined}
         />
         <span
-          class={`size-3 rounded-full ${comboClass()}`}
+          class={`${RECORD_LAMP_DOT_CLASS} ${comboClass()}`}
           title={
             getDefaultRecordLampLabel(props.record.combo_lamp, props.record.score) || undefined
           }
         />
         <span
-          class={`size-3 rounded-full ${fullChainClass()}`}
+          class={`${RECORD_LAMP_DOT_CLASS} ${fullChainClass()}`}
           title={getDefaultRecordFullChainLabel(props.record.full_chain) || undefined}
         />
       </div>
