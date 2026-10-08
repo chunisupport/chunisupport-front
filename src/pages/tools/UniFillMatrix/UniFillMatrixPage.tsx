@@ -254,7 +254,7 @@ const UniFillMatrixTable = (props: {
           </For>
         </tbody>
         <tfoot>
-          <tr class="border-t-2 border-border">
+          <tr class="border-t border-border">
             <th
               scope="row"
               class={`${lineHeaderCellClass()} bg-surface-muted text-sm font-semibold text-text`}
