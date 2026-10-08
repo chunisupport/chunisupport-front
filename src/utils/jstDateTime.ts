@@ -11,13 +11,22 @@ const jstDateTimeFormatter = new Intl.DateTimeFormat('ja-JP-u-ca-gregory-nu-latn
   hourCycle: 'h23',
 })
 
+type JstDateTimeParts = {
+  year: string
+  month: string
+  day: string
+  hour: string
+  minute: string
+  second: string
+}
+
 /**
- * API日時をJST固定の年月日時分秒へ安全に整形する。
+ * API日時をJST固定の年月日時分秒の各要素へ分解する。
  *
  * @param value - APIが返した日時文字列。日時がない場合はnull。
- * @returns YYYY/MM/DD HH:mm:ss形式の日時。不正な値またはnullの場合はnull。
+ * @returns JSTの年月日時分秒。不正な値またはnullの場合はnull。
  */
-export const formatJstDateTime = (value: string | null): string | null => {
+const toJstDateTimeParts = (value: string | null): JstDateTimeParts | null => {
   if (value === null || value.trim() === '') return null
 
   const date = new Date(value)
@@ -37,5 +46,31 @@ export const formatJstDateTime = (value: string | null): string | null => {
   const second = parts.get('second')
   if (!year || !month || !day || !hour || !minute || !second) return null
 
-  return `${year}/${month}/${day} ${hour}:${minute}:${second}`
+  return { year, month, day, hour, minute, second }
+}
+
+/**
+ * API日時をJST固定の年月日時分秒へ安全に整形する。
+ *
+ * @param value - APIが返した日時文字列。日時がない場合はnull。
+ * @returns YYYY/MM/DD HH:mm:ss形式の日時。不正な値またはnullの場合はnull。
+ */
+export const formatJstDateTime = (value: string | null): string | null => {
+  const parts = toJstDateTimeParts(value)
+  if (!parts) return null
+
+  return `${parts.year}/${parts.month}/${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`
+}
+
+/**
+ * API日時をJSTの日付へ変換する。楽曲リリース日など日付単位の値との比較に使う。
+ *
+ * @param value - APIが返した日時文字列。日時がない場合はnull。
+ * @returns YYYY-MM-DD形式のJST日付。不正な値またはnullの場合はnull。
+ */
+export const toJstDateString = (value: string | null): string | null => {
+  const parts = toJstDateTimeParts(value)
+  if (!parts) return null
+
+  return `${parts.year}-${parts.month}-${parts.day}`
 }

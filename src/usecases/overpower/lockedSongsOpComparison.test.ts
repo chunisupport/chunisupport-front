@@ -165,6 +165,7 @@ test('未解禁なしの計算値が公式値と一致する場合はmatchedに�
     lockedSongs: [],
     officialOverPower: 85,
     officialOverPowerPercent: (85 / 90) * 100,
+    lastPlayedAt: null,
   })
 
   // Then
@@ -193,6 +194,7 @@ test('未解禁にすると計算値が減り公式値と不一致になるこ�
     lockedSongs: [{ id: 'locked', is_ultima: false }],
     officialOverPower: 155,
     officialOverPowerPercent: 91.17,
+    lastPlayedAt: null,
   })
 
   // Then
@@ -216,10 +218,60 @@ test('公式OP%がnullのときはOP一致だけでmatchedを判定すること'
     lockedSongs: [],
     officialOverPower: 85,
     officialOverPowerPercent: null,
+    lastPlayedAt: null,
   })
 
   // Then
   assert.equal(result.percentMatched, null)
   assert.equal(result.overPowerMatched, true)
   assert.equal(result.matched, true)
+})
+
+test('最終プレイ日より後に追加された楽曲は照合の計算対象から除外すること', () => {
+  // Given: 最終プレイ後に未プレイの新曲が追加されている
+  const songs = [
+    createSong({ id: 'old', maxop: 90, release: '2025-01-09T00:00:00Z' }),
+    createSong({ id: 'new', maxop: 80, release: '2025-01-23T00:00:00Z' }),
+  ]
+  const records = [createRecord({ id: 'old', overpower: 85 })]
+
+  // When
+  const result = buildLockedSongsOpComparison({
+    songs,
+    records,
+    versions,
+    lockedSongs: [],
+    officialOverPower: 85,
+    officialOverPowerPercent: (85 / 90) * 100,
+    lastPlayedAt: '2025-01-22T14:00:00Z',
+  })
+
+  // Then
+  assert.equal(result.calculatedOverPowerPercent, (85 / 90) * 100)
+  assert.equal(result.matched, true)
+  assert.equal(result.songsAddedAfterLastPlayCount, 1)
+})
+
+test('最終プレイ日と同日に追加された楽曲とリリース日不明の楽曲は照合対象に含めること', () => {
+  // Given: UTCでは前日だがJSTでは追加日当日のプレイ
+  const songs = [
+    createSong({ id: 'same-day', maxop: 90, release: '2025-01-23T00:00:00Z' }),
+    createSong({ id: 'unknown', maxop: 80, release: null }),
+  ]
+  const records = [createRecord({ id: 'same-day', overpower: 85 })]
+
+  // When
+  const result = buildLockedSongsOpComparison({
+    songs,
+    records,
+    versions,
+    lockedSongs: [],
+    officialOverPower: 85,
+    officialOverPowerPercent: null,
+    lastPlayedAt: '2025-01-22T16:00:00Z',
+  })
+
+  // Then
+  assert.equal(result.calculatedOverPowerPercent, (85 / 170) * 100)
+  assert.equal(result.songsAddedAfterLastPlayCount, 0)
 })

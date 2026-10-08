@@ -1,5 +1,5 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { Info } from 'lucide-solid'
+import { CalendarClock, Info } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { AppDisclosureTrigger } from '../../../../components/common/AppDisclosureTrigger'
@@ -35,6 +35,7 @@ const valueToneClass = (matched: boolean | null): string => {
 
 /**
  * 未解禁楽曲設定ダイアログで公式OP/OP%と計算値を折りたたみ表示する。
+ * 最終プレイ以降の追加曲を照合から除外した場合は、その曲数も表示する。
  *
  * @param props - 公式値と計算値の照合結果。
  * @returns 初期状態で開いた公式値と計算値の比較表。
@@ -194,6 +195,16 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
               </Show>
             </table>
           </div>
+          <Show when={props.comparison().songsAddedAfterLastPlayCount > 0}>
+            <p class="flex min-w-0 items-center gap-1.5 font-sans text-xs text-text-muted">
+              <CalendarClock class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span class="min-w-0 break-words">
+                {LOCKED_SONGS_OP_COMPARISON_COPY.songsAddedAfterLastPlay(
+                  props.comparison().songsAddedAfterLastPlayCount
+                )}
+              </span>
+            </p>
+          </Show>
           <Show when={overPowerGuidanceText()}>
             {(message) => (
               <div class="flex w-full min-w-0 items-start gap-2 rounded-md border border-info-border bg-info-bg px-3 py-2 font-sans text-sm text-info">

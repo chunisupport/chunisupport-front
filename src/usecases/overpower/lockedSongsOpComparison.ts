@@ -1,4 +1,5 @@
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import { toJstDateString } from '../../utils/jstDateTime'
 import { formatTruncatedFixed } from '../../utils/numberFormat'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { buildOverPowerSummary } from './overpowerSummary'
@@ -23,6 +24,8 @@ export type LockedSongsOpComparisonResult = {
   percentMatched: boolean | null
   /** OPが一致し、公式OP%がある場合はOP%も一致するか */
   matched: boolean
+  /** 最終プレイ日より後に追加され、照合から除外した楽曲数 */
+  songsAddedAfterLastPlayCount: number
 }
 
 /**
@@ -100,10 +103,24 @@ export const formatLockedSongsOverPowerPercentDelta = (
 ): string => `${formatSignedDelta(calculated - official, formatOverPowerPercent)}%`
 
 /**
+ * 楽曲が指定日までに追加済みか判定する。リリース日不明の楽曲は追加済みとして扱う。
+ * 日付単位で比較するため、追加日当日の追加前にプレイした場合も当日の追加曲は含まれる。
+ *
+ * @param song - 判定対象の楽曲。
+ * @param date - YYYY-MM-DD形式のJST日付。
+ * @returns 指定日以前にリリースされている、またはリリース日不明の場合はtrue。
+ */
+const isReleasedBy = (song: SongDTO, date: string): boolean =>
+  song.release === null || song.release.slice(0, 10) <= date
+
+/**
  * 未解禁設定を反映した計算OP/OP%と公式値を照合する。
  *
- * @param input - 楽曲・レコード・未解禁設定と公式OP/OP%。
- * @returns 公式値、計算値、および筐体表示桁での一致判定。
+ * 公式OP/OP%は最終プレイ時点の楽曲で計算された値のまま更新されないため、
+ * 最終プレイ日より後に追加された楽曲は計算対象から除外して照合する。
+ *
+ * @param input - 楽曲・レコード・未解禁設定、公式OP/OP%、最終プレイ日時。
+ * @returns 公式値、計算値、筐体表示桁での一致判定、および除外した楽曲数。
  */
 export const buildLockedSongsOpComparison = (input: {
   songs: SongDTO[]
@@ -112,13 +129,15 @@ export const buildLockedSongsOpComparison = (input: {
   lockedSongs: OverPowerLockedSong[]
   officialOverPower: number
   officialOverPowerPercent: number | null
+  /** 公式値を取得した時点の最終プレイ日時。不明な場合はnull */
+  lastPlayedAt: string | null
 }): LockedSongsOpComparisonResult => {
-  const summary = buildOverPowerSummary(
-    input.songs,
-    input.records,
-    input.versions,
-    input.lockedSongs
-  ).all
+  const lastPlayedDate = toJstDateString(input.lastPlayedAt)
+  const songs =
+    lastPlayedDate === null
+      ? input.songs
+      : input.songs.filter((song) => isReleasedBy(song, lastPlayedDate))
+  const summary = buildOverPowerSummary(songs, input.records, input.versions, input.lockedSongs).all
   const overPowerMatched = matchesOfficialOverPowerDisplay(summary.current, input.officialOverPower)
   const percentMatched =
     input.officialOverPowerPercent === null
@@ -133,5 +152,6 @@ export const buildLockedSongsOpComparison = (input: {
     overPowerMatched,
     percentMatched,
     matched: overPowerMatched && percentMatched !== false,
+    songsAddedAfterLastPlayCount: input.songs.length - songs.length,
   }
 }

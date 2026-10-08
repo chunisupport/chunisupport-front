@@ -510,6 +510,7 @@ const UserOverPower: Component<Props> = (props) => {
                     lockedSongs={lockedSongs()?.items ?? []}
                     officialOverPower={props.player.official_overpower}
                     officialOverPowerPercent={props.player.official_overpower_percent}
+                    lastPlayedAt={props.player.last_played_at}
                     onOpenChange={setLockedSongsDialogOpen}
                     onSaveLockedSongs={handleSaveLockedSongs}
                   />
