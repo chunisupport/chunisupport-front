@@ -76,3 +76,6 @@ export const REGISTER_SCORE_SORT_DIRECTION_LABELS = {
   asc: '昇順',
   desc: '降順',
 } as const
+
+/** 表示コードを保持したまま、更新差分のRATING・OP・OP%表示を制御する。 */
+export const REGISTER_SCORE_SHOW_METRICS = false
