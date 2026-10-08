@@ -31,6 +31,7 @@ import {
   VersionMultiSelect,
 } from '../../components/common/DomainMultiSelect'
 import { TextRangeInput } from '../../components/common/RangeInput'
+import { DefaultRecordLampBadges } from '../../components/common/record/RecordDisplayParts'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { RANDOM_SONG_SELECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
@@ -68,7 +69,6 @@ import {
   type RandomSongLampFilter,
   type RandomSongLevelWeightOption,
   resolveRandomSongLevelWeightEnabledState,
-  resolveRandomSongRecordLamp,
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
 } from '../../utils/randomSongSelector'
@@ -95,18 +95,8 @@ const RESULT_CARD_CLASS =
 const RESULT_RECORD_BADGE_CLASS =
   'inline-flex min-h-7 items-center rounded px-2 py-1 text-xs font-semibold'
 
-const RESULT_RECORD_LAMP_BADGE_CLASS: Record<RandomSongLampFilter, string> = {
-  AJC: `${RESULT_RECORD_BADGE_CLASS} [background-image:var(--cs-gradient-lamp-all-justice-critical-bg)] text-lamp-all-justice-critical-text`,
-  AJ: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-all-justice-bg text-lamp-all-justice-text`,
-  FC: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-full-combo-bg text-lamp-full-combo-text`,
-  CATASTROPHY: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-catastrophy-bg text-lamp-catastrophy-text`,
-  ABSOLUTE: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-absolute-bg text-lamp-absolute-text`,
-  BRAVE: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-brave-bg text-lamp-brave-text`,
-  HARD: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-hard-bg text-lamp-hard-text`,
-  CLEAR: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-clear-bg text-lamp-clear-text`,
-  FAILED: `${RESULT_RECORD_BADGE_CLASS} bg-lamp-failed-bg text-lamp-failed-text`,
-  NONE: `${RESULT_RECORD_BADGE_CLASS} bg-surface-hover text-text-subtle`,
-}
+/** 選曲結果で未プレイを示すバッジのクラス */
+const RESULT_RECORD_NO_PLAY_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-hover text-text-subtle`
 const RESULT_RECORD_SCORE_BADGE_CLASS = `${RESULT_RECORD_BADGE_CLASS} bg-surface-muted text-text`
 const RANDOM_SONG_LAMP_VALUES = RANDOM_SONG_LAMP_OPTIONS.map((option) => option.value)
 
@@ -556,15 +546,14 @@ const isRandomSongDifficultyFilterDisabled = (
  * ランダム選曲結果で表示するレコードバッジを生成する。
  *
  * @param record - 選曲された譜面に対応する自分のレコード。
- * @returns スコア、ランク、ランプの表示。
+ * @returns スコア、ランク、レコード表と共通のランプバッジ表示。
  */
 const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX.Element => {
   if (record?.is_played !== true) {
-    return <span class={RESULT_RECORD_LAMP_BADGE_CLASS.NONE}>未プレイ</span>
+    return <span class={RESULT_RECORD_NO_PLAY_BADGE_CLASS}>未プレイ</span>
   }
 
   const scoreRank = getScoreRank(record.score)
-  const lamp = resolveRandomSongRecordLamp(record)
 
   return (
     <>
@@ -572,9 +561,7 @@ const renderRandomSongRecordSummary = (record: PlayerRecordDTO | undefined): JSX
         {record.score.toLocaleString('ja-JP')}
         <span class={`ml-1 ${SCORE_RANK_TEXT_CLASS[scoreRank]}`}>{scoreRank}</span>
       </span>
-      <span class={RESULT_RECORD_LAMP_BADGE_CLASS[lamp]}>
-        {formatRandomSongRecordLampLabel(lamp)}
-      </span>
+      <DefaultRecordLampBadges record={record} />
     </>
   )
 }
@@ -1694,7 +1681,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             {formatChartConst(candidate.chartConst)}
                           </span>
                         </div>
-                        <h3 class="truncate font-semibold text-text">
+                        <h3 class="truncate font-sans font-semibold text-text">
                           <A
                             href={`/songs/${encodeURIComponent(candidate.song.id)}?diff=${encodeURIComponent(candidate.difficulty)}`}
                             class="text-link hover:underline"
@@ -1702,11 +1689,13 @@ const RandomSongSelectorPage = (): JSX.Element => {
                             {candidate.song.title}
                           </A>
                         </h3>
-                        <p class="truncate text-sm text-text-muted">{candidate.song.artist}</p>
+                        <p class="truncate font-sans text-sm text-text-muted">
+                          {candidate.song.artist}
+                        </p>
                       </div>
                       <Show when={shouldShowRecord()}>
                         <div class="flex flex-col gap-2 sm:items-end">
-                          <div class="flex flex-wrap gap-2 sm:justify-end">
+                          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
                             {renderRandomSongRecordSummary(recordForCandidate(candidate))}
                           </div>
                         </div>
