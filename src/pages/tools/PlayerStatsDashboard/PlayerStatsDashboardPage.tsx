@@ -11,15 +11,10 @@ import {
   Trophy,
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  ErrorBoundary,
-  For,
-  Show,
-} from 'solid-js'
+import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
+import { fetchGenres } from '../../../api/genres'
+import { fetchNameFolders } from '../../../api/nameFolders'
+import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import {
@@ -62,6 +57,7 @@ import {
 } from '../../../utils/playerStatsDashboard'
 import { formatScoreDifference } from '../../../utils/scoreDifference'
 import { getScoreRank } from '../../../utils/scoreRank'
+import { filterReleasedVersions, getShortVersionName } from '../../../utils/versionConverter'
 import {
   PLAYER_STATS_ACHIEVEMENT_GROUP_OPTIONS,
   PLAYER_STATS_ACHIEVEMENTS,
@@ -610,26 +606,21 @@ const PlayerStatsDashboardPage: Component = () => {
     difficulty: PLAYER_STATS_DEFAULT_DIFFICULTY,
     constFilterMode: 'level',
     constRange: createFullChartConstRange(),
-    genres: [],
-    versions: [],
+    genres: null,
+    versions: null,
+    nameFolders: null,
   })
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [pageData] = createResource(fetchOwnPlayerStatsData)
-  let filterInitialized = false
-
-  createEffect(() => {
-    const data = pageData()
-    if (!data || filterInitialized) return
-
-    setFilters({
-      difficulty: PLAYER_STATS_DEFAULT_DIFFICULTY,
-      constFilterMode: 'level',
-      constRange: createFullChartConstRange(),
-      genres: [...data.genres],
-      versions: [...data.versions],
-    })
-    filterInitialized = true
-  })
+  const [genres] = createResource(fetchGenres)
+  const [versions] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
+  const genreOptions = createMemo(() => (genres() ?? []).map((genre) => genre.name))
+  const versionOptions = createMemo(() =>
+    filterReleasedVersions(versions()?.versions ?? []).map((version) =>
+      getShortVersionName(version.name)
+    )
+  )
 
   const filteredRecords = createMemo(() =>
     filterPlayerStatsRecords(
@@ -641,6 +632,7 @@ const PlayerStatsDashboardPage: Component = () => {
             attributesBySongId: pageData()?.attributesBySongId ?? new Map(),
             genres: filters().genres,
             versions: filters().versions,
+            nameFolders: filters().nameFolders,
           }
         : undefined,
       filters().constRange
@@ -649,17 +641,9 @@ const PlayerStatsDashboardPage: Component = () => {
   const summary = createMemo(() => buildPlayerStatsSummary(filteredRecords()))
   const levelRows = createMemo(() => buildPlayerStatsLevelRows(filteredRecords()))
   const chartConstantRows = createMemo(() => buildPlayerStatsChartConstantRows(filteredRecords()))
-  const hasModifiedFilters = createMemo(() => {
-    const data = pageData()
-    if (!data) return false
-
-    return isPlayerStatsFilterModified(
-      filters(),
-      PLAYER_STATS_DEFAULT_DIFFICULTY,
-      data.genres,
-      data.versions
-    )
-  })
+  const hasModifiedFilters = createMemo(() =>
+    isPlayerStatsFilterModified(filters(), PLAYER_STATS_DEFAULT_DIFFICULTY)
+  )
 
   const tool = getToolLink(DASHBOARD_PATH)
   useDocumentTitle(tool.title)
@@ -707,8 +691,9 @@ const PlayerStatsDashboardPage: Component = () => {
               <PlayerStatsFilterDialog
                 open={filterOpen()}
                 filters={filters()}
-                genreOptions={data().genres}
-                versionOptions={data().versions}
+                genreOptions={genreOptions()}
+                versionOptions={versionOptions()}
+                nameFolders={nameFolders() ?? []}
                 onOpenChange={setFilterOpen}
                 onApply={setFilters}
               />

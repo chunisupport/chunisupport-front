@@ -72,6 +72,7 @@ export const ONLINE_WEAK_CHART_FILTER_DEFAULT = {
   constMax: 16,
   genres: null,
   versions: null,
+  nameFolders: null,
 } as const
 
 /** Online の表示スコア範囲に指定できる最小値 */

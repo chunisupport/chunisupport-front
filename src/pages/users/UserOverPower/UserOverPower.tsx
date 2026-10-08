@@ -11,6 +11,7 @@ import {
   Suspense,
 } from 'solid-js'
 import { fetchGenres } from '../../../api/genres'
+import { fetchNameFolders } from '../../../api/nameFolders'
 import { fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
@@ -87,6 +88,7 @@ const UserOverPower: Component<Props> = (props) => {
   const { songsResponse: allSongs, ensureSongsLoaded } = useSongsData()
   const [genres] = createResource(fetchGenres)
   const [versionData] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
   const [summaryViewMode, setSummaryViewMode] = createSignal<OverPowerSummaryViewMode>(
     DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE
   )
@@ -504,6 +506,7 @@ const UserOverPower: Component<Props> = (props) => {
                     records={props.record.standard}
                     genres={genres() ?? []}
                     versions={versionData()?.versions ?? []}
+                    nameFolders={nameFolders() ?? []}
                     lockedSongs={lockedSongs()?.items ?? []}
                     officialOverPower={props.player.official_overpower}
                     officialOverPowerPercent={props.player.official_overpower_percent}

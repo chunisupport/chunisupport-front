@@ -26,6 +26,7 @@ export const attachWorldsendSongMetaToRecords = (
     return {
       ...record,
       genre: song?.genre ?? null,
+      name_folder_code: song?.name_folder_code ?? null,
       reading: song?.reading ?? null,
       release: song?.release ?? null,
       release_version: getShortVersionName(

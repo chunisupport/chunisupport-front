@@ -9,6 +9,7 @@ import {
   Suspense,
 } from 'solid-js'
 
+import { fetchNameFolders } from '../../../api/nameFolders'
 import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { createRecordViewState } from '../../../hooks/createRecordViewState'
@@ -76,6 +77,7 @@ const WorldsendRecord = (props: Props) => {
     isWorldsendSongsLoading,
   } = useSongsData()
   const [versionData] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
@@ -201,6 +203,7 @@ const WorldsendRecord = (props: Props) => {
                 filters={filters()}
                 onChange={applyFilters}
                 defaultFilter={defaultFilter()}
+                nameFolders={nameFolders()}
               />
 
               <WorldsendSortDialog

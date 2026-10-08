@@ -90,6 +90,7 @@ test('Onlineの表示条件は難易度と譜面定数を絞り、表では点�
     constMax: 15,
     genres: null,
     versions: null,
+    nameFolders: null,
   })
 
   // Then: 点差±60000の譜面も表の対象に残り、難易度と定数の範囲外は除外する。
@@ -135,6 +136,7 @@ test('理論値OP対象では現在のOP対象フラグではなく楽曲マス�
       constMax: 16,
       genres: null,
       versions: null,
+      nameFolders: null,
     },
     undefined,
     targetDifficultyBySongId
@@ -173,6 +175,7 @@ test('理論値OP対象では対象難易度を解決できないレコードを
       constMax: 16,
       genres: null,
       versions: null,
+      nameFolders: null,
     },
     undefined,
     targetDifficultyBySongId
@@ -235,8 +238,8 @@ test('Onlineのジャンルとバージョンは表示時の属性フィルタ�
     },
   ]
   const attributesBySongId = new Map([
-    ['song-p', { genre: 'POPS & ANIME', version: 'CHUNITHM' }],
-    ['song-v', { genre: 'niconico', version: 'CHUNITHM' }],
+    ['song-p', { genre: 'POPS & ANIME', version: 'CHUNITHM', nameFolder: 'A' }],
+    ['song-v', { genre: 'niconico', version: 'CHUNITHM', nameFolder: 'KA' }],
   ])
 
   // When: ジャンルとバージョンを指定して表示対象を絞る。
@@ -249,12 +252,48 @@ test('Onlineのジャンルとバージョンは表示時の属性フィルタ�
       constMax: 16,
       genres: ['POPS & ANIME'],
       versions: ['CHUNITHM'],
+      nameFolders: null,
     },
     attributesBySongId
   )
 
   // Then: 両方の属性に一致する譜面だけが残る。
   assert.deepEqual(result, [entries[0]])
+})
+
+test('Onlineの楽曲名順は表示時の属性フィルタとして適用する', () => {
+  // Given: 比較結果と楽曲マスタ由来の属性。
+  const entries = [
+    { record: record({ id: 'song-a', const: 14 }), averageScore: 1000000, difference: 0 },
+    { record: record({ id: 'song-ka', const: 14 }), averageScore: 1000000, difference: 0 },
+    {
+      record: record({ id: 'song-unknown', const: 14 }),
+      averageScore: 1000000,
+      difference: 0,
+    },
+  ]
+  const attributesBySongId = new Map([
+    ['song-a', { genre: 'POPS & ANIME', version: 'CHUNITHM', nameFolder: 'A' }],
+    ['song-ka', { genre: 'POPS & ANIME', version: 'CHUNITHM', nameFolder: 'KA' }],
+  ])
+
+  // When: 楽曲名順だけを指定して表示対象を絞る。
+  const result = filterOnlineWeakChartEntries(
+    entries,
+    {
+      difficulties: ['MASTER'],
+      displayScoreRange: 10000,
+      constMin: 1,
+      constMax: 16,
+      genres: null,
+      versions: null,
+      nameFolders: ['KA'],
+    },
+    attributesBySongId
+  )
+
+  // Then: 選択したフォルダの譜面だけが残り、不明な楽曲は除外される。
+  assert.deepEqual(result, [entries[1]])
 })
 
 test('比較表は平均以上と平均未満を点差の境界を含めて絞り込む', () => {

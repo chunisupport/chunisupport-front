@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   hasSameNullableFilterValues,
+  isNullableSelectionMatched,
   toNullableAllDisplaySelection,
   toNullableAllFilterSelection,
-} from './filterValue'
+} from './filterSelection'
 
 const ALL_VALUES = ['A', 'KA', 'SA']
 
@@ -65,4 +66,31 @@ test('null を全選択とするフィルター値を比較できること', () 
   assert.equal(hasSameNullableFilterValues(null, []), false)
   assert.equal(hasSameNullableFilterValues(['A', 'KA'], ['KA', 'A']), true)
   assert.equal(hasSameNullableFilterValues(['A'], ['KA']), false)
+})
+
+test('null のフィルター値は不明な値も含めて一致すること', () => {
+  // Given
+  const selected = null
+
+  // When / Then
+  assert.equal(isNullableSelectionMatched('A', selected), true)
+  assert.equal(isNullableSelectionMatched(null, selected), true)
+})
+
+test('選択値がある場合は含まれる値だけ一致し、不明な値は一致しないこと', () => {
+  // Given
+  const selected = ['A', 'KA']
+
+  // When / Then
+  assert.equal(isNullableSelectionMatched('KA', selected), true)
+  assert.equal(isNullableSelectionMatched('SA', selected), false)
+  assert.equal(isNullableSelectionMatched(undefined, selected), false)
+})
+
+test('空配列のフィルター値はどの値にも一致しないこと', () => {
+  // Given
+  const selected: string[] = []
+
+  // When / Then
+  assert.equal(isNullableSelectionMatched('A', selected), false)
 })

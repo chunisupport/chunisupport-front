@@ -3,6 +3,7 @@ import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
 import { getComboLampFilterValue } from './comboLampFilter'
+import { isNullableSelectionMatched } from './filterSelection'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
@@ -53,6 +54,8 @@ export type RandomSongFilter = {
   difficulties: readonly RandomSongDifficultyFilter[]
   genres: readonly string[]
   versions: readonly string[]
+  /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
+  nameFolders: readonly string[] | null
   minConst: number | null
   maxConst: number | null
 }
@@ -420,7 +423,7 @@ export const toggleRandomSongDifficultyFilter = (
  * ランダム選曲候補を指定条件で絞り込む。
  *
  * @param candidates - 譜面単位の候補一覧。
- * @param filter - 難易度、ジャンル、バージョン、譜面定数の絞り込み条件。
+ * @param filter - 難易度、ジャンル、バージョン、楽曲名順、譜面定数の絞り込み条件。
  * @returns 条件に一致した候補一覧。
  */
 export const filterRandomSongCandidates = (
@@ -435,6 +438,8 @@ export const filterRandomSongCandidates = (
     if (!matchesDifficulty) return false
     if (!filter.genres.includes(candidate.genre)) return false
     if (!filter.versions.includes(candidate.version)) return false
+    if (!isNullableSelectionMatched(candidate.song.name_folder_code, filter.nameFolders))
+      return false
     if (filter.minConst !== null && candidate.chartConst < filter.minConst) return false
     if (filter.maxConst !== null && candidate.chartConst > filter.maxConst) return false
 

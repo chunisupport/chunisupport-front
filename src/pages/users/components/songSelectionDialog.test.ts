@@ -61,6 +61,22 @@ test('楽曲選択フィルターはジャンルとバージョンの差分を�
   assert.equal(hasSongSelectionFilterChanges({ ...defaultFilter, genres: [] }, defaultFilter), true)
 })
 
+test('楽曲選択フィルターは楽曲名順を全選択の null とし、選択時の差分を判定すること', () => {
+  // Given
+  const defaultFilter = buildDefaultSongSelectionFilter(['ORIGINAL'], ['VERSE'])
+
+  // When & Then
+  assert.equal(defaultFilter.nameFolders, null)
+  assert.equal(
+    hasSongSelectionFilterChanges({ ...defaultFilter, nameFolders: ['A'] }, defaultFilter),
+    true
+  )
+  assert.equal(
+    hasSongSelectionFilterChanges({ ...defaultFilter, nameFolders: [] }, defaultFilter),
+    true
+  )
+})
+
 test('楽曲選択UIは状態に応じてアクセントカラーのクラスを返すこと', () => {
   // Given
   const active = true

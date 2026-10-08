@@ -199,3 +199,19 @@ test('Wikiページタイトル欠落フィルターは通常曲とWORLD’S END
     5
   )
 })
+
+test("楽曲名順で通常曲とWORLD'S END曲を絞り込む", () => {
+  // Given: 楽曲名順が NUMBER の楽曲と、別フォルダを指定したフィルター。
+  const matchedFilters = { ...createSongManagementFilters(), nameFolders: ['NUMBER'] }
+  const otherFilters = { ...createSongManagementFilters(), nameFolders: ['A'] }
+
+  // When: 通常曲とWORLD'S END曲へ条件を適用する。
+  const matched = filterManagedSongs([standardSong], matchedFilters, versions)
+  const other = filterManagedSongs([standardSong], otherFilters, versions)
+  const worldsendOther = filterManagedWorldsendSongs([worldsendSong], otherFilters, versions)
+
+  // Then: 指定したフォルダの楽曲だけが残る。
+  assert.deepEqual(matched, [standardSong])
+  assert.deepEqual(other, [])
+  assert.deepEqual(worldsendOther, [])
+})

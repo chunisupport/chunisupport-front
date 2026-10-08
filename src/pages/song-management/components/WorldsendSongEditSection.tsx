@@ -3,7 +3,7 @@ import { Loading } from '../../../components'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
 import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
-import type { MasterItemDTO, VersionSummaryDTO } from '../../../types/api'
+import type { MasterItemDTO, NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
@@ -40,6 +40,8 @@ type WorldsendSongEditSectionProps = {
   genres: MasterItemDTO[]
   /** バージョン一覧 */
   versions: readonly VersionSummaryDTO[]
+  /** 楽曲名順フォルダ一覧 */
+  nameFolders: readonly NameFolderDTO[]
   /** 削除操作を許可するか */
   canDelete: boolean
   /** 管理用の属性・欠落フィルターを表示するか */
@@ -79,6 +81,7 @@ const WorldsendSongEditSection = (props: WorldsendSongEditSectionProps) => {
               onFiltersChange={props.management.setFilters}
               genres={props.genres.map((genre) => genre.name)}
               versions={props.versions}
+              nameFolders={props.nameFolders}
             />
           </div>
 

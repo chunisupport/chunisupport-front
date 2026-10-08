@@ -99,13 +99,14 @@ const hasUnachievedCharts = (cell: UniFillMatrixCell): boolean => cell.count < c
 /**
  * マスの位置を含むスクリーンリーダー向けの操作文言を作る。
  *
- * @param position - 対象マスのジャンル・バージョン・レベル・譜面定数。
+ * @param position - 対象マスのジャンル・バージョン・楽曲名順・レベル・譜面定数。
  * @returns マスの条件と操作内容をつなげた文言。
  */
 const toCellActionLabel = (position: UniFillMatrixCellPosition): string =>
   [
     position.genre,
     position.version,
+    position.nameFolder?.label,
     position.levelConst?.label,
     UNI_FILL_MATRIX_COPY.cellActionLabel,
   ]
@@ -130,7 +131,7 @@ const toDimensionOption = (
  * @param props.caption - 表の読み上げ用説明。
  * @param props.cornerHeader - 左端の見出し列の名前。スクリーンリーダー向けにのみ提供する。
  * @param props.showPercent - 上段を達成率で表示するか。
- * @param props.onSelectCell - 未達成の譜面が残るマスをクリックしたときの処理。絞り込み位置がないマスでは呼ばれない。
+ * @param props.onSelectCell - 未達成の譜面が残るマスをクリックしたときの処理。
  * @param props.imageMode - 画像用に固定見出しと操作を無効にするか。
  * @param props.tableRef - 表の論理幅を取得するための参照設定。
  * @returns 左端の見出し列を固定した横スクロール可能なデータ表。
@@ -145,15 +146,14 @@ const UniFillMatrixTable = (props: {
   tableRef?: (element: HTMLTableElement) => void
 }): JSX.Element => {
   /**
-   * 未達成の譜面が残り、絞り込み位置があるマスだけにクリック時の処理を割り当てる。
+   * 未達成の譜面が残るマスだけにクリック時の処理を割り当てる。
    *
    * @param gridCell - 対象のマスと絞り込み位置。
    * @returns HeatmapCountCell に渡すクリック時の処理。対象外のマスでは undefined。
    */
   const selectHandler = (gridCell: UniFillMatrixGridCell): (() => void) | undefined => {
-    const position = gridCell.position
-    return !props.imageMode && props.onSelectCell && position && hasUnachievedCharts(gridCell.cell)
-      ? () => props.onSelectCell?.(position)
+    return !props.imageMode && props.onSelectCell && hasUnachievedCharts(gridCell.cell)
+      ? () => props.onSelectCell?.(gridCell.position)
       : undefined
   }
 
@@ -195,7 +195,7 @@ const UniFillMatrixTable = (props: {
       showEmptyAsComplete
       class={isTotal ? TOTAL_CELL_CLASS : undefined}
       onSelect={selectHandler(gridCell)}
-      selectLabel={gridCell.position && toCellActionLabel(gridCell.position)}
+      selectLabel={toCellActionLabel(gridCell.position)}
     />
   )
 

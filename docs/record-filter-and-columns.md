@@ -256,6 +256,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
   },
   "genres": [],
   "versions": [],
+  "nameFolders": null,
   "score": {
     "min": 0,
     "max": 1010000
@@ -281,6 +282,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `levelStarRange` | `{ min: number, max: number }` | はい | ★レベルの範囲です。`level_star` が `null` のレコードは一致しません。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
 | `versions` | `string[]` | はい | 対象バージョン名の配列です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。空配列なら全バージョン対象です。 |
+| `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
 | `score` | `{ min: number, max: number }` | はい | スコア範囲です。未プレイ譜面はスコア `0` として判定します。 |
 | `scoreFilterMode` | `"rank"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `score.min` / `score.max` を参照します。 |
 | `justiceCount` | `{ min: number \| null, max: number \| null }` | はい | AJ 時の JUSTICE 数の範囲です。`null` なら該当する範囲端は条件なしです。 |
@@ -299,11 +301,12 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 4. `level_star` が `null` ではなく、`levelStarRange.min` 以上かつ `levelStarRange.max` 以下であること。
 5. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
 6. `versions` が空でないとき、レコードのリリースバージョンが `versions` に含まれること。
-7. スコアが `score.min` 以上かつ `score.max` 以下であること。
-8. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
-9. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
-10. FULL CHAIN ランプが `chain_lamp` に含まれること。
-11. クリアランプが `hard_lamp` に含まれること。
+7. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
+8. スコアが `score.min` 以上かつ `score.max` 以下であること。
+9. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
+10. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
+11. FULL CHAIN ランプが `chain_lamp` に含まれること。
+12. クリアランプが `hard_lamp` に含まれること。
 
 ### WORLD'S END のデフォルト値
 
@@ -313,6 +316,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `levelStarRange.max`: `5`
 - `genres`: WORLD'S END 楽曲マスタ上の全ジャンル
 - `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名を短縮した名前
+- `nameFolders`: `null`（全フォルダ対象）
 - `score.min`: `0`
 - `score.max`: `1010000`
 - `scoreFilterMode`: `"rank"`
@@ -427,7 +431,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 | --- | --- | --- |
 | `name` | `string` | 保存済みフィルター名です。前後空白を除いて1〜30文字、制御文字不可です。 |
 | `filter_type` | `"standard"` \| `"worldsend"` | 通常レコードは `"standard"`、WORLD'S END は `"worldsend"` を使います。 |
-| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `10`、WORLD'S END が `4` です。 |
+| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `10`、WORLD'S END が `5` です。 |
 | `filter` | `object` | `filter_type` に対応するフィルター状態 JSON です。 |
 
 サーバーは `filter` の内部フィールドを解釈しません。
@@ -464,7 +468,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 ### フロント側の復元ルール
 
 - 通常レコードは現行の `schema_version: 10` に加え、互換対象の `3`, `4`, `5`, `6`, `7`, `8`, `9` を有効として扱います。`nameFolders` を持たない保存値は全フォルダ対象 (`null`) として補完します。
-- WORLD'S END は現行の `schema_version: 4` に加え、互換対象の `2`, `3` を有効として扱います。
+- WORLD'S END は現行の `schema_version: 5` に加え、互換対象の `2`, `3`, `4` を有効として扱います。`nameFolders` を持たない保存値は全フォルダ対象 (`null`) として補完します。
 - 互換対象の `schema_version: 3`, `4`, `5` では、保存済みの `ALL JUSTICE` 条件へ `ALL JUSTICE CRITICAL` を補完し、AJC 選択肢追加前と同じ対象範囲を維持します。
 - `filter` が `null` ではないオブジェクトの場合だけ、各画面の `normalizeFilterState` / `normalizeWorldsendFilterState` で補完します。
 - 未対応のスキーマバージョンは一覧には残しますが、`filter: null`、`isValid: false` として扱い、呼び出しや名前変更はできません。
@@ -571,18 +575,17 @@ URL クエリによるフィルター同期は、現行コードでは通常レ�
 
 バージョンは楽曲の追加バージョンで集計し、PLUSを分けて稼働順に並べます。公開済みのバージョンだけを対象とし、譜面がないバージョンは表示しません。楽曲名はAPIが返す各楽曲の `name_folder_code` で集計し、マスタデータの `name_folders` にある `name` を見出しに、`sort_order` を表示順に使用します。フロントエンドでは読みから所属フォルダを判定しません。譜面がないフォルダは表示しません。どちらかの軸で集計対象外となる譜面（表示対象外のジャンル、未公開のバージョンなど）は、もう一方の軸の集計にも含めません。
 
-ジャンル・バージョンの見出しはAPIの短縮名（short_name）を、楽曲名の見出しはフォルダ名（「ABCD」「あ行」「数字」など）を表示します。集計や通常レコードへの絞り込みには短縮前の名称を使います。行ヘッダ・列ヘッダは合計見出しを含めて改行せず、画像化でも同じ表示を使います。
+ジャンル・バージョンの見出しはAPIの短縮名（short_name）を、楽曲名の見出しはフォルダ名（「ABCD」「あ行」「数字」など）を表示します。集計や通常レコードへの絞り込みには、ジャンル・バージョンは短縮前の名称を、楽曲名はフォルダのコードを使います。行ヘッダ・列ヘッダは合計見出しを含めて改行せず、画像化でも同じ表示を使います。
 左上のセルは空欄で表示し、縦軸の名前はスクリーンリーダー向けにのみ提供します。
 
-未達成譜面が残っているセルを選ぶと、選択中の難易度・埋め条件とセルの範囲を通常レコードのフィルターに引き継ぎます。セルは縦軸と横軸の両方の条件で、右端の合計列は縦軸の条件のみで、最下段の合計行は横軸の条件のみで絞り込みます。通常レコードのフィルターには名前順フォルダの条件がないため、楽曲名の軸を含むセルと、楽曲名の軸側の合計は選択できません。
+未達成譜面が残っているセルを選ぶと、選択中の難易度・埋め条件とセルの範囲を通常レコードのフィルターに引き継ぎます。セルは縦軸と横軸の両方の条件で、右端の合計列は縦軸の条件のみで、最下段の合計行は横軸の条件のみで絞り込みます。楽曲名の軸を含むセルと合計は、フォルダのコードを通常レコードの `nameFolders` に引き継ぎます。
 
 | 選択位置 | 絞り込み範囲 |
 | --- | --- |
-| 縦軸と横軸が交差するセル | 縦軸と横軸の両方（ジャンル・バージョン・レベル・譜面定数のうち選択中の2つ） |
+| 縦軸と横軸が交差するセル | 縦軸と横軸の両方（ジャンル・バージョン・楽曲名順・レベル・譜面定数のうち選択中の2つ） |
 | 右端の合計列 | 縦軸の条件のみ |
 | 最下段の合計行 | 横軸の条件のみ |
-| 右下の総合計 | 全ジャンル・全バージョン・全レベル・全譜面定数 |
-| 楽曲名の軸を含むセル・楽曲名の軸側の合計 | 選択不可 |
+| 右下の総合計 | 全ジャンル・全バージョン・全楽曲名順・全レベル・全譜面定数 |
 
 対象がないセルは、少し大きめの白い「-」と全件達成済みのセルと同じ背景色で表示します。どちらのセルも選択できません。達成件数と達成率の表示切り替えは、絞り込み条件に影響しません。
 

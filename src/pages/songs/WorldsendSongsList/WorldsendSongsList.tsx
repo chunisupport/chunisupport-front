@@ -29,6 +29,7 @@ const WorldsendSongsList = () => {
     genres,
     versionOptions,
     genreFilterOptions,
+    nameFolderOptions,
     filters,
     setFilters,
     searchQuery,
@@ -102,6 +103,7 @@ const WorldsendSongsList = () => {
                     onChange={setFilters}
                     genres={genreFilterOptions()}
                     versions={versionOptions()}
+                    nameFolders={nameFolderOptions()}
                   />
                 </div>
                 <Show when={isCardView()}>

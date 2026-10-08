@@ -55,6 +55,14 @@ export type UniFillMatrixSongAttributes = {
   nameFolder?: string
 }
 
+/** 通常レコードへ引き継ぐ楽曲名順フォルダ */
+export type UniFillMatrixNameFolder = {
+  /** 絞り込みに使うフォルダのコード */
+  code: string
+  /** 見出しと操作文言に使う表示名 */
+  label: string
+}
+
 /** 表示用の見出し。axis はレベル・譜面定数、group はジャンル・バージョン・名前順フォルダ */
 export type UniFillMatrixHeader = {
   label: string
@@ -132,28 +140,30 @@ type UniFillMatrixAxisItem = {
   /** 並び順。小さいほど先頭 */
   order: number
   header: UniFillMatrixHeader
-  /** レコード画面で絞り込む位置。通常レコードで絞り込めない項目では未指定 */
-  position?: UniFillMatrixCellPosition
+  /** レコード画面で絞り込む位置 */
+  position: UniFillMatrixCellPosition
 }
 
 /**
  * 楽曲属性の軸の名称を、通常レコードで絞り込む位置へ変換する。
  *
  * @param dimension - 楽曲の属性から決まる軸。
- * @param group - 集計用の名称。
- * @returns 絞り込み位置。名前順フォルダは通常レコードで絞り込めないため undefined。
+ * @param group - 集計用の名称。名前順フォルダではフォルダのコード。
+ * @param label - 見出しに表示する名称。
+ * @returns 絞り込み位置。
  */
 const toSongDimensionPosition = (
   dimension: UniFillMatrixSongDimension,
-  group: string
-): UniFillMatrixCellPosition | undefined => {
+  group: string,
+  label: string
+): UniFillMatrixCellPosition => {
   switch (dimension) {
     case 'genre':
       return { genre: group }
     case 'version':
       return { version: group }
     case 'nameFolder':
-      return undefined
+      return { nameFolder: { code: group, label } }
   }
 }
 
@@ -194,11 +204,12 @@ const createAxisItemResolver = (
     const group = attributesBySongId.get(record.id)?.[dimension]
     const order = group === undefined ? undefined : orders.get(group)
     if (group === undefined || order === undefined) return undefined
+    const label = labels?.get(group) ?? group
     return {
       key: group,
       order,
-      header: { label: labels?.get(group) ?? group, kind: 'group' },
-      position: toSongDimensionPosition(dimension, group),
+      header: { label, kind: 'group' },
+      position: toSongDimensionPosition(dimension, group, label),
     }
   }
 }
@@ -208,12 +219,12 @@ const createAxisItemResolver = (
  *
  * @param line - 縦軸の項目の絞り込み位置。
  * @param column - 横軸の項目の絞り込み位置。
- * @returns 両方の条件を持つ位置。どちらかが絞り込めない場合は undefined。
+ * @returns 両方の条件を持つ位置。
  */
 const mergeCellPositions = (
-  line: UniFillMatrixCellPosition | undefined,
-  column: UniFillMatrixCellPosition | undefined
-): UniFillMatrixCellPosition | undefined => line && column && { ...line, ...column }
+  line: UniFillMatrixCellPosition,
+  column: UniFillMatrixCellPosition
+): UniFillMatrixCellPosition => ({ ...line, ...column })
 
 /**
  * 軸の項目を並び順に並べる。
@@ -305,6 +316,8 @@ export type UniFillMatrixRecordTarget = {
   genre?: string
   /** 追加バージョン。バージョンの軸を含まないマスや合計のマスでは未指定 */
   version?: string
+  /** 楽曲名順フォルダ。楽曲名の軸を含まないマスや合計のマスでは未指定 */
+  nameFolder?: UniFillMatrixNameFolder
   /** レベル・譜面定数。レベル・定数の軸を含まないマスや合計のマスでは未指定 */
   levelConst?: UniFillMatrixLevelConst
 }
@@ -397,7 +410,7 @@ const resolveUnachievedFilter = (achievement: PlayerStatsAchievement): Partial<F
  * マトリクスのマスから、埋め条件を満たしていない譜面を表示する通常レコード用フィルターを作る。
  *
  * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
- * @param target - 難易度、埋め条件と、マスが表すジャンル・追加バージョン・レベル・譜面定数。
+ * @param target - 難易度、埋め条件と、マスが表すジャンル・追加バージョン・楽曲名順・レベル・譜面定数。
  * @returns マスの条件と未達成条件を反映した通常レコードフィルター。
  */
 export const buildUniFillMatrixRecordFilter = (
@@ -409,6 +422,7 @@ export const buildUniFillMatrixRecordFilter = (
   ...resolveUnachievedFilter(target.achievement),
   ...(target.genre === undefined ? {} : { genres: [target.genre] }),
   ...(target.version === undefined ? {} : { versions: [target.version] }),
+  ...(target.nameFolder === undefined ? {} : { nameFolders: [target.nameFolder.code] }),
   ...(target.levelConst === undefined
     ? {}
     : {
@@ -420,14 +434,14 @@ export const buildUniFillMatrixRecordFilter = (
 /** レコード画面で絞り込むマスの位置。未指定の軸は絞り込まない */
 export type UniFillMatrixCellPosition = Pick<
   UniFillMatrixRecordTarget,
-  'genre' | 'version' | 'levelConst'
+  'genre' | 'version' | 'nameFolder' | 'levelConst'
 >
 
 /** 表示用の1マス */
 export type UniFillMatrixGridCell = {
   cell: UniFillMatrixCell
-  /** レコード画面で絞り込む位置。通常レコードで絞り込めないマスでは未指定 */
-  position?: UniFillMatrixCellPosition
+  /** レコード画面で絞り込む位置 */
+  position: UniFillMatrixCellPosition
 }
 
 /** 表示用の1行 */

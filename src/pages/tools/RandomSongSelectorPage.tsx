@@ -16,6 +16,7 @@ import {
   untrack,
 } from 'solid-js'
 import { fetchGoals } from '../../api/goals'
+import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchGoalFilterOptions, fetchVersions, type GoalFilterOptions } from '../../api/songs'
 import { fetchMe, fetchUserFavoriteSongs, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
@@ -24,7 +25,11 @@ import { MultiSelectField, toMultiSelectOptions } from '../../components/common/
 import { FormSelect } from '../../components/common/AppSelect'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import { GenreMultiSelect, VersionMultiSelect } from '../../components/common/DomainMultiSelect'
+import {
+  GenreMultiSelect,
+  NameFolderFilterMultiSelect,
+  VersionMultiSelect,
+} from '../../components/common/DomainMultiSelect'
 import { TextRangeInput } from '../../components/common/RangeInput'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
 import { RANDOM_SONG_SELECTOR_PATH } from '../../constants/routes'
@@ -613,6 +618,7 @@ const RandomSongSelect = <T extends string>(props: {
 const RandomSongSelectorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [versionsResponse] = createResource(fetchVersions)
+  const [nameFoldersResponse] = createResource(fetchNameFolders)
   const [myUserData] = createResource(fetchMyRandomSongUserData)
   /** @returns 保存済み目標の取得状態。 */
   const myGoalData = (): MyRandomSongGoalData | undefined => myUserData()?.goal
@@ -626,6 +632,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
   >([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
   const [selectedGenres, setSelectedGenres] = createSignal<string[]>([])
   const [selectedVersions, setSelectedVersions] = createSignal<string[]>([])
+  const [selectedNameFolders, setSelectedNameFolders] = createSignal<string[] | null>(null)
   const [selectedGoalId, setSelectedGoalId] = createSignal<number | null>(null)
   const [recordFilterSettingsOpen, setRecordFilterSettingsOpen] = createSignal(false)
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = createSignal(false)
@@ -781,6 +788,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
       difficulties: selectedDifficulties(),
       genres: selectedGenres(),
       versions: selectedVersions(),
+      nameFolders: selectedNameFolders(),
       minConst: parsedMinConst(),
       maxConst: parsedMaxConst(),
     })
@@ -982,6 +990,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
     setSelectedGenres(genreOptions())
     setSelectedVersions(versionOptions())
+    setSelectedNameFolders(null)
     setSelectedGoalId(null)
     setDifficultyWeights({
       BASIC: RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
@@ -1255,6 +1264,17 @@ const RandomSongSelectorPage = (): JSX.Element => {
                         selectedPreviewLimit={6}
                         disabled={isGoalFilterActive()}
                         onChange={setSelectedVersions}
+                      />
+                    </div>
+                    <div>
+                      <NameFolderFilterMultiSelect
+                        label={RANDOM_SONG_SELECTOR_COPY.nameFolderLabel}
+                        nameFolders={nameFoldersResponse() ?? []}
+                        selected={selectedNameFolders()}
+                        placeholder={RANDOM_SONG_SELECTOR_COPY.nameFolderLabel}
+                        selectedPreviewLimit={6}
+                        disabled={isGoalFilterActive()}
+                        onChange={setSelectedNameFolders}
                       />
                     </div>
                     <div class="sm:col-span-2">

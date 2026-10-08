@@ -2,6 +2,7 @@ import { TextField } from '@kobalte/core/text-field'
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
 import ChartConstRangeField from '../../../../../components/common/ChartConstRangeField'
+import { NameFolderFilterMultiSelect } from '../../../../../components/common/DomainMultiSelect'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../../components/common/filterStyles'
 import {
   CHART_CONST_MAX,
@@ -42,11 +43,7 @@ import {
   OVER_POWER_RANGE_FILTER,
   SINGLE_RATING_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
-import {
-  toggleArray,
-  toNullableAllDisplaySelection,
-  toNullableAllFilterSelection,
-} from '../../../utils/filterValue'
+import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import DifficultySection from './sections/DifficultySection'
@@ -261,11 +258,6 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
   const genres = () => sortMasterItemsBySortOrder(props.masterData?.genres ?? []).map((g) => g.name)
   const versions = () =>
     filterReleasedVersions(props.versions ?? []).map((version) => getShortVersionName(version.name))
-  /** @returns 楽曲名順フォルダのコード一覧（マスターデータの並び順） */
-  const nameFolderCodes = () => props.nameFolders?.map((nameFolder) => nameFolder.code) ?? []
-  /** @returns 楽曲名順フォルダのコードから表示名を引く対応表 */
-  const nameFolderNameByCode = () =>
-    new Map(props.nameFolders?.map((nameFolder) => [nameFolder.code, nameFolder.name]))
 
   /**
    * JUSTICE数の入力値をフィルター状態へ反映する。
@@ -648,18 +640,12 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }
       />
-      <MultiSelectFilterSection
-        title="楽曲名順"
-        options={nameFolderCodes()}
-        selected={toNullableAllDisplaySelection(props.filters.nameFolders, nameFolderCodes())}
-        formatLabel={(code) => nameFolderNameByCode().get(code) ?? code}
+      <NameFolderFilterMultiSelect
+        nameFolders={props.nameFolders ?? []}
+        selected={props.filters.nameFolders}
+        labelClass="text-text"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-        onChange={(selectedNameFolders) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            nameFolders: toNullableAllFilterSelection(selectedNameFolders, nameFolderCodes()),
-          }))
-        }
+        onChange={(nameFolders) => props.setFilters((prev) => ({ ...prev, nameFolders }))}
       />
     </div>
   )

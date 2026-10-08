@@ -495,6 +495,7 @@ test('初期フィルターは未指定で非アクティブなこと', () => {
   assert.deepEqual(filter, {
     genres: null,
     versions: null,
+    nameFolders: null,
     constFilterMode: 'level',
     constRange: { min: 1, max: 16 },
   })
@@ -554,8 +555,8 @@ test("WORLD'S END譜面には譜面定数範囲を適用しないこと", () => 
 test('楽曲マスタからsong_idごとの属性マップを生成すること', () => {
   // Given
   const songs = [
-    { id: 'song-1', genre: 'POPS & ANIME', release: '2024-12-12' },
-    { id: 'song-2', genre: null, release: null },
+    { id: 'song-1', genre: 'POPS & ANIME', release: '2024-12-12', name_folder_code: 'A' },
+    { id: 'song-2', genre: null, release: null, name_folder_code: 'NUMBER' },
   ]
   const versions = [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }]
 
@@ -566,8 +567,9 @@ test('楽曲マスタからsong_idごとの属性マップを生成すること'
   assert.deepEqual(attributes.get('song-1'), {
     genre: 'POPS & ANIME',
     version: 'CHUNITHM VERSE',
+    nameFolder: 'A',
   })
-  assert.deepEqual(attributes.get('song-2'), { genre: null, version: '不明' })
+  assert.deepEqual(attributes.get('song-2'), { genre: null, version: '不明', nameFolder: 'NUMBER' })
 })
 
 test('曲名検索とバージョン・ジャンルで絞り込むこと', () => {
@@ -578,9 +580,9 @@ test('曲名検索とバージョン・ジャンルで絞り込むこと', () =>
     createSortableChart({ title: 'song-3', song_id: 'song-3' }),
   ]
   const attributes = new Map([
-    ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE' }],
-    ['song-2', { genre: 'niconico', version: 'CHUNITHM VERSE' }],
-    ['song-3', { genre: 'POPS & ANIME', version: 'CHUNITHM LUMINOUS' }],
+    ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
+    ['song-2', { genre: 'niconico', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
+    ['song-3', { genre: 'POPS & ANIME', version: 'CHUNITHM LUMINOUS', nameFolder: 'A' }],
   ])
 
   // When
@@ -618,7 +620,10 @@ test('属性マップ未取得時は曲名検索のみを適用すること', ()
 test('マップにない譜面は不明扱いで判定すること', () => {
   // Given
   const charts = [createSortableChart({ title: 'unknown', song_id: 'unknown' })]
-  const attributes = new Map<string, { genre: string | null; version: string }>()
+  const attributes = new Map<
+    string,
+    { genre: string | null; version: string; nameFolder: string | null }
+  >()
 
   // When
   const withoutFilter = filterChartStats(
@@ -642,4 +647,36 @@ test('マップにない譜面は不明扱いで判定すること', () => {
   assert.equal(withoutFilter.length, 1)
   assert.equal(withUnknownVersion.length, 1)
   assert.equal(withGenre.length, 0)
+})
+
+test('楽曲名順で絞り込み、不明な楽曲は選択時に除外すること', () => {
+  // Given
+  const charts = [
+    createSortableChart({ title: 'song-1', song_id: 'song-1' }),
+    createSortableChart({ title: 'song-2', song_id: 'song-2' }),
+    createSortableChart({ title: 'unknown', song_id: 'unknown' }),
+  ]
+  const attributes = new Map([
+    ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
+    ['song-2', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE', nameFolder: 'KA' }],
+  ])
+
+  // When
+  const filtered = filterChartStats(charts, '', attributes, {
+    ...createDefaultChartStatsAttributeFilter(),
+    nameFolders: ['KA'],
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map(({ song_id }) => song_id),
+    ['song-2']
+  )
+  assert.equal(
+    isChartStatsAttributeFilterActive({
+      ...createDefaultChartStatsAttributeFilter(),
+      nameFolders: [],
+    }),
+    true
+  )
 })

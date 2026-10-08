@@ -1,4 +1,5 @@
 import type { SongDTO, VersionSummaryDTO } from '../../types/api'
+import { isNullableSelectionMatched } from '../../utils/filterSelection'
 import { parseOptionalRangeNumberInput } from '../../utils/rangeInput'
 import { resolveVersionNameByReleaseDate } from '../../utils/versionConverter'
 
@@ -9,6 +10,8 @@ export type SongFilters = {
   releaseMax: string
   genres: string[] | null
   versions: string[] | null
+  /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
+  nameFolders: string[] | null
 }
 
 export const SONG_FILTER_LABELS = {
@@ -38,6 +41,7 @@ export const createSongFilters = (): SongFilters => ({
   releaseMax: '',
   genres: null,
   versions: null,
+  nameFolders: null,
 })
 
 /**
@@ -55,7 +59,9 @@ export const parseBpmFilter = (value: string): number | null =>
  * @param versions - 追加日からのバージョン判定用一覧。
  * @returns 元の順序を保持した検索結果。
  */
-export const filterSongs = <T extends Pick<SongDTO, 'bpm' | 'release'> & { genre: string | null }>(
+export const filterSongs = <
+  T extends Pick<SongDTO, 'bpm' | 'release' | 'name_folder_code'> & { genre: string | null },
+>(
   songs: T[],
   filters: SongFilters,
   versions: readonly VersionSummaryDTO[]
@@ -75,6 +81,7 @@ export const filterSongs = <T extends Pick<SongDTO, 'bpm' | 'release'> & { genre
       !filters.versions.includes(resolveVersionNameByReleaseDate(song.release, versions))
     )
       return false
+    if (!isNullableSelectionMatched(song.name_folder_code, filters.nameFolders)) return false
     return true
   })
 }

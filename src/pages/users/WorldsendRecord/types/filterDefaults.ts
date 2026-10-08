@@ -23,6 +23,7 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
   },
   genres: [],
   versions: [],
+  nameFolders: null,
   score: {
     min: SCORE_MIN,
     max: MAX_SCORE,
@@ -110,6 +111,7 @@ export const normalizeWorldsendFilterState = (
   score: filter.score ?? { ...DEFAULT_WORLDSEND_FILTER.score },
   justiceCount: filter.justiceCount ?? { ...DEFAULT_WORLDSEND_FILTER.justiceCount },
   attributes: filter.attributes ?? [...DEFAULT_WORLDSEND_FILTER.attributes],
+  nameFolders: filter.nameFolders ?? null,
   levelStarRange: filter.levelStarRange ?? { ...DEFAULT_WORLDSEND_FILTER.levelStarRange },
   combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
   chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],

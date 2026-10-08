@@ -269,6 +269,9 @@ export const isValidSavedWorldsendFilter = (value: unknown): value is WorldsendF
     ) &&
     isStringArray(value.genres) &&
     isStringArray(value.versions) &&
+    (value.nameFolders === undefined ||
+      value.nameFolders === null ||
+      isStringArray(value.nameFolders)) &&
     isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&

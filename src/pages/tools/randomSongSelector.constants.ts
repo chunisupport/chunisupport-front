@@ -71,6 +71,7 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   favoriteOnlyLabel: 'お気に入りからランダム',
   genreLabel: 'ジャンル',
   versionLabel: 'バージョン',
+  nameFolderLabel: '楽曲名順',
   minConstLabel: '定数 下限',
   maxConstLabel: '定数 上限',
   advancedSettingsLabel: '高度な設定',

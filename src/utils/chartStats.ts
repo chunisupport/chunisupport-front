@@ -7,6 +7,7 @@ import type {
 } from '../types/chartStats'
 import type { NumericRangeFilter } from '../types/record'
 import { createFullChartConstRange, isChartConstRangeModified } from './chartLevel'
+import { isNullableSelectionMatched } from './filterSelection'
 import { normalizeForSearch } from './searchUtils'
 import { compareSongsByReading } from './songTitleSorting'
 import type { SortDirection } from './sortingQuery'
@@ -246,10 +247,12 @@ export const filterChartStatsByTitle = (
   return charts.filter((chart) => normalizeForSearch(chart.title).includes(normalizedQuery))
 }
 
-/** レコード統計の範囲・バージョン・ジャンル絞り込み条件。nullは未指定（全件対象）を表す */
+/** レコード統計の範囲・バージョン・ジャンル・楽曲名順絞り込み条件。nullは未指定（全件対象）を表す */
 export type ChartStatsAttributeFilter = {
   genres: string[] | null
   versions: string[] | null
+  /** 楽曲名順フォルダのコード */
+  nameFolders: string[] | null
   constFilterMode: 'level' | 'number'
   constRange: NumericRangeFilter
 }
@@ -258,6 +261,8 @@ export type ChartStatsAttributeFilter = {
 export type ChartStatsSongAttributes = {
   genre: string | null
   version: string
+  /** 楽曲名順フォルダのコード。不明な場合は null */
+  nameFolder: string | null
 }
 
 /** 楽曲属性マップ生成に必要な最小の楽曲情報 */
@@ -265,6 +270,7 @@ export type ChartStatsSongMeta = {
   id: string
   genre: string | null
   release: string | null
+  name_folder_code: string
 }
 
 /** バージョン解決に必要な最小のバージョン情報 */
@@ -281,25 +287,29 @@ export type ChartStatsVersionMeta = {
 export const createDefaultChartStatsAttributeFilter = (): ChartStatsAttributeFilter => ({
   genres: null,
   versions: null,
+  nameFolders: null,
   constFilterMode: 'level',
   constRange: createFullChartConstRange(),
 })
 
 /**
- * レベル・譜面定数・バージョン・ジャンルの絞り込みが指定されているか判定する。
+ * レベル・譜面定数・バージョン・ジャンル・楽曲名順の絞り込みが指定されているか判定する。
  *
  * @param filter - 判定する属性フィルター。
  * @returns いずれかが指定されている場合はtrue。
  */
 export const isChartStatsAttributeFilterActive = (filter: ChartStatsAttributeFilter): boolean =>
-  filter.genres !== null || filter.versions !== null || isChartConstRangeModified(filter.constRange)
+  filter.genres !== null ||
+  filter.versions !== null ||
+  filter.nameFolders !== null ||
+  isChartConstRangeModified(filter.constRange)
 
 /**
  * 楽曲マスタからsong_idをキーとする属性マップを生成する。
  *
  * @param songs - 通常楽曲またはWORLD'S END楽曲の一覧。
  * @param versions - リリース日からバージョン名を解決するためのバージョン一覧。
- * @returns song_idごとのジャンルとバージョン（フルネーム）のマップ。
+ * @returns song_idごとのジャンル、バージョン（フルネーム）、楽曲名順フォルダのマップ。
  */
 export const buildChartStatsAttributesBySongId = (
   songs: readonly ChartStatsSongMeta[],
@@ -311,19 +321,20 @@ export const buildChartStatsAttributesBySongId = (
       {
         genre: song.genre,
         version: resolveVersionNameByReleaseDate(song.release, versions),
+        nameFolder: song.name_folder_code,
       },
     ])
   )
 
 /**
- * 曲名検索に加えてレベル・譜面定数・バージョン・ジャンルで譜面統計を絞り込む。
- * 属性マップが未取得の場合も範囲条件を適用し、バージョン・ジャンル条件のみ保留する。
+ * 曲名検索に加えてレベル・譜面定数・バージョン・ジャンル・楽曲名順で譜面統計を絞り込む。
+ * 属性マップが未取得の場合も範囲条件を適用し、バージョン・ジャンル・楽曲名順条件のみ保留する。
  * 属性マップにない譜面は不明扱いとする。
  *
  * @param charts - 絞り込み対象の譜面統計。
  * @param query - 曲名検索文字列。
  * @param attributesBySongId - song_idごとの楽曲属性。未指定時は属性絞り込みを行わない。
- * @param filter - 範囲・バージョン・ジャンルの絞り込み条件。未指定時は追加の絞り込みを行わない。
+ * @param filter - 範囲・バージョン・ジャンル・楽曲名順の絞り込み条件。未指定時は追加の絞り込みを行わない。
  * @returns 元の順序を保った絞り込み結果。
  */
 export const filterChartStats = (
@@ -341,8 +352,17 @@ export const filterChartStats = (
     ) {
       return false
     }
-    if (!attributesBySongId || (filter.genres === null && filter.versions === null)) return true
-    const attributes = attributesBySongId.get(chart.song_id) ?? { genre: null, version: '不明' }
+    if (
+      !attributesBySongId ||
+      (filter.genres === null && filter.versions === null && filter.nameFolders === null)
+    ) {
+      return true
+    }
+    const attributes = attributesBySongId.get(chart.song_id) ?? {
+      genre: null,
+      version: '不明',
+      nameFolder: null,
+    }
     if (
       filter.genres !== null &&
       (attributes.genre === null || !filter.genres.includes(attributes.genre))
@@ -352,7 +372,7 @@ export const filterChartStats = (
     if (filter.versions !== null && !filter.versions.includes(attributes.version)) {
       return false
     }
-    return true
+    return isNullableSelectionMatched(attributes.nameFolder, filter.nameFolders)
   })
 }
 

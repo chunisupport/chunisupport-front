@@ -211,6 +211,7 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
     difficulties: ['MASTER', 'ULTIMA'],
     genres: ['POPS & ANIME'],
     versions: ['NEW'],
+    nameFolders: null,
     minConst: 13,
     maxConst: 14,
   })
@@ -220,6 +221,32 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
     filtered.map((candidate) => candidate.difficulty),
     ['MASTER']
   )
+})
+
+test('ランダム選曲候補を楽曲名順で絞り込むこと', () => {
+  // Given: 楽曲名順フォルダが異なる楽曲の候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a', name_folder_code: 'A' }) }),
+    createCandidate({ song: createSong({ id: 'song-ka', name_folder_code: 'KA' }) }),
+  ]
+  const filter = {
+    difficulties: ['MASTER' as const],
+    genres: ['POPS & ANIME'],
+    versions: ['NEW'],
+    minConst: null,
+    maxConst: null,
+  }
+
+  // When: 楽曲名順を指定した場合と全選択の場合で絞り込む。
+  const selected = filterRandomSongCandidates(candidates, { ...filter, nameFolders: ['KA'] })
+  const all = filterRandomSongCandidates(candidates, { ...filter, nameFolders: null })
+
+  // Then: 指定時は対象フォルダだけ、全選択時はすべての候補が残る。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['song-ka']
+  )
+  assert.equal(all.length, 2)
 })
 
 test('お気に入りからランダムではお気に入り楽曲の全譜面だけを残すこと', () => {
@@ -322,6 +349,7 @@ test('OP対象の難易度絞り込みでは曲ごとのOP対象譜面だけを�
     difficulties: [RANDOM_SONG_OP_TARGET_FILTER],
     genres: ['POPS & ANIME'],
     versions: ['NEW'],
+    nameFolders: null,
     minConst: null,
     maxConst: null,
   })

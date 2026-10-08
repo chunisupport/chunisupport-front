@@ -8,6 +8,7 @@ import { AppSelect } from '../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import type {
   MasterItemDTO,
+  NameFolderDTO,
   PlayerLockedSongRequest,
   PlayerLockedSongResponseItem,
   PlayerRecordDTO,
@@ -19,6 +20,7 @@ import {
   toLockedSongRequests,
 } from '../../../../usecases/overpower/lockedSongsBatch'
 import { buildLockedSongsOpComparison } from '../../../../usecases/overpower/lockedSongsOpComparison'
+import { isNullableSelectionMatched } from '../../../../utils/filterSelection'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
 import {
   normalizeForReadingSearch,
@@ -38,7 +40,7 @@ import {
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   sortSongSelectionCandidates,
 } from '../../components/songSelectionDialog'
-import { hasSameFilterValues } from '../../utils/filterValue'
+import { hasSameFilterValues, hasSameNullableFilterValues } from '../../utils/filterValue'
 import {
   DEFAULT_LOCKED_SONGS_UNLOCK_REQUIRED_ONLY,
   LOCKED_SONG_PLAY_STATUS_FILTER_COPY,
@@ -55,6 +57,8 @@ type Props = {
   records: PlayerRecordDTO[]
   genres: MasterItemDTO[]
   versions: VersionDTO[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders: NameFolderDTO[]
   lockedSongs: PlayerLockedSongResponseItem[]
   /** CHUNITHM-NETから取得した公式OVER POWER */
   officialOverPower: number
@@ -72,6 +76,8 @@ type LockedSongListItem = {
 type LockedSongsFilter = {
   genres: string[]
   versions: string[]
+  /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
+  nameFolders: string[] | null
   playStatusEnabled: boolean
   playStatus: LockedSongsPlayStatus
 }
@@ -95,7 +101,7 @@ const hasUltimaChart = (song: SongDTO): boolean => Boolean(song.charts.ULTIMA)
  *
  * @param genres - 初期選択するジャンル選択肢。
  * @param versions - 初期選択するバージョン選択肢。
- * @returns ジャンル・バージョンを全選択したフィルター状態。
+ * @returns ジャンル・バージョン・楽曲名順を全選択したフィルター状態。
  */
 const buildDefaultLockedSongsFilter = (
   genres: string[],
@@ -120,7 +126,8 @@ const isLockedSongsFilterChanged = (
   current.playStatusEnabled !== defaultFilter.playStatusEnabled ||
   current.playStatus !== defaultFilter.playStatus ||
   !hasSameFilterValues(current.genres, defaultFilter.genres) ||
-  !hasSameFilterValues(current.versions, defaultFilter.versions)
+  !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+  !hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders)
 
 /**
  * OVER POWER計算から除外する未解禁楽曲を検索・絞り込みしながら編集するダイアログ。
@@ -235,6 +242,9 @@ const LockedSongsDialog: Component<Props> = (props) => {
         if (!currentFilters.genres.includes(item.song.genre)) return false
         const version = songVersionNameById().get(item.song.id) ?? '不明'
         if (!currentFilters.versions.includes(version)) return false
+        if (!isNullableSelectionMatched(item.song.name_folder_code, currentFilters.nameFolders)) {
+          return false
+        }
         if (!normalizedQuery) return true
         return (
           searchableText.includes(normalizedQuery) ||
@@ -410,11 +420,14 @@ const LockedSongsDialog: Component<Props> = (props) => {
       hasChanges={model.hasChanges}
       genres={genreOptions}
       versions={versionOptions}
+      nameFolders={() => props.nameFolders}
       filters={model.filters}
       selectedGenres={(filter) => filter.genres}
       selectedVersions={(filter) => filter.versions}
+      selectedNameFolders={(filter) => filter.nameFolders}
       setGenres={(genres) => model.setFilters((current) => ({ ...current, genres }))}
       setVersions={(versions) => model.setFilters((current) => ({ ...current, versions }))}
+      setNameFolders={(nameFolders) => model.setFilters((current) => ({ ...current, nameFolders }))}
       resetFilters={model.resetFilters}
       showFilterCloseButton={true}
       actionButtonSize="sm"

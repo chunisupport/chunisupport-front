@@ -3,12 +3,14 @@ import {
   getSearchTextFieldIconClass,
 } from '../../../components/common/searchTextFieldStyles'
 import type { SongDTO } from '../../../types/api'
-import { hasSameFilterValues } from '../utils/filterValue'
+import { hasSameFilterValues, hasSameNullableFilterValues } from '../utils/filterValue'
 
-/** 楽曲選択ダイアログで共通利用するジャンル・バージョンフィルター */
+/** 楽曲選択ダイアログで共通利用するジャンル・バージョン・楽曲名順フィルター */
 export type SongSelectionFilter = {
   genres: string[]
   versions: string[]
+  /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
+  nameFolders: string[] | null
 }
 
 /** 楽曲選択フィルターダイアログ内の Select を前面へ表示するクラス */
@@ -27,12 +29,12 @@ export const SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS =
  *
  * @param genres - 全ジャンル。
  * @param versions - 全バージョン。
- * @returns 全項目を選択したフィルター。
+ * @returns 全項目を選択したフィルター。楽曲名順は全選択を表す null とする。
  */
 export const buildDefaultSongSelectionFilter = (
   genres: string[],
   versions: string[]
-): SongSelectionFilter => ({ genres, versions })
+): SongSelectionFilter => ({ genres, versions, nameFolders: null })
 
 /**
  * 楽曲選択フィルターが既定値から変わっているか判定する。
@@ -46,7 +48,8 @@ export const hasSongSelectionFilterChanges = (
   defaultFilter: SongSelectionFilter
 ): boolean =>
   !hasSameFilterValues(current.genres, defaultFilter.genres) ||
-  !hasSameFilterValues(current.versions, defaultFilter.versions)
+  !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+  !hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders)
 
 /**
  * 保存済みとdraftの選択キーが一致するか判定する。

@@ -371,6 +371,7 @@ const UserRecord: Component<Props> = (props) => {
                   songs={allSongs()?.songs ?? []}
                   genres={masterData()?.genres ?? []}
                   versions={versionData()?.versions ?? []}
+                  nameFolders={nameFolders() ?? []}
                   favoriteSongs={favoriteSongs()?.items ?? []}
                   onOpenChange={setFavoriteSongsOpen}
                   onSave={handleSaveFavoriteSongs}

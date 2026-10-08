@@ -1,11 +1,13 @@
 import type { Component, Setter } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
+import { NameFolderFilterMultiSelect } from '../../../../components/common/DomainMultiSelect'
 import { SCORE_MIN } from '../../../../constants/chart'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../constants/recordFilterOptions'
+import type { NameFolderDTO } from '../../../../types/api'
 import type { ChainLamp, ComboLampFilter, HardLamp } from '../../../../types/record'
 import {
   parseNumberInput,
@@ -31,6 +33,8 @@ type WorldsendFilterSelectionPanelProps = {
   filters: WorldsendFilterState
   setFilters: Setter<WorldsendFilterState>
   defaultFilter: WorldsendFilterState
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders?: NameFolderDTO[]
 }
 
 /**
@@ -344,6 +348,12 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
         onChange={(selectedVersions) =>
           props.setFilters((prev) => ({ ...prev, versions: selectedVersions }))
         }
+      />
+      <NameFolderFilterMultiSelect
+        nameFolders={props.nameFolders ?? []}
+        selected={props.filters.nameFolders}
+        labelClass="text-text"
+        onChange={(nameFolders) => props.setFilters((prev) => ({ ...prev, nameFolders }))}
       />
     </div>
   )

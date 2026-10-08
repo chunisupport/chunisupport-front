@@ -35,6 +35,8 @@ export interface WorldsendFilterState {
   levelStarRange: NumericRangeFilter
   genres: string[]
   versions: string[]
+  /** 対象とする楽曲名順フォルダのコード。null は全フォルダ対象、空配列は全件不一致を表す */
+  nameFolders: string[] | null
   score: NumericRangeFilter
   scoreFilterMode: 'number' | 'rank'
   justiceCount: NumericRangeFilter<number | null>

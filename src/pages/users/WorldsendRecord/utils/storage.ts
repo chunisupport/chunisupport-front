@@ -11,9 +11,10 @@ import { isValidSavedWorldsendFilter } from '../../components/savedRecordFilters
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
-export const SAVED_WORLDSEND_FILTER_SCHEMA_VERSION = 4
+export const SAVED_WORLDSEND_FILTER_SCHEMA_VERSION = 5
 const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION = 2
 const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_3 = 3
+const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_4 = 4
 const WORLDSEND_RECORD_FILTER_TYPE = 'worldsend'
 const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
 const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
@@ -40,7 +41,8 @@ export function toSavedWorldsendFilter(dto: RecordFilterDTO<unknown>): SavedWorl
   const validSchema =
     dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION ||
     dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION ||
-    dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_3
+    dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_3 ||
+    dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_4
   const filter =
     validSchema && isObjectRecord(dto.filter) && isValidSavedWorldsendFilter(dto.filter)
       ? dto.filter
@@ -54,7 +56,8 @@ export function toSavedWorldsendFilter(dto: RecordFilterDTO<unknown>): SavedWorl
       ? normalizeWorldsendFilterState({
           ...filter,
           combo_lamp:
-            dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION
+            dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION ||
+            dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_4
               ? filter.combo_lamp
               : migrateLegacyComboLampFilters(filter.combo_lamp),
         })
