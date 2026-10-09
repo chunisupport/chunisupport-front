@@ -25,6 +25,7 @@ import { fetchMe } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
+import { ChartCanvasFrame } from '../../components/common/ChartCanvasFrame'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
@@ -272,9 +273,9 @@ const WeakChartDistributionChart = (props: {
         <span>{WEAK_CHART_INSPECTOR_COPY.chartTitle}</span>
       </figcaption>
       <div class="overflow-x-auto overscroll-x-contain">
-        <div class={`relative h-112 w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
+        <ChartCanvasFrame class={`h-112 w-full ${WEAK_CHART_MIN_WIDTH_CLASS}`}>
           <canvas ref={canvasRef} aria-label={WEAK_CHART_INSPECTOR_COPY.chartAccessibleLabel} />
-        </div>
+        </ChartCanvasFrame>
       </div>
       <div ref={tooltipRef} class={CHART_SCATTER_TOOLTIP_CLASS} role="tooltip" />
     </figure>

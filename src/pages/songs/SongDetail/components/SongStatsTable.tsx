@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount } from 'solid-js'
+import { ChartCanvasFrame } from '../../../../components/common/ChartCanvasFrame'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { RatingBandDTO, SongStatsBandDTO } from '../../../../types/api'
 import { createChartStripePattern } from '../../../../utils/chartPattern'
@@ -494,9 +495,9 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
             )}
           </For>
         </ul>
-        <div class="min-h-0 flex-1">
+        <ChartCanvasFrame class="min-h-0 flex-1">
           <canvas ref={canvasRef} aria-label={props.ariaLabel} role="img" />
-        </div>
+        </ChartCanvasFrame>
       </div>
     </section>
   )
@@ -668,7 +669,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
   return (
     <section class="min-w-0 rounded-md border border-border bg-surface-muted p-3">
       <h3 class="mb-2 text-sm font-semibold">{AVERAGE_SCORE_CHART_TITLE}</h3>
-      <div class={CHART_HEIGHT_CLASS}>
+      <ChartCanvasFrame class={CHART_HEIGHT_CLASS}>
         <canvas
           ref={canvasRef}
           aria-label={
@@ -678,7 +679,7 @@ const SongStatsAverageScoreChart = (props: SongStatsAverageScoreChartProps) => {
           }
           role="img"
         />
-      </div>
+      </ChartCanvasFrame>
     </section>
   )
 }
