@@ -338,7 +338,6 @@ const createBarBackgroundPlugin = (datasets: SongStatsChartDataset[]): Plugin<'b
           bar.options = {
             ...bar.options,
             backgroundColor: resolvedBackground,
-            borderColor: resolvedBackground,
           }
         })
       })
@@ -419,11 +418,8 @@ const createSongStatsChartData = (
       label: dataset.label,
       data: dataset.values,
       backgroundColor: color,
-      borderColor: color,
       hoverBackgroundColor: color,
-      hoverBorderColor: color,
-      borderWidth: 1,
-      borderRadius: 3,
+      borderWidth: 0,
     }
   }),
 })
