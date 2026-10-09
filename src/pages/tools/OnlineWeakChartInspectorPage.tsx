@@ -22,6 +22,7 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../components/common/AppMultiSelect'
 import { AppSelect } from '../../components/common/AppSelect'
+import { ChartCanvasFrame } from '../../components/common/ChartCanvasFrame'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
@@ -249,9 +250,9 @@ const OnlineWeakChartScatter = (props: {
     <figure class="rounded-lg border border-border bg-surface p-4">
       <figcaption class="mb-3 font-semibold">{ONLINE_WEAK_CHART_COPY.chartTitle}</figcaption>
       <div class="overflow-x-auto overscroll-x-contain">
-        <div class="h-112 min-w-[44rem]">
+        <ChartCanvasFrame class="h-112 min-w-[44rem]">
           <canvas ref={canvasRef} role="img" aria-label={ONLINE_WEAK_CHART_COPY.chartLabel} />
-        </div>
+        </ChartCanvasFrame>
       </div>
       <div ref={tooltipRef} class={CHART_SCATTER_TOOLTIP_CLASS} role="tooltip" />
     </figure>

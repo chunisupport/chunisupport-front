@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
+import { ChartCanvasFrame } from '../../../../components/common/ChartCanvasFrame'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
 import type { ScoreHistoryEntryDTO } from '../../../../types/api'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chartTheme'
@@ -206,9 +207,9 @@ const ScoreHistoryChart = (props: Props) => {
           <div class="py-10 text-center text-sm text-text-muted">{SCORE_HISTORY_EMPTY_LABEL}</div>
         }
       >
-        <div class={CHART_HEIGHT_CLASS}>
+        <ChartCanvasFrame class={CHART_HEIGHT_CLASS}>
           <canvas ref={canvasRef} aria-label="スコア履歴の折れ線グラフ" role="img" />
-        </div>
+        </ChartCanvasFrame>
       </Show>
     </section>
   )

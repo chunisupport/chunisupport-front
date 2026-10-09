@@ -10,6 +10,7 @@ import {
 } from 'chart.js'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { ChartCanvasFrame } from '../../../components/common/ChartCanvasFrame'
 import { accentPreference, themePreference } from '../../../stores/themePreferences'
 import type { PlayerMetricHistoryEntryDTO } from '../../../types/api'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../utils/chartTheme'
@@ -220,9 +221,9 @@ const MetricHistoryLineChart: Component<MetricChartProps> = (props) => {
   return (
     <section class="rounded-lg border border-border bg-surface p-4 shadow-sm">
       <h2 class="mb-3 text-lg font-semibold text-text">{props.definition.title}</h2>
-      <div class={PLAYER_METRIC_HISTORY_CHART_HEIGHT_CLASS}>
+      <ChartCanvasFrame class={PLAYER_METRIC_HISTORY_CHART_HEIGHT_CLASS}>
         <canvas ref={canvasRef} aria-label={props.definition.ariaLabel} role="img" />
-      </div>
+      </ChartCanvasFrame>
     </section>
   )
 }
