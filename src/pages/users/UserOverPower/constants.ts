@@ -81,8 +81,6 @@ export const LOCKED_SONGS_OP_COMPARISON_COPY = {
   matched: '一致',
   mismatched: '差異あり',
   missingValue: '-',
-  /** 最終プレイ以降に追加され照合から除外した楽曲数の表示 */
-  songsAddedAfterLastPlay: (count: number) => `最終プレイ以降の追加曲 ${count}曲は照合対象外`,
   guidance: {
     overPowerHigher: 'プレイ済みの未解禁楽曲があります',
     overPowerLower: 'プレイ済み・解禁済みの楽曲を未解禁に指定しています',

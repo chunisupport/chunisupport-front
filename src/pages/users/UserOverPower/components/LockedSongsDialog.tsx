@@ -64,8 +64,6 @@ type Props = {
   officialOverPower: number
   /** CHUNITHM-NETから取得した公式OP%。記録開始前はnull */
   officialOverPowerPercent: number | null
-  /** 公式値を取得した時点の最終プレイ日時。不明な場合はnull */
-  lastPlayedAt: string | null
   onOpenChange: (open: boolean) => void
   onSaveLockedSongs: (items: PlayerLockedSongRequest[]) => Promise<void>
 }
@@ -267,7 +265,6 @@ const LockedSongsDialog: Component<Props> = (props) => {
       lockedSongs: draftLockedSongs(),
       officialOverPower: props.officialOverPower,
       officialOverPowerPercent: props.officialOverPowerPercent,
-      lastPlayedAt: props.lastPlayedAt,
     })
   )
 
