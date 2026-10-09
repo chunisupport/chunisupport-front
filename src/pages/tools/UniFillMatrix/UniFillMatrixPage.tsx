@@ -1,7 +1,17 @@
 import { useNavigate } from '@solidjs/router'
 import { ArrowLeftRight, ArrowUpDown, Grid3X3 } from 'lucide-solid'
 import type { Accessor, Component, JSX, Setter } from 'solid-js'
-import { batch, createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
+import {
+  batch,
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  For,
+  on,
+  Show,
+} from 'solid-js'
 import { render } from 'solid-js/web'
 import { fetchGenres } from '../../../api/genres'
 import { fetchVersions } from '../../../api/songs'
@@ -48,8 +58,6 @@ import {
   UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING,
   UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT,
   UNI_FILL_MATRIX_DEFAULT_DIFFICULTY,
-  UNI_FILL_MATRIX_DEFAULT_HORIZONTAL,
-  UNI_FILL_MATRIX_DEFAULT_VERTICAL,
   UNI_FILL_MATRIX_DIFFICULTY_OPTIONS,
   UNI_FILL_MATRIX_DIMENSION_OPTIONS,
   UNI_FILL_MATRIX_IMAGE_PADDING,
@@ -62,6 +70,10 @@ import {
   type UniFillMatrixDimensionOption,
 } from './constants'
 import { UniFillMatrixImagePreviewDialog } from './UniFillMatrixImagePreviewDialog'
+import {
+  readUniFillMatrixViewSettings,
+  saveUniFillMatrixViewSettings,
+} from './uniFillMatrixViewSettingsStorage'
 
 /** ページ内セクションに共通適用するカードクラス */
 const PAGE_SECTION_CLASS = 'rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5'
@@ -282,13 +294,14 @@ const UniFillMatrixPage: Component = () => {
   const [achievement, setAchievement] = createSignal<UniFillMatrixAchievementOption>(
     UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT
   )
-  const [vertical, setVertical] = createSignal<UniFillMatrixDimension>(
-    UNI_FILL_MATRIX_DEFAULT_VERTICAL
-  )
+  const savedViewSettings = readUniFillMatrixViewSettings()
+  const [vertical, setVertical] = createSignal<UniFillMatrixDimension>(savedViewSettings.vertical)
   const [horizontal, setHorizontal] = createSignal<UniFillMatrixDimension>(
-    UNI_FILL_MATRIX_DEFAULT_HORIZONTAL
+    savedViewSettings.horizontal
   )
-  const [levelConstAxis, setLevelConstAxis] = createSignal<PlayerStatsHeatmapAxis>('level')
+  const [levelConstAxis, setLevelConstAxis] = createSignal<PlayerStatsHeatmapAxis>(
+    savedViewSettings.levelConstAxis
+  )
   /**
    * 選択中の両軸に対応する読み上げ用説明を返す。
    *
@@ -345,7 +358,20 @@ const UniFillMatrixPage: Component = () => {
       setVertical(horizontal())
       setHorizontal(currentVertical)
     })
-  const [showPercent, setShowPercent] = createSignal(false)
+  const [showPercent, setShowPercent] = createSignal(savedViewSettings.showPercent)
+  createEffect(
+    on(
+      [vertical, horizontal, levelConstAxis, showPercent],
+      ([nextVertical, nextHorizontal, nextLevelConstAxis, nextShowPercent]) =>
+        saveUniFillMatrixViewSettings({
+          vertical: nextVertical,
+          horizontal: nextHorizontal,
+          levelConstAxis: nextLevelConstAxis,
+          showPercent: nextShowPercent,
+        }),
+      { defer: true }
+    )
+  )
   const [pageData] = createResource(fetchOwnPlayerStatsData)
   const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)

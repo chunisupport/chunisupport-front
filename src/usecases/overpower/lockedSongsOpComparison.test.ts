@@ -223,3 +223,26 @@ test('公式OP%がnullのときはOP一致だけでmatchedを判定すること'
   assert.equal(result.overPowerMatched, true)
   assert.equal(result.matched, true)
 })
+
+test('記録の更新日より後に追加された未プレイ楽曲も公式OP照合の計算に含めること', () => {
+  const songs = [
+    createSong({ id: 'old', maxop: 90, release: '2025-01-09T00:00:00Z' }),
+    createSong({ id: 'new', maxop: 80, release: '2025-01-23T00:00:00Z' }),
+  ]
+  const records = [createRecord({ id: 'old', overpower: 85, updated_at: '2025-01-22T14:00:00Z' })]
+
+  const result = buildLockedSongsOpComparison({
+    songs,
+    records,
+    versions,
+    lockedSongs: [],
+    officialOverPower: 85,
+    officialOverPowerPercent: (85 / 90) * 100,
+  })
+
+  assert.equal(result.calculatedOverPower, 85)
+  assert.equal(result.calculatedOverPowerPercent, (85 / 170) * 100)
+  assert.equal(result.overPowerMatched, true)
+  assert.equal(result.percentMatched, false)
+  assert.equal(result.matched, false)
+})
