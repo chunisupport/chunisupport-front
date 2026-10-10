@@ -1,3 +1,4 @@
+import { A } from '@solidjs/router'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import {
   ADMIN_USER_LIST_PAGE_SIZE,
@@ -20,6 +21,7 @@ import type { AccountType } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { formatInteger } from '../../utils/numberFormat'
 import { resolvePagedListTotalPages } from '../../utils/pagination'
+import { buildUserProfilePagePath } from '../../utils/userProfileRoute'
 import {
   ADMIN_USER_LIST_COPY,
   ADMIN_USER_STATISTICS_COPY,
@@ -27,6 +29,7 @@ import {
   formatAdminUserFlagLabel,
 } from './AdminUsersPage.constants'
 import {
+  canLinkAdminUserProfile,
   formatAccountType,
   formatAdminUserDateTime,
   formatNullableText,
@@ -36,6 +39,7 @@ import {
 /**
  * 管理者向けユーザー管理ページ。
  * ユーザー集計と、ユーザー一覧の検索・ページング・権限変更・物理削除を提供する。
+ * 公開かつプレイヤーデータ連携済みのユーザー名はプロフィールページへのリンクとして表示する。
  * テーブルヘッダおよび全データ行のセルでテキストの自動改行（折り返し）を禁止し、
  * 内容が長い場合は親要素の overflow-x-auto により横スクロールで表示する。
  *
@@ -328,7 +332,16 @@ const AdminUsersPage = () => {
               <For each={users()}>
                 {(user) => (
                   <tr class="border-t border-border">
-                    <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">{user.username}</td>
+                    <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">
+                      <Show when={canLinkAdminUserProfile(user)} fallback={user.username}>
+                        <A
+                          href={buildUserProfilePagePath(user.username, 'rating_best')}
+                          class="text-action-primary hover:underline"
+                        >
+                          {user.username}
+                        </A>
+                      </Show>
+                    </td>
                     <td class="whitespace-nowrap px-3 py-2">
                       <Show
                         when={!permissionsResponse.loading}

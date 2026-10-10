@@ -3,6 +3,7 @@ import test from 'node:test'
 import type { AdminUserListResponse } from '../../types/api.ts'
 
 import {
+  canLinkAdminUserProfile,
   formatAccountType,
   formatAdminUserDateTime,
   formatNullableText,
@@ -34,6 +35,27 @@ test('nullable text は null と空文字でハイフンを返す', () => {
   assert.equal(formatNullableText(null), '-')
   assert.equal(formatNullableText(''), '-')
   assert.equal(formatNullableText('るなぁぁ'), 'るなぁぁ')
+})
+
+test('公開かつプレイヤーデータ連携済みのユーザーはプロフィールへリンクできる', () => {
+  // Given
+  const user = { is_private: false, player_name: 'ALICE' }
+
+  // When
+  const result = canLinkAdminUserProfile(user)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('非公開またはプレイヤーデータ未連携のユーザーはプロフィールへリンクしない', () => {
+  // Given
+  const privateUser = { is_private: true, player_name: 'ALICE' }
+  const unregisteredUser = { is_private: false, player_name: null }
+
+  // When & Then
+  assert.equal(canLinkAdminUserProfile(privateUser), false)
+  assert.equal(canLinkAdminUserProfile(unregisteredUser), false)
 })
 
 test('ユーザー一覧は対象行の指定フィールドだけを更新し、行順と他の行を維持する', () => {
