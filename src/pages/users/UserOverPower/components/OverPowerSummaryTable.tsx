@@ -2,6 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { OverPowerTierValue } from '../../../../components/common/OverPowerTierValue'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
 import { OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES } from '../constants'
@@ -67,8 +68,8 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
                       <span class="sr-only">のレコードを表示</span>
                     </Button>
                   </th>
-                  <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums">
-                    {formatValue(row.current)}
+                  <td class="whitespace-nowrap px-2 py-2 text-right text-base tabular-nums">
+                    <OverPowerTierValue percent={row.percent} text={formatValue(row.current)} />
                   </td>
                   <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums text-text-muted">
                     {formatValue(row.max)}

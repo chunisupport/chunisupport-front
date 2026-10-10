@@ -834,6 +834,38 @@
   --cs-color-lamp-failed-bg: var(--color-gray-100);
   --cs-color-lamp-failed-text: var(--color-gray-300);
   --cs-color-lamp-none-bg: var(--color-gray-100);
+
+  /* ===== OVER POWER数値の色段階（銀 / 金 / 鉑 / 虹 / 影） ===== */
+  --cs-gradient-over-power-tier-silver: linear-gradient(
+    180deg,
+    #eef6ff 0%,
+    #b4cdee 50%,
+    #7f9fcf 51%,
+    #d6e6fb 100%
+  );
+  --cs-gradient-over-power-tier-gold: linear-gradient(
+    180deg,
+    #fff6b8 0%,
+    #ffd23f 50%,
+    #e0a414 51%,
+    #ffe27a 100%
+  );
+  --cs-gradient-over-power-tier-platinum: linear-gradient(
+    180deg,
+    #fffdf2 0%,
+    #fff0b8 50%,
+    #e6cf86 51%,
+    #fff7d6 100%
+  );
+  --cs-gradient-over-power-tier-rainbow: linear-gradient(
+    90deg,
+    #ff7a7a,
+    #ffd36b,
+    #8cf28c,
+    #6fd3ff,
+    #b48cff
+  );
+  --cs-shadow-over-power-tier: 0 1px 1px rgb(0 0 0 / 80%);
 }
 
 @theme inline {
@@ -1126,6 +1158,34 @@
 }
 
 @layer components {
+  /* OVER POWER数値: 色付けする段階の数字の形に沿って影を付ける。
+     text-shadow はグラデーション文字の上に重なって色を隠すため drop-shadow を使い、
+     background-clip:text と filter を同じ要素に重ねると Safari で崩れるため色クラスとは別要素に付与する */
+  .over-power-tier {
+    display: inline-block;
+    filter: drop-shadow(var(--cs-shadow-over-power-tier));
+  }
+  .over-power-tier--silver,
+  .over-power-tier--gold,
+  .over-power-tier--platinum,
+  .over-power-tier--rainbow {
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .over-power-tier--silver {
+    background-image: var(--cs-gradient-over-power-tier-silver);
+  }
+  .over-power-tier--gold {
+    background-image: var(--cs-gradient-over-power-tier-gold);
+  }
+  .over-power-tier--platinum {
+    background-image: var(--cs-gradient-over-power-tier-platinum);
+  }
+  .over-power-tier--rainbow {
+    background-image: var(--cs-gradient-over-power-tier-rainbow);
+  }
+
   .user-honor-title {
     box-sizing: border-box;
     display: block;

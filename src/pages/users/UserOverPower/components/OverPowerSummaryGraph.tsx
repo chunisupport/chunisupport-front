@@ -2,6 +2,7 @@ import { Button } from '@kobalte/core/button'
 import { Funnel } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
+import { OverPowerTierValue } from '../../../../components/common/OverPowerTierValue'
 import { DistributionBar as StackedDistributionBar } from '../../../../components/common/record/DistributionBar'
 import {
   ALL_JUSTICE_CRITICAL_BG_CLASS,
@@ -144,9 +145,12 @@ export const OverPowerSummaryCard: Component<CardProps> = (props) => {
         </Show>
       </h3>
       <p
-        class={`mt-2 text-lg font-bold tabular-nums text-text ${props.imageMode ? 'whitespace-nowrap' : ''}`}
+        class={`mt-2 text-xl font-bold tabular-nums text-text ${props.imageMode ? 'whitespace-nowrap' : ''}`}
       >
-        {formatValue(props.row.summary.current)}
+        <OverPowerTierValue
+          percent={props.row.summary.percent}
+          text={formatValue(props.row.summary.current)}
+        />
         <span class="text-sm font-normal text-text-muted">
           {' '}
           / {formatValue(props.row.summary.max)} ({formatPercent(props.row.summary.percent)}%)
