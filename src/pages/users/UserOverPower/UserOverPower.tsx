@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ChartBarBig, LockKeyhole, LockKeyholeOpen, Table2 } from 'lucide-solid'
+import { ChartBarBig, ImageDown, LockKeyhole, Table2 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import {
   createMemo,
@@ -15,8 +15,10 @@ import { fetchNameFolders } from '../../../api/nameFolders'
 import { fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
-import { AppButton } from '../../../components/common/AppButton'
+import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
 import { AppSelect } from '../../../components/common/AppSelect'
+import { CheckboxField } from '../../../components/common/CheckboxField'
+import { SingleImagePreviewDialog } from '../../../components/common/SingleImagePreviewDialog'
 import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
@@ -35,6 +37,7 @@ import type {
   OverPowerSummaryRow,
 } from '../../../usecases/overpower/types'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
+import { captureOffscreenRenderedImage } from '../../../utils/offscreenImageCapture'
 import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import {
   buildUserOverPowerPagePath,
@@ -44,12 +47,16 @@ import {
 import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
 import LockedSongsDialog from './components/LockedSongsDialog'
 import LowLevelRowsToggle from './components/LowLevelRowsToggle'
+import { OverPowerImageSheet } from './components/OverPowerImageSheet'
 import { OverPowerSummaryGraph } from './components/OverPowerSummaryGraph'
 import { OverPowerSummaryTable } from './components/OverPowerSummaryTable'
 import {
   DEFAULT_OVER_POWER_SUMMARY_VIEW_MODE,
   OVER_POWER_AGGREGATION_TARGET_OPTIONS,
   OVER_POWER_CONTROL_LABELS,
+  OVER_POWER_IMAGE_COPY,
+  OVER_POWER_IMAGE_PIXEL_RATIO,
+  OVER_POWER_IMAGE_WIDTH,
   OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL,
   OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE,
   OVER_POWER_SUMMARY_OPTIONS,
@@ -69,6 +76,7 @@ import {
   buildGraphRows,
   type RecordsBySummaryTab,
 } from './utils/graphRows'
+import { formatOverPowerImageFilename } from './utils/overPowerImageFilename'
 
 type Props = {
   record: UserRecordDTO
@@ -182,6 +190,15 @@ const UserOverPower: Component<Props> = (props) => {
     if (!currentSummary || !recordGroups) return []
     return buildGraphRows(currentSummary.versions, recordGroups.versions)
   })
+  /** 画面に表示中のカードの集計行。全体カードの後に選択中の表示軸のカードを並べる */
+  const displayedGraphRows = createMemo<OverPowerGraphRow[]>(() => {
+    const tabRows: Record<OverPowerSummaryTab, OverPowerGraphRow[]> = {
+      genres: genreGraphRows(),
+      levels: levelGraphRows(),
+      versions: versionGraphRows(),
+    }
+    return [...allGraphRows(), ...tabRows[selectedSummaryTab()]]
+  })
   const selectedSummaryOption = createMemo(
     () =>
       OVER_POWER_SUMMARY_OPTIONS.find((option) => option.value === selectedSummaryTab()) ??
@@ -204,6 +221,30 @@ const UserOverPower: Component<Props> = (props) => {
   const nextSummaryViewMode = createMemo<OverPowerSummaryViewMode>(() =>
     summaryViewMode() === 'table' ? 'graph' : 'table'
   )
+
+  /**
+   * 表示中のカードを横3枚ずつ並べた固定幅のシートを一時的に描画し、PNGへ変換する。
+   *
+   * @returns 生成したPNG画像。
+   */
+  const captureOverPowerImage = (): Promise<Blob> =>
+    captureOffscreenRenderedImage(
+      OVER_POWER_IMAGE_WIDTH,
+      () => <OverPowerImageSheet playerName={props.player.name} rows={displayedGraphRows()} />,
+      { format: 'png', pixelRatio: OVER_POWER_IMAGE_PIXEL_RATIO }
+    )
+
+  /**
+   * 現在の表示条件と日時からOVER POWER画像のファイル名を生成する。
+   *
+   * @returns ユーザー名・表示軸・集計対象・日時を含むPNGファイル名。
+   */
+  const createOverPowerImageFilename = (): string =>
+    formatOverPowerImageFilename({
+      username: props.username,
+      subPage: props.selectedSubPage,
+      aggregationTarget: aggregationTarget(),
+    })
 
   /** OVERPOWERサマリーの表示形式をテーブルとグラフの間で切り替える */
   const handleToggleSummaryViewMode = () => {
@@ -346,59 +387,74 @@ const UserOverPower: Component<Props> = (props) => {
                   </div>
 
                   <div class="ml-auto flex w-full items-center justify-between gap-1 sm:w-auto sm:justify-start">
-                    <AppButton
-                      variant="surface"
-                      size="sm"
-                      shape="pill"
-                      class="h-10 w-10 shrink-0 focus-visible:ring-offset-2"
-                      aria-label={`${
-                        nextSummaryViewMode() === 'graph'
-                          ? OVER_POWER_CONTROL_LABELS.graph
-                          : OVER_POWER_CONTROL_LABELS.table
-                      }表示に切り替え`}
-                      title={`${
-                        nextSummaryViewMode() === 'graph'
-                          ? OVER_POWER_CONTROL_LABELS.graph
-                          : OVER_POWER_CONTROL_LABELS.table
-                      }表示に切り替え`}
-                      onClick={handleToggleSummaryViewMode}
-                    >
-                      <Show
-                        when={nextSummaryViewMode() === 'graph'}
-                        fallback={<Table2 class="h-5 w-5 shrink-0" aria-hidden="true" />}
-                      >
-                        <ChartBarBig class="h-5 w-5 shrink-0" aria-hidden="true" />
-                      </Show>
-                    </AppButton>
-
-                    <div class="flex shrink-0 items-center gap-1">
-                      <AppButton
-                        variant={excludeLockedSongs() ? 'primary' : 'surface'}
-                        size="sm"
-                        shape="pill"
-                        class="h-10 w-35 whitespace-nowrap focus-visible:ring-offset-2"
-                        aria-pressed={excludeLockedSongs()}
-                        onClick={() => setExcludeLockedSongs((excluded) => !excluded)}
-                        rightIcon={<LockKeyholeOpen class="h-5 w-5" aria-hidden="true" />}
-                      >
-                        <span>{OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL}</span>
-                      </AppButton>
+                    <div class="flex items-center gap-1">
                       <AppButton
                         variant="surface"
                         size="sm"
                         shape="pill"
-                        class="h-10 whitespace-nowrap focus-visible:ring-offset-2"
-                        aria-label={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
-                        title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
-                        disabled={lockedSongsButtonDisabled()}
-                        onClick={() => setLockedSongsDialogOpen(true)}
-                        rightIcon={<LockKeyhole class="h-5 w-5" aria-hidden="true" />}
+                        class="h-10 w-10 shrink-0 focus-visible:ring-offset-2"
+                        aria-label={`${
+                          nextSummaryViewMode() === 'graph'
+                            ? OVER_POWER_CONTROL_LABELS.graph
+                            : OVER_POWER_CONTROL_LABELS.table
+                        }表示に切り替え`}
+                        title={`${
+                          nextSummaryViewMode() === 'graph'
+                            ? OVER_POWER_CONTROL_LABELS.graph
+                            : OVER_POWER_CONTROL_LABELS.table
+                        }表示に切り替え`}
+                        onClick={handleToggleSummaryViewMode}
                       >
-                        <span>{OVER_POWER_CONTROL_LABELS.lockedSongs}</span>
+                        <Show
+                          when={nextSummaryViewMode() === 'graph'}
+                          fallback={<Table2 class="h-5 w-5 shrink-0" aria-hidden="true" />}
+                        >
+                          <ChartBarBig class="h-5 w-5 shrink-0" aria-hidden="true" />
+                        </Show>
                       </AppButton>
+
+                      <SingleImagePreviewDialog
+                        captureImage={captureOverPowerImage}
+                        createFilename={createOverPowerImageFilename}
+                        disabled={
+                          summaryViewMode() === 'table' || displayedGraphRows().length === 0
+                        }
+                        triggerClass={getAppButtonClass({
+                          variant: 'surface',
+                          size: 'sm',
+                          shape: 'pill',
+                          class: 'h-10 shrink-0 whitespace-nowrap focus-visible:ring-offset-2',
+                        })}
+                        triggerIcon={<ImageDown class="h-5 w-5" aria-hidden="true" />}
+                        triggerLabel={OVER_POWER_IMAGE_COPY.triggerLabel}
+                        title={OVER_POWER_IMAGE_COPY.previewTitle}
+                        imageAlt={OVER_POWER_IMAGE_COPY.previewAlt}
+                      />
                     </div>
+
+                    <AppButton
+                      variant="surface"
+                      size="sm"
+                      shape="pill"
+                      class="h-10 shrink-0 whitespace-nowrap focus-visible:ring-offset-2"
+                      aria-label={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
+                      title={OVER_POWER_CONTROL_LABELS.lockedSongsSettings}
+                      disabled={lockedSongsButtonDisabled()}
+                      onClick={() => setLockedSongsDialogOpen(true)}
+                      rightIcon={<LockKeyhole class="h-5 w-5" aria-hidden="true" />}
+                    >
+                      <span>{OVER_POWER_CONTROL_LABELS.lockedSongs}</span>
+                    </AppButton>
                   </div>
                 </div>
+
+                <CheckboxField
+                  id="over-power-exclude-locked-songs"
+                  class="mt-3 self-end"
+                  checked={excludeLockedSongs()}
+                  onChange={setExcludeLockedSongs}
+                  label={OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL}
+                />
 
                 <Show when={recordNavigationError()}>
                   {(message) => (
