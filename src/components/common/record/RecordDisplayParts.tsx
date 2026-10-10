@@ -330,7 +330,7 @@ export const RecordScoreCell = (props: {
     <div
       class={`font-jost flex ${RECORD_ROW_MIN_HEIGHT_CLASS} flex-col items-end justify-center px-1 text-right whitespace-nowrap ${RECORD_ALPHANUMERIC_COLUMN_CLASS}`}
     >
-      <span class="w-full text-right leading-none">
+      <span class="w-full text-right leading-none tabular-nums">
         {props.record.score.toLocaleString('ja-JP')}
       </span>
       <RecordScoreRank rank={scoreRank} class="w-full text-right" />
