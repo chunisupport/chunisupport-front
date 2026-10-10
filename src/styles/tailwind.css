@@ -784,6 +784,14 @@
     rgb(255 255 255 / 30%) 76%,
     rgb(0 0 0 / 12%) 100%
   );
+  --cs-gradient-record-lamp-bar-gloss: linear-gradient(
+    180deg in oklab,
+    rgb(255 255 255 / 70%) 0%,
+    rgb(255 255 255 / 25%) 45%,
+    rgb(0 0 0 / 4%) 55%,
+    rgb(255 255 255 / 15%) 85%,
+    rgb(0 0 0 / 10%) 100%
+  );
   --cs-color-lamp-full-combo-bg: var(--color-yellow-300);
   --cs-color-lamp-full-combo-text: var(--color-yellow-900);
   --cs-color-lamp-all-justice-bg: #fdf5a7;
