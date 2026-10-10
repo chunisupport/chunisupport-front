@@ -23,6 +23,7 @@ import {
   resolveChartColor,
   resolveChartPixelLength,
 } from '../../../../utils/chartTheme'
+import { truncateDecimal } from '../../../../utils/numberFormat'
 import {
   calculateDisplayedScoreDifference,
   formatScoreDifference,
@@ -160,11 +161,12 @@ const TABLE_RATING_BAND_CELL_CLASS = 'px-2 py-2 text-left'
 const TABLE_VALUE_CELL_CLASS = 'px-2 py-2 text-right tabular-nums'
 /**
  * 平均スコアを整数部のみの表示文字列へ変換する。
+ * 自分との差の算出と同じ `truncateDecimal` で切り捨て、表示値と差の基準を一致させる。
  *
  * @param score 表示するスコア値。
  * @returns 小数点以下を除いた平均スコア文字列。
  */
-const formatAverageScore = (score: number): string => Math.trunc(score).toLocaleString()
+const formatAverageScore = (score: number): string => truncateDecimal(score, 0).toLocaleString()
 
 /**
  * 統計表に表示する列定義をカテゴリごとに取得する。

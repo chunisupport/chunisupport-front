@@ -16,17 +16,23 @@ import type { BestSlotRankingEntryDTO, PlayerRecordDTO, RatingBandDTO } from '..
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { getConstDisplay } from '../../utils/constDisplay'
-import { formatInteger, formatTruncatedFixed } from '../../utils/numberFormat'
+import {
+  type DecimalDisplayParts,
+  formatDecimalParts,
+  formatTruncatedFixed,
+  truncateDecimal,
+} from '../../utils/numberFormat'
 import { getRankingPositionClass } from '../../utils/rankingPosition'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import {
   calculateDisplayedScoreDifference,
-  formatScoreDifference,
   getScoreDifferenceClass,
 } from '../../utils/scoreDifference'
 import {
   BEST_SLOT_PERCENTAGE_DECIMAL_PLACES,
   BEST_SLOT_RANKING_COPY,
+  BEST_SLOT_SCORE_DECIMAL_PLACES,
+  BEST_SLOT_SCORE_FRACTION_CLASS,
 } from './bestSlotRanking.constants'
 
 type RatingBandOption = {
@@ -54,6 +60,19 @@ const formatPercentage = (percentage: number): string =>
   `${formatTruncatedFixed(percentage, BEST_SLOT_PERCENTAGE_DECIMAL_PLACES)}%`
 
 /**
+ * 整数部と小数部に分けた数値を、小数部だけ一回り小さく表示する。
+ *
+ * @param props.parts - 表示する整数部と小数部。
+ * @returns 小数部を縮小表示した数値。
+ */
+const SplitDecimal = (props: { parts: DecimalDisplayParts }) => (
+  <>
+    {props.parts.integerPart}
+    <span class={BEST_SLOT_SCORE_FRACTION_CLASS}>{props.parts.fractionPart}</span>
+  </>
+)
+
+/**
  * ランキングの譜面1件を表形式で表示する。
  *
  * @param props.entry - 表示対象のランキング項目。
@@ -69,10 +88,12 @@ const BestSlotRankingRow = (props: {
   const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
   const constDisplay = () =>
     getConstDisplay(props.entry.chart.const, props.entry.chart.is_const_unknown)
-  const averageScore = () =>
-    props.entry.average_score === null ? undefined : Math.trunc(props.entry.average_score)
   const scoreDifference = () =>
-    calculateDisplayedScoreDifference(props.ownScore, props.entry.average_score)
+    calculateDisplayedScoreDifference(
+      props.ownScore,
+      props.entry.average_score,
+      BEST_SLOT_SCORE_DECIMAL_PLACES
+    )
 
   return (
     <tr
@@ -121,13 +142,26 @@ const BestSlotRankingRow = (props: {
       </td>
       <td class="w-px px-3 py-2 whitespace-nowrap">
         <div class="text-right font-jost text-sm tabular-nums">
-          {averageScore() === undefined ? '-' : formatInteger(averageScore() ?? 0)}
+          <Show when={props.entry.average_score !== null} fallback="-">
+            <SplitDecimal
+              parts={formatDecimalParts(
+                truncateDecimal(props.entry.average_score ?? 0, BEST_SLOT_SCORE_DECIMAL_PLACES),
+                BEST_SLOT_SCORE_DECIMAL_PLACES
+              )}
+            />
+          </Show>
         </div>
       </td>
       <td class="w-px px-3 py-2 text-right font-jost text-xs whitespace-nowrap tabular-nums">
         <Show when={scoreDifference() !== undefined} fallback="-">
           <span class={getScoreDifferenceClass(scoreDifference() ?? 0)}>
-            {formatScoreDifference(scoreDifference() ?? 0)}
+            <SplitDecimal
+              parts={formatDecimalParts(
+                scoreDifference() ?? 0,
+                BEST_SLOT_SCORE_DECIMAL_PLACES,
+                'always'
+              )}
+            />
           </span>
         </Show>
       </td>
