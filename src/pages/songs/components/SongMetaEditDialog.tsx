@@ -257,13 +257,16 @@ const SongMetaEditDialog: Component<Props> = (props) => {
                     setValidationMessage('')
                   }}
                 >
-                  <WikiPageTitleField
-                    title={props.title}
-                    label={SONG_EDIT_COPY.wikiPageTitleLabel}
-                    value={wikiPageTitle()}
-                    inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
-                    onInput={setWikiPageTitle}
-                  />
+                  {(copyButton) => (
+                    <WikiPageTitleField
+                      title={props.title}
+                      label={SONG_EDIT_COPY.wikiPageTitleLabel}
+                      value={wikiPageTitle()}
+                      inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
+                      onInput={setWikiPageTitle}
+                      leadingAction={copyButton}
+                    />
+                  )}
                 </CopyFromStandardField>
               </Show>
 

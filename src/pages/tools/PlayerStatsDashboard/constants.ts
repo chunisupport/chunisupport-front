@@ -44,6 +44,9 @@ export const PLAYER_STATS_COPY = {
   apply: '適用',
 } as const
 
+/** 平均スコアで切り捨て・固定表示する小数点以下桁数。 */
+export const PLAYER_STATS_SCORE_DECIMAL_PLACES = 2
+
 /** 難易度フィルター1件分の値と表示名 */
 export type PlayerStatsDifficultyOption = {
   value: PlayerStatsDifficulty

@@ -142,19 +142,22 @@ const WorldsendSongEditSection = (props: WorldsendSongEditSectionProps) => {
                         props.management.updateDraftField('wiki_page_title', wikiPageTitle)
                       }
                     >
-                      <WikiPageTitleField
-                        class="text-sm"
-                        title={currentDraft().title}
-                        label={FIELD.wikiPageTitle}
-                        value={currentDraft().wiki_page_title ?? ''}
-                        inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                        onInput={(value) =>
-                          props.management.updateDraftField(
-                            'wiki_page_title',
-                            toOptionalTextInput(value)
-                          )
-                        }
-                      />
+                      {(copyButton) => (
+                        <WikiPageTitleField
+                          class="text-sm"
+                          title={currentDraft().title}
+                          label={FIELD.wikiPageTitle}
+                          value={currentDraft().wiki_page_title ?? ''}
+                          inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
+                          onInput={(value) =>
+                            props.management.updateDraftField(
+                              'wiki_page_title',
+                              toOptionalTextInput(value)
+                            )
+                          }
+                          leadingAction={copyButton}
+                        />
+                      )}
                     </CopyFromStandardField>
                     <GenreSelectField
                       label={FIELD.genre}

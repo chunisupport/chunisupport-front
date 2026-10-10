@@ -7,6 +7,7 @@ import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
+import { SplitDecimal } from '../../components/common/SplitDecimal'
 import { BEST_SLOT_RANKING_PATH, buildSongDetailPath } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -16,12 +17,7 @@ import type { BestSlotRankingEntryDTO, PlayerRecordDTO, RatingBandDTO } from '..
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { getConstDisplay } from '../../utils/constDisplay'
-import {
-  type DecimalDisplayParts,
-  formatDecimalParts,
-  formatTruncatedFixed,
-  truncateDecimal,
-} from '../../utils/numberFormat'
+import { formatDecimalParts, formatTruncatedFixed, truncateDecimal } from '../../utils/numberFormat'
 import { getRankingPositionClass } from '../../utils/rankingPosition'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import {
@@ -32,7 +28,6 @@ import {
   BEST_SLOT_PERCENTAGE_DECIMAL_PLACES,
   BEST_SLOT_RANKING_COPY,
   BEST_SLOT_SCORE_DECIMAL_PLACES,
-  BEST_SLOT_SCORE_FRACTION_CLASS,
 } from './bestSlotRanking.constants'
 
 type RatingBandOption = {
@@ -58,19 +53,6 @@ const createChartKey = (songId: string, difficulty: string): string =>
  */
 const formatPercentage = (percentage: number): string =>
   `${formatTruncatedFixed(percentage, BEST_SLOT_PERCENTAGE_DECIMAL_PLACES)}%`
-
-/**
- * 整数部と小数部に分けた数値を、小数部だけ一回り小さく表示する。
- *
- * @param props.parts - 表示する整数部と小数部。
- * @returns 小数部を縮小表示した数値。
- */
-const SplitDecimal = (props: { parts: DecimalDisplayParts }) => (
-  <>
-    {props.parts.integerPart}
-    <span class={BEST_SLOT_SCORE_FRACTION_CLASS}>{props.parts.fractionPart}</span>
-  </>
-)
 
 /**
  * ランキングの譜面1件を表形式で表示する。

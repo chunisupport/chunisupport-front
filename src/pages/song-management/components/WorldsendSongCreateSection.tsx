@@ -95,15 +95,21 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
             props.management.updateCreateDraftField('wiki_page_title', wikiPageTitle)
           }
         >
-          <WikiPageTitleField
-            title={draft().title}
-            label={FIELD.wikiPageTitle}
-            value={draft().wiki_page_title ?? ''}
-            inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) =>
-              props.management.updateCreateDraftField('wiki_page_title', toOptionalTextInput(value))
-            }
-          />
+          {(copyButton) => (
+            <WikiPageTitleField
+              title={draft().title}
+              label={FIELD.wikiPageTitle}
+              value={draft().wiki_page_title ?? ''}
+              inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
+              onInput={(value) =>
+                props.management.updateCreateDraftField(
+                  'wiki_page_title',
+                  toOptionalTextInput(value)
+                )
+              }
+              leadingAction={copyButton}
+            />
+          )}
         </CopyFromStandardField>
         <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
           <GenreSelectField

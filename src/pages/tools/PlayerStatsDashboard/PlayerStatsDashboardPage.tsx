@@ -25,6 +25,7 @@ import {
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { HeatmapCountCell } from '../../../components/common/HeatmapCountCell'
+import { SplitDecimal } from '../../../components/common/SplitDecimal'
 import {
   PLAYER_STATS_ACHIEVEMENT_LABEL,
   PLAYER_STATS_HEATMAP_AXIS_OPTIONS,
@@ -38,7 +39,12 @@ import { fetchOwnPlayerStatsData } from '../../../usecases/playerStats/fetchOwnP
 import { formatChartConst } from '../../../utils/chartConstFormat'
 import { createFullChartConstRange } from '../../../utils/chartLevel'
 import { getConstDisplay } from '../../../utils/constDisplay'
-import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
+import {
+  formatDecimalParts,
+  formatInteger,
+  formatTruncatedFixed,
+  truncateDecimal,
+} from '../../../utils/numberFormat'
 import {
   buildPlayerStatsAchievementProgress,
   buildPlayerStatsChartConstantRows,
@@ -67,6 +73,7 @@ import {
   PLAYER_STATS_DEFAULT_DIFFICULTY,
   PLAYER_STATS_HEATMAP_METRICS,
   PLAYER_STATS_MILESTONE_OPTIONS,
+  PLAYER_STATS_SCORE_DECIMAL_PLACES,
   type PlayerStatsAchievementGroup,
 } from './constants'
 import { PlayerStatsFilterDialog, type PlayerStatsFilterState } from './PlayerStatsFilterDialog'
@@ -74,7 +81,7 @@ import { PlayerStatsFilterDialog, type PlayerStatsFilterState } from './PlayerSt
 /** 主要統計カード1件分の表示定義 */
 type SummaryCardDefinition = {
   label: string
-  value: string
+  value: JSX.Element
   detail: string
   icon: Component<{ class?: string; 'aria-hidden'?: boolean }>
 }
@@ -97,7 +104,14 @@ const buildSummaryCardDefinitions = (summary: PlayerStatsSummary): SummaryCardDe
   },
   {
     label: PLAYER_STATS_COPY.averageScore,
-    value: formatInteger(summary.averageScore),
+    value: (
+      <SplitDecimal
+        parts={formatDecimalParts(
+          truncateDecimal(summary.averageScore, PLAYER_STATS_SCORE_DECIMAL_PLACES),
+          PLAYER_STATS_SCORE_DECIMAL_PLACES
+        )}
+      />
+    ),
     detail: `${formatInteger(summary.played)}${PLAYER_STATS_COPY.achievementCountSuffix}`,
     icon: Gauge,
   },
@@ -146,8 +160,8 @@ const SummaryCards = (props: { summary: PlayerStatsSummary }): JSX.Element => (
               <card.icon class="h-4 w-4 text-action-primary" aria-hidden={true} />
               <span>{card.label}</span>
             </div>
-            <p class="mt-2 font-jost text-2xl font-semibold tabular-nums text-text">{card.value}</p>
-            <p class="mt-1 font-jost text-xs tabular-nums text-text-muted">{card.detail}</p>
+            <p class="mt-2 font-jost text-2xl font-semibold text-text">{card.value}</p>
+            <p class="mt-1 font-jost text-xs text-text-muted">{card.detail}</p>
           </li>
         )}
       </For>

@@ -327,6 +327,33 @@ test('サマリーは未プレイを母数に含め、トータルハイスコ�
   assert.equal(summary.max, 1)
 })
 
+test('サマリーの平均スコアはプレイ済み譜面の小数部を保持する', () => {
+  // Given
+  const records = [
+    createRecord({ score: 1_009_000 }),
+    createRecord({ id: 'song-2', score: 1_009_001 }),
+    createRecord({ id: 'song-3', score: 1_009_001 }),
+    createRecord({ id: 'unplayed', is_played: false, score: 0 }),
+  ]
+
+  // When
+  const summary = buildPlayerStatsSummary(records)
+
+  // Then
+  assert.equal(summary.averageScore, 3_027_002 / 3)
+})
+
+test('プレイ済み譜面がない場合の平均スコアは0になる', () => {
+  // Given
+  const records = [createRecord({ is_played: false, score: 0 })]
+
+  // When
+  const summary = buildPlayerStatsSummary(records)
+
+  // Then
+  assert.equal(summary.averageScore, 0)
+})
+
 test('達成階段は指定順を保ち全譜面を母数にする', () => {
   // Given
   const records = [
