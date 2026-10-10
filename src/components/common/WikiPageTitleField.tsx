@@ -21,12 +21,14 @@ type WikiPageTitleFieldProps = {
   inputClass: string
   /** 入力値を反映する処理 */
   onInput: (value: string) => void
+  /** 曲名生成ボタンより前に置く追加操作（STANDARDからの取り込みボタンなど） */
+  leadingAction?: JSX.Element
 }
 
 /**
  * Wikiページタイトル入力欄に曲名からの生成と外部ページ確認の操作を添える。
  *
- * @param props - 曲名、入力値、ラベル、スタイル、変更ハンドラ。
+ * @param props - 曲名、入力値、ラベル、スタイル、変更ハンドラ、先頭に置く追加操作。
  * @returns 入力欄とツールチップ付き操作ボタン。
  */
 const WikiPageTitleField = (props: WikiPageTitleFieldProps): JSX.Element => {
@@ -54,6 +56,7 @@ const WikiPageTitleField = (props: WikiPageTitleFieldProps): JSX.Element => {
             onInput={(event) => props.onInput(event.currentTarget.value)}
           />
         </TextField>
+        {props.leadingAction}
         <Tooltip placement="top" gutter={4} openDelay={400}>
           <Tooltip.Trigger
             as={AppIconButton}

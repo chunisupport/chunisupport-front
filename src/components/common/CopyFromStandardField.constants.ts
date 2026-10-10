@@ -1,5 +1,6 @@
 /** STANDARD楽曲からの取り込みボタンで使用する表示文言 */
 export const COPY_FROM_STANDARD_COPY = {
+  standardBadge: 'STD',
   copyBpmFromStandardAriaLabel: 'STANDARDからBPMを入力',
   copyReadingFromStandardAriaLabel: 'STANDARDから読みを入力',
   copyWikiPageTitleFromStandardAriaLabel: 'STANDARDからWikiページタイトルを入力',

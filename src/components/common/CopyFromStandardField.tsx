@@ -22,8 +22,10 @@ type CopyFromStandardFieldBaseProps = {
   artist: string
   /** STANDARD楽曲一覧の読み込み中かどうか */
   songsLoading?: boolean
-  /** 取り込み対象の入力欄 */
-  children: JSX.Element
+  /**
+   * 取り込み対象の入力欄。関数を渡した場合は取り込みボタンを受け取り、入力欄側で配置する。
+   */
+  children: JSX.Element | ((copyButton: JSX.Element) => JSX.Element)
 }
 
 type CopyFromStandardFieldProps =
@@ -69,10 +71,11 @@ const getCopyFromStandardCopy = (
 }
 
 /**
- * WORLD'S ENDの入力欄の右に、STANDARD楽曲から値を取り込むボタンを置く。
+ * WORLD'S ENDの入力欄に、STANDARD楽曲から値を取り込むボタンを添える。
+ * 入力欄を関数で渡した場合はボタンの配置を入力欄側へ委ね、それ以外は入力欄の右に置く。
  *
  * @param props - 照合対象の楽曲、曲名・アーティスト名、入力欄、反映ハンドラ。
- * @returns 入力欄と取り込みボタンを横並びにしたUI。
+ * @returns 入力欄と取り込みボタン、取り込み失敗時のエラー表示。
  */
 const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element => {
   const errorId = createUniqueId()
@@ -130,28 +133,43 @@ const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element =
     )
   }
 
+  const copyButton = (
+    <Tooltip placement="top" gutter={4} openDelay={400}>
+      <Tooltip.Trigger
+        as={AppIconButton}
+        class="relative h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
+        disabled={isCopyDisabled()}
+        aria-label={copy().ariaLabel}
+        aria-describedby={errorMessage() ? errorId : undefined}
+        onClick={handleCopy}
+      >
+        <CornerDownLeft class="h-4 w-4" aria-hidden="true" />
+        <span
+          class="absolute right-0.5 top-0.5 origin-top-right scale-75 bg-inherit px-0.5 py-0.5 font-oswald text-xs font-semibold leading-none [text-box:trim-both_cap_alphabetic]"
+          aria-hidden="true"
+        >
+          {COPY_FROM_STANDARD_COPY.standardBadge}
+        </span>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content class="z-60 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
+          {copy().ariaLabel}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip>
+  )
+  const children = props.children
+
   return (
     <div class={props.class}>
-      <div class="flex items-end gap-2 [&_input]:h-9.5">
-        <div class="min-w-0 flex-1">{props.children}</div>
-        <Tooltip placement="top" gutter={4} openDelay={400}>
-          <Tooltip.Trigger
-            as={AppIconButton}
-            class="h-9.5 w-9.5 shrink-0"
-            disabled={isCopyDisabled()}
-            aria-label={copy().ariaLabel}
-            aria-describedby={errorMessage() ? errorId : undefined}
-            onClick={handleCopy}
-          >
-            <CornerDownLeft class="h-4 w-4" aria-hidden="true" />
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content class="z-60 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
-              {copy().ariaLabel}
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip>
-      </div>
+      {typeof children === 'function' ? (
+        children(copyButton)
+      ) : (
+        <div class="flex items-end gap-2 [&_input]:h-9.5">
+          <div class="min-w-0 flex-1">{children}</div>
+          {copyButton}
+        </div>
+      )}
       <Show when={errorMessage()}>
         {(message) => (
           <p id={errorId} class="mt-1 text-sm text-danger">
