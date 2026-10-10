@@ -20,6 +20,15 @@ import {
 
 const fixedColumnClass = 'w-px whitespace-nowrap'
 const fixedCellClass = 'px-3 py-2 text-text whitespace-nowrap'
+/** 見出しに対して中央揃えにする数値列の見出し・セルのクラス */
+const numericColumnClass = 'text-center'
+/**
+ * 譜面定数を等幅数字で表示する値ブロックのクラス。
+ * 未確定マーカーを絶対配置するための基準にもなる。
+ */
+const constValueClass = 'relative inline-block tabular-nums'
+/** ノーツ数を等幅数字で表示する値ブロックのクラス */
+const notesValueClass = 'inline-block tabular-nums'
 
 type DifficultyOption = {
   label: string
@@ -141,8 +150,16 @@ const SongInfoCard = (props: Props) => {
               <thead class="bg-surface-muted text-left">
                 <tr>
                   <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}></th>
-                  <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}>CONST</th>
-                  <th class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass}`}>NOTES</th>
+                  <th
+                    class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass} ${numericColumnClass}`}
+                  >
+                    CONST
+                  </th>
+                  <th
+                    class={`px-3 py-2 font-medium text-text-muted ${fixedColumnClass} ${numericColumnClass}`}
+                  >
+                    NOTES
+                  </th>
                   <th class="px-3 py-2 font-medium text-text-muted whitespace-nowrap">
                     NOTES DESIGNER
                   </th>
@@ -160,15 +177,18 @@ const SongInfoCard = (props: Props) => {
                             difficulty={difficulty.label as keyof typeof props.song.charts}
                           />
                         </td>
-                        <td class={`${fixedCellClass} ${fixedColumnClass}`}>
+                        <td class={`${fixedCellClass} ${fixedColumnClass} ${numericColumnClass}`}>
                           <span
-                            class={`block whitespace-nowrap ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
+                            class={`${constValueClass} ${chart?.is_const_unknown ? 'opacity-50' : ''}`}
                           >
                             {chart ? (
                               <>
                                 {formatChartConst(chart.const)}
                                 {chart.is_const_unknown ? (
-                                  <sup class="text-[0.65em] leading-none">?</sup>
+                                  // 数値自体を中央に置くため、未確定マーカーは幅に含めず右外へ配置する。
+                                  <sup class="absolute top-0 left-full text-[0.65em] leading-none">
+                                    ?
+                                  </sup>
                                 ) : null}
                               </>
                             ) : (
@@ -176,8 +196,8 @@ const SongInfoCard = (props: Props) => {
                             )}
                           </span>
                         </td>
-                        <td class={`${fixedCellClass} ${fixedColumnClass}`}>
-                          <span class="block whitespace-nowrap">{chart?.notes ?? '-'}</span>
+                        <td class={`${fixedCellClass} ${fixedColumnClass} ${numericColumnClass}`}>
+                          <span class={notesValueClass}>{chart?.notes ?? '-'}</span>
                         </td>
                         <td class="px-3 py-2 text-text">
                           <span class="font-sans block whitespace-nowrap">

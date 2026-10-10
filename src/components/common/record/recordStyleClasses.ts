@@ -86,6 +86,9 @@ export const getComboLampBadgeClass = (
   return `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
 }
 
+/** 分布バーのランプ帯に重ねる、横長の帯向けの縦方向光沢グラデーションクラス */
+export const LAMP_BAR_GLOSS_CLASS = '[background-image:var(--cs-gradient-record-lamp-bar-gloss)]'
+
 /** レコードのハードランプバッジで使う背景色クラス */
 export const HARD_LAMP_BADGE_BACKGROUND_CLASS: Record<NonNullable<SharedClearLamp>, string> = {
   CLEAR: 'bg-lamp-clear-bg',
@@ -106,20 +109,20 @@ export const HARD_LAMP_BADGE_TEXT_CLASS: Record<NonNullable<SharedClearLamp>, st
   FAILED: 'text-lamp-failed-text',
 }
 
-/** レコードのコンボランプバッジ色に合わせたフィルター統計グラフ用背景色クラス */
+/** レコードのコンボランプバッジ色に合わせた統計グラフ用背景色クラス。AJ/FCには光沢を重ねる */
 export const COMBO_LAMP_BAR_CLASS: Record<FilterStatsComboLamp, string> = {
   'ALL JUSTICE CRITICAL': ALL_JUSTICE_CRITICAL_BG_CLASS,
-  'ALL JUSTICE': COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE'],
-  'FULL COMBO': COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO'],
+  'ALL JUSTICE': `${COMBO_LAMP_BADGE_BACKGROUND_CLASS['ALL JUSTICE']} ${LAMP_BAR_GLOSS_CLASS}`,
+  'FULL COMBO': `${COMBO_LAMP_BADGE_BACKGROUND_CLASS['FULL COMBO']} ${LAMP_BAR_GLOSS_CLASS}`,
   なし: SCORE_RANK_BAR_CLASS.OTHERS,
   未プレイ: 'bg-surface-hover',
 }
 
-/** レコードのハードランプバッジ色に合わせたフィルター統計グラフ用背景色クラス */
+/** レコードのハードランプバッジ色に合わせた統計グラフ用背景色クラス。CATASTROPHY/ABSOLUTE/BRAVEには光沢を重ねる */
 export const HARD_LAMP_BAR_CLASS: Record<FilterStatsClearLamp, string> = {
-  CATASTROPHY: HARD_LAMP_BADGE_BACKGROUND_CLASS.CATASTROPHY,
-  ABSOLUTE: HARD_LAMP_BADGE_BACKGROUND_CLASS.ABSOLUTE,
-  BRAVE: HARD_LAMP_BADGE_BACKGROUND_CLASS.BRAVE,
+  CATASTROPHY: `${HARD_LAMP_BADGE_BACKGROUND_CLASS.CATASTROPHY} ${LAMP_BAR_GLOSS_CLASS}`,
+  ABSOLUTE: `${HARD_LAMP_BADGE_BACKGROUND_CLASS.ABSOLUTE} ${LAMP_BAR_GLOSS_CLASS}`,
+  BRAVE: `${HARD_LAMP_BADGE_BACKGROUND_CLASS.BRAVE} ${LAMP_BAR_GLOSS_CLASS}`,
   HARD: HARD_LAMP_BADGE_BACKGROUND_CLASS.HARD,
   CLEAR: HARD_LAMP_BADGE_BACKGROUND_CLASS.CLEAR,
   FAILED: SCORE_RANK_BAR_CLASS.OTHERS,

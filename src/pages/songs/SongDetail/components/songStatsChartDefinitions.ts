@@ -26,7 +26,19 @@ export type SongStatsChartDatasetDefinition<ValueKey extends string> = {
   gradientColorVariables?: readonly string[]
   /** 棒グラフへ斜線を適用する場合のCSS変数定義 */
   stripePattern?: SongStatsChartStripePatternDefinition
+  /** 棒グラフへランプ用の光沢を重ねるか */
+  gloss?: boolean
 }
+
+/** Chart.jsの棒の短辺方向へ重ねる光沢の色停止点。ランプバッジの光沢と同じトークンを使う */
+export const LAMP_CHART_GLOSS_COLOR_STOPS = [
+  { offset: 0, colorVariable: '--cs-color-lamp-badge-gloss-edge-light' },
+  { offset: 0.28, colorVariable: '--cs-color-lamp-badge-gloss-highlight' },
+  { offset: 0.46, colorVariable: '--cs-color-lamp-badge-gloss-fade' },
+  { offset: 0.54, colorVariable: '--cs-color-lamp-badge-gloss-shade' },
+  { offset: 0.76, colorVariable: '--cs-color-lamp-badge-gloss-reflect' },
+  { offset: 1, colorVariable: '--cs-color-lamp-badge-gloss-edge-dark' },
+] as const
 
 /** プラス付きスコアランクへ共通適用する斜線パターン定義 */
 export const SCORE_RANK_PLUS_CHART_STRIPE_PATTERN = {
@@ -81,8 +93,8 @@ export const RANK_CHART_DATASET_DEFINITIONS = [
 /** COMBOグラフに表示するデータセット定義 */
 export const COMBO_CHART_DATASET_DEFINITIONS = [
   { label: 'NONE', valueKey: 'none', colorVariable: UNACHIEVED_LAMP_CHART_COLOR_VARIABLE },
-  { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg' },
-  { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg' },
+  { label: 'FC', valueKey: 'fc', colorVariable: '--cs-color-lamp-full-combo-bg', gloss: true },
+  { label: 'AJ', valueKey: 'aj', colorVariable: '--cs-color-lamp-all-justice-bg', gloss: true },
   {
     label: 'AJC',
     valueKey: 'ajc',
@@ -97,11 +109,17 @@ export const CLEAR_CHART_DATASET_DEFINITIONS = [
   { label: 'FAILED', valueKey: 'failed', colorVariable: UNACHIEVED_LAMP_CHART_COLOR_VARIABLE },
   { label: 'CLEAR', valueKey: 'clear', colorVariable: '--cs-color-lamp-clear-bg' },
   { label: 'HARD', valueKey: 'hard', colorVariable: '--cs-color-lamp-hard-bg' },
-  { label: 'BRAVE', valueKey: 'brave', colorVariable: '--cs-color-lamp-brave-bg' },
-  { label: 'ABSOLUTE', valueKey: 'absolute', colorVariable: '--cs-color-lamp-absolute-bg' },
+  { label: 'BRAVE', valueKey: 'brave', colorVariable: '--cs-color-lamp-brave-bg', gloss: true },
+  {
+    label: 'ABSOLUTE',
+    valueKey: 'absolute',
+    colorVariable: '--cs-color-lamp-absolute-bg',
+    gloss: true,
+  },
   {
     label: 'CATASTROPHY',
     valueKey: 'catastrophy',
     colorVariable: '--cs-color-lamp-catastrophy-bg',
+    gloss: true,
   },
 ] as const satisfies readonly SongStatsChartDatasetDefinition<keyof SongStatsClearDTO>[]

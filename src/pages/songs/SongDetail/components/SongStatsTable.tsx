@@ -23,6 +23,7 @@ import {
   resolveChartColor,
   resolveChartPixelLength,
 } from '../../../../utils/chartTheme'
+import { truncateDecimal } from '../../../../utils/numberFormat'
 import {
   calculateDisplayedScoreDifference,
   formatScoreDifference,
@@ -34,6 +35,7 @@ import { OWN_SCORE_CARD_TITLE } from '../scoreHistory.constants'
 import {
   CLEAR_CHART_DATASET_DEFINITIONS,
   COMBO_CHART_DATASET_DEFINITIONS,
+  LAMP_CHART_GLOSS_COLOR_STOPS,
   RANK_CHART_DATASET_DEFINITIONS,
   type SongStatsChartStripePatternDefinition,
 } from './songStatsChartDefinitions'
@@ -66,6 +68,7 @@ type SongStatsChartDataset = {
   legendBackgroundVariable?: string
   gradientColorVariables?: readonly string[]
   stripePattern?: SongStatsChartStripePatternDefinition
+  gloss?: boolean
 }
 
 type SongStatsChartProps = {
@@ -106,6 +109,8 @@ const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_EXCLUDED_RATING_BAND = 'ALL'
 const CHART_X_AXIS_TICK_PADDING = 8
+/** 光沢付きランプの凡例色見本へ重ねるCSSグラデーション変数名 */
+const LAMP_GLOSS_GRADIENT_VARIABLE = '--cs-gradient-record-lamp-badge-gloss'
 /** 平均・中央値グラフのセクション見出し */
 const AVERAGE_SCORE_CHART_TITLE = '平均・中央値'
 /** 平均スコア系列の凡例・ツールチップ表示名 */
@@ -160,11 +165,12 @@ const TABLE_RATING_BAND_CELL_CLASS = 'px-2 py-2 text-left'
 const TABLE_VALUE_CELL_CLASS = 'px-2 py-2 text-right tabular-nums'
 /**
  * 平均スコアを整数部のみの表示文字列へ変換する。
+ * 自分との差の算出と同じ `truncateDecimal` で切り捨て、表示値と差の基準を一致させる。
  *
  * @param score 表示するスコア値。
  * @returns 小数点以下を除いた平均スコア文字列。
  */
-const formatAverageScore = (score: number): string => Math.trunc(score).toLocaleString()
+const formatAverageScore = (score: number): string => truncateDecimal(score, 0).toLocaleString()
 
 /**
  * 統計表に表示する列定義をカテゴリごとに取得する。
@@ -282,6 +288,59 @@ const createChartGradient = (
 }
 
 /**
+ * 光沢を指定したデータセットの棒へ、ランプバッジと同じ色の光沢グラデーションを重ねて描画するChart.jsプラグインを生成する。
+ * 棒の下地色はChart.jsが描画するため、光沢は半透明のオーバーレイとして描く。
+ * 光沢は棒の短辺方向へ1回だけかけ、縦長の棒は左から右、横長の段は上から下へ描くことで、
+ * 棒の長さによって光沢が引き伸ばされないようにする。
+ * @param datasets 光沢設定を含むグラフデータセット。
+ * @returns データセット描画後に光沢を重ねるChart.jsプラグイン。
+ */
+const createBarGlossPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> => {
+  const glossColorStops = LAMP_CHART_GLOSS_COLOR_STOPS.map((stop) => ({
+    offset: stop.offset,
+    color: resolveChartColor(stop.colorVariable, 'transparent'),
+  }))
+
+  return {
+    id: 'song-stats-bar-gloss',
+    afterDatasetDraw: (chart, { index, meta }) => {
+      if (!datasets[index]?.gloss || meta.hidden) return
+
+      const { ctx, chartArea } = chart
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(chartArea.left, chartArea.top, chartArea.width, chartArea.height)
+      ctx.clip()
+
+      meta.data.forEach((element) => {
+        const { x, y, base, width } = (element as BarElement).getProps(
+          ['x', 'y', 'base', 'width'],
+          true
+        )
+        const barWidth = width ?? 0
+        const topY = y ?? 0
+        const bottomY = base ?? topY
+        const barLeft = (x ?? 0) - barWidth / 2
+        const barTop = Math.min(topY, bottomY)
+        const barHeight = Math.abs(bottomY - topY)
+        const gradient =
+          barHeight > barWidth
+            ? ctx.createLinearGradient(barLeft, 0, barLeft + barWidth, 0)
+            : ctx.createLinearGradient(0, barTop, 0, barTop + barHeight)
+        glossColorStops.forEach((stop) => {
+          gradient.addColorStop(stop.offset, stop.color)
+        })
+
+        ctx.fillStyle = gradient
+        ctx.fillRect(barLeft, barTop, barWidth, barHeight)
+      })
+
+      ctx.restore()
+    },
+  }
+}
+
+/**
  * 対象の棒へ虹色グラデーションまたは斜線背景を適用するChart.jsプラグインを生成する。
  * @param datasets 背景装飾設定を含むグラフデータセット。
  * @returns 棒の描画直前に背景装飾を更新するChart.jsプラグイン。
@@ -344,6 +403,22 @@ const createBarBackgroundPlugin = (datasets: SongStatsChartDataset[]): Plugin<'b
       })
     },
   }
+}
+
+/**
+ * DOM凡例の色見本へ適用する背景を、斜線・光沢・グラデーションの設定に合わせて組み立てる。
+ * @param dataset 凡例に表示するデータセット。
+ * @returns 色見本のCSS background値。
+ */
+const getLegendBackground = (dataset: SongStatsChartDataset): string => {
+  if (dataset.stripePattern) {
+    return `var(${dataset.stripePattern.legendBackgroundVariable}), var(${dataset.colorVariable})`
+  }
+  if (dataset.gloss) {
+    return `var(${LAMP_GLOSS_GRADIENT_VARIABLE}), var(${dataset.colorVariable})`
+  }
+
+  return `var(${dataset.legendBackgroundVariable ?? dataset.colorVariable})`
 }
 
 /**
@@ -455,7 +530,10 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
 
     const chartData = createSongStatsChartData(props.labels, props.datasets)
     const chartOptions = createSongStatsChartOptions()
-    const chartPlugins = [createBarBackgroundPlugin(props.datasets)]
+    const chartPlugins = [
+      createBarBackgroundPlugin(props.datasets),
+      createBarGlossPlugin(props.datasets),
+    ]
 
     chart?.destroy()
     chart = new Chart(canvasRef, {
@@ -484,9 +562,7 @@ const SongStatsBarChart = (props: SongStatsChartProps) => {
                 <span
                   class="size-3"
                   style={{
-                    background: dataset.stripePattern
-                      ? `var(${dataset.stripePattern.legendBackgroundVariable}), var(${dataset.colorVariable})`
-                      : `var(${dataset.legendBackgroundVariable ?? dataset.colorVariable})`,
+                    background: getLegendBackground(dataset),
                   }}
                   aria-hidden="true"
                 />

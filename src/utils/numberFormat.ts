@@ -64,6 +64,46 @@ export const formatFixed = (value: number, decimalPlaces: number): string =>
  */
 export const formatInteger = (value: number): string => value.toLocaleString('ja-JP')
 
+/** 整数部と小数部に分けた数値の表示文字列。 */
+export type DecimalDisplayParts = {
+  /** 符号と3桁区切りを含む整数部。 */
+  integerPart: string
+  /** 小数点を含む小数部。小数点以下桁数が0の場合は空文字。 */
+  fractionPart: string
+}
+
+/**
+ * 数値を3桁区切りの固定小数点表記へ整形し、整数部と小数部に分けて返す。
+ * 端数処理は呼び出し側で済ませた値を渡すことを前提とする。
+ *
+ * @param value 整形する数値。
+ * @param decimalPlaces 小数点以下の表示桁数。
+ * @param signDisplay 符号の表示方法。`always` は0や正数にも符号を付ける。
+ * @returns 整数部と小数部に分けた表示文字列。
+ */
+export const formatDecimalParts = (
+  value: number,
+  decimalPlaces: number,
+  signDisplay: 'auto' | 'always' = 'auto'
+): DecimalDisplayParts => {
+  validateDecimalPlaces(decimalPlaces)
+
+  // -0 を 0 に正規化し、"-0.00" と表示されないようにする。
+  const parts = new Intl.NumberFormat('ja-JP', {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+    signDisplay,
+  }).formatToParts(value + 0)
+  const decimalIndex = parts.findIndex((part) => part.type === 'decimal')
+  const splitIndex = decimalIndex === -1 ? parts.length : decimalIndex
+  const join = (target: Intl.NumberFormatPart[]) => target.map((part) => part.value).join('')
+
+  return {
+    integerPart: join(parts.slice(0, splitIndex)),
+    fractionPart: join(parts.slice(splitIndex)),
+  }
+}
+
 /**
  * スコアを小数点以下最大1桁のk表記へ整形する。
  *
