@@ -775,14 +775,20 @@
   --cs-color-score-rank-d-text: var(--color-gray-500);
 
   /* ===== ランプ（FULL COMBO / ALL JUSTICE / ALL JUSTICE CRITICAL / CLEAR / HARD / BRAVE / ABSOLUTE / CATASTROPHY / FAILED / 未プレイ） ===== */
+  --cs-color-lamp-badge-gloss-edge-light: rgb(255 255 255 / 15%);
+  --cs-color-lamp-badge-gloss-highlight: rgb(255 255 255 / 65%);
+  --cs-color-lamp-badge-gloss-fade: rgb(255 255 255 / 10%);
+  --cs-color-lamp-badge-gloss-shade: rgb(0 0 0 / 8%);
+  --cs-color-lamp-badge-gloss-reflect: rgb(255 255 255 / 30%);
+  --cs-color-lamp-badge-gloss-edge-dark: rgb(0 0 0 / 12%);
   --cs-gradient-record-lamp-badge-gloss: linear-gradient(
     135deg in oklab,
-    rgb(255 255 255 / 15%) 0%,
-    rgb(255 255 255 / 65%) 28%,
-    rgb(255 255 255 / 10%) 46%,
-    rgb(0 0 0 / 8%) 54%,
-    rgb(255 255 255 / 30%) 76%,
-    rgb(0 0 0 / 12%) 100%
+    var(--cs-color-lamp-badge-gloss-edge-light) 0%,
+    var(--cs-color-lamp-badge-gloss-highlight) 28%,
+    var(--cs-color-lamp-badge-gloss-fade) 46%,
+    var(--cs-color-lamp-badge-gloss-shade) 54%,
+    var(--cs-color-lamp-badge-gloss-reflect) 76%,
+    var(--cs-color-lamp-badge-gloss-edge-dark) 100%
   );
   --cs-gradient-record-lamp-bar-gloss: linear-gradient(
     180deg in oklab,
