@@ -18,6 +18,3 @@ export const BEST_SLOT_PERCENTAGE_DECIMAL_PLACES = 2
 
 /** 平均スコアと自分との差で切り捨て・固定表示する小数点以下桁数 */
 export const BEST_SLOT_SCORE_DECIMAL_PLACES = 2
-
-/** 平均スコアと自分との差の小数部を整数部より一回り小さく表示する文字サイズクラス */
-export const BEST_SLOT_SCORE_FRACTION_CLASS = 'text-[0.8em]'

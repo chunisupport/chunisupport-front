@@ -289,7 +289,7 @@ export const filterPlayerStatsRecords = (
  * 通常譜面レコードから統計画面上部のサマリーを算出する。
  *
  * @param records - 集計対象の通常譜面レコード。
- * @returns トータルハイスコア、平均スコア、SSS、SSS+、AJ、MAXの集計値。
+ * @returns トータルハイスコア、丸め前の平均スコア、SSS、SSS+、AJ、MAXの集計値。
  */
 export const buildPlayerStatsSummary = (records: PlayerRecordDTO[]): PlayerStatsSummary => {
   const total = records.length
@@ -300,7 +300,7 @@ export const buildPlayerStatsSummary = (records: PlayerRecordDTO[]): PlayerStats
   const aj = records.filter((record) => hasPlayerStatsAchievement(record, 'aj')).length
   const max = records.filter((record) => hasPlayerStatsAchievement(record, 'max')).length
   const totalHighScore = playedRecords.reduce((sum, record) => sum + record.score, 0)
-  const averageScore = played ? Math.round(totalHighScore / played) : 0
+  const averageScore = played ? totalHighScore / played : 0
 
   return {
     total,
