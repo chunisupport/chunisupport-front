@@ -36,6 +36,7 @@ import {
   CLEAR_CHART_DATASET_DEFINITIONS,
   COMBO_CHART_DATASET_DEFINITIONS,
   LAMP_CHART_GLOSS_COLOR_STOPS,
+  LAMP_CHART_GLOSS_OPACITY,
   RANK_CHART_DATASET_DEFINITIONS,
   type SongStatsChartStripePatternDefinition,
 } from './songStatsChartDefinitions'
@@ -290,8 +291,8 @@ const createChartGradient = (
 /**
  * 光沢を指定したデータセットの棒へ、ランプバッジと同じ色の光沢グラデーションを重ねて描画するChart.jsプラグインを生成する。
  * 棒の下地色はChart.jsが描画するため、光沢は半透明のオーバーレイとして描く。
- * 光沢は棒の短辺方向へ1回だけかけ、縦長の棒は左から右、横長の段は上から下へ描くことで、
- * 棒の長さによって光沢が引き伸ばされないようにする。
+ * 光沢は棒の幅方向へ左から右に1回だけかけ、棒の長さによって引き伸ばされないようにする。
+ * 段の高さに関わらず向きを揃え、Chart.jsのグラフでは不透明度を下げて控えめに描く。
  * @param datasets 光沢設定を含むグラフデータセット。
  * @returns データセット描画後に光沢を重ねるChart.jsプラグイン。
  */
@@ -311,6 +312,7 @@ const createBarGlossPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> 
       ctx.beginPath()
       ctx.rect(chartArea.left, chartArea.top, chartArea.width, chartArea.height)
       ctx.clip()
+      ctx.globalAlpha = LAMP_CHART_GLOSS_OPACITY
 
       meta.data.forEach((element) => {
         const { x, y, base, width } = (element as BarElement).getProps(
@@ -323,10 +325,7 @@ const createBarGlossPlugin = (datasets: SongStatsChartDataset[]): Plugin<'bar'> 
         const barLeft = (x ?? 0) - barWidth / 2
         const barTop = Math.min(topY, bottomY)
         const barHeight = Math.abs(bottomY - topY)
-        const gradient =
-          barHeight > barWidth
-            ? ctx.createLinearGradient(barLeft, 0, barLeft + barWidth, 0)
-            : ctx.createLinearGradient(0, barTop, 0, barTop + barHeight)
+        const gradient = ctx.createLinearGradient(barLeft, 0, barLeft + barWidth, 0)
         glossColorStops.forEach((stop) => {
           gradient.addColorStop(stop.offset, stop.color)
         })
