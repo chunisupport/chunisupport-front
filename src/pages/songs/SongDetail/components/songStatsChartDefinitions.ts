@@ -30,7 +30,7 @@ export type SongStatsChartDatasetDefinition<ValueKey extends string> = {
   gloss?: boolean
 }
 
-/** Chart.jsの棒の短辺方向へ重ねる光沢の色停止点。ランプバッジの光沢と同じトークンを使う */
+/** Chart.jsの棒へ左から右に重ねる光沢の色停止点。ランプバッジの光沢と同じトークンを使う */
 export const LAMP_CHART_GLOSS_COLOR_STOPS = [
   { offset: 0, colorVariable: '--cs-color-lamp-badge-gloss-edge-light' },
   { offset: 0.28, colorVariable: '--cs-color-lamp-badge-gloss-highlight' },
@@ -39,6 +39,9 @@ export const LAMP_CHART_GLOSS_COLOR_STOPS = [
   { offset: 0.76, colorVariable: '--cs-color-lamp-badge-gloss-reflect' },
   { offset: 1, colorVariable: '--cs-color-lamp-badge-gloss-edge-dark' },
 ] as const
+
+/** Chart.jsの棒へ重ねる光沢の不透明度。バッジより面積が大きいため控えめにする */
+export const LAMP_CHART_GLOSS_OPACITY = 0.6
 
 /** プラス付きスコアランクへ共通適用する斜線パターン定義 */
 export const SCORE_RANK_PLUS_CHART_STRIPE_PATTERN = {
