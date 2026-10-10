@@ -85,3 +85,14 @@ export const SONG_MANAGEMENT_MESSAGES = {
   worldsendRestored: "WORLD'S END楽曲を復活しました。",
   worldsendDeleteConfirm: "このWORLD'S END楽曲を削除しますか？",
 } as const
+
+/** 楽曲管理一覧の仮想スクロール設定 */
+export const MANAGED_SONG_LIST_VIRTUAL = {
+  /** 1行の高さ(px)。行ボタンの `h-14` と一致させる */
+  rowHeight: 56,
+  /** 表示範囲の前後に追加描画する行数 */
+  overscan: 10,
+} as const
+
+/** 楽曲管理一覧の行ツールチップで曲名とアーティスト名を区切る文字列 */
+export const MANAGED_SONG_LIST_TITLE_SEPARATOR = ' / '

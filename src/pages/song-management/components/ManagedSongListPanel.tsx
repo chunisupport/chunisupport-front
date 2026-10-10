@@ -1,14 +1,20 @@
 import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
+import { createVirtualizer } from '@tanstack/solid-virtual'
 import { Search } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import type { NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
-import { SONG_MANAGEMENT_SECTION_COPY } from '../constants'
+import {
+  MANAGED_SONG_LIST_TITLE_SEPARATOR,
+  MANAGED_SONG_LIST_VIRTUAL,
+  SONG_MANAGEMENT_SECTION_COPY,
+} from '../constants'
 import type { SongManagementFilters } from '../songManagementFilters'
 import SongManagementFilterPanel from './SongManagementFilterPanel'
 
 /** 楽曲管理一覧の行ボタンに共通で付けるレイアウトクラス */
-const managedSongRowButtonClass = 'w-full px-3 py-2 text-left text-sm'
+const managedSongRowButtonClass =
+  'absolute top-0 left-0 flex h-14 w-full flex-col justify-center border-border px-3 text-left text-sm'
 
 /** 楽曲管理一覧の1行に表示する最小項目 */
 type ManagedSongListItem = {
@@ -64,6 +70,7 @@ const getManagedSongRowClassList = (
 
 /**
  * 楽曲管理画面の検索欄・フィルター・楽曲一覧を描画する。
+ * 楽曲一覧はスクロール領域内で仮想化し、表示範囲付近の行だけを描画する。
  *
  * @param props 表示する楽曲、選択状態、検索・フィルター状態と変更処理
  * @returns 検索欄と選択可能な楽曲一覧
@@ -71,6 +78,17 @@ const getManagedSongRowClassList = (
 const ManagedSongListPanel = <T extends ManagedSongListItem>(
   props: ManagedSongListPanelProps<T>
 ) => {
+  let scrollElement: HTMLDivElement | undefined
+
+  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLButtonElement>({
+    get count() {
+      return props.songs.length
+    },
+    getScrollElement: () => scrollElement ?? null,
+    estimateSize: () => MANAGED_SONG_LIST_VIRTUAL.rowHeight,
+    overscan: MANAGED_SONG_LIST_VIRTUAL.overscan,
+  })
+
   return (
     <>
       <div class="mb-2 flex items-end">
@@ -101,27 +119,39 @@ const ManagedSongListPanel = <T extends ManagedSongListItem>(
           />
         </Show>
       </div>
-      <div class="max-h-130 overflow-y-auto rounded border border-border">
-        <ul class="divide-y divide-border">
-          <For each={props.songs}>
-            {(song) => {
-              const isSelected = () => song.id === props.selectedSongId
+      <div ref={scrollElement} class="max-h-130 overflow-y-auto rounded border border-border">
+        <div class="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+          <For each={rowVirtualizer.getVirtualItems()}>
+            {(virtualRow) => {
+              const song = () => props.songs[virtualRow.index]
+              const isSelected = () => song()?.id === props.selectedSongId
               return (
-                <li>
-                  <Button
-                    type="button"
-                    class={managedSongRowButtonClass}
-                    classList={getManagedSongRowClassList(isSelected(), song.is_deleted)}
-                    onClick={() => props.onSelect(song.id)}
-                  >
-                    <p class="font-sans font-medium text-text">{song.title}</p>
-                    <p class="font-sans text-xs text-text-muted">{song.artist}</p>
-                  </Button>
-                </li>
+                <Show when={song()}>
+                  {(currentSong) => (
+                    <Button
+                      type="button"
+                      class={managedSongRowButtonClass}
+                      classList={{
+                        ...getManagedSongRowClassList(isSelected(), currentSong().is_deleted),
+                        'border-b': virtualRow.index < props.songs.length - 1,
+                      }}
+                      style={{ transform: `translateY(${virtualRow.start}px)` }}
+                      title={`${currentSong().title}${MANAGED_SONG_LIST_TITLE_SEPARATOR}${currentSong().artist}`}
+                      onClick={() => props.onSelect(currentSong().id)}
+                    >
+                      <span class="w-full truncate font-sans font-medium text-text">
+                        {currentSong().title}
+                      </span>
+                      <span class="w-full truncate font-sans text-xs text-text-muted">
+                        {currentSong().artist}
+                      </span>
+                    </Button>
+                  )}
+                </Show>
               )
             }}
           </For>
-        </ul>
+        </div>
       </div>
     </>
   )
