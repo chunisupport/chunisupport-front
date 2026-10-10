@@ -51,6 +51,23 @@ test('matchesSearchQuery は半角長音記号を含む reading でも検索で�
   assert.equal(matchesSearchQuery('曲A', 'Artist', 'コｰヒｰ', 'コーヒー'), true)
 })
 
+test('matchesSearchQuery は小書きのカナを含むクエリでも大きいカナの reading を検索できる', () => {
+  // Given: 大きいカナで登録された読みと、小書きのカナを含むクエリ
+  const reading = 'シヤツフル'
+
+  // When & Then: ひらがな・カタカナ・半角カナのどれでも一致する
+  assert.equal(matchesSearchQuery('曲A', 'Artist', 'しゃっふる', reading), true)
+  assert.equal(matchesSearchQuery('曲A', 'Artist', 'シャッフル', reading), true)
+  assert.equal(matchesSearchQuery('曲A', 'Artist', 'ｼｬｯﾌﾙ', reading), true)
+})
+
+test('matchesSearchQuery は小書きのカナを変換しても曲名検索の挙動を変えない', () => {
+  // Given: 小書きのカナを含む曲名
+  // When & Then: 大きいカナのクエリでは曲名に一致しない
+  assert.equal(normalizeForSearch('シャッフル'), 'しゃっふる')
+  assert.equal(matchesSearchQuery('シャッフル', 'Artist', 'しやつふる', 'ホゲ'), false)
+})
+
 test('removeTrailingFullwidthAlphabet は末尾が全角英字のときのみ1文字削除する', () => {
   assert.equal(removeTrailingFullwidthAlphabet('かもｎ'), 'かも')
   assert.equal(removeTrailingFullwidthAlphabet('かもｚ'), 'かも')
