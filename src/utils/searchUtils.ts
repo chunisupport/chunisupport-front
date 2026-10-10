@@ -2,6 +2,34 @@ const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
 const voicedMarkRegex = /[\u3099\u309A]/gu
 const prolongedSoundMarkRegex = /[ーｰ]/g
 const trailingFullwidthAlphabetRegex = /[Ａ-Ｚａ-ｚ]$/u
+/** 小書きのカナから対応する大きいカナへの対応表 */
+const SMALL_TO_LARGE_KANA: Record<string, string> = {
+  ぁ: 'あ',
+  ぃ: 'い',
+  ぅ: 'う',
+  ぇ: 'え',
+  ぉ: 'お',
+  っ: 'つ',
+  ゃ: 'や',
+  ゅ: 'ゆ',
+  ょ: 'よ',
+  ゎ: 'わ',
+  ゕ: 'か',
+  ゖ: 'け',
+  ァ: 'ア',
+  ィ: 'イ',
+  ゥ: 'ウ',
+  ェ: 'エ',
+  ォ: 'オ',
+  ッ: 'ツ',
+  ャ: 'ヤ',
+  ュ: 'ユ',
+  ョ: 'ヨ',
+  ヮ: 'ワ',
+  ヵ: 'カ',
+  ヶ: 'ケ',
+}
+const smallKanaRegex = new RegExp(`[${Object.keys(SMALL_TO_LARGE_KANA).join('')}]`, 'g')
 
 /**
  * 検索クエリ末尾の全角英字を1文字除去する。
@@ -38,6 +66,18 @@ export function normalizeForSearch(value: string | null | undefined): string {
     .replace(symbolOrSpaceRegex, '')
 }
 
+/**
+ * 読み検索用に文字列を正規化する。
+ * 楽曲マスタの読みは大きいカナで登録されているため、クエリ側もそれに合わせる。
+ * - Unicode正規化（NFKC → NFD）
+ * - 濁点・半濁点を除去
+ * - 長音記号をウに変換
+ * - 小書きのカナを大きいカナに変換
+ * - 最後に normalizeForSearch を適用
+ *
+ * @param value 正規化する文字列
+ * @returns 読み検索用に正規化した文字列。未設定の場合は空文字
+ */
 export function normalizeForReadingSearch(value: string | null | undefined): string {
   if (!value) return ''
   return normalizeForSearch(
@@ -46,6 +86,7 @@ export function normalizeForReadingSearch(value: string | null | undefined): str
       .normalize('NFD')
       .replace(voicedMarkRegex, '')
       .replace(prolongedSoundMarkRegex, 'ウ')
+      .replace(smallKanaRegex, (ch) => SMALL_TO_LARGE_KANA[ch])
   )
 }
 
