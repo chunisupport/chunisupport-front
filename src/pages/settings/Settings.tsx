@@ -1,4 +1,4 @@
-import { AlertDialog } from '@kobalte/core/alert-dialog'
+import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
 import { createEffect, createResource, createSignal, For, Show } from 'solid-js'
@@ -6,9 +6,11 @@ import { deleteAccount, deletePlayerData, fetchPrivacy, updatePrivacy } from '..
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
 import { AppSwitch } from '../../components/common/AppSwitch'
+import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../components/common/filterStyles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
@@ -16,8 +18,10 @@ import { authSession, clearAuthenticatedUser, setAuthenticatedUser } from '../..
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { clearUsernameChangeCache } from '../../usecases/cache/clearUsernameChangeCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { ACCOUNT_DELETE_COPY } from './AccountSettings.constants'
 import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
 import { DataTransferSettingsSection } from './DataTransferSettingsSection'
+import { PLAYER_DATA_DELETE_COPY } from './PlayerDataSettings.constants'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
 import { UsernameChangeForm } from './UsernameChangeForm'
@@ -42,6 +46,7 @@ const Settings = () => {
   const [privacySuccess, setPrivacySuccess] = createSignal('')
   const [playerDeleteDialogOpen, setPlayerDeleteDialogOpen] = createSignal(false)
   const [playerDeleting, setPlayerDeleting] = createSignal(false)
+  const [playerDeleteConfirmInput, setPlayerDeleteConfirmInput] = createSignal('')
   const [playerDataError, setPlayerDataError] = createSignal('')
   const [playerDataSuccess, setPlayerDataSuccess] = createSignal('')
   const [accountDeleteDialogOpen, setAccountDeleteDialogOpen] = createSignal(false)
@@ -156,11 +161,34 @@ const Settings = () => {
   }
 
   /**
+   * プレイヤーデータ削除の確認ダイアログを、確認入力を空にした状態で開く。
+   *
+   * @returns なし。
+   */
+  const openPlayerDeleteDialog = (): void => {
+    setPlayerDeleteConfirmInput('')
+    setPlayerDataError('')
+    setPlayerDeleteDialogOpen(true)
+  }
+
+  /**
+   * 確認入力が自分のユーザーネームと一致しているかを返す。
+   * 画面を開いたままの誤操作で削除されないよう、一致するまで削除を確定させない。
+   *
+   * @returns 一致している場合はtrue。
+   */
+  const isPlayerDeleteConfirmed = (): boolean => {
+    const username = summary()?.me.username
+    return Boolean(username) && playerDeleteConfirmInput() === username
+  }
+
+  /**
    * 確認ダイアログからプレイヤーデータを削除する。
    *
    * @returns 処理完了後に解決されるPromise。
    */
   const handleDeletePlayerData = async () => {
+    if (!isPlayerDeleteConfirmed()) return
     setPlayerDataError('')
     setPlayerDataSuccess('')
     setPlayerDeleting(true)
@@ -307,7 +335,7 @@ const Settings = () => {
                         <AppButton
                           variant="dangerOutline"
                           class="mt-4"
-                          onClick={() => setPlayerDeleteDialogOpen(true)}
+                          onClick={openPlayerDeleteDialog}
                           disabled={!loadedSummary().profile.player}
                         >
                           プレイヤーデータを削除
@@ -371,63 +399,59 @@ const Settings = () => {
         </main>
       </div>
 
-      <AlertDialog open={playerDeleteDialogOpen()} onOpenChange={setPlayerDeleteDialogOpen}>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-          <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-            <AlertDialog.Title class="text-lg font-bold text-text">
-              プレイヤーデータを削除しますか？
-            </AlertDialog.Title>
-            <AlertDialog.Description class="mt-2 text-sm text-text-muted">
-              スコア記録を含むプレイヤーデータが削除されます。この操作は取り消せません。
-            </AlertDialog.Description>
-            <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-              {playerDataError()}
-            </p>
-            <div class="mt-6 flex justify-end gap-2">
-              <AlertDialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted">
-                キャンセル
-              </AlertDialog.CloseButton>
-              <AppButton
-                variant="danger"
-                onClick={handleDeletePlayerData}
-                disabled={playerDeleting()}
-              >
-                {playerDeleting() ? '削除中...' : '削除する'}
-              </AppButton>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog>
+      <AppConfirmDialog
+        open={playerDeleteDialogOpen()}
+        onOpenChange={setPlayerDeleteDialogOpen}
+        title={PLAYER_DATA_DELETE_COPY.title}
+        description={PLAYER_DATA_DELETE_COPY.description}
+        cancelLabel={PLAYER_DATA_DELETE_COPY.cancel}
+        confirmLabel={
+          playerDeleting() ? PLAYER_DATA_DELETE_COPY.deleting : PLAYER_DATA_DELETE_COPY.confirm
+        }
+        confirmVariant="danger"
+        pending={playerDeleting()}
+        confirmDisabled={!isPlayerDeleteConfirmed()}
+        onConfirm={handleDeletePlayerData}
+      >
+        <TextField
+          class="mt-4"
+          value={playerDeleteConfirmInput()}
+          onChange={setPlayerDeleteConfirmInput}
+          disabled={playerDeleting()}
+        >
+          <TextField.Label class="block text-sm font-medium text-text">
+            {PLAYER_DATA_DELETE_COPY.confirmInputLabel}
+          </TextField.Label>
+          <TextField.Input
+            class={`mt-2 w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-text placeholder:text-text-muted ${FILTER_DIALOG_FIELD_FOCUS_CLASS}`}
+            placeholder={summary()?.me.username}
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck={false}
+          />
+        </TextField>
+        <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+          {playerDataError()}
+        </p>
+      </AppConfirmDialog>
 
-      <AlertDialog open={accountDeleteDialogOpen()} onOpenChange={setAccountDeleteDialogOpen}>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-          <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-            <AlertDialog.Title class="text-lg font-bold text-danger">
-              本当に退会しますか？
-            </AlertDialog.Title>
-            <AlertDialog.Description class="mt-2 text-sm text-text-muted">
-              ユーザー情報、プレイヤーデータ、目標、APIトークンがすべて削除されます。本人確認のため再認証が必要です。
-            </AlertDialog.Description>
-            <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-              {accountDeleteError()}
-            </p>
-            <div class="mt-6 flex justify-end gap-2">
-              <AlertDialog.CloseButton class="rounded bg-action-secondary px-4 py-2 text-sm font-medium text-text-muted">
-                キャンセル
-              </AlertDialog.CloseButton>
-              <AppButton
-                variant="danger"
-                onClick={handleDeleteAccount}
-                disabled={accountDeleting()}
-              >
-                {accountDeleting() ? '処理中...' : '退会する'}
-              </AppButton>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog>
+      <AppConfirmDialog
+        open={accountDeleteDialogOpen()}
+        onOpenChange={setAccountDeleteDialogOpen}
+        title={ACCOUNT_DELETE_COPY.title}
+        description={ACCOUNT_DELETE_COPY.description}
+        cancelLabel={ACCOUNT_DELETE_COPY.cancel}
+        confirmLabel={
+          accountDeleting() ? ACCOUNT_DELETE_COPY.deleting : ACCOUNT_DELETE_COPY.confirm
+        }
+        confirmVariant="danger"
+        pending={accountDeleting()}
+        onConfirm={handleDeleteAccount}
+      >
+        <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+          {accountDeleteError()}
+        </p>
+      </AppConfirmDialog>
     </div>
   )
 }

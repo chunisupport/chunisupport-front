@@ -14,3 +14,13 @@ export const USERNAME_CHANGE_COPY = {
   userMismatch: 'ログイン中のアカウントと異なるアカウントで再認証されました。',
   recentSignInExpired: '再認証の有効期限が切れています。もう一度お試しください。',
 } as const
+
+/** 退会確認ダイアログで使用する表示文言。 */
+export const ACCOUNT_DELETE_COPY = {
+  title: '本当に退会しますか？',
+  description:
+    'ユーザー情報、プレイヤーデータ、目標、APIトークンがすべて削除されます。本人確認のため再認証が必要です。',
+  cancel: 'キャンセル',
+  confirm: '退会する',
+  deleting: '処理中...',
+} as const
