@@ -33,6 +33,7 @@ import {
   buildLockedSongsBatchPayload,
   createLockedSongKey,
 } from '../../usecases/overpower/lockedSongsBatch'
+import { formatInteger } from '../../utils/numberFormat'
 import {
   calculateOverPowerDifference,
   calculateOverPowerPercent,
@@ -298,11 +299,15 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const unplayedSongCount = createMemo(
     () => importedBase()?.unplayedEntries.filter((entry) => entry.isUnplayed).length ?? 0
   )
+  /**
+   * 全曲既プレイ平均を単位なしの3桁区切り整数で表示する。
+   * @returns 平均スコアの表示文字列。平均がない場合は専用ラベル。
+   */
   const playedAverageScoreLabel = createMemo(() => {
     const score = importedBase()?.playedAverageScore
     return score === null || typeof score === 'undefined'
       ? OVER_POWER_CALCULATOR_COPY.noPlayedAverageLabel
-      : formatOverPowerInputValue(score, 0)
+      : formatInteger(Math.round(score))
   })
   const lockedSongsButtonDisabled = createMemo(() => importLoading() || !importedBase())
 

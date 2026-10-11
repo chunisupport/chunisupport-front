@@ -10,7 +10,7 @@ export const OVER_POWER_CALCULATOR_COPY = {
   addValueLabel: '加算値',
   addButtonLabel: '加算',
   addValueDescription:
-    'リザルト画面のOP増加値を随時加算することで、詳細なOP%をリアルタイムに追うことができます。毎回ブックマークレットを実行する必要がありません。',
+    'リザルト画面のOP増加値を随時加算することで、詳細なOP%をリアルタイムに追うことができます。',
   targetPercentLabel: '目標OP%',
   resultLabel: '計算結果',
   differenceLabel: 'あと',
