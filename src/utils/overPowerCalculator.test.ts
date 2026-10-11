@@ -6,14 +6,13 @@ import {
   calculateOverPowerPercent,
   calculatePlayedAverageScore,
   calculatePlayedAverageScoreByConst,
-  calculatePlayedAverageScoreRegression,
   calculateRequiredChartCount,
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
+  interpolatePlayedAverageScoreByConst,
   normalizeOverPowerCalculatorInput,
   parseOverPowerInput,
-  predictPlayedAverageScoreByConstRegression,
 } from './overPowerCalculator'
 
 test('calculateOverPowerPercent は現在値と理論値から達成率を計算すること', () => {
@@ -156,34 +155,72 @@ test('calculatePlayedAverageScoreByConst は現在OP対象の既プレイ譜面�
   assert.equal(result.has(15), false)
 })
 
-test('calculatePlayedAverageScoreRegression は譜面定数ごとの平均スコアから線形回帰モデルを作ること', () => {
-  // Given
-  const averageScoreByConst = new Map([
-    [13, 1009000],
-    [14, 1007000],
+test('線形補間は既存平均を維持し、欠けた定数を直近の両側の平均から求めること', () => {
+  // Given: 入力順を変え、直近以外に大きく異なる平均も用意する。
+  const averages = new Map([
     [15, 1005000],
+    [13, 990000],
+    [14, 1007000],
   ])
-
   // When
-  const regression = calculatePlayedAverageScoreRegression(averageScoreByConst)
-  const predicted = predictPlayedAverageScoreByConstRegression(regression, 14.5)
-
+  const exact = interpolatePlayedAverageScoreByConst(averages, 14)
+  const missing = interpolatePlayedAverageScoreByConst(averages, 14.5)
   // Then
-  assert.deepEqual(regression, { slope: -2000, intercept: 1035000 })
-  assert.equal(predicted, 1006000)
+  assert.equal(exact, 1007000)
+  assert.equal(missing, 1006000)
 })
 
-test('calculatePlayedAverageScoreRegression は1定数だけの場合に水平線モデルを作ること', () => {
+test('線形補間は16.0を15.8と15.9から外挿し、下端も近い2点から求めること', () => {
   // Given
-  const averageScoreByConst = new Map([[14, 1007000]])
-
+  const averages = new Map([
+    [15.8, 1007000],
+    [15.9, 1006000],
+    [14, 990000],
+  ])
   // When
-  const regression = calculatePlayedAverageScoreRegression(averageScoreByConst)
-  const predicted = predictPlayedAverageScoreByConstRegression(regression, 15)
-
+  const upper = interpolatePlayedAverageScoreByConst(averages, 16)
+  const lower = interpolatePlayedAverageScoreByConst(
+    new Map([
+      [14, 1007000],
+      [14.2, 1005000],
+      [15, 990000],
+    ]),
+    13.9
+  )
   // Then
-  assert.deepEqual(regression, { slope: 0, intercept: 1007000 })
-  assert.equal(predicted, 1007000)
+  assert.ok(Math.abs(upper - 1005000) < 0.000001)
+  assert.ok(Math.abs(lower - 1008000) < 0.000001)
+})
+
+test('線形補間は空データを0、1定数だけなら同じ平均とすること', () => {
+  // Given
+  const averages = new Map([[14, 1007000]])
+  // When
+  const single = interpolatePlayedAverageScoreByConst(averages, 15)
+  const empty = interpolatePlayedAverageScoreByConst(new Map(), 15)
+  // Then
+  assert.equal(single, 1007000)
+  assert.equal(empty, 0)
+})
+
+test('線形補間の外挿値は0から理論スコアまでに制限すること', () => {
+  // Given
+  const averages = new Map([
+    [14, 1000000],
+    [15, 1010000],
+  ])
+  // When
+  const upper = interpolatePlayedAverageScoreByConst(averages, 16)
+  const lower = interpolatePlayedAverageScoreByConst(
+    new Map([
+      [14, 1000],
+      [15, 1000000],
+    ]),
+    13
+  )
+  // Then
+  assert.equal(upper, 1010000)
+  assert.equal(lower, 0)
 })
 
 test('calculateUnplayedOverPower は何もしない場合に未プレイ曲を0点のまま扱うこと', () => {
@@ -198,7 +235,6 @@ test('calculateUnplayedOverPower は何もしない場合に未プレイ曲を0�
     entries,
     playedAverageScore: 1007500,
     playedAverageScoreByConst: new Map(),
-    playedAverageScoreRegression: null,
     mode: 'none',
     manualScore: 1007500,
   })
@@ -220,7 +256,6 @@ test('calculateUnplayedOverPower は存在を消す場合に未プレイ曲を�
     entries,
     playedAverageScore: 1007500,
     playedAverageScoreByConst: new Map(),
-    playedAverageScoreRegression: null,
     mode: 'remove',
     manualScore: 1007500,
   })
@@ -242,7 +277,6 @@ test('calculateUnplayedOverPower は理論値で埋める場合に未プレイ�
     entries,
     playedAverageScore: 1007500,
     playedAverageScoreByConst: new Map(),
-    playedAverageScoreRegression: null,
     mode: 'theoretical',
     manualScore: 1007500,
   })
@@ -264,7 +298,6 @@ test('calculateUnplayedOverPower は平均スコアで未プレイ曲を埋め�
     entries,
     playedAverageScore: 1007500,
     playedAverageScoreByConst: new Map(),
-    playedAverageScoreRegression: null,
     mode: 'playedAverage',
     manualScore: 1007500,
   })
@@ -286,7 +319,6 @@ test('calculateUnplayedOverPower は譜面定数ごとの平均スコアで未�
     entries,
     playedAverageScore: null,
     playedAverageScoreByConst: new Map([[14, 1007500]]),
-    playedAverageScoreRegression: null,
     mode: 'targetConstAverage',
     manualScore: 1007500,
   })
@@ -296,7 +328,7 @@ test('calculateUnplayedOverPower は譜面定数ごとの平均スコアで未�
   assert.equal(result.max, 175)
 })
 
-test('calculateUnplayedOverPower は対応する譜面定数の既プレイがない場合に0点で埋めること', () => {
+test('calculateUnplayedOverPower は平均が1定数だけなら同じ平均で未プレイ曲を埋めること', () => {
   // Given
   const entries = [
     { current: 80, max: 90, targetConst: 15, isUnplayed: false },
@@ -308,17 +340,16 @@ test('calculateUnplayedOverPower は対応する譜面定数の既プレイが�
     entries,
     playedAverageScore: null,
     playedAverageScoreByConst: new Map([[15, 1007500]]),
-    playedAverageScoreRegression: null,
     mode: 'targetConstAverage',
     manualScore: 1007500,
   })
 
   // Then
-  assert.equal(result.current, 80)
+  assert.equal(result.current, 160)
   assert.equal(result.max, 175)
 })
 
-test('calculateUnplayedOverPower は譜面定数ごとの線形回帰予測スコアで未プレイ曲を埋めること', () => {
+test('calculateUnplayedOverPower は譜面定数ごとの線形補間スコアで未プレイ曲を埋めること', () => {
   // Given
   const entries = [
     { current: 80, max: 90, targetConst: 15, isUnplayed: false },
@@ -329,9 +360,11 @@ test('calculateUnplayedOverPower は譜面定数ごとの線形回帰予測ス�
   const result = calculateUnplayedOverPower({
     entries,
     playedAverageScore: null,
-    playedAverageScoreByConst: new Map(),
-    playedAverageScoreRegression: { slope: -2000, intercept: 1035000 },
-    mode: 'targetConstRegressionAverage',
+    playedAverageScoreByConst: new Map([
+      [14, 1007000],
+      [15, 1005000],
+    ]),
+    mode: 'targetConstAverage',
     manualScore: 1007500,
   })
 
@@ -340,7 +373,7 @@ test('calculateUnplayedOverPower は譜面定数ごとの線形回帰予測ス�
   assert.equal(result.max, 177.5)
 })
 
-test('calculateUnplayedOverPower は線形回帰モデルがない場合に0点で埋めること', () => {
+test('calculateUnplayedOverPower は既プレイ平均がない場合に0点で埋めること', () => {
   // Given
   const entries = [
     { current: 80, max: 90, targetConst: 15, isUnplayed: false },
@@ -352,8 +385,7 @@ test('calculateUnplayedOverPower は線形回帰モデルがない場合に0点�
     entries,
     playedAverageScore: null,
     playedAverageScoreByConst: new Map(),
-    playedAverageScoreRegression: null,
-    mode: 'targetConstRegressionAverage',
+    mode: 'targetConstAverage',
     manualScore: 1007500,
   })
 
@@ -374,7 +406,6 @@ test('calculateUnplayedOverPower は手動指定スコアで未プレイ曲を�
     entries,
     playedAverageScore: null,
     playedAverageScoreByConst: new Map(),
-    playedAverageScoreRegression: null,
     mode: 'manual',
     manualScore: 1010000,
   })

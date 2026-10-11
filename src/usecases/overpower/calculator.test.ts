@@ -143,7 +143,7 @@ test('レコードがない楽曲も理論値と未プレイ補完対象に含�
   assert.equal(data.max, 90)
   assert.equal(data.unplayedEntries[0].isUnplayed, true)
   assert.equal(data.playedAverageScore, null)
-  assert.equal(data.playedAverageScoreRegression, null)
+  assert.equal(data.playedAverageScoreByConst.size, 0)
 })
 
 test('未解禁曲を解禁扱いにすると全曲の理論値へ戻る', () => {

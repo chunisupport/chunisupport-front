@@ -25,18 +25,7 @@ export type UnplayedOverPowerFillMode =
   | 'theoretical'
   | 'playedAverage'
   | 'targetConstAverage'
-  | 'targetConstRegressionAverage'
   | 'manual'
-
-/**
- * 譜面定数から予測スコアを出す線形回帰モデル。
- */
-export type PlayedAverageScoreRegression = {
-  /** score = slope * const + intercept の傾き。 */
-  slope: number
-  /** score = slope * const + intercept の切片。 */
-  intercept: number
-}
 
 /**
  * 未プレイ除外計算で扱う曲ごとのOVER POWER情報。
@@ -62,8 +51,6 @@ export type UnplayedOverPowerCalculationInput = {
   playedAverageScore: number | null
   /** 現在OP対象の既プレイ譜面を譜面定数ごとに集計した平均スコア。 */
   playedAverageScoreByConst: Map<number, number>
-  /** 譜面定数ごとの平均スコアから作った線形回帰モデル。 */
-  playedAverageScoreRegression: PlayedAverageScoreRegression | null
   /** 未プレイ曲の扱い。 */
   mode: UnplayedOverPowerFillMode
   /** 手動指定で埋めるスコア。 */
@@ -227,56 +214,36 @@ export const calculatePlayedAverageScoreByConst = (
 }
 
 /**
- * 譜面定数ごとの平均スコアから線形回帰モデルを作成する。
+ * 同じ定数の既プレイ平均を使い、欠けている定数だけ周辺の平均で線形補間する。
+ * 範囲外は近い2定数から外挿し、平均が1定数だけならその値を使用する。
  *
- * @param playedAverageScoreByConst - 譜面定数をキーにした平均スコア。
- * @returns 予測に使う線形回帰モデル。点がない場合はnull。
+ * @param playedAverageScoreByConst - サンプルがある譜面定数の平均スコア。
+ * @param chartConst - 補完対象の譜面定数。
+ * @returns 0〜理論スコアに制限した推定値。サンプルがない場合は0。
  */
-export const calculatePlayedAverageScoreRegression = (
-  playedAverageScoreByConst: Map<number, number>
-): PlayedAverageScoreRegression | null => {
-  const points = [...playedAverageScoreByConst.entries()]
-  if (points.length === 0) return null
-  if (points.length === 1) {
-    return { slope: 0, intercept: points[0][1] }
-  }
-
-  const averageConst = points.reduce((sum, [chartConst]) => sum + chartConst, 0) / points.length
-  const averageScore = points.reduce((sum, [, score]) => sum + score, 0) / points.length
-  const variance = points.reduce((sum, [chartConst]) => sum + (chartConst - averageConst) ** 2, 0)
-  if (variance === 0) return { slope: 0, intercept: averageScore }
-
-  const covariance = points.reduce(
-    (sum, [chartConst, score]) => sum + (chartConst - averageConst) * (score - averageScore),
-    0
-  )
-  const slope = covariance / variance
-  return {
-    slope,
-    intercept: averageScore - slope * averageConst,
-  }
-}
-
-/**
- * 線形回帰モデルから指定譜面定数の予測スコアを計算する。
- *
- * @param regression - 譜面定数ごとの平均スコアから作った線形回帰モデル。
- * @param chartConst - 予測対象の譜面定数。
- * @returns 予測スコア。モデルがない場合は0。
- */
-export const predictPlayedAverageScoreByConstRegression = (
-  regression: PlayedAverageScoreRegression | null,
+export const interpolatePlayedAverageScoreByConst = (
+  playedAverageScoreByConst: Map<number, number>,
   chartConst: number
 ): number => {
-  if (regression === null) return 0
-  return Math.max(
-    0,
-    Math.min(MAX_OVER_POWER_SCORE, regression.slope * chartConst + regression.intercept)
-  )
+  const exactAverage = playedAverageScoreByConst.get(chartConst)
+  if (exactAverage !== undefined) return exactAverage
+
+  const points = [...playedAverageScoreByConst.entries()].sort(([left], [right]) => left - right)
+  if (points.length === 0) return 0
+  if (points.length === 1) return points[0][1]
+
+  const upperIndex = points.findIndex(([constant]) => constant > chartConst)
+  const rightIndex = upperIndex === -1 ? points.length - 1 : Math.max(1, upperIndex)
+  const [leftConst, leftScore] = points[rightIndex - 1]
+  const [rightConst, rightScore] = points[rightIndex]
+  const score =
+    leftScore + ((chartConst - leftConst) / (rightConst - leftConst)) * (rightScore - leftScore)
+  return clampNumber(score, 0, MAX_OVER_POWER_SCORE)
 }
 
 /**
  * 未プレイ曲の扱いからOVER POWER達成率を計算する。
+ * 定数別平均でサンプルのない定数は、周辺の平均から補間・外挿する。
  *
  * @param input - 曲ごとのOVER POWER情報、平均スコア、選択中の扱い。
  * @returns 未プレイの扱いを反映した現在値・理論値・達成率。
@@ -307,20 +274,8 @@ export const calculateUnplayedOverPower = (
             entry.current,
             Math.min(
               calculateOverPowerForScore(
-                input.playedAverageScoreByConst.get(entry.targetConst) ?? 0,
-                entry.targetConst
-              ),
-              entry.max
-            )
-          )
-        }
-        if (input.mode === 'targetConstRegressionAverage') {
-          return Math.max(
-            entry.current,
-            Math.min(
-              calculateOverPowerForScore(
-                predictPlayedAverageScoreByConstRegression(
-                  input.playedAverageScoreRegression,
+                interpolatePlayedAverageScoreByConst(
+                  input.playedAverageScoreByConst,
                   entry.targetConst
                 ),
                 entry.targetConst

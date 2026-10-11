@@ -2,9 +2,7 @@ import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/ap
 import {
   calculatePlayedAverageScore,
   calculatePlayedAverageScoreByConst,
-  calculatePlayedAverageScoreRegression,
   type OverPowerCalculatorBase,
-  type PlayedAverageScoreRegression,
   type UnplayedOverPowerEntry,
 } from '../../utils/overPowerCalculator'
 import { buildOverPowerChartEntries, selectOverPowerChartEntries } from './aggregation'
@@ -15,7 +13,6 @@ export type OverPowerCalculatorData = OverPowerCalculatorBase & {
   unplayedEntries: UnplayedOverPowerEntry[]
   playedAverageScore: number | null
   playedAverageScoreByConst: Map<number, number>
-  playedAverageScoreRegression: PlayedAverageScoreRegression | null
 }
 
 /**
@@ -26,7 +23,7 @@ export type OverPowerCalculatorData = OverPowerCalculatorBase & {
  * @param records - ユーザーの通常譜面レコード。
  * @param versions - バージョン一覧。
  * @param lockedSongs - 計算から除外する未解禁設定。
- * @returns 自動入力値、曲別補完データ、既プレイ平均と回帰モデル。
+ * @returns 自動入力値、曲別補完データ、既プレイ平均と定数別平均。
  */
 export const buildOverPowerCalculatorData = (
   songs: SongDTO[],
@@ -64,6 +61,5 @@ export const buildOverPowerCalculatorData = (
     unplayedEntries,
     playedAverageScore: calculatePlayedAverageScore(playedRecords),
     playedAverageScoreByConst,
-    playedAverageScoreRegression: calculatePlayedAverageScoreRegression(playedAverageScoreByConst),
   }
 }

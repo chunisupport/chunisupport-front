@@ -28,6 +28,9 @@ export const OVER_POWER_CALCULATOR_COPY = {
   unplayedModeLabel: (count: number): string => `未プレイ(${count}曲)を以下のスコアで埋める`,
   manualScoreLabel: '指定スコア',
   noPlayedAverageLabel: '平均なし',
+  constAverageNoteMarker: '※',
+  constAverageNote:
+    '既プレイ譜面がない譜面定数の平均スコアは、前後の譜面定数の平均スコアから線形的に補間します。',
   requiredChartCountTitle: '達成までの必要譜面数',
   requiredChartCountDescription:
     '目標OP%の達成のために、指定した譜面定数の譜面をいくつ伸ばす必要があるかを計算できます。スコアの伸び具合を「現在のスコア」「目標スコア」欄に入力してください。',
@@ -64,7 +67,6 @@ export const UNPLAYED_FILL_OPTIONS = [
   { value: 'remove', label: 'ないものとして扱う' },
   { value: 'theoretical', label: '理論値' },
   { value: 'playedAverage', label: '全曲既プレイ平均' },
-  { value: 'targetConstAverage', label: '定数ごとの既プレイ平均' },
-  { value: 'targetConstRegressionAverage', label: '定数ごとの線形回帰' },
+  { value: 'targetConstAverage', label: '譜面定数ごとの既プレイ平均' },
   { value: 'manual', label: 'スコアを指定する…' },
 ] as const

@@ -179,6 +179,7 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
 /**
  * OVER POWER計算機ページを表示する。
  * 未ログインの自動インポート案内は、換算タブの直下だけに表示する。
+ * 定数別平均の補間仕様は選択肢の注記と末尾の説明で補足する。
  *
  * @returns OVER POWERの数値と達成率を相互変換する計算フォーム。
  */
@@ -290,7 +291,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       entries: importedBase()?.unplayedEntries ?? [],
       playedAverageScore: importedBase()?.playedAverageScore ?? null,
       playedAverageScoreByConst: importedBase()?.playedAverageScoreByConst ?? new Map(),
-      playedAverageScoreRegression: importedBase()?.playedAverageScoreRegression ?? null,
       mode: unplayedFillMode(),
       manualScore: parseOverPowerInput(manualFillScore()) ?? 0,
     })
@@ -642,7 +642,16 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                   {(option) => (
                     <SelectableCardItem
                       value={option.value}
-                      title={option.label}
+                      title={
+                        <>
+                          {option.label}
+                          <Show when={option.value === 'targetConstAverage'}>
+                            <sup class="ml-0.5 text-xs text-text-muted">
+                              {OVER_POWER_CALCULATOR_COPY.constAverageNoteMarker}
+                            </sup>
+                          </Show>
+                        </>
+                      }
                       ariaLabel={option.label}
                       density="compact"
                       titleClass="!font-normal"
@@ -670,6 +679,10 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 </For>
               </div>
             </RadioGroup>
+            <p class="mt-3 font-sans text-xs text-text-muted">
+              {OVER_POWER_CALCULATOR_COPY.constAverageNoteMarker}
+              {OVER_POWER_CALCULATOR_COPY.constAverageNote}
+            </p>
           </Show>
         </AppTabContent>
       </UnderlineTabs>
