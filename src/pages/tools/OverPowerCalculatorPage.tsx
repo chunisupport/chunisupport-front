@@ -1,7 +1,7 @@
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { CornerLeftUp, Gauge, LockKeyhole, Plus, Slash } from 'lucide-solid'
+import { CornerLeftUp, LockKeyhole, Percent, Plus, Slash } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchGenres } from '../../api/genres'
@@ -356,7 +356,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
         <div class="flex items-start justify-between gap-3">
           <div class="flex min-w-0 items-start gap-3">
             <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-              <Gauge class="h-5 w-5 text-action-primary" aria-hidden="true" />
+              <Percent class="h-5 w-5 text-action-primary" aria-hidden="true" />
             </span>
             <div class="min-w-0">
               <h1 class="text-xl font-semibold sm:text-2xl">{tool.title}</h1>

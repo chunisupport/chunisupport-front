@@ -9,6 +9,7 @@ import {
   Grid3X3,
   ListOrdered,
   Lock,
+  Percent,
   ScanSearch,
   Swords,
   Target,
@@ -338,6 +339,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
       return <Trophy class={iconClass} aria-hidden="true" />
+    case 'percent':
+      return <Percent class={iconClass} aria-hidden="true" />
     case 'gauge':
       return <Gauge class={iconClass} aria-hidden="true" />
     case 'list':

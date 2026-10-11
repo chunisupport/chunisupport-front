@@ -27,6 +27,7 @@ export type ToolLinkIcon =
   | 'target'
   | 'random'
   | 'ranking'
+  | 'percent'
   | 'gauge'
   | 'list'
   | 'discover'
@@ -135,7 +136,7 @@ export const TOOL_LINKS: ToolLink[] = [
   {
     title: 'OVER POWER計算機',
     href: OVER_POWER_CALCULATOR_PATH,
-    icon: 'gauge',
+    icon: 'percent',
     description: 'OVER POWERの数値・達成率と未プレイ譜面の補完を計算します。',
   },
   {
