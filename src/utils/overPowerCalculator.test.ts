@@ -7,9 +7,11 @@ import {
   calculatePlayedAverageScore,
   calculatePlayedAverageScoreByConst,
   calculatePlayedAverageScoreRegression,
+  calculateRequiredChartCount,
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
+  normalizeOverPowerCalculatorInput,
   parseOverPowerInput,
   predictPlayedAverageScoreByConstRegression,
 } from './overPowerCalculator'
@@ -60,7 +62,7 @@ test('parseOverPowerInput は空欄と不正な数値をnullへ変換するこ�
   assert.equal(parseOverPowerInput(invalidValue), null)
 })
 
-test('formatOverPowerInputValue は不要な末尾0を省くこと', () => {
+test('formatOverPowerInputValue は小数点以下3桁を常時表示すること', () => {
   // Given
   const value = 123.4
 
@@ -68,7 +70,7 @@ test('formatOverPowerInputValue は不要な末尾0を省くこと', () => {
   const result = formatOverPowerInputValue(value)
 
   // Then
-  assert.equal(result, '123.4')
+  assert.equal(result, '123.400')
 })
 
 test('calculateOverPowerForScore はスコアと譜面定数からコンボ補正なしのOVER POWERを計算すること', () => {
@@ -380,4 +382,43 @@ test('calculateUnplayedOverPower は手動指定スコアで未プレイ曲を�
   // Then
   assert.equal(result.current, 163.75)
   assert.equal(result.max, 175)
+})
+
+test('入力の小数桁数を固定し、目標達成率を0〜100へ制限する', () => {
+  // Given
+  const decimalPlaces = 5
+  // When & Then
+  assert.equal(normalizeOverPowerCalculatorInput('97.5', decimalPlaces, 0, 100), '97.50000')
+  assert.equal(normalizeOverPowerCalculatorInput('-1', decimalPlaces, 0, 100), '0.00000')
+  assert.equal(normalizeOverPowerCalculatorInput('101', decimalPlaces, 0, 100), '100.00000')
+  assert.equal(normalizeOverPowerCalculatorInput('', 3), '0.000')
+  assert.equal(normalizeOverPowerCalculatorInput('123,4567', 3), '123.457')
+})
+
+test('目標達成に必要な譜面数はランク境界点の単曲OPで切り上げる', () => {
+  // Given: 定数14のSSは75 OP、FCは75.5、AJは76
+  const difference = 151
+  // When & Then
+  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, null), 3)
+  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, 'FULL COMBO'), 2)
+  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, 'ALL JUSTICE'), 2)
+})
+
+test('AJCは理論値行のみ有効で、理論値では全列の獲得OPが同じになる', () => {
+  // Given
+  const difference = 170
+  // When & Then
+  assert.equal(calculateRequiredChartCount(difference, 1009000, 14, 'ALL JUSTICE CRITICAL'), null)
+  for (const lamp of [null, 'FULL COMBO', 'ALL JUSTICE', 'ALL JUSTICE CRITICAL']) {
+    assert.equal(calculateRequiredChartCount(difference, 1010000, 14, lamp), 2)
+  }
+})
+
+test('目標達成済みは0譜面で、小数誤差で達成数が余分に増えない', () => {
+  // Given
+  const difference = 75 + 0.1 + 0.2 - 0.3
+  // When & Then
+  assert.equal(calculateRequiredChartCount(0, 1000000, 14, null), 0)
+  assert.equal(calculateRequiredChartCount(-10, 1000000, 14, null), 0)
+  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, null), 1)
 })

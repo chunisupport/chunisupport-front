@@ -1,8 +1,10 @@
 import type { PlayerRecordDTO } from '../types/api'
 import { formatFixed } from './numberFormat'
+import { CALCULATOR_VALUE_DECIMALS } from './overPowerCalculatorConstants'
 import { formatOverPowerValue } from './overPowerFormat'
-import { parseNumberInput } from './rangeInput'
+import { clampNumber, parseNumberInput } from './rangeInput'
 import { MAX_SCORE } from './scoreRank'
+import { calculateSingleOverPower } from './singleOverPower'
 
 /**
  * OVER POWER計算機で扱う基準値。
@@ -365,15 +367,58 @@ export const parseOverPowerInput = (value: string): number | null => {
 }
 
 /**
- * OVER POWER値を入力欄向けの文字列へ整形する。
+ * OVER POWER値または達成率を入力欄の固定小数表記へ整形する。
  *
- * @param value - 整形するOVER POWER値。
- * @returns 不要な末尾0を省いた文字列。
+ * @param value - 整形する値。
+ * @param decimalPlaces - 常時表示する小数桁数。既定はOVER POWERの3桁。
+ * @returns 指定桁数に0埋めした入力文字列。
  */
-export const formatOverPowerInputValue = (value: number): string =>
-  Number.isInteger(value)
-    ? String(value)
-    : formatFixed(value, 3).replace(/0+$/, '').replace(/\.$/, '')
+export const formatOverPowerInputValue = (
+  value: number,
+  decimalPlaces = CALCULATOR_VALUE_DECIMALS
+): string => formatFixed(value, decimalPlaces)
+
+/**
+ * 計算機の入力を指定範囲と固定小数表記へ正規化する。
+ *
+ * @param value - 入力された数値文字列。
+ * @param decimalPlaces - 小数桁数。
+ * @param min - 許可する最小値。
+ * @param max - 許可する最大値。
+ * @returns 空欄・不正値を0として範囲内に収めた固定小数文字列。
+ */
+export const normalizeOverPowerCalculatorInput = (
+  value: string,
+  decimalPlaces: number,
+  min = 0,
+  max = Number.MAX_SAFE_INTEGER
+): string =>
+  formatOverPowerInputValue(clampNumber(parseOverPowerInput(value) ?? 0, min, max), decimalPlaces)
+
+/**
+ * 未プレイ譜面を指定のスコア・ランプで達成する場合の必要譜面数を計算する。
+ *
+ * @param difference - 目標までに必要な追加OVER POWER。
+ * @param score - 達成するスコア（各ランクの境界点）。
+ * @param chartConst - 達成する譜面定数。
+ * @param comboLamp - コンボランプ。AJCは理論値の行のみ有効。
+ * @returns 必要譜面数。目標達成済みなら0、成立しないAJC・OPが増えない条件はnull。
+ */
+export const calculateRequiredChartCount = (
+  difference: number,
+  score: number,
+  chartConst: number,
+  comboLamp: string | null
+): number | null => {
+  if (comboLamp === 'ALL JUSTICE CRITICAL' && score !== MAX_SCORE) return null
+  if (difference <= 0) return 0
+  const gain = calculateSingleOverPower(score, chartConst, comboLamp).value
+  if (gain <= 0) return null
+  const count = difference / gain
+  // 境界点の浮動小数誤差で必要数が1つ増えることを防ぐ。
+  const epsilon = Number.EPSILON * Math.max(1, count) * 8
+  return Math.ceil(count - epsilon)
+}
 
 /**
  * OVER POWERの差分を符号付きで整形する。

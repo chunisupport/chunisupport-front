@@ -1,6 +1,7 @@
+import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
-import { TextField } from '@kobalte/core/text-field'
-import { Gauge, LockKeyhole, Plus } from 'lucide-solid'
+import { Tooltip } from '@kobalte/core/tooltip'
+import { CornerLeftUp, Gauge, Info, LockKeyhole, Plus, Slash } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchGenres } from '../../api/genres'
@@ -12,9 +13,11 @@ import {
   updateMyLockedSongsBatch,
 } from '../../api/users'
 import { LoadError, Loading } from '../../components'
-import { AppButton } from '../../components/common/AppButton'
+import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
+import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
 import { OVER_POWER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -27,63 +30,150 @@ import { buildLockedSongsBatchPayload } from '../../usecases/overpower/lockedSon
 import {
   calculateOverPowerDifference,
   calculateOverPowerPercent,
+  calculateRequiredChartCount,
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
   formatSignedOverPowerValue,
+  normalizeOverPowerCalculatorInput,
   parseOverPowerInput,
   type UnplayedOverPowerFillMode,
 } from '../../utils/overPowerCalculator'
+import {
+  CALCULATOR_PERCENT_DECIMALS,
+  CALCULATOR_PERCENT_MAX,
+  CALCULATOR_VALUE_DECIMALS,
+  REQUIRED_CHART_LAMP_COLUMNS,
+  REQUIRED_CHART_SCORE_ROWS,
+} from '../../utils/overPowerCalculatorConstants'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
-import { normalizeScoreRangeInput } from '../../utils/rangeInput'
 import LockedSongsDialog from '../users/UserOverPower/components/LockedSongsDialog'
 import {
-  BORDER_PERCENTS,
   DEFAULT_MANUAL_FILL_SCORE,
+  DEFAULT_OVER_POWER_INPUT,
+  DEFAULT_REQUIRED_CHART_CONSTANT,
   OVER_POWER_CALCULATOR_COPY,
+  OVER_POWER_CALCULATOR_TABS,
+  QUICK_TARGET_PERCENTS,
   UNPLAYED_FILL_OPTIONS,
 } from './overPowerCalculator.constants'
 
-/** OVER POWER計算機の数値入力欄の表示と更新設定。 */
+/** 数値入力欄の表示・制約・変更通知。 */
 type OverPowerFieldProps = {
   id: string
   label: string
   value: string
   min?: number
   max?: number
-  step?: string
+  step?: number
+  decimalPlaces?: number
+  hideLabel?: boolean
   inputMode?: 'numeric' | 'decimal'
   onChange: (value: string) => void
 }
 
-/** 数値入力のスタイル。自由入力にはsans系フォントを使用する。 */
+/** 数値入力のスタイル。360pxでも左右の入力欄を並べられる幅に収める。 */
 const INPUT_CLASS =
-  'min-h-12 w-full rounded-md border border-border-strong bg-input-bg px-3 py-3 text-right font-sans text-base tabular-nums text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
+  'h-12 min-w-0 w-full rounded-md border border-border-strong bg-input-bg px-2 text-right font-sans text-base tabular-nums text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 
 /**
- * OVER POWER計算機の数値入力欄を描画する。
+ * 固定小数表示と範囲制限を持つ計算機専用の数値入力欄を描画する。
  *
- * @param props - 入力欄ID、ラベル、値、数値制約、入力モードと更新通知先。
- * @returns Kobalte TextFieldによる数値入力欄。
+ * @param props - 入力欄ID、ラベル、値、制約、小数桁数、更新通知先。
+ * @returns 固定小数の編集位置を保ち、範囲制限をKobalteで扱うNumberField。
  */
-const OverPowerField: Component<OverPowerFieldProps> = (props) => (
-  <TextField class="block" value={props.value} onChange={props.onChange}>
-    <TextField.Label class="mb-1 block text-sm font-medium text-text-muted" for={props.id}>
-      {props.label}
-    </TextField.Label>
-    <TextField.Input
+const OverPowerField: Component<OverPowerFieldProps> = (props) => {
+  const decimalPlaces = () => props.decimalPlaces ?? CALCULATOR_VALUE_DECIMALS
+  /**
+   * 入力値を制限範囲と常時表示する小数桁数へ合わせる。
+   * @param value - NumberFieldから受け取った入力文字列。
+   * @returns なし。
+   */
+  const handleChange = (value: string): void =>
+    props.onChange(normalizeOverPowerCalculatorInput(value, decimalPlaces(), props.min, props.max))
+  /**
+   * 小数点・負号の入力時に編集領域を選択し、固定表示のまま数値を編集する。
+   * @param event - 入力前イベント。モバイルの小数点入力にも対応する。
+   * @returns なし。
+   */
+  const handleBeforeInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
+    const input = event.currentTarget
+    if (event.data === '-' && (props.min ?? 0) < 0) {
+      event.preventDefault()
+      props.onChange(`-${input.value.replace(/^-/, '')}`)
+      input.setSelectionRange(1, input.value.length)
+      return
+    }
+    if (event.data === '.' || event.data === ',') {
+      if (input.selectionStart === 0 && input.selectionEnd === input.value.length) {
+        event.preventDefault()
+        props.onChange(formatOverPowerInputValue(Math.max(props.min ?? 0, 0), decimalPlaces()))
+        input.setSelectionRange(input.value.indexOf('.') + 1, input.value.length)
+        return
+      }
+      if (input.selectionStart !== input.selectionEnd || !input.value.includes('.')) return
+      event.preventDefault()
+      input.setSelectionRange(input.value.indexOf('.') + 1, input.value.length)
+    }
+  }
+  /**
+   * 固定小数への再整形後も入力中のカーソル位置を保つ。
+   * @param event - NumberFieldの数値処理前に通知される入力イベント。
+   * @returns なし。
+   */
+  const handleInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
+    const input = event.currentTarget
+    const start = input.selectionStart
+    const end = input.selectionEnd
+    queueMicrotask(() => input.setSelectionRange(start, end))
+  }
+  return (
+    <NumberField
       id={props.id}
       name={props.id}
-      type="text"
-      class={INPUT_CLASS}
-      inputMode={props.inputMode ?? 'decimal'}
-      pattern={props.inputMode === 'numeric' ? '[0-9]*' : '[0-9]*[.,]?[0-9]*'}
-      min={props.min}
-      max={props.max}
-      step={props.step}
-      required
-    />
-  </TextField>
+      value={props.value}
+      onChange={handleChange}
+      minValue={props.min ?? 0}
+      maxValue={props.max}
+      step={props.step ?? 10 ** -decimalPlaces()}
+      formatOptions={{
+        useGrouping: false,
+        minimumFractionDigits: decimalPlaces(),
+        maximumFractionDigits: decimalPlaces(),
+      }}
+      class="min-w-0 max-w-40 flex-1"
+    >
+      <NumberField.Label
+        class={props.hideLabel ? 'sr-only' : 'mb-1 block text-sm font-medium text-text-muted'}
+      >
+        {props.label}
+      </NumberField.Label>
+      <NumberField.Input
+        class={INPUT_CLASS}
+        inputMode={props.inputMode ?? 'decimal'}
+        onFocus={(event: FocusEvent & { currentTarget: HTMLInputElement }) =>
+          event.currentTarget.select()
+        }
+        onBeforeInput={handleBeforeInput}
+        onInput={handleInput}
+      />
+    </NumberField>
+  )
+}
+
+/**
+ * 数値入力・出力を大きなスラッシュで区切って横並びにする。
+ * @param props - 左右に表示する入力欄または出力欄と読み上げラベル。
+ * @returns モバイル幅に収まる比率表示。
+ */
+const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: string }> = (
+  props
+) => (
+  <fieldset class="flex min-w-0 max-w-sm items-end gap-2" aria-label={props.label}>
+    {props.left}
+    <Slash class="mb-3 h-6 w-6 shrink-0 text-text-subtle" aria-hidden="true" />
+    {props.right}
+  </fieldset>
 )
 
 /**
@@ -93,13 +183,22 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => (
  */
 const OverPowerCalculatorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded } = useSongsData()
-  const [maxValue, setMaxValue] = createSignal('')
-  const [currentValue, setCurrentValue] = createSignal('')
-  const [addValue, setAddValue] = createSignal('')
-  const [targetPercent, setTargetPercent] = createSignal('')
+  const [maxValue, setMaxValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
+  const [currentValue, setCurrentValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
+  const [addValue, setAddValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
+  const [targetPercent, setTargetPercent] = createSignal(
+    formatOverPowerInputValue(0, CALCULATOR_PERCENT_DECIMALS)
+  )
   const [unlockLockedSongs, setUnlockLockedSongs] = createSignal(false)
   const [unplayedFillMode, setUnplayedFillMode] = createSignal<UnplayedOverPowerFillMode>('none')
-  const [manualFillScore, setManualFillScore] = createSignal(DEFAULT_MANUAL_FILL_SCORE)
+  const [manualFillScore, setManualFillScore] = createSignal(
+    formatOverPowerInputValue(Number(DEFAULT_MANUAL_FILL_SCORE))
+  )
+  const [chartConstant, setChartConstant] = createSignal(
+    formatOverPowerInputValue(Number(DEFAULT_REQUIRED_CHART_CONSTANT))
+  )
+  const [selectedTab, setSelectedTab] =
+    createSignal<(typeof OVER_POWER_CALCULATOR_TABS)[number]['value']>('value')
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
 
   const tool = getToolLink(OVER_POWER_CALCULATOR_PATH)
@@ -161,7 +260,12 @@ const OverPowerCalculatorPage = (): JSX.Element => {
 
     setMaxValue(formatOverPowerInputValue(base.max))
     setCurrentValue(formatOverPowerInputValue(base.current))
-    setTargetPercent(formatOverPowerInputValue(calculateOverPowerPercent(base.current, base.max)))
+    setTargetPercent(
+      formatOverPowerInputValue(
+        calculateOverPowerPercent(base.current, base.max),
+        CALCULATOR_PERCENT_DECIMALS
+      )
+    )
   })
 
   const parsedMaxValue = createMemo(() => parseOverPowerInput(maxValue()) ?? 0)
@@ -177,15 +281,19 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const targetDifference = createMemo(() =>
     calculateOverPowerDifference(requiredValue(), importedCurrentValue())
   )
-  const borderRows = createMemo(() =>
-    BORDER_PERCENTS.map((percent) => {
-      const required = calculateRequiredOverPower(percent, parsedMaxValue())
-      return {
-        percent,
-        required,
-        difference: calculateOverPowerDifference(required, importedCurrentValue()),
-      }
-    })
+  const requiredChartRows = createMemo(() =>
+    REQUIRED_CHART_SCORE_ROWS.map((row) => ({
+      ...row,
+      counts: REQUIRED_CHART_LAMP_COLUMNS.map((lamp) => ({
+        ...lamp,
+        count: calculateRequiredChartCount(
+          targetDifference(),
+          row.score,
+          parseOverPowerInput(chartConstant()) ?? CHART_CONST_MIN,
+          lamp.value
+        ),
+      })),
+    }))
   )
   const unplayedCalculation = createMemo(() =>
     calculateUnplayedOverPower({
@@ -204,7 +312,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     const score = importedBase()?.playedAverageScore
     return score === null || typeof score === 'undefined'
       ? OVER_POWER_CALCULATOR_COPY.noPlayedAverageLabel
-      : `${Math.round(score).toLocaleString('ja-JP')}${OVER_POWER_CALCULATOR_COPY.manualScoreSuffix}`
+      : `${formatOverPowerInputValue(score)}${OVER_POWER_CALCULATOR_COPY.manualScoreSuffix}`
   })
   const lockedSongsButtonDisabled = createMemo(() => importLoading() || !importedBase())
 
@@ -218,7 +326,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     if (parsedAddValue === null) return
 
     setCurrentValue(formatOverPowerInputValue(parsedCurrentValue() + parsedAddValue))
-    setAddValue('')
+    setAddValue(DEFAULT_OVER_POWER_INPUT)
   }
 
   /**
@@ -248,44 +356,45 @@ const OverPowerCalculatorPage = (): JSX.Element => {
         </p>
       </Show>
 
-      <header class="flex items-start gap-3">
-        <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
-          <Gauge class="h-5 w-5 text-action-primary" aria-hidden="true" />
-        </span>
-        <div>
-          <h1 class="text-2xl font-semibold">{tool.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
+      <header>
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex min-w-0 items-start gap-3">
+            <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+              <Gauge class="h-5 w-5 text-action-primary" aria-hidden="true" />
+            </span>
+            <div class="min-w-0">
+              <h1 class="text-xl font-semibold sm:text-2xl">{tool.title}</h1>
+              <p class="mt-1 font-sans text-sm text-text-muted">{tool.description}</p>
+            </div>
+          </div>
+          <Show when={authSession.status === 'authenticated'}>
+            <AppIconButton
+              size="md"
+              tone="surface"
+              class="shrink-0"
+              aria-label={OVER_POWER_CALCULATOR_COPY.lockedSongsSettingsLabel}
+              title={OVER_POWER_CALCULATOR_COPY.lockedSongsSettingsLabel}
+              disabled={lockedSongsButtonDisabled()}
+              onClick={() => setLockedSongsDialogOpen(true)}
+            >
+              <LockKeyhole class="h-5 w-5" aria-hidden="true" />
+            </AppIconButton>
+          </Show>
         </div>
+        <Show when={authSession.status === 'authenticated'}>
+          <CheckboxField
+            class="mt-4"
+            checked={unlockLockedSongs()}
+            onChange={setUnlockLockedSongs}
+            label={OVER_POWER_CALCULATOR_COPY.unlockLockedSongsLabel}
+          />
+        </Show>
       </header>
-
       <Show when={importLoading() && authenticatedUsername()}>
         <Loading />
       </Show>
       <Show when={importError() && authenticatedUsername()}>
         <LoadError error={importError()} />
-      </Show>
-
-      <Show when={authSession.status === 'authenticated'}>
-        <div class="flex flex-col gap-3 rounded-md border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-          <CheckboxField
-            checked={unlockLockedSongs()}
-            onChange={setUnlockLockedSongs}
-            label={OVER_POWER_CALCULATOR_COPY.unlockLockedSongsLabel}
-          />
-          <AppButton
-            type="button"
-            variant="surface"
-            shape="pill"
-            class="min-h-10"
-            aria-label={OVER_POWER_CALCULATOR_COPY.lockedSongsSettingsLabel}
-            title={OVER_POWER_CALCULATOR_COPY.lockedSongsSettingsLabel}
-            disabled={lockedSongsButtonDisabled()}
-            onClick={() => setLockedSongsDialogOpen(true)}
-          >
-            <span>{OVER_POWER_CALCULATOR_COPY.lockedSongsButtonLabel}</span>
-            <LockKeyhole class="h-5 w-5" aria-hidden="true" />
-          </AppButton>
-        </div>
       </Show>
 
       <Show when={currentData() && importedBase() && currentData()}>
@@ -306,177 +415,257 @@ const OverPowerCalculatorPage = (): JSX.Element => {
         )}
       </Show>
 
-      <div class="grid gap-4 lg:grid-cols-2">
-        <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
-          <h2 class="text-lg font-semibold">{OVER_POWER_CALCULATOR_COPY.valueToPercentTitle}</h2>
-          <output class="mt-4 block text-4xl font-bold font-jost tabular-nums text-action-primary">
+      <UnderlineTabs
+        options={OVER_POWER_CALCULATOR_TABS}
+        value={selectedTab()}
+        onChange={setSelectedTab}
+        listClass="gap-0 sm:gap-2"
+        triggerClass="whitespace-nowrap !px-2 !text-sm sm:!px-3 data-selected:!bg-transparent"
+      >
+        <AppTabContent
+          value="value"
+          class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
+        >
+          <output
+            aria-live="polite"
+            class="block font-jost text-4xl font-bold tabular-nums text-action-primary"
+          >
             {formatOverPowerPercent(currentPercent())}%
           </output>
-          <div class="mt-5 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-            <OverPowerField
-              id="over-power-current-value"
-              label={OVER_POWER_CALCULATOR_COPY.currentLabel}
-              value={currentValue()}
-              onChange={setCurrentValue}
-            />
-            <span class="hidden pb-2 text-lg font-semibold text-text-muted sm:block">/</span>
-            <OverPowerField
-              id="over-power-max-value"
-              label={OVER_POWER_CALCULATOR_COPY.maxLabel}
-              value={maxValue()}
-              onChange={setMaxValue}
+          <div class="mt-5">
+            <OverPowerRatio
+              label={OVER_POWER_CALCULATOR_COPY.ratioLabel}
+              left={
+                <OverPowerField
+                  id="over-power-current-value"
+                  label={OVER_POWER_CALCULATOR_COPY.currentLabel}
+                  value={currentValue()}
+                  onChange={setCurrentValue}
+                />
+              }
+              right={
+                <OverPowerField
+                  id="over-power-max-value"
+                  label={OVER_POWER_CALCULATOR_COPY.maxLabel}
+                  value={maxValue()}
+                  onChange={setMaxValue}
+                />
+              }
             />
           </div>
-          <div class="mt-4 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <form
+            class="mt-2 flex max-w-sm items-center gap-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              handleAddValue()
+            }}
+          >
+            <CornerLeftUp class="h-6 w-6 shrink-0 text-text-subtle" aria-hidden="true" />
             <OverPowerField
               id="over-power-add-value"
               label={OVER_POWER_CALCULATOR_COPY.addValueLabel}
+              hideLabel
               value={addValue()}
+              min={-Number.MAX_SAFE_INTEGER}
               onChange={setAddValue}
             />
-            <AppButton type="button" variant="primary" class="min-h-12" onClick={handleAddValue}>
-              <Plus class="h-4 w-4" aria-hidden="true" />
+            <AppButton
+              type="submit"
+              variant="primary"
+              class="min-h-12 shrink-0"
+              leftIcon={<Plus class="h-4 w-4" aria-hidden="true" />}
+            >
               {OVER_POWER_CALCULATOR_COPY.addButtonLabel}
             </AppButton>
-          </div>
-        </section>
+          </form>
+        </AppTabContent>
 
-        <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
-          <h2 class="text-lg font-semibold">{OVER_POWER_CALCULATOR_COPY.percentToValueTitle}</h2>
-          <output class="mt-4 block text-4xl font-bold font-jost tabular-nums text-action-primary">
-            {formatSignedOverPowerValue(targetDifference())}
-          </output>
-          <p class="mt-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.differenceLabel}</p>
-          <div class="mt-5 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-            <div>
-              <p class="mb-1 text-sm font-medium text-text-muted">
-                {OVER_POWER_CALCULATOR_COPY.requiredValueLabel}
-              </p>
-              <output class="block rounded border border-border bg-surface-muted px-3 py-2 text-right font-jost text-sm tabular-nums text-text">
-                {formatOverPowerValue(requiredValue())}
-              </output>
-            </div>
-            <span class="hidden pb-2 text-lg font-semibold text-text-muted sm:block">/</span>
-            <OverPowerField
-              id="over-power-max-value-percent"
-              label={OVER_POWER_CALCULATOR_COPY.maxLabel}
-              value={maxValue()}
-              onChange={setMaxValue}
-            />
-          </div>
-          <div class="mt-4">
-            <OverPowerField
-              id="over-power-target-percent"
-              label={OVER_POWER_CALCULATOR_COPY.targetPercentLabel}
-              value={targetPercent()}
-              onChange={setTargetPercent}
-            />
-          </div>
-        </section>
-      </div>
-
-      <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
-        <h2 class="text-lg font-semibold">{OVER_POWER_CALCULATOR_COPY.borderTableTitle}</h2>
-        <div class="mt-4 overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead class="border-b border-border text-left text-text-muted">
-              <tr>
-                <th class="whitespace-nowrap px-3 py-2 font-medium">
-                  {OVER_POWER_CALCULATOR_COPY.targetPercentLabel}
-                </th>
-                <th class="whitespace-nowrap px-3 py-2 text-right font-medium">
-                  {OVER_POWER_CALCULATOR_COPY.requiredValueLabel}
-                </th>
-                <th class="whitespace-nowrap px-3 py-2 text-right font-medium">
-                  {OVER_POWER_CALCULATOR_COPY.differenceLabel}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={borderRows()}>
-                {(row) => (
-                  <tr class="border-b border-border last:border-b-0">
-                    <td class="whitespace-nowrap px-3 py-2 tabular-nums">
-                      {formatOverPowerPercent(row.percent, 1)}%
-                    </td>
-                    <td class="whitespace-nowrap px-3 py-2 text-right tabular-nums">
-                      {formatOverPowerValue(row.required)}
-                    </td>
-                    <td class="whitespace-nowrap px-3 py-2 text-right tabular-nums">
-                      {formatSignedOverPowerValue(row.difference)}
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="rounded-lg border border-border bg-surface p-4 sm:p-6">
-        <h2 class="text-lg font-semibold">{OVER_POWER_CALCULATOR_COPY.unplayedCalculatorTitle}</h2>
-        <Show
-          when={authSession.status === 'authenticated'}
-          fallback={
-            <p class="mt-4 rounded-md border border-border bg-surface-muted px-4 py-3 text-sm text-text-muted">
-              {OVER_POWER_CALCULATOR_COPY.loginRequiredMessage}
-            </p>
-          }
+        <AppTabContent
+          value="percent"
+          class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
         >
-          <output class="mt-4 block text-4xl font-bold font-jost tabular-nums text-action-primary">
-            {formatOverPowerPercent(unplayedCalculation().percent)}%
-          </output>
-          <p class="mt-2 font-jost text-sm tabular-nums text-text-muted">
-            {formatOverPowerValue(unplayedCalculation().current)} /{' '}
-            {formatOverPowerValue(unplayedCalculation().max)}
-          </p>
+          <OverPowerField
+            id="over-power-target-percent"
+            label={OVER_POWER_CALCULATOR_COPY.targetPercentLabel}
+            value={targetPercent()}
+            max={CALCULATOR_PERCENT_MAX}
+            decimalPlaces={CALCULATOR_PERCENT_DECIMALS}
+            onChange={setTargetPercent}
+          />
+          <div class="mt-2 flex flex-wrap gap-2">
+            <For each={QUICK_TARGET_PERCENTS}>
+              {(target) => (
+                <AppButton
+                  variant="surface"
+                  size="sm"
+                  onClick={() =>
+                    setTargetPercent(
+                      formatOverPowerInputValue(target.value, CALCULATOR_PERCENT_DECIMALS)
+                    )
+                  }
+                >
+                  {target.label}
+                </AppButton>
+              )}
+            </For>
+          </div>
+          <div class="mt-5">
+            <OverPowerRatio
+              label={OVER_POWER_CALCULATOR_COPY.requiredRatioLabel}
+              left={
+                <div class="min-w-0 max-w-40 flex-1">
+                  <p class="mb-1 text-sm font-medium text-text-muted">
+                    {OVER_POWER_CALCULATOR_COPY.requiredValueLabel}
+                  </p>
+                  <output class="flex h-12 items-center justify-end rounded-md border border-border bg-surface-muted px-2 font-jost text-base tabular-nums">
+                    {formatOverPowerValue(requiredValue())}
+                  </output>
+                </div>
+              }
+              right={
+                <OverPowerField
+                  id="over-power-max-value-percent"
+                  label={OVER_POWER_CALCULATOR_COPY.maxLabel}
+                  value={maxValue()}
+                  onChange={setMaxValue}
+                />
+              }
+            />
+          </div>
+          <div class="mt-5" aria-live="polite">
+            <p class="text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.differenceLabel}</p>
+            <output class="block font-jost text-3xl font-bold tabular-nums text-action-primary">
+              {formatSignedOverPowerValue(targetDifference())}
+            </output>
+          </div>
+          <section class="mt-6 border-t border-border pt-5">
+            <div class="mb-4 flex items-center gap-2">
+              <h2 class="text-base font-semibold">
+                {OVER_POWER_CALCULATOR_COPY.requiredChartCountTitle}
+              </h2>
+            </div>
+            <OverPowerField
+              id="over-power-chart-constant"
+              label={OVER_POWER_CALCULATOR_COPY.chartConstantLabel}
+              value={chartConstant()}
+              min={CHART_CONST_MIN}
+              max={CHART_CONST_MAX}
+              step={0.1}
+              onChange={setChartConstant}
+            />
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="border-b border-border text-text-muted">
+                  <tr>
+                    <th scope="col" class="px-2 py-2 text-left font-medium">
+                      {OVER_POWER_CALCULATOR_COPY.countSuffix}
+                    </th>
+                    <For each={REQUIRED_CHART_LAMP_COLUMNS}>
+                      {(lamp) => (
+                        <th scope="col" class="px-2 py-2 text-right font-medium">
+                          {lamp.label}
+                        </th>
+                      )}
+                    </For>
+                  </tr>
+                </thead>
+                <tbody>
+                  <For each={requiredChartRows()}>
+                    {(row) => (
+                      <tr class="border-b border-border last:border-0">
+                        <th
+                          scope="row"
+                          class="whitespace-nowrap px-2 py-3 text-left font-medium"
+                          title={formatOverPowerInputValue(row.score)}
+                        >
+                          {row.label}
+                        </th>
+                        <For each={row.counts}>
+                          {(cell) => (
+                            <td
+                              class="px-2 py-3 text-right font-jost tabular-nums"
+                              title={
+                                cell.count === null
+                                  ? OVER_POWER_CALCULATOR_COPY.unavailableCountHint
+                                  : undefined
+                              }
+                            >
+                              {cell.count ?? OVER_POWER_CALCULATOR_COPY.unavailableCountLabel}
+                            </td>
+                          )}
+                        </For>
+                      </tr>
+                    )}
+                  </For>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </AppTabContent>
 
-          <RadioGroup
-            name="unplayed-over-power-mode"
-            value={unplayedFillMode()}
-            onChange={(value) => setUnplayedFillMode(value as UnplayedOverPowerFillMode)}
-            class="mt-5 space-y-2"
+        <AppTabContent
+          value="unplayed"
+          class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
+        >
+          <Show
+            when={authSession.status === 'authenticated'}
+            fallback={
+              <p class="text-sm text-text-muted">
+                {OVER_POWER_CALCULATOR_COPY.loginRequiredMessage}
+              </p>
+            }
           >
-            <RadioGroup.Label class="block text-sm font-medium text-text-muted">
-              {OVER_POWER_CALCULATOR_COPY.unplayedModeLabel}（{unplayedSongCount()}
-              {OVER_POWER_CALCULATOR_COPY.songCountSuffix}）
-            </RadioGroup.Label>
-            <div class="grid gap-2 sm:grid-cols-2">
-              <For each={UNPLAYED_FILL_OPTIONS}>
-                {(option) => (
-                  <SelectableCardItem
-                    value={option.value}
-                    title={option.label}
-                    ariaLabel={option.label}
-                    density="compact"
-                    description={
+            <output class="block font-jost text-4xl font-bold tabular-nums text-action-primary">
+              {formatOverPowerPercent(unplayedCalculation().percent)}%
+            </output>
+            <p class="mt-2 font-jost text-sm tabular-nums text-text-muted">
+              {formatOverPowerValue(unplayedCalculation().current)} /{' '}
+              {formatOverPowerValue(unplayedCalculation().max)}
+            </p>
+            <RadioGroup
+              name="unplayed-over-power-mode"
+              value={unplayedFillMode()}
+              onChange={(value) => setUnplayedFillMode(value as UnplayedOverPowerFillMode)}
+              class="mt-5 space-y-2"
+            >
+              <RadioGroup.Label class="block text-sm font-medium text-text-muted">
+                {OVER_POWER_CALCULATOR_COPY.unplayedModeLabel(unplayedSongCount())}
+              </RadioGroup.Label>
+              <div class="grid gap-2 sm:grid-cols-2">
+                <For each={UNPLAYED_FILL_OPTIONS}>
+                  {(option) => {
+                    const label = () =>
                       option.value === 'playedAverage'
-                        ? playedAverageScoreLabel()
-                        : 'description' in option
-                          ? option.description
-                          : undefined
-                    }
-                  />
-                )}
-              </For>
-            </div>
-          </RadioGroup>
-          <Show when={unplayedFillMode() === 'manual'}>
-            <div class="mt-4 sm:max-w-xs">
-              <OverPowerField
-                id="unplayed-over-power-manual-score"
-                label={OVER_POWER_CALCULATOR_COPY.manualScoreLabel}
-                value={manualFillScore()}
-                inputMode="numeric"
-                onChange={(value) => {
-                  const normalized = normalizeScoreRangeInput(value)
-                  if (normalized !== null) setManualFillScore(normalized)
-                }}
-              />
-            </div>
+                        ? `${option.label}(${playedAverageScoreLabel()})`
+                        : option.label
+                    return (
+                      <SelectableCardItem
+                        value={option.value}
+                        title={label()}
+                        ariaLabel={label()}
+                        density="compact"
+                      />
+                    )
+                  }}
+                </For>
+              </div>
+            </RadioGroup>
+            <Show when={unplayedFillMode() === 'manual'}>
+              <div class="mt-4">
+                <OverPowerField
+                  id="unplayed-over-power-manual-score"
+                  label={OVER_POWER_CALCULATOR_COPY.manualScoreLabel}
+                  value={manualFillScore()}
+                  max={SCORE_THEORETICAL_MAX}
+                  step={1}
+                  inputMode="numeric"
+                  onChange={setManualFillScore}
+                />
+              </div>
+            </Show>
           </Show>
-        </Show>
-      </section>
+        </AppTabContent>
+      </UnderlineTabs>
     </main>
   )
 }
