@@ -12,8 +12,12 @@ export const OVER_POWER_CALCULATOR_COPY = {
   addValueLabel: '加算値',
   addButtonLabel: '加算',
   targetPercentLabel: '目標%',
-  requiredValueLabel: '必要獲得値',
   resultLabel: '計算結果',
+  differenceLabel: 'あと',
+  lampLabel: 'ランプ',
+  requiredCountLabel: '必要譜面数',
+  currentScoreLabel: '現在のスコア',
+  targetScoreLabel: '目標スコア',
   unplayedCalculatorTitle: '未プレイ補完計算',
   loginRequiredMessage: 'ログイン中のみ使用できます。',
   /**
@@ -28,8 +32,6 @@ export const OVER_POWER_CALCULATOR_COPY = {
   requiredChartCountTitle: '達成までの必要譜面数',
   chartConstantLabel: '譜面定数',
   unavailableCountLabel: '—',
-  unavailableCountHint: '理論値は通常列を参照してください。',
-  countSuffix: '譜面',
   ratioLabel: '獲得値 / 満点',
   requiredRatioLabel: '必要獲得値 / 満点',
 } as const
@@ -52,7 +54,11 @@ export const DEFAULT_OVER_POWER_INPUT = (0).toFixed(CALCULATOR_VALUE_DECIMALS)
 /** 指定スコア補完の初期値。 */
 export const DEFAULT_MANUAL_FILL_SCORE = '1007500'
 /** 必要譜面数を計算する譜面定数の初期値。 */
-export const DEFAULT_REQUIRED_CHART_CONSTANT = '14.0'
+export const DEFAULT_REQUIRED_CHART_CONSTANT = '15.0'
+/** 必要譜面数を計算する現在スコアの初期値。 */
+export const DEFAULT_REQUIRED_CURRENT_SCORE = '1005000'
+/** 必要譜面数を計算する目標スコアの初期値。 */
+export const DEFAULT_REQUIRED_TARGET_SCORE = '1007500'
 /** 未プレイ補完の選択肢。 */
 export const UNPLAYED_FILL_OPTIONS = [
   { value: 'none', label: '0点(=現在の値)' },

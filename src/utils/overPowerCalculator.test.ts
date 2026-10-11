@@ -423,3 +423,19 @@ test('目標達成済みは0譜面で、小数誤差で達成数が余分に増�
   assert.equal(calculateRequiredChartCount(-10, 1000000, 14, null), 0)
   assert.equal(calculateRequiredChartCount(difference, 1000000, 14, null), 1)
 })
+
+test('現在から目標へのOP増加量で必要譜面数を計算する', () => {
+  // Given: 定数14、SSからSSSへの増加量は通常5、FC5.5、AJ6
+  const difference = 11
+  // When & Then
+  assert.equal(calculateRequiredChartCount(difference, 1007500, 14, null, 1000000), 3)
+  assert.equal(calculateRequiredChartCount(difference, 1007500, 14, 'FULL COMBO', 1000000), 2)
+  assert.equal(calculateRequiredChartCount(difference, 1007500, 14, 'ALL JUSTICE', 1000000), 2)
+})
+
+test('スコアを伸ばしてもOPが増えない場合は必要譜面数を算出しない', () => {
+  // Given & When & Then
+  assert.equal(calculateRequiredChartCount(10, 1000000, 14, null, 1000000), null)
+  assert.equal(calculateRequiredChartCount(10, 1000000, 14, null, 1007500), null)
+  assert.equal(calculateRequiredChartCount(0, 1000000, 14, null, 1000000), 0)
+})

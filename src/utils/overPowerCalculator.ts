@@ -396,24 +396,28 @@ export const normalizeOverPowerCalculatorInput = (
   formatOverPowerInputValue(clampNumber(parseOverPowerInput(value) ?? 0, min, max), decimalPlaces)
 
 /**
- * 未プレイ譜面を指定のスコア・ランプで達成する場合の必要譜面数を計算する。
+ * 指定した現在スコアから目標スコアへ伸ばす場合の必要譜面数を計算する。
  *
  * @param difference - 目標までに必要な追加OVER POWER。
- * @param score - 達成するスコア（各ランクの境界点）。
+ * @param score - 達成する目標スコア。
  * @param chartConst - 達成する譜面定数。
  * @param comboLamp - コンボランプ。理論値では通常列のみ有効。
+ * @param currentScore - 現在スコア。現在のコンボランプは通常として扱う。
  * @returns 必要譜面数。目標達成済みなら0、理論値のランプ列・成立しないAJC・OPが増えない条件はnull。
  */
 export const calculateRequiredChartCount = (
   difference: number,
   score: number,
   chartConst: number,
-  comboLamp: string | null
+  comboLamp: string | null,
+  currentScore = 0
 ): number | null => {
   if (score === MAX_SCORE && comboLamp !== null) return null
   if (comboLamp === 'ALL JUSTICE CRITICAL' && score !== MAX_SCORE) return null
   if (difference <= 0) return 0
-  const gain = calculateSingleOverPower(score, chartConst, comboLamp).value
+  const gain =
+    calculateSingleOverPower(score, chartConst, comboLamp).value -
+    calculateSingleOverPower(currentScore, chartConst, null).value
   if (gain <= 0) return null
   const count = difference / gain
   // 境界点の浮動小数誤差で必要数が1つ増えることを防ぐ。

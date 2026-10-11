@@ -35,7 +35,6 @@ import {
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
-  formatSignedOverPowerValue,
   normalizeOverPowerCalculatorInput,
   parseOverPowerInput,
   type UnplayedOverPowerFillMode,
@@ -45,7 +44,6 @@ import {
   CALCULATOR_PERCENT_MAX,
   CALCULATOR_VALUE_DECIMALS,
   REQUIRED_CHART_LAMP_COLUMNS,
-  REQUIRED_CHART_SCORE_ROWS,
 } from '../../utils/overPowerCalculatorConstants'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import LockedSongsDialog from '../users/UserOverPower/components/LockedSongsDialog'
@@ -53,6 +51,8 @@ import {
   DEFAULT_MANUAL_FILL_SCORE,
   DEFAULT_OVER_POWER_INPUT,
   DEFAULT_REQUIRED_CHART_CONSTANT,
+  DEFAULT_REQUIRED_CURRENT_SCORE,
+  DEFAULT_REQUIRED_TARGET_SCORE,
   OVER_POWER_CALCULATOR_COPY,
   OVER_POWER_CALCULATOR_TABS,
   QUICK_TARGET_PERCENTS,
@@ -162,7 +162,10 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => {
 const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: string }> = (
   props
 ) => (
-  <fieldset class="flex min-w-0 max-w-sm items-end gap-2" aria-label={props.label}>
+  <fieldset
+    class="flex min-w-0 max-w-sm items-end gap-2 [&>div]:max-w-none"
+    aria-label={props.label}
+  >
     {props.left}
     <Slash class="mb-3 h-6 w-6 shrink-0 text-text-subtle" aria-hidden="true" />
     {props.right}
@@ -190,6 +193,8 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const [chartConstant, setChartConstant] = createSignal(
     formatOverPowerInputValue(Number(DEFAULT_REQUIRED_CHART_CONSTANT), 1)
   )
+  const [currentChartScore, setCurrentChartScore] = createSignal(DEFAULT_REQUIRED_CURRENT_SCORE)
+  const [targetChartScore, setTargetChartScore] = createSignal(DEFAULT_REQUIRED_TARGET_SCORE)
   const [selectedTab, setSelectedTab] =
     createSignal<(typeof OVER_POWER_CALCULATOR_TABS)[number]['value']>('value')
   const [lockedSongsDialogOpen, setLockedSongsDialogOpen] = createSignal(false)
@@ -274,18 +279,16 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const targetDifference = createMemo(() =>
     calculateOverPowerDifference(requiredValue(), importedCurrentValue())
   )
-  const requiredChartRows = createMemo(() =>
-    REQUIRED_CHART_SCORE_ROWS.map((row) => ({
-      ...row,
-      counts: REQUIRED_CHART_LAMP_COLUMNS.map((lamp) => ({
-        ...lamp,
-        count: calculateRequiredChartCount(
-          targetDifference(),
-          row.score,
-          parseOverPowerInput(chartConstant()) ?? CHART_CONST_MIN,
-          lamp.value
-        ),
-      })),
+  const requiredChartCounts = createMemo(() =>
+    REQUIRED_CHART_LAMP_COLUMNS.map((lamp) => ({
+      ...lamp,
+      count: calculateRequiredChartCount(
+        targetDifference(),
+        parseOverPowerInput(targetChartScore()) ?? 0,
+        parseOverPowerInput(chartConstant()) ?? CHART_CONST_MIN,
+        lamp.value,
+        parseOverPowerInput(currentChartScore()) ?? 0
+      ),
     }))
   )
   const unplayedCalculation = createMemo(() =>
@@ -482,61 +485,66 @@ const OverPowerCalculatorPage = (): JSX.Element => {
           value="percent"
           class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
         >
-          <div class="mb-5" aria-live="polite">
-            <p class="text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
-            <output class="block font-jost text-3xl font-bold tabular-nums text-action-primary">
-              {formatSignedOverPowerValue(targetDifference())}
-            </output>
-          </div>
-          <OverPowerField
-            fullWidth
-            id="over-power-target-percent"
-            label={OVER_POWER_CALCULATOR_COPY.targetPercentLabel}
-            value={targetPercent()}
-            max={CALCULATOR_PERCENT_MAX}
-            decimalPlaces={CALCULATOR_PERCENT_DECIMALS}
-            onChange={setTargetPercent}
-          />
-          <div class="mt-2 flex flex-wrap gap-2">
-            <For each={QUICK_TARGET_PERCENTS}>
-              {(target) => (
-                <AppButton
-                  variant="ghost"
-                  class={`border ${getPossessionClassName(target.possession)} !text-[var(--cs-color-possession-text)] hover:brightness-95`}
-                  size="sm"
-                  onClick={() =>
-                    setTargetPercent(
-                      formatOverPowerInputValue(target.value, CALCULATOR_PERCENT_DECIMALS)
-                    )
-                  }
+          <OverPowerRatio
+            label={OVER_POWER_CALCULATOR_COPY.requiredRatioLabel}
+            left={
+              <div class="min-w-0 flex-1">
+                <p class="mb-1 text-sm font-medium text-text-muted">
+                  {OVER_POWER_CALCULATOR_COPY.resultLabel}
+                </p>
+                <output
+                  aria-live="polite"
+                  class="flex h-12 items-center justify-end font-jost text-2xl sm:text-3xl font-bold tabular-nums text-action-primary"
                 >
-                  {target.label}
-                </AppButton>
-              )}
-            </For>
-          </div>
-          <div class="mt-5">
-            <OverPowerRatio
-              label={OVER_POWER_CALCULATOR_COPY.requiredRatioLabel}
-              left={
-                <div class="min-w-0 max-w-40 flex-1">
-                  <p class="mb-1 text-sm font-medium text-text-muted">
-                    {OVER_POWER_CALCULATOR_COPY.requiredValueLabel}
-                  </p>
-                  <output class="flex h-12 items-center justify-end rounded-md border border-border bg-surface-muted px-2 font-jost text-base tabular-nums">
-                    {formatOverPowerValue(requiredValue())}
-                  </output>
-                </div>
-              }
-              right={
-                <OverPowerField
-                  id="over-power-max-value-percent"
-                  label={OVER_POWER_CALCULATOR_COPY.maxLabel}
-                  value={maxValue()}
-                  onChange={setMaxValue}
-                />
-              }
-            />
+                  {formatOverPowerValue(requiredValue())}
+                </output>
+              </div>
+            }
+            right={
+              <OverPowerField
+                id="over-power-max-value-percent"
+                label={OVER_POWER_CALCULATOR_COPY.maxLabel}
+                value={maxValue()}
+                onChange={setMaxValue}
+              />
+            }
+          />
+          <p class="mt-1 text-sm text-text-muted">
+            {OVER_POWER_CALCULATOR_COPY.differenceLabel}{' '}
+            <output aria-live="polite" class="font-jost tabular-nums">
+              {formatOverPowerValue(Math.max(targetDifference(), 0))}
+            </output>
+          </p>
+          <div class="mt-5 flex flex-wrap items-end gap-2">
+            <div class="min-w-40 flex-1">
+              <OverPowerField
+                fullWidth
+                id="over-power-target-percent"
+                label={OVER_POWER_CALCULATOR_COPY.targetPercentLabel}
+                value={targetPercent()}
+                max={CALCULATOR_PERCENT_MAX}
+                decimalPlaces={CALCULATOR_PERCENT_DECIMALS}
+                onChange={setTargetPercent}
+              />
+            </div>
+            <div class="ml-auto flex shrink-0 justify-end gap-2">
+              <For each={QUICK_TARGET_PERCENTS}>
+                {(target) => (
+                  <AppButton
+                    variant="ghost"
+                    class={`h-12 border ${getPossessionClassName(target.possession)} !text-[var(--cs-color-possession-text)] hover:brightness-95`}
+                    size="sm"
+                    onClick={() =>
+                      setTargetPercent(
+                        formatOverPowerInputValue(target.value, CALCULATOR_PERCENT_DECIMALS)
+                      )
+                    }
+                  >
+                    {target.label}
+                  </AppButton>
+                )}
+              </For>
+            </div>
           </div>
           <section class="mt-6 border-t border-border pt-5">
             <div class="mb-4 flex items-center gap-2">
@@ -554,47 +562,52 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               decimalPlaces={1}
               onChange={setChartConstant}
             />
+            <div class="mt-4 flex max-w-sm gap-2">
+              <OverPowerField
+                fullWidth
+                id="over-power-current-chart-score"
+                label={OVER_POWER_CALCULATOR_COPY.currentScoreLabel}
+                value={currentChartScore()}
+                max={SCORE_THEORETICAL_MAX}
+                step={1}
+                decimalPlaces={0}
+                inputMode="numeric"
+                onChange={setCurrentChartScore}
+              />
+              <OverPowerField
+                fullWidth
+                id="over-power-target-chart-score"
+                label={OVER_POWER_CALCULATOR_COPY.targetScoreLabel}
+                value={targetChartScore()}
+                max={SCORE_THEORETICAL_MAX}
+                step={1}
+                decimalPlaces={0}
+                inputMode="numeric"
+                onChange={setTargetChartScore}
+              />
+            </div>
             <div class="mt-4 overflow-x-auto">
               <table class="w-full text-sm">
                 <thead class="border-b border-border text-text-muted">
                   <tr>
                     <th scope="col" class="px-2 py-2 text-left font-medium">
-                      {OVER_POWER_CALCULATOR_COPY.countSuffix}
+                      {OVER_POWER_CALCULATOR_COPY.lampLabel}
                     </th>
-                    <For each={REQUIRED_CHART_LAMP_COLUMNS}>
-                      {(lamp) => (
-                        <th scope="col" class="px-2 py-2 text-right font-medium">
-                          {lamp.label}
-                        </th>
-                      )}
-                    </For>
+                    <th scope="col" class="px-2 py-2 text-right font-medium">
+                      {OVER_POWER_CALCULATOR_COPY.requiredCountLabel}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <For each={requiredChartRows()}>
-                    {(row) => (
+                  <For each={requiredChartCounts()}>
+                    {(cell) => (
                       <tr class="border-b border-border last:border-0">
-                        <th
-                          scope="row"
-                          class="whitespace-nowrap px-2 py-3 text-left font-medium"
-                          title={formatOverPowerInputValue(row.score)}
-                        >
-                          {row.label}
+                        <th scope="row" class="px-2 py-3 text-left font-medium">
+                          {cell.label}
                         </th>
-                        <For each={row.counts}>
-                          {(cell) => (
-                            <td
-                              class="px-2 py-3 text-right font-jost tabular-nums"
-                              title={
-                                cell.count === null
-                                  ? OVER_POWER_CALCULATOR_COPY.unavailableCountHint
-                                  : undefined
-                              }
-                            >
-                              {cell.count ?? OVER_POWER_CALCULATOR_COPY.unavailableCountLabel}
-                            </td>
-                          )}
-                        </For>
+                        <td class="px-2 py-3 text-right font-jost tabular-nums">
+                          {cell.count ?? OVER_POWER_CALCULATOR_COPY.unavailableCountLabel}
+                        </td>
                       </tr>
                     )}
                   </For>
@@ -616,6 +629,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               </p>
             }
           >
+            <p class="mb-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
             <output class="block font-jost text-4xl font-bold tabular-nums text-action-primary">
               {formatOverPowerPercent(unplayedCalculation().percent)}%
             </output>
