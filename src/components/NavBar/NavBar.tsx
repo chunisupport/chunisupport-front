@@ -405,7 +405,8 @@ const NavBar = (props: NavBarProps) => {
       </aside>
 
       <div class="flex flex-col min-h-0 flex-1 min-w-0">
-        <main id="app-main" class="flex-1 min-h-0 overflow-y-auto">
+        {/* relative: 内部の absolute 要素 (sr-only 等) が文書全体を伸ばし、iOS Safari で外枠ごとスクロールするのを防ぐ */}
+        <main id="app-main" class="relative flex-1 min-h-0 overflow-y-auto">
           {props.children}
           <MaintenanceStatusLabel />
         </main>
