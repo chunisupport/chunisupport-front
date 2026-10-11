@@ -432,3 +432,25 @@ export const calculateRequiredChartCount = (
  */
 export const formatSignedOverPowerValue = (value: number): string =>
   `${value > 0 ? '+' : ''}${formatOverPowerValue(value)}`
+
+/**
+ * 編集済みの計算入力を保持し、集計対象の変更時のみ増減を反映する。
+ *
+ * @param value - 現在の入力文字列。
+ * @param previousBase - 前回の自動集計値。初回はundefined。
+ * @param nextBase - 更新後の自動集計値。
+ * @param edited - ユーザーが入力または加算した場合はtrue。
+ * @param selectionChanged - 未解禁設定による集計対象が変更された場合はtrue。
+ * @returns 再取得時は編集値を保持し、対象変更時は差分を反映した文字列。負値の表示制限は呼び出し元で行う。
+ */
+export const reconcileOverPowerCalculatorValue = (
+  value: string,
+  previousBase: number | undefined,
+  nextBase: number,
+  edited: boolean,
+  selectionChanged: boolean
+): string => {
+  if (!edited) return formatOverPowerInputValue(nextBase)
+  if (!selectionChanged || previousBase === undefined) return value
+  return formatOverPowerInputValue((parseOverPowerInput(value) ?? 0) + nextBase - previousBase)
+}

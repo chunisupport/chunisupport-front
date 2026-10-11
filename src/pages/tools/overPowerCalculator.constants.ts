@@ -1,5 +1,3 @@
-import { CALCULATOR_VALUE_DECIMALS } from '../../utils/overPowerCalculatorConstants'
-
 /** OVER POWER計算機の表示文言。 */
 export const OVER_POWER_CALCULATOR_COPY = {
   lockedSongsSettingsLabel: '未解禁楽曲設定',
@@ -49,8 +47,6 @@ export const QUICK_TARGET_PERCENTS = [
   { value: 99.0, label: '99.0%', possession: 'platina' },
   { value: 99.5, label: '99.5%', possession: 'rainbow' },
 ] as const
-/** 固定小数入力の初期値。 */
-export const DEFAULT_OVER_POWER_INPUT = (0).toFixed(CALCULATOR_VALUE_DECIMALS)
 /** 指定スコア補完の初期値。 */
 export const DEFAULT_MANUAL_FILL_SCORE = '1007500'
 /** 必要譜面数を計算する譜面定数の初期値。 */

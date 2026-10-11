@@ -21,13 +21,17 @@ import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../c
 import { getPossessionClassName } from '../../constants/possession'
 import { OVER_POWER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
+import { createOverPowerCalculatorInputs } from '../../hooks/createOverPowerCalculatorInputs'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import type { PlayerLockedSongRequest } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { buildOverPowerCalculatorData } from '../../usecases/overpower/calculator'
-import { buildLockedSongsBatchPayload } from '../../usecases/overpower/lockedSongsBatch'
+import {
+  buildLockedSongsBatchPayload,
+  createLockedSongKey,
+} from '../../usecases/overpower/lockedSongsBatch'
 import {
   calculateOverPowerDifference,
   calculateOverPowerPercent,
@@ -49,7 +53,6 @@ import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPo
 import LockedSongsDialog from '../users/UserOverPower/components/LockedSongsDialog'
 import {
   DEFAULT_MANUAL_FILL_SCORE,
-  DEFAULT_OVER_POWER_INPUT,
   DEFAULT_REQUIRED_CHART_CONSTANT,
   DEFAULT_REQUIRED_CURRENT_SCORE,
   DEFAULT_REQUIRED_TARGET_SCORE,
@@ -179,12 +182,7 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
  */
 const OverPowerCalculatorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded } = useSongsData()
-  const [maxValue, setMaxValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
-  const [currentValue, setCurrentValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
   const [addValue, setAddValue] = createSignal('')
-  const [targetPercent, setTargetPercent] = createSignal(
-    formatOverPowerInputValue(0, CALCULATOR_PERCENT_DECIMALS)
-  )
   const [unlockLockedSongs, setUnlockLockedSongs] = createSignal(false)
   const [unplayedFillMode, setUnplayedFillMode] = createSignal<UnplayedOverPowerFillMode>('none')
   const [manualFillScore, setManualFillScore] = createSignal(
@@ -252,19 +250,15 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const importLoading = createMemo(() => importedData.loading || songsResponse.loading)
   const importError = createMemo(() => importedData.error ?? songsResponse.error)
 
-  createEffect(() => {
-    const base = importedBase()
-    if (!base) return
-
-    setMaxValue(formatOverPowerInputValue(base.max))
-    setCurrentValue(formatOverPowerInputValue(base.current))
-    setTargetPercent(
-      formatOverPowerInputValue(
-        calculateOverPowerPercent(base.current, base.max),
-        CALCULATOR_PERCENT_DECIMALS
-      )
+  const lockedSongsSelectionKey = createMemo(() =>
+    JSON.stringify(
+      (unlockLockedSongs() ? [] : (currentData()?.lockedSongs ?? []))
+        .map((song) => createLockedSongKey(song.id, song.is_ultima))
+        .sort()
     )
-  })
+  )
+  const { maxValue, setMaxValue, currentValue, setCurrentValue, targetPercent, setTargetPercent } =
+    createOverPowerCalculatorInputs(authenticatedUsername, importedBase, lockedSongsSelectionKey)
 
   const parsedMaxValue = createMemo(() => parseOverPowerInput(maxValue()) ?? 0)
   const parsedCurrentValue = createMemo(() => parseOverPowerInput(currentValue()) ?? 0)
