@@ -18,7 +18,7 @@
   /* フォント: 数値表示用 */
   --font-jost: "Jost", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
   /* フォント: 本文用 */
-  --font-sans: "Noto Sans JP", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root,
