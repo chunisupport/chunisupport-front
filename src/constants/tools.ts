@@ -137,7 +137,7 @@ export const TOOL_LINKS: ToolLink[] = [
     title: 'OVER POWER計算機',
     href: OVER_POWER_CALCULATOR_PATH,
     icon: 'percent',
-    description: 'OVER POWERの数値・達成率と未プレイ譜面の補完を計算します。',
+    description: 'OVER POWER値・達成率の換算、未プレイ譜面を補完した値の算出ができます。',
   },
   {
     title: '苦手譜面インスペクター',

@@ -6,7 +6,7 @@ export const CALCULATOR_PERCENT_DECIMALS = 5
 export const CALCULATOR_PERCENT_MAX = 100
 /** 必要譜面数の通常・FC・AJ列。理論値は通常列のみ表示する。 */
 export const REQUIRED_CHART_LAMP_COLUMNS = [
-  { label: '通常', value: null },
-  { label: 'FC', value: 'FULL COMBO' },
-  { label: 'AJ', value: 'ALL JUSTICE' },
+  { label: 'なし', value: null },
+  { label: 'FULL COMBO', value: 'FULL COMBO' },
+  { label: 'ALL JUSTICE', value: 'ALL JUSTICE' },
 ] as const

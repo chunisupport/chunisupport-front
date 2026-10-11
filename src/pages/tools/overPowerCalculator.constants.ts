@@ -2,14 +2,16 @@
 export const OVER_POWER_CALCULATOR_COPY = {
   lockedSongsSettingsLabel: '未解禁楽曲設定',
   guestMessage: 'ログインして使用すると自動インポートされます。',
-  unlockLockedSongsLabel: '未解禁設定曲を解禁扱いにする',
+  excludeLockedSongsLabel: '未解禁曲を計算から除外する',
   valueToPercentTitle: '数値→%',
   percentToValueTitle: '%→数値',
-  maxLabel: '満点',
-  currentLabel: '獲得値',
+  maxLabel: 'OVER POWER理論値',
+  currentLabel: 'OVER POWER',
   addValueLabel: '加算値',
   addButtonLabel: '加算',
-  targetPercentLabel: '目標%',
+  addValueDescription:
+    'リザルト画面のOP増加値を随時加算することで、詳細なOP%をリアルタイムに追うことができます。毎回ブックマークレットを実行する必要がありません。',
+  targetPercentLabel: '目標OP%',
   resultLabel: '計算結果',
   differenceLabel: 'あと',
   lampLabel: 'ランプ',
@@ -25,13 +27,14 @@ export const OVER_POWER_CALCULATOR_COPY = {
    */
   unplayedModeLabel: (count: number): string => `未プレイ(${count}曲)を以下のスコアで埋める`,
   manualScoreLabel: '指定スコア',
-  manualScoreSuffix: '点',
   noPlayedAverageLabel: '平均なし',
   requiredChartCountTitle: '達成までの必要譜面数',
+  requiredChartCountDescription:
+    '目標OP%の達成のために、指定した譜面定数の譜面をいくつ伸ばす必要があるかを計算できます。スコアの伸び具合を「現在のスコア」「目標スコア」欄に入力してください。',
   chartConstantLabel: '譜面定数',
   unavailableCountLabel: '—',
-  ratioLabel: '獲得値 / 満点',
-  requiredRatioLabel: '必要獲得値 / 満点',
+  ratioLabel: '獲得値 / OVER POWER理論値',
+  requiredRatioLabel: '必要獲得値 / OVER POWER理論値',
 } as const
 
 /** ホームのプロフィールと同じ下線形式で切り替える計算機のタブ。 */
@@ -57,11 +60,11 @@ export const DEFAULT_REQUIRED_CURRENT_SCORE = '1005000'
 export const DEFAULT_REQUIRED_TARGET_SCORE = '1007500'
 /** 未プレイ補完の選択肢。 */
 export const UNPLAYED_FILL_OPTIONS = [
-  { value: 'none', label: '0点(=現在の値)' },
-  { value: 'remove', label: 'そもそも存在を消す' },
+  { value: 'none', label: '何もしない' },
+  { value: 'remove', label: 'ないものとして扱う' },
   { value: 'theoretical', label: '理論値' },
   { value: 'playedAverage', label: '全曲既プレイ平均' },
   { value: 'targetConstAverage', label: '定数ごとの既プレイ平均' },
   { value: 'targetConstRegressionAverage', label: '定数ごとの線形回帰' },
-  { value: 'manual', label: '指定スコア' },
+  { value: 'manual', label: 'スコアを指定する…' },
 ] as const

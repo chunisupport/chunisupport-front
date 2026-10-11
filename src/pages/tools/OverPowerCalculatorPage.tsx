@@ -16,8 +16,9 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
+import { ScoreField } from '../../components/common/ScoreField'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
+import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../constants/chart'
 import { getPossessionClassName } from '../../constants/possession'
 import { OVER_POWER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
@@ -177,17 +178,16 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
 
 /**
  * OVER POWER計算機ページを表示する。
+ * 未ログインの自動インポート案内は、換算タブの直下だけに表示する。
  *
  * @returns OVER POWERの数値と達成率を相互変換する計算フォーム。
  */
 const OverPowerCalculatorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded } = useSongsData()
   const [addValue, setAddValue] = createSignal('')
-  const [unlockLockedSongs, setUnlockLockedSongs] = createSignal(false)
+  const [excludeLockedSongs, setExcludeLockedSongs] = createSignal(true)
   const [unplayedFillMode, setUnplayedFillMode] = createSignal<UnplayedOverPowerFillMode>('none')
-  const [manualFillScore, setManualFillScore] = createSignal(
-    formatOverPowerInputValue(Number(DEFAULT_MANUAL_FILL_SCORE))
-  )
+  const [manualFillScore, setManualFillScore] = createSignal(DEFAULT_MANUAL_FILL_SCORE)
   const [chartConstant, setChartConstant] = createSignal(
     formatOverPowerInputValue(Number(DEFAULT_REQUIRED_CHART_CONSTANT), 1)
   )
@@ -244,7 +244,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       songs.songs,
       data.record.standard,
       data.versions,
-      unlockLockedSongs() ? [] : data.lockedSongs
+      excludeLockedSongs() ? data.lockedSongs : []
     )
   })
   const importLoading = createMemo(() => importedData.loading || songsResponse.loading)
@@ -252,7 +252,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
 
   const lockedSongsSelectionKey = createMemo(() =>
     JSON.stringify(
-      (unlockLockedSongs() ? [] : (currentData()?.lockedSongs ?? []))
+      (excludeLockedSongs() ? (currentData()?.lockedSongs ?? []) : [])
         .map((song) => createLockedSongKey(song.id, song.is_ultima))
         .sort()
     )
@@ -302,7 +302,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     const score = importedBase()?.playedAverageScore
     return score === null || typeof score === 'undefined'
       ? OVER_POWER_CALCULATOR_COPY.noPlayedAverageLabel
-      : `${formatOverPowerInputValue(score)}${OVER_POWER_CALCULATOR_COPY.manualScoreSuffix}`
+      : formatOverPowerInputValue(score, 0)
   })
   const lockedSongsButtonDisabled = createMemo(() => importLoading() || !importedBase())
 
@@ -340,12 +340,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
 
   return (
     <main class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
-      <Show when={authSession.status !== 'authenticated'}>
-        <p class="rounded-md border border-border bg-surface-muted px-4 py-3 text-sm text-text-muted">
-          {OVER_POWER_CALCULATOR_COPY.guestMessage}
-        </p>
-      </Show>
-
       <header>
         <div class="flex items-start justify-between gap-3">
           <div class="flex min-w-0 items-start gap-3">
@@ -374,9 +368,9 @@ const OverPowerCalculatorPage = (): JSX.Element => {
         <Show when={authSession.status === 'authenticated'}>
           <CheckboxField
             class="mt-4"
-            checked={unlockLockedSongs()}
-            onChange={setUnlockLockedSongs}
-            label={OVER_POWER_CALCULATOR_COPY.unlockLockedSongsLabel}
+            checked={excludeLockedSongs()}
+            onChange={setExcludeLockedSongs}
+            label={OVER_POWER_CALCULATOR_COPY.excludeLockedSongsLabel}
           />
         </Show>
       </header>
@@ -412,6 +406,11 @@ const OverPowerCalculatorPage = (): JSX.Element => {
         listClass="gap-0 sm:gap-2"
         triggerClass="whitespace-nowrap !px-2 !text-sm sm:!px-3 data-selected:!bg-transparent"
       >
+        <Show when={authSession.status !== 'authenticated' && selectedTab() !== 'unplayed'}>
+          <p class="mt-4 rounded-md border border-border bg-surface-muted px-4 py-3 text-sm text-text-muted">
+            {OVER_POWER_CALCULATOR_COPY.guestMessage}
+          </p>
+        </Show>
         <AppTabContent
           value="value"
           class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
@@ -473,6 +472,9 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               </AppButton>
             </div>
           </form>
+          <p class="mt-2 text-sm text-text-muted">
+            {OVER_POWER_CALCULATOR_COPY.addValueDescription}
+          </p>
         </AppTabContent>
 
         <AppTabContent
@@ -546,6 +548,9 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 {OVER_POWER_CALCULATOR_COPY.requiredChartCountTitle}
               </h2>
             </div>
+            <p class="mb-4 text-sm text-text-muted">
+              {OVER_POWER_CALCULATOR_COPY.requiredChartCountDescription}
+            </p>
             <OverPowerField
               id="over-power-chart-constant"
               label={OVER_POWER_CALCULATOR_COPY.chartConstantLabel}
@@ -557,26 +562,18 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               onChange={setChartConstant}
             />
             <div class="mt-4 flex max-w-sm gap-2">
-              <OverPowerField
-                fullWidth
+              <ScoreField
                 id="over-power-current-chart-score"
                 label={OVER_POWER_CALCULATOR_COPY.currentScoreLabel}
                 value={currentChartScore()}
-                max={SCORE_THEORETICAL_MAX}
-                step={1}
-                decimalPlaces={0}
-                inputMode="numeric"
+                inputClass={INPUT_CLASS}
                 onChange={setCurrentChartScore}
               />
-              <OverPowerField
-                fullWidth
+              <ScoreField
                 id="over-power-target-chart-score"
                 label={OVER_POWER_CALCULATOR_COPY.targetScoreLabel}
                 value={targetChartScore()}
-                max={SCORE_THEORETICAL_MAX}
-                step={1}
-                decimalPlaces={0}
-                inputMode="numeric"
+                inputClass={INPUT_CLASS}
                 onChange={setTargetChartScore}
               />
             </div>
@@ -642,37 +639,37 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               </RadioGroup.Label>
               <div class="grid gap-2 sm:grid-cols-2">
                 <For each={UNPLAYED_FILL_OPTIONS}>
-                  {(option) => {
-                    const label = () =>
-                      option.value === 'playedAverage'
-                        ? `${option.label} ${playedAverageScoreLabel()}`
-                        : option.label
-                    return (
-                      <SelectableCardItem
-                        value={option.value}
-                        title={label()}
-                        ariaLabel={label()}
-                        density="compact"
-                        titleClass="!font-normal"
-                      />
-                    )
-                  }}
+                  {(option) => (
+                    <SelectableCardItem
+                      value={option.value}
+                      title={option.label}
+                      ariaLabel={option.label}
+                      density="compact"
+                      titleClass="!font-normal"
+                      class="flex-wrap"
+                      footer={
+                        option.value === 'manual' && unplayedFillMode() === 'manual' ? (
+                          <ScoreField
+                            id="unplayed-over-power-manual-score"
+                            label={OVER_POWER_CALCULATOR_COPY.manualScoreLabel}
+                            labelVariant="srOnly"
+                            value={manualFillScore()}
+                            inputClass={INPUT_CLASS}
+                            onChange={setManualFillScore}
+                          />
+                        ) : undefined
+                      }
+                    >
+                      <Show when={option.value === 'playedAverage'}>
+                        <span class="font-jost text-xs tabular-nums text-text-muted">
+                          {playedAverageScoreLabel()}
+                        </span>
+                      </Show>
+                    </SelectableCardItem>
+                  )}
                 </For>
               </div>
             </RadioGroup>
-            <Show when={unplayedFillMode() === 'manual'}>
-              <div class="mt-4">
-                <OverPowerField
-                  id="unplayed-over-power-manual-score"
-                  label={OVER_POWER_CALCULATOR_COPY.manualScoreLabel}
-                  value={manualFillScore()}
-                  max={SCORE_THEORETICAL_MAX}
-                  step={1}
-                  inputMode="numeric"
-                  onChange={setManualFillScore}
-                />
-              </div>
-            </Show>
           </Show>
         </AppTabContent>
       </UnderlineTabs>
