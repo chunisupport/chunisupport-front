@@ -13,7 +13,7 @@ export const OVER_POWER_CALCULATOR_COPY = {
   addButtonLabel: '加算',
   targetPercentLabel: '目標%',
   requiredValueLabel: '必要獲得値',
-  differenceLabel: '差分',
+  resultLabel: '計算結果',
   unplayedCalculatorTitle: '未プレイ補完計算',
   loginRequiredMessage: 'ログイン中のみ使用できます。',
   /**
@@ -27,12 +27,9 @@ export const OVER_POWER_CALCULATOR_COPY = {
   noPlayedAverageLabel: '平均なし',
   requiredChartCountTitle: '達成までの必要譜面数',
   chartConstantLabel: '譜面定数',
-  requiredChartCountHint:
-    '未プレイ譜面（獲得OP=0）を、指定定数・スコア・ランプで埋める場合の必要数です。',
   unavailableCountLabel: '—',
-  unavailableCountHint: 'AJCは理論値のスコアでのみ成立します。',
+  unavailableCountHint: '理論値は通常列を参照してください。',
   countSuffix: '譜面',
-  percentSuffix: '%',
   ratioLabel: '獲得値 / 満点',
   requiredRatioLabel: '必要獲得値 / 満点',
 } as const
@@ -46,9 +43,9 @@ export const OVER_POWER_CALCULATOR_TABS = [
 
 /** 目標達成率のクイック入力ボタン。ラベルは指定された簡潔な表記を使う。 */
 export const QUICK_TARGET_PERCENTS = [
-  { value: 97.5, label: '97.5%' },
-  { value: 99.0, label: '99.0%' },
-  { value: 99.5, label: '99.5%' },
+  { value: 97.5, label: '97.5%', possession: 'gold' },
+  { value: 99.0, label: '99.0%', possession: 'platina' },
+  { value: 99.5, label: '99.5%', possession: 'rainbow' },
 ] as const
 /** 固定小数入力の初期値。 */
 export const DEFAULT_OVER_POWER_INPUT = (0).toFixed(CALCULATOR_VALUE_DECIMALS)

@@ -1,7 +1,7 @@
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
-import { Tooltip } from '@kobalte/core/tooltip'
-import { CornerLeftUp, Gauge, Info, LockKeyhole, Plus, Slash } from 'lucide-solid'
+import { TextField } from '@kobalte/core/text-field'
+import { CornerLeftUp, Gauge, LockKeyhole, Plus, Slash } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchGenres } from '../../api/genres'
@@ -18,6 +18,7 @@ import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
+import { getPossessionClassName } from '../../constants/possession'
 import { OVER_POWER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -67,7 +68,7 @@ type OverPowerFieldProps = {
   max?: number
   step?: number
   decimalPlaces?: number
-  hideLabel?: boolean
+  fullWidth?: boolean
   inputMode?: 'numeric' | 'decimal'
   onChange: (value: string) => void
 }
@@ -92,18 +93,12 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => {
   const handleChange = (value: string): void =>
     props.onChange(normalizeOverPowerCalculatorInput(value, decimalPlaces(), props.min, props.max))
   /**
-   * 小数点・負号の入力時に編集領域を選択し、固定表示のまま数値を編集する。
+   * 小数点の入力時に編集領域を選択し、固定表示のまま数値を編集する。
    * @param event - 入力前イベント。モバイルの小数点入力にも対応する。
    * @returns なし。
    */
   const handleBeforeInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
     const input = event.currentTarget
-    if (event.data === '-' && (props.min ?? 0) < 0) {
-      event.preventDefault()
-      props.onChange(`-${input.value.replace(/^-/, '')}`)
-      input.setSelectionRange(1, input.value.length)
-      return
-    }
     if (event.data === '.' || event.data === ',') {
       if (input.selectionStart === 0 && input.selectionEnd === input.value.length) {
         event.preventDefault()
@@ -141,11 +136,9 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => {
         minimumFractionDigits: decimalPlaces(),
         maximumFractionDigits: decimalPlaces(),
       }}
-      class="min-w-0 max-w-40 flex-1"
+      class={`min-w-0 flex-1 ${props.fullWidth ? '' : 'max-w-40'}`}
     >
-      <NumberField.Label
-        class={props.hideLabel ? 'sr-only' : 'mb-1 block text-sm font-medium text-text-muted'}
-      >
+      <NumberField.Label class="mb-1 block text-sm font-medium text-text-muted">
         {props.label}
       </NumberField.Label>
       <NumberField.Input
@@ -185,7 +178,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded } = useSongsData()
   const [maxValue, setMaxValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
   const [currentValue, setCurrentValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
-  const [addValue, setAddValue] = createSignal(DEFAULT_OVER_POWER_INPUT)
+  const [addValue, setAddValue] = createSignal('')
   const [targetPercent, setTargetPercent] = createSignal(
     formatOverPowerInputValue(0, CALCULATOR_PERCENT_DECIMALS)
   )
@@ -195,7 +188,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     formatOverPowerInputValue(Number(DEFAULT_MANUAL_FILL_SCORE))
   )
   const [chartConstant, setChartConstant] = createSignal(
-    formatOverPowerInputValue(Number(DEFAULT_REQUIRED_CHART_CONSTANT))
+    formatOverPowerInputValue(Number(DEFAULT_REQUIRED_CHART_CONSTANT), 1)
   )
   const [selectedTab, setSelectedTab] =
     createSignal<(typeof OVER_POWER_CALCULATOR_TABS)[number]['value']>('value')
@@ -326,7 +319,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     if (parsedAddValue === null) return
 
     setCurrentValue(formatOverPowerInputValue(parsedCurrentValue() + parsedAddValue))
-    setAddValue(DEFAULT_OVER_POWER_INPUT)
+    setAddValue('')
   }
 
   /**
@@ -349,7 +342,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   }
 
   return (
-    <main class="mx-auto flex w-full max-w-4xl flex-col gap-4 p-4">
+    <main class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <Show when={authSession.status !== 'authenticated'}>
         <p class="rounded-md border border-border bg-surface-muted px-4 py-3 text-sm text-text-muted">
           {OVER_POWER_CALCULATOR_COPY.guestMessage}
@@ -426,6 +419,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
           value="value"
           class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
         >
+          <p class="mb-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
           <output
             aria-live="polite"
             class="block font-jost text-4xl font-bold tabular-nums text-action-primary"
@@ -461,22 +455,26 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             }}
           >
             <CornerLeftUp class="h-6 w-6 shrink-0 text-text-subtle" aria-hidden="true" />
-            <OverPowerField
-              id="over-power-add-value"
-              label={OVER_POWER_CALCULATOR_COPY.addValueLabel}
-              hideLabel
-              value={addValue()}
-              min={-Number.MAX_SAFE_INTEGER}
-              onChange={setAddValue}
-            />
-            <AppButton
-              type="submit"
-              variant="primary"
-              class="min-h-12 shrink-0"
-              leftIcon={<Plus class="h-4 w-4" aria-hidden="true" />}
-            >
-              {OVER_POWER_CALCULATOR_COPY.addButtonLabel}
-            </AppButton>
+            <div class="flex min-w-0 flex-1">
+              <TextField value={addValue()} onChange={setAddValue} class="min-w-0 flex-1">
+                <TextField.Label class="sr-only">
+                  {OVER_POWER_CALCULATOR_COPY.addValueLabel}
+                </TextField.Label>
+                <TextField.Input
+                  id="over-power-add-value"
+                  inputMode="decimal"
+                  class={`${INPUT_CLASS} !rounded-r-none !border-r-0`}
+                />
+              </TextField>
+              <AppButton
+                type="submit"
+                variant="primary"
+                class="min-h-12 shrink-0 !rounded-l-none"
+                leftIcon={<Plus class="h-4 w-4" aria-hidden="true" />}
+              >
+                {OVER_POWER_CALCULATOR_COPY.addButtonLabel}
+              </AppButton>
+            </div>
           </form>
         </AppTabContent>
 
@@ -484,7 +482,14 @@ const OverPowerCalculatorPage = (): JSX.Element => {
           value="percent"
           class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
         >
+          <div class="mb-5" aria-live="polite">
+            <p class="text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
+            <output class="block font-jost text-3xl font-bold tabular-nums text-action-primary">
+              {formatSignedOverPowerValue(targetDifference())}
+            </output>
+          </div>
           <OverPowerField
+            fullWidth
             id="over-power-target-percent"
             label={OVER_POWER_CALCULATOR_COPY.targetPercentLabel}
             value={targetPercent()}
@@ -496,7 +501,8 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             <For each={QUICK_TARGET_PERCENTS}>
               {(target) => (
                 <AppButton
-                  variant="surface"
+                  variant="ghost"
+                  class={`border ${getPossessionClassName(target.possession)} !text-[var(--cs-color-possession-text)] hover:brightness-95`}
                   size="sm"
                   onClick={() =>
                     setTargetPercent(
@@ -532,12 +538,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               }
             />
           </div>
-          <div class="mt-5" aria-live="polite">
-            <p class="text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.differenceLabel}</p>
-            <output class="block font-jost text-3xl font-bold tabular-nums text-action-primary">
-              {formatSignedOverPowerValue(targetDifference())}
-            </output>
-          </div>
           <section class="mt-6 border-t border-border pt-5">
             <div class="mb-4 flex items-center gap-2">
               <h2 class="text-base font-semibold">
@@ -551,6 +551,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               min={CHART_CONST_MIN}
               max={CHART_CONST_MAX}
               step={0.1}
+              decimalPlaces={1}
               onChange={setChartConstant}
             />
             <div class="mt-4 overflow-x-auto">
@@ -636,7 +637,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                   {(option) => {
                     const label = () =>
                       option.value === 'playedAverage'
-                        ? `${option.label}(${playedAverageScoreLabel()})`
+                        ? `${option.label} ${playedAverageScoreLabel()}`
                         : option.label
                     return (
                       <SelectableCardItem
@@ -644,6 +645,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                         title={label()}
                         ariaLabel={label()}
                         density="compact"
+                        titleClass="!font-normal"
                       />
                     )
                   }}

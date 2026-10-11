@@ -401,8 +401,8 @@ export const normalizeOverPowerCalculatorInput = (
  * @param difference - 目標までに必要な追加OVER POWER。
  * @param score - 達成するスコア（各ランクの境界点）。
  * @param chartConst - 達成する譜面定数。
- * @param comboLamp - コンボランプ。AJCは理論値の行のみ有効。
- * @returns 必要譜面数。目標達成済みなら0、成立しないAJC・OPが増えない条件はnull。
+ * @param comboLamp - コンボランプ。理論値では通常列のみ有効。
+ * @returns 必要譜面数。目標達成済みなら0、理論値のランプ列・成立しないAJC・OPが増えない条件はnull。
  */
 export const calculateRequiredChartCount = (
   difference: number,
@@ -410,6 +410,7 @@ export const calculateRequiredChartCount = (
   chartConst: number,
   comboLamp: string | null
 ): number | null => {
+  if (score === MAX_SCORE && comboLamp !== null) return null
   if (comboLamp === 'ALL JUSTICE CRITICAL' && score !== MAX_SCORE) return null
   if (difference <= 0) return 0
   const gain = calculateSingleOverPower(score, chartConst, comboLamp).value

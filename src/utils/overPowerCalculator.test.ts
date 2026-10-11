@@ -404,13 +404,14 @@ test('目標達成に必要な譜面数はランク境界点の単曲OPで切り
   assert.equal(calculateRequiredChartCount(difference, 1000000, 14, 'ALL JUSTICE'), 2)
 })
 
-test('AJCは理論値行のみ有効で、理論値では全列の獲得OPが同じになる', () => {
+test('理論値は通常のみ必要数を表示し、FC・AJ列は非表示となる', () => {
   // Given
   const difference = 170
   // When & Then
   assert.equal(calculateRequiredChartCount(difference, 1009000, 14, 'ALL JUSTICE CRITICAL'), null)
-  for (const lamp of [null, 'FULL COMBO', 'ALL JUSTICE', 'ALL JUSTICE CRITICAL']) {
-    assert.equal(calculateRequiredChartCount(difference, 1010000, 14, lamp), 2)
+  assert.equal(calculateRequiredChartCount(difference, 1010000, 14, null), 2)
+  for (const lamp of ['FULL COMBO', 'ALL JUSTICE']) {
+    assert.equal(calculateRequiredChartCount(difference, 1010000, 14, lamp), null)
   }
 })
 

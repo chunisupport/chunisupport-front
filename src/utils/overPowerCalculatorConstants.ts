@@ -14,10 +14,9 @@ export const REQUIRED_CHART_SCORE_ROWS = [
   { label: 'SSS+', score: SCORE_RANK_MIN_SCORES['SSS+'] },
   { label: '理論値', score: MAX_SCORE },
 ] as const
-/** 必要譜面数のコンボランプ列。AJCは理論スコアのときのみ成立する。 */
+/** 必要譜面数の通常・FC・AJ列。理論値は通常列のみ表示する。 */
 export const REQUIRED_CHART_LAMP_COLUMNS = [
   { label: '通常', value: null },
   { label: 'FC', value: 'FULL COMBO' },
   { label: 'AJ', value: 'ALL JUSTICE' },
-  { label: 'AJC', value: 'ALL JUSTICE CRITICAL' },
 ] as const
