@@ -68,7 +68,7 @@ export const OverPowerSummaryTable: Component<Props> = (props) => (
                       <span class="sr-only">のレコードを表示</span>
                     </Button>
                   </th>
-                  <td class="whitespace-nowrap px-2 py-2 text-right text-base tabular-nums">
+                  <td class="whitespace-nowrap px-2 py-2 text-right text-base font-medium tabular-nums">
                     <OverPowerTierValue percent={row.percent} text={formatValue(row.current)} />
                   </td>
                   <td class="whitespace-nowrap px-2 py-2 text-right tabular-nums text-text-muted">

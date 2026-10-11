@@ -865,7 +865,16 @@
     #6fd3ff,
     #b48cff
   );
-  --cs-shadow-over-power-tier: 0 1px 1px rgb(0 0 0 / 80%);
+  --cs-filter-over-power-tier: drop-shadow(0 1px 1px rgb(0 0 0 / 80%));
+}
+
+/* 明るい背景では下方向だけの影だと輪郭がぼやけるため、OVER POWER数値の影を全方位に落とす。 */
+:root:not([data-theme]),
+[data-theme="light"],
+[data-theme="pastel-orange"] {
+  /* 1枚では薄いため2枚重ねる */
+  --cs-filter-over-power-tier: drop-shadow(0 0 1px rgb(0 0 0 / 90%))
+    drop-shadow(0 0 1px rgb(0 0 0 / 90%));
 }
 
 @theme inline {
@@ -1158,12 +1167,12 @@
 }
 
 @layer components {
-  /* OVER POWER数値: 色付けする段階の数字の形に沿って影を付ける。
+  /* OVER POWER数値: 色付けする段階の数字の形に沿って影（明るいテーマでは全方位）を付ける。
      text-shadow はグラデーション文字の上に重なって色を隠すため drop-shadow を使い、
      background-clip:text と filter を同じ要素に重ねると Safari で崩れるため色クラスとは別要素に付与する */
   .over-power-tier {
     display: inline-block;
-    filter: drop-shadow(var(--cs-shadow-over-power-tier));
+    filter: var(--cs-filter-over-power-tier);
   }
   .over-power-tier--silver,
   .over-power-tier--gold,
