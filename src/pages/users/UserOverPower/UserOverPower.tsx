@@ -19,6 +19,7 @@ import { AppButton, getAppButtonClass } from '../../../components/common/AppButt
 import { AppSelect } from '../../../components/common/AppSelect'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { SingleImagePreviewDialog } from '../../../components/common/SingleImagePreviewDialog'
+import { LOCKED_SONG_CALCULATION_EXCLUSION_LABEL } from '../../../constants/lockedSongs'
 import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
@@ -57,7 +58,6 @@ import {
   OVER_POWER_IMAGE_COPY,
   OVER_POWER_IMAGE_PIXEL_RATIO,
   OVER_POWER_IMAGE_WIDTH,
-  OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL,
   OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE,
   OVER_POWER_SUMMARY_OPTIONS,
   overPowerRecordFilterDimensionBySummaryTab,
@@ -453,7 +453,7 @@ const UserOverPower: Component<Props> = (props) => {
                   class="mt-3 self-end"
                   checked={excludeLockedSongs()}
                   onChange={setExcludeLockedSongs}
-                  label={OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL}
+                  label={LOCKED_SONG_CALCULATION_EXCLUSION_LABEL}
                 />
 
                 <Show when={recordNavigationError()}>

@@ -14,6 +14,7 @@ import {
 } from 'solid-js'
 import { fetchGenres } from '../../../api/genres'
 import { fetchVersions } from '../../../api/songs'
+import { fetchUserLockedSongs } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppIconButton, getAppButtonClass } from '../../../components/common/AppButton'
 import { AppSelect } from '../../../components/common/AppSelect'
@@ -22,6 +23,7 @@ import { CheckboxField } from '../../../components/common/CheckboxField'
 import { HeatmapCountCell } from '../../../components/common/HeatmapCountCell'
 import { SingleImagePreviewDialog } from '../../../components/common/SingleImagePreviewDialog'
 import { SiteLogoMark } from '../../../components/common/SiteLogoMark'
+import { LOCKED_SONG_CALCULATION_EXCLUSION_LABEL } from '../../../constants/lockedSongs'
 import type { PlayerStatsHeatmapAxis } from '../../../constants/playerStats'
 import { UNI_FILL_MATRIX_PATH } from '../../../constants/routes'
 import { SITE_NAME } from '../../../constants/site'
@@ -32,6 +34,7 @@ import { authSession } from '../../../stores/authSession'
 import { publishStandardRecordFilter } from '../../../stores/standardRecordNavigation'
 import { fetchOwnPlayerStatsData } from '../../../usecases/playerStats/fetchOwnPlayerStatsData'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
+import { excludeLockedSongRecords } from '../../../utils/lockedSongRecords'
 import { formatInteger } from '../../../utils/numberFormat'
 import { captureOffscreenRenderedImage } from '../../../utils/offscreenImageCapture'
 import { filterPlayerStatsRecords } from '../../../utils/playerStatsDashboard'
@@ -358,15 +361,25 @@ const UniFillMatrixPage: Component = () => {
       setHorizontal(currentVertical)
     })
   const [showPercent, setShowPercent] = createSignal(savedViewSettings.showPercent)
+  const [excludeLockedSongs, setExcludeLockedSongs] = createSignal(
+    savedViewSettings.excludeLockedSongs
+  )
   createEffect(
     on(
-      [vertical, horizontal, levelConstAxis, showPercent],
-      ([nextVertical, nextHorizontal, nextLevelConstAxis, nextShowPercent]) =>
+      [vertical, horizontal, levelConstAxis, showPercent, excludeLockedSongs],
+      ([
+        nextVertical,
+        nextHorizontal,
+        nextLevelConstAxis,
+        nextShowPercent,
+        nextExcludeLockedSongs,
+      ]) =>
         saveUniFillMatrixViewSettings({
           vertical: nextVertical,
           horizontal: nextHorizontal,
           levelConstAxis: nextLevelConstAxis,
           showPercent: nextShowPercent,
+          excludeLockedSongs: nextExcludeLockedSongs,
         }),
       { defer: true }
     )
@@ -374,6 +387,10 @@ const UniFillMatrixPage: Component = () => {
   const [pageData] = createResource(fetchOwnPlayerStatsData)
   const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
+  const [lockedSongs] = createResource(
+    () => (authSession.status === 'authenticated' ? authSession.user?.username : undefined),
+    fetchUserLockedSongs
+  )
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
   const navigate = useNavigate()
   let matrixTable!: HTMLTableElement
@@ -381,9 +398,11 @@ const UniFillMatrixPage: Component = () => {
   const matrix = createMemo(() => {
     const data = pageData()
     if (!data) return undefined
+    const currentLockedSongs = excludeLockedSongs() ? lockedSongs()?.items : []
+    if (!currentLockedSongs) return undefined
 
     const records = filterPlayerStatsRecords(
-      data.records,
+      excludeLockedSongRecords(data.records, currentLockedSongs),
       difficulty().value,
       data.targetDifficultyBySongId
     )
@@ -416,6 +435,7 @@ const UniFillMatrixPage: Component = () => {
         ...target,
         difficulty: difficulty().value,
         achievement: achievement().value,
+        excludeLockedSongs: excludeLockedSongs(),
       })
       await saveStandardRecordFilterSetting(filter)
       publishStandardRecordFilter(username, filter)
@@ -616,6 +636,12 @@ const UniFillMatrixPage: Component = () => {
                       checked={showPercent()}
                       onChange={setShowPercent}
                       label={UNI_FILL_MATRIX_COPY.percentToggle}
+                      class="min-h-8"
+                    />
+                    <CheckboxField
+                      checked={excludeLockedSongs()}
+                      onChange={setExcludeLockedSongs}
+                      label={LOCKED_SONG_CALCULATION_EXCLUSION_LABEL}
                       class="min-h-8"
                     />
                     <Show when={hasLevelConstAxis()}>

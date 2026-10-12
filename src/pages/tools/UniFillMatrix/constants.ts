@@ -59,12 +59,13 @@ export const UNI_FILL_MATRIX_DEFAULT_VERTICAL: UniFillMatrixDimension = 'levelCo
 /** 初期選択する横軸 */
 export const UNI_FILL_MATRIX_DEFAULT_HORIZONTAL: UniFillMatrixDimension = 'genre'
 
-/** 保存済みの値がない場合に使う表示設定（縦軸・横軸・レベル別/定数別・%表示） */
+/** 保存済みの値がない場合に使う表示設定（縦軸・横軸・レベル別/定数別・%表示・未解禁曲除外） */
 export const UNI_FILL_MATRIX_DEFAULT_VIEW_SETTINGS: UniFillMatrixViewSettings = {
   vertical: UNI_FILL_MATRIX_DEFAULT_VERTICAL,
   horizontal: UNI_FILL_MATRIX_DEFAULT_HORIZONTAL,
   levelConstAxis: 'level',
   showPercent: false,
+  excludeLockedSongs: false,
 }
 
 /** ウニ埋めマトリックスの表示設定を保存する localStorage キー */

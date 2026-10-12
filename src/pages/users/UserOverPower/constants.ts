@@ -42,9 +42,6 @@ export const OVER_POWER_AGGREGATION_TARGET_OPTIONS: OverPowerAggregationTargetOp
 /** OVER POWER集計画面で表示する達成率の小数点以下桁数 */
 export const OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES = 5
 
-/** 未解禁曲を集計対象から除外するチェックボックスのラベル */
-export const OVER_POWER_LOCKED_SONG_EXCLUSION_LABEL = '未解禁曲を計算から除外する'
-
 /** 未解禁楽曲設定ダイアログで要解禁楽曲だけを表示する初期状態 */
 export const DEFAULT_LOCKED_SONGS_UNLOCK_REQUIRED_ONLY = true
 
