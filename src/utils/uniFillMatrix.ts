@@ -61,6 +61,8 @@ export type UniFillMatrixViewSettings = {
   levelConstAxis: PlayerStatsHeatmapAxis
   /** 達成件数の代わりに達成率を表示するか */
   showPercent: boolean
+  /** 未解禁設定に登録された楽曲・譜面を集計から除外するか */
+  excludeLockedSongs: boolean
 }
 
 /**
@@ -89,6 +91,10 @@ export const normalizeUniFillMatrixViewSettings = (
         ?.value ?? fallback.levelConstAxis,
     showPercent:
       typeof source.showPercent === 'boolean' ? source.showPercent : fallback.showPercent,
+    excludeLockedSongs:
+      typeof source.excludeLockedSongs === 'boolean'
+        ? source.excludeLockedSongs
+        : fallback.excludeLockedSongs,
   }
 }
 
@@ -367,6 +373,8 @@ export type UniFillMatrixRecordTarget = {
   nameFolder?: UniFillMatrixNameFolder
   /** レベル・譜面定数。レベル・定数の軸を含まないマスや合計のマスでは未指定 */
   levelConst?: UniFillMatrixLevelConst
+  /** 未解禁設定に登録された楽曲・譜面を除外するか */
+  excludeLockedSongs: boolean
 }
 
 /**
@@ -467,6 +475,7 @@ export const buildUniFillMatrixRecordFilter = (
   ...defaultFilter,
   ...resolveUniFillMatrixDifficultyFilter(target.difficulty),
   ...resolveUnachievedFilter(target.achievement),
+  excludeLockedSongs: target.excludeLockedSongs,
   ...(target.genre === undefined ? {} : { genres: [target.genre] }),
   ...(target.version === undefined ? {} : { versions: [target.version] }),
   ...(target.nameFolder === undefined ? {} : { nameFolders: [target.nameFolder.code] }),

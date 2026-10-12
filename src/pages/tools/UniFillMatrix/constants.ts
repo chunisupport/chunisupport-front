@@ -25,6 +25,7 @@ export const UNI_FILL_MATRIX_COPY = {
   totalHeader: '合計',
   cellActionLabel: '未達成の譜面をレコードで表示',
   recordNavigationError: 'レコード画面へ移動できませんでした。',
+  lockedSongsLoadError: '未解禁設定を読み込めなかったため、未解禁曲を除外せずに表示しています。',
   imageSaveLabel: '画像化・共有',
   imagePreviewTitle: 'ウニ埋めマトリックス画像',
   imagePreviewAlt: 'ウニ埋めマトリックス画像のプレビュー',
@@ -59,12 +60,13 @@ export const UNI_FILL_MATRIX_DEFAULT_VERTICAL: UniFillMatrixDimension = 'levelCo
 /** 初期選択する横軸 */
 export const UNI_FILL_MATRIX_DEFAULT_HORIZONTAL: UniFillMatrixDimension = 'genre'
 
-/** 保存済みの値がない場合に使う表示設定（縦軸・横軸・レベル別/定数別・%表示） */
+/** 保存済みの値がない場合に使う表示設定（縦軸・横軸・レベル別/定数別・%表示・未解禁曲除外） */
 export const UNI_FILL_MATRIX_DEFAULT_VIEW_SETTINGS: UniFillMatrixViewSettings = {
   vertical: UNI_FILL_MATRIX_DEFAULT_VERTICAL,
   horizontal: UNI_FILL_MATRIX_DEFAULT_HORIZONTAL,
   levelConstAxis: 'level',
   showPercent: false,
+  excludeLockedSongs: false,
 }
 
 /** ウニ埋めマトリックスの表示設定を保存する localStorage キー */
