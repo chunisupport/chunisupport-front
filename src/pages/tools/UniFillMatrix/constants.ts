@@ -25,6 +25,7 @@ export const UNI_FILL_MATRIX_COPY = {
   totalHeader: '合計',
   cellActionLabel: '未達成の譜面をレコードで表示',
   recordNavigationError: 'レコード画面へ移動できませんでした。',
+  lockedSongsLoadError: '未解禁設定を読み込めなかったため、未解禁曲を除外せずに表示しています。',
   imageSaveLabel: '画像化・共有',
   imagePreviewTitle: 'ウニ埋めマトリックス画像',
   imagePreviewAlt: 'ウニ埋めマトリックス画像のプレビュー',

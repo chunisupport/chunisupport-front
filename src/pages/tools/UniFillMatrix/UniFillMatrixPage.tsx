@@ -398,7 +398,9 @@ const UniFillMatrixPage: Component = () => {
   const matrix = createMemo(() => {
     const data = pageData()
     if (!data) return undefined
-    const currentLockedSongs = excludeLockedSongs() ? lockedSongs()?.items : []
+    // 未解禁設定の取得に失敗した場合は除外せずに集計し、エラーはチェックボックスの近くに表示する
+    const currentLockedSongs =
+      excludeLockedSongs() && !lockedSongs.error ? lockedSongs()?.items : []
     if (!currentLockedSongs) return undefined
 
     const records = filterPlayerStatsRecords(
@@ -638,12 +640,19 @@ const UniFillMatrixPage: Component = () => {
                       label={UNI_FILL_MATRIX_COPY.percentToggle}
                       class="min-h-8"
                     />
-                    <CheckboxField
-                      checked={excludeLockedSongs()}
-                      onChange={setExcludeLockedSongs}
-                      label={LOCKED_SONG_CALCULATION_EXCLUSION_LABEL}
-                      class="min-h-8"
-                    />
+                    <div class="flex flex-col">
+                      <CheckboxField
+                        checked={excludeLockedSongs()}
+                        onChange={setExcludeLockedSongs}
+                        label={LOCKED_SONG_CALCULATION_EXCLUSION_LABEL}
+                        class="min-h-8"
+                      />
+                      <Show when={excludeLockedSongs() && lockedSongs.error}>
+                        <p class="font-sans text-sm text-danger" role="alert">
+                          {UNI_FILL_MATRIX_COPY.lockedSongsLoadError}
+                        </p>
+                      </Show>
+                    </div>
                     <Show when={hasLevelConstAxis()}>
                       <SegmentedToggleGroup
                         value={levelConstAxis()}
