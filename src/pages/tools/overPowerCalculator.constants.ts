@@ -1,3 +1,13 @@
+/** 桁数と入力内の余白に合わせた計算機専用の最大幅。 */
+export const OVER_POWER_CALCULATOR_WIDTH_CLASS = {
+  overPower: 'max-w-36',
+  compactOverPower: 'max-w-32',
+  chartConstant: 'max-w-20',
+  score: 'max-w-28',
+  scorePair: 'max-w-68',
+  ratio: 'max-w-80',
+} as const
+
 /** OVER POWER計算機の表示文言。 */
 export const OVER_POWER_CALCULATOR_COPY = {
   lockedSongsSettingsLabel: '未解禁楽曲設定',
@@ -37,7 +47,6 @@ export const OVER_POWER_CALCULATOR_COPY = {
   chartConstantLabel: '譜面定数',
   unavailableCountLabel: '—',
   ratioLabel: '獲得値 / OVER POWER理論値',
-  requiredRatioLabel: '必要獲得値 / OVER POWER理論値',
 } as const
 
 /** ホームのプロフィールと同じ下線形式で切り替える計算機のタブ。 */

@@ -1,7 +1,7 @@
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { CornerLeftUp, LockKeyhole, Percent, Plus, Slash } from 'lucide-solid'
+import { ArrowRight, CornerLeftUp, LockKeyhole, Percent, Plus, Slash } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { fetchGenres } from '../../api/genres'
@@ -60,6 +60,7 @@ import {
   DEFAULT_REQUIRED_TARGET_SCORE,
   OVER_POWER_CALCULATOR_COPY,
   OVER_POWER_CALCULATOR_TABS,
+  OVER_POWER_CALCULATOR_WIDTH_CLASS,
   QUICK_TARGET_PERCENTS,
   UNPLAYED_FILL_OPTIONS,
 } from './overPowerCalculator.constants'
@@ -73,19 +74,20 @@ type OverPowerFieldProps = {
   max?: number
   step?: number
   decimalPlaces?: number
-  fullWidth?: boolean
+  widthClass?: string
+  compact?: boolean
   inputMode?: 'numeric' | 'decimal'
   onChange: (value: string) => void
 }
 
-/** 数値入力のスタイル。360pxでも左右の入力欄を並べられる幅に収める。 */
+/** 数値入力のスタイル。 */
 const INPUT_CLASS =
   'h-12 min-w-0 w-full rounded-md border border-border-strong bg-input-bg px-2 text-right font-sans text-base tabular-nums text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 
 /**
  * 固定小数表示と範囲制限を持つ計算機専用の数値入力欄を描画する。
  *
- * @param props - 入力欄ID、ラベル、値、制約、小数桁数、更新通知先。
+ * @param props - 入力欄ID、ラベル、値、制約、小数桁数、最大幅、コンパクト表示、更新通知先。
  * @returns 固定小数の編集位置を保ち、範囲制限をKobalteで扱うNumberField。
  */
 const OverPowerField: Component<OverPowerFieldProps> = (props) => {
@@ -141,13 +143,15 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => {
         minimumFractionDigits: decimalPlaces(),
         maximumFractionDigits: decimalPlaces(),
       }}
-      class={`min-w-0 flex-1 ${props.fullWidth ? '' : 'max-w-40'}`}
+      class={`min-w-0 flex-1 ${props.widthClass ?? OVER_POWER_CALCULATOR_WIDTH_CLASS.overPower}`}
     >
-      <NumberField.Label class="mb-1 block text-sm font-medium text-text-muted">
+      <NumberField.Label
+        class={`mb-1 block font-medium text-text-muted ${props.compact ? 'text-xs' : 'text-sm'}`}
+      >
         {props.label}
       </NumberField.Label>
       <NumberField.Input
-        class={INPUT_CLASS}
+        class={`${INPUT_CLASS} ${props.compact ? '!h-9 !text-sm' : ''}`}
         inputMode={props.inputMode ?? 'decimal'}
         onFocus={(event: FocusEvent & { currentTarget: HTMLInputElement }) =>
           event.currentTarget.select()
@@ -168,7 +172,7 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
   props
 ) => (
   <fieldset
-    class="flex min-w-0 max-w-sm items-end gap-2 [&>div]:max-w-none"
+    class={`flex min-w-0 items-end gap-2 ${OVER_POWER_CALCULATOR_WIDTH_CLASS.ratio}`}
     aria-label={props.label}
   >
     {props.left}
@@ -449,7 +453,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             />
           </div>
           <form
-            class="mt-2 flex max-w-sm items-center gap-2"
+            class={`mt-2 flex items-center gap-2 ${OVER_POWER_CALCULATOR_WIDTH_CLASS.ratio}`}
             onSubmit={(event) => {
               event.preventDefault()
               handleAddValue()
@@ -486,45 +490,41 @@ const OverPowerCalculatorPage = (): JSX.Element => {
           value="percent"
           class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
         >
-          <OverPowerRatio
-            label={OVER_POWER_CALCULATOR_COPY.requiredRatioLabel}
-            left={
-              <div class="min-w-0 flex-1">
-                <p class="mb-1 text-sm font-medium text-text-muted">
-                  {OVER_POWER_CALCULATOR_COPY.resultLabel}
-                </p>
-                <output
-                  aria-live="polite"
-                  class="flex h-12 items-center justify-end font-jost text-2xl sm:text-3xl font-bold tabular-nums text-action-primary"
-                >
-                  {formatOverPowerValue(requiredValue())}
-                </output>
-              </div>
-            }
-            right={
+          <p class="mb-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
+          <output
+            aria-live="polite"
+            class="block font-jost text-4xl font-bold tabular-nums text-action-primary"
+          >
+            {formatOverPowerValue(requiredValue())}
+          </output>
+          <div class="mt-1 flex flex-wrap items-start justify-between gap-2">
+            <p class="text-lg font-bold text-action-primary">
+              {OVER_POWER_CALCULATOR_COPY.differenceLabel}{' '}
+              <output aria-live="polite" class="font-jost tabular-nums">
+                {formatOverPowerValue(Math.max(targetDifference(), 0))}
+              </output>
+            </p>
+            <div class="ml-auto mt-0 flex items-end gap-2">
+              <Slash class="mb-2.5 h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
               <OverPowerField
+                compact
                 id="over-power-max-value-percent"
                 label={OVER_POWER_CALCULATOR_COPY.maxLabel}
                 value={maxValue()}
+                widthClass={OVER_POWER_CALCULATOR_WIDTH_CLASS.compactOverPower}
                 onChange={setMaxValue}
               />
-            }
-          />
-          <p class="mt-1 text-sm text-text-muted">
-            {OVER_POWER_CALCULATOR_COPY.differenceLabel}{' '}
-            <output aria-live="polite" class="font-jost tabular-nums">
-              {formatOverPowerValue(Math.max(targetDifference(), 0))}
-            </output>
-          </p>
-          <div class="mt-5 flex flex-wrap items-end gap-2">
+            </div>
+          </div>
+          <div class="mt-1 flex flex-wrap items-end gap-2">
             <div class="min-w-40 flex-1">
               <OverPowerField
-                fullWidth
                 id="over-power-target-percent"
                 label={OVER_POWER_CALCULATOR_COPY.targetPercentLabel}
                 value={targetPercent()}
                 max={CALCULATOR_PERCENT_MAX}
                 decimalPlaces={CALCULATOR_PERCENT_DECIMALS}
+                widthClass="max-w-none"
                 onChange={setTargetPercent}
               />
             </div>
@@ -564,21 +564,23 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               max={CHART_CONST_MAX}
               step={0.1}
               decimalPlaces={1}
+              widthClass={OVER_POWER_CALCULATOR_WIDTH_CLASS.chartConstant}
               onChange={setChartConstant}
             />
-            <div class="mt-4 flex max-w-sm gap-2">
+            <div class={`mt-4 flex items-end gap-2 ${OVER_POWER_CALCULATOR_WIDTH_CLASS.scorePair}`}>
               <ScoreField
                 id="over-power-current-chart-score"
                 label={OVER_POWER_CALCULATOR_COPY.currentScoreLabel}
                 value={currentChartScore()}
-                inputClass={INPUT_CLASS}
+                inputClass={`${INPUT_CLASS} ${OVER_POWER_CALCULATOR_WIDTH_CLASS.score}`}
                 onChange={setCurrentChartScore}
               />
+              <ArrowRight class="mb-3 h-6 w-6 shrink-0 text-text-subtle" aria-hidden="true" />
               <ScoreField
                 id="over-power-target-chart-score"
                 label={OVER_POWER_CALCULATOR_COPY.targetScoreLabel}
                 value={targetChartScore()}
-                inputClass={INPUT_CLASS}
+                inputClass={`${INPUT_CLASS} ${OVER_POWER_CALCULATOR_WIDTH_CLASS.score}`}
                 onChange={setTargetChartScore}
               />
             </div>
