@@ -1,12 +1,6 @@
-/** 桁数と入力内の余白に合わせた計算機専用の最大幅。 */
-export const OVER_POWER_CALCULATOR_WIDTH_CLASS = {
-  overPower: 'max-w-36',
-  compactOverPower: 'max-w-32',
-  chartConstant: 'max-w-20',
-  score: 'max-w-28',
-  scorePair: 'max-w-68',
-  ratio: 'max-w-80',
-} as const
+/** 本文の最大幅に余白と枠線を外付けする3タブ共通のパネル。 */
+export const OVER_POWER_CALCULATOR_PANEL_CLASS =
+  'mt-4 box-content max-w-80 rounded-lg border border-border bg-surface p-4'
 
 /** OVER POWER計算機の表示文言。 */
 export const OVER_POWER_CALCULATOR_COPY = {

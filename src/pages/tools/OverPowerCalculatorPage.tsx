@@ -59,8 +59,8 @@ import {
   DEFAULT_REQUIRED_CURRENT_SCORE,
   DEFAULT_REQUIRED_TARGET_SCORE,
   OVER_POWER_CALCULATOR_COPY,
+  OVER_POWER_CALCULATOR_PANEL_CLASS,
   OVER_POWER_CALCULATOR_TABS,
-  OVER_POWER_CALCULATOR_WIDTH_CLASS,
   QUICK_TARGET_PERCENTS,
   UNPLAYED_FILL_OPTIONS,
 } from './overPowerCalculator.constants'
@@ -143,7 +143,7 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => {
         minimumFractionDigits: decimalPlaces(),
         maximumFractionDigits: decimalPlaces(),
       }}
-      class={`min-w-0 flex-1 ${props.widthClass ?? OVER_POWER_CALCULATOR_WIDTH_CLASS.overPower}`}
+      class={`min-w-0 ${props.compact ? 'w-32 max-w-full flex-none' : 'flex-1'} ${props.widthClass ?? ''}`}
     >
       <NumberField.Label
         class={`mb-1 block font-medium text-text-muted ${props.compact ? 'text-xs' : 'text-sm'}`}
@@ -164,19 +164,16 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => {
 }
 
 /**
- * 数値入力・出力を大きなスラッシュで区切って横並びにする。
+ * OVER POWER入力とコンパクトな理論値入力をスラッシュで区切る。
  * @param props - 左右に表示する入力欄または出力欄と読み上げラベル。
  * @returns モバイル幅に収まる比率表示。
  */
 const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: string }> = (
   props
 ) => (
-  <fieldset
-    class={`flex min-w-0 items-end gap-2 ${OVER_POWER_CALCULATOR_WIDTH_CLASS.ratio}`}
-    aria-label={props.label}
-  >
+  <fieldset class="flex min-w-0 items-end gap-2" aria-label={props.label}>
     {props.left}
-    <Slash class="mb-3 h-6 w-6 shrink-0 text-text-subtle" aria-hidden="true" />
+    <Slash class="mb-2.5 h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
     {props.right}
   </fieldset>
 )
@@ -420,10 +417,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             {OVER_POWER_CALCULATOR_COPY.guestMessage}
           </p>
         </Show>
-        <AppTabContent
-          value="value"
-          class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
-        >
+        <AppTabContent value="value" class={OVER_POWER_CALCULATOR_PANEL_CLASS}>
           <p class="mb-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
           <output
             aria-live="polite"
@@ -444,6 +438,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               }
               right={
                 <OverPowerField
+                  compact
                   id="over-power-max-value"
                   label={OVER_POWER_CALCULATOR_COPY.maxLabel}
                   value={maxValue()}
@@ -453,7 +448,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             />
           </div>
           <form
-            class={`mt-2 flex items-center gap-2 ${OVER_POWER_CALCULATOR_WIDTH_CLASS.ratio}`}
+            class="mt-2 flex items-center gap-2"
             onSubmit={(event) => {
               event.preventDefault()
               handleAddValue()
@@ -486,10 +481,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
           </p>
         </AppTabContent>
 
-        <AppTabContent
-          value="percent"
-          class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
-        >
+        <AppTabContent value="percent" class={OVER_POWER_CALCULATOR_PANEL_CLASS}>
           <p class="mb-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
           <output
             aria-live="polite"
@@ -511,7 +503,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 id="over-power-max-value-percent"
                 label={OVER_POWER_CALCULATOR_COPY.maxLabel}
                 value={maxValue()}
-                widthClass={OVER_POWER_CALCULATOR_WIDTH_CLASS.compactOverPower}
                 onChange={setMaxValue}
               />
             </div>
@@ -524,7 +515,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 value={targetPercent()}
                 max={CALCULATOR_PERCENT_MAX}
                 decimalPlaces={CALCULATOR_PERCENT_DECIMALS}
-                widthClass="max-w-none"
                 onChange={setTargetPercent}
               />
             </div>
@@ -564,15 +554,15 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               max={CHART_CONST_MAX}
               step={0.1}
               decimalPlaces={1}
-              widthClass={OVER_POWER_CALCULATOR_WIDTH_CLASS.chartConstant}
+              widthClass="max-w-20"
               onChange={setChartConstant}
             />
-            <div class={`mt-4 flex items-end gap-2 ${OVER_POWER_CALCULATOR_WIDTH_CLASS.scorePair}`}>
+            <div class="mt-4 flex items-end gap-2">
               <ScoreField
                 id="over-power-current-chart-score"
                 label={OVER_POWER_CALCULATOR_COPY.currentScoreLabel}
                 value={currentChartScore()}
-                inputClass={`${INPUT_CLASS} ${OVER_POWER_CALCULATOR_WIDTH_CLASS.score}`}
+                inputClass={INPUT_CLASS}
                 onChange={setCurrentChartScore}
               />
               <ArrowRight class="mb-3 h-6 w-6 shrink-0 text-text-subtle" aria-hidden="true" />
@@ -580,7 +570,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 id="over-power-target-chart-score"
                 label={OVER_POWER_CALCULATOR_COPY.targetScoreLabel}
                 value={targetChartScore()}
-                inputClass={`${INPUT_CLASS} ${OVER_POWER_CALCULATOR_WIDTH_CLASS.score}`}
+                inputClass={INPUT_CLASS}
                 onChange={setTargetChartScore}
               />
             </div>
@@ -615,10 +605,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
           </section>
         </AppTabContent>
 
-        <AppTabContent
-          value="unplayed"
-          class="mt-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
-        >
+        <AppTabContent value="unplayed" class={OVER_POWER_CALCULATOR_PANEL_CLASS}>
           <Show
             when={authSession.status === 'authenticated'}
             fallback={
@@ -631,7 +618,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             <output class="block font-jost text-4xl font-bold tabular-nums text-action-primary">
               {formatOverPowerPercent(unplayedCalculation().percent)}%
             </output>
-            <p class="mt-2 font-jost text-sm tabular-nums text-text-muted">
+            <p class="mt-0 font-jost text-sm tabular-nums text-text-muted">
               {formatOverPowerValue(unplayedCalculation().current)} /{' '}
               {formatOverPowerValue(unplayedCalculation().max)}
             </p>
@@ -644,7 +631,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               <RadioGroup.Label class="block text-sm font-medium text-text-muted">
                 {OVER_POWER_CALCULATOR_COPY.unplayedModeLabel(unplayedSongCount())}
               </RadioGroup.Label>
-              <div class="grid gap-2 sm:grid-cols-2">
+              <div class="grid gap-2">
                 <For each={UNPLAYED_FILL_OPTIONS}>
                   {(option) => (
                     <SelectableCardItem
