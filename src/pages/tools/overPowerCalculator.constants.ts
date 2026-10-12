@@ -1,6 +1,6 @@
-/** 本文の最大幅に余白と枠線を外付けする3タブ共通のパネル。 */
+/** タブ全体の中央に配置し、本文の最大幅に余白と枠線を外付けする共通パネル。 */
 export const OVER_POWER_CALCULATOR_PANEL_CLASS =
-  'mt-4 box-content max-w-80 rounded-lg border border-border bg-surface p-4'
+  'mx-auto mt-4 box-content max-w-80 rounded-lg border border-border bg-surface p-4'
 
 /** OVER POWER計算機の表示文言。 */
 export const OVER_POWER_CALCULATOR_COPY = {
