@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
-import { inspectUnifiedWeakCharts } from './unifiedWeakChartInspector'
+import { inspectUnifiedWeakCharts, sortUnifiedWeakChartEntries } from './unifiedWeakChartInspector'
 
 /** 統合インスペクターのテストで比較するレート帯。 */
 const RATING_BAND = '16.00～16.24'
@@ -316,5 +316,91 @@ test('判定の優先順、ずれの小さい順、同点時の読み順で並�
   assert.deepEqual(
     [...new Set(entries.map(({ category }) => category))],
     ['weakness', 'mildWeakness', 'normal', 'strength', 'unavailable']
+  )
+})
+
+test('ソート未指定の場合は判定の優先順位を保つ', () => {
+  // Given: 判定の優先順位順に並んだ結果がある。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 0),
+    { id: 'weakness', difference: -1000 },
+  ])
+  const entries = inspect(records, averages)
+
+  // When: ソートキーと方向を指定せずにソートする。
+  const sorted = sortUnifiedWeakChartEntries(entries, null, null)
+
+  // Then: 入力と同じ順序の新しい配列を返す。
+  assert.notEqual(sorted, entries)
+  assert.deepEqual(sorted, entries)
+})
+
+test('点差でソートすると、平均がない譜面は方向にかかわらず末尾に置く', () => {
+  // Given: 点差の異なる譜面と、平均がない譜面がある。
+  const { records, averages } = createCharts([
+    { id: 'minus', difference: -100 },
+    { id: 'plus', difference: 100 },
+    { id: 'zero', difference: 0 },
+  ])
+  records.push(createRecord('unavailable', 1000000))
+  const entries = inspect(records, averages)
+
+  // When: 点差の昇順と降順でソートする。
+  const ascending = sortUnifiedWeakChartEntries(entries, 'difference', 'asc')
+  const descending = sortUnifiedWeakChartEntries(entries, 'difference', 'desc')
+
+  // Then: 点差順に並び、平均がない譜面はどちらも末尾になる。
+  assert.deepEqual(
+    ascending.map(({ record }) => record.id),
+    ['minus', 'zero', 'plus', 'unavailable']
+  )
+  assert.deepEqual(
+    descending.map(({ record }) => record.id),
+    ['plus', 'zero', 'minus', 'unavailable']
+  )
+})
+
+test('難易度はBASICからULTIMAの順でソートする', () => {
+  // Given: 難易度の異なる譜面がある。
+  const records = [
+    createRecord('ultima', 1000000, 'ULTIMA'),
+    createRecord('basic', 1000000, 'BASIC'),
+    createRecord('master', 1000000, 'MASTER'),
+    createRecord('expert', 1000000, 'EXPERT'),
+  ]
+  const entries = inspect(records, [])
+
+  // When: 難易度の昇順でソートする。
+  const sorted = sortUnifiedWeakChartEntries(entries, 'difficulty', 'asc')
+
+  // Then: 難易度の定義順になる。
+  assert.deepEqual(
+    sorted.map(({ record }) => record.difficulty),
+    ['BASIC', 'EXPERT', 'MASTER', 'ULTIMA']
+  )
+})
+
+test('判定でソートすると優先順位の逆順になり、同じ判定内は入力順を保つ', () => {
+  // Given: 苦手・ふつう・得意・データなしの譜面がある。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 0),
+    { id: 'weakness-farther', difference: -1000 },
+    { id: 'weakness-nearer', difference: -500 },
+    { id: 'strength', difference: 1000 },
+  ])
+  records.push(createRecord('unavailable', 1000000))
+  const entries = inspect(records, averages)
+
+  // When: 判定の降順でソートする。
+  const sorted = sortUnifiedWeakChartEntries(entries, 'category', 'desc')
+
+  // Then: データなし、得意、ふつう、苦手の順で、苦手の中は入力順のまま並ぶ。
+  assert.deepEqual(
+    [...new Set(sorted.map(({ category }) => category))],
+    ['unavailable', 'strength', 'normal', 'weakness']
+  )
+  assert.deepEqual(
+    sorted.slice(-2).map(({ record }) => record.id),
+    ['weakness-farther', 'weakness-nearer']
   )
 })

@@ -18,6 +18,7 @@ import { type AppTabOption, SegmentedToggleGroup } from '../../components/common
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
+import { SortableTableHeaderCell } from '../../components/common/SortableTableHeader'
 import {
   COMPACT_VIRTUAL_TABLE_CELL_CLASS,
   COMPACT_VIRTUAL_TABLE_HEADER_CLASS,
@@ -36,11 +37,14 @@ import { formatChartConst } from '../../utils/chartConstFormat'
 import { formatInteger } from '../../utils/numberFormat'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
+import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import {
   inspectUnifiedWeakCharts,
+  sortUnifiedWeakChartEntries,
   UNIFIED_WEAK_CHART_CATEGORIES,
   type UnifiedWeakChartCategory,
   type UnifiedWeakChartEntry,
+  type UnifiedWeakChartSortKey,
 } from '../../utils/unifiedWeakChartInspector'
 import {
   UNIFIED_WEAK_CHART_COPY as COPY,
@@ -69,30 +73,47 @@ const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Eleme
 /**
  * 判定と普段の差からのずれによる優先順位を仮想化テーブルで表示する。
  * 曲名のみ左寄せ、その他の列は Online 版の比較表と同じく中央揃えにする。
+ * 列ヘッダーで昇順・降順・初期順（判定の優先順位）を切り替えられる。
  * @param props - 絞り込み済みの統合分析結果。
  * @returns 曲名リンク、難易度、定数、スコア、平均、点差、普段の差、判定の表。
  */
 const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JSX.Element => {
+  const [sortKey, setSortKey] = createSignal<UnifiedWeakChartSortKey | null>(null)
+  const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
+  const rows = createMemo(() =>
+    sortUnifiedWeakChartEntries(props.entries, sortKey(), sortDirection())
+  )
   const virtual = createWindowVirtualTable<HTMLElement, HTMLTableSectionElement>({
-    rowCount: () => props.entries.length,
+    rowCount: () => rows().length,
     rowHeight: COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
     resetOnRowCountChange: true,
-    layoutDeps: () => props.entries,
+    layoutDeps: rows,
   })
   createEffect((previous?: UnifiedWeakChartEntry[]) => {
-    const current = props.entries
+    const current = rows()
     if (previous !== undefined && previous !== current) virtual.resetToTop()
     return current
   })
-  const centeredHeaders = [
-    COPY.difficulty,
-    COPY.constant,
-    COPY.score,
-    COPY.average,
-    COPY.difference,
-    COPY.baseline,
-    COPY.category,
+  const centeredHeaders: { label: string; key: UnifiedWeakChartSortKey }[] = [
+    { label: COPY.difficulty, key: 'difficulty' },
+    { label: COPY.constant, key: 'const' },
+    { label: COPY.score, key: 'score' },
+    { label: COPY.average, key: 'averageScore' },
+    { label: COPY.difference, key: 'difference' },
+    { label: COPY.baseline, key: 'baseline' },
+    { label: COPY.category, key: 'category' },
   ]
+
+  /**
+   * 列ヘッダー操作時の次のソート状態を適用する。
+   * @param key - 選択された列のソートキー。
+   * @returns なし。
+   */
+  const changeSort = (key: UnifiedWeakChartSortKey): void => {
+    const next = nextSortState(sortKey(), sortDirection(), key)
+    setSortKey(next.sortKey)
+    setSortDirection(next.sortDirection)
+  }
   return (
     <section
       ref={virtual.setTableContainerRef}
@@ -101,24 +122,29 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
       tabIndex={0}
       aria-label={COPY.results}
     >
-      <table class="block w-full min-w-[44rem] text-sm" aria-rowcount={props.entries.length + 1}>
+      <table class="block w-full min-w-[44rem] text-sm" aria-rowcount={rows().length + 1}>
         <caption class="sr-only">{COPY.results}</caption>
         <thead class="block min-w-full">
           <tr class="grid" style={{ 'grid-template-columns': UNIFIED_WEAK_CHART_TABLE_GRID }}>
-            <th
-              scope="col"
-              class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
-            >
-              {COPY.title}
-            </th>
+            <SortableTableHeaderCell
+              label={COPY.title}
+              active={sortKey() === 'title'}
+              direction={sortDirection()}
+              align="start"
+              thClass={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
+              buttonClass="justify-start min-h-8!"
+              onClick={() => changeSort('title')}
+            />
             <For each={centeredHeaders}>
               {(header) => (
-                <th
-                  scope="col"
-                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
-                >
-                  {header}
-                </th>
+                <SortableTableHeaderCell
+                  label={header.label}
+                  active={sortKey() === header.key}
+                  direction={sortDirection()}
+                  thClass={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                  buttonClass="justify-center min-h-8!"
+                  onClick={() => changeSort(header.key)}
+                />
               )}
             </For>
           </tr>
@@ -130,7 +156,7 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
         >
           <For each={virtual.virtualRows()}>
             {(row) => {
-              const entry = createMemo(() => props.entries[row.index])
+              const entry = createMemo(() => rows()[row.index])
               return (
                 <Show when={entry()} keyed>
                   {(item) => (

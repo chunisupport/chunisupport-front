@@ -1,8 +1,10 @@
+import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import { truncateChartConst } from './chartConstFormat'
 import { compareRecordsWithRatingBand } from './onlineWeakChartInspector'
 import { compareSongsByReading } from './songTitleSorting'
+import type { SortDirection } from './sortingQuery'
 import { isWeakChartInspectionTarget, quantile } from './weakChartInspector'
 
 /** 自分の普段の点差からのずれで決める判定。 */
@@ -167,4 +169,79 @@ export const inspectUnifiedWeakCharts = (
         (left.deviation ?? 0) - (right.deviation ?? 0) ||
         compareSongsByReading(left.record, right.record)
     )
+}
+
+/** 統合分析の比較表で利用できるソートキー。 */
+export type UnifiedWeakChartSortKey =
+  | 'title'
+  | 'difficulty'
+  | 'const'
+  | 'score'
+  | 'averageScore'
+  | 'difference'
+  | 'baseline'
+  | 'category'
+
+/**
+ * 統合分析の結果を指定列でソートする。
+ *
+ * 平均・点差・普段の差がない譜面は、ソート方向にかかわらず末尾に置く。
+ * 判定列は判定の優先順で比べ、同じ判定内は入力順（ずれの小さい順）を保つ。
+ *
+ * @param entries - 優先順位順の統合分析結果。
+ * @param sortKey - ソート対象列。未指定時は入力順を維持する。
+ * @param sortDirection - ソート方向。未指定時は入力順を維持する。
+ * @returns ソート済みの新しい配列。
+ */
+export const sortUnifiedWeakChartEntries = (
+  entries: readonly UnifiedWeakChartEntry[],
+  sortKey: UnifiedWeakChartSortKey | null,
+  sortDirection: SortDirection | null
+): UnifiedWeakChartEntry[] => {
+  if (!sortKey || !sortDirection) return [...entries]
+
+  const direction = sortDirection === 'asc' ? 1 : -1
+  const nullable = sortKey === 'averageScore' || sortKey === 'difference' || sortKey === 'baseline'
+
+  /**
+   * ソート方向を掛ける前の比較値を求める。
+   * @param left - 左側の結果。
+   * @param right - 右側の結果。
+   * @returns 昇順で left が先なら負の値。
+   */
+  const compare = (left: UnifiedWeakChartEntry, right: UnifiedWeakChartEntry): number => {
+    switch (sortKey) {
+      case 'title':
+        return compareSongsByReading(left.record, right.record)
+      case 'difficulty':
+        return (
+          PLAYER_DATA_DIFFICULTIES.indexOf(left.record.difficulty) -
+          PLAYER_DATA_DIFFICULTIES.indexOf(right.record.difficulty)
+        )
+      case 'const':
+        return left.record.const - right.record.const
+      case 'score':
+        return left.record.score - right.record.score
+      case 'category':
+        return (
+          UNIFIED_WEAK_CHART_CATEGORIES.indexOf(left.category) -
+          UNIFIED_WEAK_CHART_CATEGORIES.indexOf(right.category)
+        )
+      default:
+        return (left[sortKey] ?? 0) - (right[sortKey] ?? 0)
+    }
+  }
+
+  return entries
+    .map((entry, index) => ({ entry, index }))
+    .sort((left, right) => {
+      if (nullable) {
+        // 平均がない譜面は点差・普段の差もないため、平均の有無で末尾へ寄せる。
+        const leftMissing = left.entry.averageScore === null
+        const rightMissing = right.entry.averageScore === null
+        if (leftMissing !== rightMissing) return leftMissing ? 1 : -1
+      }
+      return compare(left.entry, right.entry) * direction || left.index - right.index
+    })
+    .map(({ entry }) => entry)
 }
