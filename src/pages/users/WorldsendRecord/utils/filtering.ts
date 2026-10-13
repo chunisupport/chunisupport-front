@@ -7,6 +7,7 @@ import {
   normalizeForSearch,
   normalizeQuery,
 } from '../../../../utils/searchUtils'
+import { normalizeSongReading } from '../../../../utils/songReading'
 import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from '../types/filterTypes'
 import { hasWorldsendJusticeCountFilter } from './filterDialog'
 
@@ -16,7 +17,7 @@ export type WorldsendRecordTitleMatcher = (record: WorldsendRecordWithSongMeta) 
  * WORLD'S END レコード用の曲名検索マッチャーを生成する。
  *
  * @param query - ユーザーが入力した検索文字列。
- * @returns レコードが検索条件に一致するか判定する関数。
+ * @returns 読みが未設定または空欄なら曲名を読みとして使うマッチャー。
  */
 export function createWorldsendRecordTitleMatcher(query: string): WorldsendRecordTitleMatcher {
   const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
@@ -27,7 +28,7 @@ export function createWorldsendRecordTitleMatcher(query: string): WorldsendRecor
   return (record) => {
     const normalizedTitle = normalizeForSearch(record.title)
     const normalizedArtist = normalizeForSearch(record.artist)
-    const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
+    const normalizedReading = normalizeForReadingSearch(normalizeSongReading(record))
     return matchesNormalizedSearchQuery(
       normalizedTitle,
       normalizedArtist,

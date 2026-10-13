@@ -68,6 +68,15 @@ test('matchesSearchQuery は小書きのカナを変換しても曲名検索の�
   assert.equal(matchesSearchQuery('シャッフル', 'Artist', 'しやつふる', 'ホゲ'), false)
 })
 
+test('matchesSearchQuery は読みが空欄なら曲名に読み検索の正規化を適用する', () => {
+  // Given: 読みが未設定・空文字・空白のみの楽曲。
+  for (const reading of [undefined, null, '', ' ', '\t\n　']) {
+    // When / Then: 濁点、小書きカナ、長音を読みとして正規化し、関係ない検索語は除外する。
+    assert.equal(matchesSearchQuery('ガッツ・コーヒー', 'Artist', 'カツツコウヒウ', reading), true)
+    assert.equal(matchesSearchQuery('ガッツ・コーヒー', 'Artist', 'ソラ', reading), false)
+  }
+})
+
 test('removeTrailingFullwidthAlphabet は末尾が全角英字のときのみ1文字削除する', () => {
   assert.equal(removeTrailingFullwidthAlphabet('かもｎ'), 'かも')
   assert.equal(removeTrailingFullwidthAlphabet('かもｚ'), 'かも')

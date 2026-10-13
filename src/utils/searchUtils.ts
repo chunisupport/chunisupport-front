@@ -1,3 +1,5 @@
+import { normalizeSongReading } from './songReading'
+
 const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
 const voicedMarkRegex = /[\u3099\u309A]/gu
 const prolongedSoundMarkRegex = /[ーｰ]/g
@@ -106,7 +108,13 @@ export function matchesNormalizedSearchQuery(
 }
 
 /**
- * タイトルとアーティスト名のどちらかが検索クエリに部分一致するか判定する。
+ * 曲名・アーティスト名・読みが検索クエリに部分一致するか判定する。
+ *
+ * @param title - 曲名。
+ * @param artist - アーティスト名。
+ * @param query - 検索文字列。
+ * @param reading - 楽曲の読み。未設定または空欄の場合は曲名を使う。
+ * @returns いずれかの検索対象が一致する場合はtrue。
  */
 export function matchesSearchQuery(
   title: string,
@@ -117,7 +125,7 @@ export function matchesSearchQuery(
   const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
   const normalizedTitle = normalizeForSearch(title)
   const normalizedArtist = normalizeForSearch(artist)
-  const normalizedReading = normalizeForReadingSearch(reading ?? title)
+  const normalizedReading = normalizeForReadingSearch(normalizeSongReading({ title, reading }))
   return matchesNormalizedSearchQuery(
     normalizedTitle,
     normalizedArtist,

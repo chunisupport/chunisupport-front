@@ -87,6 +87,31 @@ test("WORLD'S END フィルターは曲名・アーティスト・読み検索�
   assert.equal(matched, true)
 })
 
+test("WORLD'S END レコードは読みが空欄なら曲名を読みとして検索する", () => {
+  // Given: 読みがないレコードと、濁点・小書きカナ・長音を正規化した検索条件。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+  })
+  const titleMatcher = matcher('カツツコウヒウ')
+  for (const reading of [undefined, null, '', ' ', '\t\n　']) {
+    const record = createRecord({ title: 'ガッツ・コーヒー', reading })
+
+    // When / Then: 曲名を読みとして使うため一致する。
+    assert.equal(isWorldsendRecordMatchedWithTitleMatcher(record, filters, titleMatcher), true)
+  }
+
+  // Then: 設定済みの読みは曲名の読みで上書きしない。
+  assert.equal(
+    isWorldsendRecordMatchedWithTitleMatcher(
+      createRecord({ title: 'ガッツ・コーヒー', reading: 'ソラ' }),
+      filters,
+      titleMatcher
+    ),
+    false
+  )
+})
+
 test("WORLD'S END フィルターはスコア・JUSTICE数・ランプ・未プレイ除外を判定できる", () => {
   // Given: AJのJUSTICE数とランプを指定したフィルター。
   const filters = normalizeWorldsendFilterState({

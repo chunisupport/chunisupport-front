@@ -4,6 +4,7 @@ import {
   normalizeForSearch,
   normalizeQuery,
 } from './searchUtils'
+import { normalizeSongReading } from './songReading'
 
 /** 検索用に正規化した文字列を持つ要素 */
 type SearchableItem<T> = {
@@ -15,7 +16,7 @@ type SearchableItem<T> = {
 
 /**
  * 曲名・アーティスト名・読みを正規化し、検索用の要素一覧を作る。
- * 読みが未設定なら曲名を読みとして扱う。
+ * 読みが未設定または空欄なら曲名を読みとして扱う。
  *
  * @param items 検索対象の要素
  * @returns 正規化済み文字列を付けた要素一覧
@@ -29,7 +30,7 @@ export const buildSearchableItems = <
     item,
     normalizedTitle: normalizeForSearch(item.title),
     normalizedArtist: normalizeForSearch(item.artist),
-    normalizedReading: normalizeForReadingSearch(item.reading?.trim() ? item.reading : item.title),
+    normalizedReading: normalizeForReadingSearch(normalizeSongReading(item)),
   }))
 }
 

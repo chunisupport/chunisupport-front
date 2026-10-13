@@ -34,10 +34,20 @@ test('楽曲検索は曲名とアーティスト名の境界をまたいで一�
 })
 
 test('楽曲検索は読みが空欄でも曲名を読みとして検索できること', () => {
-  const song = { title: 'ガッキョク', artist: '作曲者', reading: ' ' }
-  const searchableSongs = buildSearchableItems([song])
+  // Given: 読みがない楽曲と、曲名とは異なる読みが設定済みの楽曲。
+  const songs = [undefined, null, '', ' ', '\t\n　'].map((reading) => ({
+    title: 'ガッツ・コーヒー',
+    artist: '作曲者',
+    reading,
+  }))
+  const searchableSongs = buildSearchableItems([
+    ...songs,
+    { title: 'ガッツ・コーヒー', artist: '作曲者', reading: 'ソラ' },
+  ])
 
-  const result = filterSearchableItems(searchableSongs, 'かっきょく')
+  // When: 曲名の読みだけに一致するクエリで検索する。
+  const result = filterSearchableItems(searchableSongs, 'カツツコウヒウ')
 
-  assert.deepEqual(result, [song])
+  // Then: 読みが空欄の楽曲だけが曲名から補完される。
+  assert.deepEqual(result, songs)
 })
