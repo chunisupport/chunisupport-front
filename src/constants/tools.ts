@@ -185,8 +185,7 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '苦手譜面インスペクター Unified',
     href: UNIFIED_WEAK_CHART_INSPECTOR_PATH,
     icon: 'discover',
-    description:
-      '自分のスコア分布での外れ値と同レート帯の平均との差を組み合わせ、見直す譜面の優先順位を確認します。',
+    description: '同レート帯の平均との差を自分の普段の差と比べ、見直す譜面の優先順位を確認します。',
     adminOnly: true,
   },
 ]
