@@ -3,7 +3,6 @@ import { normalizeSongReading } from './songReading'
 const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
 const voicedMarkRegex = /[\u3099\u309A]/gu
 const prolongedSoundMarkRegex = /[ーｰ]/g
-const trailingFullwidthAlphabetRegex = /[Ａ-Ｚａ-ｚ]$/u
 /** 小書きのカナから対応する大きいカナへの対応表 */
 const SMALL_TO_LARGE_KANA: Record<string, string> = {
   ぁ: 'あ',
@@ -34,21 +33,19 @@ const SMALL_TO_LARGE_KANA: Record<string, string> = {
 const smallKanaRegex = new RegExp(`[${Object.keys(SMALL_TO_LARGE_KANA).join('')}]`, 'g')
 
 /**
- * 検索クエリ末尾の全角英字を1文字除去する。
+ * 検索クエリを曲名検索用と読み検索用に正規化する。
+ * 確定済みの全角英字は削除せず、NFKC を含む通常の正規化だけを適用する。
+ *
+ * @param query 入力された検索文字列。未設定の場合は空文字として扱う。
+ * @returns 曲名検索用と読み検索用に正規化したクエリ。
  */
-export function removeTrailingFullwidthAlphabet(value: string | null | undefined): string {
-  if (!value) return ''
-  return trailingFullwidthAlphabetRegex.test(value) ? value.slice(0, -1) : value
-}
-
 export function normalizeQuery(query: string | null | undefined): {
   normalizedQuery: string
   normalizedReadingQuery: string
 } {
-  const stabilizedQuery = removeTrailingFullwidthAlphabet(query)
   return {
-    normalizedQuery: normalizeForSearch(stabilizedQuery),
-    normalizedReadingQuery: normalizeForReadingSearch(stabilizedQuery),
+    normalizedQuery: normalizeForSearch(query),
+    normalizedReadingQuery: normalizeForReadingSearch(query),
   }
 }
 
