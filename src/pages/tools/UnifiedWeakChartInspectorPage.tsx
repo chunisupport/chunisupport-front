@@ -129,12 +129,12 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
   return (
     <section
       ref={virtual.setTableContainerRef}
-      class="overflow-x-auto rounded-lg border border-border bg-surface"
+      class="overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-surface"
       // biome-ignore lint/a11y/noNoninteractiveTabindex: 横スクロール領域をキーボードでも操作できるようにする。
       tabIndex={0}
       aria-label={COPY.results}
     >
-      <table class="w-full min-w-[44rem] text-sm" aria-rowcount={props.entries.length + 1}>
+      <table class="block w-full min-w-[44rem] text-sm" aria-rowcount={props.entries.length + 1}>
         <caption class="sr-only">{COPY.results}</caption>
         <thead class="block min-w-full">
           <tr class="grid" style={{ 'grid-template-columns': UNIFIED_WEAK_CHART_TABLE_GRID }}>
