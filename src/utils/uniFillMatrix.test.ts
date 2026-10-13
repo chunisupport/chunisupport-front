@@ -9,6 +9,7 @@ import {
   countUniFillMatrixChecks,
   formatUniFillMatrixImageFilename,
   normalizeUniFillMatrixViewSettings,
+  resolveUniFillMatrixExcludeLockedSongs,
   type UniFillMatrix,
   type UniFillMatrixLayout,
   type UniFillMatrixLevelConst,
@@ -578,6 +579,68 @@ test('未解禁曲を除外する設定はレコードフィルターの未解�
 
   // Then
   assert.equal(result.excludeLockedSongs, true)
+})
+
+test('未解禁設定の取得に成功しているときは除外設定を集計とレコード遷移の両方へ適用すること', () => {
+  // Given
+  const excludeLockedSongs = true
+  const lockedSongsLoadFailed = false
+
+  // When
+  const applied = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, lockedSongsLoadFailed)
+  const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'MASTER',
+    achievement: 'sss',
+    excludeLockedSongs: applied,
+  })
+
+  // Then
+  assert.equal(applied, true)
+  assert.equal(filter.excludeLockedSongs, true)
+})
+
+test('未解禁設定の取得失敗時は集計とレコード遷移の両方で未解禁曲を除外しないこと', () => {
+  // Given
+  const excludeLockedSongs = true
+  const lockedSongsLoadFailed = true
+
+  // When
+  const applied = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, lockedSongsLoadFailed)
+  const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'MASTER',
+    achievement: 'sss',
+    excludeLockedSongs: applied,
+  })
+
+  // Then
+  assert.equal(applied, false)
+  assert.equal(filter.excludeLockedSongs, false)
+})
+
+test('未解禁設定の取得失敗から復旧したときは再び未解禁曲を除外すること', () => {
+  // Given
+  const excludeLockedSongs = true
+
+  // When
+  const duringFailure = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, true)
+  const afterRecovery = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, false)
+
+  // Then
+  assert.equal(duringFailure, false)
+  assert.equal(afterRecovery, true)
+})
+
+test('未解禁曲除外がオフのときは取得の成否に関わらず除外しないこと', () => {
+  // Given
+  const excludeLockedSongs = false
+
+  // When
+  const whenLoaded = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, false)
+  const whenFailed = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, true)
+
+  // Then
+  assert.equal(whenLoaded, false)
+  assert.equal(whenFailed, false)
 })
 
 test('全難易度のマスは全難易度を選択し、OP対象では絞り込まない', () => {
