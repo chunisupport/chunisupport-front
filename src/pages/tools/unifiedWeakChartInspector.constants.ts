@@ -46,7 +46,7 @@ export const UNIFIED_WEAK_CHART_CATEGORY_VIEW: Record<
     class: 'bg-danger-bg text-danger',
   },
   hiddenWeakness: {
-    label: '平均未満',
+    label: 'やや苦手',
     icon: EyeOff,
     class: 'bg-warning-bg text-warning',
   },
@@ -56,7 +56,7 @@ export const UNIFIED_WEAK_CHART_CATEGORY_VIEW: Record<
     class: 'bg-surface-muted text-link',
   },
   normal: {
-    label: '平均並み',
+    label: 'ふつう',
     icon: Minus,
     class: 'bg-surface-muted text-text-muted',
   },
