@@ -4,7 +4,7 @@ import { compareRecordsWithRatingBand } from './onlineWeakChartInspector'
 import { compareSongsByReading } from './songTitleSorting'
 import { inspectWeakCharts, isWeakChartInspectionTarget } from './weakChartInspector'
 
-/** 個人内の外れ値とレート帯平均を組み合わせた分類。 */
+/** 自分のスコア分布での外れ値とレート帯平均を組み合わせた判定。 */
 export type UnifiedWeakChartCategory =
   | 'confirmedWeakness'
   | 'hiddenWeakness'
@@ -13,7 +13,7 @@ export type UnifiedWeakChartCategory =
   | 'strength'
   | 'unavailable'
 
-/** 統合分析の譜面別信号。比較平均が欠ける場合も個人内の判定を保持する。 */
+/** 統合分析の譜面別信号。比較平均が欠ける場合も外れ値の判定を保持する。 */
 export interface UnifiedWeakChartEntry {
   record: PlayerRecordDTO
   averageScore: number | null
@@ -33,9 +33,9 @@ export const UNIFIED_WEAK_CHART_CATEGORIES: readonly UnifiedWeakChartCategory[] 
 ]
 
 /**
- * 個人内の外れ値と帯平均との差を分類する。
+ * 自分のスコア分布での外れ値とレート帯平均との差から判定する。
  * @param personalOutlier - 同定数帯での外れ値方向。
- * @param difference - 自分のスコアから帯平均の整数部を引いた差。
+ * @param difference - 自分のスコアからレート帯平均の整数部を引いた差。
  * @param threshold - 帯でも低いと判断する点差の絶対値。
  * @returns 見直し対象または強みの分類。
  */
@@ -57,7 +57,7 @@ const classifyEntry = (
  * @param records - 選択した集計条件内の通常譜面レコード。比較平均の有無で絞り込まない。
  * @param snapshots - 難易度別のスコア統計。
  * @param ratingBand - 比較するレート帯。
- * @param threshold - 帯平均より低いと判断する点差の絶対値。
+ * @param threshold - レート帯平均より低いと判断する点差の絶対値。
  * @returns 優先順位順のプレイ済み譜面。平均欠損譜面も含む。
  */
 export const inspectUnifiedWeakCharts = (
