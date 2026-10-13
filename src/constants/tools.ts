@@ -12,6 +12,7 @@ import {
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   UNI_FILL_MATRIX_PATH,
+  UNIFIED_WEAK_CHART_INSPECTOR_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
@@ -142,6 +143,14 @@ export const TOOL_LINKS: ToolLink[] = [
     href: ONLINE_WEAK_CHART_INSPECTOR_PATH,
     icon: 'globe',
     description: '自分のスコアを同じレート帯の平均スコアと比較します。',
+  },
+  {
+    title: '苦手譜面インスペクター Unified',
+    href: UNIFIED_WEAK_CHART_INSPECTOR_PATH,
+    icon: 'discover',
+    description:
+      '個人内の外れ値とレート帯平均との差を組み合わせ、見直す譜面の優先順位を確認します。',
+    adminOnly: true,
   },
   {
     title: 'ランダム選曲',

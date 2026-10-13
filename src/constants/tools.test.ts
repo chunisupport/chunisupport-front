@@ -6,6 +6,7 @@ import {
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
   UNI_FILL_MATRIX_PATH,
+  UNIFIED_WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 import { getToolLink, isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
 
@@ -29,6 +30,15 @@ const disabledTool: ToolLink = {
   href: '/tools/disabled',
   disabled: true,
 }
+
+test('Unifiedは管理者のみに表示し、公開ツールの固定ページから除外する', () => {
+  const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
+  for (const role of [undefined, 'PLAYER', 'EDITOR', 'EXTDEV'] as const) {
+    assert.equal(isToolLinkListed(tool, role), false)
+  }
+  assert.equal(isToolLinkListed(tool, 'ADMIN'), true)
+  assert.equal(isPublicToolLink(tool), false)
+})
 
 test('isToolLinkListed は通常ツールをアカウント種別に関係なく表示すること', () => {
   // Given
