@@ -145,14 +145,6 @@ export const TOOL_LINKS: ToolLink[] = [
     description: '自分のスコアを同じレート帯の平均スコアと比較します。',
   },
   {
-    title: '苦手譜面インスペクター Unified',
-    href: UNIFIED_WEAK_CHART_INSPECTOR_PATH,
-    icon: 'discover',
-    description:
-      '個人内の外れ値とレート帯平均との差を組み合わせ、見直す譜面の優先順位を確認します。',
-    adminOnly: true,
-  },
-  {
     title: 'ランダム選曲',
     href: RANDOM_SONG_SELECTOR_PATH,
     icon: 'random',
@@ -187,6 +179,14 @@ export const TOOL_LINKS: ToolLink[] = [
     href: LOCKED_SONG_DISCOVERY_PATH,
     icon: 'discover',
     description: '分類別の筐体OVER POWERを照合し、未解禁曲がある範囲を絞り込みます。',
+    adminOnly: true,
+  },
+  {
+    title: '苦手譜面インスペクター Unified',
+    href: UNIFIED_WEAK_CHART_INSPECTOR_PATH,
+    icon: 'discover',
+    description:
+      '個人内の外れ値とレート帯平均との差を組み合わせ、見直す譜面の優先順位を確認します。',
     adminOnly: true,
   },
 ]
