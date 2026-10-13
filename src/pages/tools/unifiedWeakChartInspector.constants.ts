@@ -1,3 +1,12 @@
+import {
+  CircleSlash,
+  EyeOff,
+  type LucideIcon,
+  Minus,
+  Sparkles,
+  TriangleAlert,
+  UserRound,
+} from 'lucide-solid'
 import type { UnifiedWeakChartCategory } from '../../utils/unifiedWeakChartInspector'
 
 /** 統合分析の初期点差閾値。 */
@@ -5,15 +14,15 @@ export const UNIFIED_WEAK_CHART_THRESHOLD = 1000
 
 /** 統合分析画面の表示文言。 */
 export const UNIFIED_WEAK_CHART_COPY = {
-  ratingBand: '比較するレート帯',
-  threshold: '帯平均からの不足点数',
-  thresholdHint: 'この点数以上低い譜面を「帯でも低い」と判定します。0の場合は平均未満すべて。',
-  difficulty: '集計する難易度',
+  ratingBand: 'レート帯',
+  threshold: '点差閾値',
+  thresholdUnit: '点',
+  difficulty: '難易度',
   category: '分類',
   all: 'すべて',
-  results: '見直し優先順',
-  empty: 'この条件に一致するプレイ済み譜面がありません。',
-  noBands: '比較できるレート帯がありません。',
+  results: '分析結果',
+  empty: '該当なし',
+  noBands: 'レート帯データなし',
   title: '曲名',
   constant: '定数',
   score: 'スコア',
@@ -26,45 +35,45 @@ export const UNIFIED_WEAK_CHART_COPY = {
   normal: '通常',
 } as const
 
-/** 分類ごとの表示、判断根拠、状態色。 */
+/** 分類ごとの表示名、アイコン、状態色。 */
 export const UNIFIED_WEAK_CHART_CATEGORY_VIEW: Record<
   UnifiedWeakChartCategory,
-  { label: string; hint: string; class: string }
+  { label: string; icon: LucideIcon; class: string }
 > = {
   confirmedWeakness: {
-    label: '本当に苦手',
-    hint: '個人内で低外れ値、帯平均より閾値以上低い',
+    label: '苦手',
+    icon: TriangleAlert,
     class: 'bg-danger-bg text-danger',
   },
   hiddenWeakness: {
-    label: '隠れた弱点',
-    hint: '個人内で低外れ値ではなく、帯平均より閾値以上低い',
+    label: '隠れ苦手',
+    icon: EyeOff,
     class: 'bg-warning-bg text-warning',
   },
   personalWeakness: {
-    label: '自分だけ低い',
-    hint: '個人内で低外れ値、帯との差は閾値未満または平均以上',
+    label: '自分比で低い',
+    icon: UserRound,
     class: 'bg-surface-muted text-link',
   },
   normal: {
     label: '標準',
-    hint: '個人内で外れ値ではなく、帯との差は閾値未満または平均と同点',
+    icon: Minus,
     class: 'bg-surface-muted text-text-muted',
   },
   strength: {
-    label: '得意寄り',
-    hint: '帯でも低い条件に該当せず、個人内で高外れ値または帯平均より高いスコア',
+    label: '得意',
+    icon: Sparkles,
     class: 'bg-success-bg text-success',
   },
   unavailable: {
-    label: '比較データなし',
-    hint: '選択したレート帯の平均スコアがない',
+    label: 'データなし',
+    icon: CircleSlash,
     class: 'bg-surface-muted text-text-subtle',
   },
 }
 
 /** 比較表で共有する列幅。 */
-export const UNIFIED_WEAK_CHART_TABLE_GRID = 'minmax(12rem, 1fr) 6rem 3rem 6rem 6rem 6rem 6rem 8rem'
+export const UNIFIED_WEAK_CHART_TABLE_GRID = 'minmax(12rem, 1fr) 6rem 3rem 6rem 6rem 5rem 4rem 8rem'
 
 /** 数値入力の共通スタイル。 */
 export const UNIFIED_WEAK_CHART_INPUT_CLASS =
