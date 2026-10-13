@@ -1,6 +1,6 @@
 import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
-import { ScanSearch } from 'lucide-solid'
+import { ArrowDown, ArrowUp, Minus, ScanSearch, SearchX } from 'lucide-solid'
 import {
   createEffect,
   createMemo,
@@ -10,10 +10,12 @@ import {
   type JSX,
   Show,
 } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 import { fetchChartScores } from '../../api/chartScores'
 import { fetchRatingBands } from '../../api/ratingBands'
 import { LoadError, Loading } from '../../components'
 import { AppSelect } from '../../components/common/AppSelect'
+import { type AppTabOption, SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
@@ -51,7 +53,51 @@ import {
 } from './unifiedWeakChartInspector.constants'
 
 type BandOption = { label: string; value: string }
-type CategoryOption = { label: string; value: UnifiedWeakChartCategory | 'all' }
+type CategoryFilter = UnifiedWeakChartCategory | 'all'
+
+/**
+ * 個人内の外れ値方向を矢印アイコンで表示する。
+ * @param props - 外れ値方向。外れ値でない場合は null。
+ * @returns 方向を示すアイコンとスクリーンリーダー向けの名称。
+ */
+const PersonalOutlierIcon = (props: {
+  direction: UnifiedWeakChartEntry['personalOutlier']
+}): JSX.Element => {
+  const label = () =>
+    props.direction === 'LOW' ? COPY.low : props.direction === 'HIGH' ? COPY.high : COPY.normal
+  return (
+    <span title={label()} class="inline-flex">
+      <Show
+        when={props.direction}
+        fallback={<Minus class="h-4 w-4 text-text-subtle" aria-hidden="true" />}
+      >
+        {(direction) =>
+          direction() === 'LOW' ? (
+            <ArrowDown class="h-4 w-4 text-danger" aria-hidden="true" />
+          ) : (
+            <ArrowUp class="h-4 w-4 text-success" aria-hidden="true" />
+          )
+        }
+      </Show>
+      <span class="sr-only">{label()}</span>
+    </span>
+  )
+}
+
+/**
+ * 分類をアイコン付きの色バッジで表示する。
+ * @param props - 表示する分類。
+ * @returns 分類の色、アイコン、表示名を持つバッジ。
+ */
+const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Element => {
+  const view = () => UNIFIED_WEAK_CHART_CATEGORY_VIEW[props.category]
+  return (
+    <span class={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs ${view().class}`}>
+      <Dynamic component={view().icon} class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {view().label}
+    </span>
+  )
+}
 
 /**
  * 分類と点差による優先順位を仮想化テーブルで表示する。
@@ -153,20 +199,11 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
                           ? COPY.missing
                           : formatScoreDifference(item.difference)}
                       </td>
-                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2`}>
-                        {item.personalOutlier === 'LOW'
-                          ? COPY.low
-                          : item.personalOutlier === 'HIGH'
-                            ? COPY.high
-                            : COPY.normal}
+                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-2`}>
+                        <PersonalOutlierIcon direction={item.personalOutlier} />
                       </td>
                       <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2`}>
-                        <span
-                          title={UNIFIED_WEAK_CHART_CATEGORY_VIEW[item.category].hint}
-                          class={`rounded px-2 py-1 text-xs ${UNIFIED_WEAK_CHART_CATEGORY_VIEW[item.category].class}`}
-                        >
-                          {UNIFIED_WEAK_CHART_CATEGORY_VIEW[item.category].label}
-                        </span>
+                        <CategoryBadge category={item.category} />
                       </td>
                     </tr>
                   )}
@@ -179,6 +216,47 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
     </section>
   )
 }
+
+/**
+ * 分類フィルターの選択肢として、アイコン・表示名・件数を並べる。
+ * @param props - 分類（すべての場合は省略）、表示名、件数。
+ * @returns 分類色のアイコンと件数を含むラベル。
+ */
+const CategoryCount = (props: {
+  category?: UnifiedWeakChartCategory
+  label: string
+  count: number
+}): JSX.Element => (
+  <>
+    <Show when={props.category}>
+      {(category) => (
+        <span
+          class={`inline-flex rounded-full p-1 ${UNIFIED_WEAK_CHART_CATEGORY_VIEW[category()].class}`}
+        >
+          <Dynamic
+            component={UNIFIED_WEAK_CHART_CATEGORY_VIEW[category()].icon}
+            class="h-3.5 w-3.5"
+            aria-hidden="true"
+          />
+        </span>
+      )}
+    </Show>
+    {props.label}
+    <span class="font-jost tabular-nums">{formatInteger(props.count)}</span>
+  </>
+)
+
+/**
+ * 結果がない状態をアイコンと短い語で表示する。
+ * @param props - 表示する短い語。
+ * @returns 中央寄せの空状態表示。
+ */
+const EmptyState = (props: { label: string }): JSX.Element => (
+  <p class="flex flex-col items-center gap-2 rounded-lg border border-border bg-surface py-10 text-text-muted">
+    <SearchX class="h-8 w-8" aria-hidden="true" />
+    {props.label}
+  </p>
+)
 
 /**
  * 個人内の外れ値とレート帯平均との差を統合する管理者向け画面。
@@ -199,14 +277,7 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
   )
   const [band, setBand] = createSignal<BandOption | null>(null)
   const [threshold, setThreshold] = createSignal(String(UNIFIED_WEAK_CHART_THRESHOLD))
-  const categoryOptions: CategoryOption[] = [
-    { label: COPY.all, value: 'all' },
-    ...UNIFIED_WEAK_CHART_CATEGORIES.map((value) => ({
-      value,
-      label: UNIFIED_WEAK_CHART_CATEGORY_VIEW[value].label,
-    })),
-  ]
-  const [category, setCategory] = createSignal<CategoryOption>(categoryOptions[0])
+  const [category, setCategory] = createSignal<CategoryFilter>('all')
   const bandOptions = createMemo(() =>
     (bands() ?? [])
       .filter((item) => item.label !== ALL_RATING_BAND_LABEL)
@@ -227,8 +298,21 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
     )
   )
   const filtered = createMemo(() =>
-    entries().filter((entry) => category().value === 'all' || entry.category === category().value)
+    entries().filter((entry) => category() === 'all' || entry.category === category())
   )
+  const categoryOptions = createMemo((): AppTabOption<CategoryFilter>[] => [
+    { value: 'all', label: <CategoryCount label={COPY.all} count={entries().length} /> },
+    ...UNIFIED_WEAK_CHART_CATEGORIES.map((value) => ({
+      value,
+      label: (
+        <CategoryCount
+          category={value}
+          label={UNIFIED_WEAK_CHART_CATEGORY_VIEW[value].label}
+          count={entries().filter((entry) => entry.category === value).length}
+        />
+      ),
+    })),
+  ])
   const loading = () => bands.loading || rating.loading || records.loading || snapshots.loading
   const error = () => bands.error ?? rating.error ?? records.error ?? snapshots.error
 
@@ -265,26 +349,27 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
           step={1}
           format={false}
           allowedInput={/^\d*$/}
-          class="w-full sm:w-56"
+          class="w-full sm:w-40"
         >
-          <NumberField.Label class="mb-1 block text-sm text-text-muted" title={COPY.thresholdHint}>
+          <NumberField.Label class="mb-1 block text-sm text-text-muted">
             {COPY.threshold}
           </NumberField.Label>
-          <NumberField.Input class={UNIFIED_WEAK_CHART_INPUT_CLASS} title={COPY.thresholdHint} />
+          <div class="relative">
+            <span
+              class="pointer-events-none absolute inset-y-0 left-3 flex items-center font-jost text-text-muted"
+              aria-hidden="true"
+            >
+              −
+            </span>
+            <NumberField.Input class={`${UNIFIED_WEAK_CHART_INPUT_CLASS} pl-7 pr-8 text-right`} />
+            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-text-muted">
+              {COPY.thresholdUnit}
+            </span>
+          </div>
         </NumberField>
-        <AppSelect<CategoryOption>
-          options={categoryOptions}
-          value={category()}
-          onChange={(value) => value && setCategory(value)}
-          optionValue="value"
-          optionTextValue="label"
-          formatLabel={(value) => value.label}
-          label={COPY.category}
-          rootClass="w-full sm:w-48"
-        />
         <fieldset class="w-full">
           <legend class="mb-2 text-sm text-text-muted">{COPY.difficulty}</legend>
-          <div class="grid gap-2 sm:grid-cols-5">
+          <div class="flex flex-wrap gap-x-6 gap-y-2">
             <For each={PLAYER_DATA_DIFFICULTIES}>
               {(difficulty) => (
                 <CheckboxField
@@ -306,29 +391,16 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
       </section>
       <Show when={!loading()} fallback={<Loading />}>
         <Show when={!error()} fallback={<LoadError error={error()} />}>
-          <Show when={band()} fallback={<p class="text-text-muted">{COPY.noBands}</p>}>
-            <section class="flex flex-wrap gap-2" aria-label={COPY.category}>
-              <For each={UNIFIED_WEAK_CHART_CATEGORIES}>
-                {(value) => (
-                  <span
-                    title={UNIFIED_WEAK_CHART_CATEGORY_VIEW[value].hint}
-                    class={`rounded px-3 py-1 text-sm ${UNIFIED_WEAK_CHART_CATEGORY_VIEW[value].class}`}
-                  >
-                    {UNIFIED_WEAK_CHART_CATEGORY_VIEW[value].label}{' '}
-                    <span class="font-jost">
-                      {entries().filter((entry) => entry.category === value).length}
-                    </span>
-                  </span>
-                )}
-              </For>
-            </section>
-            <h2 class="text-lg font-semibold">
-              {COPY.results} <span class="font-jost text-text-muted">{filtered().length}</span>
-            </h2>
-            <Show
-              when={filtered().length > 0}
-              fallback={<p class="text-text-muted">{COPY.empty}</p>}
-            >
+          <Show when={band()} fallback={<EmptyState label={COPY.noBands} />}>
+            <SegmentedToggleGroup
+              options={categoryOptions()}
+              value={category()}
+              onChange={setCategory}
+              ariaLabel={COPY.category}
+              class="flex w-full flex-wrap"
+              itemClass="min-h-10 flex-1 whitespace-nowrap"
+            />
+            <Show when={filtered().length > 0} fallback={<EmptyState label={COPY.empty} />}>
               <UnifiedComparisonTable entries={filtered()} />
             </Show>
           </Show>
