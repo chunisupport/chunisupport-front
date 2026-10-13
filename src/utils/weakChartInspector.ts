@@ -131,7 +131,7 @@ export const filterWeakChartAggregationRecords = (
  * @param percentile - 0から1までの分位。
  * @returns 指定した分位点。
  */
-const quantile = (sortedValues: number[], percentile: number): number => {
+export const quantile = (sortedValues: readonly number[], percentile: number): number => {
   const position = (sortedValues.length - 1) * percentile
   const lowerIndex = Math.floor(position)
   const upperIndex = Math.ceil(position)

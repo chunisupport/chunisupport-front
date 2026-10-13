@@ -1,6 +1,5 @@
-import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
-import { ArrowDown, ArrowUp, Minus, ScanSearch, SearchX } from 'lucide-solid'
+import { ScanSearch, SearchX } from 'lucide-solid'
 import {
   createEffect,
   createMemo,
@@ -24,7 +23,7 @@ import {
   COMPACT_VIRTUAL_TABLE_HEADER_CLASS,
   COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
 } from '../../components/common/virtualTableStyles'
-import { SCORE_THEORETICAL_MAX, WEAK_CHART_INSPECTOR_DIFFICULTIES } from '../../constants/chart'
+import { WEAK_CHART_INSPECTOR_DIFFICULTIES } from '../../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { buildSongDetailPath, UNIFIED_WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
@@ -35,7 +34,6 @@ import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWi
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
 import { formatInteger } from '../../utils/numberFormat'
-import { clampNumericInput } from '../../utils/numberInput'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import {
@@ -47,42 +45,11 @@ import {
 import {
   UNIFIED_WEAK_CHART_COPY as COPY,
   UNIFIED_WEAK_CHART_CATEGORY_VIEW,
-  UNIFIED_WEAK_CHART_INPUT_CLASS,
   UNIFIED_WEAK_CHART_TABLE_GRID,
-  UNIFIED_WEAK_CHART_THRESHOLD,
 } from './unifiedWeakChartInspector.constants'
 
 type BandOption = { label: string; value: string }
 type CategoryFilter = UnifiedWeakChartCategory | 'all'
-
-/**
- * 自分のスコア分布での外れ値方向を矢印アイコンで表示する。
- * @param props - 外れ値方向。外れ値でない場合は null。
- * @returns 方向を示すアイコンとスクリーンリーダー向けの名称。
- */
-const PersonalOutlierIcon = (props: {
-  direction: UnifiedWeakChartEntry['personalOutlier']
-}): JSX.Element => {
-  const label = () =>
-    props.direction === 'LOW' ? COPY.low : props.direction === 'HIGH' ? COPY.high : COPY.normal
-  return (
-    <span title={label()} class="inline-flex">
-      <Show
-        when={props.direction}
-        fallback={<Minus class="h-4 w-4 text-text-subtle" aria-hidden="true" />}
-      >
-        {(direction) =>
-          direction() === 'LOW' ? (
-            <ArrowDown class="h-4 w-4 text-danger" aria-hidden="true" />
-          ) : (
-            <ArrowUp class="h-4 w-4 text-success" aria-hidden="true" />
-          )
-        }
-      </Show>
-      <span class="sr-only">{label()}</span>
-    </span>
-  )
-}
 
 /**
  * 判定をアイコン付きの色バッジで表示する。
@@ -100,10 +67,10 @@ const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Eleme
 }
 
 /**
- * 判定と点差による優先順位を仮想化テーブルで表示する。
+ * 判定と普段の差からのずれによる優先順位を仮想化テーブルで表示する。
  * 曲名のみ左寄せ、その他の列は Online 版の比較表と同じく中央揃えにする。
  * @param props - 絞り込み済みの統合分析結果。
- * @returns 曲名リンク、難易度、定数、スコア、平均、点差、外れ値、判定の表。
+ * @returns 曲名リンク、難易度、定数、スコア、平均、点差、普段の差、判定の表。
  */
 const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JSX.Element => {
   const virtual = createWindowVirtualTable<HTMLElement, HTMLTableSectionElement>({
@@ -123,7 +90,7 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
     COPY.score,
     COPY.average,
     COPY.difference,
-    COPY.personal,
+    COPY.baseline,
     COPY.category,
   ]
   return (
@@ -217,9 +184,11 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
                           : formatScoreDifference(item.difference)}
                       </td>
                       <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums text-text-muted`}
                       >
-                        <PersonalOutlierIcon direction={item.personalOutlier} />
+                        {item.baseline === null
+                          ? COPY.missing
+                          : formatScoreDifference(Math.round(item.baseline) || 0)}
                       </td>
                       <td
                         class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}
@@ -280,8 +249,8 @@ const EmptyState = (props: { label: string }): JSX.Element => (
 )
 
 /**
- * 自分のスコア分布での外れ値と同レート帯の平均との差を統合する管理者向け画面。
- * @returns 比較帯・難易度・閾値・判定を選べる優先順位表。
+ * 同レート帯の平均との差を、自分の普段の差と比べて判定する管理者向け画面。
+ * @returns 比較帯・難易度・判定を選べる優先順位表。
  */
 const UnifiedWeakChartInspectorPage = (): JSX.Element => {
   const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
@@ -297,7 +266,6 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
     Promise.all(selected.map(fetchChartScores))
   )
   const [band, setBand] = createSignal<BandOption | null>(null)
-  const [threshold, setThreshold] = createSignal(String(UNIFIED_WEAK_CHART_THRESHOLD))
   const [category, setCategory] = createSignal<CategoryFilter>('all')
   const bandOptions = createMemo(() =>
     (bands() ?? [])
@@ -314,8 +282,7 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
     inspectUnifiedWeakCharts(
       (records()?.standard ?? []).filter((record) => difficulties().includes(record.difficulty)),
       snapshots() ?? [],
-      band()?.value ?? '',
-      threshold() === '' ? UNIFIED_WEAK_CHART_THRESHOLD : Number(threshold())
+      band()?.value ?? ''
     )
   )
   const filtered = createMemo(() =>
@@ -337,14 +304,6 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
   const loading = () => bands.loading || rating.loading || records.loading || snapshots.loading
   const error = () => bands.error ?? rating.error ?? records.error ?? snapshots.error
 
-  /**
-   * 貼り付け時も閾値を非負整数の範囲内に保つ。
-   * @param value - 入力された閾値。空欄は入力途中として保持する。
-   * @returns なし。
-   */
-  const changeThreshold = (value: string): void => {
-    if (/^\d*$/.test(value)) setThreshold(clampNumericInput(value, 0, SCORE_THEORETICAL_MAX))
-  }
   return (
     <main class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
       <header class="flex items-center gap-3">
@@ -362,32 +321,6 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
           label={COPY.ratingBand}
           rootClass="w-full sm:w-48"
         />
-        <NumberField
-          value={threshold()}
-          onChange={changeThreshold}
-          minValue={0}
-          maxValue={SCORE_THEORETICAL_MAX}
-          step={1}
-          format={false}
-          allowedInput={/^\d*$/}
-          class="w-full sm:w-40"
-        >
-          <NumberField.Label class="mb-1 block text-sm text-text-muted">
-            {COPY.threshold}
-          </NumberField.Label>
-          <div class="relative">
-            <span
-              class="pointer-events-none absolute inset-y-0 left-3 flex items-center font-jost text-text-muted"
-              aria-hidden="true"
-            >
-              −
-            </span>
-            <NumberField.Input class={`${UNIFIED_WEAK_CHART_INPUT_CLASS} pl-7 pr-8 text-right`} />
-            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-text-muted">
-              {COPY.thresholdUnit}
-            </span>
-          </div>
-        </NumberField>
         <fieldset class="w-full">
           <legend class="mb-2 text-sm text-text-muted">{COPY.difficulty}</legend>
           <div class="flex flex-wrap gap-x-6 gap-y-2">
