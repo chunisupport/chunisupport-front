@@ -18,7 +18,7 @@ export const UNIFIED_WEAK_CHART_COPY = {
   threshold: '点差閾値',
   thresholdUnit: '点',
   difficulty: '難易度',
-  category: '分類',
+  category: '判定',
   all: 'すべて',
   results: '分析結果',
   empty: '該当なし',
@@ -26,16 +26,16 @@ export const UNIFIED_WEAK_CHART_COPY = {
   title: '曲名',
   constant: '定数',
   score: 'スコア',
-  average: '帯平均',
+  average: '平均',
   difference: '点差',
-  personal: '個人内',
+  personal: '外れ値',
   missing: '—',
   low: '低外れ値',
   high: '高外れ値',
   normal: '通常',
 } as const
 
-/** 分類ごとの表示名、アイコン、状態色。 */
+/** 判定ごとの表示名、アイコン、状態色。 */
 export const UNIFIED_WEAK_CHART_CATEGORY_VIEW: Record<
   UnifiedWeakChartCategory,
   { label: string; icon: LucideIcon; class: string }
@@ -46,17 +46,17 @@ export const UNIFIED_WEAK_CHART_CATEGORY_VIEW: Record<
     class: 'bg-danger-bg text-danger',
   },
   hiddenWeakness: {
-    label: '隠れ苦手',
+    label: '平均未満',
     icon: EyeOff,
     class: 'bg-warning-bg text-warning',
   },
   personalWeakness: {
-    label: '自分比で低い',
+    label: '苦手かも',
     icon: UserRound,
     class: 'bg-surface-muted text-link',
   },
   normal: {
-    label: '標準',
+    label: '平均並み',
     icon: Minus,
     class: 'bg-surface-muted text-text-muted',
   },
@@ -73,7 +73,8 @@ export const UNIFIED_WEAK_CHART_CATEGORY_VIEW: Record<
 }
 
 /** 比較表で共有する列幅。 */
-export const UNIFIED_WEAK_CHART_TABLE_GRID = 'minmax(12rem, 1fr) 6rem 3rem 6rem 6rem 5rem 4rem 8rem'
+export const UNIFIED_WEAK_CHART_TABLE_GRID =
+  'minmax(12rem, 1fr) 3rem 3rem 5rem 5rem 4.75rem 4rem 7rem'
 
 /** 数値入力の共通スタイル。 */
 export const UNIFIED_WEAK_CHART_INPUT_CLASS =

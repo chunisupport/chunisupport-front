@@ -18,7 +18,7 @@ import { AppSelect } from '../../components/common/AppSelect'
 import { type AppTabOption, SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
-import { DifficultyBadge } from '../../components/common/DifficultyBadge'
+import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import {
   COMPACT_VIRTUAL_TABLE_CELL_CLASS,
   COMPACT_VIRTUAL_TABLE_HEADER_CLASS,
@@ -56,7 +56,7 @@ type BandOption = { label: string; value: string }
 type CategoryFilter = UnifiedWeakChartCategory | 'all'
 
 /**
- * 個人内の外れ値方向を矢印アイコンで表示する。
+ * 自分のスコア分布での外れ値方向を矢印アイコンで表示する。
  * @param props - 外れ値方向。外れ値でない場合は null。
  * @returns 方向を示すアイコンとスクリーンリーダー向けの名称。
  */
@@ -85,9 +85,9 @@ const PersonalOutlierIcon = (props: {
 }
 
 /**
- * 分類をアイコン付きの色バッジで表示する。
- * @param props - 表示する分類。
- * @returns 分類の色、アイコン、表示名を持つバッジ。
+ * 判定をアイコン付きの色バッジで表示する。
+ * @param props - 表示する判定。
+ * @returns 判定の色、アイコン、表示名を持つバッジ。
  */
 const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Element => {
   const view = () => UNIFIED_WEAK_CHART_CATEGORY_VIEW[props.category]
@@ -100,9 +100,10 @@ const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Eleme
 }
 
 /**
- * 分類と点差による優先順位を仮想化テーブルで表示する。
+ * 判定と点差による優先順位を仮想化テーブルで表示する。
+ * 曲名のみ左寄せ、その他の列は Online 版の比較表と同じく中央揃えにする。
  * @param props - 絞り込み済みの統合分析結果。
- * @returns 曲名リンク、スコア、個人判定、帯比較、分類の表。
+ * @returns 曲名リンク、難易度、定数、スコア、平均、点差、外れ値、判定の表。
  */
 const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JSX.Element => {
   const virtual = createWindowVirtualTable<HTMLElement, HTMLTableSectionElement>({
@@ -116,8 +117,7 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
     if (previous !== undefined && previous !== current) virtual.resetToTop()
     return current
   })
-  const headers = [
-    COPY.title,
+  const centeredHeaders = [
     COPY.difficulty,
     COPY.constant,
     COPY.score,
@@ -134,13 +134,22 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
       tabIndex={0}
       aria-label={COPY.results}
     >
-      <table class="w-full min-w-[53rem] text-sm" aria-rowcount={props.entries.length + 1}>
+      <table class="w-full min-w-[44rem] text-sm" aria-rowcount={props.entries.length + 1}>
         <caption class="sr-only">{COPY.results}</caption>
         <thead class="block min-w-full">
           <tr class="grid" style={{ 'grid-template-columns': UNIFIED_WEAK_CHART_TABLE_GRID }}>
-            <For each={headers}>
+            <th
+              scope="col"
+              class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-start px-3 text-left`}
+            >
+              {COPY.title}
+            </th>
+            <For each={centeredHeaders}>
               {(header) => (
-                <th scope="col" class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} px-3`}>
+                <th
+                  scope="col"
+                  class={`${COMPACT_VIRTUAL_TABLE_HEADER_CLASS} justify-center px-0 text-center`}
+                >
                   {header}
                 </th>
               )}
@@ -168,7 +177,7 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
                     >
                       <th
                         scope="row"
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} min-w-0 font-medium text-left`}
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} min-w-0 p-0 text-left font-medium`}
                       >
                         <A
                           href={buildSongDetailPath(item.record.id, item.record.difficulty)}
@@ -178,31 +187,43 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
                           <span class="truncate">{item.record.title}</span>
                         </A>
                       </th>
-                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2`}>
-                        <DifficultyBadge difficulty={item.record.difficulty} />
+                      <td
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}
+                      >
+                        <RecordDifficultyBadge difficulty={item.record.difficulty} />
                       </td>
-                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2 font-jost tabular-nums`}>
+                      <td
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                      >
                         {formatChartConst(item.record.const)}
                       </td>
-                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2 font-jost tabular-nums`}>
+                      <td
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                      >
                         {formatInteger(item.record.score)}
                       </td>
-                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2 font-jost tabular-nums`}>
+                      <td
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                      >
                         {item.averageScore === null
                           ? COPY.missing
                           : formatInteger(Math.trunc(item.averageScore))}
                       </td>
                       <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2 font-jost tabular-nums ${item.difference === null ? 'text-text-subtle' : getScoreDifferenceClass(item.difference)}`}
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums ${item.difference === null ? 'text-text-subtle' : getScoreDifferenceClass(item.difference)}`}
                       >
                         {item.difference === null
                           ? COPY.missing
                           : formatScoreDifference(item.difference)}
                       </td>
-                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-2`}>
+                      <td
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}
+                      >
                         <PersonalOutlierIcon direction={item.personalOutlier} />
                       </td>
-                      <td class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} px-2`}>
+                      <td
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}
+                      >
                         <CategoryBadge category={item.category} />
                       </td>
                     </tr>
@@ -218,9 +239,9 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
 }
 
 /**
- * 分類フィルターの選択肢として、アイコン・表示名・件数を並べる。
- * @param props - 分類（すべての場合は省略）、表示名、件数。
- * @returns 分類色のアイコンと件数を含むラベル。
+ * 判定フィルターの選択肢として、アイコン・表示名・件数を並べる。
+ * @param props - 判定（すべての場合は省略）、表示名、件数。
+ * @returns 判定色のアイコンと件数を含むラベル。
  */
 const CategoryCount = (props: {
   category?: UnifiedWeakChartCategory
@@ -259,8 +280,8 @@ const EmptyState = (props: { label: string }): JSX.Element => (
 )
 
 /**
- * 個人内の外れ値とレート帯平均との差を統合する管理者向け画面。
- * @returns 比較帯・難易度・閾値・分類を選べる優先順位表。
+ * 自分のスコア分布での外れ値と同レート帯の平均との差を統合する管理者向け画面。
+ * @returns 比較帯・難易度・閾値・判定を選べる優先順位表。
  */
 const UnifiedWeakChartInspectorPage = (): JSX.Element => {
   const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
