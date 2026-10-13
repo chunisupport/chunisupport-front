@@ -33,6 +33,7 @@ const disabledTool: ToolLink = {
 
 test('Unifiedは管理者のみに表示し、公開ツールの固定ページから除外する', () => {
   const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
+  assert.equal(TOOL_LINKS[TOOL_LINKS.length - 1], tool)
   for (const role of [undefined, 'PLAYER', 'EDITOR', 'EXTDEV'] as const) {
     assert.equal(isToolLinkListed(tool, role), false)
   }
@@ -74,7 +75,6 @@ test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義さ�
 
   // When / Then
   assert.ok(lockedSongDiscovery)
-  assert.equal(TOOL_LINKS[TOOL_LINKS.length - 1], lockedSongDiscovery)
   assert.equal(lockedSongDiscovery.adminOnly, true)
   assert.equal(isPublicToolLink(lockedSongDiscovery), false)
 })
