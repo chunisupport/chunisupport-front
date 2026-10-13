@@ -12,6 +12,7 @@ import {
   normalizeForSearch,
   normalizeQuery,
 } from '../../../../utils/searchUtils'
+import { normalizeSongReading } from '../../../../utils/songReading'
 import { isTheoreticalOverPowerTargetDifficulty } from '../../../../utils/theoreticalOverPowerTarget'
 import { hasJusticeCountFilter, hasOverPowerFilter, hasRatingFilter } from './filterDialog'
 
@@ -20,6 +21,12 @@ export const getDefaultFilter = buildDefaultFilter
 
 export type RecordTitleMatcher = (record: PlayerRecordWithSongMeta) => boolean
 
+/**
+ * 通常レコード用の曲名・アーティスト・読み検索マッチャーを生成する。
+ *
+ * @param query - ユーザーが入力した検索文字列。
+ * @returns 読みが未設定または空欄なら曲名を読みとして使うマッチャー。
+ */
 export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
   const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
   if (!normalizedQuery) {
@@ -29,7 +36,7 @@ export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
   return (record) => {
     const normalizedTitle = normalizeForSearch(record.title)
     const normalizedArtist = normalizeForSearch(record.artist)
-    const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
+    const normalizedReading = normalizeForReadingSearch(normalizeSongReading(record))
     return matchesNormalizedSearchQuery(
       normalizedTitle,
       normalizedArtist,

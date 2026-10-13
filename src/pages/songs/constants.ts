@@ -12,6 +12,9 @@ export type SongListViewMode = 'card' | 'table'
 /** 楽曲一覧の初期表示形式 */
 export const DEFAULT_SONG_LIST_VIEW_MODE: SongListViewMode = 'card'
 
+/** 通常曲・WORLD'S END 共通の一覧表示形式を保存するキー */
+export const SONG_LIST_VIEW_MODE_STORAGE_KEY = 'chunisupport-song-list-view'
+
 /** 楽曲詳細のお気に入り操作に用いる文言 */
 export const SONG_DETAIL_FAVORITE_COPY = {
   label: 'お気に入り楽曲',

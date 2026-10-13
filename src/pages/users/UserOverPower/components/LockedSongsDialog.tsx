@@ -27,6 +27,7 @@ import {
   normalizeForSearch,
   normalizeQuery,
 } from '../../../../utils/searchUtils'
+import { normalizeSongReading } from '../../../../utils/songReading'
 import {
   filterReleasedVersions,
   getShortVersionName,
@@ -203,9 +204,7 @@ const LockedSongsDialog: Component<Props> = (props) => {
         searchableText: normalizeForSearch(
           `${item.song.id} ${item.song.title} ${item.song.artist} ${chartLabel}`
         ),
-        searchableReading: normalizeForReadingSearch(
-          item.song.reading?.trim() ? item.song.reading : item.song.title
-        ),
+        searchableReading: normalizeForReadingSearch(normalizeSongReading(item.song)),
       }
     })
   )

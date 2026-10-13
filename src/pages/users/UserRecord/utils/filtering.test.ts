@@ -58,6 +58,23 @@ test('isRecordMatched は reading 正規化したクエリでも検索できる'
   assert.equal(isRecordMatched(record, filters), true)
 })
 
+test('通常レコードは読みが空欄なら曲名を読みとして検索する', () => {
+  // Given: 読みがないレコードと、濁点・小書きカナ・長音を正規化した検索条件。
+  const filters = { ...getDefaultFilter(), title: 'カツツコウヒウ' }
+  for (const reading of [undefined, null, '', ' ', '\t\n　']) {
+    const record = createRecord({ title: 'ガッツ・コーヒー', reading })
+
+    // When / Then: 曲名を読みとして使うため一致する。
+    assert.equal(isRecordMatched(record, filters), true)
+  }
+
+  // Then: 設定済みの読みは曲名の読みで上書きしない。
+  assert.equal(
+    isRecordMatched(createRecord({ title: 'ガッツ・コーヒー', reading: 'ソラ' }), filters),
+    false
+  )
+})
+
 test('isRecordMatchedWithTitleMatcher は事前生成したマッチャーで一致判定できる', () => {
   const record = createRecord({ artist: 'LeaF', reading: 'カッツ' })
   const filters = { ...getDefaultFilter(), title: 'ｶﾞｯﾂ' }
