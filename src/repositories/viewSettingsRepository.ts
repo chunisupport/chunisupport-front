@@ -1,6 +1,7 @@
 import { CLIENT_CACHE_SCHEMA_VERSION, db, type ViewSetting } from '../lib/db/cacheDB'
 import type { FilterState, RecordColumnId } from '../types/recordFilter'
 import type { WorldsendFilterState, WorldsendRecordColumnId } from '../types/worldsendRecord'
+import { omitRecordFilterLevelSet } from '../utils/recordFilterLevelSet'
 
 type ViewSettingKey = ViewSetting['key']
 
@@ -45,12 +46,13 @@ export const readStandardRecordFilterSetting = (): Promise<unknown | null> =>
 
 /**
  * 通常レコードの現在適用中フィルターを保存する。
+ * 遷移時だけ使う非表示のレベル指定は保存しない。
  *
  * @param data - 保存するフィルター状態。
  * @returns 保存完了後に解決される Promise。
  */
 export const saveStandardRecordFilterSetting = (data: FilterState): Promise<void> =>
-  saveViewSetting({ key: 'standardRecordFilter', data })
+  saveViewSetting({ key: 'standardRecordFilter', data: omitRecordFilterLevelSet(data) })
 
 /**
  * 通常レコードの現在適用中列表示設定を読み込む。
