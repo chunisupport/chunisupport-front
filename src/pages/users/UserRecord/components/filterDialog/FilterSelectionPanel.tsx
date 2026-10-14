@@ -1,5 +1,5 @@
 import { TextField } from '@kobalte/core/text-field'
-import type { Component, Setter } from 'solid-js'
+import type { Component } from 'solid-js'
 import { createEffect, createSignal, Show } from 'solid-js'
 import ChartConstRangeField from '../../../../../components/common/ChartConstRangeField'
 import { NameFolderFilterMultiSelect } from '../../../../../components/common/DomainMultiSelect'
@@ -51,7 +51,8 @@ import DifficultySection from './sections/DifficultySection'
 type FilterSelectionPanelProps = {
   open: boolean
   filters: FilterState
-  setFilters: Setter<FilterState>
+  /** 編集中フィルターを直前の状態から更新する。 */
+  setFilters: (update: (prev: FilterState) => FilterState) => void
   masterData?: MasterDataDTO
   versions?: VersionSummaryDTO[]
   /** 楽曲名順フォルダ一覧（表示順） */

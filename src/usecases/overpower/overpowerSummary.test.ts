@@ -2,8 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import { buildOverPowerChartEntries } from './aggregation'
 import { OVER_POWER_MASTER_ULTIMA_TARGET, OVER_POWER_THEORETICAL_TARGET } from './constants'
-import { buildOverPowerSummary } from './overpowerSummary'
+import { buildNameFolderSummaries, buildOverPowerSummary } from './overpowerSummary'
 
 const versions: VersionSummaryDTO[] = [
   { name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
@@ -21,7 +22,7 @@ const createSong = (overrides: Partial<SongDTO> & Pick<SongDTO, 'id'>): SongDTO 
   id: overrides.id,
   title: overrides.title ?? overrides.id,
   reading: overrides.reading ?? null,
-  name_folder_code: 'NUMBER',
+  name_folder_code: overrides.name_folder_code ?? 'NUMBER',
   artist: overrides.artist ?? 'artist',
   genre: overrides.genre ?? 'POPS',
   bpm: overrides.bpm ?? null,
@@ -450,4 +451,32 @@ test('OP理論値対象は現在のOP対象フラグに関係なく楽曲マス�
   assert.equal(summary.all.count, 1)
   assert.equal(summary.all.current, 60)
   assert.equal(summary.all.max, 90)
+})
+
+test('楽曲名順フォルダごとにOPを集計し、マスタの表示順で並べる', () => {
+  // Given
+  const songs = [
+    createSong({ id: 'a', name_folder_code: 'A' }),
+    createSong({ id: 'number', name_folder_code: 'NUMBER' }),
+    createSong({ id: 'custom', name_folder_code: 'CUSTOM' }),
+  ]
+  const records = [createRecord({ id: 'a', overpower: 80 })]
+  const entries = buildOverPowerChartEntries(songs, records, versions)
+  const nameFolders = [
+    { code: 'A', name: 'A', sort_order: 2 },
+    { code: 'NUMBER', name: '数字', sort_order: 1 },
+  ]
+
+  // When
+  const result = buildNameFolderSummaries(entries, nameFolders)
+
+  // Then
+  assert.deepEqual(
+    result.map((row) => [row.id, row.label, row.current, row.max]),
+    [
+      ['NUMBER', '数字', 0, 90],
+      ['A', 'A', 80, 90],
+      ['CUSTOM', 'CUSTOM', 0, 90],
+    ]
+  )
 })

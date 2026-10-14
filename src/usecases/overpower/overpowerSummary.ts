@@ -1,4 +1,10 @@
-import type { MasterItemDTO, PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import type {
+  MasterItemDTO,
+  NameFolderDTO,
+  PlayerRecordDTO,
+  SongDTO,
+  VersionSummaryDTO,
+} from '../../types/api'
 import { type ChartLevelLabel, getChartLevelSortKey, isLowChartLevel } from '../../utils/chartLevel'
 import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData'
 import { getShortVersionName } from '../../utils/versionConverter'
@@ -118,6 +124,39 @@ const buildVersionSummaries = (
       if (leftOrder !== rightOrder) return leftOrder - rightOrder
       return a.label.localeCompare(b.label, 'ja')
     })
+}
+
+/**
+ * 譜面エントリを楽曲名順フォルダごとに集計する。
+ *
+ * @param entries - 集計対象の譜面エントリ。
+ * @param nameFolders - 表示名と表示順に使う楽曲名順フォルダマスタ。
+ * @returns フォルダコードをID、フォルダ名をラベルにした集計行（マスタの表示順）。
+ * マスタにないコードはコードをラベルにして末尾へ並べる。
+ */
+export const buildNameFolderSummaries = (
+  entries: OverPowerChartEntry[],
+  nameFolders: readonly NameFolderDTO[]
+): OverPowerSummaryRow[] => {
+  const groups = new Map<string, MutableSummary>()
+  for (const entry of entries) {
+    addToGroup(
+      groups,
+      entry.song.name_folder_code,
+      entry.record?.overpower ?? 0,
+      entry.maxOverPower
+    )
+  }
+  const folderByCode = new Map(nameFolders.map((folder) => [folder.code, folder]))
+
+  return [...groups.entries()]
+    .map(([code, summary]) => toSummaryRow(code, folderByCode.get(code)?.name ?? code, summary))
+    .filter((row) => row.max > 0)
+    .sort(
+      (a, b) =>
+        (folderByCode.get(a.id)?.sort_order ?? Number.MAX_SAFE_INTEGER) -
+        (folderByCode.get(b.id)?.sort_order ?? Number.MAX_SAFE_INTEGER)
+    )
 }
 
 /**
