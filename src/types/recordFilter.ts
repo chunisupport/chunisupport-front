@@ -1,3 +1,4 @@
+import type { ChartLevelLabel } from '../utils/chartLevel'
 import type { SortCondition } from '../utils/sortConditions'
 import type {
   ChainLamp,
@@ -73,6 +74,11 @@ export interface FilterState {
   nameFolders: string[] | null
   const: NumericRangeFilter
   constFilterMode: 'level' | 'number'
+  /**
+   * 他画面からの遷移時だけ使う、画面に表示しない表示レベル指定。
+   * 譜面定数・レベル条件を変更すると破棄し、保存もしない。未指定なら全レベルが対象。
+   */
+  levelSet?: ChartLevelLabel[]
   score: NumericRangeFilter
   scoreFilterMode: 'number' | 'rank'
   /** 単曲レートの任意範囲。nullは端点未指定を表す */

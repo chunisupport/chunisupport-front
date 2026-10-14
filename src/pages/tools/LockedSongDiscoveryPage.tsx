@@ -33,6 +33,7 @@ import {
   buildOverPowerChartEntries,
   selectOverPowerChartEntries,
 } from '../../usecases/overpower/aggregation'
+import { OVER_POWER_THEORETICAL_TARGET } from '../../usecases/overpower/constants'
 import {
   buildNameFolderSummaries,
   buildOverPowerSummary,
@@ -47,7 +48,6 @@ import {
   hasCompleteLockedSongDiscoveryRecords,
   type LockedSongComparison,
   type LockedSongComparisonStatus,
-  type LockedSongDiscoveryCell,
   type LockedSongDiscoveryMismatches,
   type LockedSongObservation,
 } from '../../utils/lockedSongDiscovery'
@@ -170,7 +170,7 @@ type ComparisonRowProps = {
  * 1分類分の計算値、筐体入力、照合状態を1行で表示する。
  *
  * @param props - 入力欄IDの接頭辞、集計行、観測値、照合結果、入力更新処理。
- * @returns ジャンル、バージョン、楽曲名順いずれか1行分の照合フォーム。
+ * @returns ジャンル、バージョン、楽曲名順、レベルいずれか1行分の照合フォーム。
  */
 const ComparisonRow: Component<ComparisonRowProps> = (props) => {
   const inputId = (field: keyof LockedSongObservation): string => `${props.idPrefix}-${field}`
@@ -327,17 +327,24 @@ const LockedSongDiscoveryPage: Component = () => {
   const recordsComplete = createMemo(() =>
     hasCompleteLockedSongDiscoveryRecords(songsResponse()?.songs ?? [], record()?.standard ?? [])
   )
-  /** 曲ごとのOP対象譜面エントリ。 */
-  const opTargetEntries = createMemo(() => {
+  /** 未プレイを含む全通常譜面のOP集計エントリ。 */
+  const chartEntries = createMemo(() => {
     const songs = songsResponse()?.songs
     const currentRecord = record()?.standard
     const versionItems = versions()?.versions
     if (!songs || !currentRecord || !versionItems) return []
-    return selectOverPowerChartEntries(
-      buildOverPowerChartEntries(songs, currentRecord, versionItems),
-      'OP_TARGET'
-    )
+    return buildOverPowerChartEntries(songs, currentRecord, versionItems)
   })
+  /** 筐体表示と照合する、曲ごとの現在のOP対象譜面エントリ。 */
+  const opTargetEntries = createMemo(() => selectOverPowerChartEntries(chartEntries(), 'OP_TARGET'))
+  /**
+   * 候補範囲に使う理論値OP対象譜面エントリ。
+   * 遷移先のレコードフィルターと同じ譜面でレベルを判定し、候補一覧と遷移先の曲を一致させる。
+   * 未解禁曲は未プレイのため、現在のOP対象と理論値OP対象は同じ譜面になる。
+   */
+  const theoreticalTargetEntries = createMemo(() =>
+    selectOverPowerChartEntries(chartEntries(), OVER_POWER_THEORETICAL_TARGET)
+  )
   const summary = createMemo(() => {
     const songs = songsResponse()?.songs
     const currentRecord = record()?.standard
@@ -395,42 +402,49 @@ const LockedSongDiscoveryPage: Component = () => {
   }
 
   /**
-   * 指定分類軸で筐体値と差がある行IDを返す。
+   * 指定分類軸で筐体値と差がある集計行を返す。
    *
    * @param axis - 照合対象の分類軸。
    * @param rows - ChuniSupportの分類別集計行。
-   * @returns 筐体表示と差がある分類ID。
+   * @returns 筐体表示と差がある集計行。
    */
-  const findMismatchedRowIds = (
+  const findMismatchedRows = <TRow extends OverPowerSummaryRow>(
     axis: LockedSongDiscoveryAxis,
-    rows: OverPowerSummaryRow[]
-  ): string[] =>
-    rows
-      .filter(
-        (row) =>
-          compareLockedSongObservation(
-            row,
-            observations()[observationKey(axis, row.id)] ?? EMPTY_OBSERVATION
-          ).status === 'mismatch'
-      )
-      .map((row) => row.id)
+    rows: TRow[]
+  ): TRow[] =>
+    rows.filter(
+      (row) =>
+        compareLockedSongObservation(
+          row,
+          observations()[observationKey(axis, row.id)] ?? EMPTY_OBSERVATION
+        ).status === 'mismatch'
+    )
 
   /** 筐体表示と差がある分類。 */
   const currentMismatches = createMemo((): LockedSongDiscoveryMismatches => {
     const currentSummary = summary()
-    if (!currentSummary) return { genres: [], versions: [], nameFolders: [] }
+    if (!currentSummary) return { genres: [], versions: [], nameFolders: [], levels: [] }
     return {
-      genres: findMismatchedRowIds('genre', currentSummary.genres),
-      versions: findMismatchedRowIds('version', currentSummary.versions),
-      nameFolders: findMismatchedRowIds('nameFolder', currentSummary.nameFolders),
+      genres: findMismatchedRows('genre', currentSummary.genres).map((row) => row.id),
+      versions: findMismatchedRows('version', currentSummary.versions).map((row) => row.id),
+      nameFolders: findMismatchedRows('nameFolder', currentSummary.nameFolders).map(
+        (row) => row.id
+      ),
+      levels: findMismatchedRows('level', currentSummary.levels).map((row) => row.level),
     }
   })
-  /** 分類軸ごとの差異がある分類ID。 */
+  /**
+   * 分類軸ごとに差異がある分類IDを返す。
+   *
+   * @param axis - 対象の分類軸。
+   * @returns 筐体表示と差がある分類ID。
+   */
   const mismatchesByAxis = (axis: LockedSongDiscoveryAxis): readonly string[] => {
     const mismatches = currentMismatches()
     if (axis === 'genre') return mismatches.genres
     if (axis === 'version') return mismatches.versions
-    return mismatches.nameFolders
+    if (axis === 'nameFolder') return mismatches.nameFolders
+    return mismatches.levels
   }
   /** 差異が1件以上あるか。 */
   const hasCurrentMismatch = createMemo(() =>
@@ -443,10 +457,11 @@ const LockedSongDiscoveryPage: Component = () => {
     const axis = selectedAxis()
     if (axis === 'genre') return currentSummary.genres
     if (axis === 'version') return currentSummary.versions
-    return currentSummary.nameFolders
+    if (axis === 'nameFolder') return currentSummary.nameFolders
+    return currentSummary.levels
   })
   const candidateCells = createMemo(() =>
-    buildLockedSongDiscoveryCells(opTargetEntries(), currentMismatches())
+    buildLockedSongDiscoveryCells(theoreticalTargetEntries(), currentMismatches())
   )
   /** 候補範囲に含まれる楽曲の総数。 */
   const candidateSongCount = createMemo(() =>
@@ -461,12 +476,11 @@ const LockedSongDiscoveryPage: Component = () => {
   )
 
   /**
-   * 候補範囲のフィルターを通常レコードへ引き継いで遷移する。
+   * すべての候補範囲を1つのフィルターにまとめて通常レコードへ遷移する。
    *
-   * @param candidate - 遷移先で表示する候補範囲。
    * @returns 保存と遷移処理の完了時に解決されるPromise。
    */
-  const handleOpenRecords = async (candidate: LockedSongDiscoveryCell): Promise<void> => {
+  const handleOpenRecords = async (): Promise<void> => {
     const currentUsername = username()
     const genreItems = genres()
     const versionItems = versions()?.versions
@@ -476,7 +490,7 @@ const LockedSongDiscoveryPage: Component = () => {
     try {
       const filter = buildLockedSongCandidateRecordFilter(
         buildDefaultFilter(genreItems, versionItems),
-        candidate
+        currentMismatches()
       )
       await saveStandardRecordFilterSetting(filter)
       publishStandardRecordFilter(currentUsername, filter)
@@ -537,8 +551,8 @@ const LockedSongDiscoveryPage: Component = () => {
                   value={selectedAxis()}
                   onChange={setSelectedAxis}
                   ariaLabel={LOCKED_SONG_DISCOVERY_COPY.axisSelect}
-                  class="w-full sm:w-auto"
-                  itemClass="min-h-10 flex-1 sm:min-w-28"
+                  class="w-full flex-wrap sm:w-auto"
+                  itemClass="min-h-10 grow basis-[calc(50%-0.125rem)] sm:basis-auto sm:min-w-28"
                 />
               </div>
 
@@ -617,6 +631,10 @@ const LockedSongDiscoveryPage: Component = () => {
                   title={LOCKED_SONG_DISCOVERY_COPY.mismatchedNameFolders}
                   items={currentMismatches().nameFolders.map(toNameFolderLabel)}
                 />
+                <MismatchChips
+                  title={LOCKED_SONG_DISCOVERY_COPY.mismatchedLevels}
+                  items={currentMismatches().levels}
+                />
               </div>
 
               <div class="flex min-h-0 flex-1 flex-col border-t border-border">
@@ -642,41 +660,45 @@ const LockedSongDiscoveryPage: Component = () => {
                   <ul class="max-h-[60vh] min-h-0 flex-1 divide-y divide-border overflow-y-auto lg:max-h-none">
                     <For each={candidateCells()}>
                       {(cell) => {
-                        /** 候補範囲のジャンルと楽曲名順を並べた補足表示。 */
+                        /** 候補範囲のジャンル、楽曲名順、レベルを並べた補足表示。 */
                         const subLabel = () =>
-                          cell.nameFolder === null
-                            ? cell.genre
-                            : `${cell.genre} / ${toNameFolderLabel(cell.nameFolder)}`
+                          [
+                            cell.genre,
+                            cell.nameFolder === null ? null : toNameFolderLabel(cell.nameFolder),
+                            cell.level,
+                          ]
+                            .filter((part) => part !== null)
+                            .join(' / ')
                         return (
-                          <li>
-                            <AppButton
-                              variant="ghost"
-                              fullWidth
-                              class="justify-between gap-3 rounded-none px-4 py-2.5 text-left font-sans focus-visible:ring-inset"
-                              aria-label={`${subLabel()} / ${cell.version}の${LOCKED_SONG_DISCOVERY_COPY.openRecords}`}
-                              onClick={() => void handleOpenRecords(cell)}
-                            >
-                              <span class="min-w-0">
-                                <span class="block truncate text-sm font-semibold text-text">
-                                  {cell.version}
-                                </span>
-                                <span class="block truncate text-xs text-text-muted">
-                                  {subLabel()}
-                                </span>
+                          <li class="flex items-center justify-between gap-3 px-4 py-2.5 font-sans">
+                            <span class="min-w-0">
+                              <span class="block truncate text-sm font-semibold text-text">
+                                {cell.version}
                               </span>
-                              <span class="flex shrink-0 items-center gap-1.5">
-                                <span class="rounded-full bg-warning-bg px-2 py-0.5 font-jost text-xs font-medium tabular-nums text-warning">
-                                  {cell.songs.length}
-                                  {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
-                                </span>
-                                <ChevronRight class="h-4 w-4 text-text-subtle" aria-hidden="true" />
+                              <span class="block truncate text-xs text-text-muted">
+                                {subLabel()}
                               </span>
-                            </AppButton>
+                            </span>
+                            <span class="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 font-jost text-xs font-medium tabular-nums text-warning">
+                              {cell.songs.length}
+                              {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
+                            </span>
                           </li>
                         )
                       }}
                     </For>
                   </ul>
+                  <div class="shrink-0 border-t border-border p-3">
+                    <AppButton
+                      variant="primary"
+                      fullWidth
+                      class="justify-between"
+                      rightIcon={<ChevronRight class="h-4 w-4" aria-hidden="true" />}
+                      onClick={() => void handleOpenRecords()}
+                    >
+                      {LOCKED_SONG_DISCOVERY_COPY.openRecords}
+                    </AppButton>
+                  </div>
                 </Show>
                 <Show when={recordNavigationError()}>
                   <p

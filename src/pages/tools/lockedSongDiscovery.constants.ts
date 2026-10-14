@@ -1,7 +1,7 @@
 import type { AppTabOption } from '../../components/common/AppTabs'
 
 /** 筐体表示を照合する分類軸。 */
-export type LockedSongDiscoveryAxis = 'genre' | 'version' | 'nameFolder'
+export type LockedSongDiscoveryAxis = 'genre' | 'version' | 'nameFolder' | 'level'
 
 /** 未解禁曲ディスカバーの画面文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const LOCKED_SONG_DISCOVERY_COPY = {
@@ -19,6 +19,7 @@ export const LOCKED_SONG_DISCOVERY_COPY = {
   mismatchedGenres: '差があるジャンル',
   mismatchedVersions: '差があるバージョン',
   mismatchedNameFolders: '差がある楽曲名順',
+  mismatchedLevels: '差があるレベル',
   candidateTitle: '未解禁曲の候補範囲',
   candidateCountUnit: '件',
   songCountUnit: '曲',
@@ -36,4 +37,5 @@ export const LOCKED_SONG_DISCOVERY_AXIS_OPTIONS: readonly AppTabOption<LockedSon
     { value: 'genre', label: 'ジャンル別' },
     { value: 'version', label: 'バージョン別' },
     { value: 'nameFolder', label: '楽曲名順' },
+    { value: 'level', label: 'レベル順' },
   ]

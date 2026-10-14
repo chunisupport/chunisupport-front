@@ -184,6 +184,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
 | `const` | `{ min: number, max: number }` | はい | 譜面定数の範囲です。 |
 | `constFilterMode` | `"level"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `const.min` / `const.max` を参照します。 |
+| `levelSet` | `string[]` | いいえ | 他画面からの遷移時だけ使う、画面に表示しない表示レベル (`14`、`14+` など) の配列です。未指定なら全レベル対象です。フィルターダイアログで `const` / `constFilterMode` を変更すると破棄し、IndexedDB と保存済みフィルターには保存しません。 |
 | `score` | `{ min: number, max: number }` | はい | スコア範囲です。未プレイ譜面はスコア `0` として判定します。 |
 | `scoreFilterMode` | `"rank"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `score.min` / `score.max` を参照します。 |
 | `justiceCount` | `{ min: number \| null, max: number \| null }` | はい | AJ 時の JUSTICE 数の範囲です。`null` なら該当する範囲端は条件なしです。 |
@@ -207,7 +208,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 7. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
 8. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
 9. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
-10. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
+10. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。`levelSet` が指定されているときは、譜面定数の表示レベルが `levelSet` に含まれること。
 11. スコアが `score.min` 以上かつ `score.max` 以下であること。
 12. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
 13. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。

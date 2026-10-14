@@ -120,6 +120,7 @@ test('不一致のジャンルとバージョンの交差にある曲を候補�
     genres: ['POPS & ANIME'],
     versions: ['VERSE'],
     nameFolders: [],
+    levels: [],
   })
 
   // Then
@@ -128,6 +129,7 @@ test('不一致のジャンルとバージョンの交差にある曲を候補�
       genre: 'POPS & ANIME',
       version: 'VERSE',
       nameFolder: null,
+      level: null,
       songs: [{ id: 'song-1', title: 'Candidate' }],
     },
   ])
@@ -142,6 +144,7 @@ test('不一致でないバージョンに属する曲は候補範囲へ含め�
     genres: ['POPS & ANIME'],
     versions: ['SUN'],
     nameFolders: [],
+    levels: [],
   })
 
   // Then
@@ -157,6 +160,7 @@ test('ジャンルだけ入力されても候補範囲を生成する', () => {
     genres: ['POPS & ANIME'],
     versions: [],
     nameFolders: [],
+    levels: [],
   })
 
   // Then
@@ -173,6 +177,7 @@ test('ジャンルだけの絞り込みでは収録バージョン不明の曲�
     genres: ['POPS & ANIME'],
     versions: [],
     nameFolders: [],
+    levels: [],
   })
 
   // Then
@@ -189,6 +194,7 @@ test('バージョンだけ入力されても候補範囲を生成する', () =>
     genres: [],
     versions: ['VERSE'],
     nameFolders: [],
+    levels: [],
   })
 
   // Then
@@ -202,7 +208,12 @@ test('差異が未入力なら候補範囲を生成しない', () => {
 
   // When, Then
   assert.deepEqual(
-    buildLockedSongDiscoveryCells([entry], { genres: [], versions: [], nameFolders: [] }),
+    buildLockedSongDiscoveryCells([entry], {
+      genres: [],
+      versions: [],
+      nameFolders: [],
+      levels: [],
+    }),
     []
   )
 })
@@ -217,31 +228,11 @@ test('同じ曲の複数譜面が同一セルに属しても曲数は重複し�
     genres: ['POPS & ANIME'],
     versions: ['VERSE'],
     nameFolders: [],
+    levels: [],
   })
 
   // Then
   assert.equal(result[0].songs.length, 1)
-})
-
-test('候補範囲を理論値OP対象譜面、ジャンル、バージョンで絞り込んだレコードフィルターへ変換する', () => {
-  // Given
-  const candidate = {
-    genre: 'POPS & ANIME',
-    version: 'VERSE',
-    nameFolder: null,
-  }
-
-  // When
-  const result = buildLockedSongCandidateRecordFilter(DEFAULT_FILTER, candidate)
-
-  // Then
-  assert.deepEqual(result.genres, ['POPS & ANIME'])
-  assert.deepEqual(result.versions, ['VERSE'])
-  assert.equal(result.nameFolders, null)
-  assert.equal(result.opTargetOnly, true)
-  assert.equal(result.opTargetType, 'theoretical')
-  assert.deepEqual(result.difficulties, [...PLAYER_DATA_DIFFICULTIES])
-  assert.equal(result.excludeLockedSongs, false)
 })
 
 test('楽曲名順に差異があれば楽曲名順フォルダで候補範囲を絞り込んで分ける', () => {
@@ -262,6 +253,7 @@ test('楽曲名順に差異があれば楽曲名順フォルダで候補範囲�
     genres: [],
     versions: [],
     nameFolders: ['C'],
+    levels: [],
   })
 
   // Then
@@ -270,20 +262,73 @@ test('楽曲名順に差異があれば楽曲名順フォルダで候補範囲�
       genre: 'POPS & ANIME',
       version: 'VERSE',
       nameFolder: 'C',
+      level: null,
       songs: [{ id: 'song-1', title: 'Candidate' }],
     },
   ])
 })
 
-test('楽曲名順を含む候補範囲は楽曲名順フォルダもレコードフィルターへ引き継ぐ', () => {
+test('レベルに差異があればOP対象譜面のレベルで候補範囲を絞り込んで分ける', () => {
   // Given
-  const candidate = { genre: 'POPS & ANIME', version: 'VERSE', nameFolder: 'C' }
+  const matched = createEntry('song-1', 'Candidate', 'POPS & ANIME')
+  const excluded = { ...createEntry('song-2', 'Excluded', 'POPS & ANIME'), level: '14' as const }
 
   // When
-  const result = buildLockedSongCandidateRecordFilter(DEFAULT_FILTER, candidate)
+  const result = buildLockedSongDiscoveryCells([matched, excluded], {
+    genres: [],
+    versions: [],
+    nameFolders: [],
+    levels: ['14+'],
+  })
 
   // Then
+  assert.deepEqual(result, [
+    {
+      genre: 'POPS & ANIME',
+      version: 'VERSE',
+      nameFolder: null,
+      level: '14+',
+      songs: [{ id: 'song-1', title: 'Candidate' }],
+    },
+  ])
+})
+
+test('すべての差異を1つの理論値OP対象レコードフィルターへまとめる', () => {
+  // Given
+  const mismatches = {
+    genres: ['POPS & ANIME', 'VARIETY'],
+    versions: ['VERSE'],
+    nameFolders: ['C'],
+    levels: ['13', '14+'] as const,
+  }
+
+  // When
+  const result = buildLockedSongCandidateRecordFilter(DEFAULT_FILTER, mismatches)
+
+  // Then
+  assert.deepEqual(result.genres, ['POPS & ANIME', 'VARIETY'])
+  assert.deepEqual(result.versions, ['VERSE'])
   assert.deepEqual(result.nameFolders, ['C'])
+  assert.deepEqual(result.levelSet, ['13', '14+'])
+  assert.deepEqual(result.const, DEFAULT_FILTER.const)
+  assert.equal(result.opTargetOnly, true)
+  assert.equal(result.opTargetType, 'theoretical')
+  assert.deepEqual(result.difficulties, [...PLAYER_DATA_DIFFICULTIES])
+  assert.equal(result.excludeLockedSongs, false)
+})
+
+test('差異がない分類軸は既定フィルターのまま絞り込まない', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER, genres: ['POPS & ANIME', 'VARIETY'] }
+  const mismatches = { genres: [], versions: ['VERSE'], nameFolders: [], levels: [] }
+
+  // When
+  const result = buildLockedSongCandidateRecordFilter(defaultFilter, mismatches)
+
+  // Then
+  assert.deepEqual(result.genres, ['POPS & ANIME', 'VARIETY'])
+  assert.equal(result.nameFolders, null)
+  assert.equal('levelSet' in result, false)
 })
 
 test('楽曲マスタの全譜面にレコードがあれば完全と判定する', () => {
