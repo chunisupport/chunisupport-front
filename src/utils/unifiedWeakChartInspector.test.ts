@@ -2,7 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
-import { inspectUnifiedWeakCharts, sortUnifiedWeakChartEntries } from './unifiedWeakChartInspector'
+import {
+  inspectUnifiedWeakCharts,
+  sortUnifiedWeakChartEntries,
+  toAptitudeBarSpan,
+} from './unifiedWeakChartInspector'
 
 /** 統合インスペクターのテストで比較するレート帯。 */
 const RATING_BAND = '16.00～16.24'
@@ -150,9 +154,9 @@ test('平均を上回っていても、普段の差より大きく低い譜面�
   // When: 統合分析を実行する。
   const target = findEntry(inspect(records, averages), 'target')
 
-  // Then: 平均との差は正でも、普段の差を基準に苦手と判定する。
-  assert.equal(target.difference, 500)
-  assert.equal(target.baseline, 2995)
+  // Then: 平均との差は正でも、普段の差（2,995点）より大きく低いため得意度は下限の苦手になる。
+  assert.equal(target.deviation, -24.95)
+  assert.equal(target.aptitude, 20)
   assert.equal(target.category, 'weakness')
 })
 
@@ -163,7 +167,8 @@ test('全体的に平均を下回っていても、普段どおりの譜面は�
   // When: 統合分析を実行する。
   const entries = inspect(records, averages)
 
-  // Then: 中心の譜面はふつうで、苦手と判定される譜面はない。
+  // Then: 中心の譜面は得意度50のふつうで、苦手と判定される譜面はない。
+  assert.equal(findEntry(entries, 'steady-4').aptitude, 50)
   assert.equal(findEntry(entries, 'steady-4').category, 'normal')
   assert.ok(entries.every(({ category }) => category !== 'weakness'))
 })
@@ -180,10 +185,10 @@ test('普段の差は譜面定数の近い譜面だけで求める', () => {
   // When: 同じ+1,000点の譜面を定数帯ごとに判定する。
   const entries = inspect(records, averages)
 
-  // Then: 定数12付近では苦手、定数15付近では得意になる。
-  assert.equal(findEntry(entries, 'low-target').baseline, 4995)
+  // Then: 定数12付近では普段の差4,995点より低く苦手、定数15付近では普段の差5点より高く得意になる。
+  assert.equal(findEntry(entries, 'low-target').deviation, -39.95)
   assert.equal(findEntry(entries, 'low-target').category, 'weakness')
-  assert.equal(findEntry(entries, 'high-target').baseline, 5)
+  assert.equal(findEntry(entries, 'high-target').deviation, 9.95)
   assert.equal(findEntry(entries, 'high-target').category, 'strength')
 })
 
@@ -197,8 +202,8 @@ test('定数の近い譜面が少ない場合は比較できる全譜面で普�
   // When: 統合分析を実行する。
   const isolated = findEntry(inspect(records, averages), 'isolated')
 
-  // Then: 全譜面の中央値を普段の差として苦手と判定する。
-  assert.equal(isolated.baseline, 1995)
+  // Then: 全譜面の中央値1,995点を普段の差として苦手と判定する。
+  assert.equal(isolated.deviation, -19.95)
   assert.equal(isolated.category, 'weakness')
 })
 
@@ -211,14 +216,14 @@ test('平均統計がない譜面はデータなしにし、普段の差の計�
   // When: 統合分析を実行する。
   const entries = inspect(records, averages)
 
-  // Then: 平均なし譜面は点差・普段の差を持たず、他譜面の普段の差も変わらない。
+  // Then: 平均なし譜面は得意度を持たず、他譜面の得意度も変わらない。
   for (const id of ['missing-average', 'null-average']) {
     const entry = findEntry(entries, id)
     assert.equal(entry.category, 'unavailable')
-    assert.equal(entry.difference, null)
-    assert.equal(entry.baseline, null)
+    assert.equal(entry.deviation, null)
+    assert.equal(entry.aptitude, null)
   }
-  assert.equal(findEntry(entries, 'steady-0').baseline, 1000)
+  assert.equal(findEntry(entries, 'steady-0').aptitude, 46)
 })
 
 test('未プレイ譜面と理論値超過スコアを出力と普段の差の計算から除外する', () => {
@@ -236,9 +241,9 @@ test('未プレイ譜面と理論値超過スコアを出力と普段の差の�
   // When: 全レコードを分析関数へ渡す。
   const entries = inspect(records, averages)
 
-  // Then: 不適格レコードは結果に含まれず、普段の差にも影響しない。
+  // Then: 不適格レコードは結果に含まれず、得意度にも影響しない。
   assert.equal(entries.length, 9)
-  assert.equal(findEntry(entries, 'steady-0').baseline, 1000)
+  assert.equal(findEntry(entries, 'steady-0').aptitude, 46)
 })
 
 test('点差のばらつきがない場合も下限点数で割り、わずかなずれは過敏に判定しない', () => {
@@ -255,31 +260,33 @@ test('点差のばらつきがない場合も下限点数で割り、わずか�
   // Then: ばらつきを下限100点として、50点差はふつう、6,000点差は苦手になる。
   assert.equal(findEntry(entries, 'same-0').deviation, 0)
   assert.equal(findEntry(entries, 'near').deviation, -0.5)
+  assert.equal(findEntry(entries, 'near').aptitude, 45)
   assert.equal(findEntry(entries, 'near').category, 'normal')
   assert.equal(findEntry(entries, 'far').category, 'weakness')
 })
 
-test('同じ楽曲IDでも難易度ごとの平均を照合し、平均値の小数部分を切り捨てる', () => {
-  // Given: 同じ楽曲IDのMASTERとULTIMAに異なるレート帯平均を用意する。
-  const records = [
+test('同じ楽曲IDでも難易度ごとの平均を照合し、平均値の小数部分を切り捨てて判定する', () => {
+  // Given: 普段の差が0点の譜面群に、同じ楽曲IDのMASTERとULTIMAを加える。
+  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0))
+  records.push(
     createRecord('shared-song', 1000000, 'MASTER'),
-    createRecord('shared-song', 1005000, 'ULTIMA'),
-  ]
-  const averages = [
+    createRecord('shared-song', 1000000, 'ULTIMA')
+  )
+  averages.push(
     { songId: 'shared-song', difficulty: 'MASTER', averageScore: 1001000.9 },
-    { songId: 'shared-song', difficulty: 'ULTIMA', averageScore: 1003000.9 },
-  ] as const
+    { songId: 'shared-song', difficulty: 'ULTIMA', averageScore: 999900.9 }
+  )
 
   // When: 楽曲IDと難易度を組み合わせてレート帯平均を照合する。
   const entries = inspect(records, averages)
 
-  // Then: 各譜面の平均を取り違えず、差分計算前に小数を切り捨てる。
+  // Then: 各譜面の平均を取り違えず、ULTIMAは切り捨て後の+100点でちょうど得意の境界になる。
   const master = findEntry(entries, 'shared-song', 'MASTER')
   const ultima = findEntry(entries, 'shared-song', 'ULTIMA')
-  assert.equal(master.averageScore, 1001000.9)
-  assert.equal(master.difference, -1000)
-  assert.equal(ultima.averageScore, 1003000.9)
-  assert.equal(ultima.difference, 2000)
+  assert.equal(master.category, 'weakness')
+  assert.equal(ultima.deviation, 1)
+  assert.equal(ultima.aptitude, 60)
+  assert.equal(ultima.category, 'strength')
 })
 
 test('判定の優先順、ずれの小さい順、同点時の読み順で並べる', () => {
@@ -335,8 +342,8 @@ test('ソート未指定の場合は判定の優先順位を保つ', () => {
   assert.deepEqual(sorted, entries)
 })
 
-test('点差でソートすると、平均がない譜面は方向にかかわらず末尾に置く', () => {
-  // Given: 点差の異なる譜面と、平均がない譜面がある。
+test('得意度でソートすると、平均がない譜面は方向にかかわらず末尾に置く', () => {
+  // Given: 得意度の異なる譜面と、平均がない譜面がある。
   const { records, averages } = createCharts([
     { id: 'minus', difference: -100 },
     { id: 'plus', difference: 100 },
@@ -345,11 +352,11 @@ test('点差でソートすると、平均がない譜面は方向にかかわ�
   records.push(createRecord('unavailable', 1000000))
   const entries = inspect(records, averages)
 
-  // When: 点差の昇順と降順でソートする。
-  const ascending = sortUnifiedWeakChartEntries(entries, 'difference', 'asc')
-  const descending = sortUnifiedWeakChartEntries(entries, 'difference', 'desc')
+  // When: 得意度の昇順と降順でソートする。
+  const ascending = sortUnifiedWeakChartEntries(entries, 'aptitude', 'asc')
+  const descending = sortUnifiedWeakChartEntries(entries, 'aptitude', 'desc')
 
-  // Then: 点差順に並び、平均がない譜面はどちらも末尾になる。
+  // Then: 得意度順に並び、平均がない譜面はどちらも末尾になる。
   assert.deepEqual(
     ascending.map(({ record }) => record.id),
     ['minus', 'zero', 'plus', 'unavailable']
@@ -403,4 +410,20 @@ test('判定でソートすると優先順位の逆順になり、同じ判定�
     sorted.slice(-2).map(({ record }) => record.id),
     ['weakness-farther', 'weakness-nearer']
   )
+})
+
+test('得意度バーは中心から得意度の方向へ、上限・下限で半分の幅まで塗る', () => {
+  // Given: 下限、中心、中間、上限の得意度がある。
+  const aptitudes = [20, 50, 65, 80]
+
+  // When: 塗りの範囲を求める。
+  const spans = aptitudes.map(toAptitudeBarSpan)
+
+  // Then: 50未満は中心から左へ、50超は中心から右へ伸びる。
+  assert.deepEqual(spans, [
+    { left: 0, width: 50 },
+    { left: 50, width: 0 },
+    { left: 50, width: 25 },
+    { left: 50, width: 50 },
+  ])
 })
