@@ -19,7 +19,6 @@ import { fetchVersions } from '../../api/songs'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { SegmentedToggleGroup } from '../../components/common/AppTabs'
-import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { LOCKED_SONG_DISCOVERY_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
@@ -29,7 +28,10 @@ import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import { publishStandardRecordFilter } from '../../stores/standardRecordNavigation'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
-import { buildOverPowerChartEntries } from '../../usecases/overpower/aggregation'
+import {
+  buildOverPowerChartEntries,
+  selectOverPowerChartEntries,
+} from '../../usecases/overpower/aggregation'
 import { buildOverPowerSummary } from '../../usecases/overpower/overpowerSummary'
 import type { OverPowerSummaryRow } from '../../usecases/overpower/types'
 import { isNotFoundApiError } from '../../utils/apiError'
@@ -42,7 +44,6 @@ import {
   type LockedSongComparison,
   type LockedSongComparisonStatus,
   type LockedSongDiscoveryCell,
-  type LockedSongDiscoveryDifficulty,
   type LockedSongObservation,
 } from '../../utils/lockedSongDiscovery'
 import { formatTruncatedFixed } from '../../utils/numberFormat'
@@ -52,7 +53,6 @@ import { scrollToUserProfileContent } from '../../utils/userProfileScroll'
 import {
   LOCKED_SONG_DISCOVERY_AXIS_OPTIONS,
   LOCKED_SONG_DISCOVERY_COPY,
-  LOCKED_SONG_DISCOVERY_DIFFICULTY_OPTIONS,
   type LockedSongDiscoveryAxis,
 } from './lockedSongDiscovery.constants'
 
@@ -289,8 +289,6 @@ const LockedSongDiscoveryPage: Component = () => {
   const [record] = createResource(username, fetchUserRecordWithCache)
   const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
-  const [selectedDifficulty, setSelectedDifficulty] =
-    createSignal<LockedSongDiscoveryDifficulty>('MASTER')
   const [selectedAxis, setSelectedAxis] = createSignal<LockedSongDiscoveryAxis>('genre')
   const [observations, setObservations] = createSignal<Record<string, LockedSongObservation>>({})
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
@@ -313,12 +311,16 @@ const LockedSongDiscoveryPage: Component = () => {
   const recordsComplete = createMemo(() =>
     hasCompleteLockedSongDiscoveryRecords(songsResponse()?.songs ?? [], record()?.standard ?? [])
   )
-  const allChartEntries = createMemo(() => {
+  /** 曲ごとのOP対象譜面エントリ。 */
+  const opTargetEntries = createMemo(() => {
     const songs = songsResponse()?.songs
     const currentRecord = record()?.standard
     const versionItems = versions()?.versions
     if (!songs || !currentRecord || !versionItems) return []
-    return buildOverPowerChartEntries(songs, currentRecord, versionItems)
+    return selectOverPowerChartEntries(
+      buildOverPowerChartEntries(songs, currentRecord, versionItems),
+      'OP_TARGET'
+    )
   })
   const summary = createMemo(() => {
     const songs = songsResponse()?.songs
@@ -326,38 +328,18 @@ const LockedSongDiscoveryPage: Component = () => {
     const versionItems = versions()?.versions
     const genreItems = genres()
     if (!songs || !currentRecord || !versionItems || !genreItems) return undefined
-    const masterSummary = buildOverPowerSummary(
-      songs,
-      currentRecord,
-      versionItems,
-      [],
-      genreItems,
-      'MASTER'
-    )
-    const ultimaSummary = buildOverPowerSummary(
-      songs,
-      currentRecord,
-      versionItems,
-      [],
-      genreItems,
-      'ULTIMA'
-    )
-    return { MASTER: masterSummary, ULTIMA: ultimaSummary }
+    return buildOverPowerSummary(songs, currentRecord, versionItems, [], genreItems)
   })
 
   /**
-   * 難易度・分類軸・分類IDから観測値の保存キーを作る。
+   * 分類軸・分類IDから観測値の保存キーを作る。
    *
-   * @param difficulty - 照合対象の難易度。
    * @param axis - 照合対象の分類軸。
    * @param rowId - 分類ID。
    * @returns 観測値を保持するためのキー。
    */
-  const observationKey = (
-    difficulty: LockedSongDiscoveryDifficulty,
-    axis: LockedSongDiscoveryAxis,
-    rowId: string
-  ): string => `${difficulty}:${axis}:${rowId}`
+  const observationKey = (axis: LockedSongDiscoveryAxis, rowId: string): string =>
+    `${axis}:${rowId}`
 
   /**
    * 指定分類の筐体観測値を更新する。
@@ -379,15 +361,13 @@ const LockedSongDiscoveryPage: Component = () => {
   }
 
   /**
-   * 指定難易度・分類軸で筐体値と差がある行IDを返す。
+   * 指定分類軸で筐体値と差がある行IDを返す。
    *
-   * @param difficulty - 照合対象の難易度。
    * @param axis - 照合対象の分類軸。
    * @param rows - ChuniSupportの分類別集計行。
    * @returns 筐体表示と差がある分類ID。
    */
   const findMismatchedRowIds = (
-    difficulty: LockedSongDiscoveryDifficulty,
     axis: LockedSongDiscoveryAxis,
     rows: OverPowerSummaryRow[]
   ): string[] =>
@@ -396,52 +376,37 @@ const LockedSongDiscoveryPage: Component = () => {
         (row) =>
           compareLockedSongObservation(
             row,
-            observations()[observationKey(difficulty, axis, row.id)] ?? EMPTY_OBSERVATION
+            observations()[observationKey(axis, row.id)] ?? EMPTY_OBSERVATION
           ).status === 'mismatch'
       )
       .map((row) => row.id)
 
-  const mismatches = createMemo(() => {
+  /** 筐体表示と差がある分類。 */
+  const currentMismatches = createMemo(() => {
     const currentSummary = summary()
-    if (!currentSummary) {
-      return {
-        MASTER: { genres: [], versions: [] },
-        ULTIMA: { genres: [], versions: [] },
-      }
-    }
+    if (!currentSummary) return { genres: [], versions: [] }
     return {
-      MASTER: {
-        genres: findMismatchedRowIds('MASTER', 'genre', currentSummary.MASTER.genres),
-        versions: findMismatchedRowIds('MASTER', 'version', currentSummary.MASTER.versions),
-      },
-      ULTIMA: {
-        genres: findMismatchedRowIds('ULTIMA', 'genre', currentSummary.ULTIMA.genres),
-        versions: findMismatchedRowIds('ULTIMA', 'version', currentSummary.ULTIMA.versions),
-      },
+      genres: findMismatchedRowIds('genre', currentSummary.genres),
+      versions: findMismatchedRowIds('version', currentSummary.versions),
     }
   })
-  /** 選択中難易度で筐体表示と差がある分類。 */
-  const currentMismatches = createMemo(() => mismatches()[selectedDifficulty()])
-  /** 選択中難易度に差異が1件以上あるか。 */
+  /** 差異が1件以上あるか。 */
   const hasCurrentMismatch = createMemo(
     () => currentMismatches().genres.length > 0 || currentMismatches().versions.length > 0
   )
-  /** 選択中の難易度・分類軸で入力欄に並べる集計行。 */
+  /** 選択中の分類軸で入力欄に並べる集計行。 */
   const currentRows = createMemo(() => {
-    const difficultySummary = summary()?.[selectedDifficulty()]
-    if (!difficultySummary) return []
-    return selectedAxis() === 'genre' ? difficultySummary.genres : difficultySummary.versions
+    const currentSummary = summary()
+    if (!currentSummary) return []
+    return selectedAxis() === 'genre' ? currentSummary.genres : currentSummary.versions
   })
-  const candidateCells = createMemo(() => {
-    const difficulty = selectedDifficulty()
-    const difficultyMismatches = mismatches()[difficulty]
-    return buildLockedSongDiscoveryCells(
-      allChartEntries(),
-      difficultyMismatches.genres,
-      difficultyMismatches.versions,
-      difficulty
+  const candidateCells = createMemo(() =>
+    buildLockedSongDiscoveryCells(
+      opTargetEntries(),
+      currentMismatches().genres,
+      currentMismatches().versions
     )
-  })
+  )
   /** 候補範囲に含まれる楽曲の総数。 */
   const candidateSongCount = createMemo(() =>
     candidateCells().reduce((total, cell) => total + cell.songs.length, 0)
@@ -454,15 +419,6 @@ const LockedSongDiscoveryPage: Component = () => {
         option.value === 'genre'
           ? currentMismatches().genres.length > 0
           : currentMismatches().versions.length > 0,
-    }))
-  )
-  /** 差異がある難易度に通知ドットを付けた選択肢。 */
-  const difficultyOptions = createMemo(() =>
-    LOCKED_SONG_DISCOVERY_DIFFICULTY_OPTIONS.map((option) => ({
-      ...option,
-      hasNotificationDot:
-        mismatches()[option.value].genres.length > 0 ||
-        mismatches()[option.value].versions.length > 0,
     }))
   )
 
@@ -537,15 +493,7 @@ const LockedSongDiscoveryPage: Component = () => {
 
           <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
             <section class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-              <div class="flex flex-col gap-2 border-b border-border p-3 sm:flex-row sm:items-center sm:justify-between">
-                <SegmentedToggleGroup
-                  options={difficultyOptions()}
-                  value={selectedDifficulty()}
-                  onChange={setSelectedDifficulty}
-                  ariaLabel={LOCKED_SONG_DISCOVERY_COPY.difficultySelect}
-                  class="w-full sm:w-auto"
-                  itemClass="min-h-10 flex-1 font-semibold tracking-wide sm:min-w-28"
-                />
+              <div class="border-b border-border p-3">
                 <SegmentedToggleGroup
                   options={axisOptions()}
                   value={selectedAxis()}
@@ -574,7 +522,7 @@ const LockedSongDiscoveryPage: Component = () => {
               <ul class="divide-y divide-border">
                 <For each={currentRows()}>
                   {(row) => {
-                    const key = () => observationKey(selectedDifficulty(), selectedAxis(), row.id)
+                    const key = () => observationKey(selectedAxis(), row.id)
                     const observation = () => observations()[key()] ?? EMPTY_OBSERVATION
                     const comparison = createMemo(() =>
                       compareLockedSongObservation(row, observation())
@@ -598,11 +546,10 @@ const LockedSongDiscoveryPage: Component = () => {
               class="flex scroll-mt-4 flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)]"
               aria-labelledby={RESULT_TITLE_ID}
             >
-              <div class="flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-3">
+              <div class="shrink-0 border-b border-border px-4 py-3">
                 <h2 id={RESULT_TITLE_ID} class="font-sans text-base font-semibold">
                   {LOCKED_SONG_DISCOVERY_COPY.candidateTitle}
                 </h2>
-                <DifficultyBadge difficulty={selectedDifficulty()} compact />
               </div>
 
               <div class="flex shrink-0 flex-col gap-3 px-4 py-3">
@@ -658,7 +605,7 @@ const LockedSongDiscoveryPage: Component = () => {
                             variant="ghost"
                             fullWidth
                             class="justify-between gap-3 rounded-none px-4 py-2.5 text-left font-sans focus-visible:ring-inset"
-                            aria-label={`${cell.difficulty} ${cell.genre} / ${cell.version}の${LOCKED_SONG_DISCOVERY_COPY.openRecords}`}
+                            aria-label={`${cell.genre} / ${cell.version}の${LOCKED_SONG_DISCOVERY_COPY.openRecords}`}
                             onClick={() => void handleOpenRecords(cell)}
                           >
                             <span class="min-w-0">

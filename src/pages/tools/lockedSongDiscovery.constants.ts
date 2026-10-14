@@ -1,5 +1,4 @@
 import type { AppTabOption } from '../../components/common/AppTabs'
-import type { LockedSongDiscoveryDifficulty } from '../../utils/lockedSongDiscovery'
 
 /** 筐体表示を照合する分類軸。 */
 export type LockedSongDiscoveryAxis = 'genre' | 'version'
@@ -16,7 +15,6 @@ export const LOCKED_SONG_DISCOVERY_COPY = {
   mismatched: '差異あり',
   invalid: '入力エラー',
   empty: '未入力',
-  difficultySelect: '難易度',
   axisSelect: '分類軸',
   mismatchedGenres: '差があるジャンル',
   mismatchedVersions: '差があるバージョン',
@@ -36,11 +34,4 @@ export const LOCKED_SONG_DISCOVERY_AXIS_OPTIONS: readonly AppTabOption<LockedSon
   [
     { value: 'genre', label: 'ジャンル別' },
     { value: 'version', label: 'バージョン別' },
-  ]
-
-/** 筐体表示を照合する難易度の選択肢。 */
-export const LOCKED_SONG_DISCOVERY_DIFFICULTY_OPTIONS: readonly AppTabOption<LockedSongDiscoveryDifficulty>[] =
-  [
-    { value: 'MASTER', label: 'MASTER' },
-    { value: 'ULTIMA', label: 'ULTIMA' },
   ]
