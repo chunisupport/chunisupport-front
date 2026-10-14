@@ -36,11 +36,11 @@ import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWi
 import { formatChartConst } from '../../utils/chartConstFormat'
 import { formatInteger } from '../../utils/numberFormat'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
-import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import {
   inspectUnifiedWeakCharts,
   sortUnifiedWeakChartEntries,
+  toAptitudeBarSpan,
   UNIFIED_WEAK_CHART_CATEGORIES,
   type UnifiedWeakChartCategory,
   type UnifiedWeakChartEntry,
@@ -71,11 +71,42 @@ const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Eleme
 }
 
 /**
- * 判定と普段の差からのずれによる優先順位を仮想化テーブルで表示する。
+ * 得意度を数値と、50を中心に左右へ伸びるバーで表示する。
+ * @param props - 得意度（データなしは null）と、バーの色を決める判定。
+ * @returns 得意度の数値とバー。得意度がない場合は欠損記号。
+ */
+const AptitudeMeter = (props: {
+  aptitude: number | null
+  category: UnifiedWeakChartCategory
+}): JSX.Element => (
+  <Show
+    when={props.aptitude ?? undefined}
+    fallback={<span class="text-text-subtle">{COPY.missing}</span>}
+  >
+    {(aptitude) => (
+      <span class="flex items-center gap-2">
+        <span class="w-6 text-right font-jost tabular-nums">{aptitude()}</span>
+        <span class="relative h-1.5 w-12 rounded-full bg-surface-muted" aria-hidden="true">
+          <span class="absolute inset-y-0 left-1/2 w-px bg-border-strong" />
+          <span
+            class={`absolute inset-y-0 rounded-full ${UNIFIED_WEAK_CHART_CATEGORY_VIEW[props.category].barClass}`}
+            style={{
+              left: `${toAptitudeBarSpan(aptitude()).left}%`,
+              width: `${toAptitudeBarSpan(aptitude()).width}%`,
+            }}
+          />
+        </span>
+      </span>
+    )}
+  </Show>
+)
+
+/**
+ * 判定と得意度による優先順位を仮想化テーブルで表示する。
  * 曲名のみ左寄せ、その他の列は Online 版の比較表と同じく中央揃えにする。
  * 列ヘッダーで昇順・降順・初期順（判定の優先順位）を切り替えられる。
  * @param props - 絞り込み済みの統合分析結果。
- * @returns 曲名リンク、難易度、定数、スコア、平均、点差、普段の差、判定の表。
+ * @returns 曲名リンク、難易度、定数、スコア、得意度、判定の表。
  */
 const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JSX.Element => {
   const [sortKey, setSortKey] = createSignal<UnifiedWeakChartSortKey | null>(null)
@@ -98,9 +129,7 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
     { label: COPY.difficulty, key: 'difficulty' },
     { label: COPY.constant, key: 'const' },
     { label: COPY.score, key: 'score' },
-    { label: COPY.average, key: 'averageScore' },
-    { label: COPY.difference, key: 'difference' },
-    { label: COPY.baseline, key: 'baseline' },
+    { label: COPY.aptitude, key: 'aptitude' },
     { label: COPY.category, key: 'category' },
   ]
 
@@ -122,7 +151,7 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
       tabIndex={0}
       aria-label={COPY.results}
     >
-      <table class="block w-full min-w-[44rem] text-sm" aria-rowcount={rows().length + 1}>
+      <table class="block w-full min-w-[37rem] text-sm" aria-rowcount={rows().length + 1}>
         <caption class="sr-only">{COPY.results}</caption>
         <thead class="block min-w-full">
           <tr class="grid" style={{ 'grid-template-columns': UNIFIED_WEAK_CHART_TABLE_GRID }}>
@@ -196,25 +225,9 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
                         {formatInteger(item.record.score)}
                       </td>
                       <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums`}
+                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}
                       >
-                        {item.averageScore === null
-                          ? COPY.missing
-                          : formatInteger(Math.trunc(item.averageScore))}
-                      </td>
-                      <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums ${item.difference === null ? 'text-text-subtle' : getScoreDifferenceClass(item.difference)}`}
-                      >
-                        {item.difference === null
-                          ? COPY.missing
-                          : formatScoreDifference(item.difference)}
-                      </td>
-                      <td
-                        class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center font-jost tabular-nums text-text-muted`}
-                      >
-                        {item.baseline === null
-                          ? COPY.missing
-                          : formatScoreDifference(Math.round(item.baseline) || 0)}
+                        <AptitudeMeter aptitude={item.aptitude} category={item.category} />
                       </td>
                       <td
                         class={`${COMPACT_VIRTUAL_TABLE_CELL_CLASS} justify-center px-0 text-center`}

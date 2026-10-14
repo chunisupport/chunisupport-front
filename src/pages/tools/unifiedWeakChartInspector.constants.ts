@@ -20,44 +20,46 @@ export const UNIFIED_WEAK_CHART_COPY = {
   title: '曲名',
   constant: '定数',
   score: 'スコア',
-  average: '平均',
-  difference: '点差',
-  baseline: '普段の差',
+  aptitude: '得意度',
   missing: '—',
 } as const
 
-/** 判定ごとの表示名、アイコン、状態色。 */
+/** 判定ごとの表示名、アイコン、状態色、得意度バーの塗り色。 */
 export const UNIFIED_WEAK_CHART_CATEGORY_VIEW: Record<
   UnifiedWeakChartCategory,
-  { label: string; icon: LucideIcon; class: string }
+  { label: string; icon: LucideIcon; class: string; barClass: string }
 > = {
   weakness: {
     label: '苦手',
     icon: TriangleAlert,
     class: 'bg-danger-bg text-danger',
+    barClass: 'bg-danger',
   },
   mildWeakness: {
     label: 'やや苦手',
     icon: TrendingDown,
     class: 'bg-warning-bg text-warning',
+    barClass: 'bg-warning',
   },
   normal: {
     label: 'ふつう',
     icon: Minus,
     class: 'bg-surface-muted text-text-muted',
+    barClass: 'bg-text-muted',
   },
   strength: {
     label: '得意',
     icon: Sparkles,
     class: 'bg-success-bg text-success',
+    barClass: 'bg-success',
   },
   unavailable: {
     label: 'データなし',
     icon: CircleSlash,
     class: 'bg-surface-muted text-text-subtle',
+    barClass: 'bg-text-subtle',
   },
 }
 
 /** 比較表で共有する列幅。 */
-export const UNIFIED_WEAK_CHART_TABLE_GRID =
-  'minmax(12rem, 1fr) 3rem 3rem 5rem 5rem 4.75rem 4.75rem 7rem'
+export const UNIFIED_WEAK_CHART_TABLE_GRID = 'minmax(12rem, 1fr) 3rem 3rem 5rem 7rem 7rem'

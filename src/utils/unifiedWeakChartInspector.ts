@@ -15,16 +15,13 @@ export type UnifiedWeakChartCategory =
   | 'strength'
   | 'unavailable'
 
-/** 統合分析の譜面別信号。比較平均が欠ける譜面は点差と基準を null にする。 */
+/** 統合分析の譜面別信号。比較平均が欠ける譜面はずれと得意度を null にする。 */
 export interface UnifiedWeakChartEntry {
   record: PlayerRecordDTO
-  averageScore: number | null
-  /** 自分のスコアからレート帯平均の整数部を引いた差。 */
-  difference: number | null
-  /** 近い譜面定数の譜面で求めた、自分の普段の点差（中央値）。 */
-  baseline: number | null
   /** 普段の点差からのずれを、近い譜面定数での点差のばらつきで割った値。 */
   deviation: number | null
+  /** ずれを偏差値形式（50が普段どおり）へ換算した整数の得意度。 */
+  aptitude: number | null
   category: UnifiedWeakChartCategory
 }
 
@@ -49,14 +46,26 @@ const MAD_TO_SIGMA = 1.4826
 /** ばらつきの下限点数。点差がほぼ揃った定数帯で、数十点のずれを過敏に判定しないようにする。 */
 const MIN_SCALE = 100
 
-/** ずれがこの値以下なら「苦手」とする。 */
-const WEAKNESS_DEVIATION = -2
+/** 普段どおりの譜面の得意度。 */
+const APTITUDE_CENTER = 50
 
-/** ずれがこの値以下なら「やや苦手」とする。 */
-const MILD_WEAKNESS_DEVIATION = -1
+/** ずれ1あたりの得意度の変化量。 */
+const APTITUDE_PER_DEVIATION = 10
 
-/** ずれがこの値以上なら「得意」とする。 */
-const STRENGTH_DEVIATION = 1
+/** 得意度の下限。極端なずれで表示が振り切れないようにする。 */
+const MIN_APTITUDE = 20
+
+/** 得意度の上限。 */
+const MAX_APTITUDE = 80
+
+/** 得意度がこの値以下なら「苦手」とする。 */
+const WEAKNESS_APTITUDE = 30
+
+/** 得意度がこの値以下なら「やや苦手」とする。 */
+const MILD_WEAKNESS_APTITUDE = 40
+
+/** 得意度がこの値以上なら「得意」とする。 */
+const STRENGTH_APTITUDE = 60
 
 /** 普段の点差とばらつき。 */
 type DifferenceStats = { baseline: number; scale: number }
@@ -76,15 +85,47 @@ const calculateDifferenceStats = (differences: readonly number[]): DifferenceSta
 }
 
 /**
- * 普段の点差からのずれで判定する。
+ * ずれを偏差値形式の得意度へ換算する。
  * @param deviation - ばらつきで割ったずれ。
+ * @returns 下限・上限内に収めた整数の得意度。
+ */
+const toAptitude = (deviation: number): number =>
+  Math.min(
+    Math.max(Math.round(APTITUDE_CENTER + deviation * APTITUDE_PER_DEVIATION), MIN_APTITUDE),
+    MAX_APTITUDE
+  )
+
+/**
+ * 得意度で判定する。表示する得意度と判定が食い違わないよう、丸めた後の値で比べる。
+ * @param aptitude - 整数の得意度。
  * @returns 判定。
  */
-const classifyDeviation = (deviation: number): UnifiedWeakChartCategory => {
-  if (deviation <= WEAKNESS_DEVIATION) return 'weakness'
-  if (deviation <= MILD_WEAKNESS_DEVIATION) return 'mildWeakness'
-  if (deviation >= STRENGTH_DEVIATION) return 'strength'
+const classifyAptitude = (aptitude: number): UnifiedWeakChartCategory => {
+  if (aptitude <= WEAKNESS_APTITUDE) return 'weakness'
+  if (aptitude <= MILD_WEAKNESS_APTITUDE) return 'mildWeakness'
+  if (aptitude >= STRENGTH_APTITUDE) return 'strength'
   return 'normal'
+}
+
+/** 得意度バーの中心位置（バー全体の幅に対する割合、%）。 */
+const APTITUDE_BAR_CENTER_PERCENT = 50
+
+/**
+ * 得意度バーで、中心から得意度までを塗る範囲を求める。
+ * @param aptitude - 下限・上限内の得意度。
+ * @returns バー全体の幅に対する、塗りの左端と幅（%）。
+ */
+export const toAptitudeBarSpan = (aptitude: number): { left: number; width: number } => {
+  const width =
+    (Math.abs(aptitude - APTITUDE_CENTER) / (MAX_APTITUDE - APTITUDE_CENTER)) *
+    APTITUDE_BAR_CENTER_PERCENT
+  return {
+    left:
+      aptitude < APTITUDE_CENTER
+        ? APTITUDE_BAR_CENTER_PERCENT - width
+        : APTITUDE_BAR_CENTER_PERCENT,
+    width,
+  }
 }
 
 /**
@@ -98,7 +139,7 @@ const toConstStep = (chartConst: number): number => Math.round(truncateChartCons
  * レート帯平均との点差を、自分の普段の点差と比べて判定する。
  *
  * 近い譜面定数（前後0.5、判定する譜面自身を含む）の譜面で点差の中央値を普段の点差とし、
- * そこからのずれを中央絶対偏差によるばらつきで割って判定する。
+ * そこからのずれを中央絶対偏差によるばらつきで割り、偏差値形式の得意度に換算して判定する。
  * 自分の地力とレート帯のずれや、定数帯ごとのスコアの伸びにくさを打ち消せる。
  *
  * @param records - 選択した集計条件内の通常譜面レコード。比較平均の有無で絞り込まない。
@@ -142,25 +183,12 @@ export const inspectUnifiedWeakCharts = (
     .map((record): UnifiedWeakChartEntry => {
       const comparison = comparisonByKey.get(`${record.id}:${record.difficulty}`)
       if (!comparison) {
-        return {
-          record,
-          averageScore: null,
-          difference: null,
-          baseline: null,
-          deviation: null,
-          category: 'unavailable',
-        }
+        return { record, deviation: null, aptitude: null, category: 'unavailable' }
       }
       const { baseline, scale } = statsFor(comparison.step)
       const deviation = (comparison.difference - baseline) / scale
-      return {
-        record,
-        averageScore: comparison.averageScore,
-        difference: comparison.difference,
-        baseline,
-        deviation,
-        category: classifyDeviation(deviation),
-      }
+      const aptitude = toAptitude(deviation)
+      return { record, deviation, aptitude, category: classifyAptitude(aptitude) }
     })
     .sort(
       (left, right) =>
@@ -177,15 +205,13 @@ export type UnifiedWeakChartSortKey =
   | 'difficulty'
   | 'const'
   | 'score'
-  | 'averageScore'
-  | 'difference'
-  | 'baseline'
+  | 'aptitude'
   | 'category'
 
 /**
  * 統合分析の結果を指定列でソートする。
  *
- * 平均・点差・普段の差がない譜面は、ソート方向にかかわらず末尾に置く。
+ * 得意度がない譜面は、得意度で並べる場合にソート方向にかかわらず末尾に置く。
  * 判定列は判定の優先順で比べ、同じ判定内は入力順（ずれの小さい順）を保つ。
  *
  * @param entries - 優先順位順の統合分析結果。
@@ -201,7 +227,6 @@ export const sortUnifiedWeakChartEntries = (
   if (!sortKey || !sortDirection) return [...entries]
 
   const direction = sortDirection === 'asc' ? 1 : -1
-  const nullable = sortKey === 'averageScore' || sortKey === 'difference' || sortKey === 'baseline'
 
   /**
    * ソート方向を掛ける前の比較値を求める。
@@ -227,18 +252,17 @@ export const sortUnifiedWeakChartEntries = (
           UNIFIED_WEAK_CHART_CATEGORIES.indexOf(left.category) -
           UNIFIED_WEAK_CHART_CATEGORIES.indexOf(right.category)
         )
-      default:
-        return (left[sortKey] ?? 0) - (right[sortKey] ?? 0)
+      case 'aptitude':
+        return (left.aptitude ?? 0) - (right.aptitude ?? 0)
     }
   }
 
   return entries
     .map((entry, index) => ({ entry, index }))
     .sort((left, right) => {
-      if (nullable) {
-        // 平均がない譜面は点差・普段の差もないため、平均の有無で末尾へ寄せる。
-        const leftMissing = left.entry.averageScore === null
-        const rightMissing = right.entry.averageScore === null
+      if (sortKey === 'aptitude') {
+        const leftMissing = left.entry.aptitude === null
+        const rightMissing = right.entry.aptitude === null
         if (leftMissing !== rightMissing) return leftMissing ? 1 : -1
       }
       return compare(left.entry, right.entry) * direction || left.index - right.index
