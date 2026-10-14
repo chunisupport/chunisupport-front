@@ -378,6 +378,20 @@ export type UniFillMatrixRecordTarget = {
 }
 
 /**
+ * 集計と通常レコード遷移で共通の未解禁曲除外を決める。
+ * 除外がオンでも未解禁設定の取得に失敗しているときは除外しない。
+ * 取得に成功して失敗状態が解消されれば、再び除外を適用する。
+ *
+ * @param excludeLockedSongs - 画面で未解禁曲除外がオンか。
+ * @param lockedSongsLoadFailed - 未解禁設定の取得に失敗しているか。
+ * @returns 集計と遷移先フィルターへ渡す除外フラグ。
+ */
+export const resolveUniFillMatrixExcludeLockedSongs = (
+  excludeLockedSongs: boolean,
+  lockedSongsLoadFailed: boolean
+): boolean => excludeLockedSongs && !lockedSongsLoadFailed
+
+/**
  * マトリクスの難易度を通常レコードの難易度・OP対象条件へ変換する。
  *
  * @param difficulty - マトリクスで選択中の難易度。

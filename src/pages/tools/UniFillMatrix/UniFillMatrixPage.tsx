@@ -44,6 +44,7 @@ import {
   buildUniFillMatrixRecordFilter,
   countUniFillMatrixChecks,
   formatUniFillMatrixImageFilename,
+  resolveUniFillMatrixExcludeLockedSongs,
   type UniFillMatrix,
   type UniFillMatrixCell,
   type UniFillMatrixCellPosition,
@@ -391,6 +392,14 @@ const UniFillMatrixPage: Component = () => {
     () => (authSession.status === 'authenticated' ? authSession.user?.username : undefined),
     fetchUserLockedSongs
   )
+  /**
+   * 集計とセル遷移で共通の未解禁曲除外を返す。
+   * 未解禁設定の取得に失敗している間は除外しない。
+   *
+   * @returns 実際に適用する除外フラグ。
+   */
+  const lockedSongsExcluded = (): boolean =>
+    resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs(), Boolean(lockedSongs.error))
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
   const navigate = useNavigate()
   let matrixTable!: HTMLTableElement
@@ -398,9 +407,8 @@ const UniFillMatrixPage: Component = () => {
   const matrix = createMemo(() => {
     const data = pageData()
     if (!data) return undefined
-    // 未解禁設定の取得に失敗した場合は除外せずに集計し、エラーはチェックボックスの近くに表示する
-    const currentLockedSongs =
-      excludeLockedSongs() && !lockedSongs.error ? lockedSongs()?.items : []
+    // 未解禁設定の取得に失敗した場合は、集計とレコード遷移のどちらも除外しない
+    const currentLockedSongs = lockedSongsExcluded() ? lockedSongs()?.items : []
     if (!currentLockedSongs) return undefined
 
     const records = filterPlayerStatsRecords(
@@ -421,6 +429,7 @@ const UniFillMatrixPage: Component = () => {
 
   /**
    * マスの条件で埋め条件を満たしていない譜面を通常レコードへ引き継いで遷移する。
+   * 未解禁曲除外は集計と同じ実効値を渡し、未解禁設定の取得失敗中は除外しない。
    *
    * @param target - レコード画面で絞り込むマスの位置。
    * @returns 保存と遷移処理の完了時に解決されるPromise。
@@ -437,7 +446,7 @@ const UniFillMatrixPage: Component = () => {
         ...target,
         difficulty: difficulty().value,
         achievement: achievement().value,
-        excludeLockedSongs: excludeLockedSongs(),
+        excludeLockedSongs: lockedSongsExcluded(),
       })
       await saveStandardRecordFilterSetting(filter)
       publishStandardRecordFilter(username, filter)
