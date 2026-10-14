@@ -3,6 +3,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { createVirtualizer } from '@tanstack/solid-virtual'
 import { Search } from 'lucide-solid'
 import { For, Show } from 'solid-js'
+import { createComposingSearchInput } from '../../../hooks/createComposingSearchInput'
 import type { NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
 import {
   MANAGED_SONG_LIST_TITLE_SEPARATOR,
@@ -71,6 +72,7 @@ const getManagedSongRowClassList = (
 /**
  * 楽曲管理画面の検索欄・フィルター・楽曲一覧を描画する。
  * 楽曲一覧はスクロール領域内で仮想化し、表示範囲付近の行だけを描画する。
+ * IME変換中は未確定の全文を表示し、検索値だけ末尾の全角英字を外す。
  *
  * @param props 表示する楽曲、選択状態、検索・フィルター状態と変更処理
  * @returns 検索欄と選択可能な楽曲一覧
@@ -79,6 +81,10 @@ const ManagedSongListPanel = <T extends ManagedSongListItem>(
   props: ManagedSongListPanelProps<T>
 ) => {
   let scrollElement: HTMLDivElement | undefined
+  const composition = createComposingSearchInput({
+    value: () => props.searchQuery,
+    onChange: (value) => props.onSearchQueryChange(value),
+  })
 
   const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLButtonElement>({
     get count() {
@@ -98,14 +104,16 @@ const ManagedSongListPanel = <T extends ManagedSongListItem>(
             rounded: !props.showAdvancedFilters,
             'rounded-l border-r-0': props.showAdvancedFilters,
           }}
+          value={composition.displayedValue()}
+          onChange={composition.handleChange}
         >
           <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
           <TextField.Input
             type="search"
-            value={props.searchQuery}
-            onInput={(event) => props.onSearchQueryChange(event.currentTarget.value)}
             placeholder={SONG_MANAGEMENT_SECTION_COPY.searchPlaceholder}
             class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
+            onCompositionStart={(event) => composition.beginComposition(event.currentTarget.value)}
+            onCompositionEnd={(event) => composition.endComposition(event.currentTarget.value)}
           />
         </TextField>
         <Show when={props.showAdvancedFilters}>

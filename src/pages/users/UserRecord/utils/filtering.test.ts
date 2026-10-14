@@ -97,6 +97,12 @@ test('createRecordTitleMatcher は末尾の全角英字を残して一致判定�
     ),
     false
   )
+  assert.equal(
+    createRecordTitleMatcher('かもｎ')(
+      createRecord({ title: 'かもねぎ', artist: '東雲めぐ', reading: 'カモネギ' })
+    ),
+    false
+  )
 })
 
 test('isRecordMatched は難易度・ジャンル・バージョンの条件を判定できる', () => {

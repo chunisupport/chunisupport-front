@@ -3,6 +3,7 @@ import { normalizeSongReading } from './songReading'
 const symbolOrSpaceRegex = /[\p{P}\p{S}\p{Z}\p{Cf}]/gu
 const voicedMarkRegex = /[\u3099\u309A]/gu
 const prolongedSoundMarkRegex = /[ーｰ]/g
+const trailingFullwidthAlphabetRegex = /[Ａ-Ｚａ-ｚ]$/u
 /** 小書きのカナから対応する大きいカナへの対応表 */
 const SMALL_TO_LARGE_KANA: Record<string, string> = {
   ぁ: 'あ',
@@ -33,8 +34,32 @@ const SMALL_TO_LARGE_KANA: Record<string, string> = {
 const smallKanaRegex = new RegExp(`[${Object.keys(SMALL_TO_LARGE_KANA).join('')}]`, 'g')
 
 /**
+ * IME変換中の検索語から、末尾の未確定な全角英字を1文字外す。
+ * ローマ字入力の途中（`かもｎ` など）を、確定済みの文字までで検索するために使う。
+ *
+ * @param value 変換中の入力文字列
+ * @returns 末尾が全角英字ならそれを除いた文字列。それ以外はそのまま
+ */
+export function removeTrailingFullwidthAlphabet(value: string): string {
+  return trailingFullwidthAlphabetRegex.test(value) ? value.slice(0, -1) : value
+}
+
+/**
+ * IMEの変換状態に応じて、検索へ渡す文字列を決める。
+ * 変換中だけ末尾の全角英字を外し、確定済みの全角英字は残す。
+ *
+ * @param value 入力欄に表示している文字列
+ * @param composing IME変換中なら true
+ * @returns 検索条件に使う文字列
+ */
+export function resolveComposingSearchQuery(value: string, composing: boolean): string {
+  return composing ? removeTrailingFullwidthAlphabet(value) : value
+}
+
+/**
  * 検索クエリを曲名検索用と読み検索用に正規化する。
- * 確定済みの全角英字は削除せず、NFKC を含む通常の正規化だけを適用する。
+ * 確定済みの全角英字は削除しない。IME変換中の末尾全角英字は、この関数の前に
+ * `resolveComposingSearchQuery` で検索条件から外す。
  *
  * @param query 入力された検索文字列。未設定の場合は空文字として扱う。
  * @returns 曲名検索用と読み検索用に正規化したクエリ。
