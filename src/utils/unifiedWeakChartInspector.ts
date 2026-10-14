@@ -1,3 +1,4 @@
+import { SCORE_THEORETICAL_MAX } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
@@ -7,7 +8,7 @@ import { compareSongsByReading } from './songTitleSorting'
 import type { SortDirection } from './sortingQuery'
 import { isWeakChartInspectionTarget, quantile } from './weakChartInspector'
 
-/** 自分の普段の点差からのずれで決める判定。 */
+/** 自分の普段の失点比からのずれで決める判定。 */
 export type UnifiedWeakChartCategory =
   | 'weakness'
   | 'mildWeakness'
@@ -18,7 +19,7 @@ export type UnifiedWeakChartCategory =
 /** 統合分析の譜面別信号。比較平均が欠ける譜面はずれと得意度を null にする。 */
 export interface UnifiedWeakChartEntry {
   record: PlayerRecordDTO
-  /** 普段の点差からのずれを、近い譜面定数での点差のばらつきで割った値。 */
+  /** 普段の失点比からのずれを、近い譜面定数での失点比のばらつきで割った値。 */
   deviation: number | null
   /** ずれを偏差値形式（50が普段どおり）へ換算した整数の得意度。 */
   aptitude: number | null
@@ -34,17 +35,20 @@ export const UNIFIED_WEAK_CHART_CATEGORIES: readonly UnifiedWeakChartCategory[] 
   'unavailable',
 ]
 
-/** 普段の点差を求める譜面定数の幅（前後それぞれ、0.1刻みの段数）。 */
+/** 普段の失点比を求める譜面定数の幅（前後それぞれ、0.1刻みの段数）。 */
 const CONST_WINDOW_STEPS = 5
 
-/** 定数の近い譜面がこの件数未満の場合は、比較できる全譜面で普段の点差を求める。 */
+/** 定数の近い譜面がこの件数未満の場合は、比較できる全譜面で普段の失点比を求める。 */
 const MIN_WINDOW_SIZE = 5
 
 /** 中央絶対偏差を正規分布の標準偏差相当へ換算する係数。 */
 const MAD_TO_SIGMA = 1.4826
 
-/** ばらつきの下限点数。点差がほぼ揃った定数帯で、数十点のずれを過敏に判定しないようにする。 */
-const MIN_SCALE = 100
+/** 失点の下限点数。理論値付近で、数十点の差が大きな比にならないようにする。 */
+const MIN_LOSS = 100
+
+/** ばらつきの下限（失点比の自然対数）。失点比がほぼ揃った定数帯で、わずかなずれを過敏に判定しないようにする。 */
+const MIN_SCALE = 0.1
 
 /** 普段どおりの譜面の得意度。 */
 const APTITUDE_CENTER = 50
@@ -67,19 +71,39 @@ const MILD_WEAKNESS_APTITUDE = 40
 /** 得意度がこの値以上なら「得意」とする。 */
 const STRENGTH_APTITUDE = 60
 
-/** 普段の点差とばらつき。 */
-type DifferenceStats = { baseline: number; scale: number }
+/** 普段の失点比とばらつき。 */
+type LossRatioStats = { baseline: number; scale: number }
 
 /**
- * 点差の中央値と、中央絶対偏差から求めたばらつきを算出する。
- * @param differences - 1件以上の点差。
- * @returns 中央値と標準偏差相当のばらつき。ばらつきは下限点数以上にする。
+ * 理論値からの失点を求める。
+ * @param score - スコアまたは平均スコア。
+ * @returns 理論値との差。下限点数以上にする。
  */
-const calculateDifferenceStats = (differences: readonly number[]): DifferenceStats => {
-  const sorted = [...differences].sort((left, right) => left - right)
+const toLoss = (score: number): number => Math.max(SCORE_THEORETICAL_MAX - score, MIN_LOSS)
+
+/**
+ * レート帯平均の失点に対する自分の失点の比を、自然対数で求める。
+ *
+ * 失点はおおよそミスの数に比例するため、比にすると高得点帯ほど点数が上がりにくいことと、
+ * 譜面ごとのノーツ数の違い（1ミスあたりの失点の違い）を打ち消せる。
+ *
+ * @param score - 自分のスコア。
+ * @param averageScore - レート帯の平均スコア。
+ * @returns 平均より失点が少ないほど大きい値。失点が同じなら0。
+ */
+const toLossRatio = (score: number, averageScore: number): number =>
+  Math.log(toLoss(averageScore) / toLoss(score))
+
+/**
+ * 失点比の中央値と、中央絶対偏差から求めたばらつきを算出する。
+ * @param ratios - 1件以上の失点比（自然対数）。
+ * @returns 中央値と標準偏差相当のばらつき。ばらつきは下限以上にする。
+ */
+const calculateLossRatioStats = (ratios: readonly number[]): LossRatioStats => {
+  const sorted = [...ratios].sort((left, right) => left - right)
   const baseline = quantile(sorted, 0.5)
   const deviations = sorted
-    .map((difference) => Math.abs(difference - baseline))
+    .map((ratio) => Math.abs(ratio - baseline))
     .sort((left, right) => left - right)
   return { baseline, scale: Math.max(quantile(deviations, 0.5) * MAD_TO_SIGMA, MIN_SCALE) }
 }
@@ -136,11 +160,11 @@ export const toAptitudeBarSpan = (aptitude: number): { left: number; width: numb
 const toConstStep = (chartConst: number): number => Math.round(truncateChartConst(chartConst) * 10)
 
 /**
- * レート帯平均との点差を、自分の普段の点差と比べて判定する。
+ * レート帯平均との失点比を、自分の普段の失点比と比べて判定する。
  *
- * 近い譜面定数（前後0.5、判定する譜面自身を含む）の譜面で点差の中央値を普段の点差とし、
+ * 近い譜面定数（前後0.5、判定する譜面自身を含む）の譜面で失点比の中央値を普段の失点比とし、
  * そこからのずれを中央絶対偏差によるばらつきで割り、偏差値形式の得意度に換算して判定する。
- * 自分の地力とレート帯のずれや、定数帯ごとのスコアの伸びにくさを打ち消せる。
+ * 自分の地力とレート帯のずれや、定数帯・スコア帯ごとのスコアの伸びにくさを打ち消せる。
  *
  * @param records - 選択した集計条件内の通常譜面レコード。比較平均の有無で絞り込まない。
  * @param snapshots - 難易度別のスコア統計。
@@ -154,27 +178,28 @@ export const inspectUnifiedWeakCharts = (
 ): UnifiedWeakChartEntry[] => {
   const played = records.filter(isWeakChartInspectionTarget)
   const comparisons = compareRecordsWithRatingBand(played, snapshots, ratingBand).map((entry) => ({
-    ...entry,
+    record: entry.record,
+    ratio: toLossRatio(entry.record.score, entry.averageScore),
     step: toConstStep(entry.record.const),
   }))
   const comparisonByKey = new Map(
     comparisons.map((entry) => [`${entry.record.id}:${entry.record.difficulty}`, entry])
   )
-  const statsByStep = new Map<number, DifferenceStats>()
+  const statsByStep = new Map<number, LossRatioStats>()
 
   /**
-   * 指定した定数段の近くにある譜面から普段の点差を求める。同じ段は再計算しない。
+   * 指定した定数段の近くにある譜面から普段の失点比を求める。同じ段は再計算しない。
    * @param step - 0.1刻みの定数段。
-   * @returns 普段の点差とばらつき。
+   * @returns 普段の失点比とばらつき。
    */
-  const statsFor = (step: number): DifferenceStats => {
+  const statsFor = (step: number): LossRatioStats => {
     const cached = statsByStep.get(step)
     if (cached) return cached
     const nearby = comparisons.filter(
       (comparison) => Math.abs(comparison.step - step) <= CONST_WINDOW_STEPS
     )
     const source = nearby.length >= MIN_WINDOW_SIZE ? nearby : comparisons
-    const stats = calculateDifferenceStats(source.map(({ difference }) => difference))
+    const stats = calculateLossRatioStats(source.map(({ ratio }) => ratio))
     statsByStep.set(step, stats)
     return stats
   }
@@ -186,7 +211,7 @@ export const inspectUnifiedWeakCharts = (
         return { record, deviation: null, aptitude: null, category: 'unavailable' }
       }
       const { baseline, scale } = statsFor(comparison.step)
-      const deviation = (comparison.difference - baseline) / scale
+      const deviation = (comparison.ratio - baseline) / scale
       const aptitude = toAptitude(deviation)
       return { record, deviation, aptitude, category: classifyAptitude(aptitude) }
     })
