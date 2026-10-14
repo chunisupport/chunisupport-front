@@ -288,7 +288,7 @@ const EmptyState = (props: { label: string }): JSX.Element => (
 )
 
 /**
- * 同レート帯の平均との差を、自分の普段の差と比べて判定する管理者向け画面。
+ * 同レート帯の平均との失点比を、自分の普段の失点比と比べて判定する管理者向け画面。
  * @returns 比較帯・難易度・判定を選べる優先順位表。
  */
 const UnifiedWeakChartInspectorPage = (): JSX.Element => {

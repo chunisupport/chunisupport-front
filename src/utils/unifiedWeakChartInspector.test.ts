@@ -11,6 +11,12 @@ import {
 /** 統合インスペクターのテストで比較するレート帯。 */
 const RATING_BAND = '16.00～16.24'
 
+/** 理論値。 */
+const MAX_SCORE = 1010000
+
+/** テスト用レート帯平均の既定の失点。 */
+const DEFAULT_AVERAGE_LOSS = 10000
+
 /** テスト用の譜面別平均スコア。 */
 type TestAverage = {
   songId: string
@@ -91,38 +97,49 @@ const inspect = (records: readonly PlayerRecordDTO[], averages: readonly TestAve
   inspectUnifiedWeakCharts(records, createSnapshots(averages), RATING_BAND)
 
 /**
- * レート帯平均との点差を指定してレコードと平均の組を作る。
+ * 理論値からの失点を指定してレコードと平均の組を作る。
  *
- * @param charts - 楽曲ID、譜面定数、点差の一覧。スコアは1,000,000点で固定する。
+ * @param charts - 楽曲ID、譜面定数、自分の失点、平均の失点（既定は10,000点）の一覧。
  * @returns レコードとレート帯平均。
  */
 const createCharts = (
-  charts: readonly { id: string; chartConst?: number; difference: number }[]
+  charts: readonly { id: string; chartConst?: number; loss: number; averageLoss?: number }[]
 ): { records: PlayerRecordDTO[]; averages: TestAverage[] } => ({
-  records: charts.map(({ id, chartConst = 14 }) =>
-    createRecord(id, 1000000, 'MASTER', { const: chartConst })
+  records: charts.map(({ id, chartConst = 14, loss }) =>
+    createRecord(id, MAX_SCORE - loss, 'MASTER', { const: chartConst })
   ),
-  averages: charts.map(({ id, difference }) => ({
+  averages: charts.map(({ id, averageLoss = DEFAULT_AVERAGE_LOSS }) => ({
     songId: id,
     difficulty: 'MASTER',
-    averageScore: 1000000 - difference,
+    averageScore: MAX_SCORE - averageLoss,
   })),
 })
 
 /**
- * 点差がほぼ同じ譜面を作る。
+ * 平均の失点に対する失点の倍率がほぼ同じ譜面を作る。
  *
  * @param prefix - 楽曲IDの接頭辞。
  * @param chartConst - 譜面定数。
- * @param baseDifference - 中心となる点差。
- * @returns 中心の前後にばらついた9譜面。
+ * @param lossFactor - 平均の失点に対する自分の失点の倍率。
+ * @returns 倍率の前後2%以内にばらついた9譜面。
  */
-const createSteadyCharts = (prefix: string, chartConst: number, baseDifference: number) =>
-  [-40, -30, -20, -10, 0, 10, 20, 30, 40].map((offset, index) => ({
+const createSteadyCharts = (prefix: string, chartConst: number, lossFactor: number) =>
+  [-0.02, -0.015, -0.01, -0.005, 0, 0.005, 0.01, 0.015, 0.02].map((offset, index) => ({
     id: `${prefix}-${index}`,
     chartConst,
-    difference: baseDifference + offset,
+    loss: DEFAULT_AVERAGE_LOSS * lossFactor * (1 + offset),
   }))
+
+/**
+ * 小数の値が期待値に十分近いことを確かめる。
+ *
+ * @param actual - 実際の値。
+ * @param expected - 期待値。
+ * @returns なし。
+ */
+const assertClose = (actual: number | null, expected: number) => {
+  assert.ok(actual !== null && Math.abs(actual - expected) < 1e-9, `${actual} ≠ ${expected}`)
+}
 
 /**
  * 譜面IDと難易度から分類結果を取得する。
@@ -144,25 +161,25 @@ const findEntry = (
   return entry
 }
 
-test('平均を上回っていても、普段の差より大きく低い譜面は苦手にする', () => {
-  // Given: 普段はレート帯平均を約3,000点上回り、1譜面だけ500点しか上回らない。
+test('平均より失点が少なくても、普段の失点比より大きく劣る譜面は苦手にする', () => {
+  // Given: 普段は平均の半分の失点で、1譜面だけ平均の0.9倍の失点にとどまる。
   const { records, averages } = createCharts([
-    ...createSteadyCharts('steady', 14, 3000),
-    { id: 'target', difference: 500 },
+    ...createSteadyCharts('steady', 14, 0.5),
+    { id: 'target', loss: 9000 },
   ])
 
   // When: 統合分析を実行する。
   const target = findEntry(inspect(records, averages), 'target')
 
-  // Then: 平均との差は正でも、普段の差（2,995点）より大きく低いため得意度は下限の苦手になる。
-  assert.equal(target.deviation, -24.95)
+  // Then: 平均は上回っていても、普段より大きく劣るため得意度は下限の苦手になる。
+  assert.ok((target.deviation ?? 0) < -3)
   assert.equal(target.aptitude, 20)
   assert.equal(target.category, 'weakness')
 })
 
-test('全体的に平均を下回っていても、普段どおりの譜面は苦手にしない', () => {
-  // Given: すべての譜面がレート帯平均を約3,000点下回る。
-  const { records, averages } = createCharts(createSteadyCharts('steady', 14, -3000))
+test('全体的に平均より失点が多くても、普段どおりの譜面は苦手にしない', () => {
+  // Given: すべての譜面が平均の2倍前後の失点である。
+  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 2))
 
   // When: 統合分析を実行する。
   const entries = inspect(records, averages)
@@ -173,62 +190,94 @@ test('全体的に平均を下回っていても、普段どおりの譜面は�
   assert.ok(entries.every(({ category }) => category !== 'weakness'))
 })
 
-test('普段の差は譜面定数の近い譜面だけで求める', () => {
-  // Given: 定数12では約+5,000点、定数15では約0点が普段の差になる。
+test('点差が同じでも、高得点帯での上積みを高く評価する', () => {
+  // Given: 普段は平均の半分の失点で、平均を1,000点上回る譜面が高得点帯と中得点帯にある。
   const { records, averages } = createCharts([
-    ...createSteadyCharts('low-const', 12, 5000),
-    ...createSteadyCharts('high-const', 15, 0),
-    { id: 'low-target', chartConst: 12.5, difference: 1000 },
-    { id: 'high-target', chartConst: 14.5, difference: 1000 },
+    ...createSteadyCharts('steady', 14, 0.5),
+    { id: 'high-score', loss: 1000, averageLoss: 2000 },
+    { id: 'middle-score', loss: 14000, averageLoss: 15000 },
   ])
 
-  // When: 同じ+1,000点の譜面を定数帯ごとに判定する。
+  // When: 統合分析を実行する。
   const entries = inspect(records, averages)
 
-  // Then: 定数12付近では普段の差4,995点より低く苦手、定数15付近では普段の差5点より高く得意になる。
-  assert.equal(findEntry(entries, 'low-target').deviation, -39.95)
+  // Then: 高得点帯は失点を半分にしており普段どおり、中得点帯は失点がほぼ減っておらず苦手になる。
+  assert.equal(findEntry(entries, 'high-score').category, 'normal')
+  assert.equal(findEntry(entries, 'middle-score').category, 'weakness')
+})
+
+test('理論値付近の失点は下限点数として扱い、数十点の差を過敏に判定しない', () => {
+  // Given: 平均どおりの譜面群に、理論値の譜面と、平均・自分とも失点100点未満の譜面を加える。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 1),
+    { id: 'theoretical', loss: 0, averageLoss: 1000 },
+    { id: 'near-max', loss: 50, averageLoss: 10 },
+  ])
+
+  // When: 統合分析を実行する。
+  const entries = inspect(records, averages)
+
+  // Then: 理論値でも得意度は有限の上限に収まり、失点100点未満どうしの差はふつうになる。
+  assert.equal(findEntry(entries, 'theoretical').aptitude, 80)
+  assert.equal(findEntry(entries, 'theoretical').category, 'strength')
+  assert.equal(findEntry(entries, 'near-max').category, 'normal')
+})
+
+test('普段の失点比は譜面定数の近い譜面だけで求める', () => {
+  // Given: 定数12では平均の半分、定数15では平均どおりの失点が普段の失点比になる。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('low-const', 12, 0.5),
+    ...createSteadyCharts('high-const', 15, 1),
+    { id: 'low-target', chartConst: 12.5, loss: 7000 },
+    { id: 'high-target', chartConst: 14.5, loss: 7000 },
+  ])
+
+  // When: 同じ失点の譜面を定数帯ごとに判定する。
+  const entries = inspect(records, averages)
+
+  // Then: 定数12付近では普段より劣り苦手、定数15付近では普段より優れて得意になる。
   assert.equal(findEntry(entries, 'low-target').category, 'weakness')
-  assert.equal(findEntry(entries, 'high-target').deviation, 9.95)
   assert.equal(findEntry(entries, 'high-target').category, 'strength')
 })
 
-test('定数の近い譜面が少ない場合は比較できる全譜面で普段の差を求める', () => {
+test('定数の近い譜面が少ない場合は比較できる全譜面で普段の失点比を求める', () => {
   // Given: 定数10の譜面が1つだけで、他は定数14に集まっている。
   const { records, averages } = createCharts([
-    ...createSteadyCharts('steady', 14, 2000),
-    { id: 'isolated', chartConst: 10, difference: 0 },
+    ...createSteadyCharts('steady', 14, 0.5),
+    { id: 'isolated', chartConst: 10, loss: 10000 },
   ])
 
   // When: 統合分析を実行する。
   const isolated = findEntry(inspect(records, averages), 'isolated')
 
-  // Then: 全譜面の中央値1,995点を普段の差として苦手と判定する。
-  assert.equal(isolated.deviation, -19.95)
+  // Then: 全譜面の普段の失点比（平均の半分）と比べて苦手と判定する。
   assert.equal(isolated.category, 'weakness')
 })
 
-test('平均統計がない譜面はデータなしにし、普段の差の計算にも含めない', () => {
+test('平均統計がない譜面はデータなしにし、普段の失点比の計算にも含めない', () => {
   // Given: 平均なしとnull平均の譜面を加える。
-  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 1000))
+  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0.8))
+  const baseline = findEntry(inspect(records, averages), 'steady-0').deviation
   records.push(createRecord('missing-average', 900000), createRecord('null-average', 900000))
   averages.push({ songId: 'null-average', difficulty: 'MASTER', averageScore: null })
 
   // When: 統合分析を実行する。
   const entries = inspect(records, averages)
 
-  // Then: 平均なし譜面は得意度を持たず、他譜面の得意度も変わらない。
+  // Then: 平均なし譜面は得意度を持たず、他譜面のずれも変わらない。
   for (const id of ['missing-average', 'null-average']) {
     const entry = findEntry(entries, id)
     assert.equal(entry.category, 'unavailable')
     assert.equal(entry.deviation, null)
     assert.equal(entry.aptitude, null)
   }
-  assert.equal(findEntry(entries, 'steady-0').aptitude, 46)
+  assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
 })
 
-test('未プレイ譜面と理論値超過スコアを出力と普段の差の計算から除外する', () => {
+test('未プレイ譜面と理論値超過スコアを出力と普段の失点比の計算から除外する', () => {
   // Given: 適格な譜面に、未プレイの0点と上限を1点超える譜面を加える。
-  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 1000))
+  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0.8))
+  const baseline = findEntry(inspect(records, averages), 'steady-0').deviation
   records.push(
     createRecord('unplayed', 0, 'MASTER', { is_played: false }),
     createRecord('over-score', 1010001)
@@ -241,62 +290,58 @@ test('未プレイ譜面と理論値超過スコアを出力と普段の差の�
   // When: 全レコードを分析関数へ渡す。
   const entries = inspect(records, averages)
 
-  // Then: 不適格レコードは結果に含まれず、得意度にも影響しない。
+  // Then: 不適格レコードは結果に含まれず、ずれにも影響しない。
   assert.equal(entries.length, 9)
-  assert.equal(findEntry(entries, 'steady-0').aptitude, 46)
+  assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
 })
 
-test('点差のばらつきがない場合も下限点数で割り、わずかなずれは過敏に判定しない', () => {
-  // Given: 半数以上の譜面が同じ点差で、普段より50点低い譜面と6,000点低い譜面がある。
+test('失点比のばらつきがない場合も下限で割り、わずかなずれは過敏に判定しない', () => {
+  // Given: 半数以上の譜面が平均どおりで、失点が5%多い譜面と3倍の譜面がある。
   const { records, averages } = createCharts([
-    ...[0, 1, 2, 3, 4].map((index) => ({ id: `same-${index}`, difference: 1000 })),
-    { id: 'near', difference: 950 },
-    { id: 'far', difference: -5000 },
+    ...[0, 1, 2, 3, 4].map((index) => ({ id: `same-${index}`, loss: 10000 })),
+    { id: 'near', loss: 10500 },
+    { id: 'far', loss: 30000 },
   ])
 
   // When: 統合分析を実行する。
   const entries = inspect(records, averages)
 
-  // Then: ばらつきを下限100点として、50点差はふつう、6,000点差は苦手になる。
+  // Then: ばらつきを下限0.1として、5%の差はふつう、3倍の差は苦手になる。
   assert.equal(findEntry(entries, 'same-0').deviation, 0)
-  assert.equal(findEntry(entries, 'near').deviation, -0.5)
+  assertClose(findEntry(entries, 'near').deviation, Math.log(10000 / 10500) / 0.1)
   assert.equal(findEntry(entries, 'near').aptitude, 45)
   assert.equal(findEntry(entries, 'near').category, 'normal')
   assert.equal(findEntry(entries, 'far').category, 'weakness')
 })
 
-test('同じ楽曲IDでも難易度ごとの平均を照合し、平均値の小数部分を切り捨てて判定する', () => {
-  // Given: 普段の差が0点の譜面群に、同じ楽曲IDのMASTERとULTIMAを加える。
-  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0))
+test('同じ楽曲IDでも難易度ごとの平均を照合して判定する', () => {
+  // Given: 平均どおりの譜面群に、同じ楽曲IDのMASTERとULTIMAを加える。
+  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 1))
   records.push(
     createRecord('shared-song', 1000000, 'MASTER'),
     createRecord('shared-song', 1000000, 'ULTIMA')
   )
   averages.push(
-    { songId: 'shared-song', difficulty: 'MASTER', averageScore: 1001000.9 },
-    { songId: 'shared-song', difficulty: 'ULTIMA', averageScore: 999900.9 }
+    { songId: 'shared-song', difficulty: 'MASTER', averageScore: 1005000 },
+    { songId: 'shared-song', difficulty: 'ULTIMA', averageScore: 990000 }
   )
 
   // When: 楽曲IDと難易度を組み合わせてレート帯平均を照合する。
   const entries = inspect(records, averages)
 
-  // Then: 各譜面の平均を取り違えず、ULTIMAは切り捨て後の+100点でちょうど得意の境界になる。
-  const master = findEntry(entries, 'shared-song', 'MASTER')
-  const ultima = findEntry(entries, 'shared-song', 'ULTIMA')
-  assert.equal(master.category, 'weakness')
-  assert.equal(ultima.deviation, 1)
-  assert.equal(ultima.aptitude, 60)
-  assert.equal(ultima.category, 'strength')
+  // Then: 各譜面の平均を取り違えず、MASTERは苦手、ULTIMAは得意になる。
+  assert.equal(findEntry(entries, 'shared-song', 'MASTER').category, 'weakness')
+  assert.equal(findEntry(entries, 'shared-song', 'ULTIMA').category, 'strength')
 })
 
 test('判定の優先順、ずれの小さい順、同点時の読み順で並べる', () => {
   // Given: 各判定に該当する譜面、平均なし譜面、読みと曲名の順が異なる同点譜面を用意する。
   const { records, averages } = createCharts([
-    ...createSteadyCharts('steady', 14, 0),
-    { id: 'weakness-farther', difference: -1000 },
-    { id: 'weakness-nearer', difference: -500 },
-    { id: 'mild', difference: -150 },
-    { id: 'strength', difference: 1000 },
+    ...createSteadyCharts('steady', 14, 1),
+    { id: 'weakness-farther', loss: 30000 },
+    { id: 'weakness-nearer', loss: 20000 },
+    { id: 'mild', loss: 11500 },
+    { id: 'strength', loss: 8000 },
   ])
   const readingI = {
     ...createRecord('reading-i', 1000000, 'MASTER', { title: 'あ' }),
@@ -329,8 +374,8 @@ test('判定の優先順、ずれの小さい順、同点時の読み順で並�
 test('ソート未指定の場合は判定の優先順位を保つ', () => {
   // Given: 判定の優先順位順に並んだ結果がある。
   const { records, averages } = createCharts([
-    ...createSteadyCharts('steady', 14, 0),
-    { id: 'weakness', difference: -1000 },
+    ...createSteadyCharts('steady', 14, 1),
+    { id: 'weakness', loss: 30000 },
   ])
   const entries = inspect(records, averages)
 
@@ -345,9 +390,9 @@ test('ソート未指定の場合は判定の優先順位を保つ', () => {
 test('得意度でソートすると、平均がない譜面は方向にかかわらず末尾に置く', () => {
   // Given: 得意度の異なる譜面と、平均がない譜面がある。
   const { records, averages } = createCharts([
-    { id: 'minus', difference: -100 },
-    { id: 'plus', difference: 100 },
-    { id: 'zero', difference: 0 },
+    { id: 'minus', loss: 11000 },
+    { id: 'plus', loss: 9000 },
+    { id: 'zero', loss: 10000 },
   ])
   records.push(createRecord('unavailable', 1000000))
   const entries = inspect(records, averages)
@@ -390,10 +435,10 @@ test('難易度はBASICからULTIMAの順でソートする', () => {
 test('判定でソートすると優先順位の逆順になり、同じ判定内は入力順を保つ', () => {
   // Given: 苦手・ふつう・得意・データなしの譜面がある。
   const { records, averages } = createCharts([
-    ...createSteadyCharts('steady', 14, 0),
-    { id: 'weakness-farther', difference: -1000 },
-    { id: 'weakness-nearer', difference: -500 },
-    { id: 'strength', difference: 1000 },
+    ...createSteadyCharts('steady', 14, 1),
+    { id: 'weakness-farther', loss: 30000 },
+    { id: 'weakness-nearer', loss: 20000 },
+    { id: 'strength', loss: 8000 },
   ])
   records.push(createRecord('unavailable', 1000000))
   const entries = inspect(records, averages)
