@@ -1,3 +1,4 @@
+import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import type { FilterState } from '../types/recordFilter'
 import type { OverPowerChartEntry, OverPowerSummaryRow } from '../usecases/overpower/types'
@@ -20,9 +21,6 @@ export type LockedSongObservation = {
   percent: string
 }
 
-/** 未解禁曲ディスカバーで独立して照合する難易度。 */
-export type LockedSongDiscoveryDifficulty = 'MASTER' | 'ULTIMA'
-
 /** 観測値とChuniSupport計算値の照合状態。 */
 export type LockedSongComparisonStatus = 'empty' | 'invalid' | 'match' | 'mismatch'
 
@@ -35,7 +33,6 @@ export type LockedSongComparison = {
 
 /** 不一致のジャンルとバージョンから絞り込んだ候補範囲。 */
 export type LockedSongDiscoveryCell = {
-  difficulty: LockedSongDiscoveryDifficulty
   genre: string
   version: string
   songs: Array<Pick<SongDTO, 'id' | 'title'>>
@@ -177,14 +174,12 @@ export const compareLockedSongObservation = (
  * @param entries - 曲ごとのOP対象譜面エントリ。
  * @param mismatchedGenres - 筐体表示と一致しなかったジャンル。
  * @param mismatchedVersions - 筐体表示と一致しなかったバージョン。
- * @param difficulty - 候補として抽出する難易度。
  * @returns 入力済みの差異だけで絞り込んだジャンル・バージョン一覧。
  */
 export const buildLockedSongDiscoveryCells = (
   entries: OverPowerChartEntry[],
   mismatchedGenres: readonly string[],
-  mismatchedVersions: readonly string[],
-  difficulty: LockedSongDiscoveryDifficulty
+  mismatchedVersions: readonly string[]
 ): LockedSongDiscoveryCell[] => {
   const genreSet = new Set(mismatchedGenres)
   const versionSet = new Set(mismatchedVersions)
@@ -192,14 +187,13 @@ export const buildLockedSongDiscoveryCells = (
   if (genreSet.size === 0 && versionSet.size === 0) return []
 
   for (const entry of entries) {
-    if (entry.difficulty !== difficulty) continue
     const genre = entry.song.genre
     if (!genre) continue
     if (genreSet.size > 0 && !genreSet.has(genre)) continue
     if (versionSet.size > 0 && (!entry.versionName || !versionSet.has(entry.versionName))) continue
     const version = entry.versionName ?? UNKNOWN_VERSION_LABEL
     const key = `${genre}\u0000${version}`
-    const cell = cells.get(key) ?? { difficulty, genre, version, songs: [] }
+    const cell = cells.get(key) ?? { genre, version, songs: [] }
     if (!cell.songs.some((song) => song.id === entry.song.id)) {
       cell.songs.push({ id: entry.song.id, title: entry.song.title })
     }
@@ -214,14 +208,17 @@ export const buildLockedSongDiscoveryCells = (
  *
  * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
  * @param candidate - 遷移元の候補範囲。
- * @returns 候補の難易度、ジャンル、バージョンだけを指定した通常レコードフィルター。
+ * @returns 理論値OP対象譜面、候補のジャンル、バージョンだけを指定した通常レコードフィルター。
+ * 未解禁曲は未プレイで現在のOP対象フラグを持たないため、理論値OP対象で判定する。
  */
 export const buildLockedSongCandidateRecordFilter = (
   defaultFilter: FilterState,
-  candidate: Pick<LockedSongDiscoveryCell, 'difficulty' | 'genre' | 'version'>
+  candidate: Pick<LockedSongDiscoveryCell, 'genre' | 'version'>
 ): FilterState => ({
   ...defaultFilter,
-  difficulties: [candidate.difficulty],
+  opTargetOnly: true,
+  opTargetType: 'theoretical',
+  difficulties: [...PLAYER_DATA_DIFFICULTIES],
   genres: [candidate.genre],
   versions: [candidate.version],
 })
