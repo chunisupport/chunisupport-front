@@ -18,7 +18,9 @@
   /* フォント: 数値表示用 */
   --font-jost: "Jost", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
   /* フォント: 本文用 */
-  --font-sans: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  /* Google Fonts の Noto Sans JP はギリシャ文字を含まないため、Noto Sans で補う。
+     Yu Gothic UI (system-ui) の太字は Ω を и で描画するため、そこまでフォールバックさせない。 */
+  --font-sans: "Noto Sans JP", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root,
