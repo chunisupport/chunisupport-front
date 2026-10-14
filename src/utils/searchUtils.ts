@@ -34,11 +34,11 @@ const SMALL_TO_LARGE_KANA: Record<string, string> = {
 const smallKanaRegex = new RegExp(`[${Object.keys(SMALL_TO_LARGE_KANA).join('')}]`, 'g')
 
 /**
- * IME変換中の検索語から、末尾の未確定な全角英字を1文字外す。
- * ローマ字入力の途中（`かもｎ` など）を、確定済みの文字までで検索するために使う。
+ * Removes one trailing fullwidth Latin letter (A-Z or a-z), regardless of IME state.
+ * Use during IME composition to search the preceding text, for example `かもｎ` as `かも`.
  *
- * @param value 変換中の入力文字列
- * @returns 末尾が全角英字ならそれを除いた文字列。それ以外はそのまま
+ * @param value - Text to inspect; the caller determines whether composition is active.
+ * @returns The text without its last letter if it is fullwidth Latin; otherwise unchanged.
  */
 export function removeTrailingFullwidthAlphabet(value: string): string {
   return trailingFullwidthAlphabetRegex.test(value) ? value.slice(0, -1) : value
