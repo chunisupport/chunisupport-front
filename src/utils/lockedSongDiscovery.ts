@@ -31,11 +31,21 @@ export type LockedSongComparison = {
   percentError: string
 }
 
-/** 不一致のジャンルとバージョンから絞り込んだ候補範囲。 */
+/** 不一致のジャンル、バージョン、楽曲名順から絞り込んだ候補範囲。 */
 export type LockedSongDiscoveryCell = {
   genre: string
   version: string
+  /** 楽曲名順フォルダのコード。楽曲名順に差異がなければnull。 */
+  nameFolder: string | null
   songs: Array<Pick<SongDTO, 'id' | 'title'>>
+}
+
+/** 筐体表示と一致しなかった分類。 */
+export type LockedSongDiscoveryMismatches = {
+  genres: readonly string[]
+  versions: readonly string[]
+  /** 楽曲名順フォルダのコード。 */
+  nameFolders: readonly string[]
 }
 
 /** OP / OP%入力値の解析結果。 */
@@ -169,31 +179,33 @@ export const compareLockedSongObservation = (
 }
 
 /**
- * 不一致のジャンルとバージョンでOP対象曲を候補範囲へまとめる。
+ * 不一致のジャンル、バージョン、楽曲名順でOP対象曲を候補範囲へまとめる。
  *
  * @param entries - 曲ごとのOP対象譜面エントリ。
- * @param mismatchedGenres - 筐体表示と一致しなかったジャンル。
- * @param mismatchedVersions - 筐体表示と一致しなかったバージョン。
- * @returns 入力済みの差異だけで絞り込んだジャンル・バージョン一覧。
+ * @param mismatches - 筐体表示と一致しなかったジャンル、バージョン、楽曲名順フォルダ。
+ * @returns 入力済みの差異だけで絞り込んだジャンル・バージョン（・楽曲名順）一覧。
+ * 楽曲名順に差異がある場合だけ、楽曲名順フォルダでも候補範囲を分ける。
  */
 export const buildLockedSongDiscoveryCells = (
   entries: OverPowerChartEntry[],
-  mismatchedGenres: readonly string[],
-  mismatchedVersions: readonly string[]
+  mismatches: LockedSongDiscoveryMismatches
 ): LockedSongDiscoveryCell[] => {
-  const genreSet = new Set(mismatchedGenres)
-  const versionSet = new Set(mismatchedVersions)
+  const genreSet = new Set(mismatches.genres)
+  const versionSet = new Set(mismatches.versions)
+  const nameFolderSet = new Set(mismatches.nameFolders)
   const cells = new Map<string, LockedSongDiscoveryCell>()
-  if (genreSet.size === 0 && versionSet.size === 0) return []
+  if (genreSet.size === 0 && versionSet.size === 0 && nameFolderSet.size === 0) return []
 
   for (const entry of entries) {
     const genre = entry.song.genre
     if (!genre) continue
     if (genreSet.size > 0 && !genreSet.has(genre)) continue
     if (versionSet.size > 0 && (!entry.versionName || !versionSet.has(entry.versionName))) continue
+    if (nameFolderSet.size > 0 && !nameFolderSet.has(entry.song.name_folder_code)) continue
     const version = entry.versionName ?? UNKNOWN_VERSION_LABEL
-    const key = `${genre}\u0000${version}`
-    const cell = cells.get(key) ?? { genre, version, songs: [] }
+    const nameFolder = nameFolderSet.size > 0 ? entry.song.name_folder_code : null
+    const key = `${genre}\u0000${version}\u0000${nameFolder ?? ''}`
+    const cell = cells.get(key) ?? { genre, version, nameFolder, songs: [] }
     if (!cell.songs.some((song) => song.id === entry.song.id)) {
       cell.songs.push({ id: entry.song.id, title: entry.song.title })
     }
@@ -208,12 +220,12 @@ export const buildLockedSongDiscoveryCells = (
  *
  * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
  * @param candidate - 遷移元の候補範囲。
- * @returns 理論値OP対象譜面、候補のジャンル、バージョンだけを指定した通常レコードフィルター。
+ * @returns 理論値OP対象譜面、候補のジャンル、バージョン、楽曲名順だけを指定した通常レコードフィルター。
  * 未解禁曲は未プレイで現在のOP対象フラグを持たないため、理論値OP対象で判定する。
  */
 export const buildLockedSongCandidateRecordFilter = (
   defaultFilter: FilterState,
-  candidate: Pick<LockedSongDiscoveryCell, 'genre' | 'version'>
+  candidate: Pick<LockedSongDiscoveryCell, 'genre' | 'version' | 'nameFolder'>
 ): FilterState => ({
   ...defaultFilter,
   opTargetOnly: true,
@@ -221,6 +233,7 @@ export const buildLockedSongCandidateRecordFilter = (
   difficulties: [...PLAYER_DATA_DIFFICULTIES],
   genres: [candidate.genre],
   versions: [candidate.version],
+  nameFolders: candidate.nameFolder === null ? null : [candidate.nameFolder],
 })
 
 /**
