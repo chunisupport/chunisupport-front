@@ -468,6 +468,37 @@ test('OP対象フラグがない候補はプレイ済み譜面の最大OPを使�
   assert.deepEqual(buildLockedSongDiscoveryCandidates(entries, []), [])
 })
 
+test('候補行は reading のカナ、英字、数字の順に並ぶ', () => {
+  // Given
+  const withReading = (id: string, title: string, reading: string): OverPowerChartEntry => {
+    const entry = createEntry(id, title, 'POPS')
+    return {
+      ...entry,
+      song: { ...entry.song, reading, charts: { MASTER: { const: 14.5 } } } as SongDTO,
+    }
+  }
+  const entries = [
+    withReading('number', '39', '39'),
+    withReading('alphabet', 'Brand New Day', 'BRAND NEW DAY'),
+    withReading('kana', '愛', 'アイ'),
+  ]
+  const cells = buildLockedSongDiscoveryCells(entries, {
+    genres: ['POPS'],
+    versions: [],
+    nameFolders: [],
+    levels: [],
+  })
+
+  // When
+  const candidates = buildLockedSongDiscoveryCandidates(entries, cells)
+
+  // Then
+  assert.deepEqual(
+    candidates.map((candidate) => candidate.song.id),
+    ['kana', 'alphabet', 'number']
+  )
+})
+
 test('通常行はULTIMA以外のOP対象、ULTIMA行はULTIMAのレコードを表示する', () => {
   // Given
   const song = {
