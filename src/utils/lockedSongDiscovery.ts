@@ -5,6 +5,7 @@ import { selectOverPowerChartEntries } from '../usecases/overpower/aggregation'
 import { OVER_POWER_THEORETICAL_TARGET } from '../usecases/overpower/constants'
 import type { OverPowerChartEntry, OverPowerSummaryRow } from '../usecases/overpower/types'
 import type { ChartLevelLabel } from './chartLevel'
+import { compareSongsByReading } from './songTitleSorting'
 
 /** OP内部計算で使う小数第3位までの整数倍率。 */
 export const OVER_POWER_SCALE = 1_000
@@ -306,16 +307,14 @@ export const buildLockedSongDiscoveryCandidates = (
       .map((entry) => [entry.song.id, entry])
   )
   const songs = new Map(candidateEntries.map((entry) => [entry.song.id, entry.song]))
-  return [...songs.values()]
-    .sort((left, right) => left.title.localeCompare(right.title, 'ja'))
-    .flatMap((song) => {
-      const normal = normalTargets.get(song.id)
-      const ultima = ultimaEntries.get(song.id)
-      return [
-        { song, isUltima: false, opTarget: normal?.record?.is_played ? normal : null },
-        ...(ultima
-          ? [{ song, isUltima: true, opTarget: ultima.record?.is_played ? ultima : null }]
-          : []),
-      ]
-    })
+  return [...songs.values()].sort(compareSongsByReading).flatMap((song) => {
+    const normal = normalTargets.get(song.id)
+    const ultima = ultimaEntries.get(song.id)
+    return [
+      { song, isUltima: false, opTarget: normal?.record?.is_played ? normal : null },
+      ...(ultima
+        ? [{ song, isUltima: true, opTarget: ultima.record?.is_played ? ultima : null }]
+        : []),
+    ]
+  })
 }
