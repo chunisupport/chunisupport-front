@@ -5,6 +5,7 @@ import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import type { OverPowerChartEntry, OverPowerSummaryRow } from '../usecases/overpower/types'
 import {
   buildLockedSongCandidateRecordFilter,
+  buildLockedSongDiscoveryCandidates,
   buildLockedSongDiscoveryCells,
   compareLockedSongObservation,
   hasCompleteLockedSongDiscoveryRecords,
@@ -389,4 +390,82 @@ test('レベルに差異がなければ候補は理論値OP対象譜面に限定
 
   // Then
   assert.deepEqual(cells[0].songs, [{ id: 'song-1', title: 'Candidate' }])
+})
+
+test('候補範囲を重複排除し、レベル条件外のプレイ済みOP対象も表示する', () => {
+  // Given
+  const song = {
+    ...createEntry('song-1', 'Candidate', 'POPS & ANIME').song,
+    charts: { EXPERT: { const: 12 }, MASTER: { const: 14.5 } },
+    maxop: 87.5,
+  } as SongDTO
+  const expert = {
+    ...createEntry(song.id, song.title, song.genre),
+    song,
+    difficulty: 'EXPERT',
+    level: '12',
+    record: {
+      is_played: true,
+      is_op_target: true,
+      overpower: 70,
+      score: 1000000,
+    } as PlayerRecordDTO,
+  } as OverPowerChartEntry
+  const master = { ...createEntry(song.id, song.title, song.genre), song }
+  const cells = buildLockedSongDiscoveryCells([expert, master], {
+    genres: [song.genre],
+    versions: [],
+    nameFolders: [],
+    levels: ['14+'],
+  })
+
+  // When
+  const candidates = buildLockedSongDiscoveryCandidates([expert, master], [...cells, ...cells])
+
+  // Then
+  assert.equal(candidates.length, 1)
+  assert.equal(candidates[0].opTarget?.difficulty, 'EXPERT')
+  assert.equal(candidates[0].opTarget?.record?.score, 1000000)
+})
+
+test('OP対象フラグがない候補はプレイ済み譜面の最大OPを使い、未プレイ曲はレコードを表示しない', () => {
+  // Given
+  const song = {
+    ...createEntry('song-1', 'Played', 'POPS & ANIME').song,
+    charts: { EXPERT: { const: 12 }, MASTER: { const: 14.5 } },
+    maxop: 87.5,
+  } as SongDTO
+  const master = {
+    ...createEntry(song.id, song.title, song.genre),
+    song,
+    record: { is_played: true, is_op_target: false, overpower: 65 } as PlayerRecordDTO,
+  }
+  const expert = {
+    ...master,
+    difficulty: 'EXPERT',
+    record: { is_played: true, is_op_target: false, overpower: 70 } as PlayerRecordDTO,
+  } as OverPowerChartEntry
+  const unplayed = {
+    ...createEntry('song-2', 'Unplayed', song.genre),
+    song: { ...song, id: 'song-2', title: 'Unplayed' },
+    record: { is_played: false, is_op_target: false, overpower: 0 } as PlayerRecordDTO,
+  }
+  const entries = [master, expert, unplayed]
+  const cells = buildLockedSongDiscoveryCells(entries, {
+    genres: [song.genre],
+    versions: [],
+    nameFolders: [],
+    levels: [],
+  })
+
+  // When
+  const candidates = buildLockedSongDiscoveryCandidates(entries, cells)
+
+  // Then
+  assert.equal(
+    candidates.find((candidate) => candidate.song.id === song.id)?.opTarget?.difficulty,
+    'EXPERT'
+  )
+  assert.equal(candidates.find((candidate) => candidate.song.id === 'song-2')?.opTarget, null)
+  assert.deepEqual(buildLockedSongDiscoveryCandidates(entries, []), [])
 })

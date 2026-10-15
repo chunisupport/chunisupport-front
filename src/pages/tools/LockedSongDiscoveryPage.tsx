@@ -43,11 +43,13 @@ import { isNotFoundApiError } from '../../utils/apiError'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   buildLockedSongCandidateRecordFilter,
+  buildLockedSongDiscoveryCandidates,
   buildLockedSongDiscoveryCells,
   compareLockedSongObservation,
   hasCompleteLockedSongDiscoveryRecords,
   type LockedSongComparison,
   type LockedSongComparisonStatus,
+  type LockedSongDiscoveryCell,
   type LockedSongDiscoveryMismatches,
   type LockedSongObservation,
 } from '../../utils/lockedSongDiscovery'
@@ -55,7 +57,9 @@ import { formatTruncatedFixed } from '../../utils/numberFormat'
 import { buildDefaultFilter } from '../../utils/recordFilterDefaults'
 import { buildUserProfilePagePath } from '../../utils/userProfileRoute'
 import { scrollToUserProfileContent } from '../../utils/userProfileScroll'
+import { LockedSongCandidatesDialog } from './LockedSongCandidatesDialog'
 import {
+  LOCKED_SONG_CANDIDATES_COPY,
   LOCKED_SONG_DISCOVERY_AXIS_OPTIONS,
   LOCKED_SONG_DISCOVERY_COPY,
   type LockedSongDiscoveryAxis,
@@ -298,6 +302,7 @@ const LockedSongDiscoveryPage: Component = () => {
   const [selectedAxis, setSelectedAxis] = createSignal<LockedSongDiscoveryAxis>('genre')
   const [observations, setObservations] = createSignal<Record<string, LockedSongObservation>>({})
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
+  const [dialogCells, setDialogCells] = createSignal<LockedSongDiscoveryCell[]>()
   /** モバイルの移動ボタンからスクロールさせる候補範囲パネル。 */
   let resultPanel: HTMLElement | undefined
 
@@ -456,9 +461,12 @@ const LockedSongDiscoveryPage: Component = () => {
   const candidateCells = createMemo(() =>
     buildLockedSongDiscoveryCells(chartEntries(), currentMismatches())
   )
-  /** 候補範囲に含まれる楽曲の総数。 */
-  const candidateSongCount = createMemo(() =>
-    candidateCells().reduce((total, cell) => total + cell.songs.length, 0)
+  const dialogCandidates = createMemo(() =>
+    buildLockedSongDiscoveryCandidates(chartEntries(), dialogCells() ?? [])
+  )
+  /** 候補範囲に含まれる重複を除いた楽曲数。 */
+  const candidateSongCount = createMemo(
+    () => new Set(candidateCells().flatMap((cell) => cell.songs.map((song) => song.id))).size
   )
   /** 差異がある分類軸に通知ドットを付けた選択肢。 */
   const axisOptions = createMemo(() =>
@@ -663,27 +671,42 @@ const LockedSongDiscoveryPage: Component = () => {
                             .filter((part) => part !== null)
                             .join(' / ')
                         return (
-                          <li class="flex items-center justify-between gap-3 px-4 py-2.5 font-sans">
-                            <span class="min-w-0">
-                              <span class="block truncate text-sm font-semibold text-text">
-                                {cell.version}
+                          <li>
+                            <AppButton
+                              variant="ghost"
+                              fullWidth
+                              class="justify-between gap-3 px-4 py-2.5 text-left font-sans focus-visible:ring-inset"
+                              aria-label={`${cell.version} ${subLabel()} ${LOCKED_SONG_CANDIDATES_COPY.openRange}`}
+                              onClick={() => setDialogCells([cell])}
+                            >
+                              <span class="min-w-0">
+                                <span class="block truncate text-sm font-semibold text-text">
+                                  {cell.version}
+                                </span>
+                                <span class="block truncate text-xs text-text-muted">
+                                  {subLabel()}
+                                </span>
                               </span>
-                              <span class="block truncate text-xs text-text-muted">
-                                {subLabel()}
+                              <span class="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 font-jost text-xs font-medium tabular-nums text-warning">
+                                {cell.songs.length}
+                                {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
                               </span>
-                            </span>
-                            <span class="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 font-jost text-xs font-medium tabular-nums text-warning">
-                              {cell.songs.length}
-                              {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
-                            </span>
+                            </AppButton>
                           </li>
                         )
                       }}
                     </For>
                   </ul>
-                  <div class="shrink-0 border-t border-border p-3">
+                  <div class="shrink-0 space-y-2 border-t border-border p-3">
                     <AppButton
                       variant="primary"
+                      fullWidth
+                      onClick={() => setDialogCells(candidateCells())}
+                    >
+                      {LOCKED_SONG_CANDIDATES_COPY.open}
+                    </AppButton>
+                    <AppButton
+                      variant="surface"
                       fullWidth
                       class="justify-between"
                       rightIcon={<ChevronRight class="h-4 w-4" aria-hidden="true" />}
@@ -722,6 +745,17 @@ const LockedSongDiscoveryPage: Component = () => {
               </AppButton>
             </div>
           </Show>
+        </Show>
+      </Show>
+      <Show when={dialogCells()}>
+        <Show when={username()} keyed>
+          {(currentUsername) => (
+            <LockedSongCandidatesDialog
+              username={currentUsername}
+              candidates={dialogCandidates()}
+              onClose={() => setDialogCells(undefined)}
+            />
+          )}
         </Show>
       </Show>
     </div>

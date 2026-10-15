@@ -39,3 +39,22 @@ export const LOCKED_SONG_DISCOVERY_AXIS_OPTIONS: readonly AppTabOption<LockedSon
     { value: 'nameFolder', label: '楽曲名順' },
     { value: 'level', label: 'レベル順' },
   ]
+
+/** 候補曲ダイアログの文言。 */
+export const LOCKED_SONG_CANDIDATES_COPY = {
+  title: '未解禁候補曲',
+  songCountUnit: '曲',
+  description: '通常楽曲・ULTIMAの未解禁設定',
+  open: '候補曲を確認・未解禁指定',
+  openRange: 'この範囲の候補曲を確認',
+  close: '閉じる',
+  unplayed: '未プレイ',
+  opTarget: 'OP対象',
+  score: 'スコア',
+  op: 'OP',
+  percent: 'OP%',
+  loadError: '未解禁設定を取得できませんでした。',
+  saveError: '未解禁設定を更新できませんでした。',
+  retry: '再読み込み',
+  empty: '候補曲はありません',
+} as const
