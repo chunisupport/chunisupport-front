@@ -49,7 +49,8 @@ export const LOCKED_SONG_DISCOVERY_OBSERVATIONS_STORAGE_PREFIX =
 /** 候補曲ダイアログの文言。 */
 export const LOCKED_SONG_CANDIDATES_COPY = {
   title: '未解禁候補曲',
-  songCountUnit: '曲',
+  candidateCountUnit: '件',
+  ultima: 'ULTIMA',
   description: '通常楽曲・ULTIMAの未解禁設定',
   open: '候補曲を確認・未解禁指定',
   openRange: 'この範囲の候補曲を確認',

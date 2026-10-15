@@ -2,9 +2,9 @@ import { Dialog } from '@kobalte/core/dialog'
 import { createMemo, createResource, createSignal, For, onCleanup, Show } from 'solid-js'
 import { addMyLockedSong, deleteMyLockedSong, fetchUserLockedSongs } from '../../api/users'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
-import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { LockedSongToggle } from '../../components/common/LockedSongToggle'
-import { DefaultRecordLampBadges } from '../../components/common/record/RecordDisplayParts'
+import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
+import { RecordLampDots } from '../../components/common/record/RecordDisplayParts'
 import Loading from '../../components/Loading/Loading'
 import { createLockedSongKey } from '../../usecases/overpower/lockedSongsBatch'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
@@ -13,7 +13,7 @@ import { formatInteger, formatTruncatedFixed } from '../../utils/numberFormat'
 import { LOCKED_SONG_CANDIDATES_COPY as COPY } from './lockedSongDiscovery.constants'
 
 /**
- * 候補曲のOP対象レコードと、即時保存する未解禁ボタンを表示する。
+ * 通常楽曲とULTIMAの候補を、OP対象レコード付きの横長の選択行で表示する。
  *
  * @param props - ログインユーザー、候補曲、ダイアログの開閉処理。
  * @returns 本文だけをスクロールする候補楽曲ダイアログ。
@@ -31,7 +31,7 @@ export const LockedSongCandidatesDialog = (props: {
     }
   )
   const [savingKey, setSavingKey] = createSignal<string>()
-  const [saveError, setSaveError] = createSignal<{ songId: string; message: string }>()
+  const [saveError, setSaveError] = createSignal<{ key: string; message: string }>()
   let active = true
   onCleanup(() => {
     active = false
@@ -41,22 +41,18 @@ export const LockedSongCandidatesDialog = (props: {
    * 1件の未解禁状態を保存し、成功時だけ一覧の状態を更新する。
    *
    * @param candidate - 更新する候補曲。
-   * @param isUltima - ULTIMAのみを対象とする場合はtrue。
    * @returns 保存処理の完了を表すPromise。
    */
-  const toggleLocked = async (
-    candidate: LockedSongDiscoveryCandidate,
-    isUltima: boolean
-  ): Promise<void> => {
+  const toggleLocked = async (candidate: LockedSongDiscoveryCandidate): Promise<void> => {
     const current = lockedKeys()
     if (!current || lockedKeys.loading || lockedKeys.error || savingKey()) return
     const username = props.username
-    const key = createLockedSongKey(candidate.song.id, isUltima)
+    const key = createLockedSongKey(candidate.song.id, candidate.isUltima)
     const locked = current.has(key)
     setSavingKey(key)
     setSaveError(undefined)
     try {
-      const request = { id: candidate.song.id, is_ultima: isUltima }
+      const request = { id: candidate.song.id, is_ultima: candidate.isUltima }
       if (locked) await deleteMyLockedSong(request)
       else await addMyLockedSong(request)
       if (active && username === props.username) {
@@ -70,7 +66,7 @@ export const LockedSongCandidatesDialog = (props: {
     } catch (error) {
       if (active && username === props.username) {
         setSaveError({
-          songId: candidate.song.id,
+          key,
           message: toUserFriendlyErrorMessage(error, COPY.saveError),
         })
       }
@@ -89,7 +85,7 @@ export const LockedSongCandidatesDialog = (props: {
             <Dialog.Description class="sr-only">{COPY.description}</Dialog.Description>
             <p class="mt-1 text-sm text-text-muted">
               {props.candidates.length}
-              {COPY.songCountUnit}
+              {COPY.candidateCountUnit}
             </p>
           </div>
           <div class="min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain rounded border border-border bg-surface">
@@ -120,77 +116,80 @@ export const LockedSongCandidatesDialog = (props: {
                     fallback={<li class="p-4 font-sans text-sm text-text-muted">{COPY.empty}</li>}
                   >
                     {(candidate) => {
+                      const key = createLockedSongKey(candidate.song.id, candidate.isUltima)
                       const error = () =>
-                        saveError()?.songId === candidate.song.id ? saveError()?.message : undefined
+                        saveError()?.key === key ? saveError()?.message : undefined
                       const opRecord = createMemo(() => candidate.opTarget?.record ?? undefined)
                       return (
-                        <li class="space-y-3 p-3 sm:p-4">
-                          <div class="min-w-0 font-sans">
-                            <p class="break-words text-sm font-semibold text-text">
-                              {candidate.song.title}
-                            </p>
-                            <p class="truncate text-xs text-text-muted">{candidate.song.artist}</p>
-                          </div>
-                          <Show
-                            when={opRecord()}
-                            fallback={
-                              <p class="font-sans text-sm text-text-subtle">{COPY.unplayed}</p>
+                        <li>
+                          <LockedSongToggle
+                            songTitle={candidate.song.title}
+                            isUltima={candidate.isUltima}
+                            locked={lockedKeys()?.has(key) ?? false}
+                            disabled={
+                              Boolean(savingKey()) ||
+                              lockedKeys.loading ||
+                              Boolean(lockedKeys.error)
                             }
+                            busy={savingKey() === key}
+                            onClick={() => void toggleLocked(candidate)}
                           >
-                            {(record) => (
-                              <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-                                <span class="font-sans text-xs text-text-muted">
-                                  {COPY.opTarget}
+                            <span class="min-w-0 flex-1">
+                              <span class="flex min-w-0 items-center gap-1.5">
+                                <span
+                                  class="truncate text-sm font-medium"
+                                  title={candidate.song.title}
+                                >
+                                  {candidate.song.title}
                                 </span>
-                                <DifficultyBadge difficulty={record().difficulty} compact />
-                                <span class="font-oswald text-lg text-text">
-                                  <span class="sr-only">{COPY.score} </span>
-                                  {formatInteger(record().score)}
-                                </span>
-                                <DefaultRecordLampBadges record={record()} />
-                                <dl class="flex w-full flex-wrap gap-x-4 gap-y-1 text-sm">
-                                  <div class="flex items-baseline gap-1">
-                                    <dt class="font-sans text-xs text-text-muted">{COPY.op}</dt>
-                                    <dd class="font-oswald text-text">
+                                <Show when={candidate.isUltima}>
+                                  <span class="shrink-0 rounded bg-danger-bg px-1 py-0.5 font-oswald text-xs text-danger">
+                                    {COPY.ultima}
+                                  </span>
+                                </Show>
+                              </span>
+                              <span class="block truncate text-xs opacity-70">
+                                {candidate.song.artist}
+                              </span>
+                            </span>
+                            <Show
+                              when={opRecord()}
+                              fallback={
+                                <span class="shrink-0 text-xs opacity-70">{COPY.unplayed}</span>
+                              }
+                            >
+                              {(record) => (
+                                <div class="shrink-0 space-y-1">
+                                  <div class="flex items-center justify-end gap-1.5">
+                                    <RecordDifficultyBadge difficulty={record().difficulty} />
+                                    <span class="whitespace-nowrap font-oswald text-sm">
+                                      <span class="sr-only">
+                                        {!candidate.isUltima && COPY.opTarget} {COPY.score}{' '}
+                                      </span>
+                                      {formatInteger(record().score)}
+                                    </span>
+                                    <RecordLampDots record={record()} />
+                                  </div>
+                                  <span class="flex items-baseline justify-end gap-1 whitespace-nowrap text-xs">
+                                    <span class="opacity-70">{COPY.op}</span>
+                                    <span class="font-oswald">
                                       {formatTruncatedFixed(record().overpower, 2)}
-                                    </dd>
-                                  </div>
-                                  <div class="flex items-baseline gap-1">
-                                    <dt class="font-sans text-xs text-text-muted">
-                                      {COPY.percent}
-                                    </dt>
-                                    <dd class="font-oswald text-text">
+                                    </span>
+                                    <span class="opacity-70" aria-hidden="true">
+                                      /
+                                    </span>
+                                    <span class="sr-only">{COPY.percent} </span>
+                                    <span class="font-oswald">
                                       {formatTruncatedFixed(record().overpower_percent, 2)}%
-                                    </dd>
-                                  </div>
-                                </dl>
-                              </div>
-                            )}
-                          </Show>
-                          <fieldset class="flex flex-wrap gap-2">
-                            <legend class="sr-only">{candidate.song.title}</legend>
-                            <For each={candidate.song.charts.ULTIMA ? [false, true] : [false]}>
-                              {(isUltima) => {
-                                const key = createLockedSongKey(candidate.song.id, isUltima)
-                                return (
-                                  <LockedSongToggle
-                                    isUltima={isUltima}
-                                    locked={lockedKeys()?.has(key) ?? false}
-                                    disabled={
-                                      Boolean(savingKey()) ||
-                                      lockedKeys.loading ||
-                                      Boolean(lockedKeys.error)
-                                    }
-                                    busy={savingKey() === key}
-                                    onClick={() => void toggleLocked(candidate, isUltima)}
-                                  />
-                                )
-                              }}
-                            </For>
-                          </fieldset>
+                                    </span>
+                                  </span>
+                                </div>
+                              )}
+                            </Show>
+                          </LockedSongToggle>
                           <Show when={error()}>
                             {(message) => (
-                              <p class="font-sans text-sm text-danger" role="alert">
+                              <p class="px-3 pb-2 font-sans text-sm text-danger" role="alert">
                                 {message()}
                               </p>
                             )}
