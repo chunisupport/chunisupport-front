@@ -33,8 +33,8 @@ import {
   buildOverPowerChartEntries,
   selectOverPowerChartEntries,
 } from '../../usecases/overpower/aggregation'
-import { OVER_POWER_THEORETICAL_TARGET } from '../../usecases/overpower/constants'
 import {
+  buildLevelSummaries,
   buildNameFolderSummaries,
   buildOverPowerSummary,
 } from '../../usecases/overpower/overpowerSummary'
@@ -337,14 +337,6 @@ const LockedSongDiscoveryPage: Component = () => {
   })
   /** 筐体表示と照合する、曲ごとの現在のOP対象譜面エントリ。 */
   const opTargetEntries = createMemo(() => selectOverPowerChartEntries(chartEntries(), 'OP_TARGET'))
-  /**
-   * 候補範囲に使う理論値OP対象譜面エントリ。
-   * 遷移先のレコードフィルターと同じ譜面でレベルを判定し、候補一覧と遷移先の曲を一致させる。
-   * 未解禁曲は未プレイのため、現在のOP対象と理論値OP対象は同じ譜面になる。
-   */
-  const theoreticalTargetEntries = createMemo(() =>
-    selectOverPowerChartEntries(chartEntries(), OVER_POWER_THEORETICAL_TARGET)
-  )
   const summary = createMemo(() => {
     const songs = songsResponse()?.songs
     const currentRecord = record()?.standard
@@ -357,6 +349,7 @@ const LockedSongDiscoveryPage: Component = () => {
     return {
       ...buildOverPowerSummary(songs, currentRecord, versionItems, [], genreItems),
       nameFolders: buildNameFolderSummaries(opTargetEntries(), nameFolderItems),
+      levels: buildLevelSummaries(chartEntries()),
     }
   })
   /** 楽曲名順フォルダのコードから表示名を引く対応表。 */
@@ -461,7 +454,7 @@ const LockedSongDiscoveryPage: Component = () => {
     return currentSummary.levels
   })
   const candidateCells = createMemo(() =>
-    buildLockedSongDiscoveryCells(theoreticalTargetEntries(), currentMismatches())
+    buildLockedSongDiscoveryCells(chartEntries(), currentMismatches())
   )
   /** 候補範囲に含まれる楽曲の総数。 */
   const candidateSongCount = createMemo(() =>

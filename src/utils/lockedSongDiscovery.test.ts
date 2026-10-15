@@ -31,7 +31,7 @@ const SUMMARY_ROW: OverPowerSummaryRow = {
  * @returns VERSE収録のOP対象エントリ。
  */
 const createEntry = (id: string, title: string, genre: string): OverPowerChartEntry => ({
-  song: { id, title, genre, name_folder_code: 'C' } as SongDTO,
+  song: { id, title, genre, name_folder_code: 'C', op_target_difficulty: 'MASTER' } as SongDTO,
   difficulty: 'MASTER',
   chartConst: 14.5,
   maxOverPower: 87.5,
@@ -245,6 +245,7 @@ test('楽曲名順に差異があれば楽曲名順フォルダで候補範囲�
       title: 'Excluded',
       genre: 'POPS & ANIME',
       name_folder_code: 'D',
+      op_target_difficulty: 'MASTER',
     } as SongDTO,
   }
 
@@ -268,7 +269,7 @@ test('楽曲名順に差異があれば楽曲名順フォルダで候補範囲�
   ])
 })
 
-test('レベルに差異があればOP対象譜面のレベルで候補範囲を絞り込んで分ける', () => {
+test('レベルに差異があれば譜面のレベルで候補範囲を絞り込んで分ける', () => {
   // Given
   const matched = createEntry('song-1', 'Candidate', 'POPS & ANIME')
   const excluded = { ...createEntry('song-2', 'Excluded', 'POPS & ANIME'), level: '14' as const }
@@ -293,7 +294,7 @@ test('レベルに差異があればOP対象譜面のレベルで候補範囲を
   ])
 })
 
-test('すべての差異を1つの理論値OP対象レコードフィルターへまとめる', () => {
+test('レベルを含む差異をOP対象外の譜面も表示するレコードフィルターへまとめる', () => {
   // Given
   const mismatches = {
     genres: ['POPS & ANIME', 'VARIETY'],
@@ -311,7 +312,7 @@ test('すべての差異を1つの理論値OP対象レコードフィルター�
   assert.deepEqual(result.nameFolders, ['C'])
   assert.deepEqual(result.levelSet, ['13', '14+'])
   assert.deepEqual(result.const, DEFAULT_FILTER.const)
-  assert.equal(result.opTargetOnly, true)
+  assert.equal(result.opTargetOnly, false)
   assert.equal(result.opTargetType, 'theoretical')
   assert.deepEqual(result.difficulties, [...PLAYER_DATA_DIFFICULTIES])
   assert.equal(result.excludeLockedSongs, false)
@@ -327,6 +328,8 @@ test('差異がない分類軸は既定フィルターのまま絞り込まな�
 
   // Then
   assert.deepEqual(result.genres, ['POPS & ANIME', 'VARIETY'])
+  assert.equal(result.opTargetOnly, true)
+  assert.equal(result.opTargetType, 'theoretical')
   assert.equal(result.nameFolders, null)
   assert.equal('levelSet' in result, false)
 })
@@ -345,4 +348,45 @@ test('楽曲マスタの全譜面にレコードがあれば完全と判定す�
   // When, Then
   assert.equal(hasCompleteLockedSongDiscoveryRecords([song], records), true)
   assert.equal(hasCompleteLockedSongDiscoveryRecords([song], records.slice(0, 1)), false)
+})
+
+test('レベルの差異から現在・理論値ともOP対象外の譜面を候補に含め、他分類と交差させる', () => {
+  // Given
+  const master = createEntry('song-1', 'Candidate', 'POPS & ANIME')
+  const expert: OverPowerChartEntry = { ...master, difficulty: 'EXPERT', level: '13', record: null }
+  const excluded = createEntry('song-2', 'Excluded', 'VARIETY')
+
+  // When
+  const cells = buildLockedSongDiscoveryCells([master, expert, { ...expert }, excluded], {
+    genres: ['POPS & ANIME'],
+    versions: ['VERSE'],
+    nameFolders: ['C'],
+    levels: ['13'],
+  })
+
+  // Then
+  assert.equal(cells.length, 1)
+  assert.equal(cells[0].level, '13')
+  assert.deepEqual(cells[0].songs, [{ id: 'song-1', title: 'Candidate' }])
+})
+
+test('レベルに差異がなければ候補は理論値OP対象譜面に限定する', () => {
+  // Given
+  const master = createEntry('song-1', 'Candidate', 'POPS & ANIME')
+  const expert: OverPowerChartEntry = { ...master, difficulty: 'EXPERT', level: '13' }
+  const nonTargetOnly: OverPowerChartEntry = {
+    ...createEntry('song-2', 'Excluded', 'POPS & ANIME'),
+    difficulty: 'EXPERT',
+  }
+
+  // When
+  const cells = buildLockedSongDiscoveryCells([master, expert, nonTargetOnly], {
+    genres: ['POPS & ANIME'],
+    versions: [],
+    nameFolders: [],
+    levels: [],
+  })
+
+  // Then
+  assert.deepEqual(cells[0].songs, [{ id: 'song-1', title: 'Candidate' }])
 })
