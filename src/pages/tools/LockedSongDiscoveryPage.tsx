@@ -6,13 +6,23 @@ import {
   CircleAlert,
   CircleCheck,
   CircleDashed,
+  Eraser,
   Info,
   ScanSearch,
   SearchX,
   TriangleAlert,
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, createResource, createSignal, For, onMount, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  on,
+  onMount,
+  Show,
+} from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { fetchGenres } from '../../api/genres'
 import { fetchNameFolders } from '../../api/nameFolders'
@@ -64,6 +74,11 @@ import {
   LOCKED_SONG_DISCOVERY_COPY,
   type LockedSongDiscoveryAxis,
 } from './lockedSongDiscovery.constants'
+import {
+  clearLockedSongObservations,
+  readLockedSongObservations,
+  saveLockedSongObservations,
+} from './lockedSongDiscoveryStorage'
 
 /** 照合行の列構成。見出し行と入力行で共有し、列位置を揃える。 */
 const ROW_GRID_CLASS =
@@ -306,6 +321,12 @@ const LockedSongDiscoveryPage: Component = () => {
   /** モバイルの移動ボタンからスクロールさせる候補範囲パネル。 */
   let resultPanel: HTMLElement | undefined
 
+  createEffect(
+    on(username, (currentUsername) => {
+      setObservations(readLockedSongObservations(currentUsername))
+    })
+  )
+
   onMount(ensureSongsLoaded)
   const tool = getToolLink(LOCKED_SONG_DISCOVERY_PATH)
   useDocumentTitle(tool.title)
@@ -393,10 +414,21 @@ const LockedSongDiscoveryPage: Component = () => {
     field: keyof LockedSongObservation,
     value: string
   ): void => {
-    setObservations((current) => ({
+    const next = setObservations((current) => ({
       ...current,
       [key]: { ...(current[key] ?? EMPTY_OBSERVATION), [field]: value },
     }))
+    saveLockedSongObservations(username(), next)
+  }
+
+  /**
+   * 表示中の分類の入力値を消去し、保存済みの値へ反映する。
+   *
+   * @returns なし。
+   */
+  const handleClearObservations = (): void => {
+    const next = setObservations((current) => clearLockedSongObservations(current, selectedAxis()))
+    saveLockedSongObservations(username(), next)
   }
 
   /**
@@ -555,6 +587,19 @@ const LockedSongDiscoveryPage: Component = () => {
                   class="w-full flex-wrap sm:w-auto"
                   itemClass="min-h-10 grow basis-[calc(50%-0.125rem)] sm:basis-auto sm:min-w-28"
                 />
+                <div class="mt-2 flex justify-end">
+                  <AppButton
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    class="min-h-10 font-sans"
+                    leftIcon={<Eraser class="h-4 w-4" aria-hidden="true" />}
+                    aria-label={LOCKED_SONG_DISCOVERY_COPY.clearInputsAriaLabel}
+                    onClick={handleClearObservations}
+                  >
+                    {LOCKED_SONG_DISCOVERY_COPY.clearInputs}
+                  </AppButton>
+                </div>
               </div>
 
               <div class="border-b border-border bg-surface-muted px-3 py-2">

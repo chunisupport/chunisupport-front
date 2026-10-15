@@ -16,6 +16,8 @@ export const LOCKED_SONG_DISCOVERY_COPY = {
   invalid: '入力エラー',
   empty: '未入力',
   axisSelect: '分類軸',
+  clearInputs: '入力を消去',
+  clearInputsAriaLabel: '表示中の分類の入力を消去',
   mismatchedGenres: '差があるジャンル',
   mismatchedVersions: '差があるバージョン',
   mismatchedNameFolders: '差がある楽曲名順',
@@ -39,6 +41,10 @@ export const LOCKED_SONG_DISCOVERY_AXIS_OPTIONS: readonly AppTabOption<LockedSon
     { value: 'nameFolder', label: '楽曲名順' },
     { value: 'level', label: 'レベル順' },
   ]
+
+/** ユーザー別の筐体入力値を保存するlocalStorageキーの接頭辞。 */
+export const LOCKED_SONG_DISCOVERY_OBSERVATIONS_STORAGE_PREFIX =
+  'chunisupport-locked-song-discovery-observations:'
 
 /** 候補曲ダイアログの文言。 */
 export const LOCKED_SONG_CANDIDATES_COPY = {
