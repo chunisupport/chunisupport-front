@@ -14,6 +14,7 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { FormSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
+import { ClassEmblem } from '../../components/common/profile/ClassEmblem'
 import { RECORD_COMPACT_BADGE_CLASS } from '../../components/common/record/RecordBadges'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import type {
@@ -26,6 +27,7 @@ import {
   type CourseClassOption,
   courseClassBadgeClass,
   formatCourseClass,
+  resolveCourseClassEmblemName,
 } from '../../utils/courseClassDisplay'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
@@ -48,6 +50,32 @@ type CourseManagementPageProps = {
 }
 
 type CourseFormMode = 'create' | 'edit'
+
+/**
+ * Ⅰ〜Ⅴと∞をエンブレム、EXと未対応値をバッジで表示する。
+ *
+ * @param props - 表示するコースクラス。
+ * @returns 一覧とクラス選択で使用するクラス表示。
+ */
+const CourseClassDisplay: Component<{ courseClass: string }> = (props) => (
+  <Show
+    when={resolveCourseClassEmblemName(props.courseClass)}
+    fallback={
+      <span class={`${RECORD_COMPACT_BADGE_CLASS} ${courseClassBadgeClass(props.courseClass)}`}>
+        {formatCourseClass(props.courseClass)}
+      </span>
+    }
+  >
+    {(emblem) => (
+      <ClassEmblem
+        emblem={emblem()}
+        base={null}
+        label={formatCourseClass(props.courseClass)}
+        class="h-8 align-middle"
+      />
+    )}
+  </Show>
+)
 
 type CourseFormDialogProps = {
   open: boolean
@@ -210,7 +238,7 @@ const CourseFormDialog: Component<CourseFormDialogProps> = (props): JSX.Element 
                 }
                 placeholder={COURSE_MANAGEMENT_COPY.classPlaceholder}
                 contentZIndexClass="z-60"
-                formatLabel={(option) => option.label}
+                formatLabel={(option) => <CourseClassDisplay courseClass={option.value} />}
                 disabled={props.saving}
               />
 
@@ -484,11 +512,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
                       <td class="whitespace-nowrap px-3 py-2 font-mono">{course.idx}</td>
                       <td class="px-3 py-2 font-sans">{course.name}</td>
                       <td class="whitespace-nowrap px-3 py-2">
-                        <span
-                          class={`${RECORD_COMPACT_BADGE_CLASS} ${courseClassBadgeClass(course.class)}`}
-                        >
-                          {formatCourseClass(course.class)}
-                        </span>
+                        <CourseClassDisplay courseClass={course.class} />
                       </td>
                       <td class="whitespace-nowrap px-3 py-2">
                         {isManagedCourseDeleted(course)
