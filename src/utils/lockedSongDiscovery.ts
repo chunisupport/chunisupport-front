@@ -278,3 +278,30 @@ export const hasCompleteLockedSongDiscoveryRecords = (
     )
   )
 }
+
+/** ダイアログに表示する候補楽曲と、全難易度から選んだプレイ済みOP対象譜面。 */
+export type LockedSongDiscoveryCandidate = {
+  song: SongDTO
+  opTarget: OverPowerChartEntry | null
+}
+
+/**
+ * 候補範囲内の楽曲を重複なく取り出し、全難易度から現在のOP対象を求める。
+ *
+ * @param entries - 候補レベルで絞り込む前の全譜面エントリ。
+ * @param cells - 表示する候補範囲。
+ * @returns 楽曲名順の候補と、プレイ済みの場合だけOP対象譜面。
+ */
+export const buildLockedSongDiscoveryCandidates = (
+  entries: OverPowerChartEntry[],
+  cells: readonly LockedSongDiscoveryCell[]
+): LockedSongDiscoveryCandidate[] => {
+  const songIds = new Set(cells.flatMap((cell) => cell.songs.map((song) => song.id)))
+  const candidateEntries = entries.filter((entry) => songIds.has(entry.song.id))
+  return selectOverPowerChartEntries(candidateEntries, 'OP_TARGET')
+    .map((entry) => ({
+      song: entry.song,
+      opTarget: entry.record?.is_played ? entry : null,
+    }))
+    .sort((left, right) => left.song.title.localeCompare(right.song.title, 'ja'))
+}
