@@ -84,7 +84,13 @@ const buildGenreSummaries = (
     .sort((a, b) => compareMasterItemNames(a.label, b.label, genreOrderMap))
 }
 
-const buildLevelSummaries = (entries: OverPowerChartEntry[]): OverPowerLevelSummaryRow[] => {
+/**
+ * 指定された譜面をレベルごとに集計する。
+ *
+ * @param entries - 集計対象の譜面エントリ。
+ * @returns レベル順のOP、理論値、OP%、譜面数。
+ */
+export const buildLevelSummaries = (entries: OverPowerChartEntry[]): OverPowerLevelSummaryRow[] => {
   const groups = new Map<ChartLevelLabel, MutableSummary>()
   for (const entry of entries) {
     addToGroup(groups, entry.level, entry.record?.overpower ?? 0, entry.maxOverPower)

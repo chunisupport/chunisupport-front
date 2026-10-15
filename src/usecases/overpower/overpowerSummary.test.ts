@@ -2,9 +2,13 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
-import { buildOverPowerChartEntries } from './aggregation'
+import { buildOverPowerChartEntries, selectOverPowerChartEntries } from './aggregation'
 import { OVER_POWER_MASTER_ULTIMA_TARGET, OVER_POWER_THEORETICAL_TARGET } from './constants'
-import { buildNameFolderSummaries, buildOverPowerSummary } from './overpowerSummary'
+import {
+  buildLevelSummaries,
+  buildNameFolderSummaries,
+  buildOverPowerSummary,
+} from './overpowerSummary'
 
 const versions: VersionSummaryDTO[] = [
   { name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
@@ -479,4 +483,54 @@ test('楽曲名順フォルダごとにOPを集計し、マスタの表示順で
       ['CUSTOM', 'CUSTOM', 0, 90],
     ]
   )
+})
+
+test('全譜面のレベル別集計はOP対象外と未プレイを含み、他分類は現在OP対象だけを集計する', () => {
+  // Given
+  const songs = [
+    createSong({
+      id: 'multi',
+      maxop: 90,
+      charts: {
+        EXPERT: { const: 13, is_const_unknown: false, notes: null },
+        MASTER: { const: 13.4, is_const_unknown: false, notes: null },
+        ULTIMA: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+  const records = [
+    createRecord({ id: 'multi', difficulty: 'EXPERT', overpower: 40, is_op_target: false }),
+    createRecord({ id: 'multi', difficulty: 'MASTER', overpower: 60, is_op_target: true }),
+    createRecord({
+      id: 'multi',
+      difficulty: 'ULTIMA',
+      overpower: 0,
+      is_played: false,
+      is_op_target: false,
+    }),
+  ]
+  const entries = buildOverPowerChartEntries(songs, records, versions)
+
+  // When
+  const levels = buildLevelSummaries(entries)
+  const summary = buildOverPowerSummary(songs, records, versions)
+  const nameFolders = buildNameFolderSummaries(selectOverPowerChartEntries(entries, 'OP_TARGET'), [
+    { code: 'NUMBER', name: '数字', sort_order: 1 },
+  ])
+
+  // Then
+  assert.deepEqual(
+    levels.map(({ level, current, max, count }) => ({ level, current, max, count })),
+    [
+      { level: '13', current: 100, max: 162, count: 2 },
+      { level: '15', current: 0, max: 90, count: 1 },
+    ]
+  )
+  assert.equal(levels[0].percent, (100 / 162) * 100)
+  assert.equal(levels[1].percent, 0)
+  for (const row of [summary.all, ...summary.genres, ...summary.versions, ...nameFolders]) {
+    assert.equal(row.current, 60)
+    assert.equal(row.max, 90)
+    assert.equal(row.count, 1)
+  }
 })

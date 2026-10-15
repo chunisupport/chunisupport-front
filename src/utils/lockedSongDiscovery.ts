@@ -1,6 +1,8 @@
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import type { FilterState } from '../types/recordFilter'
+import { selectOverPowerChartEntries } from '../usecases/overpower/aggregation'
+import { OVER_POWER_THEORETICAL_TARGET } from '../usecases/overpower/constants'
 import type { OverPowerChartEntry, OverPowerSummaryRow } from '../usecases/overpower/types'
 import type { ChartLevelLabel } from './chartLevel'
 
@@ -38,7 +40,7 @@ export type LockedSongDiscoveryCell = {
   version: string
   /** 楽曲名順フォルダのコード。楽曲名順に差異がなければnull。 */
   nameFolder: string | null
-  /** OP対象譜面のレベル。レベルに差異がなければnull。 */
+  /** 譜面のレベル。レベルに差異がなければnull。 */
   level: ChartLevelLabel | null
   songs: Array<Pick<SongDTO, 'id' | 'title'>>
 }
@@ -49,7 +51,7 @@ export type LockedSongDiscoveryMismatches = {
   versions: readonly string[]
   /** 楽曲名順フォルダのコード。 */
   nameFolders: readonly string[]
-  /** OP対象譜面のレベル表記。 */
+  /** 譜面のレベル表記。 */
   levels: readonly ChartLevelLabel[]
 }
 
@@ -184,9 +186,9 @@ export const compareLockedSongObservation = (
 }
 
 /**
- * 不一致のジャンル、バージョン、楽曲名順、レベルでOP対象曲を候補範囲へまとめる。
+ * 不一致のジャンル、バージョン、楽曲名順、レベルで候補範囲をまとめる。
  *
- * @param entries - 曲ごとのOP対象譜面エントリ。
+ * @param entries - 未プレイを含む全通常譜面エントリ。
  * @param mismatches - 筐体表示と一致しなかったジャンル、バージョン、楽曲名順フォルダ、レベル。
  * @returns 入力済みの差異だけで絞り込んだジャンル・バージョン（・楽曲名順・レベル）一覧。
  * 楽曲名順とレベルは、差異がある場合だけ候補範囲を分ける軸に加える。
@@ -209,7 +211,11 @@ export const buildLockedSongDiscoveryCells = (
     return []
   }
 
-  for (const entry of entries) {
+  const candidateEntries = selectOverPowerChartEntries(
+    entries,
+    levelSet.size > 0 ? 'ALL' : OVER_POWER_THEORETICAL_TARGET
+  )
+  for (const entry of candidateEntries) {
     const genre = entry.song.genre
     if (!genre) continue
     if (genreSet.size > 0 && !genreSet.has(genre)) continue
@@ -236,7 +242,7 @@ export const buildLockedSongDiscoveryCells = (
  *
  * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
  * @param mismatches - 筐体表示と一致しなかったジャンル、バージョン、楽曲名順フォルダ、レベル。
- * @returns 理論値OP対象譜面と、差異がある分類軸だけを絞り込んだ通常レコードフィルター。
+ * @returns レベルに差異があれば全譜面、それ以外は理論値OP対象譜面を分類軸で絞り込んだフィルター。
  * 未解禁曲は未プレイで現在のOP対象フラグを持たないため、理論値OP対象で判定する。
  * レベルは離れた複数レベルを指定できるよう、画面に表示しないレベル指定で渡す。
  */
@@ -245,7 +251,7 @@ export const buildLockedSongCandidateRecordFilter = (
   mismatches: LockedSongDiscoveryMismatches
 ): FilterState => ({
   ...defaultFilter,
-  opTargetOnly: true,
+  opTargetOnly: mismatches.levels.length === 0,
   opTargetType: 'theoretical',
   difficulties: [...PLAYER_DATA_DIFFICULTIES],
   genres: mismatches.genres.length > 0 ? [...mismatches.genres] : defaultFilter.genres,
