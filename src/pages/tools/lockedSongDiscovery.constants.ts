@@ -5,10 +5,10 @@ export type LockedSongDiscoveryAxis = 'genre' | 'version' | 'nameFolder' | 'leve
 
 /** 未解禁曲ディスカバーの画面文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const LOCKED_SONG_DISCOVERY_COPY = {
-  inputGuide: '筐体と違う分類だけ入力（OP・OP%は片方でも可）',
   dataLoading: '照合用データを読み込み中',
-  calculated: 'ChuniSupportの計算値',
-  categoryColumn: '分類',
+  prerequisitesLabel: '以下の条件を満たしていますか？',
+  prerequisiteTicket: '全難易度プレイチケットを使用している',
+  prerequisiteMaster: '選曲画面でMASTERを選択している',
   observedOverPower: '筐体OP',
   observedPercent: '筐体OP%',
   matched: '一致',

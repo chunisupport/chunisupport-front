@@ -178,7 +178,7 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '未解禁曲ディスカバー',
     href: LOCKED_SONG_DISCOVERY_PATH,
     icon: 'discover',
-    description: '分類別の筐体OVER POWERを照合し、未解禁曲がある範囲を絞り込みます。',
+    description: '筐体のOVER POWERと見比べて、未解禁曲の候補を絞り込めます。',
     adminOnly: true,
   },
   {
