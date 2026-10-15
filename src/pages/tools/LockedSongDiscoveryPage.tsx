@@ -7,9 +7,10 @@ import {
   CircleCheck,
   CircleDashed,
   Eraser,
-  Info,
+  ListMusic,
   ScanSearch,
   SearchX,
+  Ticket,
   TriangleAlert,
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
@@ -79,9 +80,9 @@ import {
   saveLockedSongObservations,
 } from './lockedSongDiscoveryStorage'
 
-/** 照合行の列構成。見出し行と入力行で共有し、列位置を揃える。 */
+/** 照合行の列構成。見出し行と入力行で共有し、列位置を揃える。OP%列は最大値100.00が収まる幅にする。 */
 const ROW_GRID_CLASS =
-  'grid grid-cols-[minmax(0,1fr)_5.5rem_5rem] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_8rem_7rem] sm:gap-x-3'
+  'grid grid-cols-[minmax(0,1fr)_5.5rem_4.5rem] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_8rem_5rem] sm:gap-x-3'
 
 /** 入力欄・見出しなどのID接頭辞。 */
 const ID_PREFIX = 'locked-song-discovery'
@@ -91,7 +92,13 @@ const RESULT_TITLE_ID = `${ID_PREFIX}-result-title`
 
 /** 筐体観測値入力に共通するスタイル。モバイルではタッチしやすい高さにする。 */
 const INPUT_CLASS =
-  'h-11 w-full sm:h-10 rounded-md border border-input-border bg-input-bg px-2 text-right font-jost text-base tabular-nums text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring data-[invalid]:border-danger'
+  'h-11 w-full sm:h-10 rounded-md border border-input-border bg-input-bg px-2 text-right font-jost text-base tabular-nums text-text placeholder:text-text-subtle hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring data-[invalid]:border-danger'
+
+/**
+ * アイコンと横並びにする日本語テキストのクラス。
+ * Noto Sans JPは行ボックス内で文字が下寄りになるため、表意文字の外枠で上下を詰めてアイコンと中央を揃える。
+ */
+const ICON_ALIGNED_TEXT_CLASS = '[text-box:trim-both_ideographic]'
 
 /** 照合状態ごとの行スタイル、アイコン、読み上げ文言。 */
 const STATUS_VIEW: Record<
@@ -135,6 +142,8 @@ type ObservationFieldProps = {
   label: string
   /** 現在の入力値。 */
   value: string
+  /** 未入力時に表示する計算値。 */
+  placeholder: string
   /** 入力エラー文。エラーがなければ空文字。 */
   error: string
   /** 入力変更時の通知先。 */
@@ -145,7 +154,7 @@ type ObservationFieldProps = {
  * 筐体に表示されたOPまたはOP%を入力する欄を表示する。
  * 見出しは列ヘッダーで視覚的に示すため、ラベルはスクリーンリーダー専用にする。
  *
- * @param props - 入力欄ID、ラベル、現在値、エラー文、入力更新処理。
+ * @param props - 入力欄ID、ラベル、現在値、未入力時の計算値、エラー文、入力更新処理。
  * @returns 小数入力用のテキストフィールド。
  */
 const ObservationField: Component<ObservationFieldProps> = (props) => (
@@ -164,6 +173,7 @@ const ObservationField: Component<ObservationFieldProps> = (props) => (
       inputMode="decimal"
       autocomplete="off"
       pattern="[0-9]*[.]?[0-9]{0,2}"
+      placeholder={props.placeholder}
       class={INPUT_CLASS}
       aria-describedby={props.error ? `${props.id}-error` : undefined}
     />
@@ -185,7 +195,7 @@ type ComparisonRowProps = {
 }
 
 /**
- * 1分類分の計算値、筐体入力、照合状態を1行で表示する。
+ * 1分類分の筐体入力と照合状態を1行で表示する。計算値は入力欄のプレースホルダーで示す。
  *
  * @param props - 入力欄IDの接頭辞、集計行、観測値、照合結果、入力更新処理。
  * @returns ジャンル、バージョン、楽曲名順、レベルいずれか1行分の照合フォーム。
@@ -206,22 +216,15 @@ const ComparisonRow: Component<ComparisonRowProps> = (props) => {
             />
             <span class="sr-only">{status().label}</span>
           </span>
-          <div class="min-w-0">
-            <p class="truncate font-sans text-sm font-semibold text-text">{props.row.label}</p>
-            <p
-              class="flex flex-wrap gap-x-2 font-jost text-xs tabular-nums text-text-muted"
-              title={LOCKED_SONG_DISCOVERY_COPY.calculated}
-            >
-              <span class="sr-only">{LOCKED_SONG_DISCOVERY_COPY.calculated}</span>
-              <span>{formatTruncatedFixed(props.row.current, 2)}</span>
-              <span>{formatTruncatedFixed(props.row.percent, 2)}%</span>
-            </p>
-          </div>
+          <p class="min-w-0 truncate font-sans text-sm font-semibold text-text">
+            {props.row.label}
+          </p>
         </div>
         <ObservationField
           id={inputId('overPower')}
           label={`${props.row.label} ${LOCKED_SONG_DISCOVERY_COPY.observedOverPower}`}
           value={props.observation.overPower}
+          placeholder={formatTruncatedFixed(props.row.current, 2)}
           error={props.comparison.overPowerError}
           onChange={(value) => props.onChange('overPower', value)}
         />
@@ -229,6 +232,7 @@ const ComparisonRow: Component<ComparisonRowProps> = (props) => {
           id={inputId('percent')}
           label={`${props.row.label} ${LOCKED_SONG_DISCOVERY_COPY.observedPercent}`}
           value={props.observation.percent}
+          placeholder={formatTruncatedFixed(props.row.percent, 2)}
           error={props.comparison.percentError}
           onChange={(value) => props.onChange('percent', value)}
         />
@@ -505,6 +509,32 @@ const LockedSongDiscoveryPage: Component = () => {
         </div>
       </header>
 
+      <section
+        class="flex flex-col gap-1.5 self-start rounded-md border border-warning-border bg-warning-bg px-3 py-2 font-sans text-sm text-warning"
+        aria-labelledby="locked-song-discovery-prerequisites"
+      >
+        <h2 id="locked-song-discovery-prerequisites" class="flex items-center gap-2 font-semibold">
+          <TriangleAlert class="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span class={ICON_ALIGNED_TEXT_CLASS}>
+            {LOCKED_SONG_DISCOVERY_COPY.prerequisitesLabel}
+          </span>
+        </h2>
+        <ul class="flex flex-col gap-1.5 pl-6">
+          <li class="flex items-center gap-2">
+            <Ticket class="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span class={ICON_ALIGNED_TEXT_CLASS}>
+              {LOCKED_SONG_DISCOVERY_COPY.prerequisiteTicket}
+            </span>
+          </li>
+          <li class="flex items-center gap-2">
+            <ListMusic class="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span class={ICON_ALIGNED_TEXT_CLASS}>
+              {LOCKED_SONG_DISCOVERY_COPY.prerequisiteMaster}
+            </span>
+          </li>
+        </ul>
+      </section>
+
       <Show
         when={!loadError()}
         fallback={
@@ -533,7 +563,7 @@ const LockedSongDiscoveryPage: Component = () => {
 
           <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
             <section class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-              <div class="border-b border-border p-3">
+              <div class="flex flex-wrap items-center gap-2 border-b border-border p-3">
                 <SegmentedToggleGroup
                   options={axisOptions()}
                   value={selectedAxis()}
@@ -542,19 +572,17 @@ const LockedSongDiscoveryPage: Component = () => {
                   class="w-full flex-wrap sm:w-auto"
                   itemClass="min-h-10 grow basis-[calc(50%-0.125rem)] sm:basis-auto sm:min-w-28"
                 />
-                <div class="mt-2 flex justify-end">
-                  <AppButton
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    class="min-h-10 font-sans"
-                    leftIcon={<Eraser class="h-4 w-4" aria-hidden="true" />}
-                    aria-label={LOCKED_SONG_DISCOVERY_COPY.clearInputsAriaLabel}
-                    onClick={handleClearObservations}
-                  >
-                    {LOCKED_SONG_DISCOVERY_COPY.clearInputs}
-                  </AppButton>
-                </div>
+                <AppButton
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class="ml-auto min-h-10 font-sans"
+                  leftIcon={<Eraser class="h-4 w-4" aria-hidden="true" />}
+                  aria-label={LOCKED_SONG_DISCOVERY_COPY.clearInputsAriaLabel}
+                  onClick={handleClearObservations}
+                >
+                  {LOCKED_SONG_DISCOVERY_COPY.clearInputs}
+                </AppButton>
               </div>
 
               <div class="border-b border-border bg-surface-muted px-3 py-2">
@@ -562,14 +590,10 @@ const LockedSongDiscoveryPage: Component = () => {
                   class={`${ROW_GRID_CLASS} border-l-4 border-l-transparent font-sans text-xs font-medium text-text-muted`}
                   aria-hidden="true"
                 >
-                  <span class="pl-6">{LOCKED_SONG_DISCOVERY_COPY.categoryColumn}</span>
-                  <span class="text-right">{LOCKED_SONG_DISCOVERY_COPY.observedOverPower}</span>
-                  <span class="text-right">{LOCKED_SONG_DISCOVERY_COPY.observedPercent}</span>
+                  <span />
+                  <span class="text-center">{LOCKED_SONG_DISCOVERY_COPY.observedOverPower}</span>
+                  <span class="text-center">{LOCKED_SONG_DISCOVERY_COPY.observedPercent}</span>
                 </div>
-                <p class="mt-1 flex items-center gap-1 font-sans text-xs text-text-subtle">
-                  <Info class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {LOCKED_SONG_DISCOVERY_COPY.inputGuide}
-                </p>
               </div>
 
               <ul class="divide-y divide-border">
