@@ -21,7 +21,10 @@ import { buildLockedSongsOpComparison } from '../../usecases/overpower/lockedSon
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import type { LockedSongDiscoveryCandidate } from '../../utils/lockedSongDiscovery'
 import { formatInteger, formatTruncatedFixed } from '../../utils/numberFormat'
-import { LOCKED_SONG_CANDIDATES_COPY as COPY } from './lockedSongDiscovery.constants'
+import {
+  LOCKED_SONG_CANDIDATES_COPY as COPY,
+  LOCKED_SONG_DISCOVERY_COPY,
+} from './lockedSongDiscovery.constants'
 
 /**
  * 通常楽曲とULTIMAの候補を、OP対象レコード付きの横長の選択行で表示する。
@@ -34,6 +37,7 @@ export const LockedSongCandidatesDialog = (props: {
   candidates: LockedSongDiscoveryCandidate[]
   songs: SongDTO[]
   records: PlayerRecordDTO[]
+  recordsComplete: boolean
   versions: VersionSummaryDTO[]
   onClose: () => void
 }) => {
@@ -52,7 +56,7 @@ export const LockedSongCandidatesDialog = (props: {
     fetchUserProfileSummary
   )
   const opComparison = createMemo(() => {
-    if (profile.error || lockedKeys.error) return undefined
+    if (!props.recordsComplete || profile.error || lockedKeys.error) return undefined
     const player = profile()?.player
     const keys = lockedKeys()
     if (!player || !keys) return undefined
@@ -122,6 +126,11 @@ export const LockedSongCandidatesDialog = (props: {
               {candidateSongCount()}
               {COPY.songCountUnit}
             </p>
+            <Show when={!props.recordsComplete}>
+              <p class="mt-2 text-sm text-danger" role="alert">
+                {LOCKED_SONG_DISCOVERY_COPY.recordIncomplete}
+              </p>
+            </Show>
             <Show when={profile.loading}>
               <div class="flex justify-center py-2">
                 <Loading size="inline" />
