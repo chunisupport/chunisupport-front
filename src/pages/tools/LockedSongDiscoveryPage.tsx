@@ -692,6 +692,7 @@ const LockedSongDiscoveryPage: Component = () => {
               candidates={dialogCandidates()}
               songs={songsResponse()?.songs ?? []}
               records={record()?.standard ?? []}
+              recordsComplete={recordsComplete()}
               versions={versions()?.versions ?? []}
               onClose={() => setCandidateDialogOpen(false)}
             />
