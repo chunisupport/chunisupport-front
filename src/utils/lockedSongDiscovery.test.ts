@@ -9,6 +9,7 @@ import {
   buildLockedSongDiscoveryCells,
   compareLockedSongObservation,
   hasCompleteLockedSongDiscoveryRecords,
+  type LockedSongDiscoveryMismatches,
   matchesLockedSongObservation,
   parseDisplayedHundredths,
 } from './lockedSongDiscovery'
@@ -128,7 +129,6 @@ test('不一致のジャンルとバージョンの交差にある曲を候補�
   assert.deepEqual(result, [
     {
       genre: 'POPS & ANIME',
-      version: 'VERSE',
       nameFolder: null,
       level: null,
       songs: [{ id: 'song-1', title: 'Candidate' }],
@@ -166,7 +166,7 @@ test('ジャンルだけ入力されても候補範囲を生成する', () => {
 
   // Then
   assert.equal(result.length, 1)
-  assert.equal(result[0].version, 'VERSE')
+  assert.deepEqual(result[0].songs, [{ id: entry.song.id, title: entry.song.title }])
 })
 
 test('ジャンルだけの絞り込みでは収録バージョン不明の曲も候補に残す', () => {
@@ -183,7 +183,7 @@ test('ジャンルだけの絞り込みでは収録バージョン不明の曲�
 
   // Then
   assert.equal(result.length, 1)
-  assert.equal(result[0].version, '不明')
+  assert.deepEqual(result[0].songs, [{ id: entry.song.id, title: entry.song.title }])
 })
 
 test('バージョンだけ入力されても候補範囲を生成する', () => {
@@ -262,7 +262,6 @@ test('楽曲名順に差異があれば楽曲名順フォルダで候補範囲�
   assert.deepEqual(result, [
     {
       genre: 'POPS & ANIME',
-      version: 'VERSE',
       nameFolder: 'C',
       level: null,
       songs: [{ id: 'song-1', title: 'Candidate' }],
@@ -287,7 +286,6 @@ test('レベルに差異があれば譜面のレベルで候補範囲を絞り�
   assert.deepEqual(result, [
     {
       genre: 'POPS & ANIME',
-      version: 'VERSE',
       nameFolder: null,
       level: '14+',
       songs: [{ id: 'song-1', title: 'Candidate' }],
@@ -543,4 +541,37 @@ test('通常行はULTIMA以外のOP対象、ULTIMA行はULTIMAのレコードを
   assert.equal(unplayedUltima[0].opTarget?.difficulty, 'EXPERT')
   assert.equal(unplayedUltima[1].isUltima, true)
   assert.equal(unplayedUltima[1].opTarget, null)
+})
+
+test('バージョンが異なる候補曲も同じ範囲へまとめ、入力済みバージョンでは絞り込む', () => {
+  // Given
+  const verse = createEntry('song-1', 'Verse song', 'POPS & ANIME')
+  const sun = { ...createEntry('song-2', 'Sun song', 'POPS & ANIME'), versionName: 'SUN' }
+  const unknown = { ...createEntry('song-3', 'Unknown song', 'POPS & ANIME'), versionName: null }
+  const entries = [verse, sun, unknown, verse]
+  const mismatches: LockedSongDiscoveryMismatches = {
+    genres: ['POPS & ANIME'],
+    versions: [],
+    nameFolders: [],
+    levels: [],
+  }
+
+  // When
+  const all = buildLockedSongDiscoveryCells(entries, mismatches)
+  const selected = buildLockedSongDiscoveryCells(entries, {
+    ...mismatches,
+    versions: ['VERSE', 'SUN'],
+  })
+
+  // Then
+  assert.equal(all.length, 1)
+  assert.deepEqual(
+    all[0].songs.map((song) => song.id),
+    ['song-1', 'song-2', 'song-3']
+  )
+  assert.equal(selected.length, 1)
+  assert.deepEqual(
+    selected[0].songs.map((song) => song.id),
+    ['song-1', 'song-2']
+  )
 })
