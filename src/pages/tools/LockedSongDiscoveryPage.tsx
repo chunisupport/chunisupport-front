@@ -706,10 +706,9 @@ const LockedSongDiscoveryPage: Component = () => {
                   <ul class="max-h-[60vh] min-h-0 flex-1 divide-y divide-border overflow-y-auto lg:max-h-none">
                     <For each={candidateCells()}>
                       {(cell) => {
-                        /** 候補範囲のジャンル、楽曲名順、レベルを並べた補足表示。 */
+                        /** 候補範囲を分ける楽曲名順とレベルの補足表示。 */
                         const subLabel = () =>
                           [
-                            cell.genre,
                             cell.nameFolder === null ? null : toNameFolderLabel(cell.nameFolder),
                             cell.level,
                           ]
@@ -721,16 +720,18 @@ const LockedSongDiscoveryPage: Component = () => {
                               variant="ghost"
                               fullWidth
                               class="justify-between gap-3 px-4 py-2.5 text-left font-sans focus-visible:ring-inset"
-                              aria-label={`${cell.version} ${subLabel()} ${LOCKED_SONG_CANDIDATES_COPY.openRange}`}
+                              aria-label={`${cell.genre} ${subLabel()} ${LOCKED_SONG_CANDIDATES_COPY.openRange}`}
                               onClick={() => setDialogCells([cell])}
                             >
                               <span class="min-w-0">
                                 <span class="block truncate text-sm font-semibold text-text">
-                                  {cell.version}
+                                  {cell.genre}
                                 </span>
-                                <span class="block truncate text-xs text-text-muted">
-                                  {subLabel()}
-                                </span>
+                                <Show when={subLabel()}>
+                                  <span class="block truncate text-xs text-text-muted">
+                                    {subLabel()}
+                                  </span>
+                                </Show>
                               </span>
                               <span class="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 font-jost text-xs font-medium tabular-nums text-warning">
                                 {cell.songs.length}

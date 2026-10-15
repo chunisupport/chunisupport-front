@@ -15,9 +15,6 @@ export const OBSERVED_OVER_POWER_UNIT_MILLI = 10
 /** 筐体のOP%表示単位。 */
 export const OBSERVED_PERCENT_UNIT_BASIS_POINTS = 1
 
-/** 収録バージョンを解決できない候補の表示名。 */
-const UNKNOWN_VERSION_LABEL = '不明'
-
 /** ジャンル別・バージョン別の筐体観測値。 */
 export type LockedSongObservation = {
   overPower: string
@@ -34,10 +31,9 @@ export type LockedSongComparison = {
   percentError: string
 }
 
-/** 不一致のジャンル、バージョン、楽曲名順、レベルから絞り込んだ候補範囲。 */
+/** 不一致の分類から絞り込み、ジャンル・楽曲名順・レベルでまとめた候補範囲。 */
 export type LockedSongDiscoveryCell = {
   genre: string
-  version: string
   /** 楽曲名順フォルダのコード。楽曲名順に差異がなければnull。 */
   nameFolder: string | null
   /** 譜面のレベル。レベルに差異がなければnull。 */
@@ -186,11 +182,11 @@ export const compareLockedSongObservation = (
 }
 
 /**
- * 不一致のジャンル、バージョン、楽曲名順、レベルで候補範囲をまとめる。
+ * 不一致の分類で候補を絞り込み、バージョンを分けずに候補範囲をまとめる。
  *
  * @param entries - 未プレイを含む全通常譜面エントリ。
  * @param mismatches - 筐体表示と一致しなかったジャンル、バージョン、楽曲名順フォルダ、レベル。
- * @returns 入力済みの差異だけで絞り込んだジャンル・バージョン（・楽曲名順・レベル）一覧。
+ * @returns 入力済みの差異だけで絞り込んだジャンル（・楽曲名順・レベル）一覧。
  * 楽曲名順とレベルは、差異がある場合だけ候補範囲を分ける軸に加える。
  */
 export const buildLockedSongDiscoveryCells = (
@@ -222,11 +218,10 @@ export const buildLockedSongDiscoveryCells = (
     if (versionSet.size > 0 && (!entry.versionName || !versionSet.has(entry.versionName))) continue
     if (nameFolderSet.size > 0 && !nameFolderSet.has(entry.song.name_folder_code)) continue
     if (levelSet.size > 0 && !levelSet.has(entry.level)) continue
-    const version = entry.versionName ?? UNKNOWN_VERSION_LABEL
     const nameFolder = nameFolderSet.size > 0 ? entry.song.name_folder_code : null
     const level = levelSet.size > 0 ? entry.level : null
-    const key = [genre, version, nameFolder ?? '', level ?? ''].join('\u0000')
-    const cell = cells.get(key) ?? { genre, version, nameFolder, level, songs: [] }
+    const key = [genre, nameFolder ?? '', level ?? ''].join('\u0000')
+    const cell = cells.get(key) ?? { genre, nameFolder, level, songs: [] }
     if (!cell.songs.some((song) => song.id === entry.song.id)) {
       cell.songs.push({ id: entry.song.id, title: entry.song.title })
     }
