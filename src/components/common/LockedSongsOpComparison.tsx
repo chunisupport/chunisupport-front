@@ -2,23 +2,22 @@ import { Collapsible } from '@kobalte/core/collapsible'
 import { Info } from 'lucide-solid'
 import type { Accessor, Component } from 'solid-js'
 import { Show } from 'solid-js'
-import { AppDisclosureTrigger } from '../../../../components/common/AppDisclosureTrigger'
 import {
   formatLockedSongsOverPowerDelta,
   formatLockedSongsOverPowerPercentDelta,
   formatOfficialOverPowerDisplay,
   getLockedSongsOpComparisonDeltaDirection,
   type LockedSongsOpComparisonResult,
-} from '../../../../usecases/overpower/lockedSongsOpComparison'
-import { formatOverPowerPercent, formatOverPowerValue } from '../../../../utils/overPowerFormat'
-import {
-  LOCKED_SONGS_OP_COMPARISON_COPY,
-  OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES,
-} from '../constants'
+} from '../../usecases/overpower/lockedSongsOpComparison'
+import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import { AppDisclosureTrigger } from './AppDisclosureTrigger'
+import { LOCKED_SONGS_OP_COMPARISON_COPY } from './LockedSongsOpComparison.constants'
 
 type Props = {
   /** 未解禁設定の下書きに対する公式値と計算値の照合結果 */
   comparison: Accessor<LockedSongsOpComparisonResult>
+  /** 差異の理由を説明する案内文を表示するか。既定は表示する。 */
+  showGuidance?: boolean
 }
 
 /**
@@ -34,9 +33,9 @@ const valueToneClass = (matched: boolean | null): string => {
 }
 
 /**
- * 未解禁楽曲設定ダイアログで公式OP/OP%と計算値を折りたたみ表示する。
+ * 未解禁設定に対する公式OP/OP%・計算値・差分を共通の比較表で表示する。
  *
- * @param props - 公式値と計算値の照合結果。
+ * @param props - 公式値と計算値の照合結果、および案内文の表示可否。
  * @returns 初期状態で開いた公式値と計算値の比較表。
  */
 export const LockedSongsOpComparison: Component<Props> = (props) => {
@@ -114,8 +113,7 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
                 )} ${officialPercentText()} ${LOCKED_SONGS_OP_COMPARISON_COPY.calculated} ${formatOverPowerValue(
                   props.comparison().calculatedOverPower
                 )} ${formatOverPowerPercent(
-                  props.comparison().calculatedOverPowerPercent,
-                  OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES
+                  props.comparison().calculatedOverPowerPercent
                 )}% ${statusLabel()} ${overPowerDeltaText()} ${percentDeltaText() ?? ''}`}
               </caption>
               <thead>
@@ -165,11 +163,7 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
                       props.comparison().percentMatched
                     )}`}
                   >
-                    {formatOverPowerPercent(
-                      props.comparison().calculatedOverPowerPercent,
-                      OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES
-                    )}
-                    %
+                    {formatOverPowerPercent(props.comparison().calculatedOverPowerPercent)}%
                   </td>
                 </tr>
               </tbody>
@@ -194,7 +188,7 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
               </Show>
             </table>
           </div>
-          <Show when={overPowerGuidanceText()}>
+          <Show when={props.showGuidance !== false && overPowerGuidanceText()}>
             {(message) => (
               <div class="flex w-full min-w-0 items-start gap-2 rounded-md border border-info-border bg-info-bg px-3 py-2 font-sans text-sm text-info">
                 <Info class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -205,7 +199,7 @@ export const LockedSongsOpComparison: Component<Props> = (props) => {
               </div>
             )}
           </Show>
-          <Show when={percentGuidanceText()}>
+          <Show when={props.showGuidance !== false && percentGuidanceText()}>
             {(message) => (
               <div class="flex w-full min-w-0 items-start gap-2 rounded-md border border-info-border bg-info-bg px-3 py-2 font-sans text-sm text-info">
                 <Info class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />

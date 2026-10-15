@@ -6,6 +6,7 @@ import { createMemo, createSignal, Show } from 'solid-js'
 import { getAppIconButtonClass } from '../../../../components/common/AppButton'
 import { AppSelect } from '../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { LockedSongsOpComparison } from '../../../../components/common/LockedSongsOpComparison'
 import type {
   MasterItemDTO,
   NameFolderDTO,
@@ -48,7 +49,6 @@ import {
   LOCKED_SONGS_UNLOCK_REQUIRED_ONLY_LABEL,
   type LockedSongsPlayStatus,
 } from '../constants'
-import { LockedSongsOpComparison } from './LockedSongsOpComparison'
 import { matchesLockedSongsPlayStatus } from './lockedSongsFilter'
 
 type Props = {

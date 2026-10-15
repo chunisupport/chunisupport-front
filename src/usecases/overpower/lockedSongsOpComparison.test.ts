@@ -246,3 +246,43 @@ test('記録の更新日より後に追加された未プレイ楽曲も公式OP
   assert.equal(result.percentMatched, false)
   assert.equal(result.matched, false)
 })
+
+test('候補曲の未解禁設定を試す間も候補外の設定を含め、解除すると元の公式値との一致に戻る', () => {
+  // Given
+  const songs = [
+    createSong({ id: 'candidate' }),
+    createSong({ id: 'outside' }),
+    createSong({ id: 'remaining' }),
+  ]
+  const records = [
+    createRecord({ id: 'candidate', overpower: 90 }),
+    createRecord({ id: 'outside', overpower: 60 }),
+    createRecord({ id: 'remaining', overpower: 30 }),
+  ]
+  const input = {
+    songs,
+    records,
+    versions,
+    officialOverPower: 120,
+    officialOverPowerPercent: 66.66,
+  }
+  const savedOutside = { id: 'outside', is_ultima: false }
+
+  // When
+  const before = buildLockedSongsOpComparison({ ...input, lockedSongs: [savedOutside] })
+  const selected = buildLockedSongsOpComparison({
+    ...input,
+    lockedSongs: [savedOutside, { id: 'candidate', is_ultima: false }],
+  })
+  const restored = buildLockedSongsOpComparison({ ...input, lockedSongs: [savedOutside] })
+
+  // Then
+  assert.equal(before.matched, true)
+  assert.equal(selected.calculatedOverPower, 30)
+  assert.equal(selected.matched, false)
+  assert.equal(
+    formatLockedSongsOverPowerDelta(selected.calculatedOverPower, input.officialOverPower),
+    '-90.000'
+  )
+  assert.deepEqual(restored, before)
+})
