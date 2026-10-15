@@ -59,7 +59,6 @@ import {
   hasCompleteLockedSongDiscoveryRecords,
   type LockedSongComparison,
   type LockedSongComparisonStatus,
-  type LockedSongDiscoveryCell,
   type LockedSongDiscoveryMismatches,
   type LockedSongObservation,
 } from '../../utils/lockedSongDiscovery'
@@ -248,37 +247,6 @@ const ComparisonRow: Component<ComparisonRowProps> = (props) => {
   )
 }
 
-/** 差異のある分類名を並べるチップ群に必要な値。 */
-type MismatchChipsProps = {
-  /** チップ群の見出し。 */
-  title: string
-  /** 差異がある分類名。 */
-  items: readonly string[]
-}
-
-/**
- * 筐体表示と差がある分類名をチップで表示する。
- *
- * @param props - 見出しと分類名一覧。
- * @returns 差異がある分類のチップ一覧。一覧が空なら何も表示しない。
- */
-const MismatchChips: Component<MismatchChipsProps> = (props) => (
-  <Show when={props.items.length > 0}>
-    <div>
-      <h3 class="font-sans text-xs font-medium text-text-muted">{props.title}</h3>
-      <ul class="mt-1.5 flex flex-wrap gap-1.5">
-        <For each={props.items}>
-          {(item) => (
-            <li class="rounded-full border border-warning-border bg-warning-bg px-2.5 py-0.5 font-sans text-xs font-medium text-warning">
-              {item}
-            </li>
-          )}
-        </For>
-      </ul>
-    </div>
-  </Show>
-)
-
 /** 候補範囲がない状態の表示に必要な値。 */
 type CandidateEmptyStateProps = {
   /** 状態を表すアイコン。 */
@@ -317,7 +285,7 @@ const LockedSongDiscoveryPage: Component = () => {
   const [selectedAxis, setSelectedAxis] = createSignal<LockedSongDiscoveryAxis>('genre')
   const [observations, setObservations] = createSignal<Record<string, LockedSongObservation>>({})
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
-  const [dialogCells, setDialogCells] = createSignal<LockedSongDiscoveryCell[]>()
+  const [candidateDialogOpen, setCandidateDialogOpen] = createSignal(false)
   /** モバイルの移動ボタンからスクロールさせる候補範囲パネル。 */
   let resultPanel: HTMLElement | undefined
 
@@ -378,19 +346,6 @@ const LockedSongDiscoveryPage: Component = () => {
       levels: buildLevelSummaries(chartEntries()),
     }
   })
-  /** 楽曲名順フォルダのコードから表示名を引く対応表。 */
-  const nameFolderLabels = createMemo(
-    () => new Map((nameFolders() ?? []).map((folder) => [folder.code, folder.name]))
-  )
-
-  /**
-   * 楽曲名順フォルダのコードを表示名へ変換する。
-   *
-   * @param code - 楽曲名順フォルダのコード。
-   * @returns マスタの表示名。マスタにない場合はコード。
-   */
-  const toNameFolderLabel = (code: string): string => nameFolderLabels().get(code) ?? code
-
   /**
    * 分類軸・分類IDから観測値の保存キーを作る。
    *
@@ -494,7 +449,7 @@ const LockedSongDiscoveryPage: Component = () => {
     buildLockedSongDiscoveryCells(chartEntries(), currentMismatches())
   )
   const dialogCandidates = createMemo(() =>
-    buildLockedSongDiscoveryCandidates(chartEntries(), dialogCells() ?? [])
+    buildLockedSongDiscoveryCandidates(chartEntries(), candidateCells())
   )
   /** 候補範囲に含まれる重複を除いた楽曲数。 */
   const candidateSongCount = createMemo(
@@ -650,38 +605,14 @@ const LockedSongDiscoveryPage: Component = () => {
                 </h2>
               </div>
 
-              <div class="flex shrink-0 flex-col gap-3 px-4 py-3">
-                <p class="flex items-baseline gap-1.5" aria-live="polite">
-                  <span class="font-jost text-4xl font-semibold tabular-nums leading-none">
-                    {candidateCells().length}
-                  </span>
-                  <span class="font-sans text-sm text-text-muted">
-                    {LOCKED_SONG_DISCOVERY_COPY.candidateCountUnit}
-                  </span>
-                  <Show when={candidateSongCount() > 0}>
-                    <span class="ml-auto font-jost text-sm tabular-nums text-text-muted">
-                      {candidateSongCount()}
-                      {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
-                    </span>
-                  </Show>
-                </p>
-                <MismatchChips
-                  title={LOCKED_SONG_DISCOVERY_COPY.mismatchedGenres}
-                  items={currentMismatches().genres}
-                />
-                <MismatchChips
-                  title={LOCKED_SONG_DISCOVERY_COPY.mismatchedVersions}
-                  items={currentMismatches().versions}
-                />
-                <MismatchChips
-                  title={LOCKED_SONG_DISCOVERY_COPY.mismatchedNameFolders}
-                  items={currentMismatches().nameFolders.map(toNameFolderLabel)}
-                />
-                <MismatchChips
-                  title={LOCKED_SONG_DISCOVERY_COPY.mismatchedLevels}
-                  items={currentMismatches().levels}
-                />
-              </div>
+              <p class="flex items-baseline gap-1.5 px-4 py-3" aria-live="polite">
+                <span class="font-jost text-4xl font-semibold leading-none">
+                  {candidateSongCount()}
+                </span>
+                <span class="font-sans text-sm text-text-muted">
+                  {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
+                </span>
+              </p>
 
               <div class="flex min-h-0 flex-1 flex-col border-t border-border">
                 <Show
@@ -703,51 +634,11 @@ const LockedSongDiscoveryPage: Component = () => {
                     </Show>
                   }
                 >
-                  <ul class="max-h-[60vh] min-h-0 flex-1 divide-y divide-border overflow-y-auto lg:max-h-none">
-                    <For each={candidateCells()}>
-                      {(cell) => {
-                        /** 候補範囲を分ける楽曲名順とレベルの補足表示。 */
-                        const subLabel = () =>
-                          [
-                            cell.nameFolder === null ? null : toNameFolderLabel(cell.nameFolder),
-                            cell.level,
-                          ]
-                            .filter((part) => part !== null)
-                            .join(' / ')
-                        return (
-                          <li>
-                            <AppButton
-                              variant="ghost"
-                              fullWidth
-                              class="justify-between gap-3 px-4 py-2.5 text-left font-sans focus-visible:ring-inset"
-                              aria-label={`${cell.genre} ${subLabel()} ${LOCKED_SONG_CANDIDATES_COPY.openRange}`}
-                              onClick={() => setDialogCells([cell])}
-                            >
-                              <span class="min-w-0">
-                                <span class="block truncate text-sm font-semibold text-text">
-                                  {cell.genre}
-                                </span>
-                                <Show when={subLabel()}>
-                                  <span class="block truncate text-xs text-text-muted">
-                                    {subLabel()}
-                                  </span>
-                                </Show>
-                              </span>
-                              <span class="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 font-jost text-xs font-medium tabular-nums text-warning">
-                                {cell.songs.length}
-                                {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
-                              </span>
-                            </AppButton>
-                          </li>
-                        )
-                      }}
-                    </For>
-                  </ul>
-                  <div class="shrink-0 space-y-2 border-t border-border p-3">
+                  <div class="shrink-0 space-y-2 p-3">
                     <AppButton
                       variant="primary"
                       fullWidth
-                      onClick={() => setDialogCells(candidateCells())}
+                      onClick={() => setCandidateDialogOpen(true)}
                     >
                       {LOCKED_SONG_CANDIDATES_COPY.open}
                     </AppButton>
@@ -785,21 +676,24 @@ const LockedSongDiscoveryPage: Component = () => {
               >
                 <span>{LOCKED_SONG_DISCOVERY_COPY.jumpToCandidates}</span>
                 <span class="ml-auto font-jost tabular-nums">
-                  {candidateCells().length}
-                  {LOCKED_SONG_DISCOVERY_COPY.candidateCountUnit}
+                  {candidateSongCount()}
+                  {LOCKED_SONG_DISCOVERY_COPY.songCountUnit}
                 </span>
               </AppButton>
             </div>
           </Show>
         </Show>
       </Show>
-      <Show when={dialogCells()}>
+      <Show when={candidateDialogOpen()}>
         <Show when={username()} keyed>
           {(currentUsername) => (
             <LockedSongCandidatesDialog
               username={currentUsername}
               candidates={dialogCandidates()}
-              onClose={() => setDialogCells(undefined)}
+              songs={songsResponse()?.songs ?? []}
+              records={record()?.standard ?? []}
+              versions={versions()?.versions ?? []}
+              onClose={() => setCandidateDialogOpen(false)}
             />
           )}
         </Show>

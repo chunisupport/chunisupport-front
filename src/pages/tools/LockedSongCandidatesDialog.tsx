@@ -1,12 +1,23 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { createMemo, createResource, createSignal, For, onCleanup, Show } from 'solid-js'
-import { addMyLockedSong, deleteMyLockedSong, fetchUserLockedSongs } from '../../api/users'
+import {
+  addMyLockedSong,
+  deleteMyLockedSong,
+  fetchUserLockedSongs,
+  fetchUserProfileSummary,
+} from '../../api/users'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { LockedSongsOpComparison } from '../../components/common/LockedSongsOpComparison'
 import { LockedSongToggle } from '../../components/common/LockedSongToggle'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { RecordLampDots } from '../../components/common/record/RecordDisplayParts'
 import Loading from '../../components/Loading/Loading'
-import { createLockedSongKey } from '../../usecases/overpower/lockedSongsBatch'
+import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../types/api'
+import {
+  createLockedSongKey,
+  toLockedSongRequests,
+} from '../../usecases/overpower/lockedSongsBatch'
+import { buildLockedSongsOpComparison } from '../../usecases/overpower/lockedSongsOpComparison'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import type { LockedSongDiscoveryCandidate } from '../../utils/lockedSongDiscovery'
 import { formatInteger, formatTruncatedFixed } from '../../utils/numberFormat'
@@ -15,14 +26,20 @@ import { LOCKED_SONG_CANDIDATES_COPY as COPY } from './lockedSongDiscovery.const
 /**
  * 通常楽曲とULTIMAの候補を、OP対象レコード付きの横長の選択行で表示する。
  *
- * @param props - ログインユーザー、候補曲、ダイアログの開閉処理。
+ * @param props - ログインユーザー、候補曲、全楽曲・全レコード・バージョン、開閉処理。
  * @returns 本文だけをスクロールする候補楽曲ダイアログ。
  */
 export const LockedSongCandidatesDialog = (props: {
   username: string
   candidates: LockedSongDiscoveryCandidate[]
+  songs: SongDTO[]
+  records: PlayerRecordDTO[]
+  versions: VersionSummaryDTO[]
   onClose: () => void
 }) => {
+  const candidateSongCount = createMemo(
+    () => new Set(props.candidates.map((candidate) => candidate.song.id)).size
+  )
   const [lockedKeys, { mutate, refetch }] = createResource(
     () => props.username,
     async (username) => {
@@ -30,6 +47,24 @@ export const LockedSongCandidatesDialog = (props: {
       return new Set(response.items.map((item) => createLockedSongKey(item.id, item.is_ultima)))
     }
   )
+  const [profile, { refetch: refetchProfile }] = createResource(
+    () => props.username,
+    fetchUserProfileSummary
+  )
+  const opComparison = createMemo(() => {
+    if (profile.error || lockedKeys.error) return undefined
+    const player = profile()?.player
+    const keys = lockedKeys()
+    if (!player || !keys) return undefined
+    return buildLockedSongsOpComparison({
+      songs: props.songs,
+      records: props.records,
+      versions: props.versions,
+      lockedSongs: toLockedSongRequests([...keys]),
+      officialOverPower: player.official_overpower,
+      officialOverPowerPercent: player.official_overpower_percent,
+    })
+  })
   const [savingKey, setSavingKey] = createSignal<string>()
   const [saveError, setSaveError] = createSignal<{ key: string; message: string }>()
   let active = true
@@ -84,9 +119,27 @@ export const LockedSongCandidatesDialog = (props: {
             <Dialog.Title class="text-lg font-bold">{COPY.title}</Dialog.Title>
             <Dialog.Description class="sr-only">{COPY.description}</Dialog.Description>
             <p class="mt-1 text-sm text-text-muted">
-              {props.candidates.length}
-              {COPY.candidateCountUnit}
+              {candidateSongCount()}
+              {COPY.songCountUnit}
             </p>
+            <Show when={profile.loading}>
+              <div class="flex justify-center py-2">
+                <Loading size="inline" />
+              </div>
+            </Show>
+            <Show when={profile.error}>
+              <div class="mt-2 space-y-2">
+                <p class="text-sm text-danger" role="alert">
+                  {toUserFriendlyErrorMessage(profile.error, COPY.comparisonLoadError)}
+                </p>
+                <AppButton onClick={() => void refetchProfile()}>{COPY.retry}</AppButton>
+              </div>
+            </Show>
+            <Show when={opComparison()}>
+              {(comparison) => (
+                <LockedSongsOpComparison comparison={comparison} showGuidance={false} />
+              )}
+            </Show>
           </div>
           <div class="min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain rounded border border-border bg-surface">
             <Show
