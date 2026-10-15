@@ -469,3 +469,78 @@ test('OP対象フラグがない候補はプレイ済み譜面の最大OPを使�
   assert.equal(candidates.find((candidate) => candidate.song.id === 'song-2')?.opTarget, null)
   assert.deepEqual(buildLockedSongDiscoveryCandidates(entries, []), [])
 })
+
+test('通常行はULTIMA以外のOP対象、ULTIMA行はULTIMAのレコードを表示する', () => {
+  // Given
+  const song = {
+    ...createEntry('song-1', 'Candidate', 'POPS & ANIME').song,
+    charts: { EXPERT: { const: 12 }, MASTER: { const: 14.5 }, ULTIMA: { const: 15 } },
+    op_target_difficulty: 'ULTIMA',
+    maxop: 90,
+  } as SongDTO
+  const master = {
+    ...createEntry(song.id, song.title, song.genre),
+    song,
+    record: { is_played: true, is_op_target: false, overpower: 65 } as PlayerRecordDTO,
+  }
+  const expert: OverPowerChartEntry = {
+    ...master,
+    difficulty: 'EXPERT',
+    record: { is_played: true, is_op_target: false, overpower: 70 } as PlayerRecordDTO,
+  }
+  const ultima: OverPowerChartEntry = {
+    ...master,
+    difficulty: 'ULTIMA',
+    record: { is_played: true, is_op_target: true, overpower: 85 } as PlayerRecordDTO,
+  }
+  const cells = buildLockedSongDiscoveryCells([master, expert, ultima], {
+    genres: [song.genre],
+    versions: [],
+    nameFolders: [],
+    levels: [],
+  })
+
+  // When
+  const candidates = buildLockedSongDiscoveryCandidates(
+    [master, expert, ultima],
+    [...cells, ...cells]
+  )
+
+  // Then
+  assert.deepEqual(
+    candidates.map((candidate) => [
+      candidate.song.id,
+      candidate.isUltima,
+      candidate.opTarget?.difficulty,
+    ]),
+    [
+      [song.id, false, 'EXPERT'],
+      [song.id, true, 'ULTIMA'],
+    ]
+  )
+  assert.equal(candidates[0].opTarget?.record?.overpower, 70)
+  assert.equal(candidates[1].opTarget?.record?.overpower, 85)
+
+  // When
+  const unplayedUltima = buildLockedSongDiscoveryCandidates(
+    [
+      master,
+      expert,
+      {
+        ...ultima,
+        record: {
+          ...ultima.record,
+          is_played: false,
+          is_op_target: false,
+          overpower: 0,
+        } as PlayerRecordDTO,
+      },
+    ],
+    cells
+  )
+
+  // Then
+  assert.equal(unplayedUltima[0].opTarget?.difficulty, 'EXPERT')
+  assert.equal(unplayedUltima[1].isUltima, true)
+  assert.equal(unplayedUltima[1].opTarget, null)
+})
