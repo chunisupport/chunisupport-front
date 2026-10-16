@@ -9,6 +9,7 @@ import {
   FRIEND_VS_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
+  OVER_POWER_CALCULATOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   UNI_FILL_MATRIX_PATH,
@@ -27,6 +28,7 @@ export type ToolLinkIcon =
   | 'target'
   | 'random'
   | 'ranking'
+  | 'percent'
   | 'gauge'
   | 'list'
   | 'discover'
@@ -131,6 +133,12 @@ export const TOOL_LINKS: ToolLink[] = [
     href: BORDER_CALCULATOR_PATH,
     icon: 'target',
     description: '楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。',
+  },
+  {
+    title: 'OVER POWER計算機',
+    href: OVER_POWER_CALCULATOR_PATH,
+    icon: 'percent',
+    description: 'OVER POWER値・達成率の換算、未プレイ譜面を補完した値の算出ができます。',
   },
   {
     title: '苦手譜面インスペクター',
