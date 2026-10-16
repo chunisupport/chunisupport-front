@@ -6,10 +6,6 @@ import FilterResetDialog from '../../../../components/common/FilterResetDialog'
 import type { MasterDataDTO, NameFolderDTO, VersionSummaryDTO } from '../../../../types/api'
 import type { FilterState } from '../../../../types/recordFilter'
 import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
-import {
-  omitRecordFilterLevelSet,
-  resetRecordFilterLevelSetOnConstChange,
-} from '../../../../utils/recordFilterLevelSet'
 import type { EditingFilter } from '../../components/SavedRecordFiltersDialog'
 import SavedFiltersDialog from './filterDialog/dialogs/SavedFiltersDialog'
 import FilterSelectionPanel from './filterDialog/FilterSelectionPanel'
@@ -66,16 +62,6 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
    */
   const handleOpenChange = (open: boolean) => {
     props.onOpenChange(open)
-  }
-
-  /**
-   * 選択パネルからの変更を反映し、譜面定数・レベル条件が変わったら非表示のレベル指定を破棄する。
-   *
-   * @param update - 直前の編集中フィルターから次の状態を作る関数。
-   * @returns なし。
-   */
-  const updateFilters = (update: (prev: FilterState) => FilterState) => {
-    setFilters((prev) => resetRecordFilterLevelSetOnConstChange(prev, update(prev)))
   }
 
   /**
@@ -141,7 +127,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
             <div class="flex items-center gap-2">
               <SavedFiltersDialog
                 open={props.open}
-                currentFilters={omitRecordFilterLevelSet(filters())}
+                currentFilters={filters()}
                 onApplyFilter={handleApplySavedFilter}
                 onEditFilter={handleEditSavedFilter}
                 onEditingChange={handleEditingChange}
@@ -154,7 +140,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
           <FilterSelectionPanel
             open={props.open}
             filters={filters()}
-            setFilters={updateFilters}
+            setFilters={setFilters}
             masterData={props.masterData}
             versions={props.versions}
             nameFolders={props.nameFolders}

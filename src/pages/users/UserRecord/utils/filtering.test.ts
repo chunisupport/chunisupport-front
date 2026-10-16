@@ -274,16 +274,6 @@ test('isRecordMatched は譜面定数とスコアの範囲を判定できる', (
   )
 })
 
-test('isRecordMatched は非表示のレベル指定に含まれる表示レベルの譜面だけに絞り込む', () => {
-  // Given
-  const filters: FilterState = { ...getDefaultFilter(), levelSet: ['13', '14+'] }
-
-  // When, Then
-  assert.equal(isRecordMatched(createRecord({ const: 14.7 }), filters), true)
-  assert.equal(isRecordMatched(createRecord({ const: 13.2 }), filters), true)
-  assert.equal(isRecordMatched(createRecord({ const: 14.2 }), filters), false)
-})
-
 test('単曲レート範囲は境界を含み定数不明譜面を除外する', () => {
   // Given
   const filters: FilterState = {
