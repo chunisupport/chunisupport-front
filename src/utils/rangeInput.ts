@@ -7,6 +7,8 @@ import { MAX_SCORE } from './scoreRank'
 const DECIMAL_BASE = 10
 const DECIMAL_RANGE_INPUT_PATTERN = /^\d*(?:\.\d*)?$/
 const INTEGER_RANGE_INPUT_PATTERN = /^\d*$/
+const HUNDREDTHS_INPUT_PATTERN = /^\d*(?:\.\d{0,2})?$/
+const HUNDREDTHS_DECIMAL_PLACES = 2
 
 export type OptionalRangeInputOptions = {
   /** 許可する最小値 */
@@ -74,6 +76,25 @@ export const normalizeChartConstRangeInput = (value: string): string | null => {
 export const normalizeScoreRangeInput = (value: string): string | null => {
   if (!INTEGER_RANGE_INPUT_PATTERN.test(value)) return null
   return clampNumericInput(value, SCORE_MIN, MAX_SCORE)
+}
+
+/**
+ * 小数第2位までの非負数入力を、入力途中の小数を保ったまま有効範囲へ収める。
+ * 全角数字・全角ピリオドは半角へ変換して受け入れる。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @param max - 許可する最大値。未指定なら上限なし。
+ * @returns 入力を受け入れる場合は正規化後の文字列。数値以外を含む場合や小数第3位以降がある場合は null。
+ */
+export const normalizeHundredthsInput = (
+  value: string,
+  max = Number.POSITIVE_INFINITY
+): string | null => {
+  const halfWidthValue = value.normalize('NFKC')
+  if (!HUNDREDTHS_INPUT_PATTERN.test(halfWidthValue)) return null
+  return clampNumericInput(halfWidthValue, 0, max, (clamped) =>
+    clamped.toFixed(HUNDREDTHS_DECIMAL_PLACES)
+  )
 }
 
 /**
