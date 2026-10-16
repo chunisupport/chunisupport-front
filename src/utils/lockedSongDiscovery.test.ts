@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerRecordDTO, SongDTO } from '../types/api'
 import type { OverPowerChartEntry, OverPowerSummaryRow } from '../usecases/overpower/types'
 import {
-  buildLockedSongCandidateRecordFilter,
   buildLockedSongDiscoveryCandidates,
   buildLockedSongDiscoveryCells,
   compareLockedSongObservation,
@@ -13,7 +11,6 @@ import {
   matchesLockedSongObservation,
   parseDisplayedHundredths,
 } from './lockedSongDiscovery'
-import { DEFAULT_FILTER } from './recordFilterDefaults'
 
 const SUMMARY_ROW: OverPowerSummaryRow = {
   id: 'genre',
@@ -291,46 +288,6 @@ test('レベルに差異があれば譜面のレベルで候補範囲を絞り�
       songs: [{ id: 'song-1', title: 'Candidate' }],
     },
   ])
-})
-
-test('レベルを含む差異をOP対象外の譜面も表示するレコードフィルターへまとめる', () => {
-  // Given
-  const mismatches = {
-    genres: ['POPS & ANIME', 'VARIETY'],
-    versions: ['VERSE'],
-    nameFolders: ['C'],
-    levels: ['13', '14+'] as const,
-  }
-
-  // When
-  const result = buildLockedSongCandidateRecordFilter(DEFAULT_FILTER, mismatches)
-
-  // Then
-  assert.deepEqual(result.genres, ['POPS & ANIME', 'VARIETY'])
-  assert.deepEqual(result.versions, ['VERSE'])
-  assert.deepEqual(result.nameFolders, ['C'])
-  assert.deepEqual(result.levelSet, ['13', '14+'])
-  assert.deepEqual(result.const, DEFAULT_FILTER.const)
-  assert.equal(result.opTargetOnly, false)
-  assert.equal(result.opTargetType, 'theoretical')
-  assert.deepEqual(result.difficulties, [...PLAYER_DATA_DIFFICULTIES])
-  assert.equal(result.excludeLockedSongs, false)
-})
-
-test('差異がない分類軸は既定フィルターのまま絞り込まない', () => {
-  // Given
-  const defaultFilter = { ...DEFAULT_FILTER, genres: ['POPS & ANIME', 'VARIETY'] }
-  const mismatches = { genres: [], versions: ['VERSE'], nameFolders: [], levels: [] }
-
-  // When
-  const result = buildLockedSongCandidateRecordFilter(defaultFilter, mismatches)
-
-  // Then
-  assert.deepEqual(result.genres, ['POPS & ANIME', 'VARIETY'])
-  assert.equal(result.opTargetOnly, true)
-  assert.equal(result.opTargetType, 'theoretical')
-  assert.equal(result.nameFolders, null)
-  assert.equal('levelSet' in result, false)
 })
 
 test('楽曲マスタの全譜面にレコードがあれば完全と判定する', () => {
