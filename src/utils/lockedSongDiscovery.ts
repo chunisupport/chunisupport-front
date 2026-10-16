@@ -13,6 +13,9 @@ export const OVER_POWER_SCALE = 1_000
 /** 筐体のOP表示単位。 */
 export const OBSERVED_OVER_POWER_UNIT_MILLI = 10
 
+/** 筐体のOP%として入力できる最大値。 */
+export const OBSERVED_PERCENT_MAX = 100
+
 /** 筐体のOP%表示単位。 */
 export const OBSERVED_PERCENT_UNIT_BASIS_POINTS = 1
 
@@ -159,7 +162,9 @@ export const compareLockedSongObservation = (
     return { status: 'empty', overPowerError: '', percentError: '' }
   }
   const parsedOverPower = overPower ? parseDisplayedHundredths(overPower, 'OP') : undefined
-  const parsedPercent = percent ? parseDisplayedHundredths(percent, 'OP%', 100) : undefined
+  const parsedPercent = percent
+    ? parseDisplayedHundredths(percent, 'OP%', OBSERVED_PERCENT_MAX)
+    : undefined
   if (parsedOverPower?.ok === false || parsedPercent?.ok === false) {
     return {
       status: 'invalid',

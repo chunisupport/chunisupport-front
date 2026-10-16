@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   clampNumber,
   normalizeChartConstRangeInput,
+  normalizeHundredthsInput,
   normalizeScoreRangeInput,
   parseNumberInput,
   parseOptionalRangeNumberInput,
@@ -85,4 +86,39 @@ test('updateOptionalNumberRange は指定された範囲端だけ更新するこ
 
   // Then
   assert.deepEqual(result, { min: 3, max: 10 })
+})
+
+test('normalizeHundredthsInput は小数第2位までの数値入力を受け入れる', () => {
+  // Given
+  const values = ['', '12', '12.', '12.3', '12.34', '.5']
+
+  // When
+  const results = values.map((value) => normalizeHundredthsInput(value))
+
+  // Then
+  assert.deepEqual(results, values)
+})
+
+test('normalizeHundredthsInput は数値以外や小数第3位以降を拒否する', () => {
+  // Given
+  const values = ['a', '12a', '-1', '1.2.3', '12.345', '1e3', ' 1']
+
+  // When
+  const results = values.map((value) => normalizeHundredthsInput(value))
+
+  // Then
+  assert.deepEqual(
+    results,
+    values.map(() => null)
+  )
+})
+
+test('normalizeHundredthsInput は全角数字を半角へ変換し、上限を超える値を上限へ収める', () => {
+  // Given, When
+  const fullWidth = normalizeHundredthsInput('１２．３')
+  const overMax = normalizeHundredthsInput('100.5', 100)
+
+  // Then
+  assert.equal(fullWidth, '12.3')
+  assert.equal(overMax, '100.00')
 })

@@ -62,8 +62,10 @@ import {
   type LockedSongComparisonStatus,
   type LockedSongDiscoveryMismatches,
   type LockedSongObservation,
+  OBSERVED_PERCENT_MAX,
 } from '../../utils/lockedSongDiscovery'
 import { formatTruncatedFixed } from '../../utils/numberFormat'
+import { normalizeHundredthsInput } from '../../utils/rangeInput'
 import { buildDefaultFilter } from '../../utils/recordFilterDefaults'
 import { buildUserProfilePagePath } from '../../utils/userProfileRoute'
 import { scrollToUserProfileContent } from '../../utils/userProfileScroll'
@@ -144,6 +146,8 @@ type ObservationFieldProps = {
   value: string
   /** 未入力時に表示する計算値。 */
   placeholder: string
+  /** 入力可能な最大値。未指定なら上限なし。 */
+  max?: number
   /** 入力エラー文。エラーがなければ空文字。 */
   error: string
   /** 入力変更時の通知先。 */
@@ -153,16 +157,13 @@ type ObservationFieldProps = {
 /**
  * 筐体に表示されたOPまたはOP%を入力する欄を表示する。
  * 見出しは列ヘッダーで視覚的に示すため、ラベルはスクリーンリーダー専用にする。
+ * 数値以外や小数第3位以降の入力は受け付けず、直前の値へ戻す。
  *
- * @param props - 入力欄ID、ラベル、現在値、未入力時の計算値、エラー文、入力更新処理。
+ * @param props - 入力欄ID、ラベル、現在値、未入力時の計算値、最大値、エラー文、入力更新処理。
  * @returns 小数入力用のテキストフィールド。
  */
 const ObservationField: Component<ObservationFieldProps> = (props) => (
-  <TextField
-    value={props.value}
-    onChange={props.onChange}
-    validationState={props.error ? 'invalid' : 'valid'}
-  >
+  <TextField value={props.value} validationState={props.error ? 'invalid' : 'valid'}>
     <TextField.Label for={props.id} class="sr-only">
       {props.label}
     </TextField.Label>
@@ -176,6 +177,12 @@ const ObservationField: Component<ObservationFieldProps> = (props) => (
       placeholder={props.placeholder}
       class={INPUT_CLASS}
       aria-describedby={props.error ? `${props.id}-error` : undefined}
+      onInput={(event) => {
+        const input = event.currentTarget
+        const normalizedValue = normalizeHundredthsInput(input.value, props.max)
+        input.value = normalizedValue ?? props.value
+        if (normalizedValue !== null) props.onChange(normalizedValue)
+      }}
     />
   </TextField>
 )
@@ -233,6 +240,7 @@ const ComparisonRow: Component<ComparisonRowProps> = (props) => {
           label={`${props.row.label} ${LOCKED_SONG_DISCOVERY_COPY.observedPercent}`}
           value={props.observation.percent}
           placeholder={formatTruncatedFixed(props.row.percent, 2)}
+          max={OBSERVED_PERCENT_MAX}
           error={props.comparison.percentError}
           onChange={(value) => props.onChange('percent', value)}
         />
