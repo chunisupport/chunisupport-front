@@ -22,9 +22,7 @@ export const LOCKED_SONG_DISCOVERY_COPY = {
   songCountUnit: '曲',
   candidateEmpty: '差がある分類を入力すると、ここに候補が表示されます',
   candidateNotFound: '入力内容に一致する候補曲はありません',
-  openRecords: '候補曲をレコードで表示',
   jumpToCandidates: '候補曲へ移動',
-  recordNavigationError: '候補曲のレコード画面を開けませんでした。',
   recordIncomplete: '照合に必要な未プレイを含む譜面レコードが不足しています。',
 } as const
 

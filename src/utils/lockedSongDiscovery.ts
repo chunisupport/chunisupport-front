@@ -1,6 +1,4 @@
-import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerRecordDTO, SongDTO } from '../types/api'
-import type { FilterState } from '../types/recordFilter'
 import { selectOverPowerChartEntries } from '../usecases/overpower/aggregation'
 import { OVER_POWER_THEORETICAL_TARGET } from '../usecases/overpower/constants'
 import type { OverPowerChartEntry, OverPowerSummaryRow } from '../usecases/overpower/types'
@@ -236,30 +234,6 @@ export const buildLockedSongDiscoveryCells = (
 
   return [...cells.values()]
 }
-
-/**
- * すべての候補範囲を1回で表示する通常レコード用フィルターへ変換する。
- * 候補範囲は分類軸ごとの差異の積なので、各軸の差異を複数選択として指定すれば候補範囲の和集合と一致する。
- *
- * @param defaultFilter - マスタデータを反映した通常レコードの既定フィルター。
- * @param mismatches - 筐体表示と一致しなかったジャンル、バージョン、楽曲名順フォルダ、レベル。
- * @returns レベルに差異があれば全譜面、それ以外は理論値OP対象譜面を分類軸で絞り込んだフィルター。
- * 未解禁曲は未プレイで現在のOP対象フラグを持たないため、理論値OP対象で判定する。
- * レベルは離れた複数レベルを指定できるよう、画面に表示しないレベル指定で渡す。
- */
-export const buildLockedSongCandidateRecordFilter = (
-  defaultFilter: FilterState,
-  mismatches: LockedSongDiscoveryMismatches
-): FilterState => ({
-  ...defaultFilter,
-  opTargetOnly: mismatches.levels.length === 0,
-  opTargetType: 'theoretical',
-  difficulties: [...PLAYER_DATA_DIFFICULTIES],
-  genres: mismatches.genres.length > 0 ? [...mismatches.genres] : defaultFilter.genres,
-  versions: mismatches.versions.length > 0 ? [...mismatches.versions] : defaultFilter.versions,
-  nameFolders: mismatches.nameFolders.length > 0 ? [...mismatches.nameFolders] : null,
-  ...(mismatches.levels.length > 0 && { levelSet: [...mismatches.levels] }),
-})
 
 /**
  * 楽曲マスタに存在する全通常譜面のレコードが取得できているか判定する。

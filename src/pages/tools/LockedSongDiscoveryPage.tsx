@@ -1,8 +1,6 @@
 import { TextField } from '@kobalte/core/text-field'
-import { useNavigate } from '@solidjs/router'
 import {
   ArrowDown,
-  ChevronRight,
   CircleAlert,
   CircleCheck,
   CircleDashed,
@@ -35,10 +33,8 @@ import { LOCKED_SONG_DISCOVERY_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { saveStandardRecordFilterSetting } from '../../repositories/viewSettingsRepository'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
-import { publishStandardRecordFilter } from '../../stores/standardRecordNavigation'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import {
   buildOverPowerChartEntries,
@@ -51,9 +47,7 @@ import {
 } from '../../usecases/overpower/overpowerSummary'
 import type { OverPowerSummaryRow } from '../../usecases/overpower/types'
 import { isNotFoundApiError } from '../../utils/apiError'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
-  buildLockedSongCandidateRecordFilter,
   buildLockedSongDiscoveryCandidates,
   buildLockedSongDiscoveryCells,
   compareLockedSongObservation,
@@ -66,9 +60,6 @@ import {
 } from '../../utils/lockedSongDiscovery'
 import { formatTruncatedFixed } from '../../utils/numberFormat'
 import { normalizeHundredthsInput } from '../../utils/rangeInput'
-import { buildDefaultFilter } from '../../utils/recordFilterDefaults'
-import { buildUserProfilePagePath } from '../../utils/userProfileRoute'
-import { scrollToUserProfileContent } from '../../utils/userProfileScroll'
 import { LockedSongCandidatesDialog } from './LockedSongCandidatesDialog'
 import {
   LOCKED_SONG_CANDIDATES_COPY,
@@ -286,7 +277,6 @@ const CandidateEmptyState: Component<CandidateEmptyStateProps> = (props) => (
  * @returns 未解禁曲ディスカバーツール画面。
  */
 const LockedSongDiscoveryPage: Component = () => {
-  const navigate = useNavigate()
   const username = (): string | undefined =>
     authSession.status === 'authenticated' ? authSession.user?.username : undefined
   const { songsResponse, ensureSongsLoaded } = useSongsData()
@@ -296,7 +286,6 @@ const LockedSongDiscoveryPage: Component = () => {
   const [nameFolders] = createResource(fetchNameFolders)
   const [selectedAxis, setSelectedAxis] = createSignal<LockedSongDiscoveryAxis>('genre')
   const [observations, setObservations] = createSignal<Record<string, LockedSongObservation>>({})
-  const [recordNavigationError, setRecordNavigationError] = createSignal('')
   const [candidateDialogOpen, setCandidateDialogOpen] = createSignal(false)
   /** モバイルの移動ボタンからスクロールさせる候補範囲パネル。 */
   let resultPanel: HTMLElement | undefined
@@ -475,36 +464,6 @@ const LockedSongDiscoveryPage: Component = () => {
     }))
   )
 
-  /**
-   * すべての候補範囲を1つのフィルターにまとめて通常レコードへ遷移する。
-   *
-   * @returns 保存と遷移処理の完了時に解決されるPromise。
-   */
-  const handleOpenRecords = async (): Promise<void> => {
-    const currentUsername = username()
-    const genreItems = genres()
-    const versionItems = versions()?.versions
-    if (!currentUsername || !genreItems || !versionItems) return
-
-    setRecordNavigationError('')
-    try {
-      const filter = buildLockedSongCandidateRecordFilter(
-        buildDefaultFilter(genreItems, versionItems),
-        currentMismatches()
-      )
-      await saveStandardRecordFilterSetting(filter)
-      publishStandardRecordFilter(currentUsername, filter)
-      navigate(
-        `${buildUserProfilePagePath(currentUsername, 'record_normal')}?sortcol=title&sortorder=asc`
-      )
-      scrollToUserProfileContent()
-    } catch (error) {
-      setRecordNavigationError(
-        toUserFriendlyErrorMessage(error, LOCKED_SONG_DISCOVERY_COPY.recordNavigationError)
-      )
-    }
-  }
-
   return (
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
       <header class="flex items-start gap-3">
@@ -666,7 +625,7 @@ const LockedSongDiscoveryPage: Component = () => {
                     </Show>
                   }
                 >
-                  <div class="shrink-0 space-y-2 p-3">
+                  <div class="shrink-0 p-3">
                     <AppButton
                       variant="primary"
                       fullWidth
@@ -674,24 +633,7 @@ const LockedSongDiscoveryPage: Component = () => {
                     >
                       {LOCKED_SONG_CANDIDATES_COPY.open}
                     </AppButton>
-                    <AppButton
-                      variant="surface"
-                      fullWidth
-                      class="justify-between"
-                      rightIcon={<ChevronRight class="h-4 w-4" aria-hidden="true" />}
-                      onClick={() => void handleOpenRecords()}
-                    >
-                      {LOCKED_SONG_DISCOVERY_COPY.openRecords}
-                    </AppButton>
                   </div>
-                </Show>
-                <Show when={recordNavigationError()}>
-                  <p
-                    class="border-t border-danger-border bg-danger-bg px-4 py-2 font-sans text-sm text-danger"
-                    role="alert"
-                  >
-                    {recordNavigationError()}
-                  </p>
                 </Show>
               </div>
             </aside>
