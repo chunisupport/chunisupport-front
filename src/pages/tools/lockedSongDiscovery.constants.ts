@@ -1,4 +1,5 @@
 import type { AppTabOption } from '../../components/common/AppTabs'
+import type { SortDirection } from '../../utils/sortingQuery'
 
 /** 筐体表示を照合する分類軸。 */
 export type LockedSongDiscoveryAxis = 'genre' | 'version' | 'nameFolder' | 'level'
@@ -16,6 +17,7 @@ export const LOCKED_SONG_DISCOVERY_COPY = {
   invalid: '入力エラー',
   empty: '未入力',
   axisSelect: '分類軸',
+  sortOrder: '並び順',
   clearInputs: '入力を消去',
   clearInputsAriaLabel: '表示中の分類の入力を消去',
   candidateTitle: '未解禁候補曲',
@@ -34,6 +36,22 @@ export const LOCKED_SONG_DISCOVERY_AXIS_OPTIONS: readonly AppTabOption<LockedSon
     { value: 'nameFolder', label: '楽曲名順' },
     { value: 'level', label: 'レベル順' },
   ]
+
+/** 並び順の表示ラベル。 */
+export const LOCKED_SONG_DISCOVERY_SORT_LABELS: Readonly<Record<SortDirection, string>> = {
+  asc: '昇順',
+  desc: '降順',
+}
+
+/** 画面を開いたときの分類軸ごとの並び順。レベルは高い順から確認できるよう降順にする。 */
+export const LOCKED_SONG_DISCOVERY_DEFAULT_SORT_DIRECTIONS: Readonly<
+  Record<LockedSongDiscoveryAxis, SortDirection>
+> = {
+  genre: 'asc',
+  version: 'asc',
+  nameFolder: 'asc',
+  level: 'desc',
+}
 
 /** ユーザー別の筐体入力値を保存するlocalStorageキーの接頭辞。 */
 export const LOCKED_SONG_DISCOVERY_OBSERVATIONS_STORAGE_PREFIX =
