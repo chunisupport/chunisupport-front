@@ -5,7 +5,6 @@ import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsB
 import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
-import { matchesRecordFilterLevelSet } from '../../../../utils/recordFilterLevelSet'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
   matchesNormalizedSearchQuery,
@@ -149,7 +148,6 @@ export function isRecordMatchedWithTitleMatcher(
   // 定数
   if (record.const < filters.const.min) return false
   if (record.const > filters.const.max) return false
-  if (!matchesRecordFilterLevelSet(record.const, filters.levelSet)) return false
 
   // スコア
   const score = record.is_played ? record.score : 0
