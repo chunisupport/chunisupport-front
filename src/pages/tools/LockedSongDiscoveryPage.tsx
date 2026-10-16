@@ -1,6 +1,8 @@
+import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
 import {
   ArrowDown,
+  ArrowUpDown,
   CircleAlert,
   CircleCheck,
   CircleDashed,
@@ -60,11 +62,14 @@ import {
 } from '../../utils/lockedSongDiscovery'
 import { formatTruncatedFixed } from '../../utils/numberFormat'
 import { normalizeHundredthsInput } from '../../utils/rangeInput'
+import type { SortDirection } from '../../utils/sortingQuery'
 import { LockedSongCandidatesDialog } from './LockedSongCandidatesDialog'
 import {
   LOCKED_SONG_CANDIDATES_COPY,
   LOCKED_SONG_DISCOVERY_AXIS_OPTIONS,
   LOCKED_SONG_DISCOVERY_COPY,
+  LOCKED_SONG_DISCOVERY_DEFAULT_SORT_DIRECTIONS,
+  LOCKED_SONG_DISCOVERY_SORT_LABELS,
   type LockedSongDiscoveryAxis,
 } from './lockedSongDiscovery.constants'
 import {
@@ -286,6 +291,11 @@ const LockedSongDiscoveryPage: Component = () => {
   const [nameFolders] = createResource(fetchNameFolders)
   const [selectedAxis, setSelectedAxis] = createSignal<LockedSongDiscoveryAxis>('genre')
   const [observations, setObservations] = createSignal<Record<string, LockedSongObservation>>({})
+  const [sortDirections, setSortDirections] = createSignal<
+    Record<LockedSongDiscoveryAxis, SortDirection>
+  >({ ...LOCKED_SONG_DISCOVERY_DEFAULT_SORT_DIRECTIONS })
+  /** 選択中の分類軸の並び順。 */
+  const currentSortDirection = (): SortDirection => sortDirections()[selectedAxis()]
   const [candidateDialogOpen, setCandidateDialogOpen] = createSignal(false)
   /** モバイルの移動ボタンからスクロールさせる候補範囲パネル。 */
   let resultPanel: HTMLElement | undefined
@@ -436,8 +446,8 @@ const LockedSongDiscoveryPage: Component = () => {
   const hasCurrentMismatch = createMemo(() =>
     LOCKED_SONG_DISCOVERY_AXIS_OPTIONS.some((option) => mismatchesByAxis(option.value).length > 0)
   )
-  /** 選択中の分類軸で入力欄に並べる集計行。 */
-  const currentRows = createMemo(() => {
+  /** 選択中の分類軸で集計順に並べた集計行。 */
+  const axisRows = (): OverPowerSummaryRow[] => {
     const currentSummary = summary()
     if (!currentSummary) return []
     const axis = selectedAxis()
@@ -445,7 +455,23 @@ const LockedSongDiscoveryPage: Component = () => {
     if (axis === 'version') return currentSummary.versions
     if (axis === 'nameFolder') return currentSummary.nameFolders
     return currentSummary.levels
-  })
+  }
+  /** 選択中の分類軸で入力欄に並べる集計行。降順なら集計順を反転する。 */
+  const currentRows = createMemo(() =>
+    currentSortDirection() === 'desc' ? [...axisRows()].reverse() : axisRows()
+  )
+  /**
+   * 選択中の分類軸の並び順を昇順・降順で切り替える。
+   *
+   * @returns なし。
+   */
+  const toggleSortDirection = (): void => {
+    const axis = selectedAxis()
+    setSortDirections((current) => ({
+      ...current,
+      [axis]: current[axis] === 'asc' ? 'desc' : 'asc',
+    }))
+  }
   const candidateCells = createMemo(() =>
     buildLockedSongDiscoveryCells(chartEntries(), currentMismatches())
   )
@@ -555,11 +581,22 @@ const LockedSongDiscoveryPage: Component = () => {
               <div class="border-b border-border bg-surface-muted px-3 py-2">
                 <div
                   class={`${ROW_GRID_CLASS} border-l-4 border-l-transparent font-sans text-xs font-medium text-text-muted`}
-                  aria-hidden="true"
                 >
-                  <span />
-                  <span class="text-center">{LOCKED_SONG_DISCOVERY_COPY.observedOverPower}</span>
-                  <span class="text-center">{LOCKED_SONG_DISCOVERY_COPY.observedPercent}</span>
+                  <Button
+                    type="button"
+                    class="flex min-h-8 items-center gap-1 justify-self-start rounded px-1 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    onClick={toggleSortDirection}
+                  >
+                    <ArrowUpDown class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span class="sr-only">{LOCKED_SONG_DISCOVERY_COPY.sortOrder}</span>
+                    <span>{LOCKED_SONG_DISCOVERY_SORT_LABELS[currentSortDirection()]}</span>
+                  </Button>
+                  <span class="text-center" aria-hidden="true">
+                    {LOCKED_SONG_DISCOVERY_COPY.observedOverPower}
+                  </span>
+                  <span class="text-center" aria-hidden="true">
+                    {LOCKED_SONG_DISCOVERY_COPY.observedPercent}
+                  </span>
                 </div>
               </div>
 
