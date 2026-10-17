@@ -4,7 +4,8 @@ import test from 'node:test'
 import {
   matchesSearchQuery,
   normalizeForSearch,
-  removeTrailingFullwidthAlphabet,
+  normalizeQuery,
+  resolveComposingSearchQuery,
 } from './searchUtils'
 
 test('normalizeForSearch はUnicode正規化して記号・空白を除去する', () => {
@@ -77,13 +78,60 @@ test('matchesSearchQuery は読みが空欄なら曲名に読み検索の正規�
   }
 })
 
-test('removeTrailingFullwidthAlphabet は末尾が全角英字のときのみ1文字削除する', () => {
-  assert.equal(removeTrailingFullwidthAlphabet('かもｎ'), 'かも')
-  assert.equal(removeTrailingFullwidthAlphabet('かもｚ'), 'かも')
-  assert.equal(removeTrailingFullwidthAlphabet('かも９'), 'かも９')
-  assert.equal(removeTrailingFullwidthAlphabet('かもね'), 'かもね')
+test('normalizeQuery は確定済みの末尾全角英字を削除しない', () => {
+  // Given: 確定済みで末尾が全角英字の検索語
+  // When
+  const { normalizedQuery, normalizedReadingQuery } = normalizeQuery('TESTＡ')
+  const singleLetter = normalizeQuery('Ａ')
+
+  // Then: NFKC で半角化されるが、末尾の1文字は残る
+  assert.equal(normalizedQuery, 'testa')
+  assert.equal(normalizedReadingQuery, 'testa')
+  assert.equal(singleLetter.normalizedQuery, 'a')
+  assert.equal(singleLetter.normalizedReadingQuery, 'a')
 })
 
-test('matchesSearchQuery は末尾の全角英字を除去して検索できる', () => {
-  assert.equal(matchesSearchQuery('かもねぎ', 'dummy', 'かもｎ'), true)
+test('matchesSearchQuery は末尾が全角英字の曲名を検索できる', () => {
+  // Given: 曲名末尾が全角英字
+  // When & Then: 全角・半角の検索語で一致し、末尾を含む検索語は短い曲名に一致しない
+  assert.equal(matchesSearchQuery('TESTＡ', 'dummy', 'TESTＡ'), true)
+  assert.equal(matchesSearchQuery('TESTＡ', 'dummy', 'testa'), true)
+  assert.equal(matchesSearchQuery('TEST', 'dummy', 'TESTＡ'), false)
+})
+
+test('matchesSearchQuery は末尾が全角英字のアーティスト名を検索できる', () => {
+  // Given: アーティスト名末尾が全角英字
+  // When & Then: 全角・半角の検索語で一致し、末尾を含む検索語は短い名前に一致しない
+  assert.equal(matchesSearchQuery('曲名', 'ArtistＡ', 'ArtistＡ'), true)
+  assert.equal(matchesSearchQuery('曲名', 'ArtistＡ', 'artista'), true)
+  assert.equal(matchesSearchQuery('曲名', 'Artist', 'ArtistＡ'), false)
+})
+
+test('resolveComposingSearchQuery は変換中だけ末尾の全角英字を外す', () => {
+  // Given: ローマ字入力の途中と、確定済みの全角英字
+  // When / Then: 変換中の末尾全角英字だけを外し、数字・かな・確定済み文字は残す
+  assert.equal(resolveComposingSearchQuery('かもｎ', true), 'かも')
+  assert.equal(resolveComposingSearchQuery('かもｚ', true), 'かも')
+  assert.equal(resolveComposingSearchQuery('かも９', true), 'かも９')
+  assert.equal(resolveComposingSearchQuery('かもね', true), 'かもね')
+  assert.equal(resolveComposingSearchQuery('Ａ', true), '')
+  assert.equal(resolveComposingSearchQuery('TESTＡ', false), 'TESTＡ')
+  assert.equal(resolveComposingSearchQuery('Ａ', false), 'Ａ')
+})
+
+test('変換中の検索語は末尾の全角英字を外して一致し、確定後は残す', () => {
+  // Given: 末尾が未確定の全角英字である検索語と、同じ文字を確定した検索語
+  const composingQuery = resolveComposingSearchQuery('かもｎ', true)
+  const confirmedQuery = resolveComposingSearchQuery('かもｎ', false)
+
+  // When / Then: 変換中は確定済みの「かも」で一致し、確定後の全角ｎは別の文字として残る
+  assert.equal(matchesSearchQuery('かもねぎ', '東雲めぐ', composingQuery), true)
+  assert.equal(matchesSearchQuery('かもねぎ', '東雲めぐ', confirmedQuery), false)
+})
+
+test('matchesSearchQuery は全角英字1文字の検索語で全件一致しない', () => {
+  // Given: 確定済みの全角英字1文字
+  // When & Then: 空クエリ扱いにならず、該当しない曲は除外する
+  assert.equal(matchesSearchQuery('無関係', 'dummy', 'Ａ'), false)
+  assert.equal(matchesSearchQuery('Ａ', 'dummy', 'Ａ'), true)
 })

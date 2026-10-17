@@ -34,21 +34,43 @@ const SMALL_TO_LARGE_KANA: Record<string, string> = {
 const smallKanaRegex = new RegExp(`[${Object.keys(SMALL_TO_LARGE_KANA).join('')}]`, 'g')
 
 /**
- * 検索クエリ末尾の全角英字を1文字除去する。
+ * Removes one trailing fullwidth Latin letter (A-Z or a-z), regardless of IME state.
+ * Use during IME composition to search the preceding text, for example `かもｎ` as `かも`.
+ *
+ * @param value - Text to inspect; the caller determines whether composition is active.
+ * @returns The text without its last letter if it is fullwidth Latin; otherwise unchanged.
  */
-export function removeTrailingFullwidthAlphabet(value: string | null | undefined): string {
-  if (!value) return ''
+export function removeTrailingFullwidthAlphabet(value: string): string {
   return trailingFullwidthAlphabetRegex.test(value) ? value.slice(0, -1) : value
 }
 
+/**
+ * IMEの変換状態に応じて、検索へ渡す文字列を決める。
+ * 変換中だけ末尾の全角英字を外し、確定済みの全角英字は残す。
+ *
+ * @param value 入力欄に表示している文字列
+ * @param composing IME変換中なら true
+ * @returns 検索条件に使う文字列
+ */
+export function resolveComposingSearchQuery(value: string, composing: boolean): string {
+  return composing ? removeTrailingFullwidthAlphabet(value) : value
+}
+
+/**
+ * 検索クエリを曲名検索用と読み検索用に正規化する。
+ * 確定済みの全角英字は削除しない。IME変換中の末尾全角英字は、この関数の前に
+ * `resolveComposingSearchQuery` で検索条件から外す。
+ *
+ * @param query 入力された検索文字列。未設定の場合は空文字として扱う。
+ * @returns 曲名検索用と読み検索用に正規化したクエリ。
+ */
 export function normalizeQuery(query: string | null | undefined): {
   normalizedQuery: string
   normalizedReadingQuery: string
 } {
-  const stabilizedQuery = removeTrailingFullwidthAlphabet(query)
   return {
-    normalizedQuery: normalizeForSearch(stabilizedQuery),
-    normalizedReadingQuery: normalizeForReadingSearch(stabilizedQuery),
+    normalizedQuery: normalizeForSearch(query),
+    normalizedReadingQuery: normalizeForReadingSearch(query),
   }
 }
 

@@ -83,11 +83,26 @@ test('isRecordMatchedWithTitleMatcher は事前生成したマッチャーで一
   assert.equal(isRecordMatchedWithTitleMatcher(record, filters, matcher), true)
 })
 
-test('createRecordTitleMatcher は末尾の全角英字を除去して一致判定できる', () => {
-  const record = createRecord({ title: 'かもねぎ' })
-  const matcher = createRecordTitleMatcher('かもｎ')
+test('createRecordTitleMatcher は末尾の全角英字を残して一致判定できる', () => {
+  // Given: 曲名末尾が全角英字のレコードと、同じ文字を含む確定済み検索語
+  const record = createRecord({ title: 'TESTＡ' })
+  const matcher = createRecordTitleMatcher('TESTＡ')
 
+  // Then: 末尾の全角英字を含めて一致し、末尾付きの検索語は短い曲名や無関係な曲に一致しない
   assert.equal(matcher(record), true)
+  assert.equal(createRecordTitleMatcher('TESTＡ')(createRecord({ title: 'TEST' })), false)
+  assert.equal(
+    createRecordTitleMatcher('Ａ')(
+      createRecord({ title: 'かもねぎ', artist: '東雲めぐ', reading: 'カモネギ' })
+    ),
+    false
+  )
+  assert.equal(
+    createRecordTitleMatcher('かもｎ')(
+      createRecord({ title: 'かもねぎ', artist: '東雲めぐ', reading: 'カモネギ' })
+    ),
+    false
+  )
 })
 
 test('isRecordMatched は難易度・ジャンル・バージョンの条件を判定できる', () => {
