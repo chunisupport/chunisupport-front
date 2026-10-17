@@ -28,6 +28,16 @@ const FRONTEND_BUILD_ID = randomUUID()
 const FAVICON_PATH = path.resolve(import.meta.dirname, 'src/assets/favicon.png')
 /** トップページの OGP に使用する画像の絶対パス。 */
 const OGP_IMAGE_PATH = path.resolve(import.meta.dirname, 'src/assets/ogp.png')
+/**
+ * 画面で使う Google Fonts のスタイルシート。
+ *
+ * Noto Sans / Noto Sans JP は可変フォントのため、ウェイトを個別指定すると
+ * 同じ woff2 を指す `@font-face` がウェイトごとに複製され CSS が肥大する。
+ * 範囲指定でも参照する woff2 は変わらない。
+ * Jost のイタリックはレーティング画像の NEW バッジなどで使用している。
+ */
+const GOOGLE_FONTS_STYLESHEET_URL =
+  'https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400..700&family=Noto+Sans+JP:wght@400..800&family=Oswald:wght@200..700&display=swap'
 const ASSET_HASH_LENGTH = 10
 
 /**
@@ -143,7 +153,7 @@ export default defineConfig(({ env, envMode }) => {
           tag: 'link',
           attrs: {
             rel: 'stylesheet',
-            href: 'https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700;800&family=Oswald:wght@200..700&display=swap',
+            href: GOOGLE_FONTS_STYLESHEET_URL,
             crossorigin: true,
           },
         },
