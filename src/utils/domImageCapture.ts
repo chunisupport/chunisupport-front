@@ -289,6 +289,8 @@ export const captureElementAsImage = async (
       backgroundColor: getComputedStyle(sourceElement).backgroundColor,
       dpr: options.pixelRatio,
       embedFonts: true,
+      // 長い画像化でもスピナー更新やタップを処理できるよう、毎フレーム程度でイベントループへ処理を返す。
+      fast: false,
       format: options.format,
       // 取得できなかった画像は灰色の "img" ではなく、何も描画しない。
       placeholders: false,
@@ -297,8 +299,8 @@ export const captureElementAsImage = async (
     })
     const rasterizeOptions = {
       dpr: options.pixelRatio,
+      format: options.format,
       quality: options.quality,
-      type: options.format,
     }
 
     // ChromeがSVG内の埋め込みフォントを初回描画で準備するため、1回目は破棄する。

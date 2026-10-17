@@ -30,8 +30,8 @@ importers:
         specifier: ^0.7.5
         version: 0.7.5(solid-js@1.9.15)
       '@zumer/snapdom':
-        specifier: ^2.23.1
-        version: 2.23.1
+        specifier: ^3.3.4
+        version: 3.3.4
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
@@ -1041,8 +1041,8 @@ packages:
   '@types/node@26.0.1':
     resolution: {integrity: sha512-fc3KiUoBt6kie0N9bIW3E47vZsuaMf0PM2AaUpLCLT0s/LvX1nxAim6Fc049cNxODPpGm6qRAuUOB86SkRuPQw==}
 
-  '@zumer/snapdom@2.23.1':
-    resolution: {integrity: sha512-r+6LRFXIpzTxlvGBjTr7mhvVW05TozgyE1QFmvO1hbchdbl4Km5/7DIkeyl2+nEVbz8Sp6/K2g4b86pXhCrFIQ==}
+  '@zumer/snapdom@3.3.4':
+    resolution: {integrity: sha512-dICc6NpHXdeymOXeksZBWFRSG/qsHB0PvgtUQi6znkPoVT8F6pPjyP9vfXnGRr3MOL90cVEA6t5I2ZgM2p/41g==}
 
   abbrev@4.0.0:
     resolution: {integrity: sha512-a1wflyaL0tHtJSmLSOVybYhy22vRih4eduhhrkcjgrWGnRfrZtovJ2FRjxuTtkkj47O/baf0R86QU5OuYpz8fA==}
@@ -3090,7 +3090,7 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
-  '@zumer/snapdom@2.23.1': {}
+  '@zumer/snapdom@3.3.4': {}
 
   abbrev@4.0.0: {}
 

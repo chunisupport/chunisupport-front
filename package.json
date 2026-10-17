@@ -27,7 +27,7 @@
     "@tanstack/solid-query": "^5.102.8",
     "@tanstack/solid-virtual": "^3.13.30",
     "@thisbeyond/solid-dnd": "^0.7.5",
-    "@zumer/snapdom": "^2.23.1",
+    "@zumer/snapdom": "^3.3.4",
     "chart.js": "^4.5.1",
     "dexie": "^4.4.4",
     "firebase": "^12.15.0",
