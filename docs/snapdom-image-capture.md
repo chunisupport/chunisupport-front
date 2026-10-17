@@ -205,7 +205,7 @@ SnapDOM は表示済みの `<img>` も再取得し、3秒で取得できない�
 - 画像化のたびに数十枚のジャケットを `fetch` で再取得すると、HTTPキャッシュが使われない環境やレート制限で一部だけ失敗し、生成のたびに異なるジャケットが代替画像になることがありました。表示済み画像の再取得はしないでください。
 - SVG（クラスエンブレムなど）は原寸で Canvas へ描くと拡大時にぼやけるため、表示済みでない画像と同じく HTTPキャッシュ優先で取得し、元のバイト列のまま埋め込みます。
 
-それでも埋め込めなかった画像は、`<img>` の `data-image-capture-fallback-src` に指定した代替画像へ置き換えます。ジャケットでは `JacketImage` の `imageCaptureFallbackSrc` で、楽曲詳細画面などの読み込み中表示と同じ `src/assets/placeholder.png` を指定しています。代替画像を持たない画像（クラスエンブレムなど）は、SnapDOM の `placeholders: false` により何も描画しません。
+それでも埋め込めなかった画像は、`<img>` の `data-image-capture-fallback-src` に指定した代替画像へ置き換えます。ジャケットでは `JacketImage` の `imageCaptureFallbackSrc` で、楽曲詳細画面などの読み込み中表示と同じ `src/assets/placeholder.webp` を指定しています。代替画像を持たない画像（クラスエンブレムなど）は、SnapDOM の `placeholders: false` により何も描画しません。
 
 ## 背景色とテーマ
 
