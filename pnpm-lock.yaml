@@ -56,6 +56,9 @@ importers:
       '@rsbuild/core':
         specifier: ^2.1.1
         version: 2.1.1(core-js@3.47.0)
+      '@rsbuild/plugin-assets-retry':
+        specifier: ^2.0.2
+        version: 2.0.2(@rsbuild/core@2.1.1(core-js@3.47.0))
       '@rsbuild/plugin-babel':
         specifier: ^2.0.0
         version: 2.0.0(@rsbuild/core@2.1.1(core-js@3.47.0))
@@ -704,6 +707,14 @@ packages:
       core-js: '>= 3.0.0'
     peerDependenciesMeta:
       core-js:
+        optional: true
+
+  '@rsbuild/plugin-assets-retry@2.0.2':
+    resolution: {integrity: sha512-MPB0P5cIGn4F9kZRriMQjTDxi8k1OLpA2aYiP73xp4Gu2IbPZaxYgFlETZmUGiYv+tx/oYS3YIUGcIsr6qlohg==}
+    peerDependencies:
+      '@rsbuild/core': ^1.0.0 || ^2.0.0
+    peerDependenciesMeta:
+      '@rsbuild/core':
         optional: true
 
   '@rsbuild/plugin-babel@1.2.1':
@@ -2761,6 +2772,10 @@ snapshots:
       core-js: 3.47.0
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
+
+  '@rsbuild/plugin-assets-retry@2.0.2(@rsbuild/core@2.1.1(core-js@3.47.0))':
+    optionalDependencies:
+      '@rsbuild/core': 2.1.1(core-js@3.47.0)
 
   '@rsbuild/plugin-babel@1.2.1(@rsbuild/core@2.1.1(core-js@3.47.0))':
     dependencies:
