@@ -3,6 +3,10 @@ allowBuilds:
   core-js: true
   protobufjs: true
 overrides:
+  # @firebase/firestore は @grpc/grpc-js を ~1.9.0 に固定している。
+  # GHSA-m9gg-hp2v-232j / GHSA-f596-whhp-79r4 の修正は 1.13.6 以降。
+  # 1.13.7 は残件修正を含み、proto-loader は ^0.7.13 のままなので 1.14 系には上げない。
+  '@grpc/grpc-js': '~1.13.7'
   postcss: ^8.5.23
   seroval: ^1.6.8
   seroval-plugins: ^1.6.8
