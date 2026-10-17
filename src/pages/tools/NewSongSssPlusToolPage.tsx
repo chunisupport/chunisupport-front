@@ -8,13 +8,14 @@ import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigg
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
+import { OwnDataNotice } from '../../components/LoginRequiredState'
 import { buildSongDetailPath, RATING_THEORETICAL_CHECKER_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { createHistoryViewState } from '../../hooks/createHistoryViewState'
+import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useRatingTheoretical } from '../../hooks/useNewSongTheoreticalRating'
-import { authSession } from '../../stores/authSession'
 import type { PlayerRecordDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
@@ -52,6 +53,8 @@ type RatingTheoreticalFigureProps = {
   class?: string
   /** 現在の平均レーティング。未計算の場合はnull */
   currentRating: number | null
+  /** 自分のレーティングとの差を表示するか */
+  showOwnData: boolean
   /** データ取得で発生したエラー。正常時は未定義 */
   error: unknown
   /** 現在データを取得または理論値を計算しているか */
@@ -64,6 +67,8 @@ type RatingTheoreticalFigureProps = {
 type RatingTheoreticalChartsProps = {
   /** 理論値対象譜面との照合に使う全通常譜面レコード */
   records: readonly PlayerRecordDTO[]
+  /** 自分の現在スコアを表示するか */
+  showOwnData: boolean
   /** 理論値対象譜面一覧の見出し */
   detailsLabel: string
   /** データ取得で発生したエラー。正常時は未定義 */
@@ -144,15 +149,17 @@ const RatingTheoreticalFigure: Component<RatingTheoreticalFigureProps> = (props)
                     <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.unknownChartConstant}</span>
                   </Show>
                 </p>
-                <p
-                  class="flex items-baseline gap-1 font-jost font-medium tabular-nums text-text-muted"
-                  classList={{ 'text-base': props.primary, 'text-sm': !props.primary }}
-                  title={NEW_SONG_SSS_PLUS_COPY.currentGap}
-                >
-                  <TrendingUp class="h-4 w-4 shrink-0 self-center" aria-hidden="true" />
-                  <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.currentGap}</span>
-                  {formatRatingGap(theoreticalRating())}
-                </p>
+                <Show when={props.showOwnData}>
+                  <p
+                    class="flex items-baseline gap-1 font-jost font-medium tabular-nums text-text-muted"
+                    classList={{ 'text-base': props.primary, 'text-sm': !props.primary }}
+                    title={NEW_SONG_SSS_PLUS_COPY.currentGap}
+                  >
+                    <TrendingUp class="h-4 w-4 shrink-0 self-center" aria-hidden="true" />
+                    <span class="sr-only">{NEW_SONG_SSS_PLUS_COPY.currentGap}</span>
+                    {formatRatingGap(theoreticalRating())}
+                  </p>
+                </Show>
               </div>
             )}
           </Show>
@@ -244,13 +251,14 @@ const isSssPlusAchievedEntry = (
 /**
  * 理論値対象譜面の1行を表示する。SSS+達成済みなら背景をハイライトする。
  *
- * @param props - 対象譜面、表示順位、全通常譜面レコード。
+ * @param props - 対象譜面、表示順位、全通常譜面レコード、自分の現在スコアを表示するか。
  * @returns 楽曲詳細へ遷移できる一覧行。
  */
 const TheoreticalChartRow: Component<{
   entry: RatingTheoreticalEntry
   rank: number
   records: readonly PlayerRecordDTO[]
+  showOwnData: boolean
 }> = (props) => {
   const progress = createMemo(() => resolveChartProgressDisplay(props.entry, props.records))
   const isSssPlusAchieved = () => progress()?.scoreRank === 'SSS+'
@@ -300,7 +308,9 @@ const TheoreticalChartRow: Component<{
               </Show>
             </span>
           </span>
-          <SssPlusChartProgress progress={progress()} />
+          <Show when={props.showOwnData}>
+            <SssPlusChartProgress progress={progress()} />
+          </Show>
         </span>
       </A>
     </li>
@@ -310,13 +320,14 @@ const TheoreticalChartRow: Component<{
 /**
  * 全譜面SSS+時にレーティング枠へ採用される譜面を単曲レーティング順に表示する。
  *
- * @param props - 一覧見出し、SSS+時に採用される譜面一覧、全通常譜面レコード。
+ * @param props - 一覧見出し、SSS+時に採用される譜面一覧、全通常譜面レコード、自分の現在スコアを表示するか。
  * @returns 楽曲詳細へ遷移できる常時表示の一覧。
  */
 const TheoreticalChartList: Component<{
   detailsLabel: string
   entries: RatingTheoretical['entries']
   records: readonly PlayerRecordDTO[]
+  showOwnData: boolean
 }> = (props) => (
   <section aria-label={props.detailsLabel}>
     <div class="flex items-center justify-between px-3 py-2 font-sans">
@@ -329,7 +340,12 @@ const TheoreticalChartList: Component<{
     <ol class="divide-y divide-border border-t border-border">
       <For each={props.entries}>
         {(entry, index) => (
-          <TheoreticalChartRow entry={entry} rank={index() + 1} records={props.records} />
+          <TheoreticalChartRow
+            entry={entry}
+            rank={index() + 1}
+            records={props.records}
+            showOwnData={props.showOwnData}
+          />
         )}
       </For>
     </ol>
@@ -339,13 +355,14 @@ const TheoreticalChartList: Component<{
 /**
  * 下限定数で規定枠数から溢れた譜面を、既定で折りたたまれた独立カードに表示する。
  *
- * @param props - 下限定数の枠外譜面一覧、全行に表示する下限順位、全通常譜面レコード。
+ * @param props - 下限定数の枠外譜面一覧、全行に表示する下限順位、全通常譜面レコード、自分の現在スコアを表示するか。
  * @returns 開閉できる枠外譜面一覧のカード。
  */
 const BoundaryChartList: Component<{
   entries: RatingTheoretical['boundaryEntries']
   rank: number
   records: readonly PlayerRecordDTO[]
+  showOwnData: boolean
 }> = (props) => (
   <Collapsible class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
     <AppDisclosureTrigger
@@ -361,7 +378,12 @@ const BoundaryChartList: Component<{
       >
         <For each={props.entries}>
           {(entry) => (
-            <TheoreticalChartRow entry={entry} rank={props.rank} records={props.records} />
+            <TheoreticalChartRow
+              entry={entry}
+              rank={props.rank}
+              records={props.records}
+              showOwnData={props.showOwnData}
+            />
           )}
         </For>
       </ol>
@@ -422,6 +444,7 @@ const RatingTheoreticalCharts: Component<RatingTheoreticalChartsProps> = (props)
                   detailsLabel={props.detailsLabel}
                   entries={current().entries}
                   records={props.records}
+                  showOwnData={props.showOwnData}
                 />
               )}
             </Show>
@@ -433,6 +456,7 @@ const RatingTheoreticalCharts: Component<RatingTheoreticalChartsProps> = (props)
           entries={boundaryEntries() ?? []}
           rank={prioritized()?.entries.length ?? 0}
           records={props.records}
+          showOwnData={props.showOwnData}
         />
       </Show>
     </div>
@@ -440,15 +464,19 @@ const RatingTheoreticalCharts: Component<RatingTheoreticalChartsProps> = (props)
 }
 
 /**
- * ログインユーザーのベスト枠・新曲枠理論値と現在スコア差を表示する。
+ * ベスト枠・新曲枠理論値を表示する。
+ * プレイヤーデータ登録済みの場合は、自分のレーティング・スコアとの差も表示する。
  *
  * @returns ベスト枠・新曲枠理論値チェッカーのツールページ。
  */
 const RatingTheoreticalCheckerPage: Component = () => {
-  const username = (): string | undefined =>
-    authSession.status === 'authenticated' ? authSession.user?.username : undefined
-  const [rating] = createResource(username, fetchUserRatingWithCache)
-  const [record] = createResource(username, fetchUserRecordWithCache)
+  const { status: playerDataStatus, ownUsername } = createPlayerDataStatus()
+  const [rating] = createResource(ownUsername, fetchUserRatingWithCache)
+  const [record] = createResource(ownUsername, fetchUserRecordWithCache)
+  /** 自分のレーティング・スコアを表示するか */
+  const showOwnData = (): boolean => ownUsername() !== undefined
+  /** 自分のデータの判定・取得中か */
+  const isOwnDataLoading = (): boolean => playerDataStatus.loading || rating.loading
   const theoreticalRatings = useRatingTheoretical()
   const [selectedFrame, setSelectedFrame] = useSelectedFrameState(
     () => RATING_THEORETICAL_CHECKER_PATH,
@@ -456,7 +484,7 @@ const RatingTheoreticalCheckerPage: Component = () => {
   )
   useAppMainScrollRestoration(
     () =>
-      !rating.loading &&
+      !isOwnDataLoading() &&
       !record.loading &&
       (selectedFrame() === 'best'
         ? !theoreticalRatings.isBestLoading()
@@ -482,6 +510,8 @@ const RatingTheoreticalCheckerPage: Component = () => {
         </div>
       </header>
 
+      <OwnDataNotice status={playerDataStatus.error ? undefined : playerDataStatus()} />
+
       <section
         class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"
         aria-label={NEW_SONG_SSS_PLUS_COPY.summaryAriaLabel}
@@ -493,30 +523,33 @@ const RatingTheoreticalCheckerPage: Component = () => {
             icon={<Gauge class="h-4 w-4" aria-hidden="true" />}
             primary
             currentRating={rating()?.rating ?? null}
+            showOwnData={showOwnData()}
             error={rating.error ?? theoreticalRatings.bestError()}
-            loading={rating.loading || theoreticalRatings.isBestLoading()}
+            loading={isOwnDataLoading() || theoreticalRatings.isBestLoading()}
             theoreticalRating={theoreticalRatings.overallTheoreticalRating()}
           />
           <RatingTheoreticalFigure
             class="border-r border-border sm:border-r-0 sm:border-b"
             label={NEW_SONG_SSS_PLUS_COPY.bestLabel}
             currentRating={rating()?.best_average ?? null}
+            showOwnData={showOwnData()}
             error={rating.error ?? theoreticalRatings.bestError()}
-            loading={rating.loading || theoreticalRatings.isBestLoading()}
+            loading={isOwnDataLoading() || theoreticalRatings.isBestLoading()}
             theoreticalRating={theoreticalRatings.bestTheoreticalRating()}
           />
           <RatingTheoreticalFigure
             label={NEW_SONG_SSS_PLUS_COPY.newLabel}
             currentRating={rating()?.new_average ?? null}
+            showOwnData={showOwnData()}
             error={rating.error ?? theoreticalRatings.newError()}
-            loading={rating.loading || theoreticalRatings.isNewLoading()}
+            loading={isOwnDataLoading() || theoreticalRatings.isNewLoading()}
             theoreticalRating={theoreticalRatings.newTheoreticalRating()}
           />
         </div>
         <Show
           when={
             !rating.error &&
-            !rating.loading &&
+            !isOwnDataLoading() &&
             theoreticalRatings.overallTheoreticalRating()?.hasUnknownChartConstants
           }
         >
@@ -539,8 +572,11 @@ const RatingTheoreticalCheckerPage: Component = () => {
           <RatingTheoreticalCharts
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.bestDetailsLabel}
             error={record.error ?? theoreticalRatings.bestError()}
-            loading={record.loading || theoreticalRatings.isBestLoading()}
+            loading={
+              playerDataStatus.loading || record.loading || theoreticalRatings.isBestLoading()
+            }
             records={playedRecords()}
+            showOwnData={showOwnData()}
             theoreticalRating={theoreticalRatings.bestTheoreticalRating()}
           />
         </AppTabContent>
@@ -548,8 +584,11 @@ const RatingTheoreticalCheckerPage: Component = () => {
           <RatingTheoreticalCharts
             detailsLabel={NEW_SONG_SSS_PLUS_COPY.newDetailsLabel}
             error={record.error ?? theoreticalRatings.newError()}
-            loading={record.loading || theoreticalRatings.isNewLoading()}
+            loading={
+              playerDataStatus.loading || record.loading || theoreticalRatings.isNewLoading()
+            }
             records={playedRecords()}
+            showOwnData={showOwnData()}
             theoreticalRating={theoreticalRatings.newTheoreticalRating()}
           />
         </AppTabContent>

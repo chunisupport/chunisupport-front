@@ -8,11 +8,12 @@ import { AppButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SplitDecimal } from '../../components/common/SplitDecimal'
+import { OwnDataNotice } from '../../components/LoginRequiredState'
 import { BEST_SLOT_RANKING_PATH, buildSongDetailPath } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
+import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { bestSlotRankingInfiniteQueryOptions } from '../../queries/bestSlotRankings'
-import { authSession } from '../../stores/authSession'
 import type { BestSlotRankingEntryDTO, PlayerRecordDTO, RatingBandDTO } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
@@ -60,12 +61,14 @@ const formatPercentage = (percentage: number): string =>
  * @param props.entry - 表示対象のランキング項目。
  * @param props.isOwnBest - ログインユーザーのベスト枠に含まれる譜面か。
  * @param props.ownScore - 同じ譜面におけるログインユーザーのスコア。
+ * @param props.showScoreDifference - 自分との差の列を表示するか。
  * @returns 順位、譜面情報、平均スコア、自分との差、採用率を含む行。
  */
 const BestSlotRankingRow = (props: {
   entry: BestSlotRankingEntryDTO
   isOwnBest: boolean
   ownScore: number | undefined
+  showScoreDifference: boolean
 }) => {
   const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
   const constDisplay = () =>
@@ -134,19 +137,21 @@ const BestSlotRankingRow = (props: {
           </Show>
         </div>
       </td>
-      <td class="w-px px-3 py-2 text-right font-jost text-xs whitespace-nowrap tabular-nums">
-        <Show when={scoreDifference() !== undefined} fallback="-">
-          <span class={getScoreDifferenceClass(scoreDifference() ?? 0)}>
-            <SplitDecimal
-              parts={formatDecimalParts(
-                scoreDifference() ?? 0,
-                BEST_SLOT_SCORE_DECIMAL_PLACES,
-                'always'
-              )}
-            />
-          </span>
-        </Show>
-      </td>
+      <Show when={props.showScoreDifference}>
+        <td class="w-px px-3 py-2 text-right font-jost text-xs whitespace-nowrap tabular-nums">
+          <Show when={scoreDifference() !== undefined} fallback="-">
+            <span class={getScoreDifferenceClass(scoreDifference() ?? 0)}>
+              <SplitDecimal
+                parts={formatDecimalParts(
+                  scoreDifference() ?? 0,
+                  BEST_SLOT_SCORE_DECIMAL_PLACES,
+                  'always'
+                )}
+              />
+            </span>
+          </Show>
+        </td>
+      </Show>
       <td class="min-w-36 px-3 py-2">
         <div class="flex items-center gap-3">
           <div
@@ -174,14 +179,11 @@ const BestSlotRankingRow = (props: {
  */
 const BestSlotRankingPage = () => {
   const [ratingBandsResource] = createResource(fetchRatingBands)
-  const [ownRating] = createResource(
-    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
-    fetchUserRatingWithCache
-  )
-  const [ownRecords] = createResource(
-    () => (authSession.status === 'authenticated' ? authSession.user?.username : null),
-    fetchUserRecordWithCache
-  )
+  const { status: playerDataStatus, ownUsername } = createPlayerDataStatus()
+  const [ownRating] = createResource(ownUsername, fetchUserRatingWithCache)
+  const [ownRecords] = createResource(ownUsername, fetchUserRecordWithCache)
+  /** 自分との差の列を表示するか */
+  const showScoreDifference = (): boolean => ownUsername() !== undefined
   const [selectedRatingBand, setSelectedRatingBand] = createSignal<RatingBandOption | null>(null)
   const [hasResolvedInitialBand, setHasResolvedInitialBand] = createSignal(false)
 
@@ -194,12 +196,11 @@ const BestSlotRankingPage = () => {
 
   createEffect(() => {
     if (hasResolvedInitialBand() || ratingBands().length === 0) return
-    if (authSession.status === 'unknown') return
-    if (authSession.status === 'authenticated' && ownRating.loading) return
+    if (playerDataStatus.loading || ownRating.loading) return
 
     const initialBand = resolveInitialBestSlotRatingBand(
       ratingBands(),
-      authSession.status === 'authenticated' && !ownRating.error ? ownRating()?.best_average : null
+      ownUsername() !== undefined && !ownRating.error ? ownRating()?.best_average : null
     )
     if (!initialBand) return
 
@@ -269,6 +270,8 @@ const BestSlotRankingPage = () => {
         </Show>
       </div>
 
+      <OwnDataNotice status={playerDataStatus.error ? undefined : playerDataStatus()} />
+
       <Show
         when={!ratingBandsResource.error}
         fallback={<LoadError error={ratingBandsResource.error} />}
@@ -314,9 +317,14 @@ const BestSlotRankingPage = () => {
                         <th scope="col" class="px-3 py-2 text-right font-medium whitespace-nowrap">
                           {BEST_SLOT_RANKING_COPY.averageScoreColumn}
                         </th>
-                        <th scope="col" class="px-3 py-2 text-right font-medium whitespace-nowrap">
-                          {BEST_SLOT_RANKING_COPY.scoreDifferenceColumn}
-                        </th>
+                        <Show when={showScoreDifference()}>
+                          <th
+                            scope="col"
+                            class="px-3 py-2 text-right font-medium whitespace-nowrap"
+                          >
+                            {BEST_SLOT_RANKING_COPY.scoreDifferenceColumn}
+                          </th>
+                        </Show>
                         <th scope="col" class="px-3 py-2 text-right font-medium">
                           {BEST_SLOT_RANKING_COPY.percentageColumn}
                         </th>
@@ -335,6 +343,7 @@ const BestSlotRankingPage = () => {
                                 createChartKey(entry.song.id, entry.chart.difficulty)
                               )?.score
                             }
+                            showScoreDifference={showScoreDifference()}
                           />
                         )}
                       </For>
