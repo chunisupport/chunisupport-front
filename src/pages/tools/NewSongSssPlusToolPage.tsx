@@ -470,7 +470,7 @@ const RatingTheoreticalCharts: Component<RatingTheoreticalChartsProps> = (props)
  * @returns ベスト枠・新曲枠理論値チェッカーのツールページ。
  */
 const RatingTheoreticalCheckerPage: Component = () => {
-  const { status: playerDataStatus, ownUsername } = createPlayerDataStatus()
+  const { status: playerDataStatus, noticeStatus, ownUsername } = createPlayerDataStatus()
   const [rating] = createResource(ownUsername, fetchUserRatingWithCache)
   const [record] = createResource(ownUsername, fetchUserRecordWithCache)
   /** 自分のレーティング・スコアを表示するか */
@@ -510,7 +510,7 @@ const RatingTheoreticalCheckerPage: Component = () => {
         </div>
       </header>
 
-      <OwnDataNotice status={playerDataStatus.error ? undefined : playerDataStatus()} />
+      <OwnDataNotice status={noticeStatus()} />
 
       <section
         class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm"

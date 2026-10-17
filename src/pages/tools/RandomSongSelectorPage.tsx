@@ -626,7 +626,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [versionsResponse] = createResource(fetchVersions)
   const [nameFoldersResponse] = createResource(fetchNameFolders)
-  const { status: playerDataStatus, ownUsername } = createPlayerDataStatus()
+  const { status: playerDataStatus, noticeStatus, ownUsername } = createPlayerDataStatus()
   const [fetchedMyUserData] = createResource(ownUsername, fetchMyRandomSongUserData)
   /**
    * 自分のデータを使う機能が利用できない理由を返す。
@@ -1205,7 +1205,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
         </div>
       </header>
 
-      <OwnDataNotice status={playerDataStatus.error ? undefined : playerDataStatus()} />
+      <OwnDataNotice status={noticeStatus()} />
 
       <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
         <Show

@@ -10,6 +10,10 @@ import type { AuthResolution } from './resolveAuthSession.ts'
  */
 export type PlayerDataStatus = 'unauthenticated' | 'unregistered' | 'registered'
 
+/** 認証情報を解決できなかった場合のエラーメッセージ */
+export const AUTH_SESSION_ERROR_MESSAGE =
+  '認証情報の取得に失敗しました。ページを再読み込みしてください。'
+
 /** 認証状態の解決とプロフィール取得の依存関係 */
 type Dependencies = {
   /** 認証セッションを解決する */
@@ -35,7 +39,7 @@ export const resolvePlayerDataStatus = async (
 
   const username = dependencies.getUsername()
   if (authResolution === 'error' || username === null) {
-    throw new Error('認証情報の取得に失敗しました。ページを再読み込みしてください。')
+    throw new Error(AUTH_SESSION_ERROR_MESSAGE)
   }
 
   const profile = await dependencies.fetchProfile(username)

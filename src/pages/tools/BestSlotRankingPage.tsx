@@ -179,7 +179,7 @@ const BestSlotRankingRow = (props: {
  */
 const BestSlotRankingPage = () => {
   const [ratingBandsResource] = createResource(fetchRatingBands)
-  const { status: playerDataStatus, ownUsername } = createPlayerDataStatus()
+  const { status: playerDataStatus, noticeStatus, ownUsername } = createPlayerDataStatus()
   const [ownRating] = createResource(ownUsername, fetchUserRatingWithCache)
   const [ownRecords] = createResource(ownUsername, fetchUserRecordWithCache)
   /** 自分との差の列を表示するか */
@@ -270,7 +270,7 @@ const BestSlotRankingPage = () => {
         </Show>
       </div>
 
-      <OwnDataNotice status={playerDataStatus.error ? undefined : playerDataStatus()} />
+      <OwnDataNotice status={noticeStatus()} />
 
       <Show
         when={!ratingBandsResource.error}

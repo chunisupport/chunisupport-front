@@ -6,7 +6,9 @@ import Loading from '../Loading/Loading'
 import { LoginRequiredState } from '../LoginRequiredState'
 import { PlayerDataEmptyState } from '../PlayerDataEmptyState'
 
+/** プレイヤーデータ guard の props */
 type RequirePlayerDataProps = {
+  /** プレイヤーデータ登録済みの場合に表示する画面 */
   children: JSX.Element
 }
 
