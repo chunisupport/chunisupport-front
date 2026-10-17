@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { For, Show } from 'solid-js'
-import placeholderImageUrl from '../../../../assets/placeholder.png'
+import placeholderImageUrl from '../../../../assets/placeholder.webp'
 import { JacketImage } from '../../../../components/common/JacketImage'
 import { PLAYER_DATA_DIFFICULTIES } from '../../../../constants/difficulty'
 import { buildSongDetailPath } from '../../../../constants/routes'

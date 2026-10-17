@@ -1,5 +1,5 @@
 import { For, type JSX, Show } from 'solid-js'
-import placeholderImageUrl from '../../../assets/placeholder.png'
+import placeholderImageUrl from '../../../assets/placeholder.webp'
 import { JacketImage } from '../../../components/common/JacketImage'
 import { buildChunithmJacketUrl } from '../../../utils/jacket'
 import { SONG_EDIT_COPY } from '../songEditConstants'

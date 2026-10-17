@@ -1,7 +1,7 @@
 import { Triangle } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
-import placeholderImageUrl from '../../../../assets/placeholder.png'
+import placeholderImageUrl from '../../../../assets/placeholder.webp'
 import { ClassEmblem } from '../../../../components/common/profile/ClassEmblem'
 import { SCORE_RANK_TEXT_CLASS } from '../../../../components/common/record/recordStyleClasses'
 import { normalizePlayerDataDifficulty } from '../../../../constants/difficulty'
