@@ -2745,7 +2745,7 @@ This codebase contains a modified portion of code from the TC39 Temporal proposa
 
 The following npm package may be included in this product:
 
- - @zumer/snapdom@2.23.1
+ - @zumer/snapdom@3.3.4
 
 This package contains the following license:
 
