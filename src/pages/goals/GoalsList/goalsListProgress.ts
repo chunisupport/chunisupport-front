@@ -1,4 +1,10 @@
-import type { GoalAchievementType, GoalCreateRequest, GoalDTO } from '../../../types/api'
+import type {
+  GoalAchievementType,
+  GoalAttributes,
+  GoalCreateRequest,
+  GoalDTO,
+  PlayerRecordDTO,
+} from '../../../types/api'
 import { filterRatingReachableRecords } from '../../../utils/goalRatingCount'
 import { calculateGoalOverPowerChartMax } from '../utils/goalOverPower'
 import {
@@ -57,6 +63,25 @@ const toOverPowerProgressContext = (data: GoalsListData): GoalOverPowerProgressC
 export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWithProgress[] => {
   if (!data) return []
 
+  // 目標ごとに楽曲Mapを作り直さず、同じ対象条件の抽出結果も目標間で再利用する。
+  const songMap = new Map(data.songs.map((song) => [song.id, song]))
+  const filteredRecordsByAttributes = new Map<string, PlayerRecordDTO[]>()
+  const filterRecords = (attributes: GoalAttributes): PlayerRecordDTO[] => {
+    const key = JSON.stringify(attributes)
+    const cached = filteredRecordsByAttributes.get(key)
+    if (cached) return cached
+    const filtered = filterRecordsByAttributes(
+      data.records,
+      attributes,
+      data.masterData,
+      data.songs,
+      data.versions,
+      { songMap }
+    )
+    filteredRecordsByAttributes.set(key, filtered)
+    return filtered
+  }
+
   return data.goals.map((goal) => {
     if (goal.achievement_type === 'rainbow_count') {
       const targetSongs = filterRainbowTargetSongs(
@@ -81,14 +106,7 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
         ),
       }
     }
-    const filtered = filterRecordsByAttributes(
-      data.records,
-      goal.attributes,
-      data.masterData,
-      data.songs,
-      data.versions
-    )
-    const progress = calculateGoalProgress(goal, filtered, data.songs)
+    const progress = calculateGoalProgress(goal, filterRecords(goal.attributes), data.songs)
     return { goal, progress }
   })
 }

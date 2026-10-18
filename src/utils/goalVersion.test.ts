@@ -52,3 +52,21 @@ test('未来バージョンは選択肢から除外され、公開済みの番�
     { value: '3', numericValue: 3, label: 'LUMINOUS' },
   ])
 })
+
+test('同じリリース日を繰り返し解決しても、バージョン一覧ごとに正しい番号を返す', () => {
+  // Given: 同じリリース日を、新しいバージョンを追加した別の一覧でも解決する。
+  const withNewVersion: VersionDTO[] = [
+    ...versions,
+    { id: 60, name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
+  ]
+
+  // When: キャッシュ済みの一覧と別の一覧で同じ日付を解決する。
+  const first = resolveGoalVersionValueByReleaseDate('2025-01-01', versions)
+  const cached = resolveGoalVersionValueByReleaseDate('2025-01-01T00:00:00Z', versions)
+  const otherList = resolveGoalVersionValueByReleaseDate('2025-01-01', withNewVersion)
+
+  // Then: 一覧ごとに解決され、キャッシュが別の一覧へ漏れない。
+  assert.equal(first, 3)
+  assert.equal(cached, 3)
+  assert.equal(otherList, 4)
+})

@@ -45,6 +45,8 @@ export interface GoalProgressResult {
 interface FilterRecordsByAttributesOptions {
   /** OP対象指定時に、対象曲の全譜面レコードを残すか。OVER POWER集計で曲内最大値を取るために使う */
   includeAllChartsForOpTarget?: boolean
+  /** 楽曲IDから楽曲マスタを引くMap。複数目標を続けて抽出する場合に再生成を避けるために渡す */
+  songMap?: ReadonlyMap<string, SongDTO>
 }
 
 /** OVER POWER目標の進捗計算に渡す未解禁曲・マスタ情報 */
@@ -159,7 +161,7 @@ const isOverPowerTargetSongMatched = (
  * @param masterData - 難易度・ジャンルなどのマスタデータ。
  * @param songs - 楽曲マスタ一覧。
  * @param versions - version API から返されたバージョン一覧。
- * @param options - OP対象のレコード粒度を調整する追加オプション。
+ * @param options - OP対象のレコード粒度と、共有する楽曲Mapを指定する追加オプション。
  * @returns 目標条件に一致したレコード一覧。
  */
 export const filterRecordsByAttributes = (
@@ -170,7 +172,7 @@ export const filterRecordsByAttributes = (
   versions: VersionDTO[],
   options: FilterRecordsByAttributesOptions = {}
 ): PlayerRecordDTO[] => {
-  const songMap = new Map(songs.map((song) => [song.id, song]))
+  const songMap = options.songMap ?? new Map(songs.map((song) => [song.id, song]))
   const diffIds = normalizeGoalAttributeIds(attributes.diff)
   const genreIds = normalizeGoalAttributeIds(attributes.genre)
   const versionIds = normalizeGoalAttributeIds(attributes.ver)
