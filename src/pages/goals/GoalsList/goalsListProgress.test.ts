@@ -105,6 +105,13 @@ test('単曲レート入力の変更に応じて到達可能譜面数を再解�
 
 test('同じ対象条件の目標が複数あっても、目標ごとの成果パラメータで進捗を計算する', () => {
   // Given: MASTERの2譜面とEXPERTの1譜面があり、同じ条件の目標2件と別条件の目標1件がある。
+  /**
+   * 進捗計算テスト用の目標を作る。
+   *
+   * @param id - 目標ID。並び順にも使う。
+   * @param overrides - テストごとに差し替える目標項目。
+   * @returns score_count を既定とした目標。
+   */
   const createGoal = (id: number, overrides: Partial<GoalDTO>): GoalDTO => ({
     id,
     sort_order: id,
