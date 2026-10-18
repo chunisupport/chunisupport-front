@@ -79,15 +79,18 @@ const EMPTY_MESSAGE = '該当する曲がありません'
 
 /** 仮想化した楽曲候補一覧へ渡す値 */
 type SongSelectionVirtualListProps<TItem> = {
+  /** 表示対象の全候補 */
   items: readonly TItem[]
   /** 一覧を内包するスクロール要素。一覧のマウント時点で描画済みであること */
   getScrollElement: () => HTMLDivElement | undefined
+  /** 1行分の中身を描画する */
   renderItem: (item: TItem) => JSX.Element
 }
 
 /**
  * 楽曲候補をスクロール領域内で仮想化し、表示範囲付近の行だけを描画する。
  * 行の高さは描画後に計測し、見積もり値との差を補正する。
+ * 絞り込みで同じ位置の候補が入れ替わった場合も行を作り直し、計測し直す。
  *
  * @param props - 候補一覧、スクロール要素の取得処理、行の描画処理。
  * @returns 表示範囲付近の行だけを含む一覧。
@@ -108,16 +111,22 @@ const SongSelectionVirtualList = <TItem,>(
     <ul class="relative bg-surface" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
       <For each={rowVirtualizer.getVirtualItems()}>
         {(virtualRow) => (
-          <Show when={props.items[virtualRow.index]}>
+          <Show when={props.items[virtualRow.index]} keyed>
             {(item) => (
               <li
                 data-index={virtualRow.index}
-                ref={(element) => queueMicrotask(() => rowVirtualizer.measureElement(element))}
+                aria-setsize={props.items.length}
+                aria-posinset={virtualRow.index + 1}
+                ref={(element) =>
+                  queueMicrotask(() => {
+                    if (element.isConnected) rowVirtualizer.measureElement(element)
+                  })
+                }
                 class="absolute top-0 left-0 w-full"
                 classList={{ 'border-b border-border': virtualRow.index < props.items.length - 1 }}
                 style={{ transform: `translateY(${virtualRow.start}px)` }}
               >
-                {props.renderItem(item())}
+                {props.renderItem(item)}
               </li>
             )}
           </Show>

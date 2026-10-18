@@ -18,7 +18,7 @@ export const SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS = 'z-80'
 
 /** 楽曲選択ダイアログの候補一覧を仮想化する設定 */
 export const SONG_SELECTION_LIST_VIRTUAL = {
-  /** 1行の見積もり高さ(px)。実際の高さは描画後に計測して補正する */
+  /** 1行の見積もり高さ(px)。py-2・text-sm・text-xs・下罫線1pxの合計。実際の高さは描画後に計測して補正する */
   estimatedRowHeight: 53,
   /** 表示範囲の前後に追加描画する行数 */
   overscan: 10,
