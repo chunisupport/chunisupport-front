@@ -1,5 +1,4 @@
 import { type Accessor, createEffect, createSignal, onMount, type Setter } from 'solid-js'
-import { createLatestOnlyRunner } from '../utils/latestOnlyRunner'
 import {
   createInitialSortConditions,
   nextPrimarySortCondition,
@@ -172,9 +171,6 @@ export const createRecordViewState = <
         .finally(() => setColumnsReady(true))
     })
 
-    /** 検索入力の連打で保存が積み重ならないよう、保存中に届いたフィルターは最新の1件だけ保存する */
-    const saveLatestFilter = createLatestOnlyRunner(options.saveFilter)
-
     /**
      * フィルターを画面へ反映し、永続化する。永続化の失敗は無視する。
      *
@@ -183,7 +179,7 @@ export const createRecordViewState = <
      */
     const applyFilters = (nextFilters: TFilter) => {
       setFilters(() => nextFilters)
-      saveLatestFilter(nextFilters)
+      void options.saveFilter(nextFilters).catch(() => undefined)
     }
 
     /**
