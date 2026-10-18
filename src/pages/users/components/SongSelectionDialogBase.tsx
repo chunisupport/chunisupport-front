@@ -1,5 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
+import { createVirtualizer } from '@tanstack/solid-virtual'
 import { CircleSlash2, Funnel, ListChecks, LoaderCircle } from 'lucide-solid'
 import type { Accessor, JSX, Setter } from 'solid-js'
 import { For, Show } from 'solid-js'
@@ -19,6 +20,7 @@ import Loading from '../../../components/Loading/Loading'
 import type { NameFolderDTO } from '../../../types/api'
 import {
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
+  SONG_SELECTION_LIST_VIRTUAL,
   SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
   SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
 } from './songSelectionDialog'
@@ -75,6 +77,65 @@ const FILTER_RESET_LABEL = 'リセット'
 const SELECTED_ONLY_LABEL = '選択済み楽曲のみ表示'
 const EMPTY_MESSAGE = '該当する曲がありません'
 
+/** 仮想化した楽曲候補一覧へ渡す値 */
+type SongSelectionVirtualListProps<TItem> = {
+  /** 表示対象の全候補 */
+  items: readonly TItem[]
+  /** 一覧を内包するスクロール要素。一覧のマウント時点で描画済みであること */
+  getScrollElement: () => HTMLDivElement | undefined
+  /** 1行分の中身を描画する */
+  renderItem: (item: TItem) => JSX.Element
+}
+
+/**
+ * 楽曲候補をスクロール領域内で仮想化し、表示範囲付近の行だけを描画する。
+ * 行の高さは描画後に計測し、見積もり値との差を補正する。
+ * 絞り込みで同じ位置の候補が入れ替わった場合も行を作り直し、計測し直す。
+ *
+ * @param props - 候補一覧、スクロール要素の取得処理、行の描画処理。
+ * @returns 表示範囲付近の行だけを含む一覧。
+ */
+const SongSelectionVirtualList = <TItem,>(
+  props: SongSelectionVirtualListProps<TItem>
+): JSX.Element => {
+  const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLLIElement>({
+    get count() {
+      return props.items.length
+    },
+    getScrollElement: () => props.getScrollElement() ?? null,
+    estimateSize: () => SONG_SELECTION_LIST_VIRTUAL.estimatedRowHeight,
+    overscan: SONG_SELECTION_LIST_VIRTUAL.overscan,
+  })
+
+  return (
+    <ul class="relative bg-surface" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+      <For each={rowVirtualizer.getVirtualItems()}>
+        {(virtualRow) => (
+          <Show when={props.items[virtualRow.index]} keyed>
+            {(item) => (
+              <li
+                data-index={virtualRow.index}
+                aria-setsize={props.items.length}
+                aria-posinset={virtualRow.index + 1}
+                ref={(element) =>
+                  queueMicrotask(() => {
+                    if (element.isConnected) rowVirtualizer.measureElement(element)
+                  })
+                }
+                class="absolute top-0 left-0 w-full"
+                classList={{ 'border-b border-border': virtualRow.index < props.items.length - 1 }}
+                style={{ transform: `translateY(${virtualRow.start}px)` }}
+              >
+                {props.renderItem(item)}
+              </li>
+            )}
+          </Show>
+        )}
+      </For>
+    </ul>
+  )
+}
+
 /**
  * 楽曲選択画面で共通する全画面Dialog、検索、フィルター、一覧、保存操作を描画する。
  *
@@ -86,6 +147,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
 ): JSX.Element => {
   const filterButtonLabel = (): string =>
     props.filterChanged() ? FILTER_ACTIVE_LABEL : FILTER_LABEL
+  let listScrollElement: HTMLDivElement | undefined
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
@@ -148,7 +210,10 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
             {props.selectionSummary()}
           </div>
 
-          <div class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface">
+          <div
+            ref={listScrollElement}
+            class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface"
+          >
             <Show
               when={props.isListReady()}
               fallback={
@@ -172,9 +237,11 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
                   </div>
                 }
               >
-                <ul class="divide-y divide-border bg-surface">
-                  <For each={props.items()}>{(item) => <li>{props.renderItem(item)}</li>}</For>
-                </ul>
+                <SongSelectionVirtualList
+                  items={props.items()}
+                  getScrollElement={() => listScrollElement}
+                  renderItem={props.renderItem}
+                />
               </Show>
             </Show>
           </div>
