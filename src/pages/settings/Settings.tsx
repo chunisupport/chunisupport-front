@@ -21,6 +21,7 @@ import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { ACCOUNT_DELETE_COPY } from './AccountSettings.constants'
 import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
 import { DataTransferSettingsSection } from './DataTransferSettingsSection'
+import { GoogleAccountChangeForm } from './GoogleAccountChangeForm'
 import { PLAYER_DATA_DELETE_COPY } from './PlayerDataSettings.constants'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
@@ -374,6 +375,7 @@ const Settings = () => {
                         currentUsername={loadedSummary().me.username}
                         onChanged={handleUsernameChanged}
                       />
+                      <GoogleAccountChangeForm />
                       <div class="mt-10 border-t border-danger-border pt-6">
                         <h3 class="font-semibold text-danger">退会</h3>
                         <p class="mt-1 text-sm text-text-muted">

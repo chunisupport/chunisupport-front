@@ -15,6 +15,24 @@ export const USERNAME_CHANGE_COPY = {
   recentSignInExpired: '再認証の有効期限が切れています。もう一度お試しください。',
 } as const
 
+/** アカウント設定のGoogleアカウント変更欄で使用する表示文言。 */
+export const GOOGLE_ACCOUNT_CHANGE_COPY = {
+  title: 'Googleアカウントを変更',
+  currentLabel: '現在',
+  targetLabel: '変更先',
+  select: '変更先を選択',
+  selecting: '選択中...',
+  submit: '変更する',
+  submitting: '変更中...',
+  cancel: 'キャンセル',
+  success: 'Googleアカウントを変更しました。',
+  failure: 'Googleアカウントの変更に失敗しました。',
+  selectionClosed: 'Googleアカウントの選択がキャンセルされました。',
+  popupClosed: '再認証がキャンセルされました。',
+  userMismatch: '現在のGoogleアカウントで再認証してください。',
+  recentSignInExpired: '有効期限が切れました。変更先をもう一度選択してください。',
+} as const
+
 /** 退会確認ダイアログで使用する表示文言。 */
 export const ACCOUNT_DELETE_COPY = {
   title: '本当に退会しますか？',

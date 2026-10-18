@@ -145,6 +145,7 @@ export type ErrorCode =
   // 権限
   | 'forbidden'
   | 'firebase_uid_already_linked'
+  | 'firebase_account_unchanged'
   // ユーザー
   | 'registration_failed'
   | 'user_not_found'
@@ -254,6 +255,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   recent_sign_in_required: '再認証が必要です。もう一度Googleログインを行ってください',
   forbidden: 'アクセス権限がありません',
   firebase_uid_already_linked: 'このGoogleアカウントはすでに別のユーザーに連携されています',
+  firebase_account_unchanged: '現在と同じGoogleアカウントです',
   registration_failed: 'このユーザー名は使用できません',
   user_not_found: 'ユーザーが見つかりません',
   operation_failed: '操作に失敗しました',
