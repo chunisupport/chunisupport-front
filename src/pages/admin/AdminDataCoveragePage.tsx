@@ -1,10 +1,12 @@
 import { A } from '@solidjs/router'
-import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import { createMemo, createResource, createSignal, For, type JSX, Show } from 'solid-js'
 import { fetchAllSongs, fetchWorldsendSongs } from '../../api/songs'
 import { Loading } from '../../components'
 import { AppTabContent, SegmentedTabs } from '../../components/common/AppTabs'
+import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import {
+  RECORD_ROW_HEIGHT,
   RECORD_ROW_MIN_HEIGHT_CLASS,
   RecordHeaderButton,
 } from '../../components/common/record/RecordDisplayParts'
@@ -47,6 +49,80 @@ const DATA_COVERAGE_SONG_LINK_CLASS = `flex w-full items-center px-3 py-1 ${RECO
 
 /** 未判明・未登録表の難易度・Lvセルに共通適用するクラス。レコード表の行高に合わせる */
 const DATA_COVERAGE_TABLE_CELL_CLASS = 'w-px px-3 py-1 text-center'
+
+/** 未判明・未登録表の1行の高さ。曲名リンクの最小高さに行の上罫線1pxを加える */
+const DATA_COVERAGE_TABLE_ROW_HEIGHT = RECORD_ROW_HEIGHT + 1
+
+type VirtualCoverageTableProps<TRow> = {
+  /** スクリーンリーダー向けの表題 */
+  caption: string
+  /** 表の列数。上下の余白行で全列を結合するために使う */
+  columnCount: number
+  /** 見出し行 */
+  header: JSX.Element
+  /** 表示対象の全行 */
+  rows: readonly TRow[]
+  /** 1行分の `tr` を描画する。`ariaRowIndex` は見出し行を1とした行番号 */
+  renderRow: (row: TRow, ariaRowIndex: number) => JSX.Element
+}
+
+/**
+ * 未判明・未登録譜面の表を、ページのスクロール位置に合わせて表示範囲付近の行だけ描画する。
+ *
+ * 表示範囲外の行は上下の余白行で高さだけを確保し、table 要素の列幅計算と意味構造を維持する。
+ *
+ * @param props - 表題、列数、見出し行、全行、行の描画処理。
+ * @returns 仮想化した表。
+ */
+const VirtualCoverageTable = <TRow,>(props: VirtualCoverageTableProps<TRow>) => {
+  const virtualizedTable = createWindowVirtualTable<HTMLDivElement, HTMLTableSectionElement>({
+    rowCount: () => props.rows.length,
+    rowHeight: DATA_COVERAGE_TABLE_ROW_HEIGHT,
+    resetOnRowCountChange: true,
+  })
+  const paddingTop = () => {
+    const firstRow = virtualizedTable.virtualRows()[0]
+    return firstRow ? firstRow.start - virtualizedTable.scrollMargin() : 0
+  }
+  const paddingBottom = () => {
+    const virtualRows = virtualizedTable.virtualRows()
+    const lastRow = virtualRows[virtualRows.length - 1]
+    return lastRow
+      ? virtualizedTable.getTotalSize() - (lastRow.end - virtualizedTable.scrollMargin())
+      : 0
+  }
+
+  return (
+    <div
+      ref={virtualizedTable.setTableContainerRef}
+      class="overflow-x-auto rounded-lg border border-border bg-surface"
+    >
+      <table class="min-w-full text-sm whitespace-nowrap" aria-rowcount={props.rows.length + 1}>
+        <caption class="sr-only">{props.caption}</caption>
+        <thead class={DATA_COVERAGE_TABLE_HEAD_CLASS}>{props.header}</thead>
+        <tbody ref={virtualizedTable.setTableBodyRef}>
+          <Show when={paddingTop() > 0}>
+            <tr style={{ height: `${paddingTop()}px` }}>
+              <td colSpan={props.columnCount} class="p-0" aria-hidden="true" />
+            </tr>
+          </Show>
+          <For each={virtualizedTable.virtualRows()}>
+            {(virtualRow) => (
+              <Show when={props.rows[virtualRow.index]} keyed>
+                {(row) => props.renderRow(row, virtualRow.index + 2)}
+              </Show>
+            )}
+          </For>
+          <Show when={paddingBottom() > 0}>
+            <tr style={{ height: `${paddingBottom()}px` }}>
+              <td colSpan={props.columnCount} class="p-0" aria-hidden="true" />
+            </tr>
+          </Show>
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 /**
  * 譜面定数未判明譜面の楽曲詳細画面パスを生成する。
@@ -416,63 +492,59 @@ const MissingCharts = (props: MissingChartsProps) => {
           </p>
         }
       >
-        <div class="overflow-x-auto rounded-lg border border-border bg-surface">
-          <table class="min-w-full text-sm whitespace-nowrap">
-            <caption class="sr-only">{props.caption}</caption>
-            <thead class={DATA_COVERAGE_TABLE_HEAD_CLASS}>
-              <tr>
-                <th
-                  class="w-full px-2"
-                  scope="col"
-                  aria-sort={getSortAriaValue(sortKey() === 'songTitle', sortDirection())}
+        <VirtualCoverageTable
+          caption={props.caption}
+          columnCount={2}
+          rows={sortedCharts()}
+          header={
+            <tr>
+              <th
+                class="w-full px-2"
+                scope="col"
+                aria-sort={getSortAriaValue(sortKey() === 'songTitle', sortDirection())}
+              >
+                <RecordHeaderButton
+                  label={ADMIN_DATA_COVERAGE_COPY.songColumn}
+                  active={sortKey() === 'songTitle'}
+                  direction={sortDirection()}
+                  align="start"
+                  class="justify-start"
+                  onClick={() => handleSortChange('songTitle')}
+                />
+              </th>
+              <th
+                class="w-px px-2"
+                scope="col"
+                aria-sort={getSortAriaValue(sortKey() === 'difficulty', sortDirection())}
+              >
+                <RecordHeaderButton
+                  label={ADMIN_DATA_COVERAGE_COPY.difficultyColumn}
+                  active={sortKey() === 'difficulty'}
+                  direction={sortDirection()}
+                  align="center"
+                  class="justify-center"
+                  onClick={() => handleSortChange('difficulty')}
+                />
+              </th>
+            </tr>
+          }
+          renderRow={(chart, ariaRowIndex) => (
+            <tr class="border-t border-border" aria-rowindex={ariaRowIndex}>
+              <td class="max-w-0 p-0 font-sans text-text">
+                <A
+                  href={buildMissingChartHref(chart)}
+                  class={DATA_COVERAGE_SONG_LINK_CLASS}
+                  title={chart.songTitle}
                 >
-                  <RecordHeaderButton
-                    label={ADMIN_DATA_COVERAGE_COPY.songColumn}
-                    active={sortKey() === 'songTitle'}
-                    direction={sortDirection()}
-                    align="start"
-                    class="justify-start"
-                    onClick={() => handleSortChange('songTitle')}
-                  />
-                </th>
-                <th
-                  class="w-px px-2"
-                  scope="col"
-                  aria-sort={getSortAriaValue(sortKey() === 'difficulty', sortDirection())}
-                >
-                  <RecordHeaderButton
-                    label={ADMIN_DATA_COVERAGE_COPY.difficultyColumn}
-                    active={sortKey() === 'difficulty'}
-                    direction={sortDirection()}
-                    align="center"
-                    class="justify-center"
-                    onClick={() => handleSortChange('difficulty')}
-                  />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={sortedCharts()}>
-                {(chart) => (
-                  <tr class="border-t border-border">
-                    <td class="max-w-0 p-0 font-sans text-text">
-                      <A
-                        href={buildMissingChartHref(chart)}
-                        class={DATA_COVERAGE_SONG_LINK_CLASS}
-                        title={chart.songTitle}
-                      >
-                        <span class="min-w-0 truncate">{chart.songTitle}</span>
-                      </A>
-                    </td>
-                    <td class={DATA_COVERAGE_TABLE_CELL_CLASS}>
-                      <CoverageDifficultyLabel difficulty={chart.difficulty} />
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
-        </div>
+                  <span class="min-w-0 truncate">{chart.songTitle}</span>
+                </A>
+              </td>
+              <td class={DATA_COVERAGE_TABLE_CELL_CLASS}>
+                <CoverageDifficultyLabel difficulty={chart.difficulty} />
+              </td>
+            </tr>
+          )}
+        />
       </Show>
     </section>
   )
@@ -525,82 +597,76 @@ const UnknownChartsList = (props: UnknownChartsListProps) => {
           </p>
         }
       >
-        <div class="overflow-x-auto rounded-lg border border-border bg-surface">
-          <table class="min-w-full text-sm whitespace-nowrap">
-            <caption class="sr-only">
-              {ADMIN_DATA_COVERAGE_COPY.chartConstant.missingCaption}
-            </caption>
-            <thead class={DATA_COVERAGE_TABLE_HEAD_CLASS}>
-              <tr>
-                <th
-                  class="w-full px-2"
-                  scope="col"
-                  aria-sort={getSortAriaValue(sortKey() === 'songTitle', sortDirection())}
+        <VirtualCoverageTable
+          caption={ADMIN_DATA_COVERAGE_COPY.chartConstant.missingCaption}
+          columnCount={3}
+          rows={sortedCharts()}
+          header={
+            <tr>
+              <th
+                class="w-full px-2"
+                scope="col"
+                aria-sort={getSortAriaValue(sortKey() === 'songTitle', sortDirection())}
+              >
+                <RecordHeaderButton
+                  label={ADMIN_DATA_COVERAGE_COPY.songColumn}
+                  active={sortKey() === 'songTitle'}
+                  direction={sortDirection()}
+                  align="start"
+                  class="justify-start"
+                  onClick={() => handleSortChange('songTitle')}
+                />
+              </th>
+              <th
+                class="w-px px-2"
+                scope="col"
+                aria-sort={getSortAriaValue(sortKey() === 'difficulty', sortDirection())}
+              >
+                <RecordHeaderButton
+                  label={ADMIN_DATA_COVERAGE_COPY.difficultyColumn}
+                  active={sortKey() === 'difficulty'}
+                  direction={sortDirection()}
+                  align="center"
+                  class="justify-center"
+                  onClick={() => handleSortChange('difficulty')}
+                />
+              </th>
+              <th
+                class="w-px px-2"
+                scope="col"
+                aria-sort={getSortAriaValue(sortKey() === 'level', sortDirection())}
+              >
+                <RecordHeaderButton
+                  label={ADMIN_DATA_COVERAGE_COPY.levelColumn}
+                  active={sortKey() === 'level'}
+                  direction={sortDirection()}
+                  align="center"
+                  class="justify-center"
+                  onClick={() => handleSortChange('level')}
+                />
+              </th>
+            </tr>
+          }
+          renderRow={(chart, ariaRowIndex) => (
+            <tr class="border-t border-border" aria-rowindex={ariaRowIndex}>
+              <td class="max-w-0 p-0 font-sans text-text">
+                <A
+                  href={buildUnknownChartHref(chart)}
+                  class={DATA_COVERAGE_SONG_LINK_CLASS}
+                  title={chart.songTitle}
                 >
-                  <RecordHeaderButton
-                    label={ADMIN_DATA_COVERAGE_COPY.songColumn}
-                    active={sortKey() === 'songTitle'}
-                    direction={sortDirection()}
-                    align="start"
-                    class="justify-start"
-                    onClick={() => handleSortChange('songTitle')}
-                  />
-                </th>
-                <th
-                  class="w-px px-2"
-                  scope="col"
-                  aria-sort={getSortAriaValue(sortKey() === 'difficulty', sortDirection())}
-                >
-                  <RecordHeaderButton
-                    label={ADMIN_DATA_COVERAGE_COPY.difficultyColumn}
-                    active={sortKey() === 'difficulty'}
-                    direction={sortDirection()}
-                    align="center"
-                    class="justify-center"
-                    onClick={() => handleSortChange('difficulty')}
-                  />
-                </th>
-                <th
-                  class="w-px px-2"
-                  scope="col"
-                  aria-sort={getSortAriaValue(sortKey() === 'level', sortDirection())}
-                >
-                  <RecordHeaderButton
-                    label={ADMIN_DATA_COVERAGE_COPY.levelColumn}
-                    active={sortKey() === 'level'}
-                    direction={sortDirection()}
-                    align="center"
-                    class="justify-center"
-                    onClick={() => handleSortChange('level')}
-                  />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={sortedCharts()}>
-                {(chart) => (
-                  <tr class="border-t border-border">
-                    <td class="max-w-0 p-0 font-sans text-text">
-                      <A
-                        href={buildUnknownChartHref(chart)}
-                        class={DATA_COVERAGE_SONG_LINK_CLASS}
-                        title={chart.songTitle}
-                      >
-                        <span class="min-w-0 truncate">{chart.songTitle}</span>
-                      </A>
-                    </td>
-                    <td class={DATA_COVERAGE_TABLE_CELL_CLASS}>
-                      <DifficultyBadge difficulty={chart.difficulty} />
-                    </td>
-                    <td class={`font-jost tabular-nums ${DATA_COVERAGE_TABLE_CELL_CLASS}`}>
-                      {chart.level}
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
-        </div>
+                  <span class="min-w-0 truncate">{chart.songTitle}</span>
+                </A>
+              </td>
+              <td class={DATA_COVERAGE_TABLE_CELL_CLASS}>
+                <DifficultyBadge difficulty={chart.difficulty} />
+              </td>
+              <td class={`font-jost tabular-nums ${DATA_COVERAGE_TABLE_CELL_CLASS}`}>
+                {chart.level}
+              </td>
+            </tr>
+          )}
+        />
       </Show>
     </section>
   )
