@@ -79,7 +79,7 @@ export const GoogleAccountChangeForm: Component = () => {
       const sessionSwitched = await changeGoogleAccount(selectedTarget)
       if (!sessionSwitched) {
         // 旧アカウントは削除済みのため、変更先でログインし直してもらう。
-        await auth.signOut()
+        await auth.signOut().catch(() => undefined)
         await clearClientCache().catch(() => undefined)
         clearAuthenticatedUser()
         navigate('/login', { replace: true })
