@@ -20,6 +20,7 @@ import {
 } from '../../../repositories/viewSettingsRepository'
 import { useSongsData } from '../../../stores/songsData'
 import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
+import { createSearchTextCache } from '../../../utils/searchHelpers'
 import FilterStats from '../components/FilterStats'
 import FilterToolbar from '../components/FilterToolbar'
 import { getRecordStats } from '../utils/recordStats'
@@ -27,7 +28,7 @@ import WorldsendFilterDialog from './components/WorldsendFilterDialog'
 import WorldsendRecordTable from './components/WorldsendRecordTable'
 import WorldsendSortDialog from './components/WorldsendSortDialog'
 import { buildDefaultWorldsendFilter, DEFAULT_WORLDSEND_FILTER } from './types/filterDefaults'
-import type { WorldsendFilterState } from './types/filterTypes'
+import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from './types/filterTypes'
 import {
   getDefaultVisibleWorldsendColumnIds,
   sanitizeVisibleWorldsendColumnIds,
@@ -137,9 +138,12 @@ const WorldsendRecord = (props: Props) => {
     return attachWorldsendSongMetaToRecords(songs.songs, props.records, versions.versions)
   })
 
+  /** レコードごとの正規化済み検索用文字列。検索文字列の変更では再正規化しない */
+  const getSearchText = createSearchTextCache<WorldsendRecordWithSongMeta>()
+
   const filteredRecords = createMemo(() => {
     const currentFilters = filters()
-    const matchTitle = createWorldsendRecordTitleMatcher(currentFilters.title)
+    const matchTitle = createWorldsendRecordTitleMatcher(currentFilters.title, getSearchText)
     return recordsWithSongMeta().filter((record) =>
       isWorldsendRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
     )

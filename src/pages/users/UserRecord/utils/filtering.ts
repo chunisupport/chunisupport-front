@@ -7,12 +7,11 @@ import { isDateInRange } from '../../../../utils/dateFilter'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
-  matchesNormalizedSearchQuery,
-  normalizeForReadingSearch,
-  normalizeForSearch,
-  normalizeQuery,
-} from '../../../../utils/searchUtils'
-import { normalizeSongReading } from '../../../../utils/songReading'
+  createSearchTextMatcher,
+  type NormalizedSearchText,
+  normalizeSearchText,
+} from '../../../../utils/searchHelpers'
+import { normalizeForSearch } from '../../../../utils/searchUtils'
 import { isTheoreticalOverPowerTargetDifficulty } from '../../../../utils/theoreticalOverPowerTarget'
 import { hasJusticeCountFilter, hasOverPowerFilter, hasRatingFilter } from './filterDialog'
 
@@ -25,26 +24,19 @@ export type RecordTitleMatcher = (record: PlayerRecordWithSongMeta) => boolean
  * 通常レコード用の曲名・アーティスト・読み検索マッチャーを生成する。
  *
  * @param query - ユーザーが入力した検索文字列。
+ * @param getSearchText - レコードの正規化済み検索用文字列を返す関数。キャッシュを渡すと入力ごとの再正規化を避けられる。
  * @returns 読みが未設定または空欄なら曲名を読みとして使うマッチャー。
  */
-export function createRecordTitleMatcher(query: string): RecordTitleMatcher {
-  const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
-  if (!normalizedQuery) {
+export function createRecordTitleMatcher(
+  query: string,
+  getSearchText: (record: PlayerRecordWithSongMeta) => NormalizedSearchText = normalizeSearchText
+): RecordTitleMatcher {
+  if (!normalizeForSearch(query)) {
     return () => true
   }
 
-  return (record) => {
-    const normalizedTitle = normalizeForSearch(record.title)
-    const normalizedArtist = normalizeForSearch(record.artist)
-    const normalizedReading = normalizeForReadingSearch(normalizeSongReading(record))
-    return matchesNormalizedSearchQuery(
-      normalizedTitle,
-      normalizedArtist,
-      normalizedReading,
-      normalizedQuery,
-      normalizedReadingQuery
-    )
-  }
+  const matches = createSearchTextMatcher(query)
+  return (record) => matches(getSearchText(record))
 }
 
 /**
