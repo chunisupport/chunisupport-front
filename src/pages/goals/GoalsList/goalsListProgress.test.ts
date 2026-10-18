@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GoalCreateRequest, PlayerRecordDTO } from '../../../types/api'
+import type { GoalCreateRequest, GoalDTO, PlayerRecordDTO } from '../../../types/api'
 import {
+  buildGoalsWithProgress,
   isOverPowerAchievementType,
   resolveDraftGoalProgress,
   resolveGoalAllCount,
@@ -100,4 +101,73 @@ test('単曲レート入力の変更に応じて到達可能譜面数を再解�
   // Then
   assert.equal(rating18Count, 1)
   assert.equal(rating1795Count, 2)
+})
+
+test('同じ対象条件の目標が複数あっても、目標ごとの成果パラメータで進捗を計算する', () => {
+  // Given: MASTERの2譜面とEXPERTの1譜面があり、同じ条件の目標2件と別条件の目標1件がある。
+  /**
+   * 進捗計算テスト用の目標を作る。
+   *
+   * @param id - 目標ID。並び順にも使う。
+   * @param overrides - テストごとに差し替える目標項目。
+   * @returns score_count を既定とした目標。
+   */
+  const createGoal = (id: number, overrides: Partial<GoalDTO>): GoalDTO => ({
+    id,
+    sort_order: id,
+    created_at: '',
+    group_id: null,
+    title: `目標${id}`,
+    achievement_type: 'score_count',
+    achievement_params: { score: 1_000_000, count: 1 },
+    attributes: { diff: [4] },
+    invert_value: false,
+    invert_percentage: false,
+    ...overrides,
+  })
+  const data = {
+    username: 'player',
+    noPlayerData: false,
+    goals: [
+      createGoal(1, { achievement_params: { score: 1_000_000 } }),
+      createGoal(2, { achievement_params: { score: 1_009_000 } }),
+      createGoal(3, { attributes: { diff: [3] }, achievement_params: { score: 1_000_000 } }),
+    ],
+    groups: [],
+    songs: [],
+    masterData: {
+      difficulties: [
+        { id: 3, name: 'EXPERT' },
+        { id: 4, name: 'MASTER' },
+      ],
+      genres: [],
+      versions: [],
+      name_folders: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+      possessions: [],
+    },
+    versions: [],
+    records: [
+      createRecord({ id: 'song-1', score: 1_010_000 }),
+      createRecord({ id: 'song-2', score: 1_005_000 }),
+      createRecord({ id: 'song-1', difficulty: 'EXPERT', score: 990_000 }),
+    ],
+    lockedSongs: [],
+  } satisfies GoalsListData
+
+  // When
+  const result = buildGoalsWithProgress(data).map(({ goal, progress }) => [
+    goal.id,
+    progress.current,
+    progress.target,
+  ])
+
+  // Then
+  assert.deepEqual(result, [
+    [1, 2, 2],
+    [2, 1, 2],
+    [3, 0, 1],
+  ])
 })
