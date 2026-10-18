@@ -1,9 +1,9 @@
 import { useNavigate } from '@solidjs/router'
 import { ArrowRightLeft } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createSignal, onCleanup, Show } from 'solid-js'
+import { createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { AppButton } from '../../components/common/AppButton'
-import { auth } from '../../lib/firebase'
+import { auth, getAccountChangeAuth } from '../../lib/firebase'
 import { clearAuthenticatedUser } from '../../stores/authSession'
 import {
   cancelGoogleAccountChange,
@@ -13,14 +13,10 @@ import {
 } from '../../usecases/auth/changeGoogleAccount'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-import { GOOGLE_ACCOUNT_CHANGE_COPY } from './AccountSettings.constants'
-
-/** 変更先を選び直す必要があるAPIエラーコード */
-const RESELECT_TARGET_ERROR_CODES = new Set([
-  'recent_sign_in_required',
-  'firebase_uid_already_linked',
-  'firebase_account_unchanged',
-])
+import {
+  GOOGLE_ACCOUNT_CHANGE_COPY,
+  GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES,
+} from './AccountSettings.constants'
 
 /**
  * ログインに使うGoogleアカウントを変更するフォームを表示する。
@@ -36,6 +32,11 @@ export const GoogleAccountChangeForm: Component = () => {
   const [isSubmitting, setIsSubmitting] = createSignal(false)
   const [error, setError] = createSignal('')
   const [success, setSuccess] = createSignal('')
+
+  // Safari などではクリック後に初期化するとポップアップがブロックされるため、表示時に初期化しておく。
+  onMount(() => {
+    getAccountChangeAuth()
+  })
 
   onCleanup(() => {
     void cancelGoogleAccountChange().catch(() => undefined)
@@ -64,7 +65,7 @@ export const GoogleAccountChangeForm: Component = () => {
   const handleCancel = async (): Promise<void> => {
     setTarget(undefined)
     setError('')
-    await cancelGoogleAccountChange()
+    await cancelGoogleAccountChange().catch(() => undefined)
   }
 
   /** 現在のアカウントで再認証し、変更先アカウントへ差し替える。 */
@@ -98,7 +99,7 @@ export const GoogleAccountChangeForm: Component = () => {
       } else {
         setError(toUserFriendlyErrorMessage(caught, GOOGLE_ACCOUNT_CHANGE_COPY.failure))
       }
-      if (code && RESELECT_TARGET_ERROR_CODES.has(code)) {
+      if (code && GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES.has(code)) {
         setTarget(undefined)
         await cancelGoogleAccountChange().catch(() => undefined)
       }

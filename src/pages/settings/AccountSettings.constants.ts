@@ -1,3 +1,5 @@
+import type { ErrorCode } from '../../types/api'
+
 /** アカウント設定のユーザーネーム変更欄で使用する表示文言。 */
 export const USERNAME_CHANGE_COPY = {
   title: 'ユーザーネームを変更',
@@ -32,6 +34,13 @@ export const GOOGLE_ACCOUNT_CHANGE_COPY = {
   userMismatch: '現在のGoogleアカウントで再認証してください。',
   recentSignInExpired: '有効期限が切れました。変更先をもう一度選択してください。',
 } as const
+
+/** Googleアカウント変更で、変更先を選び直す必要があるAPIエラーコード。 */
+export const GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES: ReadonlySet<string> = new Set<ErrorCode>([
+  'recent_sign_in_required',
+  'firebase_uid_already_linked',
+  'firebase_account_unchanged',
+])
 
 /** 退会確認ダイアログで使用する表示文言。 */
 export const ACCOUNT_DELETE_COPY = {

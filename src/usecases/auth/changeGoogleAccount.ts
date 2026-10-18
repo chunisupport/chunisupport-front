@@ -66,7 +66,8 @@ export const changeGoogleAccount = async (target: GoogleAccountChangeTarget): Pr
   const newAccountIdToken = await newAccount.getIdToken()
   const reauthToken = await reauthenticateAndGetToken()
   await changeFirebaseAccount(newAccountIdToken, reauthToken)
-  await cancelGoogleAccountChange()
+  // 差し替えは完了しているため、変更先のサインイン状態の破棄に失敗しても成功として扱う。
+  await cancelGoogleAccountChange().catch(() => undefined)
 
   if (!target.credential) return false
   try {
