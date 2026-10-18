@@ -53,6 +53,7 @@ const DATA_COVERAGE_TABLE_CELL_CLASS = 'w-px px-3 py-1 text-center'
 /** 未判明・未登録表の1行の高さ。曲名リンクの最小高さに行の上罫線1pxを加える */
 const DATA_COVERAGE_TABLE_ROW_HEIGHT = RECORD_ROW_HEIGHT + 1
 
+/** 仮想化した未判明・未登録表へ渡す値 */
 type VirtualCoverageTableProps<TRow> = {
   /** スクリーンリーダー向けの表題 */
   caption: string
@@ -78,7 +79,6 @@ const VirtualCoverageTable = <TRow,>(props: VirtualCoverageTableProps<TRow>) => 
   const virtualizedTable = createWindowVirtualTable<HTMLDivElement, HTMLTableSectionElement>({
     rowCount: () => props.rows.length,
     rowHeight: DATA_COVERAGE_TABLE_ROW_HEIGHT,
-    resetOnRowCountChange: true,
   })
   const paddingTop = () => {
     const firstRow = virtualizedTable.virtualRows()[0]
@@ -464,6 +464,10 @@ const MissingCharts = (props: MissingChartsProps) => {
   const [sortKey, setSortKey] = createSignal<MissingChartsSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const sortedCharts = createMemo(() => sortMissingCharts(props.charts, sortKey(), sortDirection()))
+  /** WORLD'S END の譜面を含むか。仮想化で描画行が変わっても難易度列の幅を揃えるために使う */
+  const hasWorldsendChart = createMemo(() =>
+    props.charts.some((chart) => chart.difficulty === 'WORLDS_END')
+  )
 
   /**
    * ヘッダークリック時に昇順、降順、解除を循環させる。
@@ -497,7 +501,7 @@ const MissingCharts = (props: MissingChartsProps) => {
           columnCount={2}
           rows={sortedCharts()}
           header={
-            <tr>
+            <tr aria-rowindex={1}>
               <th
                 class="w-full px-2"
                 scope="col"
@@ -525,6 +529,12 @@ const MissingCharts = (props: MissingChartsProps) => {
                   class="justify-center"
                   onClick={() => handleSortChange('difficulty')}
                 />
+                {/* 描画範囲外の行も含めた最大幅で難易度列を固定し、スクロール時の列幅変化を防ぐ */}
+                <Show when={hasWorldsendChart()}>
+                  <span aria-hidden="true" class="invisible block h-0 overflow-hidden px-1">
+                    <CoverageDifficultyLabel difficulty="WORLDS_END" />
+                  </span>
+                </Show>
               </th>
             </tr>
           }
@@ -602,7 +612,7 @@ const UnknownChartsList = (props: UnknownChartsListProps) => {
           columnCount={3}
           rows={sortedCharts()}
           header={
-            <tr>
+            <tr aria-rowindex={1}>
               <th
                 class="w-full px-2"
                 scope="col"
