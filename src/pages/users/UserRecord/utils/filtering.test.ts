@@ -4,6 +4,7 @@ import type { FilterState } from '../../../../types/recordFilter'
 import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch.ts'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { createSearchTextCache } from '../../../../utils/searchHelpers.ts'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
@@ -507,4 +508,20 @@ test('isRecordMatched は楽曲名順が空配列の場合にどのレコード�
 
   // When & Then
   assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), false)
+})
+
+test('createRecordTitleMatcher は渡したキャッシュの検索用文字列で判定し、検索文字列を変えても同じ正規化結果を使うこと', () => {
+  // Given
+  const record = createRecord({ title: 'アルファ', artist: 'LeaF', reading: 'あるふぁ' })
+  const getSearchText = createSearchTextCache<PlayerRecordWithSongMeta>()
+  const cachedText = getSearchText(record)
+
+  // When
+  const results = ['leaf', 'アルフ', '存在しない曲'].map((query) =>
+    createRecordTitleMatcher(query, getSearchText)(record)
+  )
+
+  // Then
+  assert.deepEqual(results, [true, true, false])
+  assert.equal(getSearchText(record), cachedText)
 })

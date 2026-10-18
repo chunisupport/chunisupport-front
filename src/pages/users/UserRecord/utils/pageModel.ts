@@ -6,6 +6,7 @@ import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
+import { createSearchTextCache } from '../../../../utils/searchHelpers'
 import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../../utils/theoreticalOverPowerTarget'
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
@@ -51,11 +52,14 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     buildTheoreticalOverPowerTargetDifficultyBySongId(params.songs()?.songs ?? [])
   )
 
+  /** レコードごとの正規化済み検索用文字列。検索文字列の変更では再正規化しない */
+  const getSearchText = createSearchTextCache<PlayerRecordWithSongMeta>()
+
   /** フィルター適用後のレコード */
   const filteredRecords = createMemo(() => {
     const records = recordsWithSongMeta()
     const currentFilters = params.filters()
-    const matchTitle = createRecordTitleMatcher(currentFilters.title)
+    const matchTitle = createRecordTitleMatcher(currentFilters.title, getSearchText)
     const favoriteSongIds = params.favoriteSongIds()
     const lockedSongKeys = params.lockedSongKeys()
     const targetDifficultyBySongId = theoreticalTargetDifficultyBySongId()
