@@ -112,8 +112,9 @@ const VirtualCoverageTable = <TRow,>(props: VirtualCoverageTableProps<TRow>) => 
         <thead class={DATA_COVERAGE_TABLE_HEAD_CLASS}>{props.header}</thead>
         <tbody ref={virtualizedTable.setTableBodyRef}>
           <Show when={paddingTop() > 0}>
-            <tr style={{ height: `${paddingTop()}px` }}>
-              <td colSpan={props.columnCount} class="p-0" aria-hidden="true" />
+            {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: 高さ確保だけの余白行でフォーカス可能な要素を含まないため、支援技術から隠す。 */}
+            <tr aria-hidden="true" style={{ height: `${paddingTop()}px` }}>
+              <td colSpan={props.columnCount} class="p-0" />
             </tr>
           </Show>
           <For each={virtualizedTable.virtualRows()}>
@@ -124,8 +125,9 @@ const VirtualCoverageTable = <TRow,>(props: VirtualCoverageTableProps<TRow>) => 
             )}
           </For>
           <Show when={paddingBottom() > 0}>
-            <tr style={{ height: `${paddingBottom()}px` }}>
-              <td colSpan={props.columnCount} class="p-0" aria-hidden="true" />
+            {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: 高さ確保だけの余白行でフォーカス可能な要素を含まないため、支援技術から隠す。 */}
+            <tr aria-hidden="true" style={{ height: `${paddingBottom()}px` }}>
+              <td colSpan={props.columnCount} class="p-0" />
             </tr>
           </Show>
         </tbody>
