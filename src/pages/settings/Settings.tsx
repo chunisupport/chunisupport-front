@@ -15,6 +15,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { authSession, clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
+import { canChangeGoogleAccount } from '../../usecases/auth/changeGoogleAccount'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { clearUsernameChangeCache } from '../../usecases/cache/clearUsernameChangeCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
@@ -375,7 +376,9 @@ const Settings = () => {
                         currentUsername={loadedSummary().me.username}
                         onChanged={handleUsernameChanged}
                       />
-                      <GoogleAccountChangeForm />
+                      <Show when={canChangeGoogleAccount()}>
+                        <GoogleAccountChangeForm />
+                      </Show>
                       <div class="mt-10 border-t border-danger-border pt-6">
                         <h3 class="font-semibold text-danger">退会</h3>
                         <p class="mt-1 text-sm text-text-muted">

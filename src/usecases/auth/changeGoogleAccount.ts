@@ -20,6 +20,17 @@ export type GoogleAccountChangeTarget = {
 }
 
 /**
+ * ログイン中のアカウントがGoogleアカウント変更を利用できるかを判定する。
+ * 再認証をGoogleで行うため、メール／パスワード専用アカウントでは利用できない。
+ *
+ * @returns Googleでログインしている場合は true。
+ */
+export const canChangeGoogleAccount = (): boolean =>
+  auth.currentUser?.providerData.some(
+    (provider) => provider.providerId === GoogleAuthProvider.PROVIDER_ID
+  ) ?? false
+
+/**
  * ログイン中のセッションを維持したまま、変更先のGoogleアカウントを選択してサインインする。
  *
  * @returns 選択された変更先アカウント。
