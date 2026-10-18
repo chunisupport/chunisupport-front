@@ -80,10 +80,20 @@ const VirtualCoverageTable = <TRow,>(props: VirtualCoverageTableProps<TRow>) => 
     rowCount: () => props.rows.length,
     rowHeight: DATA_COVERAGE_TABLE_ROW_HEIGHT,
   })
+  /**
+   * 描画範囲より前の行の合計高さを返す。
+   *
+   * @returns 上側の余白行に設定する高さ(px)。描画行がない場合は0。
+   */
   const paddingTop = () => {
     const firstRow = virtualizedTable.virtualRows()[0]
     return firstRow ? firstRow.start - virtualizedTable.scrollMargin() : 0
   }
+  /**
+   * 描画範囲より後ろの行の合計高さを返す。
+   *
+   * @returns 下側の余白行に設定する高さ(px)。描画行がない場合は0。
+   */
   const paddingBottom = () => {
     const virtualRows = virtualizedTable.virtualRows()
     const lastRow = virtualRows[virtualRows.length - 1]
