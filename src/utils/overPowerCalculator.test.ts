@@ -428,45 +428,133 @@ test('入力の小数桁数を固定し、目標達成率を0〜100へ制限す�
 
 test('目標達成に必要な譜面数はランク境界点の単曲OPで切り上げる', () => {
   // Given: 定数14のSSは75 OP、FCは75.5、AJは76
-  const difference = 151
+  const target = { max: 151, current: 0, percent: 100 }
   // When & Then
-  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, null), 3)
-  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, 'FULL COMBO'), 2)
-  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, 'ALL JUSTICE'), 2)
+  assert.equal(calculateRequiredChartCount(target, 1000000, 14, null), 3)
+  assert.equal(calculateRequiredChartCount(target, 1000000, 14, 'FULL COMBO'), 2)
+  assert.equal(calculateRequiredChartCount(target, 1000000, 14, 'ALL JUSTICE'), 2)
 })
 
 test('理論値は通常のみ必要数を表示し、FC・AJ列は非表示となる', () => {
   // Given
-  const difference = 170
+  const target = { max: 170, current: 0, percent: 100 }
   // When & Then
-  assert.equal(calculateRequiredChartCount(difference, 1009000, 14, 'ALL JUSTICE CRITICAL'), null)
-  assert.equal(calculateRequiredChartCount(difference, 1010000, 14, null), 2)
+  assert.equal(calculateRequiredChartCount(target, 1009000, 14, 'ALL JUSTICE CRITICAL'), null)
+  assert.equal(calculateRequiredChartCount(target, 1010000, 14, null), 2)
   for (const lamp of ['FULL COMBO', 'ALL JUSTICE']) {
-    assert.equal(calculateRequiredChartCount(difference, 1010000, 14, lamp), null)
+    assert.equal(calculateRequiredChartCount(target, 1010000, 14, lamp), null)
   }
 })
 
 test('目標達成済みは0譜面で、小数誤差で達成数が余分に増えない', () => {
   // Given
-  const difference = 75 + 0.1 + 0.2 - 0.3
+  const target = { max: 100, current: 25 + 0.1 + 0.2 - 0.3, percent: 100 }
   // When & Then
-  assert.equal(calculateRequiredChartCount(0, 1000000, 14, null), 0)
-  assert.equal(calculateRequiredChartCount(-10, 1000000, 14, null), 0)
-  assert.equal(calculateRequiredChartCount(difference, 1000000, 14, null), 1)
+  assert.equal(
+    calculateRequiredChartCount({ max: 100, current: 100, percent: 100 }, 1000000, 14, null),
+    0
+  )
+  assert.equal(
+    calculateRequiredChartCount({ max: 100, current: 110, percent: 100 }, 1000000, 14, null),
+    0
+  )
+  assert.equal(calculateRequiredChartCount(target, 1000000, 14, null), 1)
 })
 
 test('現在から目標へのOP増加量で必要譜面数を計算する', () => {
   // Given: 定数14、SSからSSSへの増加量は通常5、FC5.5、AJ6
-  const difference = 11
+  const target = { max: 11, current: 0, percent: 100 }
   // When & Then
-  assert.equal(calculateRequiredChartCount(difference, 1007500, 14, null, 1000000), 3)
-  assert.equal(calculateRequiredChartCount(difference, 1007500, 14, 'FULL COMBO', 1000000), 2)
-  assert.equal(calculateRequiredChartCount(difference, 1007500, 14, 'ALL JUSTICE', 1000000), 2)
+  assert.equal(calculateRequiredChartCount(target, 1007500, 14, null, 1000000), 3)
+  assert.equal(calculateRequiredChartCount(target, 1007500, 14, 'FULL COMBO', 1000000), 2)
+  assert.equal(calculateRequiredChartCount(target, 1007500, 14, 'ALL JUSTICE', 1000000), 2)
 })
 
 test('スコアを伸ばしてもOPが増えない場合は必要譜面数を算出しない', () => {
   // Given & When & Then
-  assert.equal(calculateRequiredChartCount(10, 1000000, 14, null, 1000000), null)
-  assert.equal(calculateRequiredChartCount(10, 1000000, 14, null, 1007500), null)
-  assert.equal(calculateRequiredChartCount(0, 1000000, 14, null, 1000000), 0)
+  assert.equal(
+    calculateRequiredChartCount(
+      { max: 100, current: 90, percent: 100 },
+      1000000,
+      14,
+      null,
+      1000000
+    ),
+    null
+  )
+  assert.equal(
+    calculateRequiredChartCount(
+      { max: 100, current: 90, percent: 100 },
+      1000000,
+      14,
+      null,
+      1007500
+    ),
+    null
+  )
+  assert.equal(
+    calculateRequiredChartCount(
+      { max: 100, current: 100, percent: 100 },
+      1000000,
+      14,
+      null,
+      1000000
+    ),
+    0
+  )
+})
+
+test('OP差分と単曲増分の減算誤差で必要譜面数が増えない', () => {
+  // Given: 必要OPは0.010、1譜面あたりの増分は0.005。
+  const target = { max: 100, current: 99.99, percent: 100 }
+
+  // When
+  const count = calculateRequiredChartCount(target, 1005005, 14, null, 1005000)
+
+  // Then
+  assert.equal(count, 2)
+})
+
+test('大きなOP合計の集計誤差があっても境界の必要譜面数が増えない', () => {
+  // Given: インポート時の合算で整数表現から微小な誤差が生じた値。
+  const target = { max: 200000, current: 199999.99000000002, percent: 100 }
+
+  // When
+  const count = calculateRequiredChartCount(target, 1005005, 14, null, 1005000)
+
+  // Then
+  assert.equal(count, 2)
+})
+
+test('目標OPが必要数の境界をわずかに超える場合は切り上げる', () => {
+  // Given: 目標OPは100.0000099901で、2譜面の増分0.010では届かない。
+  const target = { max: 100.001, current: 99.99, percent: 99.99901 }
+
+  // When
+  const count = calculateRequiredChartCount(target, 1005005, 14, null, 1005000)
+
+  // Then
+  assert.equal(count, 3)
+})
+
+test('目標OPが必要数の境界をわずかに下回る場合は余分に切り上げない', () => {
+  // Given: 必要OPは0.00999999で、2譜面の増分0.010で到達する。
+  const target = { max: 100.001, current: 99.99, percent: 99.999 }
+
+  // When
+  const count = calculateRequiredChartCount(target, 1005005, 14, null, 1005000)
+
+  // Then
+  assert.equal(count, 2)
+})
+
+test('達成率由来の小数第10位の目標OPも達成済みに丸めない', () => {
+  // Given: 目標OPは0.0000000001で、現在OPは0。
+  const target = { max: 0.001, current: 0, percent: 0.00001 }
+
+  // When
+  const count = calculateRequiredChartCount(target, 1005005, 14, null, 1005000)
+
+  // Then
+  assert.equal(count, 1)
 })

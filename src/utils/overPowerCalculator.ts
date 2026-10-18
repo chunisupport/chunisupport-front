@@ -1,6 +1,11 @@
 import type { PlayerRecordDTO } from '../types/api'
 import { formatFixed } from './numberFormat'
-import { CALCULATOR_VALUE_DECIMALS } from './overPowerCalculatorConstants'
+import {
+  CALCULATOR_PERCENT_MAX,
+  CALCULATOR_PERCENT_SCALE,
+  CALCULATOR_VALUE_DECIMALS,
+  CALCULATOR_VALUE_SCALE,
+} from './overPowerCalculatorConstants'
 import { formatOverPowerValue } from './overPowerFormat'
 import { clampNumber, parseNumberInput } from './rangeInput'
 import { MAX_SCORE } from './scoreRank'
@@ -352,8 +357,9 @@ export const normalizeOverPowerCalculatorInput = (
 
 /**
  * 指定した現在スコアから目標スコアへ伸ばす場合の必要譜面数を計算する。
+ * OPは小数3桁、達成率は小数5桁の整数へ変換してから計算し、減算誤差と目標の端数落ちを防ぐ。
  *
- * @param difference - 目標までに必要な追加OVER POWER。
+ * @param target - 理論OP、現在OP、目標達成率。集計時の浮動小数誤差は入力精度へ丸める。
  * @param score - 達成する目標スコア。
  * @param chartConst - 達成する譜面定数。
  * @param comboLamp - コンボランプ。理論値では通常列のみ有効。
@@ -361,7 +367,7 @@ export const normalizeOverPowerCalculatorInput = (
  * @returns 必要譜面数。目標達成済みなら0、理論値のランプ列・成立しないAJC・OPが増えない条件はnull。
  */
 export const calculateRequiredChartCount = (
-  difference: number,
+  target: OverPowerCalculatorBase & { percent: number },
   score: number,
   chartConst: number,
   comboLamp: string | null,
@@ -369,15 +375,22 @@ export const calculateRequiredChartCount = (
 ): number | null => {
   if (score === MAX_SCORE && comboLamp !== null) return null
   if (comboLamp === 'ALL JUSTICE CRITICAL' && score !== MAX_SCORE) return null
-  if (difference <= 0) return 0
+  const percentDivisor = BigInt(CALCULATOR_PERCENT_MAX * CALCULATOR_PERCENT_SCALE)
+  const difference =
+    BigInt(Math.round(target.max * CALCULATOR_VALUE_SCALE)) *
+      BigInt(Math.round(target.percent * CALCULATOR_PERCENT_SCALE)) -
+    BigInt(Math.round(target.current * CALCULATOR_VALUE_SCALE)) * percentDivisor
+  if (difference <= 0n) return 0
   const gain =
-    calculateSingleOverPower(score, chartConst, comboLamp).value -
-    calculateSingleOverPower(currentScore, chartConst, null).value
+    Math.round(
+      calculateSingleOverPower(score, chartConst, comboLamp).value * CALCULATOR_VALUE_SCALE
+    ) -
+    Math.round(
+      calculateSingleOverPower(currentScore, chartConst, null).value * CALCULATOR_VALUE_SCALE
+    )
   if (gain <= 0) return null
-  const count = difference / gain
-  // 境界点の浮動小数誤差で必要数が1つ増えることを防ぐ。
-  const epsilon = Number.EPSILON * Math.max(1, count) * 8
-  return Math.ceil(count - epsilon)
+  const scaledGain = BigInt(gain) * percentDivisor
+  return Number((difference + scaledGain - 1n) / scaledGain)
 }
 
 /**

@@ -1,3 +1,4 @@
+import { I18nProvider } from '@kobalte/core/i18n'
 import { NumberField } from '@kobalte/core/number-field'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
@@ -46,6 +47,7 @@ import {
   type UnplayedOverPowerFillMode,
 } from '../../utils/overPowerCalculator'
 import {
+  CALCULATOR_INPUT_LOCALE,
   CALCULATOR_PERCENT_DECIMALS,
   CALCULATOR_PERCENT_MAX,
   CALCULATOR_VALUE_DECIMALS,
@@ -85,7 +87,7 @@ const INPUT_CLASS =
   'h-12 min-w-0 w-full rounded-md border border-border-strong bg-input-bg px-2 text-right font-sans text-base tabular-nums text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 
 /**
- * 固定小数表示と範囲制限を持つ計算機専用の数値入力欄を描画する。
+ * 固定小数表示と範囲制限を持ち、ブラウザの言語に依存しない数値入力欄を描画する。
  *
  * @param props - 入力欄ID、ラベル、値、制約、小数桁数、最大幅、コンパクト表示、更新通知先。
  * @returns 固定小数の編集位置を保ち、範囲制限をKobalteで扱うNumberField。
@@ -130,36 +132,38 @@ const OverPowerField: Component<OverPowerFieldProps> = (props) => {
     queueMicrotask(() => input.setSelectionRange(start, end))
   }
   return (
-    <NumberField
-      id={props.id}
-      name={props.id}
-      value={props.value}
-      onChange={handleChange}
-      minValue={props.min ?? 0}
-      maxValue={props.max}
-      step={props.step ?? 10 ** -decimalPlaces()}
-      formatOptions={{
-        useGrouping: false,
-        minimumFractionDigits: decimalPlaces(),
-        maximumFractionDigits: decimalPlaces(),
-      }}
-      class={`min-w-0 ${props.compact ? 'w-32 max-w-full flex-none' : 'flex-1'} ${props.widthClass ?? ''}`}
-    >
-      <NumberField.Label
-        class={`mb-1 block font-medium text-text-muted ${props.compact ? 'text-xs' : 'text-sm'}`}
+    <I18nProvider locale={CALCULATOR_INPUT_LOCALE}>
+      <NumberField
+        id={props.id}
+        name={props.id}
+        value={props.value}
+        onChange={handleChange}
+        minValue={props.min ?? 0}
+        maxValue={props.max}
+        step={props.step ?? 10 ** -decimalPlaces()}
+        formatOptions={{
+          useGrouping: false,
+          minimumFractionDigits: decimalPlaces(),
+          maximumFractionDigits: decimalPlaces(),
+        }}
+        class={`min-w-0 ${props.compact ? 'w-32 max-w-full flex-none' : 'flex-1'} ${props.widthClass ?? ''}`}
       >
-        {props.label}
-      </NumberField.Label>
-      <NumberField.Input
-        class={`${INPUT_CLASS} ${props.compact ? '!h-9 !text-sm' : ''}`}
-        inputMode={props.inputMode ?? 'decimal'}
-        onFocus={(event: FocusEvent & { currentTarget: HTMLInputElement }) =>
-          event.currentTarget.select()
-        }
-        onBeforeInput={handleBeforeInput}
-        onInput={handleInput}
-      />
-    </NumberField>
+        <NumberField.Label
+          class={`mb-1 block font-medium text-text-muted ${props.compact ? 'text-xs' : 'text-sm'}`}
+        >
+          {props.label}
+        </NumberField.Label>
+        <NumberField.Input
+          class={`${INPUT_CLASS} ${props.compact ? '!h-9 !text-sm' : ''}`}
+          inputMode={props.inputMode ?? 'decimal'}
+          onFocus={(event: FocusEvent & { currentTarget: HTMLInputElement }) =>
+            event.currentTarget.select()
+          }
+          onBeforeInput={handleBeforeInput}
+          onInput={handleInput}
+        />
+      </NumberField>
+    </I18nProvider>
   )
 }
 
@@ -280,7 +284,11 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     REQUIRED_CHART_LAMP_COLUMNS.map((lamp) => ({
       ...lamp,
       count: calculateRequiredChartCount(
-        targetDifference(),
+        {
+          max: parsedMaxValue(),
+          current: importedCurrentValue(),
+          percent: parsedTargetPercent(),
+        },
         parseOverPowerInput(targetChartScore()) ?? 0,
         parseOverPowerInput(chartConstant()) ?? CHART_CONST_MIN,
         lamp.value,
