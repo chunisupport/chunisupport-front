@@ -12,6 +12,7 @@ export const createLatestOnlyRunner = <T>(
   let pendingValue: T
   let running = false
 
+  /** 実行待ちの値がなくなるまで、最新の値を1件ずつ実行する */
   const drain = async () => {
     running = true
     while (hasPending) {

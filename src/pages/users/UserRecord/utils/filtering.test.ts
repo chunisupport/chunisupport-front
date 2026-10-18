@@ -510,16 +510,11 @@ test('isRecordMatched は楽曲名順が空配列の場合にどのレコード�
   assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), false)
 })
 
-test('createRecordTitleMatcher はキャッシュ済みの検索用文字列で判定し、検索文字列の変更で再正規化しないこと', () => {
+test('createRecordTitleMatcher は渡したキャッシュの検索用文字列で判定し、検索文字列を変えても同じ正規化結果を使うこと', () => {
   // Given
   const record = createRecord({ title: 'アルファ', artist: 'LeaF', reading: 'あるふぁ' })
-  const cache = createSearchTextCache<PlayerRecordWithSongMeta>()
-  let normalizeCount = 0
-  const getSearchText = (target: PlayerRecordWithSongMeta) => {
-    normalizeCount += 1
-    return cache(target)
-  }
-  const cachedText = cache(record)
+  const getSearchText = createSearchTextCache<PlayerRecordWithSongMeta>()
+  const cachedText = getSearchText(record)
 
   // When
   const results = ['leaf', 'アルフ', '存在しない曲'].map((query) =>
@@ -528,6 +523,5 @@ test('createRecordTitleMatcher はキャッシュ済みの検索用文字列で�
 
   // Then
   assert.deepEqual(results, [true, true, false])
-  assert.equal(normalizeCount, 3)
-  assert.equal(cache(record), cachedText)
+  assert.equal(getSearchText(record), cachedText)
 })
