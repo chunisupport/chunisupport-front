@@ -20,13 +20,20 @@ export const USERNAME_CHANGE_COPY = {
 /** アカウント設定のGoogleアカウント変更欄で使用する表示文言。 */
 export const GOOGLE_ACCOUNT_CHANGE_COPY = {
   title: 'Googleアカウントを変更',
+  stepsLabel: '変更の手順',
+  steps: { select: '変更先を選択', confirm: '本人確認', done: '完了' },
+  stepCompleted: '（完了済み）',
   currentLabel: '現在',
   targetLabel: '変更先',
+  open: '変更する',
+  cancel: 'キャンセル',
   select: '変更先を選択',
   selecting: '選択中...',
-  submit: '変更する',
+  reselect: '選び直す',
+  /** 本人確認に使うアカウントを名指しして、どのアカウントで認証するかを明示する。 */
+  submit: (email: string) => `${email} で本人確認して変更`,
   submitting: '変更中...',
-  cancel: 'キャンセル',
+  close: '閉じる',
   success: 'Googleアカウントを変更しました。',
   failure: 'Googleアカウントの変更に失敗しました。',
   selectionClosed: 'Googleアカウントの選択がキャンセルされました。',
