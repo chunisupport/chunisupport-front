@@ -8,8 +8,10 @@ import {
 
 import { reauthenticateAndGetToken } from '../../api/reauthenticate'
 import { changeFirebaseAccount } from '../../api/settings'
+import { fetchMe } from '../../api/users'
 import { accountChangeGoogleProvider, auth, getAccountChangeAuth } from '../../lib/firebase'
 import { errorMessages } from '../../types/api'
+import { resolveGoogleRegistrationEligibility } from './registrationEligibility'
 
 /** 変更先として選択されたGoogleアカウント */
 export type GoogleAccountChangeTarget = {
@@ -31,19 +33,40 @@ export const canChangeGoogleAccount = (): boolean =>
   ) ?? false
 
 /**
+ * エラーコード付きのエラーを作成する。
+ *
+ * @param code - 画面側で判定に使うエラーコード。
+ * @returns エラーコードに対応する文言を持つエラー。
+ */
+const createCodedError = (code: 'firebase_account_unchanged' | 'firebase_uid_already_linked') =>
+  Object.assign(new Error(errorMessages[code]), { code })
+
+/**
  * ログイン中のセッションを維持したまま、変更先のGoogleアカウントを選択してサインインする。
+ * 変更できないアカウントは本人確認へ進む前に弾き、選択をなかったことにする。
  *
  * @returns 選択された変更先アカウント。
- * @throws 現在と同じアカウントが選ばれた場合は `firebase_account_unchanged` コードのエラー。
+ * @throws 現在と同じアカウントが選ばれた場合は `firebase_account_unchanged`、
+ *   すでにユーザー登録済みのアカウントが選ばれた場合は `firebase_uid_already_linked` コードのエラー。
  */
 export const selectGoogleAccountChangeTarget = async (): Promise<GoogleAccountChangeTarget> => {
   const accountChangeAuth = getAccountChangeAuth()
   const result = await signInWithPopup(accountChangeAuth, accountChangeGoogleProvider)
-  if (result.user.uid === auth.currentUser?.uid) {
-    await signOut(accountChangeAuth)
-    throw Object.assign(new Error(errorMessages.firebase_account_unchanged), {
-      code: 'firebase_account_unchanged',
-    })
+  try {
+    if (result.user.uid === auth.currentUser?.uid) {
+      throw createCodedError('firebase_account_unchanged')
+    }
+    // 変更先のトークンで照会し、ログイン中のセッションには影響させない。
+    const eligibility = await resolveGoogleRegistrationEligibility(async () =>
+      fetchMe({ redirectOnUnauthorized: false, idToken: await result.user.getIdToken() })
+    )
+    if (eligibility === 'registered') {
+      throw createCodedError('firebase_uid_already_linked')
+    }
+  } catch (error) {
+    // サインアウトに失敗しても、画面にはアカウントを弾いた理由を伝える。
+    await signOut(accountChangeAuth).catch(() => undefined)
+    throw error
   }
 
   return {
@@ -74,8 +97,9 @@ export const changeGoogleAccount = async (target: GoogleAccountChangeTarget): Pr
     })
   }
 
-  const newAccountIdToken = await newAccount.getIdToken()
+  // クリック直後にポップアップを開かないとブロックされるため、ほかの await より先に再認証する。
   const reauthToken = await reauthenticateAndGetToken()
+  const newAccountIdToken = await newAccount.getIdToken()
   await changeFirebaseAccount(newAccountIdToken, reauthToken)
   // 差し替えは完了しているため、変更先のサインイン状態の破棄に失敗しても成功として扱う。
   await cancelGoogleAccountChange().catch(() => undefined)

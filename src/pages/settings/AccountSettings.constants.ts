@@ -24,21 +24,21 @@ export const GOOGLE_ACCOUNT_CHANGE_COPY = {
   steps: { select: '変更先を選択', confirm: '本人確認', done: '完了' },
   stepCompleted: '（完了済み）',
   currentLabel: '現在',
-  targetLabel: '変更先',
   open: '変更する',
-  cancel: 'キャンセル',
   select: '変更先を選択',
   selecting: '選択中...',
   reselect: '選び直す',
-  /** 本人確認に使うアカウントを名指しして、どのアカウントで認証するかを明示する。 */
-  submit: (email: string) => `${email} で本人確認して変更`,
+  proceed: '本人確認へ進む',
+  reauthTitle: '本人確認',
+  reauthSubmit: 'このアカウントで本人確認',
   submitting: '変更中...',
   close: '閉じる',
   success: 'Googleアカウントを変更しました。',
   failure: 'Googleアカウントの変更に失敗しました。',
   selectionClosed: 'Googleアカウントの選択がキャンセルされました。',
   popupClosed: '再認証がキャンセルされました。',
-  userMismatch: '現在のGoogleアカウントで再認証してください。',
+  /** 本人確認に使うアカウントを名指しして、選び直してもらう。 */
+  userMismatch: (email: string) => `${email} を選択してください。`,
   recentSignInExpired: '有効期限が切れました。変更先をもう一度選択してください。',
 } as const
 
