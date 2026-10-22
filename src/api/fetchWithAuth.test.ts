@@ -60,6 +60,30 @@ test('認証必須リクエストはFirebaseユーザー不在時にAPIを呼ば
   }
 })
 
+test('IDトークンを指定した場合はログイン中のセッションではなく指定トークンで認証する', async () => {
+  // Given: Firebase にログインしておらず、別アカウントのIDトークンを指定する
+  const { fetchWithAuth } = await loadFetchWithAuthModule()
+  const originalFetch = globalThis.fetch
+  let authorization: string | null = null
+  globalThis.fetch = async (_input, init) => {
+    authorization = new Headers(init?.headers).get('Authorization')
+    return new Response()
+  }
+
+  try {
+    // When: 認証必須 API を指定トークンで呼び出す
+    await fetchWithAuth('https://example.com/internal/me', {
+      requireAuthentication: true,
+      idToken: 'other-account-token',
+    })
+
+    // Then: 指定トークンが Bearer として送られる
+    assert.equal(authorization, 'Bearer other-account-token')
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 test('maintenance_mode応答はセッションを維持して可用性StoreへRetry-Afterを反映する', async () => {
   // Given: アプリ内セッションがあり、APIがメンテナンス専用503を返す
   const { fetchWithAuth } = await loadFetchWithAuthModule()

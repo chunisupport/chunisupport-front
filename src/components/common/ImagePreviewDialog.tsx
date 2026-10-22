@@ -1,9 +1,10 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { RotateCcw, X } from 'lucide-solid'
+import { RotateCcw } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { Show } from 'solid-js'
 import { Loading } from '../Loading'
-import { AppButton, getAppIconButtonClass } from './AppButton'
+import { AppButton } from './AppButton'
+import { AppDialogHeader } from './AppDialogHeader'
 
 /** プレビューダイアログの幅 */
 export type ImagePreviewDialogWidth = 'md' | 'lg'
@@ -87,25 +88,12 @@ export const ImagePreviewDialog: Component<Props> = (props) => (
         <Dialog.Content
           class={`fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] ${IMAGE_PREVIEW_DIALOG_WIDTH_CLASS[props.width ?? 'md']} sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6`}
         >
-          <div class="flex shrink-0 items-start justify-between gap-4">
-            <div class="min-w-0">
-              <Dialog.Title class="text-lg font-bold text-text">{props.title}</Dialog.Title>
-              <Show when={props.description}>
-                {(description) => (
-                  <Dialog.Description class="mt-1 text-sm text-text-muted">
-                    {description()}
-                  </Dialog.Description>
-                )}
-              </Show>
-            </div>
-            <Dialog.CloseButton
-              class={getAppIconButtonClass({ tone: 'ghost', class: 'shrink-0' })}
-              aria-label={props.closeLabel}
-              disabled={props.closeDisabled}
-            >
-              <X class="h-5 w-5" aria-hidden="true" />
-            </Dialog.CloseButton>
-          </div>
+          <AppDialogHeader
+            title={props.title}
+            description={props.description}
+            closeLabel={props.closeLabel}
+            closeDisabled={props.closeDisabled}
+          />
 
           {props.controls}
 
