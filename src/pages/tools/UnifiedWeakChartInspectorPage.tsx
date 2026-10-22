@@ -41,6 +41,7 @@ import {
   inspectUnifiedWeakCharts,
   sortUnifiedWeakChartEntries,
   toAptitudeBarSpan,
+  toAptitudeLabelPlacement,
   UNIFIED_WEAK_CHART_CATEGORIES,
   type UnifiedWeakChartCategory,
   type UnifiedWeakChartEntry,
@@ -71,9 +72,10 @@ const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Eleme
 }
 
 /**
- * 得意度を数値と、50を中心に左右へ伸びるバーで表示する。
+ * 得意度を、50を中心に左右へ伸びるバーと、その先端に重ねた数値で表示する。
+ * 塗りが短く数値が収まらない場合は、数値を先端の外側に置く。
  * @param props - 得意度（データなしは null）と、バーの色を決める判定。
- * @returns 得意度の数値とバー。得意度がない場合は欠損記号。
+ * @returns 数値を重ねた得意度バー。得意度がない場合は欠損記号。
  */
 const AptitudeMeter = (props: {
   aptitude: number | null
@@ -83,21 +85,30 @@ const AptitudeMeter = (props: {
     when={props.aptitude ?? undefined}
     fallback={<span class="text-text-subtle">{COPY.missing}</span>}
   >
-    {(aptitude) => (
-      <span class="flex items-center gap-2">
-        <span class="w-6 text-right font-jost tabular-nums">{aptitude()}</span>
-        <span class="relative h-1.5 w-12 rounded-full bg-surface-muted" aria-hidden="true">
-          <span class="absolute inset-y-0 left-1/2 w-px bg-border-strong" />
+    {(aptitude) => {
+      const span = () => toAptitudeBarSpan(aptitude())
+      const label = () => toAptitudeLabelPlacement(aptitude())
+      return (
+        <span class="relative block h-4 w-24 rounded-full bg-surface-muted">
+          <span class="absolute inset-y-0 left-1/2 w-px bg-border-strong" aria-hidden="true" />
           <span
             class={`absolute inset-y-0 rounded-full ${UNIFIED_WEAK_CHART_CATEGORY_VIEW[props.category].barClass}`}
-            style={{
-              left: `${toAptitudeBarSpan(aptitude()).left}%`,
-              width: `${toAptitudeBarSpan(aptitude()).width}%`,
-            }}
+            style={{ left: `${span().left}%`, width: `${span().width}%` }}
+            aria-hidden="true"
           />
+          <span
+            class="absolute inset-y-0 flex items-center px-0.5 font-jost text-xs leading-none tabular-nums"
+            classList={{ 'text-text-inverse': label().inside }}
+            style={{
+              left: `${label().anchor}%`,
+              transform: label().beforeAnchor ? 'translateX(-100%)' : undefined,
+            }}
+          >
+            {aptitude()}
+          </span>
         </span>
-      </span>
-    )}
+      )
+    }}
   </Show>
 )
 

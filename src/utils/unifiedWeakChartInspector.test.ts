@@ -6,6 +6,7 @@ import {
   inspectUnifiedWeakCharts,
   sortUnifiedWeakChartEntries,
   toAptitudeBarSpan,
+  toAptitudeLabelPlacement,
 } from './unifiedWeakChartInspector'
 
 /** 統合インスペクターのテストで比較するレート帯。 */
@@ -471,4 +472,37 @@ test('得意度バーは中心から得意度の方向へ、上限・下限で�
     { left: 50, width: 25 },
     { left: 50, width: 50 },
   ])
+})
+
+test('得意度の数値は塗りが長ければ先端の内側、短ければ先端の外側に置く', () => {
+  // Given: 長い塗り（20, 80）と短い塗り（45, 50, 55）の得意度がある。
+  const aptitudes = [20, 45, 50, 55, 80]
+
+  // When: 数値の配置を求める。
+  const placements = aptitudes.map(toAptitudeLabelPlacement)
+
+  // Then: 内側なら中心側へ、外側なら中心から離れる側へ寄せる。
+  assert.deepEqual(
+    placements.map(({ beforeAnchor, inside }) => ({ beforeAnchor, inside })),
+    [
+      { beforeAnchor: false, inside: true },
+      { beforeAnchor: true, inside: false },
+      { beforeAnchor: false, inside: false },
+      { beforeAnchor: false, inside: false },
+      { beforeAnchor: true, inside: true },
+    ]
+  )
+  assert.equal(placements[0].anchor, 0)
+  assert.equal(placements[4].anchor, 100)
+})
+
+test('得意度の数値は塗りが全幅の20%以上で内側、未満で外側に置く', () => {
+  // Given: 塗りが全幅のちょうど20%（38, 62）と、それより短い（39, 61）得意度がある。
+  const aptitudes = [38, 39, 61, 62]
+
+  // When: 数値の配置を求める。
+  const insides = aptitudes.map((aptitude) => toAptitudeLabelPlacement(aptitude).inside)
+
+  // Then: 20%ちょうどは内側、未満は外側になる。
+  assert.deepEqual(insides, [true, false, false, true])
 })
