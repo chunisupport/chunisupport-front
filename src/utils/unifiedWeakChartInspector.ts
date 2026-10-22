@@ -152,6 +152,28 @@ export const toAptitudeBarSpan = (aptitude: number): { left: number; width: numb
   }
 }
 
+/** 得意度の数値を塗りの内側に収められる、塗りの最小幅（バー全体の幅に対する割合、%）。 */
+const APTITUDE_LABEL_INSIDE_MIN_WIDTH_PERCENT = 20
+
+/**
+ * 得意度の数値を、塗りの先端（中心から遠い側の端）のどこに置くかを求める。
+ * 塗りが十分に長ければ先端の内側、短ければ先端の外側に置く。
+ * @param aptitude - 下限・上限内の得意度。
+ * @returns 先端の位置（バー全体の幅に対する %）、数値を先端より左に置くか、塗りの内側に置くか。
+ */
+export const toAptitudeLabelPlacement = (
+  aptitude: number
+): { anchor: number; beforeAnchor: boolean; inside: boolean } => {
+  const span = toAptitudeBarSpan(aptitude)
+  const towardRight = aptitude >= APTITUDE_CENTER
+  const inside = span.width >= APTITUDE_LABEL_INSIDE_MIN_WIDTH_PERCENT
+  return {
+    anchor: towardRight ? span.left + span.width : span.left,
+    beforeAnchor: towardRight === inside,
+    inside,
+  }
+}
+
 /**
  * 譜面定数を0.1刻みの整数段へ変換する。
  * @param chartConst - 譜面定数。
