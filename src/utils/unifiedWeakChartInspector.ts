@@ -137,18 +137,19 @@ const APTITUDE_BAR_CENTER_PERCENT = 50
 /**
  * 得意度バーで、中心から得意度までを塗る範囲を求める。
  * @param aptitude - 下限・上限内の得意度。
- * @returns バー全体の幅に対する、塗りの左端と幅（%）。
+ * @returns バー全体の幅に対する塗りの左端と幅（%）、塗りが中心から右へ伸びるか。
  */
-export const toAptitudeBarSpan = (aptitude: number): { left: number; width: number } => {
+export const toAptitudeBarSpan = (
+  aptitude: number
+): { left: number; width: number; towardRight: boolean } => {
   const width =
     (Math.abs(aptitude - APTITUDE_CENTER) / (MAX_APTITUDE - APTITUDE_CENTER)) *
     APTITUDE_BAR_CENTER_PERCENT
+  const towardRight = aptitude >= APTITUDE_CENTER
   return {
-    left:
-      aptitude < APTITUDE_CENTER
-        ? APTITUDE_BAR_CENTER_PERCENT - width
-        : APTITUDE_BAR_CENTER_PERCENT,
+    left: towardRight ? APTITUDE_BAR_CENTER_PERCENT : APTITUDE_BAR_CENTER_PERCENT - width,
     width,
+    towardRight,
   }
 }
 
@@ -165,11 +166,10 @@ export const toAptitudeLabelPlacement = (
   aptitude: number
 ): { anchor: number; beforeAnchor: boolean; inside: boolean } => {
   const span = toAptitudeBarSpan(aptitude)
-  const towardRight = aptitude >= APTITUDE_CENTER
   const inside = span.width >= APTITUDE_LABEL_INSIDE_MIN_WIDTH_PERCENT
   return {
-    anchor: towardRight ? span.left + span.width : span.left,
-    beforeAnchor: towardRight === inside,
+    anchor: span.towardRight ? span.left + span.width : span.left,
+    beforeAnchor: span.towardRight === inside,
     inside,
   }
 }

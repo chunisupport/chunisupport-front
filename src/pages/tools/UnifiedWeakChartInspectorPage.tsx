@@ -73,6 +73,7 @@ const CategoryBadge = (props: { category: UnifiedWeakChartCategory }): JSX.Eleme
 
 /**
  * 得意度を、50を中心に左右へ伸びるバーと、その先端に重ねた数値で表示する。
+ * 塗りは中心線から伸びて見えるよう、先端側だけを丸める。
  * 塗りが短く数値が収まらない場合は、数値を先端の外側に置く。
  * @param props - 得意度（データなしは null）と、バーの色を決める判定。
  * @returns 数値を重ねた得意度バー。得意度がない場合は欠損記号。
@@ -92,7 +93,11 @@ const AptitudeMeter = (props: {
         <span class="relative block h-4 w-24 rounded-full bg-surface-muted">
           <span class="absolute inset-y-0 left-1/2 w-px bg-border-strong" aria-hidden="true" />
           <span
-            class={`absolute inset-y-0 rounded-full ${UNIFIED_WEAK_CHART_CATEGORY_VIEW[props.category].barClass}`}
+            class={`absolute inset-y-0 ${UNIFIED_WEAK_CHART_CATEGORY_VIEW[props.category].barClass}`}
+            classList={{
+              'rounded-r-full': span().towardRight,
+              'rounded-l-full': !span().towardRight,
+            }}
             style={{ left: `${span().left}%`, width: `${span().width}%` }}
             aria-hidden="true"
           />
