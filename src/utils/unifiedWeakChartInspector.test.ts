@@ -467,10 +467,10 @@ test('得意度バーは中心から得意度の方向へ、上限・下限で�
 
   // Then: 50未満は中心から左へ、50超は中心から右へ伸びる。
   assert.deepEqual(spans, [
-    { left: 0, width: 50 },
-    { left: 50, width: 0 },
-    { left: 50, width: 25 },
-    { left: 50, width: 50 },
+    { left: 0, width: 50, towardRight: false },
+    { left: 50, width: 0, towardRight: true },
+    { left: 50, width: 25, towardRight: true },
+    { left: 50, width: 50, towardRight: true },
   ])
 })
 
