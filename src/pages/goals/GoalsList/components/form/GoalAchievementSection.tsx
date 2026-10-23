@@ -16,6 +16,7 @@ import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import {
   LABEL_INVERT_PERCENTAGE,
   LABEL_INVERT_VALUE,
+  OVERPOWER_TARGET_DECIMAL_PLACES,
   RATING_GOAL_DECIMAL_PLACES,
   RATING_GOAL_FIELD_LABEL,
   RATING_GOAL_MIN_VALUE,
@@ -266,6 +267,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
                   description={props.totalLimitText}
                   min={0}
                   max={props.totalFieldMax}
+                  step={10 ** -OVERPOWER_TARGET_DECIMAL_PLACES}
                   onChange={props.onTotalChange}
                 />
               }
