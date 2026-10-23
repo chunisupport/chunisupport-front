@@ -73,6 +73,57 @@ test('OVER POWER目標の小数桁数が多すぎる場合は保存前検証で�
   assert.equal(result, 'OVER POWERの目標値・残数・割合は小数第3位以内で入力してください。')
 })
 
+test('OVER POWER達成率は小数第3位までを許可し、第4位以下は保存前検証でエラーになる', () => {
+  // Given
+  const baseInput = {
+    ...validInput,
+    achievementType: 'overpower_percent' as const,
+    totalMode: 'number' as const,
+    allCount: 20,
+    theoreticalTotal: 100,
+  }
+  const decimalError = 'OVER POWER達成率は小数第3位以内で入力してください。'
+
+  // When / Then: 小数第3位ちょうど、およびそれ未満は通過する
+  assert.equal(validateGoalForm({ ...baseInput, total: '0' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, total: '0.001' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, total: '99.1' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, total: '99.123' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, total: '99.1230' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, total: '99.999' }), undefined)
+  assert.equal(validateGoalForm({ ...baseInput, total: '100' }), undefined)
+
+  // When / Then: 小数第4位以下は達成率の桁数エラーになる
+  assert.equal(validateGoalForm({ ...baseInput, total: '0.0001' }), decimalError)
+  assert.equal(validateGoalForm({ ...baseInput, total: '99.1234' }), decimalError)
+  assert.equal(validateGoalForm({ ...baseInput, total: '99.1235' }), decimalError)
+  assert.equal(validateGoalForm({ ...baseInput, total: '99.9999' }), decimalError)
+})
+
+test('OVER POWER達成率が100を超える場合は小数桁より先に上限エラーになる', () => {
+  // Given / When
+  const overMax = validateGoalForm({
+    ...validInput,
+    achievementType: 'overpower_percent',
+    total: '100.001',
+    totalMode: 'number',
+    allCount: 20,
+    theoreticalTotal: 100,
+  })
+  const overMaxWithExtraDecimals = validateGoalForm({
+    ...validInput,
+    achievementType: 'overpower_percent',
+    total: '100.0001',
+    totalMode: 'number',
+    allCount: 20,
+    theoreticalTotal: 100,
+  })
+
+  // Then
+  assert.equal(overMax, 'OVER POWER達成率は100%以下で入力してください。')
+  assert.equal(overMaxWithExtraDecimals, 'OVER POWER達成率は100%以下で入力してください。')
+})
+
 test('正しい入力の場合は保存前検証を通過する', () => {
   // Given / When
   const result = validateGoalForm(validInput)
