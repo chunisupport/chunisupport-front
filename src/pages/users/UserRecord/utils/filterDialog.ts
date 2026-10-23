@@ -71,7 +71,7 @@ export function isRecordFilterOptionsChanged(
     current.overPower.max !== defaultFilter.overPower.max ||
     !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) ||
     !hasSameFilterValues(current.genres, defaultFilter.genres) ||
-    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameNullableFilterValues(current.versions, defaultFilter.versions) ||
     !hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
@@ -112,7 +112,7 @@ export function isRecordDifficultyFilterOnlyChanged(
     current.overPower.max === defaultFilter.overPower.max &&
     !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) &&
     hasSameFilterValues(current.genres, defaultFilter.genres) &&
-    hasSameFilterValues(current.versions, defaultFilter.versions) &&
+    hasSameNullableFilterValues(current.versions, defaultFilter.versions) &&
     hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) &&
     hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) &&
     hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) &&

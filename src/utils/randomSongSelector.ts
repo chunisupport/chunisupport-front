@@ -3,7 +3,7 @@ import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
 import { getComboLampFilterValue } from './comboLampFilter'
-import { isNullableSelectionMatched } from './filterSelection'
+import { isNullableSelectionMatched, matchesNullableVersionFilter } from './filterSelection'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
@@ -53,7 +53,8 @@ export type RandomSongCandidateWeightSummary = {
 export type RandomSongFilter = {
   difficulties: readonly RandomSongDifficultyFilter[]
   genres: readonly string[]
-  versions: readonly string[]
+  /** 対象バージョンの短縮名。null は全選択（未指定）で、バージョン不明の候補も含む。空配列は全件不一致 */
+  versions: readonly string[] | null
   /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
   nameFolders: readonly string[] | null
   minConst: number | null
@@ -437,7 +438,7 @@ export const filterRandomSongCandidates = (
         isRandomSongOpTargetCandidate(candidate))
     if (!matchesDifficulty) return false
     if (!filter.genres.includes(candidate.genre)) return false
-    if (!filter.versions.includes(candidate.version)) return false
+    if (!matchesNullableVersionFilter(candidate.version, filter.versions)) return false
     if (!isNullableSelectionMatched(candidate.song.name_folder_code, filter.nameFolders))
       return false
     if (filter.minConst !== null && candidate.chartConst < filter.minConst) return false

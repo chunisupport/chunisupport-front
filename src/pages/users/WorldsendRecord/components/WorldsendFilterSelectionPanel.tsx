@@ -10,6 +10,10 @@ import {
 import type { NameFolderDTO } from '../../../../types/api'
 import type { ChainLamp, ComboLampFilter, HardLamp } from '../../../../types/record'
 import {
+  toNullableAllDisplaySelection,
+  toNullableAllFilterSelection,
+} from '../../../../utils/filterSelection'
+import {
   parseNumberInput,
   toInputValue,
   updateOptionalNumberRange,
@@ -33,6 +37,8 @@ type WorldsendFilterSelectionPanelProps = {
   filters: WorldsendFilterState
   setFilters: Setter<WorldsendFilterState>
   defaultFilter: WorldsendFilterState
+  /** 公開済みバージョンの短縮名。全選択の表示に使う */
+  versionOptions: readonly string[]
   /** 楽曲名順フォルダ一覧（表示順） */
   nameFolders?: NameFolderDTO[]
 }
@@ -40,7 +46,7 @@ type WorldsendFilterSelectionPanelProps = {
 /**
  * WORLD'S END レコードのフィルター条件を選択するパネルを表示する。
  *
- * @param props - フィルター状態、更新ハンドラー、初期値を含むパネル設定。
+ * @param props - フィルター状態、公開済みバージョン、更新ハンドラー、初期値を含むパネル設定。
  * @returns WORLD'S END フィルター条件編集パネルの JSX 要素。
  */
 const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProps> = (props) => {
@@ -343,10 +349,13 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
       />
       <MultiSelectFilterSection
         title="バージョン"
-        options={props.defaultFilter.versions}
-        selected={props.filters.versions}
+        options={[...props.versionOptions]}
+        selected={toNullableAllDisplaySelection(props.filters.versions, props.versionOptions)}
         onChange={(selectedVersions) =>
-          props.setFilters((prev) => ({ ...prev, versions: selectedVersions }))
+          props.setFilters((prev) => ({
+            ...prev,
+            versions: toNullableAllFilterSelection(selectedVersions, props.versionOptions),
+          }))
         }
       />
       <NameFolderFilterMultiSelect

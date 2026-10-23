@@ -223,6 +223,40 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
   )
 })
 
+test('全バージョン選択ではバージョン不明の候補を残し、絞り込むと除外すること', () => {
+  // Given: 配信日のある候補と、バージョン不明の候補がある。
+  const candidates = [
+    createCandidate({ version: 'NEW' }),
+    createCandidate({
+      version: '不明',
+      song: createSong({ id: 'unknown-release', release: null }),
+    }),
+  ]
+  const baseFilter = {
+    difficulties: ['MASTER' as const],
+    genres: ['POPS & ANIME'],
+    nameFolders: null,
+    minConst: null,
+    maxConst: null,
+  }
+
+  // When: 全選択と一部選択で絞り込む。
+  const allSelected = filterRandomSongCandidates(candidates, { ...baseFilter, versions: null })
+  const narrowed = filterRandomSongCandidates(candidates, { ...baseFilter, versions: ['NEW'] })
+  const cleared = filterRandomSongCandidates(candidates, { ...baseFilter, versions: [] })
+
+  // Then: 全選択は不明を残し、一部選択と全解除は不明を残さない。全解除は候補を残さない。
+  assert.deepEqual(
+    allSelected.map((candidate) => candidate.version),
+    ['NEW', '不明']
+  )
+  assert.deepEqual(
+    narrowed.map((candidate) => candidate.version),
+    ['NEW']
+  )
+  assert.deepEqual(cleared, [])
+})
+
 test('ランダム選曲候補を楽曲名順で絞り込むこと', () => {
   // Given: 楽曲名順フォルダが異なる楽曲の候補がある。
   const candidates = [

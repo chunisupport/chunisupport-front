@@ -2,12 +2,14 @@ import type { Accessor } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
 import type { FilterState, RecordSortCondition } from '../../../../types/recordFilter'
+import { normalizeVersionFilterSelection } from '../../../../utils/filterSelection'
 import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
 import { createSearchTextCache } from '../../../../utils/searchHelpers'
 import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../../utils/theoreticalOverPowerTarget'
+import { getReleasedVersionShortNames } from '../../../../utils/versionConverter'
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
 import { sortRecordsByConditions } from './sorting'
@@ -55,10 +57,18 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
   /** レコードごとの正規化済み検索用文字列。検索文字列の変更では再正規化しない */
   const getSearchText = createSearchTextCache<PlayerRecordWithSongMeta>()
 
+  /** 公開済みバージョンの短縮名。全選択を未指定へ揃える */
+  const releasedVersionNames = createMemo(() =>
+    getReleasedVersionShortNames(params.versions()?.versions ?? [])
+  )
+
   /** フィルター適用後のレコード */
   const filteredRecords = createMemo(() => {
     const records = recordsWithSongMeta()
-    const currentFilters = params.filters()
+    const currentFilters = {
+      ...params.filters(),
+      versions: normalizeVersionFilterSelection(params.filters().versions, releasedVersionNames()),
+    }
     const matchTitle = createRecordTitleMatcher(currentFilters.title, getSearchText)
     const favoriteSongIds = params.favoriteSongIds()
     const lockedSongKeys = params.lockedSongKeys()
