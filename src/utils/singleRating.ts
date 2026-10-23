@@ -17,6 +17,14 @@ export const THEORETICAL_RATING_BONUS_HUNDREDTHS = 215
 export const toRatingHundredths = (rating: number): number => Math.round(rating * RATING_SCALE)
 
 /**
+ * 0.01単位の整数値を単曲レーティングへ戻す。
+ *
+ * @param hundredths - 0.01を1とした整数値。
+ * @returns 対応する単曲レーティング。
+ */
+export const fromRatingHundredths = (hundredths: number): number => hundredths / RATING_SCALE
+
+/**
  * スコアと譜面定数から単曲レーティングを0.01単位で算出する。
  *
  * @param score - 算出対象のスコア。
