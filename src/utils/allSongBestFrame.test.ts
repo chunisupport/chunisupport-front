@@ -85,6 +85,21 @@ test('30曲平均と50曲平均を0.0001単位で返すこと', () => {
   assert.equal(result.totalAverage, 16.846)
 })
 
+test('定数15.0相当29曲と定数14.9相当1曲の平均は小数第4位で切り捨てること', () => {
+  // Given: 単曲レーティング17.15が29曲、17.05が1曲。定数15.0と14.9のMASTER理論値に相当する。
+  const records = [
+    ...createRecords(29, (index) => ({ id: `high-${index}`, rating: 17.15 })),
+    createRecord({ id: 'low', rating: 17.05 }),
+  ]
+
+  // When: 全曲ベスト枠を組み立てる。
+  const result = buildAllSongBestFrame(records)
+
+  // Then: (17.15×29 + 17.05) / 30 を小数第4位で切り捨てた17.1466になる。
+  assert.equal(result.primaryAverage, 17.1466)
+  assert.equal(result.totalAverage, 17.1466)
+})
+
 test('同率時は楽曲IDと難易度順で並べること', () => {
   // Given: 同じ単曲レーティングの3譜面。
   const records = [
