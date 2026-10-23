@@ -35,11 +35,13 @@ import {
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
 import type { FilterState, RecordColumnId, RecordSortKey } from '../../../types/recordFilter'
 import { createLockedSongKey } from '../../../usecases/overpower/lockedSongsBatch'
+import { normalizeVersionFilterSelection } from '../../../utils/filterSelection'
 import {
   buildDefaultFilter,
   DEFAULT_FILTER,
   normalizeFilterState,
 } from '../../../utils/recordFilterDefaults'
+import { getReleasedVersionShortNames } from '../../../utils/versionConverter'
 import FilterStats from '../components/FilterStats'
 import FilterToolbar from '../components/FilterToolbar'
 import RecordDataTable from '../components/RecordDataTable'
@@ -86,19 +88,24 @@ const useStandardRecordViewState = createRecordViewState<
  *
  * @param masterData - フィルター既定値の構築に使うマスターデータ。
  * @param versions - フィルター既定値の構築に使うバージョン一覧。
- * @returns 初回表示に適用するフィルター状態。
+ * @returns 初回表示に適用するフィルター状態。保存済みの全バージョン選択は未指定へ揃える。
  */
 const restoreInitialStandardRecordFilter = async (
   masterData: MasterDataDTO,
   versions: VersionSummaryDTO[]
 ): Promise<FilterState> => {
   const defaultFilter = buildDefaultFilter(masterData.genres, versions)
+  const releasedVersionNames = getReleasedVersionShortNames(versions)
 
   try {
     const savedFilter = await readStandardRecordFilterSetting()
-    return isValidSavedStandardFilter(savedFilter)
+    const restored = isValidSavedStandardFilter(savedFilter)
       ? normalizeFilterState(savedFilter)
       : defaultFilter
+    return {
+      ...restored,
+      versions: normalizeVersionFilterSelection(restored.versions, releasedVersionNames),
+    }
   } catch {
     return defaultFilter
   }

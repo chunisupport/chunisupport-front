@@ -15,6 +15,8 @@ type WorldsendFilterDialogProps = {
   filters: WorldsendFilterState
   onChange: (filters: WorldsendFilterState) => void
   defaultFilter: WorldsendFilterState
+  /** 公開済みバージョンの短縮名。全選択の表示に使う */
+  versionOptions: readonly string[]
   /** 楽曲名順フォルダ一覧（表示順） */
   nameFolders?: NameFolderDTO[]
 }
@@ -22,7 +24,7 @@ type WorldsendFilterDialogProps = {
 /**
  * WORLD'S END レコード用フィルターダイアログを表示する。
  *
- * @param props - 開閉状態、フィルター状態、適用ハンドラー、初期値。
+ * @param props - 開閉状態、フィルター状態、公開済みバージョン、適用ハンドラー、初期値。
  * @returns WORLD'S END フィルターダイアログの JSX 要素。
  */
 const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => {
@@ -59,7 +61,7 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
       attributes: [...props.defaultFilter.attributes],
       levelStarRange: { ...props.defaultFilter.levelStarRange },
       genres: [...props.defaultFilter.genres],
-      versions: [...props.defaultFilter.versions],
+      versions: props.defaultFilter.versions === null ? null : [...props.defaultFilter.versions],
       combo_lamp: [...props.defaultFilter.combo_lamp],
       chain_lamp: [...props.defaultFilter.chain_lamp],
       hard_lamp: [...props.defaultFilter.hard_lamp],
@@ -109,6 +111,7 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
             filters={filters()}
             setFilters={setFilters}
             defaultFilter={props.defaultFilter}
+            versionOptions={props.versionOptions}
             nameFolders={props.nameFolders}
           />
           <div class="mt-6 flex justify-end">

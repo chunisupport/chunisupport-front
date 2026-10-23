@@ -68,3 +68,50 @@ export function isNullableSelectionMatched<T>(
 ): boolean {
   return selected === null || (value !== null && value !== undefined && selected.includes(value))
 }
+
+/**
+ * バージョンの全選択を未指定（null）へ揃える。
+ * 楽曲一覧と同じく、選択肢と一致する選択は未指定として扱う。
+ *
+ * @param selected - 現在のバージョン選択。null は全選択を表す。
+ * @param allVersions - 選択可能な公開済みバージョンの短縮名。
+ * @returns 全選択なら null。一部選択と全解除はそのまま返す。
+ */
+export function normalizeVersionFilterSelection(
+  selected: readonly string[] | null,
+  allVersions: readonly string[]
+): string[] | null {
+  if (selected === null) return null
+  return toNullableAllFilterSelection(selected, allVersions)
+}
+
+/**
+ * レコード一覧のバージョン条件に一致するか判定する。
+ * null と空配列は未指定で、バージョン不明の楽曲も含めて一致する。
+ * 一部のバージョンだけが選ばれている場合は、その短縮名に含まれるときだけ一致する。
+ *
+ * @param releaseVersion - レコードの収録バージョン。不明な場合は「不明」。
+ * @param selected - 選択中のバージョン。null は全選択を表す。
+ * @returns バージョン条件に一致する場合は true。
+ */
+export function matchesRecordVersionFilter(
+  releaseVersion: string,
+  selected: readonly string[] | null
+): boolean {
+  return selected === null || selected.length === 0 || selected.includes(releaseVersion)
+}
+
+/**
+ * 全選択を null で表すバージョン条件に一致するか判定する。
+ * null は未指定でバージョン不明も含める。空配列はどのバージョンにも一致しない。
+ *
+ * @param version - 判定対象のバージョン名。
+ * @param selected - 選択中のバージョン。null は全選択を表す。
+ * @returns バージョン条件に一致する場合は true。
+ */
+export function matchesNullableVersionFilter(
+  version: string,
+  selected: readonly string[] | null
+): boolean {
+  return selected === null || selected.includes(version)
+}

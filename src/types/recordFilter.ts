@@ -68,7 +68,12 @@ export interface FilterState {
   /** 未解禁設定に登録された楽曲・譜面を除外するか */
   excludeLockedSongs: boolean
   genres: string[]
-  versions: string[]
+  /**
+   * 対象バージョンの短縮名。
+   * null は全選択（未指定）で、バージョン不明の楽曲も含む。
+   * 空配列もバージョン条件なし。一部選択時はそのバージョンだけが対象で、バージョン不明は含まない。
+   */
+  versions: string[] | null
   /** 対象とする楽曲名順フォルダのコード。null は全フォルダ対象、空配列は全件不一致を表す */
   nameFolders: string[] | null
   const: NumericRangeFilter
