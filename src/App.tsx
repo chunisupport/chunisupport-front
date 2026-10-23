@@ -30,6 +30,7 @@ import {
 import ApplicationAvailabilityGate from './components/availability/ApplicationAvailabilityGate'
 import { SelectableCardLink } from './components/common/SelectableCardButton'
 import RequireAuth from './components/guards/RequireAuth'
+import RequirePlayerData from './components/guards/RequirePlayerData'
 import RequireRole from './components/guards/RequireRole'
 import { LandingProfileCard } from './components/LandingProfileCard/LandingProfileCard'
 
@@ -191,6 +192,22 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
     <RequireAuth>
       <Component {...props} />
     </RequireAuth>
+  )
+}
+
+/**
+ * 指定された画面をプレイヤーデータ guard の許可分岐内に表示する。
+ * 未ログイン・プレイヤーデータ未登録の場合は、ログインまたはデータ登録を案内する。
+ *
+ * @typeParam P - 対象画面の props 型。
+ * @param Component - 自分のプレイヤーデータを要求する画面。
+ * @returns プレイヤーデータ guard を付与した route component。
+ */
+const withPlayerData = <P extends object>(Component: (props: P) => JSX.Element) => {
+  return (props: P) => (
+    <RequirePlayerData>
+      <Component {...props} />
+    </RequirePlayerData>
   )
 }
 
@@ -421,11 +438,13 @@ const LoadableUnifiedWeakChartInspectorPage = withRouteLoadBoundary(UnifiedWeakC
 
 /**
  * 統合分析ツールへの直接アクセスを管理者に限定する。
- * @returns ADMIN権限を満たす場合のみ表示する統合分析画面。
+ * @returns ADMIN権限とプレイヤーデータ登録を満たす場合のみ表示する統合分析画面。
  */
 const GuardedUnifiedWeakChartInspectorPage = () => (
   <RequireRole allowedRoles={['ADMIN']}>
-    <LoadableUnifiedWeakChartInspectorPage />
+    <RequirePlayerData>
+      <LoadableUnifiedWeakChartInspectorPage />
+    </RequirePlayerData>
   </RequireRole>
 )
 const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePage)
@@ -705,7 +724,7 @@ const App = () => {
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
       <Route
         path={FRIEND_VS_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(FriendVsPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(FriendVsPage)))}
       />
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
@@ -721,11 +740,11 @@ const App = () => {
       />
       <Route
         path={WEAK_CHART_INSPECTOR_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(WeakChartInspectorPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(WeakChartInspectorPage)))}
       />
       <Route
         path={ONLINE_WEAK_CHART_INSPECTOR_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(OnlineWeakChartInspectorPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(OnlineWeakChartInspectorPage)))}
       />
       <Route
         path={UNIFIED_WEAK_CHART_INSPECTOR_PATH}
@@ -741,23 +760,23 @@ const App = () => {
       />
       <Route
         path={ALL_SONG_BEST_FRAME_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(AllSongBestFramePage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(AllSongBestFramePage)))}
       />
       <Route
         path={RATING_THEORETICAL_CHECKER_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(RatingTheoreticalCheckerPage)))}
+        component={withNavBar(withRouteLoadBoundary(RatingTheoreticalCheckerPage))}
       />
       <Route
         path={DASHBOARD_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
       />
       <Route
         path={UNI_FILL_MATRIX_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(UniFillMatrixPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(UniFillMatrixPage)))}
       />
       <Route
         path={LOCKED_SONG_DISCOVERY_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(LockedSongDiscoveryPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(LockedSongDiscoveryPage)))}
       />
 
       {/* 管理 */}
