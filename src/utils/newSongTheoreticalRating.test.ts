@@ -58,6 +58,20 @@ const CURRENT_VERSIONS = [
 /** 将来マスタを除外するためのテスト基準日 */
 const CURRENT_DATE = '2026-08-08'
 
+/**
+ * MASTER譜面だけの理論値計算用楽曲を生成する。
+ *
+ * @param id - 楽曲ID。
+ * @param release - 楽曲のリリース日。
+ * @param chartConstant - MASTER譜面の譜面定数。
+ * @returns MASTER譜面だけを持つ楽曲。
+ */
+const createMasterSong = (id: string, release: string, chartConstant: number): SongDTO => {
+  const song = createSong(id, release, [])
+  song.charts.MASTER = { const: chartConstant, is_const_unknown: false, notes: null }
+  return song
+}
+
 test('全新曲譜面の単曲理論値から上位20件の平均を返すこと', () => {
   // Given: 現行バージョンの新曲21譜面と、より高い譜面定数を持つ旧曲1譜面。
   const songs = [
@@ -108,6 +122,28 @@ test('現行バージョンより前の全譜面からベスト枠上位30件を
     false
   )
   assert.equal(result?.hasUnknownChartConstants, true)
+})
+
+test('定数15.0が29曲と定数14.9が1曲のベスト枠理論値は小数第4位で切り捨てること', () => {
+  // Given: 旧曲のMASTER譜面。定数15.0が29曲、定数14.9が1曲。
+  const songs = [
+    ...Array.from({ length: 29 }, (_, index) =>
+      createMasterSong(`const-15-${index}`, '2025-12-31', 15)
+    ),
+    createMasterSong('const-14-9', '2025-12-31', 14.9),
+  ]
+
+  // When: 現行バージョン開始日より前の楽曲でベスト枠30枠の理論値を算出する。
+  const result = calculateBestTheoreticalRating(
+    songs,
+    [{ released_at: '2026-01-01' }],
+    '2026-10-22',
+    30
+  )
+
+  // Then: 単曲理論値 17.15×29 + 17.05 = 514.40 を30で割り、小数第4位で切り捨てた17.1466になる。
+  assert.equal(result?.rating, 17.1466)
+  assert.equal(result?.entries.length, 30)
 })
 
 test('is_newではなく現行バージョン開始日でベスト枠を判定すること', () => {

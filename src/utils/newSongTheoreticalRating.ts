@@ -165,6 +165,7 @@ const findTheoreticalChartRecord = (
 
 /**
  * 対象楽曲の全譜面から規定枠数分のレーティング理論値を算出する。
+ * 平均はAPIの枠平均と同じく、0.01単位の合計を整数のまま小数第4位で切り捨てる。
  *
  * @param songs - 理論値計算の対象楽曲一覧。
  * @param slotCount - 採用するレーティング枠数。
@@ -195,7 +196,7 @@ const calculateTheoreticalRating = (
     (total, chart) => total + chart.ratingHundredths,
     0
   )
-  const theoreticalRatingUnits = Math.round(
+  const theoreticalRatingUnits = Math.floor(
     (totalRatingHundredths * PLAYER_RATING_SCALE) / RATING_SCALE / theoreticalRatings.length
   )
 
