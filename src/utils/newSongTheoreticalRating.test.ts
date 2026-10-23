@@ -16,14 +16,14 @@ import { formatScoreDifference } from './scoreDifference.ts'
  * 理論値計算テスト用の楽曲を生成する。
  *
  * @param id - 楽曲ID。
- * @param release - 楽曲のリリース日。
+ * @param release - 楽曲のリリース日。未登録の場合はnull。
  * @param chartConstants - BASICから難易度順に登録する譜面定数一覧。
  * @param isNew - 直近追加曲フラグ。
  * @returns 理論値計算に必要な項目を持つ楽曲。
  */
 const createSong = (
   id: string,
-  release: string,
+  release: string | null,
   chartConstants: ReadonlyArray<{ value: number; unknown?: boolean }>,
   isNew = false
 ): SongDTO => ({
@@ -125,6 +125,49 @@ test('is_newではなく現行バージョン開始日でベスト枠を判定�
     result?.entries.map((entry) => entry.songId),
     ['recent-update-old-song']
   )
+})
+
+test('配信日未登録の楽曲を新曲枠の採用譜面と枠外譜面に含めること', () => {
+  // Given: 配信済み新曲、配信日未登録の同定数譜面、旧曲、基準日より後の楽曲。
+  const songs = [
+    createSong('dated-top', '2026-07-02', [{ value: 16 }]),
+    createSong('dated-tie', '2026-07-02', [{ value: 15 }]),
+    createSong('unreleased-adopted', null, [{ value: 15 }]),
+    createSong('unreleased-boundary', null, [{ value: 15 }]),
+    createSong('old', '2026-07-01', [{ value: 17 }]),
+    createSong('future', '2026-08-09', [{ value: 17 }]),
+  ]
+
+  // When: 3枠分の新曲枠理論値を算出する。
+  const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 3)
+
+  // Then: 配信日未登録の譜面は採用譜面と枠外譜面に入り、旧曲と未配信楽曲は除外される。
+  assert.deepEqual(
+    result?.entries.map((entry) => entry.songId),
+    ['dated-top', 'dated-tie', 'unreleased-adopted']
+  )
+  assert.deepEqual(
+    result?.boundaryEntries.map((entry) => entry.songId),
+    ['unreleased-boundary']
+  )
+})
+
+test('配信日未登録の楽曲をベスト枠から除外すること', () => {
+  // Given: 旧曲と、それより譜面定数が高い配信日未登録の楽曲。
+  const songs = [
+    createSong('old', '2026-07-01', [{ value: 14 }]),
+    createSong('unreleased', null, [{ value: 16 }]),
+  ]
+
+  // When: ベスト枠の理論値を算出する。
+  const result = calculateBestTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 30)
+
+  // Then: 配信日未登録の楽曲は採用譜面にも枠外譜面にも入らない。
+  assert.deepEqual(
+    result?.entries.map((entry) => entry.songId),
+    ['old']
+  )
+  assert.deepEqual(result?.boundaryEntries, [])
 })
 
 test('規定枠数未満の新曲譜面は採用した譜面数で平均すること', () => {
