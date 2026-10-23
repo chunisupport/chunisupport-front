@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../../constants/chart.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults.ts'
 import type { WorldsendRecordWithSongMeta } from '../types/filterTypes.ts'
@@ -46,6 +47,51 @@ const createRecord = (
  * @returns WORLD'S END レコード用検索マッチャー。
  */
 const matcher = (title = '') => createWorldsendRecordTitleMatcher(title)
+
+test("WORLD'S END フィルターは★レベル範囲が既定の全範囲なら★未登録の譜面を表示する", () => {
+  // Given: ★レベル範囲が既定（★1〜★5）のフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: WORLDSEND_LEVEL_STAR_MIN, max: WORLDSEND_LEVEL_STAR_MAX },
+  })
+
+  // When: ★未登録の譜面と、範囲内の★登録済み譜面を判定する。
+  const unregistered = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ level_star: null }),
+    filters,
+    matcher()
+  )
+  const registered = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ level_star: 3 }),
+    filters,
+    matcher()
+  )
+
+  // Then: 既定の全範囲では未登録も登録済みも表示する。
+  assert.equal(unregistered, true)
+  assert.equal(registered, true)
+})
+
+test("WORLD'S END フィルターは★レベル範囲を絞ると★未登録の譜面を除外する", () => {
+  // Given: 下限だけ、上限だけを既定から狭めたフィルター。
+  const narrowedMin = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: WORLDSEND_LEVEL_STAR_MIN + 1, max: WORLDSEND_LEVEL_STAR_MAX },
+  })
+  const narrowedMax = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: WORLDSEND_LEVEL_STAR_MIN, max: WORLDSEND_LEVEL_STAR_MAX - 1 },
+  })
+  const record = createRecord({ level_star: null })
+
+  // When: ★未登録の譜面を、範囲を絞ったフィルターで判定する。
+  const minNarrowed = isWorldsendRecordMatchedWithTitleMatcher(record, narrowedMin, matcher())
+  const maxNarrowed = isWorldsendRecordMatchedWithTitleMatcher(record, narrowedMax, matcher())
+
+  // Then: 絞り込み時の未登録譜面の扱いは未決のため、従来どおり除外する。
+  assert.equal(minNarrowed, false)
+  assert.equal(maxNarrowed, false)
+})
 
 test("WORLD'S END フィルターは属性・レベル・ジャンル・バージョンを判定できる", () => {
   // Given: 属性、レベル、ジャンル、バージョンが一致するフィルター。
