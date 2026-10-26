@@ -44,7 +44,7 @@ const compareAllSongBestRecords = (left: PlayerRecordDTO, right: PlayerRecordDTO
 }
 
 /**
- * 単曲レーティングの平均をプレイヤーレーティングと同じ0.0001単位へ丸める。
+ * 単曲レーティングの平均をプレイヤーレーティングと同じ0.0001単位へ切り捨てる。
  *
  * @param records - 平均対象のレコード。
  * @returns 対象件数で平均したレーティング。対象がなければnull。
@@ -56,7 +56,7 @@ const calculateRatingAverage = (records: readonly PlayerRecordDTO[]): number | n
     (total, record) => total + toRatingHundredths(record.rating),
     0
   )
-  const averageUnits = Math.round(
+  const averageUnits = Math.floor(
     (totalRatingHundredths * PLAYER_RATING_SCALE) / RATING_SCALE / records.length
   )
   return averageUnits / PLAYER_RATING_SCALE
