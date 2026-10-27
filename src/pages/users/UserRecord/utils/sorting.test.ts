@@ -63,6 +63,23 @@ test('ソートクエリが無効な場合はrating descを既定値にする', 
   })
 })
 
+test('継承プロパティの sortcol は rating desc に戻す', () => {
+  // Given: 通常レコードの対応表は通常オブジェクトなので、これらの名前はプロトタイプ上にある
+  const inheritedSortCols = ['toString', 'constructor', '__proto__'] as const
+
+  for (const sortcol of inheritedSortCols) {
+    // When
+    const result = parseSortParams({ sortcol, sortorder: 'asc' })
+
+    // Then
+    assert.deepEqual(result, {
+      initialSortKey: 'rating',
+      initialSortOrder: 'desc',
+    })
+    assert.equal(typeof result.initialSortKey, 'string')
+  }
+})
+
 test('通常レコードの既定ソートは単曲レート降順、定数降順、難易度降順、曲名昇順にする', () => {
   // Given
   const expectedSortConditions = [
