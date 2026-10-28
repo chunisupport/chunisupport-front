@@ -24,6 +24,10 @@ import {
   getChartLevelFilterBoundary,
   toChartLevelFilterLabel,
 } from '../../../../../utils/chartLevel'
+import {
+  toNullableAllDisplaySelection,
+  toNullableAllFilterSelection,
+} from '../../../../../utils/filterSelection'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import {
   parseNumberInput,
@@ -631,13 +635,13 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <MultiSelectFilterSection
         title="バージョン"
         options={versions()}
-        selected={props.filters.versions}
+        selected={toNullableAllDisplaySelection(props.filters.versions, versions())}
         placeholder="バージョンを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onChange={(selectedVersions) =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: selectedVersions,
+            versions: toNullableAllFilterSelection(selectedVersions, versions()),
           }))
         }
       />

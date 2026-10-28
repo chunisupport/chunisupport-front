@@ -138,7 +138,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
   "favoriteSongsOnly": false,
   "excludeLockedSongs": false,
   "genres": [],
-  "versions": [],
+  "versions": null,
   "nameFolders": null,
   "const": {
     "min": 1,
@@ -180,7 +180,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `favoriteSongsOnly` | `boolean` | はい | `true` の場合、お気に入り登録済みの楽曲だけを表示します。 |
 | `excludeLockedSongs` | `boolean` | はい | `true` の場合、未解禁設定に登録された楽曲とULTIMA譜面を除外します。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
-| `versions` | `string[]` | はい | 対象バージョン名の配列です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。空配列なら全バージョン対象です。 |
+| `versions` | `string[] \| null` | はい | 対象バージョンの短縮名です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。`null` は全選択（未指定）で、公開済みバージョンとバージョン不明の楽曲を含み、未公開バージョンの楽曲は除外します。画面上では `null` を全選択として表示し、全選択は `null` として保存します。空配列もバージョン条件なしです。一部選択時は選んだバージョンだけが対象で、バージョン不明は含みません。 |
 | `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
 | `const` | `{ min: number, max: number }` | はい | 譜面定数の範囲です。 |
 | `constFilterMode` | `"level"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `const.min` / `const.max` を参照します。 |
@@ -205,7 +205,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 5. `favoriteSongsOnly` が `true` のとき、お気に入り登録済みの楽曲であること。
 6. `excludeLockedSongs` が `true` のとき、未解禁設定の通常楽曲ではなく、ULTIMAの場合は未解禁設定のULTIMA譜面でもないこと。
 7. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
-8. `versions` が空でないとき、レコードのバージョンが `versions` に含まれること。
+8. `versions` が `null` でも空でもないとき、レコードのバージョンが `versions` に含まれること。`null` と空配列では公開済みバージョンとバージョン不明の楽曲を残し、未公開バージョンの楽曲は除外します。
 9. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
 10. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
 11. スコアが `score.min` 以上かつ `score.max` 以下であること。
@@ -225,7 +225,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `favoriteSongsOnly`: `false`
 - `excludeLockedSongs`: `false`
 - `genres`: ジャンル API (`/internal/master/genres`) から取得した全ジャンル名
-- `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名を短縮した名前
+- `versions`: `null`（全選択。バージョン不明の楽曲も含む）
 - `nameFolders`: `null`（全フォルダ対象）
 - `const.min`: `1`
 - `const.max`: `16`
@@ -255,7 +255,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
     "max": 5
   },
   "genres": [],
-  "versions": [],
+  "versions": null,
   "nameFolders": null,
   "score": {
     "min": 0,
@@ -281,7 +281,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `attributes` | `Array<string \| null>` | はい | WORLD'S END 属性の配列です。`null` は属性不明を表します。空配列にすると全件不一致になります。 |
 | `levelStarRange` | `{ min: number, max: number }` | はい | ★レベルの範囲です。`level_star` が `null` のレコードは、全範囲（★1〜★5）のときだけ一致します。下限または上限を絞った場合は一致しません。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
-| `versions` | `string[]` | はい | 対象バージョン名の配列です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。空配列なら全バージョン対象です。 |
+| `versions` | `string[] \| null` | はい | 対象バージョンの短縮名です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。`null` は全選択（未指定）で、公開済みバージョンとバージョン不明の楽曲を含み、未公開バージョンの楽曲は除外します。画面上では `null` を全選択として表示し、全選択は `null` として保存します。空配列もバージョン条件なしです。一部選択時は選んだバージョンだけが対象で、バージョン不明は含みません。 |
 | `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
 | `score` | `{ min: number, max: number }` | はい | スコア範囲です。未プレイ譜面はスコア `0` として判定します。 |
 | `scoreFilterMode` | `"rank"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `score.min` / `score.max` を参照します。 |
@@ -300,7 +300,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 3. `attribute` が `attributes` に含まれること。
 4. `level_star` が設定されている場合は、`levelStarRange.min` 以上かつ `levelStarRange.max` 以下であること。`null` の場合は、範囲が全範囲（`min: 1`, `max: 5`）であること。下限または上限を絞った場合は一致しません。
 5. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
-6. `versions` が空でないとき、レコードのリリースバージョンが `versions` に含まれること。
+6. `versions` が `null` でも空でもないとき、レコードのリリースバージョンが `versions` に含まれること。`null` と空配列では公開済みバージョンとバージョン不明の楽曲を残し、未公開バージョンの楽曲は除外します。
 7. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
 8. スコアが `score.min` 以上かつ `score.max` 以下であること。
 9. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
@@ -315,7 +315,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `levelStarRange.min`: `1`
 - `levelStarRange.max`: `5`
 - `genres`: WORLD'S END 楽曲マスタ上の全ジャンル
-- `versions`: バージョン API (`/internal/master/versions`) から取得した全バージョン名を短縮した名前
+- `versions`: `null`（全選択。バージョン不明の楽曲も含む）
 - `nameFolders`: `null`（全フォルダ対象）
 - `score.min`: `0`
 - `score.max`: `1010000`

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { FilterState } from '../../../../types/recordFilter'
 import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch.ts'
+import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults.ts'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
 import { createSearchTextCache } from '../../../../utils/searchHelpers.ts'
@@ -104,6 +105,27 @@ test('createRecordTitleMatcher は末尾の全角英字を残して一致判定�
     ),
     false
   )
+})
+
+test('既定の全バージョン選択ではバージョン不明のレコードを表示し、絞り込むと除外する', () => {
+  // Given: 公開済みバージョンがある既定フィルターと、配信日未登録のレコード。
+  const versions = [
+    { name: 'CHUNITHM VERSE', short_name: 'VERSE', released_at: '2024-12-12' },
+    { name: 'CHUNITHM X-VERSE', short_name: 'X-VERSE', released_at: '2026-01-01' },
+  ]
+  const genres = [{ id: 1, name: 'POPS & ANIME', sort_order: 1 }]
+  const filters = buildDefaultFilter(genres, versions, '2026-10-22')
+  const unknown = createRecord({ release: null, release_version: '不明' })
+  const known = createRecord({ release: '2026-01-01', release_version: 'X-VERSE' })
+
+  // When / Then: 全選択は未指定なので不明も含め、一部選択では不明を除外する。
+  assert.equal(filters.versions, null)
+  assert.equal(isRecordMatched(unknown, filters), true)
+  assert.equal(isRecordMatched(known, filters), true)
+  assert.equal(isRecordMatched(unknown, { ...filters, versions: [] }), true)
+  assert.equal(isRecordMatched(unknown, { ...filters, versions: ['X-VERSE'] }), false)
+  assert.equal(isRecordMatched(known, { ...filters, versions: ['X-VERSE'] }), true)
+  assert.equal(isRecordMatched(known, { ...filters, versions: ['VERSE'] }), false)
 })
 
 test('isRecordMatched は難易度・ジャンル・バージョンの条件を判定できる', () => {

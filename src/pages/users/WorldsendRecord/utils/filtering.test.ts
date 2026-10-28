@@ -2,7 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../../constants/chart.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
-import { normalizeWorldsendFilterState } from '../types/filterDefaults.ts'
+import {
+  buildDefaultWorldsendFilter,
+  normalizeWorldsendFilterState,
+} from '../types/filterDefaults.ts'
 import type { WorldsendRecordWithSongMeta } from '../types/filterTypes.ts'
 import {
   createWorldsendRecordTitleMatcher,
@@ -47,6 +50,39 @@ const createRecord = (
  * @returns WORLD'S END レコード用検索マッチャー。
  */
 const matcher = (title = '') => createWorldsendRecordTitleMatcher(title)
+
+test("既定の全バージョン選択ではバージョン不明の WORLD'S END レコードを表示し、絞り込むと除外する", () => {
+  // Given: 公開済みバージョンがある既定フィルターと、配信日未登録のレコード。
+  const versions = [
+    { name: 'CHUNITHM LUMINOUS', short_name: 'LUMINOUS', released_at: '2023-01-01' },
+    { name: 'CHUNITHM VERSE', short_name: 'VERSE', released_at: '2024-12-12' },
+  ]
+  const filters = {
+    ...buildDefaultWorldsendFilter([], versions, '2026-10-22'),
+    attributes: ['狂' as const],
+  }
+  const unknown = createRecord({ release: null, release_version: '不明' })
+
+  // When / Then: 全選択は未指定なので不明も含め、一部選択では不明を除外する。
+  assert.equal(filters.versions, null)
+  assert.equal(isWorldsendRecordMatchedWithTitleMatcher(unknown, filters, matcher()), true)
+  assert.equal(
+    isWorldsendRecordMatchedWithTitleMatcher(
+      unknown,
+      { ...filters, versions: ['VERSE'] },
+      matcher()
+    ),
+    false
+  )
+  assert.equal(
+    isWorldsendRecordMatchedWithTitleMatcher(
+      createRecord({ release_version: 'VERSE' }),
+      { ...filters, versions: ['VERSE'] },
+      matcher()
+    ),
+    true
+  )
+})
 
 test("WORLD'S END フィルターは★レベル範囲が既定の全範囲なら★未登録の譜面を表示する", () => {
   // Given: ★レベル範囲が既定（★1〜★5）のフィルター。

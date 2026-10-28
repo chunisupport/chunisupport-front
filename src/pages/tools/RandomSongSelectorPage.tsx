@@ -47,6 +47,12 @@ import type { PlayerDataStatus } from '../../usecases/auth/resolvePlayerDataStat
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
 import {
+  normalizeVersionFilterSelection,
+  resolveReleasedVersionFilterSelection,
+  toNullableAllDisplaySelection,
+  toNullableAllFilterSelection,
+} from '../../utils/filterSelection'
+import {
   filterRandomSongCandidatesByGoal,
   isRandomSongGoalFilterAvailable,
 } from '../../utils/randomSongGoalFilter'
@@ -664,7 +670,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     RandomSongDifficultyFilter[]
   >([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
   const [selectedGenres, setSelectedGenres] = createSignal<string[]>([])
-  const [selectedVersions, setSelectedVersions] = createSignal<string[]>([])
+  const [selectedVersions, setSelectedVersions] = createSignal<string[] | null>(null)
   const [selectedNameFolders, setSelectedNameFolders] = createSignal<string[] | null>(null)
   const [selectedGoalId, setSelectedGoalId] = createSignal<number | null>(null)
   const [recordFilterSettingsOpen, setRecordFilterSettingsOpen] = createSignal(false)
@@ -820,7 +826,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
     const basicFilteredCandidates = filterRandomSongCandidates(allCandidates(), {
       difficulties: selectedDifficulties(),
       genres: selectedGenres(),
-      versions: selectedVersions(),
+      versions: resolveReleasedVersionFilterSelection(
+        normalizeVersionFilterSelection(selectedVersions(), versionOptions()),
+        versionOptions()
+      ),
       nameFolders: selectedNameFolders(),
       minConst: parsedMinConst(),
       maxConst: parsedMaxConst(),
@@ -946,7 +955,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
 
     untrack(() => {
       setSelectedGenres(genres)
-      setSelectedVersions(versions)
+      setSelectedVersions(null)
       setFilterInitialized(true)
     })
   })
@@ -1022,7 +1031,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])
     setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
     setSelectedGenres(genreOptions())
-    setSelectedVersions(versionOptions())
+    setSelectedVersions(null)
     setSelectedNameFolders(null)
     setSelectedGoalId(null)
     setDifficultyWeights({
@@ -1289,11 +1298,18 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <VersionMultiSelect
                         label={RANDOM_SONG_SELECTOR_COPY.versionLabel}
                         options={toMultiSelectOptions(versionOptions())}
-                        selected={selectedVersions()}
+                        selected={toNullableAllDisplaySelection(
+                          selectedVersions(),
+                          versionOptions()
+                        )}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
                         selectedPreviewLimit={6}
                         disabled={isGoalFilterActive()}
-                        onChange={setSelectedVersions}
+                        onChange={(selected) =>
+                          setSelectedVersions(
+                            toNullableAllFilterSelection(selected, versionOptions())
+                          )
+                        }
                       />
                     </div>
                     <div>

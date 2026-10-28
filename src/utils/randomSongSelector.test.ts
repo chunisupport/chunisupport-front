@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
+import { resolveReleasedVersionFilterSelection } from './filterSelection'
 import type { RandomSongCandidate, RandomSongLampFilter } from './randomSongSelector.ts'
 import {
   aggregateRandomSongCandidateWeights,
@@ -221,6 +222,40 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
     filtered.map((candidate) => candidate.difficulty),
     ['MASTER']
   )
+})
+
+test('全バージョン選択ではバージョン不明の候補を残し、絞り込むと除外すること', () => {
+  // Given: 配信日のある候補と、バージョン不明の候補がある。
+  const candidates = [
+    createCandidate({ version: 'NEW' }),
+    createCandidate({
+      version: '不明',
+      song: createSong({ id: 'unknown-release', release: null }),
+    }),
+  ]
+  const baseFilter = {
+    difficulties: ['MASTER' as const],
+    genres: ['POPS & ANIME'],
+    nameFolders: null,
+    minConst: null,
+    maxConst: null,
+  }
+
+  // When: 全選択と一部選択で絞り込む。
+  const allSelected = filterRandomSongCandidates(candidates, { ...baseFilter, versions: null })
+  const narrowed = filterRandomSongCandidates(candidates, { ...baseFilter, versions: ['NEW'] })
+  const cleared = filterRandomSongCandidates(candidates, { ...baseFilter, versions: [] })
+
+  // Then: 全選択は不明を残し、一部選択と全解除は不明を残さない。全解除は候補を残さない。
+  assert.deepEqual(
+    allSelected.map((candidate) => candidate.version),
+    ['NEW', '不明']
+  )
+  assert.deepEqual(
+    narrowed.map((candidate) => candidate.version),
+    ['NEW']
+  )
+  assert.deepEqual(cleared, [])
 })
 
 test('ランダム選曲候補を楽曲名順で絞り込むこと', () => {
@@ -718,4 +753,29 @@ test('AJC判定はJ数0ではなく理論値スコアを基準にすること', 
   // Then: 理論値だけがAJCになり、J数0でも理論値未満ならAJになる。
   assert.equal(theoreticalLamp, 'AJC')
   assert.equal(belowTheoreticalLamp, 'AJ')
+})
+
+test('公開済みの全バージョン選択では未公開バージョンを抽選候補から除外すること', () => {
+  // Given: 候補のバージョン名は未公開分を含むマスタで解決されている。
+  const candidates = [
+    createCandidate({ version: 'NEW' }),
+    createCandidate({ version: 'FUTURE' }),
+    createCandidate({ version: '不明', song: createSong({ id: 'unknown', release: null }) }),
+  ]
+
+  // When: 画面と同じく公開済み選択肢から全選択の判定条件を作る。
+  const filtered = filterRandomSongCandidates(candidates, {
+    difficulties: ['MASTER'],
+    genres: ['POPS & ANIME'],
+    versions: resolveReleasedVersionFilterSelection(null, ['NEW']),
+    nameFolders: null,
+    minConst: null,
+    maxConst: null,
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.version),
+    ['NEW', '不明']
+  )
 })

@@ -4,6 +4,7 @@ import type { FilterState } from '../../../../types/recordFilter'
 import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch'
 import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
+import { matchesRecordVersionFilter } from '../../../../utils/filterSelection'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
 import {
@@ -146,8 +147,8 @@ export function isRecordMatchedWithTitleMatcher(
     return false
   }
 
-  // バージョン
-  if (filters.versions.length > 0 && !filters.versions.includes(record.release_version)) {
+  // バージョン。全選択（null）と空配列は未指定で、バージョン不明も含める。
+  if (!matchesRecordVersionFilter(record.release_version, filters.versions)) {
     return false
   }
 

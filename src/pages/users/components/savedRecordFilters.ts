@@ -134,6 +134,15 @@ const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
 
 /**
+ * 文字列配列、または全選択を表す null かを判定する。
+ *
+ * @param value - 判定対象の値。
+ * @returns null、またはすべての要素が文字列の配列の場合は true。
+ */
+const isNullableStringArray = (value: unknown): value is string[] | null =>
+  value === null || isStringArray(value)
+
+/**
  * 数値範囲オブジェクトかを判定する。
  *
  * @param value - 判定対象の値。
@@ -226,7 +235,7 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     (value.favoriteSongsOnly === undefined || typeof value.favoriteSongsOnly === 'boolean') &&
     (value.excludeLockedSongs === undefined || typeof value.excludeLockedSongs === 'boolean') &&
     isStringArray(value.genres) &&
-    isStringArray(value.versions) &&
+    isNullableStringArray(value.versions) &&
     (value.nameFolders === undefined ||
       value.nameFolders === null ||
       isStringArray(value.nameFolders)) &&
@@ -268,7 +277,7 @@ export const isValidSavedWorldsendFilter = (value: unknown): value is WorldsendF
       true
     ) &&
     isStringArray(value.genres) &&
-    isStringArray(value.versions) &&
+    isNullableStringArray(value.versions) &&
     (value.nameFolders === undefined ||
       value.nameFolders === null ||
       isStringArray(value.nameFolders)) &&

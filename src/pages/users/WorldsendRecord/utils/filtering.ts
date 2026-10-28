@@ -1,7 +1,10 @@
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../../constants/chart'
 import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
-import { isNullableSelectionMatched } from '../../../../utils/filterSelection'
+import {
+  isNullableSelectionMatched,
+  matchesRecordVersionFilter,
+} from '../../../../utils/filterSelection'
 import {
   createSearchTextMatcher,
   type NormalizedSearchText,
@@ -70,8 +73,7 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
   if (filters.genres.length > 0 && !record.genre) return false
   if (record.genre && filters.genres.length > 0 && !filters.genres.includes(record.genre))
     return false
-  if (filters.versions.length > 0 && !filters.versions.includes(record.release_version))
-    return false
+  if (!matchesRecordVersionFilter(record.release_version, filters.versions)) return false
   if (!isNullableSelectionMatched(record.name_folder_code, filters.nameFolders)) return false
 
   const score = record.is_played ? record.score : 0
