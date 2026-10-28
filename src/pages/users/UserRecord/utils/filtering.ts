@@ -12,6 +12,7 @@ import {
   normalizeSearchText,
 } from '../../../../utils/searchHelpers'
 import { normalizeForSearch } from '../../../../utils/searchUtils'
+import { toRatingHundredths } from '../../../../utils/singleRating'
 import { isTheoreticalOverPowerTargetDifficulty } from '../../../../utils/theoreticalOverPowerTarget'
 import { hasJusticeCountFilter, hasOverPowerFilter, hasRatingFilter } from './filterDialog'
 
@@ -19,6 +20,20 @@ import { hasJusticeCountFilter, hasOverPowerFilter, hasRatingFilter } from './fi
 export const getDefaultFilter = buildDefaultFilter
 
 export type RecordTitleMatcher = (record: PlayerRecordWithSongMeta) => boolean
+
+/**
+ * 単曲レートがフィルター範囲へ0.01単位で収まるか判定する。
+ *
+ * @param rating - 判定する単曲レート。
+ * @param range - 単曲レートの下限と上限。nullの端は制限しない。
+ * @returns 下限以上かつ上限以下の場合は true。
+ */
+const isSingleRatingWithinFilter = (rating: number, range: FilterState['rating']): boolean => {
+  const ratingHundredths = toRatingHundredths(rating)
+  if (range.min !== null && ratingHundredths < toRatingHundredths(range.min)) return false
+  if (range.max !== null && ratingHundredths > toRatingHundredths(range.max)) return false
+  return true
+}
 
 /**
  * 通常レコード用の曲名・アーティスト・読み検索マッチャーを生成する。
@@ -154,9 +169,9 @@ export function isRecordMatchedWithTitleMatcher(
   if (score > filters.score.max) return false
 
   if (hasRatingFilter(filters)) {
-    if (record.is_const_unknown) return false
-    if (filters.rating.min !== null && record.rating < filters.rating.min) return false
-    if (filters.rating.max !== null && record.rating > filters.rating.max) return false
+    if (record.is_const_unknown || !isSingleRatingWithinFilter(record.rating, filters.rating)) {
+      return false
+    }
   }
 
   // JUSTICE数

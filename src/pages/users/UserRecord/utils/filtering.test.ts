@@ -290,6 +290,18 @@ test('isRecordMatched は譜面定数とスコアの範囲を判定できる', (
   )
 })
 
+test('単曲レートの上限比較は0.01単位で隣の段階を除外しない', () => {
+  // Given: 17.45から0.01を引くと17.439999999999998になり、直接比較では17.44を除外する
+  const filters: FilterState = {
+    ...getDefaultFilter(),
+    rating: { min: null, max: 17.45 - 0.01 },
+  }
+
+  // When & Then
+  assert.equal(isRecordMatched(createRecord({ rating: 17.44 }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ rating: 17.45 }), filters), false)
+})
+
 test('単曲レート範囲は境界を含み定数不明譜面を除外する', () => {
   // Given
   const filters: FilterState = {
