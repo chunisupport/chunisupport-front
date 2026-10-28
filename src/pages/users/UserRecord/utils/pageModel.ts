@@ -2,7 +2,10 @@ import type { Accessor } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
 import type { FilterState, RecordSortCondition } from '../../../../types/recordFilter'
-import { normalizeVersionFilterSelection } from '../../../../utils/filterSelection'
+import {
+  normalizeVersionFilterSelection,
+  resolveReleasedVersionFilterSelection,
+} from '../../../../utils/filterSelection'
 import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
@@ -67,7 +70,12 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     const records = recordsWithSongMeta()
     const currentFilters = {
       ...params.filters(),
-      versions: normalizeVersionFilterSelection(params.filters().versions, releasedVersionNames()),
+      versions: resolveReleasedVersionFilterSelection(
+        params.filters().versions?.length === 0
+          ? null
+          : normalizeVersionFilterSelection(params.filters().versions, releasedVersionNames()),
+        releasedVersionNames()
+      ),
     }
     const matchTitle = createRecordTitleMatcher(currentFilters.title, getSearchText)
     const favoriteSongIds = params.favoriteSongIds()

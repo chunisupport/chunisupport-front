@@ -45,6 +45,7 @@ import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWi
 import { formatChartConst } from '../../utils/chartConstFormat'
 import {
   normalizeVersionFilterSelection,
+  resolveReleasedVersionFilterSelection,
   toNullableAllDisplaySelection,
   toNullableAllFilterSelection,
 } from '../../utils/filterSelection'
@@ -785,7 +786,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
     const basicFilteredCandidates = filterRandomSongCandidates(allCandidates(), {
       difficulties: selectedDifficulties(),
       genres: selectedGenres(),
-      versions: normalizeVersionFilterSelection(selectedVersions(), versionOptions()),
+      versions: resolveReleasedVersionFilterSelection(
+        normalizeVersionFilterSelection(selectedVersions(), versionOptions()),
+        versionOptions()
+      ),
       nameFolders: selectedNameFolders(),
       minConst: parsedMinConst(),
       maxConst: parsedMaxConst(),

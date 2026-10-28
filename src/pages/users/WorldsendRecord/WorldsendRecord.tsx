@@ -20,7 +20,10 @@ import {
 } from '../../../repositories/viewSettingsRepository'
 import { useSongsData } from '../../../stores/songsData'
 import type { VersionSummaryDTO, WorldsendRecordDTO, WorldsendSongDTO } from '../../../types/api'
-import { normalizeVersionFilterSelection } from '../../../utils/filterSelection'
+import {
+  normalizeVersionFilterSelection,
+  resolveReleasedVersionFilterSelection,
+} from '../../../utils/filterSelection'
 import { createSearchTextCache } from '../../../utils/searchHelpers'
 import { getReleasedVersionShortNames } from '../../../utils/versionConverter'
 import FilterStats from '../components/FilterStats'
@@ -149,7 +152,12 @@ const WorldsendRecord = (props: Props) => {
   const filteredRecords = createMemo(() => {
     const currentFilters = {
       ...filters(),
-      versions: normalizeVersionFilterSelection(filters().versions, versionOptions()),
+      versions: resolveReleasedVersionFilterSelection(
+        filters().versions?.length === 0
+          ? null
+          : normalizeVersionFilterSelection(filters().versions, versionOptions()),
+        versionOptions()
+      ),
     }
     const matchTitle = createWorldsendRecordTitleMatcher(currentFilters.title, getSearchText)
     return recordsWithSongMeta().filter((record) =>

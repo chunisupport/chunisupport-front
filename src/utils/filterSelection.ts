@@ -115,3 +115,18 @@ export function matchesNullableVersionFilter(
 ): boolean {
   return selected === null || selected.includes(version)
 }
+
+/**
+ * バージョン選択を、公開済みバージョンと不明だけを含む全選択へ展開する。
+ * 全バージョンのマスタで解決した未公開のバージョン名は、全選択には含めない。
+ *
+ * @param selected - 選択中の短縮名。null は全選択。空配列はそのまま維持する。
+ * @param releasedVersions - 選択可能な公開済みバージョンの短縮名。
+ * @returns 全選択なら公開済み名と「不明」。一部選択と全解除は選択値の複製。
+ */
+export function resolveReleasedVersionFilterSelection(
+  selected: readonly string[] | null,
+  releasedVersions: readonly string[]
+): string[] {
+  return selected === null ? [...releasedVersions, '不明'] : [...selected]
+}

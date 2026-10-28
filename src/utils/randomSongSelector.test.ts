@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
+import { resolveReleasedVersionFilterSelection } from './filterSelection'
 import type { RandomSongCandidate, RandomSongLampFilter } from './randomSongSelector.ts'
 import {
   aggregateRandomSongCandidateWeights,
@@ -752,4 +753,29 @@ test('AJC判定はJ数0ではなく理論値スコアを基準にすること', 
   // Then: 理論値だけがAJCになり、J数0でも理論値未満ならAJになる。
   assert.equal(theoreticalLamp, 'AJC')
   assert.equal(belowTheoreticalLamp, 'AJ')
+})
+
+test('公開済みの全バージョン選択では未公開バージョンを抽選候補から除外すること', () => {
+  // Given: 候補のバージョン名は未公開分を含むマスタで解決されている。
+  const candidates = [
+    createCandidate({ version: 'NEW' }),
+    createCandidate({ version: 'FUTURE' }),
+    createCandidate({ version: '不明', song: createSong({ id: 'unknown', release: null }) }),
+  ]
+
+  // When: 画面と同じく公開済み選択肢から全選択の判定条件を作る。
+  const filtered = filterRandomSongCandidates(candidates, {
+    difficulties: ['MASTER'],
+    genres: ['POPS & ANIME'],
+    versions: resolveReleasedVersionFilterSelection(null, ['NEW']),
+    nameFolders: null,
+    minConst: null,
+    maxConst: null,
+  })
+
+  // Then
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.version),
+    ['NEW', '不明']
+  )
 })
