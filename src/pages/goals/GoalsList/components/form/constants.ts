@@ -30,3 +30,6 @@ export const RATING_GOAL_MIN_VALUE = 0.01
 
 /** 単曲レート目標で許可する小数点以下桁数 */
 export const RATING_GOAL_DECIMAL_PLACES = 2
+
+/** OVER POWER目標で許可する小数点以下桁数。APIの total 精度に合わせる */
+export const OVERPOWER_TARGET_DECIMAL_PLACES = 3

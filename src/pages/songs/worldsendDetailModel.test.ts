@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { buildWorldsendSongDetailPath } from '../../constants/routes.ts'
 import type { WorldsendSongDTO } from '../../types/api.ts'
 import {
   decodeWorldsendDisplayIdParam,
   getWorldsendDisplayIdSource,
+  isWorldsendSongDetailNotFound,
 } from './WorldsendSongDetail/worldsendRouteParams.ts'
 import {
   buildWorldsendOwnScoreItem,
@@ -168,4 +170,74 @@ test('ルートパラメータのdisplay idはAPIに渡す前にデコードす�
 
 test('空のdisplay idはリソース取得を開始しないためfalseに変換する', () => {
   assert.equal(getWorldsendDisplayIdSource(''), false)
+})
+
+/**
+ * `@solidjs/router` の `createLocation` と同じく、パスを `URL.pathname` の末尾セグメントにする。
+ * `useParams` はこのセグメントを `decodeURIComponent` せずに渡す。
+ *
+ * @param path - ルートマッチ前のパス。
+ * @returns `useParams` が受け取る表示ID。
+ */
+const readRouterDisplayIdParam = (path: string): string => {
+  const pathname = new URL(path, 'http://sr').pathname
+  return pathname.split('/').filter(Boolean).pop() ?? ''
+}
+
+test('不正なパーセントエンコードの表示IDは例外にせず取得しない', () => {
+  // Given: ルーターが pathname に残す不正なエンコード。
+  const invalidParams = ['%', '%ZZ', '%E3%81', '%E3', '%FF']
+
+  for (const displayIdParam of invalidParams) {
+    const routerParam = readRouterDisplayIdParam(`/songs/worldsend/${displayIdParam}`)
+
+    // When: 表示IDをデコードする。
+    const decoded = decodeWorldsendDisplayIdParam(routerParam)
+    const source = getWorldsendDisplayIdSource(routerParam)
+
+    // Then: 例外にせず、APIへ渡さない無効値になる。
+    assert.equal(routerParam, displayIdParam)
+    assert.equal(decoded, null)
+    assert.equal(source, false)
+    assert.equal(isWorldsendSongDetailNotFound(source, 'loaded'), true)
+  }
+})
+
+test('正常な表示IDはルーター経由でも1回のデコードで戻り、二重デコードしない', () => {
+  // Given: 画面遷移が encodeURIComponent したパス。useParams はそれを未デコードで渡す。
+  const displayIds = ['A/B C', 'plain-id', 'あ', '100%', 'A%2FB']
+
+  for (const displayId of displayIds) {
+    const routerParam = readRouterDisplayIdParam(buildWorldsendSongDetailPath(displayId))
+
+    // When: 表示IDを1回デコードする。
+    const source = getWorldsendDisplayIdSource(routerParam)
+
+    // Then: 元の表示IDに戻り、API取得を止めない。
+    assert.equal(source, displayId)
+    assert.equal(isWorldsendSongDetailNotFound(source, undefined), false)
+  }
+})
+
+test('パーセント列を含まない表示IDはデコードしても変わらない', () => {
+  // Given: すでにデコード済みで、パーセントエンコードを含まない表示ID。
+  const displayId = 'A/B C'
+
+  // When: もう一度デコードする。
+  const decoded = decodeWorldsendDisplayIdParam(displayId)
+
+  // Then: 同じ表示IDのままになる。
+  assert.equal(decoded, displayId)
+})
+
+test('無効な表示IDと404は Not Found に収束し、取得中や取得失敗は詳細表示を続ける', () => {
+  // Given / When / Then: 無効IDは過去の取得結果が残っていても Not Found。
+  assert.equal(isWorldsendSongDetailNotFound(false, undefined), true)
+  assert.equal(isWorldsendSongDetailNotFound(false, 'loaded'), true)
+
+  // 有効IDの404は Not Found。未取得と取得失敗は詳細側でローディングまたはエラーを出す。
+  assert.equal(isWorldsendSongDetailNotFound('song-id', 'notFound'), true)
+  assert.equal(isWorldsendSongDetailNotFound('song-id', undefined), false)
+  assert.equal(isWorldsendSongDetailNotFound('song-id', 'error'), false)
+  assert.equal(isWorldsendSongDetailNotFound('song-id', 'loaded'), false)
 })

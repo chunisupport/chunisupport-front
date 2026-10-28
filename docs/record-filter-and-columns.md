@@ -279,7 +279,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | --- | --- | --- | --- |
 | `title` | `string` | はい | 曲名、アーティスト名、読みの部分一致検索。正規化して比較します。空文字なら条件なしです。 |
 | `attributes` | `Array<string \| null>` | はい | WORLD'S END 属性の配列です。`null` は属性不明を表します。空配列にすると全件不一致になります。 |
-| `levelStarRange` | `{ min: number, max: number }` | はい | ★レベルの範囲です。`level_star` が `null` のレコードは一致しません。 |
+| `levelStarRange` | `{ min: number, max: number }` | はい | ★レベルの範囲です。`level_star` が `null` のレコードは、全範囲（★1〜★5）のときだけ一致します。下限または上限を絞った場合は一致しません。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
 | `versions` | `string[] \| null` | はい | 対象バージョンの短縮名です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。`null` は全選択（未指定）で、公開済みバージョンとバージョン不明の楽曲を含み、未公開バージョンの楽曲は除外します。画面上では `null` を全選択として表示し、全選択は `null` として保存します。空配列もバージョン条件なしです。一部選択時は選んだバージョンだけが対象で、バージョン不明は含みません。 |
 | `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
@@ -298,7 +298,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 1. `excludeNoPlay` が `true` のとき、未プレイではないこと。
 2. `title` が空でないとき、曲名、アーティスト名、読みのいずれかに一致すること。
 3. `attribute` が `attributes` に含まれること。
-4. `level_star` が `null` ではなく、`levelStarRange.min` 以上かつ `levelStarRange.max` 以下であること。
+4. `level_star` が設定されている場合は、`levelStarRange.min` 以上かつ `levelStarRange.max` 以下であること。`null` の場合は、範囲が全範囲（`min: 1`, `max: 5`）であること。下限または上限を絞った場合は一致しません。
 5. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
 6. `versions` が `null` でも空でもないとき、レコードのリリースバージョンが `versions` に含まれること。`null` と空配列では公開済みバージョンとバージョン不明の楽曲を残し、未公開バージョンの楽曲は除外します。
 7. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。

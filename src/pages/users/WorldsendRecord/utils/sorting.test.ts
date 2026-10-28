@@ -6,6 +6,7 @@ import { createInitialSortConditions } from '../../../../utils/sortConditions'
 import {
   DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
   normalizeWorldsendRecordSortConditions,
+  parseWorldsendSortParams,
   sortWorldsendRecords,
   sortWorldsendRecordsByConditions,
 } from './sorting'
@@ -32,6 +33,28 @@ const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRec
   combo_lamp: null,
   full_chain: null,
   ...overrides,
+})
+
+test("WORLD'S ENDの不正な sortcol はスコア降順に戻し、登録済み列は指定ソートを使う", () => {
+  // Given
+  const invalidSortCols = ['toString', 'constructor', '__proto__', 'not-a-column'] as const
+
+  for (const sortcol of invalidSortCols) {
+    // When: 継承プロパティ、または未登録の列名を指定する
+    const result = parseWorldsendSortParams({ sortcol, sortorder: 'asc' })
+
+    // Then
+    assert.deepEqual(result, {
+      initialSortKey: 'score',
+      initialSortOrder: 'desc',
+    })
+    assert.equal(typeof result.initialSortKey, 'string')
+  }
+
+  assert.deepEqual(parseWorldsendSortParams({ sortcol: 'updated_at', sortorder: 'asc' }), {
+    initialSortKey: 'updatedAt',
+    initialSortOrder: 'asc',
+  })
 })
 
 test("WORLD'S ENDの既定ソートはスコア降順、属性昇順、レベル降順、曲名昇順にする", () => {

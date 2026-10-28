@@ -165,6 +165,7 @@ const findTheoreticalChartRecord = (
 
 /**
  * 対象楽曲の全譜面から規定枠数分のレーティング理論値を算出する。
+ * 平均はAPIの枠平均と同じく、0.01単位の合計を整数のまま小数第4位で切り捨てる。
  *
  * @param songs - 理論値計算の対象楽曲一覧。
  * @param slotCount - 採用するレーティング枠数。
@@ -195,7 +196,7 @@ const calculateTheoreticalRating = (
     (total, chart) => total + chart.ratingHundredths,
     0
   )
-  const theoreticalRatingUnits = Math.round(
+  const theoreticalRatingUnits = Math.floor(
     (totalRatingHundredths * PLAYER_RATING_SCALE) / RATING_SCALE / theoreticalRatings.length
   )
 
@@ -234,9 +235,10 @@ export const calculateBestTheoreticalRating = (
 }
 
 /**
- * 全新曲の譜面から新曲枠レーティング理論値を算出する。
+ * 現行バージョン開始日から基準日までに配信された楽曲と、配信日未登録の楽曲から新曲枠レーティング理論値を算出する。
+ * 配信日未登録の楽曲はベスト枠には含めず、APIの新曲判定と同じく新曲枠の対象とする。
  *
- * @param songs - リリース日と譜面定数を含む通常楽曲一覧。
+ * @param songs - リリース日と譜面定数を含む通常楽曲一覧。配信日未登録の楽曲も含む。
  * @param versions - 新曲枠対象の開始日を解決するバージョン一覧。
  * @param referenceDate - 現行バージョンと配信済み楽曲を判定する基準日。
  * @param slotCount - 新曲枠の規定枠数。
@@ -252,12 +254,12 @@ export const calculateNewSongTheoreticalRating = (
   if (currentVersionReleaseDate === undefined) return undefined
 
   return calculateTheoreticalRating(
-    songs.filter(
-      (song) =>
-        song.release !== null &&
-        song.release.slice(0, 10) >= currentVersionReleaseDate &&
-        song.release.slice(0, 10) <= referenceDate
-    ),
+    songs.filter((song) => {
+      if (song.release === null) return true
+
+      const releaseDate = song.release.slice(0, 10)
+      return releaseDate >= currentVersionReleaseDate && releaseDate <= referenceDate
+    }),
     slotCount
   )
 }

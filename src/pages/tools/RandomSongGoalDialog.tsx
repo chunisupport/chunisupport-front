@@ -13,6 +13,8 @@ type RandomSongGoalDialogProps = {
   goals: GoalDTO[]
   selectedGoalId: number | null
   loading: boolean
+  /** 目標選択ボタンを無効化するか */
+  disabled?: boolean
   error?: string
   onApply: (id: number | null) => void
 }
@@ -57,6 +59,7 @@ export const RandomSongGoalDialog = (props: RandomSongGoalDialogProps): JSX.Elem
           class: 'min-h-10 rounded-md',
         })}
         aria-pressed={props.selectedGoalId !== null}
+        disabled={props.disabled}
       >
         <Target size={16} aria-hidden="true" />
         {RANDOM_SONG_SELECTOR_COPY.goalFilterLabel}
