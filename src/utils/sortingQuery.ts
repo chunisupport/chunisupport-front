@@ -8,10 +8,11 @@ const readFirstParam = (value: string | string[] | undefined): string =>
 
 /**
  * URLクエリからソート列とソート方向を読み取り、画面で使うソート状態へ変換する。
+ * 列名は対応表の自前プロパティだけを受理し、`toString` などの継承プロパティは無効として扱う。
  *
  * @param searchParams - 読み取り対象の検索パラメータ。
  * @param sortColMap - クエリ上の列名から画面内ソートキーへ変換する対応表。
- * @param fallback - クエリが不正な場合に返す既定のソート状態。
+ * @param fallback - クエリが不正、または列名が対応表の自前プロパティでない場合に返す既定のソート状態。
  * @returns 検証済みのソートキーとソート方向。
  */
 export const parseSortQuery = <TSortKey extends string>(
@@ -20,7 +21,10 @@ export const parseSortQuery = <TSortKey extends string>(
   fallback: { sortKey: TSortKey; sortDirection: SortDirection }
 ): { sortKey: TSortKey; sortDirection: SortDirection } => {
   const sortcolParam = readFirstParam(searchParams.sortcol)
-  const parsedSortKey = sortColMap[sortcolParam] ?? null
+  // ブラケットアクセスは Object.prototype の toString / constructor / __proto__ も拾う。
+  const parsedSortKey = Object.hasOwn(sortColMap, sortcolParam)
+    ? (sortColMap[sortcolParam] ?? null)
+    : null
   const sortorderParam = readFirstParam(searchParams.sortorder)
   const parsedSortOrder =
     sortorderParam === 'asc' || sortorderParam === 'desc' ? sortorderParam : null

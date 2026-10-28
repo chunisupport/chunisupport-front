@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "lib": ["DOM", "ES2021"],
+    /* Object.hasOwn のため。ビルド対象ブラウザは ES2022 の Object を備えている */
+    "lib": ["DOM", "ES2021", "ES2022.Object"],
     "jsx": "preserve",
     "target": "ES2020",
     "noEmit": true,
