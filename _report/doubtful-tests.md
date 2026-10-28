@@ -1,22 +1,13 @@
 # 仕様確認が必要なテスト
 
-再検証日: 2026-10-03
-調査対象: `develop`
+再検証日: 2026-10-28
+調査対象: `origin/develop`（`7b27bec5788c4204715ec4be772e98917cdf0e4b`）
 
 この文書は、現在の実装・テストを固定しているものの、期待値を仕様として確定してよいか判断が必要な項目だけを記録する。
 
-## 優先度: 高
+## 継続して仕様確認が必要な項目
 
-### 1. 検索語末尾の全角英字を無条件に1文字削除
-
-- `removeTrailingFullwidthAlphabet`は、検索語の末尾が全角英字なら常に1文字削除する。
-- `src/utils/searchUtils.test.ts`も、この動作を明示的に固定している。
-- 確定済みの検索語や、曲名・アーティスト名に全角英字を含む検索でも末尾1文字が失われる。
-- 確認事項:
-  - IME変換途中だけをUIイベントで判定して補正するか。
-  - 確定済み文字列にも現在の補正を適用する仕様とするか。
-
-## 優先度: 中
+前回の番号を維持する。8件ともテストの成功だけでは仕様の妥当性を確定できない項目であり、不具合確定という意味ではない。
 
 ### 2. 四分位数の算出方法
 
@@ -67,16 +58,7 @@
   - レコード更新日の表示・フィルター基準を日本時間、UTC、文字列上の日付のどれにするか。
   - 表示・フィルター・ソートで日付妥当性の判定を統一するか。
 
-### 7. コースレコードのEXクラスをエンブレム表示しない
-
-- `resolveCourseClassEmblemName`は`1`〜`5`と`inf`だけをエンブレム名へ変換し、`extra`は`null`としてバッジ表示へフォールバックする。
-- `src/utils/courseClassDisplay.test.ts`も「EXと未対応値のコースクラスはエンブレム対象外になること」として`extra`→`null`を固定している。
-- 一方、EXクラス専用のエンブレムSVG（`emblem_extra.svg` / `base_extra.svg`）が追加され、`ClassEmblem`にも`extra`が登録されているが、現在`extra`を渡す呼び出し元はない。
-- 確認事項:
-  - コースレコードのEXクラスも専用エンブレムで表示するか。
-  - EXだけバッジ表示を維持する場合、未使用のEX用エンブレムを残す理由を明確にするか。
-
-## 優先度: 低
+今回追加確認したスコア履歴（`src/utils/scoreHistory.ts:10`、`src/utils/scoreHistory.test.ts:44`）にも不一致がある。履歴表示は `Intl.DateTimeFormat` にタイムゾーンを渡さず実行環境の日時を使うが、バージョン境界はJSTで生成する。同じ `2026-06-22T00:30:00+09:00` の表示を別プロセスで確認すると、`TZ=UTC` と `America/Los_Angeles` は `26/06/21`、`Asia/Tokyo` は `26/06/22` になる。追加されたテストの正午のデータはUTC/JSTのどちらでも同日になるため、この差を検出しない。表示日とバージョン境界の基準を決めたうえで、日付境界のテストが必要。
 
 ### 8. スコアランクフィルターでAAA未満をAAAへまとめる
 
@@ -95,15 +77,6 @@
   - ALLから除外するか。
   - 現状を仕様とする場合、合計が一致しないことをUI上で許容するか。
 
-### 10. 固定件数目標が対象数を超えた場合
-
-- `src/pages/goals/utils/goalRainbow.test.ts`は、保存済みの固定件数が現在の対象楽曲数を超えても固定値を維持する期待を持つ。
-- たとえば対象が1曲まで減っても固定目標3曲が残り、達成不能な目標になる。
-- 確認事項:
-  - 保存済みの固定目標を履歴として維持するか。
-  - 現在の対象数へ上限補正するか。
-  - 達成不能状態をUIで明示するか。
-
 ### 11. 降順ソート時のマスタ外ジャンル
 
 - `compareMasterItemNames`はマスタ順序にない名称を既知の項目より後へ配置し、`src/utils/masterData.test.ts`もその規則を固定している。
@@ -112,11 +85,42 @@
   - マスタ外ジャンルは昇順・降順とも末尾へ固定するか。
   - 降順ではマスタ項目と一緒に順序を反転させるか。
 
-### 12. OVER POWER達成率の表示桁数
+## 新たに見つかったテスト前提の疑義
 
-- 共通の`formatOverPowerPercent`は、桁数を省略した場合に小数点以下5桁で表示する。
-- 目標カードは`OVER_POWER_PERCENT_DECIMAL_PLACES = 3`をローカルに定義し、小数点以下3桁を明示的に指定している。
-- 現在の差はコード上で明示された画面固有の指定になっている。
-- 確認事項:
-  - 目標カードだけ3桁とする仕様を維持するか。
-  - 共通表示と同じ5桁へ統一するか。
+### 13. APIが返せない譜面定数15.05を正常系として扱う
+
+- 根拠: `src/utils/newSongTheoreticalRating.test.ts:222` は「APIから小数第2位を含む譜面定数15.05が返る」として理論値17.25と候補スコア差-1を期待する。
+- APIの `internal/domain/vo/chartconstant/chartconstant.go:20` は0.1刻み以外を拒否する。通常の有効データからこの前提は作れない。
+- フロントの計算処理自体の数学的一貫性を調べるテストとしては意味があるが、APIとの整合性や実運用の回帰を保証する例としては不適切。実際の正常値15.0/15.1の境界と区別する必要がある。
+- 確認事項: 任意精度入力を許容する計算関数のテストとして意図を明記するか、API契約に沿う入力で表示・候補計算の整合性を検証するか。これだけで実運用のバグとは判定しない。
+
+## 前回から外した項目
+
+| 前回番号 | 現在の確認結果 |
+| --- | --- |
+| 1. 全角英字の削除 | 解消。`src/utils/searchUtils.ts:55` は変換中だけ補正し、確定後は末尾を残す。`src/hooks/createComposingSearchInput.test.ts` と検索・レコード絞り込みのテストにも確定済み全角英字の回帰検証がある。 |
+| 7. EXクラスのエンブレム | 仕様意図を確認。`src/utils/courseClassDisplay.ts:76` に「EXは独自デザインのためバッジ表示のまま」と明記されている。素材が存在することだけでは期待値の誤りの根拠にならないため、要確認項目から外した。 |
+| 10. 固定件数目標 | APIの正式仕様 `chunisupport-api/docs/API.md:2505` に、対象数が減っても固定件数を維持する旨がある。`goalRainbow.test.ts:171` は仕様に沿うため、疑義から外した。 |
+| 12. OP達成率の桁数 | 画面固有の明示的指定であり、差があるだけでは疑義としない。目標カードは3桁、共通フォーマッターは5桁。目標入力も3桁制約をテストしている。 |
+
+## 再検証の根拠と範囲
+
+- 前回資料更新コミット `dbfda65d` 以降、変更された単体テストファイルは79件。変更一覧と追加テスト名を走査し、検索、フィルター、ソート、日付、目標進捗、OP集計、理論値、統計、苦手譜面分析、キャッシュ、認証の追加・変更を重点的に読んだ。全実装の網羅監査やブラウザでの全画面検証を意味しない。
+- 仕様の根拠は `docs/` と現行コードを使った。この資料自体は仕様確定の根拠ではない。
+- 継続項目の参照先:
+  - 2: `src/pages/users/utils/recordStats.ts:165`、`src/pages/users/UserRecord/utils/recordStats.test.ts:53`、`src/utils/weakChartInspector.ts:134`。
+  - 3: `src/utils/sortConditions.ts:44`、`src/utils/sortConditions.test.ts`。
+  - 4: `src/pages/users/utils/justiceCountSorting.ts:25`、`src/pages/users/WorldsendRecord/utils/sorting.test.ts`。
+  - 5: `src/utils/borderCalculator.ts:128`、`src/utils/borderCalculator.test.ts:15`、`src/pages/tools/BorderCalculatorPage.tsx:27`。
+  - 6: `src/utils/dateFilter.ts:11`、`src/utils/dateFilter.test.ts`、`src/utils/recordUpdatedAt.ts:11`。履歴については本文の追加確認を参照。
+  - 8: `src/pages/users/utils/scoreRank.ts:44`、`src/pages/users/utils/scoreRank.test.ts:41`。AAA未満の全入力域を直接テストしているわけではない。
+  - 9: `src/usecases/overpower/overpowerSummary.test.ts:156`、同ディレクトリ `overpowerSummary.ts`。
+  - 11: `src/utils/masterData.test.ts`、`src/pages/songs/SongsList/utils/sorting.ts:99`、`src/pages/songs/WorldsendSongsList/utils/sorting.ts:116`。マスタ外項目を含む降順は一覧ソートの既存テストで直接保証されていない。
+- バージョン空配列はhelper単体だと全件一致するが、通常/WORLD'S END画面は `pageModel.ts:74` / `WorldsendRecord.tsx:156` で空配列も公開済み条件へ展開する。単体helperだけを根拠に未公開曲が画面へ漏れるとは指摘しない。
+
+## 実行検証
+
+- `pnpm test:unit` はpnpmが依存ディレクトリ再構築の非対話確認で失敗し、ランナー起動前に終了した。
+- 同スクリプトの実体である `node --import ./scripts/register-ts-extension-loader.mjs --disable-warning=ExperimentalWarning --test 'src/**/*.test.ts'` を実行し、**1,643件成功、失敗0、skip 0**（約44秒）。テスト成功は、本文に挙げた期待値の仕様妥当性を保証しない。
+- スコア履歴のTZ差はUTC/JST/Los Angelesの別プロセスで再現確認した。
+- 今回は調査Markdownのみを変更し、実装・テスト・正式仕様は変更していない。型検査・本番ビルド・実ブラウザ・外部API/IndexedDBの実環境連携は未実行。
