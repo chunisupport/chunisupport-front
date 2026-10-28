@@ -1,3 +1,4 @@
+import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../../constants/chart'
 import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
 import { isDateInRange } from '../../../../utils/dateFilter'
 import { isNullableSelectionMatched } from '../../../../utils/filterSelection'
@@ -32,7 +33,20 @@ export function createWorldsendRecordTitleMatcher(
 }
 
 /**
+ * ★レベル範囲が既定の全範囲（★1〜★5）かどうかを判定する。
+ *
+ * @param range - 判定対象の★レベル範囲。
+ * @returns 下限と上限が既定の全範囲と一致する場合は true。
+ */
+function isDefaultWorldsendLevelStarRange(range: WorldsendFilterState['levelStarRange']): boolean {
+  return range.min === WORLDSEND_LEVEL_STAR_MIN && range.max === WORLDSEND_LEVEL_STAR_MAX
+}
+
+/**
  * WORLD'S END レコードがフィルター条件に一致するか判定する。
+ *
+ * ★レベルが未登録（null）の譜面は、★レベル範囲が既定の全範囲のときだけ一致する。
+ * 範囲を絞ったときの未登録譜面の扱いは未決のため、その場合は除外する。
  *
  * @param record - 判定対象の WORLD'S END レコード。
  * @param filters - 適用する WORLD'S END フィルター。
@@ -47,9 +61,12 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
   if (filters.excludeNoPlay && !record.is_played) return false
   if (!matchTitle(record)) return false
   if (!filters.attributes.includes(record.attribute)) return false
-  if (record.level_star === null) return false
-  if (record.level_star < filters.levelStarRange.min) return false
-  if (record.level_star > filters.levelStarRange.max) return false
+  const levelStar = record.level_star
+  if (levelStar === null) {
+    if (!isDefaultWorldsendLevelStarRange(filters.levelStarRange)) return false
+  } else if (levelStar < filters.levelStarRange.min || levelStar > filters.levelStarRange.max) {
+    return false
+  }
   if (filters.genres.length > 0 && !record.genre) return false
   if (record.genre && filters.genres.length > 0 && !filters.genres.includes(record.genre))
     return false

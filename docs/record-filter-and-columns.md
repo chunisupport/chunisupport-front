@@ -279,7 +279,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | --- | --- | --- | --- |
 | `title` | `string` | はい | 曲名、アーティスト名、読みの部分一致検索。正規化して比較します。空文字なら条件なしです。 |
 | `attributes` | `Array<string \| null>` | はい | WORLD'S END 属性の配列です。`null` は属性不明を表します。空配列にすると全件不一致になります。 |
-| `levelStarRange` | `{ min: number, max: number }` | はい | ★レベルの範囲です。`level_star` が `null` のレコードは一致しません。 |
+| `levelStarRange` | `{ min: number, max: number }` | はい | ★レベルの範囲です。`level_star` が `null` のレコードは、全範囲（★1〜★5）のときだけ一致します。下限または上限を絞った場合は一致しません。 |
 | `genres` | `string[]` | はい | 対象ジャンル名の配列です。空配列なら全ジャンル対象です。 |
 | `versions` | `string[]` | はい | 対象バージョン名の配列です。値はバージョン API (`/internal/master/versions`) の `versions[].name` を `getShortVersionName` で短縮した名前を使います。空配列なら全バージョン対象です。 |
 | `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
@@ -298,7 +298,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 1. `excludeNoPlay` が `true` のとき、未プレイではないこと。
 2. `title` が空でないとき、曲名、アーティスト名、読みのいずれかに一致すること。
 3. `attribute` が `attributes` に含まれること。
-4. `level_star` が `null` ではなく、`levelStarRange.min` 以上かつ `levelStarRange.max` 以下であること。
+4. `level_star` が設定されている場合は、`levelStarRange.min` 以上かつ `levelStarRange.max` 以下であること。`null` の場合は、範囲が全範囲（`min: 1`, `max: 5`）であること。下限または上限を絞った場合は一致しません。
 5. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
 6. `versions` が空でないとき、レコードのリリースバージョンが `versions` に含まれること。
 7. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
