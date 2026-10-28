@@ -104,7 +104,8 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   invalidCountMessage: '曲数は1以上で入力してください。',
   invalidConstRangeMessage: '定数の範囲を確認してください。',
   invalidScoreRangeMessage: 'スコアの範囲を確認してください。',
-  invalidWeightMessage: '出やすさは0以上の数値で入力してください。',
+  invalidWeightMessage:
+    '出やすさは0以上の数値で入力してください。倍率の積や重み合計が大きすぎる場合は、倍率を小さくしてください。',
 } as const
 
 /**

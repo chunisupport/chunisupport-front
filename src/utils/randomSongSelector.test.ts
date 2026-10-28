@@ -464,6 +464,69 @@ test('定数別の倍率は難易度倍率と掛け合わせて抽選対象を�
   )
 })
 
+test('重みの合計がオーバーフローする倍率設定は抽選前に拒否すること', () => {
+  // Given: 個別には有限だが合計がInfinityになる候補がある。
+  const candidates = [createCandidate({}), createCandidate({})]
+  let randomCalled = false
+
+  // When / Then: 抽選を実行せず、明示的なエラーにする。
+  assert.throws(
+    () =>
+      drawRandomSongs(candidates, 1, { difficultyWeights: { MASTER: 1e308 } }, () => {
+        randomCalled = true
+        return 0.25
+      }),
+    RangeError
+  )
+  assert.equal(randomCalled, false)
+})
+
+test('難易度倍率と定数倍率の積がオーバーフローする設定は拒否すること', () => {
+  // Given: 倍率の積がInfinityになる候補がある。
+  const candidates = [createCandidate({})]
+
+  // When / Then: 末尾の候補を返さず、明示的なエラーにする。
+  assert.throws(
+    () =>
+      drawRandomSongs(
+        candidates,
+        1,
+        { difficultyWeights: { MASTER: 1e308 }, constWeights: { '13.7': 2 } },
+        () => 0.25
+      ),
+    RangeError
+  )
+})
+
+test('通常の倍率の確率分布と0重み除外を維持すること', () => {
+  // Given: 重み0、0.5、1、2の候補がある。
+  const candidates = ['BASIC', 'EXPERT', 'MASTER', 'ULTIMA'].map((difficulty) =>
+    createCandidate({ difficulty: difficulty as RandomSongCandidate['difficulty'] })
+  )
+  const weight = { difficultyWeights: { BASIC: 0, EXPERT: 0.5, MASTER: 1, ULTIMA: 2 } }
+
+  // When: 各確率区間の内側の乱数で抽選する。
+  const selected = [0, 0.1, 0.2, 0.4, 0.5, 0.9].map(
+    (random) => drawRandomSongs(candidates, 1, weight, () => random)[0].difficulty
+  )
+
+  // Then: 1:2:4の区間に従い、0重みは選ばれない。
+  assert.deepEqual(selected, ['EXPERT', 'EXPERT', 'MASTER', 'MASTER', 'ULTIMA', 'ULTIMA'])
+})
+
+test('大きな倍率でも重み合計が有限なら抽選できること', () => {
+  // Given: 倍率は大きいが、合計は数値の上限内に収まる。
+  const candidates = [createCandidate({}), createCandidate({})]
+
+  // When: 同じ重みの前半・後半の区間で抽選する。
+  const first = drawRandomSongs(candidates, 1, { difficultyWeights: { MASTER: 1e307 } }, () => 0.25)
+  const last = drawRandomSongs(candidates, 1, { difficultyWeights: { MASTER: 1e307 } }, () => 0.75)
+
+  // Then: 大きな倍率を一律に拒否せず、両候補を選択できる。
+  assert.equal(first[0], candidates[0])
+  assert.equal(last[0], candidates[1])
+})
+
 test('レベル内の全譜面定数を含む場合だけレベル別重み設定の対象にすること', () => {
   // Given: 13と13+にそれぞれ複数の譜面定数がある。
   const allCandidates = [
