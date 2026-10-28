@@ -22,7 +22,7 @@ import {
 } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createEffect, createSignal, For, onMount } from 'solid-js'
-import { isHomePath } from './navItemMatching'
+import { isNavItemActive } from './navItemMatching'
 
 type NavBarProps = {
   children: JSX.Element
@@ -248,32 +248,14 @@ const NavBar = (props: NavBarProps) => {
     }
   })
 
-  const isActive = (item: NavItem) => {
-    const pathname = location.pathname
-
-    // ユーザーページ系のパス（/users/:username...）の場合は、
-    // 表示中のユーザー名が現在の認証ユーザーと一致する場合のみアクティブとする
-    const authUser = authSession.user
-    const userMatch = pathname.match(/^\/users\/([^/]+)/)
-    if (userMatch && authUser) {
-      const viewedUsername = decodeURIComponent(userMatch[1])
-      if (viewedUsername !== authUser.username) {
-        return false
-      }
-    }
-
-    if (item.id === 'home') {
-      return isHomePath(pathname)
-    }
-
-    if (item.matchPattern) {
-      return item.matchPattern.test(pathname)
-    }
-    if (item.matchPrefix) {
-      return pathname.startsWith(item.path)
-    }
-    return pathname === item.path
-  }
+  /**
+   * ナビゲーション項目が現在のパスでアクティブかを判定する。
+   *
+   * @param item - 判定対象の項目。
+   * @returns アクティブ表示するなら true。
+   */
+  const isActive = (item: NavItem): boolean =>
+    isNavItemActive(item, location.pathname, authSession.user?.username)
 
   /**
    * その他メニューの項目選択を処理する。
