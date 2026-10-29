@@ -4,8 +4,12 @@ const TURNSTILE_SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api
 
 type TurnstileWidgetId = string
 
+/** APIがフォームごとに照合するTurnstileのaction。 */
+type TurnstileAction = 'login' | 'signup'
+
 type TurnstileRenderOptions = {
   sitekey: string
+  action: TurnstileAction
   theme: 'auto'
   callback: (token: string) => void
   'expired-callback': () => void
@@ -28,6 +32,8 @@ declare global {
 
 type TurnstileProps = {
   siteKey: string
+  /** ウィジェット生成時に固定する、APIの期待値と一致するaction。 */
+  action: TurnstileAction
   resetKey: number
   class?: string
   onVerify: (token: string) => void
@@ -86,7 +92,7 @@ const loadTurnstileScript = (): Promise<TurnstileGlobal> => {
 /**
  * Cloudflare Turnstile ウィジェットをSolidコンポーネント内で描画する。
  *
- * @param props Site Key、リセットキー、検証結果コールバックを含むプロパティ。
+ * @param props Site Key、action、リセットキー、検証結果コールバックを含むプロパティ。
  * @returns Turnstileの描画先となるコンテナ要素。
  */
 export const Turnstile: Component<TurnstileProps> = (props) => {
@@ -103,6 +109,7 @@ export const Turnstile: Component<TurnstileProps> = (props) => {
 
         const renderedWidgetId = turnstile.render(containerRef, {
           sitekey: props.siteKey,
+          action: props.action,
           theme: 'auto',
           callback: props.onVerify,
           'expired-callback': props.onExpire,
