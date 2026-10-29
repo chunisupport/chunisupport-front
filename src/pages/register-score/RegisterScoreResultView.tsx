@@ -1001,7 +1001,7 @@ const RegisterScoreChangeRow = (props: {
           </Show>
           <h3 class="min-w-0 flex-1">
             <Button
-              class={`flex w-fit min-w-0 max-w-full items-center gap-1 border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
+              class={`flex w-fit min-w-0 max-w-full items-center gap-1 border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 image-capture:block image-capture:w-full image-capture:truncate ${
                 isCopyHighlighted()
                   ? 'text-action-primary transition-none'
                   : 'text-text transition-colors duration-700 motion-reduce:transition-none'
@@ -1010,7 +1010,9 @@ const RegisterScoreChangeRow = (props: {
               title={props.songTitle}
               onClick={handleCopySongTitle}
             >
-              <span class="min-w-0 truncate">{props.songTitle}</span>
+              <span class="min-w-0 truncate image-capture:inline image-capture:overflow-visible image-capture:text-clip">
+                {props.songTitle}
+              </span>
               <Copy
                 class="h-3.5 w-3.5 shrink-0"
                 aria-hidden="true"

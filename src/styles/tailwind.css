@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant image-capture (&:where([data-image-capture], [data-image-capture] *));
+
 @theme {
   /* アクセントカラー: data-accentで選択した色相を操作強調色へ接続する */
   --color-primary-50: var(--cs-color-accent-50);

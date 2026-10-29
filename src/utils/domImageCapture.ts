@@ -183,7 +183,7 @@ const inlineElementImages = async (
 }
 
 /**
- * 表示用transformと画像除外要素を取り除いた固定幅のDOMを作る。
+ * 表示用transformと画像除外要素を取り除き、画像専用スタイルを適用する固定幅のDOMを作る。
  *
  * @param sourceElement - 画面に表示中の画像化対象。
  * @returns 接続済みの複製要素と一時DOMの破棄処理。
@@ -194,6 +194,7 @@ export const createImageCaptureClone = (
   const sourceWidth = sourceElement.offsetWidth
   const captureHost = document.createElement('div')
   const sourceClone = sourceElement.cloneNode(true) as HTMLElement
+  sourceClone.dataset.imageCapture = 'true'
 
   sourceClone.querySelectorAll(IMAGE_CAPTURE_EXCLUDED_SELECTOR).forEach((element) => {
     element.remove()
