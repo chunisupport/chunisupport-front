@@ -254,10 +254,12 @@ const parseRandomSongWeightForPercent = (value: string, enabled = true): number 
  *
  * @param weightMass - 対象項目に含まれる候補の重み総量。
  * @param total - 同じ設定グループ内の重み総量。
- * @returns 表示用のグループ内出現割合。
+ * @returns 表示用のグループ内出現割合。重みがオーバーフローする場合は無効値の表示。
  */
 const formatRandomSongWeightPercent = (weightMass: number | null, total: number): string => {
-  if (weightMass === null) return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+  if (weightMass === null || !Number.isFinite(weightMass) || !Number.isFinite(total)) {
+    return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+  }
   if (total <= 0 || weightMass <= 0) return EMPTY_WEIGHT_PERCENT_LABEL
 
   return `${WEIGHT_PERCENT_FORMATTER.format((weightMass / total) * 100)}%`
@@ -885,17 +887,20 @@ const RandomSongSelectorPage = (): JSX.Element => {
   /**
    * 候補全体を一度だけ走査し、出現割合表示用の重みを分類別に集計する。
    *
-   * @returns 全体・難易度別・レベル別・譜面定数別の候補重み。
+   * @returns 抽選で有効な倍率を使った全体・難易度別・レベル別・譜面定数別の候補重み。
    */
   const candidateWeightSummary = createMemo(() => {
     const currentDifficultyWeights = difficultyWeights()
+    const currentDifficultyWeightOptions = selectedDifficultyWeightOptions()
     const currentConstWeights = constWeights()
     const currentConstWeightEnabled = constWeightEnabled()
 
     return aggregateRandomSongCandidateWeights(standardFilteredCandidates(), (candidate) => {
       const chartConst = formatChartConst(candidate.chartConst)
       const difficultyWeight = parseRandomSongWeightForPercent(
-        currentDifficultyWeights[candidate.difficulty]
+        currentDifficultyWeightOptions.includes(candidate.difficulty)
+          ? currentDifficultyWeights[candidate.difficulty]
+          : RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight
       )
       const constWeight = parseRandomSongWeightForPercent(
         currentConstWeights[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
@@ -929,7 +934,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const hasInvalidWeights = createMemo(
     () =>
       hasInvalidRandomSongWeightValue(selectedDifficultyWeights()) ||
-      hasInvalidRandomSongWeightValue(selectedConstWeights())
+      hasInvalidRandomSongWeightValue(selectedConstWeights()) ||
+      !Number.isFinite(candidateWeightSummary().total)
   )
   const validationMessage = createMemo(() => {
     if (parsedCount() === null) return RANDOM_SONG_SELECTOR_COPY.invalidCountMessage

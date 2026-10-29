@@ -543,6 +543,7 @@ export const resolveRandomSongWeight = (
  * @param weight - 難易度別、定数別の倍率設定。
  * @param random - 0以上1未満の乱数を返す関数。
  * @returns ランダムに選ばれた候補一覧。
+ * @throws RangeError - 倍率の積または重み合計がオーバーフローする場合。
  */
 export const drawRandomSongs = (
   candidates: readonly RandomSongCandidate[],
@@ -561,6 +562,9 @@ export const drawRandomSongs = (
 
   for (let drawIndex = 0; drawIndex < drawCount; drawIndex += 1) {
     const totalWeight = pool.reduce((sum, entry) => sum + entry.weight, 0)
+    if (!Number.isFinite(totalWeight)) {
+      throw new RangeError('Random song weight total must be finite')
+    }
     let threshold = random() * totalWeight
     let selectedIndex = pool.length - 1
 
