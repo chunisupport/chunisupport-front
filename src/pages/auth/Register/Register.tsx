@@ -311,6 +311,7 @@ const Register = () => {
                 <form onSubmit={handleRegister}>
                   <Turnstile
                     siteKey={CF_TURNSTILE_SITE_KEY}
+                    action="signup"
                     resetKey={turnstileResetKey()}
                     class="mb-4 flex justify-center"
                     onVerify={setTurnstileToken}
