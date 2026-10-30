@@ -134,12 +134,32 @@ const UserPage: Component = () => {
     }
   })
 
-  const [pageState] = createResource(() => params.username, fetchUserPageLoadState)
+  const [pageState, { mutate: mutatePageState }] = createResource(
+    () => params.username,
+    fetchUserPageLoadState
+  )
   const [recordProfile] = createResource(() => params.username, fetchUserRecordLoadState)
   const [courseRecordProfile] = createResource(
     () => (courseRecordProfileUsername() === params.username ? params.username : undefined),
     fetchUserCourseRecordLoadState
   )
+
+  /**
+   * 未解禁曲設定の保存後にプロフィールを再取得し、カードのOP・OP%を更新する。
+   *
+   * @param username - 設定を保存したユーザー名。
+   * @returns プロフィール更新の完了を表すPromise。
+   */
+  const handleLockedSongsSaved = async (username: string): Promise<void> => {
+    const profile = await fetchUserProfileSummary(username)
+    mutatePageState((state) =>
+      state?.type === 'loaded' &&
+      state.profile.username === username &&
+      params.username === username
+        ? { ...state, profile }
+        : state
+    )
+  }
 
   const linkedRatingProfile = createMemo<UserPageRatingProfile | undefined>(() => {
     const state = pageState()
@@ -239,6 +259,7 @@ const UserPage: Component = () => {
                     selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
                     selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}
                     username={params.username}
+                    onLockedSongsSaved={handleLockedSongsSaved}
                   />
                 )}
               </Show>

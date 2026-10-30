@@ -50,6 +50,8 @@ type Props = {
   selectedOverPowerSubPage: OverPowerSubPage
   selectedPage: ProfilePageQuery
   username: string
+  /** 未解禁曲設定を保存したユーザーのプロフィールを更新する */
+  onLockedSongsSaved: (username: string) => Promise<void>
 }
 
 const BEST_CANDIDATE_HEADING = 'ベスト枠候補'
@@ -486,6 +488,7 @@ export const UserProfileView: Component<Props> = (props) => {
                   player={playerInfo()}
                   selectedSubPage={props.selectedOverPowerSubPage}
                   username={props.username}
+                  onLockedSongsSaved={props.onLockedSongsSaved}
                 />
               )}
             </Show>

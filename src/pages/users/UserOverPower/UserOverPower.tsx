@@ -76,6 +76,8 @@ type Props = {
   player: PlayerDTO
   selectedSubPage: OverPowerSubPage
   username: string
+  /** 保存したユーザーのプロフィールカードを最新のOP・OP%へ更新する */
+  onLockedSongsSaved: (username: string) => Promise<void>
 }
 
 /**
@@ -284,7 +286,7 @@ const UserOverPower: Component<Props> = (props) => {
   }
 
   /**
-   * 未解禁楽曲設定の差分を保存し、保存後に設定を再取得する。
+   * 未解禁楽曲設定の差分を保存し、設定とプロフィールカードを更新する。
    *
    * @param nextLockedSongs - 次に保存する未解禁楽曲設定一覧。
    * @returns 保存処理の完了を表すPromise。
@@ -298,7 +300,10 @@ const UserOverPower: Component<Props> = (props) => {
     const payload = buildLockedSongsBatchPayload(currentLockedSongs, nextLockedSongs)
     if (!payload.add && !payload.delete) return
 
+    const username = props.username
     await updateMyLockedSongsBatch(payload)
+    // プロフィール取得に失敗しても保存の差分を保持し、再試行できるようにする。
+    await props.onLockedSongsSaved(username)
     await refetchLockedSongs()
   }
 
