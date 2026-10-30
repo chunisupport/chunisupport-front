@@ -1,9 +1,7 @@
-import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../constants/chart'
-import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { WEAK_CHART_SETTINGS_DEFAULT } from '../../components/common/WeakChartSettingsDialog.constants'
 import {
-  ONLINE_WEAK_CHART_OP_TARGET_FILTER,
   ONLINE_WEAK_CHART_TABLE_FILTER,
-  type OnlineWeakChartDifficulty,
+  type OnlineWeakChartFilter,
   type OnlineWeakChartTableFilter,
 } from '../../utils/onlineWeakChartInspector'
 
@@ -24,16 +22,7 @@ export const ONLINE_WEAK_CHART_COPY = {
   ownScore: 'スコア',
   averageScore: '平均',
   difference: '点差',
-  settingsTitle: '表示・集計範囲',
-  settingsOpen: '表示・集計範囲を開く',
   displayScoreRange: '表示スコア範囲',
-  filterUnselected: '未選択',
-  chartConstRange: '譜面定数',
-  chartConstMin: '譜面定数 最小',
-  chartConstMax: '譜面定数 最大',
-  reset: '初期値に戻す',
-  cancel: 'キャンセル',
-  apply: '適用',
   lowerDataset: '平均より低い',
   higherDataset: '平均以上',
   songTitle: '曲名',
@@ -64,33 +53,11 @@ export const ONLINE_WEAK_CHART_TABLE_FILTER_OPTIONS: readonly {
 /** 散布図の譜面定数座標をずらす最大単位 */
 export const ONLINE_WEAK_CHART_POINT_JITTER = 0.012
 
-/** Online の表示・集計範囲の初期値 */
-export const ONLINE_WEAK_CHART_FILTER_DEFAULT = {
-  difficulties: ['MASTER', 'ULTIMA'],
+/** Online の表示・集計範囲の初期値。共通の条件に表示スコア範囲を加える。 */
+export const ONLINE_WEAK_CHART_FILTER_DEFAULT: OnlineWeakChartFilter = {
+  ...WEAK_CHART_SETTINGS_DEFAULT,
   displayScoreRange: 10000,
-  constMin: 1,
-  constMax: 16,
-  genres: null,
-  versions: null,
-  nameFolders: null,
-} as const
+}
 
 /** Online の表示スコア範囲に指定できる最小値 */
 export const ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN = 1
-
-/** 苦手譜面インスペクター Online の難易度選択肢 */
-export const ONLINE_WEAK_CHART_DIFFICULTY_OPTIONS: readonly {
-  /** 選択状態で保持する値 */
-  value: OnlineWeakChartDifficulty
-  /** チェックボックスに表示する名前 */
-  label: string
-}[] = [
-  {
-    value: ONLINE_WEAK_CHART_OP_TARGET_FILTER,
-    label: THEORETICAL_OVER_POWER_TARGET_LABEL,
-  },
-  ...PLAYER_DATA_DIFFICULTIES.map((difficulty) => ({
-    value: difficulty,
-    label: difficulty,
-  })),
-]

@@ -38,18 +38,22 @@ export interface OnlineWeakChartEntry {
   difference: number
 }
 
-/** Online の表示条件 */
-export interface OnlineWeakChartFilter {
+/** 苦手譜面インスペクター（Online・Unified）で共通の表示・集計範囲 */
+export interface WeakChartSettings {
   /** 通常難易度または理論値OVER POWER対象の選択値 */
   difficulties: readonly OnlineWeakChartDifficulty[]
-  /** 散布図の縦軸に表示するスコア差の絶対値範囲。比較表と平均値の集計範囲は制限しない。 */
-  displayScoreRange: number
   constMin: number
   constMax: number
   genres: readonly string[] | null
   versions: readonly string[] | null
   /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
   nameFolders: readonly string[] | null
+}
+
+/** Online の表示条件 */
+export interface OnlineWeakChartFilter extends WeakChartSettings {
+  /** 散布図の縦軸に表示するスコア差の絶対値範囲。比較表と平均値の集計範囲は制限しない。 */
+  displayScoreRange: number
 }
 
 /** 比較表をジャンル・バージョン・楽曲名順で絞り込むための楽曲属性。 */
@@ -111,32 +115,49 @@ export const resolveOnlineWeakChartScoreDifficulties = (
 }
 
 /**
+ * レコードが選択した難易度に含まれるか判定する。
+ * 理論値OVER POWER対象を選択した場合は、曲ごとの対象難易度の譜面だけを含める。
+ *
+ * @param record - 判定する譜面レコード。
+ * @param difficulties - 通常難易度または理論値OVER POWER対象の選択値。
+ * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
+ * @returns 選択した難易度に含まれる場合は true。
+ */
+export const isWeakChartDifficultySelected = (
+  record: Pick<PlayerRecordDTO, 'id' | 'difficulty'>,
+  difficulties: readonly OnlineWeakChartDifficulty[],
+  targetDifficultyBySongId?: ReadonlyMap<string, PlayerDataDifficulty>
+): boolean => {
+  const recordDifficulty = record.difficulty.toUpperCase() as PlayerDataDifficulty
+  return difficulties.includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)
+    ? isTheoreticalOverPowerTargetDifficulty(
+        targetDifficultyBySongId?.get(record.id),
+        recordDifficulty
+      )
+    : difficulties.includes(recordDifficulty)
+}
+
+/**
  * 比較結果から表示条件に含まれる譜面を抽出する。
  *
- * @param entries - レート帯平均との比較結果。
- * @param filter - 難易度、譜面定数、ジャンル、バージョンの表示条件。
+ * @param entries - レコードを持つ比較結果。Online の平均比較と Unified の判定結果の両方に使う。
+ * @param filter - 難易度、譜面定数、ジャンル、バージョン、楽曲名順の表示条件。
  * @param attributesBySongId - 楽曲IDごとのジャンル・バージョン。未取得時は属性条件を適用しない。
  * @param targetDifficultyBySongId - 曲IDごとの理論値OVER POWER対象難易度。
  * @returns 表示対象の比較結果。
  */
-export const filterOnlineWeakChartEntries = (
-  entries: readonly OnlineWeakChartEntry[],
-  filter: OnlineWeakChartFilter,
+export const filterOnlineWeakChartEntries = <TEntry extends { record: PlayerRecordDTO }>(
+  entries: readonly TEntry[],
+  filter: WeakChartSettings,
   attributesBySongId?: ReadonlyMap<string, OnlineWeakChartSongAttributes>,
   targetDifficultyBySongId?: ReadonlyMap<string, PlayerDataDifficulty>
-): OnlineWeakChartEntry[] => {
-  const opTargetOnly = filter.difficulties.includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)
-  const filteredEntries = entries.filter(({ record }) => {
-    const recordDifficulty = record.difficulty.toUpperCase() as PlayerDataDifficulty
-    const difficultyMatched = opTargetOnly
-      ? isTheoreticalOverPowerTargetDifficulty(
-          targetDifficultyBySongId?.get(record.id),
-          recordDifficulty
-        )
-      : filter.difficulties.includes(recordDifficulty)
-
-    return difficultyMatched && record.const >= filter.constMin && record.const <= filter.constMax
-  })
+): TEntry[] => {
+  const filteredEntries = entries.filter(
+    ({ record }) =>
+      isWeakChartDifficultySelected(record, filter.difficulties, targetDifficultyBySongId) &&
+      record.const >= filter.constMin &&
+      record.const <= filter.constMax
+  )
 
   if (
     !attributesBySongId ||
