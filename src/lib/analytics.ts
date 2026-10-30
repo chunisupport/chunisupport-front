@@ -15,12 +15,11 @@ const initializeAnalytics = async (): Promise<void> => {
 }
 
 /**
- * 初回描画を妨げないよう、ブラウザのアイドル時に Firebase Analytics を初期化する。
- * `requestIdleCallback` 未対応のブラウザ（Safari）では次のタスクで初期化する。
+ * ブラウザのアイドル時に Firebase Analytics を初期化する。
  *
  * @returns なし。
  */
-export const scheduleAnalyticsInitialization = (): void => {
+const scheduleOnIdle = (): void => {
   const run = () => {
     // Analytics の読込失敗（オフライン・デプロイ直後のチャンク欠落など）は画面に影響させない
     void initializeAnalytics().catch(() => undefined)
@@ -30,4 +29,15 @@ export const scheduleAnalyticsInitialization = (): void => {
     return
   }
   setTimeout(run)
+}
+
+/**
+ * 初回描画とページデータの取得を妨げないよう、load イベント後のアイドル時に Firebase Analytics を初期化する。
+ * load 前に読み込みを始めると、Analytics と gtag.js の取得完了まで load イベントが遅れるため待機する。
+ * `requestIdleCallback` 未対応のブラウザ（Safari）では load 直後のタスクで初期化する。
+ *
+ * @returns なし。
+ */
+export const scheduleAnalyticsInitialization = (): void => {
+  window.addEventListener('load', scheduleOnIdle, { once: true })
 }
