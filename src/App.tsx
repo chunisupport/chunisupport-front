@@ -9,6 +9,7 @@ import {
   Grid3X3,
   ListOrdered,
   Lock,
+  Percent,
   ScanSearch,
   Swords,
   Target,
@@ -64,6 +65,7 @@ import {
   LOCKED_SONG_DISCOVERY_PATH,
   MAINTENANCE_LOGIN_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
+  OVER_POWER_CALCULATOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
@@ -123,6 +125,7 @@ const RegisterScoreTempPage = lazy(
   () => import('./pages/register-score-temp/RegisterScoreTempPage')
 )
 
+const OverPowerCalculatorPage = lazy(() => import('./pages/tools/OverPowerCalculatorPage'))
 const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConstantCalculatorPage'))
 const ChartStatsPage = lazy(() => import('./pages/tools/ChartStats'))
 const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
@@ -357,6 +360,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
       return <Trophy class={iconClass} aria-hidden="true" />
+    case 'percent':
+      return <Percent class={iconClass} aria-hidden="true" />
     case 'gauge':
       return <Gauge class={iconClass} aria-hidden="true" />
     case 'list':
@@ -725,6 +730,10 @@ const App = () => {
       <Route
         path={FRIEND_VS_PATH}
         component={withNavBar(withPlayerData(withRouteLoadBoundary(FriendVsPage)))}
+      />
+      <Route
+        path={OVER_POWER_CALCULATOR_PATH}
+        component={withNavBar(withRouteLoadBoundary(OverPowerCalculatorPage))}
       />
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
