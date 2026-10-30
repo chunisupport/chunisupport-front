@@ -2,8 +2,8 @@ import {
   type CachedSong,
   type CachedWorldsendSong,
   CLIENT_CACHE_SCHEMA_VERSION,
-  db,
-} from '../lib/db/cacheDB'
+} from '../lib/db/cacheSchema'
+import { getCacheDB } from '../lib/db/getCacheDB'
 import type { SongDTO, WorldsendSongDTO } from '../types/api'
 
 type SongCacheKind = 'songs' | 'worldsendSongs'
@@ -58,6 +58,7 @@ const hasValidSongMetadata = async (
   kind: SongCacheKind,
   songsUpdatedAt: string | null
 ): Promise<boolean> => {
+  const db = await getCacheDB()
   const metadata = await db.cacheMetadata.get(kind)
   return (
     metadata?.schemaVersion === CLIENT_CACHE_SCHEMA_VERSION &&
@@ -76,6 +77,7 @@ export const readCachedSongs = async (songsUpdatedAt: string | null): Promise<So
     return null
   }
 
+  const db = await getCacheDB()
   const cachedSongs = await db.songs.toArray()
   if (
     cachedSongs.length === 0 ||
@@ -105,6 +107,7 @@ export const readCachedWorldsendSongs = async (
     return null
   }
 
+  const db = await getCacheDB()
   const cachedSongs = await db.worldsendSongs.toArray()
   if (
     cachedSongs.length === 0 ||
@@ -140,6 +143,7 @@ const replaceSongCache = async <TKind extends SongCacheKind>(
     return
   }
 
+  const db = await getCacheDB()
   const now = new Date().toISOString()
 
   if (kind === 'songs') {
@@ -228,6 +232,7 @@ export const replaceCachedWorldsendSongs = (
 export const clearCachedSongData = async (): Promise<void> => {
   songCacheGeneration += 1
 
+  const db = await getCacheDB()
   await db.transaction('rw', db.songs, db.worldsendSongs, db.cacheMetadata, async () => {
     await Promise.all([
       db.songs.clear(),

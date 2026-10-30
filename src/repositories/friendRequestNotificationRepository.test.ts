@@ -1,7 +1,8 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
-import { CLIENT_CACHE_SCHEMA_VERSION, db } from '../lib/db/cacheDB.ts'
+import { db } from '../lib/db/cacheDB.ts'
+import { CLIENT_CACHE_SCHEMA_VERSION } from '../lib/db/cacheSchema.ts'
 import {
   clearFriendRequestNotificationState,
   clearFriendRequestNotificationStates,

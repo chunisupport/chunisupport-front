@@ -1,4 +1,3 @@
-import { getAnalytics } from 'firebase/analytics'
 import { initializeApp } from 'firebase/app'
 import {
   type Auth,
@@ -23,10 +22,9 @@ const firebaseConfig = {
   measurementId: env.PUBLIC_FB_MEASUREMENT_ID,
 }
 
-const app = initializeApp(firebaseConfig)
+/** 既定の Firebase App。Analytics は初期バンドルから外すため `lib/analytics` で遅延初期化する。 */
+export const app = initializeApp(firebaseConfig)
 
-/** ブラウザ環境で初期化されたFirebase Analytics */
-export const analytics = typeof window === 'undefined' ? undefined : getAnalytics(app)
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
 
