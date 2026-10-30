@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { MASTER_ULTIMA_FILTER } from '../constants/chart'
 import type { PlayerRecordDTO } from '../types/api'
 import type { PlayerStatsAchievement } from './playerStatsDashboard'
 import { DEFAULT_FILTER } from './recordFilterDefaults'
@@ -666,6 +667,8 @@ test('画像ファイル名は難易度・埋め条件・縦軸・横軸・日�
 
 /** 表示設定の正規化テストで使う既定値 */
 const VIEW_SETTINGS_FALLBACK: UniFillMatrixViewSettings = {
+  difficulty: MASTER_ULTIMA_FILTER,
+  achievement: 'sss',
   vertical: 'levelConst',
   horizontal: 'genre',
   levelConstAxis: 'level',
@@ -675,6 +678,8 @@ const VIEW_SETTINGS_FALLBACK: UniFillMatrixViewSettings = {
 test('保存済みの表示設定が正しい場合はそのまま復元されること', () => {
   // Given
   const saved = {
+    difficulty: 'EXPERT',
+    achievement: 'aj',
     vertical: 'version',
     horizontal: 'nameFolder',
     levelConstAxis: 'chartConstant',
@@ -704,6 +709,8 @@ test('表示設定が未保存または不正な形式の場合は既定値に�
 test('項目ごとに不正値だけが既定値へ戻ること', () => {
   // Given
   const saved = {
+    difficulty: 'unknown',
+    achievement: 'unknown',
     vertical: 'genre',
     horizontal: 'version',
     levelConstAxis: 'unknown',
@@ -715,6 +722,7 @@ test('項目ごとに不正値だけが既定値へ戻ること', () => {
 
   // Then
   assert.deepEqual(result, {
+    ...VIEW_SETTINGS_FALLBACK,
     vertical: 'genre',
     horizontal: 'version',
     levelConstAxis: 'level',
@@ -736,4 +744,15 @@ test('縦軸と横軸が同じ属性または片方が不正な場合は両軸�
     assert.equal(result.vertical, 'levelConst')
     assert.equal(result.horizontal, 'genre')
   }
+})
+
+test('旧形式の保存設定は既存の軸を維持し、難易度と埋め条件のみ既定値で補うこと', () => {
+  // Given
+  const saved = { vertical: 'version', horizontal: 'nameFolder', showPercent: true }
+
+  // When
+  const result = normalizeUniFillMatrixViewSettings(saved, VIEW_SETTINGS_FALLBACK)
+
+  // Then
+  assert.deepEqual(result, { ...VIEW_SETTINGS_FALLBACK, ...saved })
 })

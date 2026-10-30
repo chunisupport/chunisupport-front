@@ -288,13 +288,17 @@ const UniFillMatrixTable = (props: {
  * @returns 難易度・埋め条件・両軸を切り替えられ、マスから未達成譜面へ遷移できる画面。
  */
 const UniFillMatrixPage: Component = () => {
+  const savedViewSettings = readUniFillMatrixViewSettings()
   const [difficulty, setDifficulty] = createSignal<UniFillMatrixDifficultyOption>(
-    UNI_FILL_MATRIX_DEFAULT_DIFFICULTY
+    UNI_FILL_MATRIX_DIFFICULTY_OPTIONS.find(
+      ({ value }) => value === savedViewSettings.difficulty
+    ) ?? UNI_FILL_MATRIX_DEFAULT_DIFFICULTY
   )
   const [achievement, setAchievement] = createSignal<UniFillMatrixAchievementOption>(
-    UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT
+    UNI_FILL_MATRIX_ACHIEVEMENT_OPTIONS.find(
+      ({ value }) => value === savedViewSettings.achievement
+    ) ?? UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT
   )
-  const savedViewSettings = readUniFillMatrixViewSettings()
   const [vertical, setVertical] = createSignal<UniFillMatrixDimension>(savedViewSettings.vertical)
   const [horizontal, setHorizontal] = createSignal<UniFillMatrixDimension>(
     savedViewSettings.horizontal
@@ -361,9 +365,18 @@ const UniFillMatrixPage: Component = () => {
   const [showPercent, setShowPercent] = createSignal(savedViewSettings.showPercent)
   createEffect(
     on(
-      [vertical, horizontal, levelConstAxis, showPercent],
-      ([nextVertical, nextHorizontal, nextLevelConstAxis, nextShowPercent]) =>
+      [difficulty, achievement, vertical, horizontal, levelConstAxis, showPercent],
+      ([
+        nextDifficulty,
+        nextAchievement,
+        nextVertical,
+        nextHorizontal,
+        nextLevelConstAxis,
+        nextShowPercent,
+      ]) =>
         saveUniFillMatrixViewSettings({
+          difficulty: nextDifficulty.value,
+          achievement: nextAchievement.value,
           vertical: nextVertical,
           horizontal: nextHorizontal,
           levelConstAxis: nextLevelConstAxis,
