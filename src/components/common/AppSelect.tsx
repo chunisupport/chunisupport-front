@@ -109,6 +109,7 @@ const renderAppSelectItem = <T,>(props: {
 
 /**
  * アプリ全体で使う単一選択 Select を表示する。
+ * 非表示ラベルの配置基準をルート内に保ち、祖先のスクロール範囲への溢れを防ぐ。
  *
  * @param props - 選択肢、選択値、ラベル、表示変換、Kobalte Select の属性。
  * @returns 共通スタイルを適用した Kobalte Select。
@@ -136,7 +137,7 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
   return (
     <Select<T>
       {...selectProps}
-      class={local.rootClass}
+      class={`relative ${local.rootClass ?? ''}`}
       gutter={0}
       multiple={false}
       sameWidth
