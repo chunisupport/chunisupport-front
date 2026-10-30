@@ -7,11 +7,12 @@ import {
   type PlayerStatsHeatmapAxis,
 } from '../../../constants/playerStats'
 import type { PlayerStatsAchievement } from '../../../utils/playerStatsDashboard'
-import type {
-  UniFillMatrixDifficulty,
-  UniFillMatrixDimension,
-  UniFillMatrixHeader,
-  UniFillMatrixViewSettings,
+import {
+  UNI_FILL_MATRIX_ACHIEVEMENTS,
+  type UniFillMatrixDifficulty,
+  type UniFillMatrixDimension,
+  type UniFillMatrixHeader,
+  type UniFillMatrixViewSettings,
 } from '../../../utils/uniFillMatrix'
 
 /** ウニ埋めマトリックス画面の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
@@ -59,15 +60,6 @@ export const UNI_FILL_MATRIX_DEFAULT_VERTICAL: UniFillMatrixDimension = 'levelCo
 
 /** 初期選択する横軸 */
 export const UNI_FILL_MATRIX_DEFAULT_HORIZONTAL: UniFillMatrixDimension = 'genre'
-
-/** 保存済みの値がない場合に使う表示設定（縦軸・横軸・レベル別/定数別・%表示・未解禁曲除外） */
-export const UNI_FILL_MATRIX_DEFAULT_VIEW_SETTINGS: UniFillMatrixViewSettings = {
-  vertical: UNI_FILL_MATRIX_DEFAULT_VERTICAL,
-  horizontal: UNI_FILL_MATRIX_DEFAULT_HORIZONTAL,
-  levelConstAxis: 'level',
-  showPercent: false,
-  excludeLockedSongs: false,
-}
 
 /** ウニ埋めマトリックスの表示設定を保存する localStorage キー */
 export const UNI_FILL_MATRIX_VIEW_SETTINGS_STORAGE_KEY =
@@ -165,30 +157,27 @@ export type UniFillMatrixAchievementOption = {
 }
 
 /** 埋め条件の選択肢（表示順） */
-export const UNI_FILL_MATRIX_ACHIEVEMENT_OPTIONS: UniFillMatrixAchievementOption[] = (
-  [
-    'played',
-    's',
-    'sPlus',
-    'ss',
-    'ssPlus',
-    'sss',
-    'sssPlus',
-    'fc',
-    'aj',
-    'ajc',
-    'clear',
-    'hard',
-    'brave',
-    'absolute',
-    'catastrophe',
-  ] as const
-).map((value) => ({ value, label: PLAYER_STATS_ACHIEVEMENT_LABEL[value] }))
+export const UNI_FILL_MATRIX_ACHIEVEMENT_OPTIONS: UniFillMatrixAchievementOption[] =
+  UNI_FILL_MATRIX_ACHIEVEMENTS.map((value) => ({
+    value,
+    label: PLAYER_STATS_ACHIEVEMENT_LABEL[value],
+  }))
 
 /** 初期選択する埋め条件（SSS） */
 export const UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT: UniFillMatrixAchievementOption = {
   value: 'sss',
   label: PLAYER_STATS_ACHIEVEMENT_LABEL.sss,
+}
+
+/** 保存済みの値がない場合に使う表示設定（難易度・埋め条件・両軸・%表示・未解禁曲除外） */
+export const UNI_FILL_MATRIX_DEFAULT_VIEW_SETTINGS: UniFillMatrixViewSettings = {
+  difficulty: UNI_FILL_MATRIX_DEFAULT_DIFFICULTY.value,
+  achievement: UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT.value,
+  vertical: UNI_FILL_MATRIX_DEFAULT_VERTICAL,
+  horizontal: UNI_FILL_MATRIX_DEFAULT_HORIZONTAL,
+  levelConstAxis: 'level',
+  showPercent: false,
+  excludeLockedSongs: false,
 }
 
 /**

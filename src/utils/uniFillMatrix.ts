@@ -51,8 +51,31 @@ const UNI_FILL_MATRIX_DIMENSIONS = ['levelConst', 'genre', 'version', 'nameFolde
 /** 縦軸・横軸に選べる属性。levelConst はレベルまたは譜面定数 */
 export type UniFillMatrixDimension = (typeof UNI_FILL_MATRIX_DIMENSIONS)[number]
 
+/** マトリックスで選択できる埋め条件（表示順） */
+export const UNI_FILL_MATRIX_ACHIEVEMENTS = [
+  'played',
+  's',
+  'sPlus',
+  'ss',
+  'ssPlus',
+  'sss',
+  'sssPlus',
+  'fc',
+  'aj',
+  'ajc',
+  'clear',
+  'hard',
+  'brave',
+  'absolute',
+  'catastrophe',
+] as const satisfies readonly PlayerStatsAchievement[]
+
 /** ウニ埋めマトリックスの保存対象となる表示設定 */
 export type UniFillMatrixViewSettings = {
+  /** 対象難易度 */
+  difficulty: UniFillMatrixDifficulty
+  /** 埋め条件 */
+  achievement: PlayerStatsAchievement
   /** 縦軸の属性 */
   vertical: UniFillMatrixDimension
   /** 横軸の属性 */
@@ -83,7 +106,18 @@ export const normalizeUniFillMatrixViewSettings = (
   const horizontal = UNI_FILL_MATRIX_DIMENSIONS.find((dimension) => dimension === source.horizontal)
   const hasValidAxes = vertical !== undefined && horizontal !== undefined && vertical !== horizontal
 
+  const difficulty = [
+    'ALL',
+    ...PLAYER_DATA_DIFFICULTIES,
+    MASTER_ULTIMA_FILTER,
+    THEORETICAL_OVER_POWER_TARGET_FILTER,
+  ] as const
+
   return {
+    difficulty: difficulty.find((value) => value === source.difficulty) ?? fallback.difficulty,
+    achievement:
+      UNI_FILL_MATRIX_ACHIEVEMENTS.find((value) => value === source.achievement) ??
+      fallback.achievement,
     vertical: hasValidAxes ? vertical : fallback.vertical,
     horizontal: hasValidAxes ? horizontal : fallback.horizontal,
     levelConstAxis:
