@@ -1,8 +1,8 @@
 import {
   CLIENT_CACHE_SCHEMA_VERSION,
-  db,
   type FriendRequestNotificationState,
-} from '../lib/db/cacheDB'
+} from '../lib/db/cacheSchema'
+import { getCacheDB } from '../lib/db/getCacheDB'
 
 const FRIEND_REQUEST_NOTIFICATION_KEY_PREFIX = 'friendRequestNotification'
 
@@ -24,6 +24,7 @@ const buildFriendRequestNotificationKey = (username: string): string =>
 export const readFriendRequestNotificationState = async (
   username: string
 ): Promise<FriendRequestNotificationState | null> => {
+  const db = await getCacheDB()
   const state = await db.friendRequestNotificationStates.get(
     buildFriendRequestNotificationKey(username)
   )
@@ -52,6 +53,7 @@ export const saveFriendRequestNotificationState = async (
   hasPendingReceivedRequest: boolean,
   fetchedAt: string
 ): Promise<void> => {
+  const db = await getCacheDB()
   await db.friendRequestNotificationStates.put({
     key: buildFriendRequestNotificationKey(username),
     username,
@@ -68,6 +70,7 @@ export const saveFriendRequestNotificationState = async (
  * @returns 削除完了後に解決される Promise。
  */
 export const clearFriendRequestNotificationState = async (username: string): Promise<void> => {
+  const db = await getCacheDB()
   await db.friendRequestNotificationStates.delete(buildFriendRequestNotificationKey(username))
 }
 
@@ -77,5 +80,6 @@ export const clearFriendRequestNotificationState = async (username: string): Pro
  * @returns 削除完了後に解決される Promise。
  */
 export const clearFriendRequestNotificationStates = async (): Promise<void> => {
+  const db = await getCacheDB()
   await db.friendRequestNotificationStates.clear()
 }

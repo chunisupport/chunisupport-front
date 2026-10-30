@@ -3,8 +3,8 @@ import {
   type CachedUserCourseRecord,
   CLIENT_CACHE_SCHEMA_VERSION,
   COURSE_CACHE_SCHEMA_VERSION,
-  db,
-} from '../lib/db/cacheDB'
+} from '../lib/db/cacheSchema'
+import { getCacheDB } from '../lib/db/getCacheDB'
 import type { CourseDTO, UserCourseRecordsDTO } from '../types/api'
 import type { PlayedCourseRecords } from '../types/courseRecord'
 import { toPlayedCourseRecords } from '../utils/courseRecordMerger'
@@ -34,6 +34,7 @@ const createUserCourseRecordKey = (username: string, courseId: string): string =
 export const readCachedCourses = async (
   coursesUpdatedAt: string | null
 ): Promise<CourseDTO[] | null> => {
+  const db = await getCacheDB()
   const metadata = await db.cacheMetadata.get('courses')
   if (
     metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
@@ -79,6 +80,7 @@ export const replaceCachedCourses = async (
     })
   )
 
+  const db = await getCacheDB()
   await db.transaction('rw', db.courses, db.cacheMetadata, async () => {
     await db.courses.clear()
     await db.courses.bulkPut(entries)
@@ -101,6 +103,7 @@ export const replaceCachedCourses = async (
 export const readCachedUserCourseRecords = async (
   match: UserCourseRecordCacheMatch
 ): Promise<PlayedCourseRecords | null> => {
+  const db = await getCacheDB()
   const metadata = await db.cacheMetadata.get('userCourseRecords')
   if (
     metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
@@ -160,6 +163,7 @@ export const replaceCachedUserCourseRecords = async (
     })
   )
 
+  const db = await getCacheDB()
   await db.transaction('rw', db.userCourseRecords, db.cacheMetadata, async () => {
     await db.userCourseRecords.clear()
     await db.userCourseRecords.bulkPut(entries)

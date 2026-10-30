@@ -1,4 +1,4 @@
-import { db } from '../../lib/db/cacheDB'
+import { getCacheDB } from '../../lib/db/getCacheDB'
 
 /**
  * IndexedDB に保存したフロントエンドキャッシュを全削除する。
@@ -6,6 +6,7 @@ import { db } from '../../lib/db/cacheDB'
  * @returns 削除処理完了後に解決される Promise。
  */
 export const clearClientCache = async (): Promise<void> => {
+  const db = await getCacheDB()
   await db.transaction(
     'rw',
     [

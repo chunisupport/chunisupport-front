@@ -1,7 +1,7 @@
 # IndexedDB キャッシュ
 
 このドキュメントは、フロントエンドが IndexedDB を使って API レスポンスをローカルキャッシュする仕組みをまとめたものです。
-基準実装は `src/lib/db/cacheDB.ts`、`src/repositories/`、`src/usecases/cache/` です。
+基準実装は `src/lib/db/`、`src/repositories/`、`src/usecases/cache/` です。
 
 画面設定（現在適用中のフィルター・列表示設定）の永続化も同じ IndexedDB に保存しますが、仕様の詳細は [レコードフィルター・列表示設定](./record-filter-and-columns.md) を参照してください。
 
@@ -97,7 +97,7 @@ ChuniSupportCache
 
 ### TypeScript 型
 
-`src/lib/db/cacheDB.ts` では、楽曲・コース・曲単位レコード・コースレコード・レーティング・画面設定・フレンド申請通知状態に対応する型を定義しています。
+`src/lib/db/cacheSchema.ts` では、楽曲・コース・曲単位レコード・コースレコード・レーティング・画面設定・フレンド申請通知状態に対応する型を定義しています。
 
 現行の `CLIENT_CACHE_SCHEMA_VERSION` は `6`、`COURSE_CACHE_SCHEMA_VERSION` は `2` です。いずれも Dexie のDBバージョンとは別の値で、キャッシュデータの互換性判定に使います。コース関連の変更では、コース以外のキャッシュを保持するため `COURSE_CACHE_SCHEMA_VERSION` だけを更新します。
 
@@ -165,7 +165,9 @@ WORLD'S END 楽曲:
 src/
 ├── lib/
 │   └── db/
-│       └── cacheDB.ts
+│       ├── cacheDB.ts
+│       ├── cacheSchema.ts
+│       └── getCacheDB.ts
 ├── repositories/
 │   ├── songCacheRepository.ts
 │   ├── userApiCacheRepository.ts
@@ -182,7 +184,9 @@ src/
 
 責務は以下のように分けています。
 
+- `src/lib/db/cacheSchema.ts`: キャッシュの型とスキーマバージョン定数。Dexie を実行時に読み込まない。
 - `src/lib/db/cacheDB.ts`: Dexie インスタンス、ストア定義、DB バージョン管理。
+- `src/lib/db/getCacheDB.ts`: `cacheDB.ts` を動的 import して Dexie インスタンスを返す。Dexie を初期バンドルから外すため、アプリケーションコードは `cacheDB.ts` を直接 import せずこの関数を使う（テストからの直接参照は可）。
 - `src/repositories/*`: IndexedDB の読み書きのみ。
 - `src/usecases/cache/*`: `updated-at` 判定、API 呼び出し、フォールバック制御。
 - コンポーネント: `createResource` の fetcher から usecase を呼び出す。

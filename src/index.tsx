@@ -2,10 +2,12 @@ import './styles/tailwind.css'
 import { render } from 'solid-js/web'
 import App from './App'
 import { AppQueryProvider } from './components/AppQueryProvider'
+import { scheduleAnalyticsInitialization } from './lib/analytics'
 import { applyInitialAccent, applyInitialTheme } from './utils/themePreference'
 
 applyInitialTheme()
 applyInitialAccent()
+scheduleAnalyticsInitialization()
 
 const root = document.getElementById('root')
 if (root) {
