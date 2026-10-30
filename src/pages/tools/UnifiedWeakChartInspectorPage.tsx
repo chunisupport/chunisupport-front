@@ -1,4 +1,5 @@
 import { A } from '@solidjs/router'
+import { Chart, LinearScale, type Plugin, PointElement, ScatterController, Tooltip } from 'chart.js'
 import { ScanSearch, SearchX } from 'lucide-solid'
 import {
   createEffect,
@@ -7,6 +8,7 @@ import {
   createSignal,
   For,
   type JSX,
+  onCleanup,
   Show,
 } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
@@ -15,6 +17,7 @@ import { fetchRatingBands } from '../../api/ratingBands'
 import { LoadError, Loading } from '../../components'
 import { AppSelect } from '../../components/common/AppSelect'
 import { type AppTabOption, SegmentedToggleGroup } from '../../components/common/AppTabs'
+import { ChartCanvasFrame } from '../../components/common/ChartCanvasFrame'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
@@ -30,31 +33,188 @@ import { buildSongDetailPath, UNIFIED_WEAK_CHART_INSPECTOR_PATH } from '../../co
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
+import { accentPreference, themePreference } from '../../stores/themePreferences'
 import type { PlayerDataDifficulty } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
+import {
+  CHART_SCATTER_TOOLTIP_CLASS,
+  updateChartScatterTooltip,
+} from '../../utils/chartScatterTooltip'
+import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import {
+  buildUnifiedWeakChartPoints,
   inspectUnifiedWeakCharts,
   sortUnifiedWeakChartEntries,
   toAptitudeBarSpan,
   toAptitudeLabelPlacement,
+  UNIFIED_WEAK_CHART_APTITUDE_SCALE,
   UNIFIED_WEAK_CHART_CATEGORIES,
+  UNIFIED_WEAK_CHART_ZONES,
   type UnifiedWeakChartCategory,
   type UnifiedWeakChartEntry,
+  type UnifiedWeakChartPoint,
   type UnifiedWeakChartSortKey,
 } from '../../utils/unifiedWeakChartInspector'
 import {
   UNIFIED_WEAK_CHART_COPY as COPY,
+  UNIFIED_WEAK_CHART_APTITUDE_AXIS_PADDING,
+  UNIFIED_WEAK_CHART_APTITUDE_TICK_STEP,
   UNIFIED_WEAK_CHART_CATEGORY_VIEW,
+  UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
+  UNIFIED_WEAK_CHART_POINT_JITTER,
+  UNIFIED_WEAK_CHART_POINT_ORDER,
   UNIFIED_WEAK_CHART_TABLE_GRID,
+  UNIFIED_WEAK_CHART_ZONE_COLOR,
 } from './unifiedWeakChartInspector.constants'
+
+Chart.register(ScatterController, LinearScale, PointElement, Tooltip)
 
 type BandOption = { label: string; value: string }
 type CategoryFilter = UnifiedWeakChartCategory | 'all'
+
+/** 散布図の縦軸の目盛り。得意度の下限から上限まで一定間隔で並べる。 */
+const APTITUDE_TICKS = Array.from(
+  {
+    length:
+      (UNIFIED_WEAK_CHART_APTITUDE_SCALE.max - UNIFIED_WEAK_CHART_APTITUDE_SCALE.min) /
+        UNIFIED_WEAK_CHART_APTITUDE_TICK_STEP +
+      1,
+  },
+  (_, index) => ({
+    value: UNIFIED_WEAK_CHART_APTITUDE_SCALE.min + index * UNIFIED_WEAK_CHART_APTITUDE_TICK_STEP,
+  })
+)
+
+/**
+ * 譜面定数ごとの得意度を、判定の色で塗り分けた散布図で表示する。
+ * 苦手・やや苦手・得意の得意度範囲は背景を判定の色で塗り、普段どおり（50）の線を強調する。
+ * 判定で絞り込んでも点の位置と横軸の範囲が変わらないよう、点と軸は全譜面から求める。
+ * @param props.entries - 判定で絞り込む前の統合分析結果。
+ * @param props.category - 表示する判定。すべての場合は 'all'。
+ * @returns 横軸が譜面定数、縦軸が得意度の散布図。
+ */
+const UnifiedWeakChartScatter = (props: {
+  entries: UnifiedWeakChartEntry[]
+  category: CategoryFilter
+}): JSX.Element => {
+  let canvasRef!: HTMLCanvasElement
+  let tooltipRef!: HTMLDivElement
+  let chart: Chart<'scatter', UnifiedWeakChartPoint[]> | undefined
+
+  createEffect(() => {
+    themePreference()
+    accentPreference()
+    const points = buildUnifiedWeakChartPoints(props.entries, UNIFIED_WEAK_CHART_POINT_JITTER)
+    const consts = points.map((point) => point.entry.record.const)
+    const textColor = resolveChartColor('--cs-color-text-muted', CHART_COLOR_FALLBACK)
+    const gridColor = resolveChartColor('--cs-color-border', CHART_COLOR_FALLBACK)
+    const zones = UNIFIED_WEAK_CHART_ZONES.map((zone) => ({
+      ...zone,
+      color: resolveChartColor(UNIFIED_WEAK_CHART_ZONE_COLOR[zone.category], CHART_COLOR_FALLBACK),
+    }))
+    const zonePlugin: Plugin<'scatter'> = {
+      id: 'unifiedWeakChartZones',
+      beforeDraw: ({ ctx, chartArea, scales }) => {
+        const yScale = scales.y
+        ctx.save()
+        for (const zone of zones) {
+          const top = yScale.getPixelForValue(Math.min(zone.to, yScale.max))
+          const bottom = yScale.getPixelForValue(Math.max(zone.from, yScale.min))
+          ctx.fillStyle = zone.color
+          ctx.fillRect(chartArea.left, top, chartArea.right - chartArea.left, bottom - top)
+        }
+        ctx.restore()
+      },
+    }
+
+    chart?.destroy()
+    chart = new Chart(canvasRef, {
+      type: 'scatter',
+      data: {
+        datasets: UNIFIED_WEAK_CHART_CATEGORIES.filter(
+          (category) =>
+            category !== 'unavailable' && (props.category === 'all' || props.category === category)
+        ).map((category) => ({
+          label: UNIFIED_WEAK_CHART_CATEGORY_VIEW[category].label,
+          data: points.filter((point) => point.entry.category === category),
+          backgroundColor: resolveChartColor(
+            UNIFIED_WEAK_CHART_CATEGORY_VIEW[category].pointColor,
+            CHART_COLOR_FALLBACK
+          ),
+          order: UNIFIED_WEAK_CHART_POINT_ORDER[category],
+          pointRadius: category === 'normal' ? 3 : 4,
+          pointHoverRadius: category === 'normal' ? 5 : 6,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: 'nearest', intersect: true },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: false,
+            external: ({ tooltip }) =>
+              updateChartScatterTooltip(tooltipRef, canvasRef, tooltip, (raw) => {
+                const { entry } = raw as UnifiedWeakChartPoint
+                return {
+                  record: entry.record,
+                  detail: `${entry.record.difficulty} ${formatChartConst(entry.record.const)} / ${formatInteger(entry.record.score)} / ${COPY.aptitude} ${entry.aptitude}（${UNIFIED_WEAK_CHART_CATEGORY_VIEW[entry.category].label}）`,
+                }
+              }),
+          },
+        },
+        scales: {
+          x: {
+            min: Math.min(...consts) - UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
+            max: Math.max(...consts) + UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              includeBounds: false,
+              callback: (value) => formatChartConst(Number(value)),
+            },
+          },
+          y: {
+            min: UNIFIED_WEAK_CHART_APTITUDE_SCALE.min - UNIFIED_WEAK_CHART_APTITUDE_AXIS_PADDING,
+            max: UNIFIED_WEAK_CHART_APTITUDE_SCALE.max + UNIFIED_WEAK_CHART_APTITUDE_AXIS_PADDING,
+            afterBuildTicks: (axis) => {
+              axis.ticks = APTITUDE_TICKS
+            },
+            grid: {
+              color: (context) =>
+                context.tick.value === UNIFIED_WEAK_CHART_APTITUDE_SCALE.center
+                  ? textColor
+                  : gridColor,
+            },
+            ticks: { color: textColor },
+          },
+        },
+      },
+      plugins: [zonePlugin],
+    })
+  })
+
+  onCleanup(() => chart?.destroy())
+
+  return (
+    <figure class="rounded-lg border border-border bg-surface p-4">
+      <figcaption class="mb-3 font-semibold">{COPY.chartTitle}</figcaption>
+      <div class="overflow-x-auto overscroll-x-contain">
+        <ChartCanvasFrame class="h-96 min-w-[44rem]">
+          <canvas ref={canvasRef} role="img" aria-label={COPY.chartLabel} />
+        </ChartCanvasFrame>
+      </div>
+      <div ref={tooltipRef} class={CHART_SCATTER_TOOLTIP_CLASS} role="tooltip" />
+    </figure>
+  )
+}
 
 /**
  * 判定をアイコン付きの色バッジで表示する。
@@ -307,7 +467,7 @@ const EmptyState = (props: { label: string }): JSX.Element => (
 
 /**
  * 同レート帯の平均との失点比を、自分の普段の失点比と比べて判定する管理者向け画面。
- * @returns 比較帯・難易度・判定を選べる優先順位表。
+ * @returns 比較帯・難易度・判定を選べる、譜面定数別の得意度の散布図と優先順位表。
  */
 const UnifiedWeakChartInspectorPage = (): JSX.Element => {
   const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
@@ -412,6 +572,9 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
               itemClass="min-h-10 flex-1 whitespace-nowrap"
             />
             <Show when={filtered().length > 0} fallback={<EmptyState label={COPY.empty} />}>
+              <Show when={filtered().some((entry) => entry.aptitude !== null)}>
+                <UnifiedWeakChartScatter entries={entries()} category={category()} />
+              </Show>
               <UnifiedComparisonTable entries={filtered()} />
             </Show>
           </Show>
