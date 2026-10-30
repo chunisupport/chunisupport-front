@@ -3,10 +3,13 @@ import test from 'node:test'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import {
+  buildUnifiedWeakChartPoints,
   inspectUnifiedWeakCharts,
   sortUnifiedWeakChartEntries,
   toAptitudeBarSpan,
   toAptitudeLabelPlacement,
+  UNIFIED_WEAK_CHART_ZONES,
+  type UnifiedWeakChartEntry,
 } from './unifiedWeakChartInspector'
 
 /** 統合インスペクターのテストで比較するレート帯。 */
@@ -505,4 +508,64 @@ test('得意度の数値は塗りが全幅の20%以上で内側、未満で外�
 
   // Then: 20%ちょうどは内側、未満は外側になる。
   assert.deepEqual(insides, [true, false, false, true])
+})
+
+test('グラフの判定領域は、各判定の得意度を対応する領域の内側に含む', () => {
+  // Given: 判定の境界とその隣の得意度がある。
+  const expected = [
+    [20, 'weakness'],
+    [30, 'weakness'],
+    [31, 'mildWeakness'],
+    [40, 'mildWeakness'],
+    [41, 'normal'],
+    [59, 'normal'],
+    [60, 'strength'],
+    [80, 'strength'],
+  ] as const
+
+  // When: 各得意度を含む領域を探す。領域がなければ「ふつう」とする。
+  const categories = expected.map(
+    ([aptitude]) =>
+      UNIFIED_WEAK_CHART_ZONES.find((zone) => zone.from < aptitude && aptitude < zone.to)
+        ?.category ?? 'normal'
+  )
+
+  // Then: 境界上ではなく内側に含まれ、表の判定と一致する。
+  assert.deepEqual(
+    categories,
+    expected.map(([, category]) => category)
+  )
+})
+
+test('グラフの点は得意度がある譜面だけを、横方向へ7段階にずらして描く', () => {
+  // Given: 得意度がある譜面8件と、データなしの譜面1件がある。
+  const entries: UnifiedWeakChartEntry[] = [
+    ...Array.from({ length: 8 }, (_, index) => ({
+      record: createRecord(`song-${index}`, 1005000, 'MASTER', { const: 14.5 }),
+      deviation: 0,
+      aptitude: 50 + index,
+      category: 'normal' as const,
+    })),
+    {
+      record: createRecord('missing', 1005000),
+      deviation: null,
+      aptitude: null,
+      category: 'unavailable',
+    },
+  ]
+
+  // When: 1段0.01でずらした点を作る。
+  const points = buildUnifiedWeakChartPoints(entries, 0.01)
+
+  // Then: データなしは除き、縦軸は得意度、横軸は-3段から+3段で巡回する。
+  assert.equal(points.length, 8)
+  assert.deepEqual(
+    points.map((point) => point.y),
+    [50, 51, 52, 53, 54, 55, 56, 57]
+  )
+  assert.deepEqual(
+    points.map((point) => Math.round((point.x - 14.5) * 100)),
+    [-3, -2, -1, 0, 1, 2, 3, -3]
+  )
+  assert.equal(points[0].entry, entries[0])
 })

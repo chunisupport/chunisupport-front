@@ -131,6 +131,68 @@ const classifyAptitude = (aptitude: number): UnifiedWeakChartCategory => {
   return 'normal'
 }
 
+/** 得意度の表示範囲と、普段どおりを表す中心。 */
+export const UNIFIED_WEAK_CHART_APTITUDE_SCALE = {
+  min: MIN_APTITUDE,
+  max: MAX_APTITUDE,
+  center: APTITUDE_CENTER,
+} as const
+
+/** 得意度は整数のため、判定の境界を0.5ずらすと、各判定の点が必ず対応する領域内に描かれる。 */
+const ZONE_BOUNDARY_OFFSET = 0.5
+
+/** グラフで背景を塗る判定の得意度範囲。範囲外の得意度は「ふつう」。 */
+export interface UnifiedWeakChartZone {
+  category: Exclude<UnifiedWeakChartCategory, 'normal' | 'unavailable'>
+  /** 範囲の下端。下側に制限がない場合は負の無限大。 */
+  from: number
+  /** 範囲の上端。上側に制限がない場合は正の無限大。 */
+  to: number
+}
+
+/** グラフで背景を塗る判定の得意度範囲。判定の閾値と同じ定数から作り、判定と食い違わないようにする。 */
+export const UNIFIED_WEAK_CHART_ZONES: readonly UnifiedWeakChartZone[] = [
+  {
+    category: 'weakness',
+    from: Number.NEGATIVE_INFINITY,
+    to: WEAKNESS_APTITUDE + ZONE_BOUNDARY_OFFSET,
+  },
+  {
+    category: 'mildWeakness',
+    from: WEAKNESS_APTITUDE + ZONE_BOUNDARY_OFFSET,
+    to: MILD_WEAKNESS_APTITUDE + ZONE_BOUNDARY_OFFSET,
+  },
+  {
+    category: 'strength',
+    from: STRENGTH_APTITUDE - ZONE_BOUNDARY_OFFSET,
+    to: Number.POSITIVE_INFINITY,
+  },
+]
+
+/** 散布図に描く、譜面定数と得意度の点。 */
+export interface UnifiedWeakChartPoint {
+  x: number
+  y: number
+  entry: UnifiedWeakChartEntry
+}
+
+/**
+ * 統合分析の結果を、横軸が譜面定数、縦軸が得意度の散布図の点へ変換する。
+ * 同じ定数・得意度の点が重ならないよう、横方向へ7段階にずらす。得意度がない譜面は描かない。
+ * @param entries - 統合分析の結果。
+ * @param jitter - 横方向へ1段ずらす譜面定数の幅。
+ * @returns 得意度がある譜面の点。
+ */
+export const buildUnifiedWeakChartPoints = (
+  entries: readonly UnifiedWeakChartEntry[],
+  jitter: number
+): UnifiedWeakChartPoint[] =>
+  entries.flatMap((entry, index) =>
+    entry.aptitude === null
+      ? []
+      : [{ x: entry.record.const + ((index % 7) - 3) * jitter, y: entry.aptitude, entry }]
+  )
+
 /** 得意度バーの中心位置（バー全体の幅に対する割合、%）。 */
 const APTITUDE_BAR_CENTER_PERCENT = 50
 
