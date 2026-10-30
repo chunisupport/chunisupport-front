@@ -1,8 +1,6 @@
-import { Dialog } from '@kobalte/core/dialog'
-import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { Globe, Minus, Plus, RotateCcw, Settings } from 'lucide-solid'
+import { Globe, Minus, Plus, Settings } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -19,25 +17,26 @@ import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchRatingBands } from '../../api/ratingBands'
 import { fetchVersions } from '../../api/songs'
 import { LoadError, Loading } from '../../components'
-import { AppButton, AppIconButton } from '../../components/common/AppButton'
-import { toMultiSelectOptions } from '../../components/common/AppMultiSelect'
+import { AppIconButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { ChartCanvasFrame } from '../../components/common/ChartCanvasFrame'
-import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
-import {
-  GenreMultiSelect,
-  NameFolderFilterMultiSelect,
-  VersionMultiSelect,
-} from '../../components/common/DomainMultiSelect'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
 import {
   COMPACT_VIRTUAL_TABLE_CELL_CLASS,
   COMPACT_VIRTUAL_TABLE_HEADER_CLASS,
   COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
 } from '../../components/common/virtualTableStyles'
-import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
+import {
+  WeakChartSettingsDialog,
+  WeakChartSettingsNumberField,
+} from '../../components/common/WeakChartSettingsDialog'
+import {
+  WEAK_CHART_SETTINGS_COPY,
+  WEAK_CHART_SETTINGS_DEFAULT,
+} from '../../components/common/WeakChartSettingsDialog.constants'
+import { SCORE_THEORETICAL_MAX } from '../../constants/chart'
 import { buildSongDetailPath, ONLINE_WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -56,7 +55,6 @@ import {
 import { buildChartStatsAttributesBySongId } from '../../utils/chartStats'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
-import { clampNumericInput } from '../../utils/numberInput'
 import {
   compareRecordsWithRatingBand,
   filterOnlineWeakChartEntries,
@@ -69,16 +67,14 @@ import {
   type OnlineWeakChartSortKey,
   resolveOnlineWeakChartScoreDifficulties,
   sortOnlineWeakChartEntries,
-  toggleOnlineWeakChartDifficulty,
+  type WeakChartSettings,
 } from '../../utils/onlineWeakChartInspector'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { formatScoreDifference, getScoreDifferenceClass } from '../../utils/scoreDifference'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
 import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../utils/theoreticalOverPowerTarget'
-import { getShortVersionName } from '../../utils/versionConverter'
 import {
   ONLINE_WEAK_CHART_COPY,
-  ONLINE_WEAK_CHART_DIFFICULTY_OPTIONS,
   ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN,
   ONLINE_WEAK_CHART_FILTER_DEFAULT,
   ONLINE_WEAK_CHART_POINT_JITTER,
@@ -91,38 +87,6 @@ type RatingBandOption = { label: string; value: string }
 type ComparisonPoint = { x: number; y: number; entry: OnlineWeakChartEntry }
 /** 比較表の平均との比較条件を表示する選択肢 */
 type OnlineWeakChartTableFilterOption = (typeof ONLINE_WEAK_CHART_TABLE_FILTER_OPTIONS)[number]
-
-/**
- * 設定画面に範囲内補正付きの数値欄を表示する。
- *
- * @param props - 入力値、範囲、刻み、ラベルと変更処理。
- * @returns 数値入力欄。
- */
-const FilterNumberField = (props: {
-  value: string
-  min: number
-  max: number
-  step: number
-  label: string
-  onChange: (value: string) => void
-}): JSX.Element => (
-  <NumberField
-    class="block flex-1"
-    value={props.value}
-    onChange={(value) => props.onChange(clampNumericInput(value, props.min, props.max))}
-    format={false}
-    allowedInput={props.step === 1 ? /[0-9]/ : /[0-9.]/}
-    step={props.step}
-  >
-    <NumberField.Label class="sr-only">{props.label}</NumberField.Label>
-    <NumberField.Input
-      min={props.min}
-      max={props.max}
-      step={props.step}
-      class="w-full rounded border border-border-strong bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-inset focus:ring-focus-ring"
-    />
-  </NumberField>
-)
 
 /**
  * 選択した難易度の公開スコア統計を取得する。
@@ -537,14 +501,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     ...ONLINE_WEAK_CHART_FILTER_DEFAULT,
   })
   const [settingsOpen, setSettingsOpen] = createSignal(false)
-  const [editDifficulties, setEditDifficulties] = createSignal<OnlineWeakChartDifficulty[]>([])
   const [editDisplayScoreRange, setEditDisplayScoreRange] = createSignal('')
-  const [editConstMin, setEditConstMin] = createSignal('')
-  const [editConstMax, setEditConstMax] = createSignal('')
-  const [editGenres, setEditGenres] = createSignal<string[] | null>(null)
-  const [editVersions, setEditVersions] = createSignal<string[] | null>(null)
-  const [editNameFolders, setEditNameFolders] = createSignal<string[] | null>(null)
-  let settingsContentRef!: HTMLDivElement
   const [scoreSnapshots] = createResource(
     () => [...filter().difficulties],
     fetchSelectedChartScores
@@ -623,69 +580,13 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
     (isOpTargetSelected() ? songsResponse.error : undefined)
 
   /**
-   * 対象難易度の選択状態を更新する。
-   *
-   * @param difficulty - 切り替える通常難易度または理論値OVER POWER対象。
-   * @returns なし。
-   */
-  const toggleDifficulty = (difficulty: OnlineWeakChartDifficulty): void => {
-    setEditDifficulties((current) => toggleOnlineWeakChartDifficulty(current, difficulty))
-  }
-
-  /**
-   * 適用中の条件を編集欄へ反映して設定を開く。
+   * 適用中の表示スコア範囲を編集欄へ反映して設定を開く。共通の条件はダイアログが読み込む。
    *
    * @returns なし。
    */
   const openSettings = (): void => {
-    const currentFilter = filter()
-    setEditDifficulties([...currentFilter.difficulties])
-    setEditDisplayScoreRange(String(currentFilter.displayScoreRange))
-    setEditConstMin(String(currentFilter.constMin))
-    setEditConstMax(String(currentFilter.constMax))
-    setEditGenres(currentFilter.genres === null ? null : [...currentFilter.genres])
-    setEditVersions(currentFilter.versions === null ? null : [...currentFilter.versions])
-    setEditNameFolders(currentFilter.nameFolders === null ? null : [...currentFilter.nameFolders])
+    setEditDisplayScoreRange(String(filter().displayScoreRange))
     setSettingsOpen(true)
-  }
-
-  /**
-   * 編集中の条件を初期値に戻す。
-   *
-   * @returns なし。
-   */
-  const resetSettings = (): void => {
-    setEditDifficulties([...ONLINE_WEAK_CHART_FILTER_DEFAULT.difficulties])
-    setEditDisplayScoreRange(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.displayScoreRange))
-    setEditConstMin(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.constMin))
-    setEditConstMax(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.constMax))
-    setEditGenres(null)
-    setEditVersions(null)
-    setEditNameFolders(null)
-  }
-
-  /**
-   * 編集中の表示条件をグラフと表へ適用する。
-   *
-   * @returns なし。
-   */
-  const applySettings = (): void => {
-    const displayScoreRange = Number(editDisplayScoreRange())
-    const constMin = Number(editConstMin()) || CHART_CONST_MIN
-    const constMax = Number(editConstMax()) || CHART_CONST_MAX
-    setFilter({
-      difficulties: [...editDifficulties()],
-      displayScoreRange:
-        displayScoreRange >= ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN
-          ? displayScoreRange
-          : ONLINE_WEAK_CHART_FILTER_DEFAULT.displayScoreRange,
-      constMin: Math.min(constMin, constMax),
-      constMax: Math.max(constMin, constMax),
-      genres: editGenres(),
-      versions: editVersions(),
-      nameFolders: editNameFolders(),
-    })
-    setSettingsOpen(false)
   }
 
   /**
@@ -700,14 +601,20 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
   }
 
   /**
-   * 設定を開いた際にダイアログ本体へフォーカスする。
+   * 編集した共通の条件と表示スコア範囲をグラフと表へ適用する。
    *
-   * @param event - 自動フォーカスイベント。
+   * @param settings - ダイアログで編集した共通の条件。
    * @returns なし。
    */
-  const handleSettingsOpenAutoFocus = (event: Event): void => {
-    event.preventDefault()
-    settingsContentRef.focus()
+  const applySettings = (settings: WeakChartSettings): void => {
+    const displayScoreRange = Number(editDisplayScoreRange())
+    setFilter({
+      ...settings,
+      displayScoreRange:
+        displayScoreRange >= ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN
+          ? displayScoreRange
+          : ONLINE_WEAK_CHART_FILTER_DEFAULT.displayScoreRange,
+    })
   }
 
   return (
@@ -724,7 +631,7 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
         </div>
         <AppIconButton
           tone="ghost"
-          aria-label={ONLINE_WEAK_CHART_COPY.settingsOpen}
+          aria-label={WEAK_CHART_SETTINGS_COPY.open}
           onClick={openSettings}
           class="shrink-0"
         >
@@ -752,139 +659,41 @@ const OnlineWeakChartInspectorPage = (): JSX.Element => {
         </Show>
       </div>
 
-      <Dialog open={settingsOpen()} onOpenChange={handleSettingsOpenChange} preventScroll={false}>
-        <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-          <Dialog.Content
-            ref={settingsContentRef}
-            onOpenAutoFocus={handleSettingsOpenAutoFocus}
-            class="fixed left-1/2 top-1/2 z-50 flex h-5/6 max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg"
-          >
-            <div class="mb-4 flex shrink-0 items-center justify-between">
-              <Dialog.Title class="text-lg font-bold">
-                {ONLINE_WEAK_CHART_COPY.settingsTitle}
-              </Dialog.Title>
-              <AppIconButton
-                tone="danger"
-                aria-label={ONLINE_WEAK_CHART_COPY.reset}
-                onClick={resetSettings}
-              >
-                <RotateCcw class="h-5 w-5" aria-hidden="true" />
-              </AppIconButton>
-            </div>
-            <div class="scrollbar-none min-h-0 min-w-0 flex-1 basis-0 space-y-5 overflow-y-auto">
-              <fieldset>
-                <legend class="mb-2 text-sm font-semibold">
-                  {ONLINE_WEAK_CHART_COPY.difficulty}
-                </legend>
-                <div class="flex flex-col items-start gap-1">
-                  <For each={ONLINE_WEAK_CHART_DIFFICULTY_OPTIONS}>
-                    {(option) => (
-                      <CheckboxField
-                        id={`online-weak-chart-${option.value}`}
-                        checked={editDifficulties().includes(option.value)}
-                        disabled={
-                          editDifficulties().includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER) &&
-                          option.value !== ONLINE_WEAK_CHART_OP_TARGET_FILTER
-                        }
-                        onChange={() => toggleDifficulty(option.value)}
-                        label={option.label}
-                        textVariant="large"
-                        class="relative flex items-center gap-2"
-                      />
-                    )}
-                  </For>
-                </div>
-              </fieldset>
-              <GenreMultiSelect
-                options={toMultiSelectOptions(genreOptions())}
-                selected={editGenres() ?? genreOptions()}
-                onChange={(value) =>
-                  setEditGenres(
-                    value.length > 0 && value.length === genreOptions().length ? null : [...value]
-                  )
-                }
-                placeholder={ONLINE_WEAK_CHART_COPY.filterUnselected}
-                disabled={attributesBySongId() === undefined}
-              />
-              <VersionMultiSelect
-                options={toMultiSelectOptions(versionNames(), getShortVersionName)}
-                selected={editVersions() ?? versionNames()}
-                onChange={(value) =>
-                  setEditVersions(
-                    value.length > 0 && value.length === versionNames().length ? null : [...value]
-                  )
-                }
-                placeholder={ONLINE_WEAK_CHART_COPY.filterUnselected}
-                disabled={attributesBySongId() === undefined}
-              />
-              <NameFolderFilterMultiSelect
-                nameFolders={nameFoldersResource() ?? []}
-                selected={editNameFolders()}
-                onChange={setEditNameFolders}
-                placeholder={ONLINE_WEAK_CHART_COPY.filterUnselected}
-                disabled={attributesBySongId() === undefined}
-              />
-              <div class="space-y-1">
-                <span class="block text-sm text-text-muted">
-                  {ONLINE_WEAK_CHART_COPY.displayScoreRange}
-                </span>
-                <div class="flex items-center gap-2">
-                  <span
-                    class="flex shrink-0 flex-col items-center text-text-muted"
-                    aria-hidden="true"
-                  >
-                    <Plus class="h-3 w-3" />
-                    <Minus class="h-3 w-3" />
-                  </span>
-                  <FilterNumberField
-                    value={editDisplayScoreRange()}
-                    min={ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN}
-                    max={SCORE_THEORETICAL_MAX}
-                    step={1}
-                    label={ONLINE_WEAK_CHART_COPY.displayScoreRange}
-                    onChange={setEditDisplayScoreRange}
-                  />
-                </div>
-              </div>
-              <div class="space-y-1">
-                <span class="block text-sm text-text-muted">
-                  {ONLINE_WEAK_CHART_COPY.chartConstRange}
-                </span>
-                <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-center gap-2">
-                  <FilterNumberField
-                    value={editConstMin()}
-                    min={CHART_CONST_MIN}
-                    max={CHART_CONST_MAX}
-                    step={0.1}
-                    label={ONLINE_WEAK_CHART_COPY.chartConstMin}
-                    onChange={setEditConstMin}
-                  />
-                  <span class="text-center text-text-muted" aria-hidden="true">
-                    ～
-                  </span>
-                  <FilterNumberField
-                    value={editConstMax()}
-                    min={CHART_CONST_MIN}
-                    max={CHART_CONST_MAX}
-                    step={0.1}
-                    label={ONLINE_WEAK_CHART_COPY.chartConstMax}
-                    onChange={setEditConstMax}
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="mt-6 flex shrink-0 justify-end gap-2">
-              <AppButton onClick={() => setSettingsOpen(false)}>
-                {ONLINE_WEAK_CHART_COPY.cancel}
-              </AppButton>
-              <AppButton variant="primary" onClick={applySettings}>
-                {ONLINE_WEAK_CHART_COPY.apply}
-              </AppButton>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
+      <WeakChartSettingsDialog
+        open={settingsOpen()}
+        onOpenChange={handleSettingsOpenChange}
+        value={filter()}
+        defaults={WEAK_CHART_SETTINGS_DEFAULT}
+        onApply={applySettings}
+        onReset={() =>
+          setEditDisplayScoreRange(String(ONLINE_WEAK_CHART_FILTER_DEFAULT.displayScoreRange))
+        }
+        genreOptions={genreOptions()}
+        versionNames={versionNames()}
+        nameFolders={nameFoldersResource() ?? []}
+        attributesReady={attributesBySongId() !== undefined}
+        idPrefix="online-weak-chart"
+      >
+        <div class="space-y-1">
+          <span class="block text-sm text-text-muted">
+            {ONLINE_WEAK_CHART_COPY.displayScoreRange}
+          </span>
+          <div class="flex items-center gap-2">
+            <span class="flex shrink-0 flex-col items-center text-text-muted" aria-hidden="true">
+              <Plus class="h-3 w-3" />
+              <Minus class="h-3 w-3" />
+            </span>
+            <WeakChartSettingsNumberField
+              value={editDisplayScoreRange()}
+              min={ONLINE_WEAK_CHART_DISPLAY_SCORE_RANGE_MIN}
+              max={SCORE_THEORETICAL_MAX}
+              step={1}
+              label={ONLINE_WEAK_CHART_COPY.displayScoreRange}
+              onChange={setEditDisplayScoreRange}
+            />
+          </div>
+        </div>
+      </WeakChartSettingsDialog>
 
       <Show when={!loadError()} fallback={<LoadError error={loadError()} />}>
         <Show when={!isLoading()} fallback={<Loading />}>

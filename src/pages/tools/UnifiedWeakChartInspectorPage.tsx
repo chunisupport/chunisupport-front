@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, type Plugin, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { ScanSearch, SearchX } from 'lucide-solid'
+import { ScanSearch, SearchX, Settings } from 'lucide-solid'
 import {
   createEffect,
   createMemo,
@@ -9,16 +9,19 @@ import {
   For,
   type JSX,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { fetchChartScores } from '../../api/chartScores'
+import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchRatingBands } from '../../api/ratingBands'
+import { fetchVersions } from '../../api/songs'
 import { LoadError, Loading } from '../../components'
+import { AppIconButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { type AppTabOption, SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { ChartCanvasFrame } from '../../components/common/ChartCanvasFrame'
-import { CheckboxField } from '../../components/common/CheckboxField'
 import { createWindowVirtualTable } from '../../components/common/createWindowVirtualTable'
 import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
 import { SortableTableHeaderCell } from '../../components/common/SortableTableHeader'
@@ -27,14 +30,17 @@ import {
   COMPACT_VIRTUAL_TABLE_HEADER_CLASS,
   COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
 } from '../../components/common/virtualTableStyles'
-import { WEAK_CHART_INSPECTOR_DIFFICULTIES } from '../../constants/chart'
-import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { WeakChartSettingsDialog } from '../../components/common/WeakChartSettingsDialog'
+import {
+  WEAK_CHART_SETTINGS_COPY,
+  WEAK_CHART_SETTINGS_DEFAULT,
+} from '../../components/common/WeakChartSettingsDialog.constants'
 import { buildSongDetailPath, UNIFIED_WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
+import { useSongsData } from '../../stores/songsData'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
-import type { PlayerDataDifficulty } from '../../types/api'
 import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
@@ -42,10 +48,19 @@ import {
   CHART_SCATTER_TOOLTIP_CLASS,
   updateChartScatterTooltip,
 } from '../../utils/chartScatterTooltip'
+import { buildChartStatsAttributesBySongId } from '../../utils/chartStats'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../utils/chartTheme'
 import { formatInteger } from '../../utils/numberFormat'
+import {
+  filterOnlineWeakChartEntries,
+  isWeakChartDifficultySelected,
+  ONLINE_WEAK_CHART_OP_TARGET_FILTER,
+  resolveOnlineWeakChartScoreDifficulties,
+  type WeakChartSettings,
+} from '../../utils/onlineWeakChartInspector'
 import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
 import { nextSortState, type SortDirection } from '../../utils/sortingQuery'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../utils/theoreticalOverPowerTarget'
 import {
   buildUnifiedWeakChartPoints,
   inspectUnifiedWeakCharts,
@@ -93,8 +108,8 @@ const APTITUDE_TICKS = Array.from(
 /**
  * 譜面定数ごとの得意度を、判定の色で塗り分けた散布図で表示する。
  * 苦手・やや苦手・得意の得意度範囲は背景を判定の色で塗り、普段どおり（50）の線を強調する。
- * 判定で絞り込んでも点の位置と横軸の範囲が変わらないよう、点と軸は全譜面から求める。
- * @param props.entries - 判定で絞り込む前の統合分析結果。
+ * 判定で絞り込んでも点の位置と横軸の範囲が変わらないよう、点と軸は判定で絞り込む前の譜面から求める。
+ * @param props.entries - 表示・集計範囲で絞り込み、判定では絞り込む前の統合分析結果。
  * @param props.category - 表示する判定。すべての場合は 'all'。
  * @returns 横軸が譜面定数、縦軸が得意度の散布図。
  */
@@ -467,65 +482,123 @@ const EmptyState = (props: { label: string }): JSX.Element => (
 
 /**
  * 同レート帯の平均との失点比を、自分の普段の失点比と比べて判定する管理者向け画面。
- * @returns 比較帯・難易度・判定を選べる、譜面定数別の得意度の散布図と優先順位表。
+ * @returns 比較帯・表示・集計範囲・判定を選べる、譜面定数別の得意度の散布図と優先順位表。
  */
 const UnifiedWeakChartInspectorPage = (): JSX.Element => {
   const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
   useDocumentTitle(tool.title)
   const username = () => authSession.user?.username ?? null
   const [bands] = createResource(fetchRatingBands)
+  const [versions] = createResource(fetchVersions)
+  const [nameFolders] = createResource(fetchNameFolders)
+  const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [rating] = createResource(username, fetchUserRatingWithCache)
   const [records] = createResource(username, fetchUserRecordWithCache)
-  const [difficulties, setDifficulties] = createSignal<PlayerDataDifficulty[]>([
-    ...WEAK_CHART_INSPECTOR_DIFFICULTIES,
-  ])
-  const [snapshots] = createResource(difficulties, (selected) =>
-    Promise.all(selected.map(fetchChartScores))
+  const [settings, setSettings] = createSignal<WeakChartSettings>(WEAK_CHART_SETTINGS_DEFAULT)
+  const [settingsOpen, setSettingsOpen] = createSignal(false)
+  // 譜面定数・ジャンルなどの変更で統計の再取得と判定の再計算が走らないよう、難易度だけを比べる。
+  const difficulties = createMemo(() => settings().difficulties, undefined, {
+    equals: (previous, next) => previous.join() === next.join(),
+  })
+  const [snapshots] = createResource(
+    () => resolveOnlineWeakChartScoreDifficulties(difficulties()),
+    (selected) => Promise.all(selected.map(fetchChartScores))
   )
   const [band, setBand] = createSignal<BandOption | null>(null)
   const [category, setCategory] = createSignal<CategoryFilter>('all')
+
+  onMount(() => ensureSongsLoaded())
+
   const bandOptions = createMemo(() =>
     (bands() ?? [])
       .filter((item) => item.label !== ALL_RATING_BAND_LABEL)
       .sort((a, b) => b.sort_order - a.sort_order)
       .map((item) => ({ label: item.label, value: item.label }))
   )
+  const genreOptions = createMemo(() =>
+    [...new Set((songsResponse()?.songs ?? []).map((song) => song.genre))].sort((left, right) =>
+      left.localeCompare(right, 'ja')
+    )
+  )
+  const versionNames = createMemo(() => (versions()?.versions ?? []).map((item) => item.name))
+  const attributesBySongId = createMemo(() => {
+    const songs = songsResponse()?.songs
+    const versionList = versions()?.versions
+    if (!songs || !versionList) return undefined
+    return buildChartStatsAttributesBySongId(songs, versionList)
+  })
+  const targetDifficultyBySongId = createMemo(() =>
+    buildTheoreticalOverPowerTargetDifficultyBySongId(songsResponse()?.songs ?? [])
+  )
+  const isOpTargetSelected = () => difficulties().includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER)
   createEffect(() => {
     if (band() || !bands() || rating.loading) return
     const initial = resolveInitialBestSlotRatingBand(bands() ?? [], rating()?.best_average)
     if (initial) setBand({ label: initial.label, value: initial.label })
   })
+  // 難易度は判定の集計範囲として、判定の前に絞り込む。
   const entries = createMemo(() =>
     inspectUnifiedWeakCharts(
-      (records()?.standard ?? []).filter((record) => difficulties().includes(record.difficulty)),
+      (records()?.standard ?? []).filter((record) =>
+        isWeakChartDifficultySelected(record, difficulties(), targetDifficultyBySongId())
+      ),
       snapshots() ?? [],
       band()?.value ?? ''
     )
   )
+  // 譜面定数・ジャンル・バージョン・楽曲名順は、普段の失点比が変わらないよう判定の後に絞り込む。
+  const displayed = createMemo(() =>
+    filterOnlineWeakChartEntries(
+      entries(),
+      settings(),
+      attributesBySongId(),
+      targetDifficultyBySongId()
+    )
+  )
   const filtered = createMemo(() =>
-    entries().filter((entry) => category() === 'all' || entry.category === category())
+    displayed().filter((entry) => category() === 'all' || entry.category === category())
   )
   const categoryOptions = createMemo((): AppTabOption<CategoryFilter>[] => [
-    { value: 'all', label: <CategoryCount label={COPY.all} count={entries().length} /> },
+    { value: 'all', label: <CategoryCount label={COPY.all} count={displayed().length} /> },
     ...UNIFIED_WEAK_CHART_CATEGORIES.map((value) => ({
       value,
       label: (
         <CategoryCount
           category={value}
           label={UNIFIED_WEAK_CHART_CATEGORY_VIEW[value].label}
-          count={entries().filter((entry) => entry.category === value).length}
+          count={displayed().filter((entry) => entry.category === value).length}
         />
       ),
     })),
   ])
-  const loading = () => bands.loading || rating.loading || records.loading || snapshots.loading
-  const error = () => bands.error ?? rating.error ?? records.error ?? snapshots.error
+  const loading = () =>
+    bands.loading ||
+    rating.loading ||
+    records.loading ||
+    snapshots.loading ||
+    (isOpTargetSelected() && isSongsLoading())
+  const error = () =>
+    bands.error ??
+    rating.error ??
+    records.error ??
+    snapshots.error ??
+    (isOpTargetSelected() ? songsResponse.error : undefined)
 
   return (
     <main class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
-      <header class="flex items-center gap-3">
-        <ScanSearch class="h-8 w-8 shrink-0 text-action-primary" aria-hidden="true" />
-        <h1 class="text-2xl font-semibold">{tool.title}</h1>
+      <header class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <ScanSearch class="h-8 w-8 shrink-0 text-action-primary" aria-hidden="true" />
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+        </div>
+        <AppIconButton
+          tone="ghost"
+          aria-label={WEAK_CHART_SETTINGS_COPY.open}
+          onClick={() => setSettingsOpen(true)}
+          class="shrink-0"
+        >
+          <Settings class="h-5 w-5" aria-hidden="true" />
+        </AppIconButton>
       </header>
       <section class="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-surface p-4">
         <AppSelect<BandOption>
@@ -538,28 +611,19 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
           label={COPY.ratingBand}
           rootClass="w-full sm:w-48"
         />
-        <fieldset class="w-full">
-          <legend class="mb-2 text-sm text-text-muted">{COPY.difficulty}</legend>
-          <div class="flex flex-wrap gap-x-6 gap-y-2">
-            <For each={PLAYER_DATA_DIFFICULTIES}>
-              {(difficulty) => (
-                <CheckboxField
-                  textVariant="large"
-                  label={difficulty}
-                  checked={difficulties().includes(difficulty)}
-                  onChange={(checked) =>
-                    setDifficulties((current) =>
-                      checked
-                        ? [...current, difficulty]
-                        : current.filter((value) => value !== difficulty)
-                    )
-                  }
-                />
-              )}
-            </For>
-          </div>
-        </fieldset>
       </section>
+      <WeakChartSettingsDialog
+        open={settingsOpen()}
+        onOpenChange={setSettingsOpen}
+        value={settings()}
+        defaults={WEAK_CHART_SETTINGS_DEFAULT}
+        onApply={setSettings}
+        genreOptions={genreOptions()}
+        versionNames={versionNames()}
+        nameFolders={nameFolders() ?? []}
+        attributesReady={attributesBySongId() !== undefined}
+        idPrefix="unified-weak-chart"
+      />
       <Show when={!loading()} fallback={<Loading />}>
         <Show when={!error()} fallback={<LoadError error={error()} />}>
           <Show when={band()} fallback={<EmptyState label={COPY.noBands} />}>
@@ -573,7 +637,7 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
             />
             <Show when={filtered().length > 0} fallback={<EmptyState label={COPY.empty} />}>
               <Show when={filtered().some((entry) => entry.aptitude !== null)}>
-                <UnifiedWeakChartScatter entries={entries()} category={category()} />
+                <UnifiedWeakChartScatter entries={displayed()} category={category()} />
               </Show>
               <UnifiedComparisonTable entries={filtered()} />
             </Show>

@@ -7,8 +7,10 @@ import {
   filterOnlineWeakChartEntries,
   filterOnlineWeakChartTableEntries,
   formatOnlineWeakChartTooltipDetail,
+  isWeakChartDifficultySelected,
   ONLINE_WEAK_CHART_OP_TARGET_FILTER,
   ONLINE_WEAK_CHART_TABLE_FILTER,
+  type OnlineWeakChartFilter,
   resolveOnlineWeakChartScoreDifficulties,
   sortOnlineWeakChartEntries,
   toggleOnlineWeakChartDifficulty,
@@ -83,7 +85,7 @@ test('Onlineの表示条件は難易度と譜面定数を絞り、表では点�
   ]
 
   // When: 表示対象をMASTERとULTIMA、定数14～15、散布図の縦軸を±10000にする。
-  const result = filterOnlineWeakChartEntries(entries, {
+  const filter: OnlineWeakChartFilter = {
     difficulties: ['MASTER', 'ULTIMA'],
     displayScoreRange: 10000,
     constMin: 14,
@@ -91,7 +93,8 @@ test('Onlineの表示条件は難易度と譜面定数を絞り、表では点�
     genres: null,
     versions: null,
     nameFolders: null,
-  })
+  }
+  const result = filterOnlineWeakChartEntries(entries, filter)
 
   // Then: 点差±60000の譜面も表の対象に残り、難易度と定数の範囲外は除外する。
   assert.deepEqual(result, [entries[0], entries[1], entries[3], entries[4]])
@@ -131,7 +134,6 @@ test('理論値OP対象では現在のOP対象フラグではなく楽曲マス�
     entries,
     {
       difficulties: [ONLINE_WEAK_CHART_OP_TARGET_FILTER],
-      displayScoreRange: 10000,
       constMin: 1,
       constMax: 16,
       genres: null,
@@ -170,7 +172,6 @@ test('理論値OP対象では対象難易度を解決できないレコードを
     entries,
     {
       difficulties: [ONLINE_WEAK_CHART_OP_TARGET_FILTER],
-      displayScoreRange: 10000,
       constMin: 1,
       constMax: 16,
       genres: null,
@@ -247,7 +248,6 @@ test('Onlineのジャンルとバージョンは表示時の属性フィルタ�
     entries,
     {
       difficulties: ['MASTER'],
-      displayScoreRange: 10000,
       constMin: 1,
       constMax: 16,
       genres: ['POPS & ANIME'],
@@ -282,7 +282,6 @@ test('Onlineの楽曲名順は表示時の属性フィルタとして適用す�
     entries,
     {
       difficulties: ['MASTER'],
-      displayScoreRange: 10000,
       constMin: 1,
       constMax: 16,
       genres: null,
@@ -394,4 +393,34 @@ test('Onlineの比較表を各列の昇順・降順で安定してソートす�
   assert.deepEqual(ascendingIds('averageScore'), ['song-b', 'song-c', 'song-a'])
   assert.deepEqual(ascendingIds('difference'), ['song-c', 'song-a', 'song-b'])
   assert.deepEqual(descendingIds('difference'), ['song-b', 'song-c', 'song-a'])
+})
+
+test('難易度の選択判定は、理論値OP対象では楽曲マスタの対象難易度だけを含める', () => {
+  // Given: ULTIMAが理論値OP対象の曲と、MASTERが理論値OP対象の曲がある。
+  const targetDifficultyBySongId = new Map([
+    ['ultima-song', 'ULTIMA' as const],
+    ['master-song', 'MASTER' as const],
+  ])
+
+  // When: 理論値OP対象と、通常難易度のMASTERでそれぞれ判定する。
+  const opTarget = [
+    { id: 'ultima-song', difficulty: 'MASTER' as const },
+    { id: 'ultima-song', difficulty: 'ULTIMA' as const },
+    { id: 'master-song', difficulty: 'MASTER' as const },
+  ].map((record) =>
+    isWeakChartDifficultySelected(
+      record,
+      [ONLINE_WEAK_CHART_OP_TARGET_FILTER],
+      targetDifficultyBySongId
+    )
+  )
+  const masterOnly = isWeakChartDifficultySelected(
+    { id: 'ultima-song', difficulty: 'MASTER' },
+    ['MASTER'],
+    targetDifficultyBySongId
+  )
+
+  // Then: 理論値OP対象では対象難易度の譜面だけ、通常難易度では選んだ難易度の譜面を含める。
+  assert.deepEqual(opTarget, [false, true, true])
+  assert.equal(masterOnly, true)
 })
