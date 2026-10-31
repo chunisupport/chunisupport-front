@@ -2924,7 +2924,7 @@ THE SOFTWARE.
 The following npm packages may be included in this product:
 
  - seroval-plugins@1.6.8
- - seroval@1.6.8
+ - seroval@1.7.5
 
 These packages each contain the following license:
 

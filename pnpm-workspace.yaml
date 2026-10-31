@@ -8,8 +8,11 @@ overrides:
   # 1.13.7 は残件修正を含み、proto-loader は ^0.7.13 のままなので 1.14 系には上げない。
   '@grpc/grpc-js': '~1.13.7'
   postcss: ^8.5.23
-  seroval: ^1.6.8
+  seroval: ^1.6.11
   seroval-plugins: ^1.6.8
+  # ライセンス生成ツールの依存を GHSA-g3hv-75wg-m249 / GHSA-3g3m-2fjr-6pw4 の修正版に固定する。
+  'minimatch@<11.0.1': ^11.0.1
+  'glob@<14.0.2': ^14.0.2
 minimumReleaseAgeExclude:
   - brace-expansion@5.0.7 || 5.0.8 || 5.0.9
   - protobufjs@7.6.5
