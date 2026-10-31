@@ -59,6 +59,7 @@ export function isRecordFilterOptionsChanged(
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
     current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.unplayedOnly !== defaultFilter.unplayedOnly ||
     current.const.min !== defaultFilter.const.min ||
     current.const.max !== defaultFilter.const.max ||
     current.score.min !== defaultFilter.score.min ||
@@ -100,6 +101,7 @@ export function isRecordDifficultyFilterOnlyChanged(
     current.constFilterMode === defaultFilter.constFilterMode &&
     current.scoreFilterMode === defaultFilter.scoreFilterMode &&
     current.excludeNoPlay === defaultFilter.excludeNoPlay &&
+    current.unplayedOnly === defaultFilter.unplayedOnly &&
     current.const.min === defaultFilter.const.min &&
     current.const.max === defaultFilter.const.max &&
     current.score.min === defaultFilter.score.min &&

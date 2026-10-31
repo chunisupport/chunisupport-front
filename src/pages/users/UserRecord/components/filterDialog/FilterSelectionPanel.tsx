@@ -168,6 +168,34 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     }))
   }
 
+  /**
+   * 未プレイ除外を切り替える。オンにしたときは未プレイのみを解除する。
+   *
+   * @param checked - 未プレイ譜面を除外するか。
+   * @returns なし。
+   */
+  const handleExcludeNoPlayChange = (checked: boolean) => {
+    props.setFilters((prev) => ({
+      ...prev,
+      excludeNoPlay: checked,
+      unplayedOnly: checked ? false : prev.unplayedOnly,
+    }))
+  }
+
+  /**
+   * 未プレイのみを切り替える。オンにしたときは未プレイ除外を解除する。
+   *
+   * @param checked - 未プレイ譜面だけを表示するか。
+   * @returns なし。
+   */
+  const handleUnplayedOnlyChange = (checked: boolean) => {
+    props.setFilters((prev) => ({
+      ...prev,
+      unplayedOnly: checked,
+      excludeNoPlay: checked ? false : prev.excludeNoPlay,
+    }))
+  }
+
   /** 定数入力モードの変更時に内部値を同期 */
   const handleScoreFilterModeChange = (mode: 'number' | 'rank') => {
     // ランク->数値の場合
@@ -468,6 +496,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         scoreRankMin={scoreRankMin()}
         scoreRankMax={scoreRankMax()}
         excludeNoPlay={props.filters.excludeNoPlay}
+        unplayedOnly={props.filters.unplayedOnly}
         onScoreFilterModeChange={handleScoreFilterModeChange}
         onScoreMinInput={setScoreMinInput}
         onScoreMaxInput={setScoreMaxInput}
@@ -492,12 +521,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }}
         onScoreRankChange={handleScoreRankChange}
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
+        onUnplayedOnlyChange={handleUnplayedOnlyChange}
       />
       <NumericRangeSection
         config={SINGLE_RATING_RANGE_FILTER}
@@ -563,12 +588,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ),
           }))
         }
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
       />
       <LampSection
         title="FULL CHAIN"
@@ -585,12 +605,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ),
           }))
         }
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
       />
       <LampSection
         title="ハードランプ"
@@ -612,12 +627,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ),
           }))
         }
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
       />
       <MultiSelectFilterSection
         title="ジャンル"

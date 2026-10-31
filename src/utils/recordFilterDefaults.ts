@@ -49,6 +49,7 @@ export const DEFAULT_FILTER: FilterState = {
   chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
   excludeNoPlay: false,
+  unplayedOnly: false,
   updatedAt: {
     min: '',
     max: '',
@@ -124,6 +125,7 @@ export const normalizeFilterState = (
     opTargetType: filter.opTargetType ?? DEFAULT_FILTER.opTargetType,
     favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
     excludeLockedSongs: filter.excludeLockedSongs ?? DEFAULT_FILTER.excludeLockedSongs,
+    unplayedOnly: filter.unplayedOnly ?? DEFAULT_FILTER.unplayedOnly,
     nameFolders: filter.nameFolders ?? null,
     combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
     chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],

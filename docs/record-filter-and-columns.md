@@ -162,6 +162,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
   "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
   "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null],
   "excludeNoPlay": false,
+  "unplayedOnly": false,
   "updatedAt": {
     "min": "",
     "max": ""
@@ -192,6 +193,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `chain_lamp` | `Array<string \| null>` | はい | 許可する FULL CHAIN ランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `hard_lamp` | `Array<string \| null>` | はい | 許可するクリアランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `excludeNoPlay` | `boolean` | はい | `true` の場合、未プレイ譜面を除外します。 |
+| `unplayedOnly` | `boolean` | いいえ | `true` の場合、未プレイ譜面だけを表示します。保存値に無い場合は `false` です。URL クエリには載せません。 |
 | `updatedAt` | `{ min: string, max: string }` | はい | 最終更新日の範囲です。空文字列は該当する範囲端を指定しないことを表します。 |
 
 ### 通常レコードの判定ルール
@@ -199,22 +201,23 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 レコードは以下をすべて満たした場合に一致します。
 
 1. `excludeNoPlay` が `true` のとき、未プレイではないこと。
-2. `title` が空でないとき、曲名、アーティスト名、読みのいずれかに一致すること。
-3. `difficulty` が `difficulties` に含まれること。
-4. `opTargetOnly` が `true` のとき、`opTargetType` に応じたOVER POWER対象譜面であること。
-5. `favoriteSongsOnly` が `true` のとき、お気に入り登録済みの楽曲であること。
-6. `excludeLockedSongs` が `true` のとき、未解禁設定の通常楽曲ではなく、ULTIMAの場合は未解禁設定のULTIMA譜面でもないこと。
-7. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
-8. `versions` が `null` でも空でもないとき、レコードのバージョンが `versions` に含まれること。`null` と空配列では公開済みバージョンとバージョン不明の楽曲を残し、未公開バージョンの楽曲は除外します。
-9. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
-10. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
-11. スコアが `score.min` 以上かつ `score.max` 以下であること。
-12. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
-13. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
-14. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
-15. FULL CHAIN ランプが `chain_lamp` に含まれること。
-16. クリアランプが `hard_lamp` に含まれること。
-17. `updatedAt` で指定した最終更新日の範囲内であること。
+2. `unplayedOnly` が `true` のとき、プレイ済みではないこと。プレイ済み0点は対象外です。
+3. `title` が空でないとき、曲名、アーティスト名、読みのいずれかに一致すること。
+4. `difficulty` が `difficulties` に含まれること。
+5. `opTargetOnly` が `true` のとき、`opTargetType` に応じたOVER POWER対象譜面であること。
+6. `favoriteSongsOnly` が `true` のとき、お気に入り登録済みの楽曲であること。
+7. `excludeLockedSongs` が `true` のとき、未解禁設定の通常楽曲ではなく、ULTIMAの場合は未解禁設定のULTIMA譜面でもないこと。
+8. `genres` が空でないとき、レコードのジャンルが `genres` に含まれること。
+9. `versions` が `null` でも空でもないとき、レコードのバージョンが `versions` に含まれること。`null` と空配列では公開済みバージョンとバージョン不明の楽曲を残し、未公開バージョンの楽曲は除外します。
+10. `nameFolders` が `null` でないとき、楽曲の楽曲名順フォルダのコードが `nameFolders` に含まれること。
+11. 譜面定数が `const.min` 以上かつ `const.max` 以下であること。
+12. スコアが `score.min` 以上かつ `score.max` 以下であること。未プレイ譜面はスコア `0` として判定します。
+13. `justiceCount.min` または `justiceCount.max` が `null` でないとき、コンボランプが `ALL JUSTICE` で、`justice_count` が `null` ではなく、指定範囲内であること。
+14. `overPower.min` または `overPower.max` が `null` でないとき、プレイ済み譜面で、`overpower` が指定範囲内であること。
+15. AJC 判定後のコンボランプが `combo_lamp` に含まれること。JUSTICE 数フィルターの有効・無効にかかわらず判定します。
+16. FULL CHAIN ランプが `chain_lamp` に含まれること。
+17. クリアランプが `hard_lamp` に含まれること。
+18. `updatedAt` で指定した最終更新日の範囲内であること。
 
 ### 通常レコードのデフォルト値
 
@@ -241,6 +244,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `chain_lamp`: `["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null]`
 - `hard_lamp`: `["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD", "CLEAR", "FAILED", null]`
 - `excludeNoPlay`: `false`
+- `unplayedOnly`: `false`
 - `updatedAt.min`: `""`
 - `updatedAt.max`: `""`
 
@@ -386,7 +390,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 {
   "name": "高難度FC狙い",
   "filter_type": "standard",
-  "schema_version": 10,
+  "schema_version": 11,
   "filter": {
     "title": "",
     "difficulties": ["MASTER", "ULTIMA"],
@@ -419,6 +423,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
     "chain_lamp": ["FULL CHAIN PLATINUM", "FULL CHAIN GOLD", null],
     "hard_lamp": ["CATASTROPHY", "ABSOLUTE", "BRAVE", "HARD"],
     "excludeNoPlay": true,
+    "unplayedOnly": false,
     "updatedAt": {
       "min": "",
       "max": ""
@@ -431,7 +436,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 | --- | --- | --- |
 | `name` | `string` | 保存済みフィルター名です。前後空白を除いて1〜30文字、制御文字不可です。 |
 | `filter_type` | `"standard"` \| `"worldsend"` | 通常レコードは `"standard"`、WORLD'S END は `"worldsend"` を使います。 |
-| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `10`、WORLD'S END が `5` です。 |
+| `schema_version` | `number` | フロント側フィルタースキーマのバージョンです。現行値は通常レコードが `11`、WORLD'S END が `5` です。 |
 | `filter` | `object` | `filter_type` に対応するフィルター状態 JSON です。 |
 
 サーバーは `filter` の内部フィールドを解釈しません。
@@ -447,7 +452,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
       "id": "11111111-1111-1111-1111-111111111111",
       "name": "高難度FC狙い",
       "filter_type": "standard",
-      "schema_version": 10,
+      "schema_version": 11,
       "filter": {
         "title": "",
         "difficulties": ["MASTER", "ULTIMA"]
@@ -467,7 +472,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 
 ### フロント側の復元ルール
 
-- 通常レコードは現行の `schema_version: 10` に加え、互換対象の `3`, `4`, `5`, `6`, `7`, `8`, `9` を有効として扱います。`nameFolders` を持たない保存値は全フォルダ対象 (`null`) として補完します。
+- 通常レコードは現行の `schema_version: 11` に加え、互換対象の `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10` を有効として扱います。`nameFolders` を持たない保存値は全フォルダ対象 (`null`) として補完します。`unplayedOnly` を持たない保存値は未プレイのみを無効 (`false`) として補完します。
 - WORLD'S END は現行の `schema_version: 5` に加え、互換対象の `2`, `3`, `4` を有効として扱います。`nameFolders` を持たない保存値は全フォルダ対象 (`null`) として補完します。
 - 互換対象の `schema_version: 3`, `4`, `5` では、保存済みの `ALL JUSTICE` 条件へ `ALL JUSTICE CRITICAL` を補完し、AJC 選択肢追加前と同じ対象範囲を維持します。
 - `filter` が `null` ではないオブジェクトの場合だけ、各画面の `normalizeFilterState` / `normalizeWorldsendFilterState` で補完します。
@@ -502,6 +507,7 @@ OVER POWER 達成率 (`overpower_percent`) は検索対象にしません。
 
 URL クエリによるフィルター同期は、現行コードでは通常レコードの範囲条件を対象にしています。
 `FilterState` の内部構造をそのまま保存せず、必要な項目だけをフラットなキーとして表現します。
+`excludeNoPlay` と `unplayedOnly` は URL クエリに載せません。既存の範囲クエリキーの意味は変わりません。
 
 ```text
 ?constMin=14&constMax=16&scoreMin=1000000&scoreMax=1010000&justiceCountMax=20&overPowerMin=80
@@ -581,6 +587,8 @@ URL クエリによるフィルター同期は、現行コードでは通常レ�
 左上のセルは空欄で表示し、縦軸の名前はスクリーンリーダー向けにのみ提供します。
 
 未達成譜面が残っているセルを選ぶと、選択中の難易度・埋め条件とセルの範囲を通常レコードのフィルターに引き継ぎます。セルは縦軸と横軸の両方の条件で、右端の合計列は縦軸の条件のみで、最下段の合計行は横軸の条件のみで絞り込みます。楽曲名の軸を含むセルと合計は、フォルダのコードを通常レコードの `nameFolders` に引き継ぎます。
+
+「プレイ済み」の未達成は `unplayedOnly` を有効にし、未プレイ譜面だけを表示します。スコア0のプレイ済み譜面は達成済みのため遷移先に含めません。スコアやランプの埋め条件は、これまでどおりスコア上限またはランプ条件で未達成譜面を表示し、`unplayedOnly` はオフのままです。
 
 | 選択位置 | 絞り込み範囲 |
 | --- | --- |

@@ -88,6 +88,11 @@ export interface FilterState {
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]
   excludeNoPlay: boolean
+  /**
+   * 未プレイ譜面だけを表示するか。
+   * URLクエリには載せず、保存値に無い場合は false として扱う。
+   */
+  unplayedOnly: boolean
   /** 最終更新日の範囲フィルター。空文字列は未指定を意味する */
   updatedAt: DateRangeFilter
 }

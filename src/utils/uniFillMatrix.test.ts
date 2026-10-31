@@ -461,6 +461,7 @@ test('レベル別のマスはジャンル・レベル範囲・スコア上限�
   assert.equal(result.constFilterMode, 'level')
   assert.deepEqual(result.score, { min: 0, max: 1_007_499 })
   assert.equal(result.scoreFilterMode, 'number')
+  assert.equal(result.unplayedOnly, false)
 })
 
 test('ジャンルとバージョンが交差するマスは両方の条件を引き継ぎ、譜面定数は既定値のままにする', () => {
@@ -657,7 +658,7 @@ test('全難易度のマスは全難易度を選択し、OP対象では絞り込
   assert.deepEqual(result.combo_lamp, [null])
 })
 
-test('AJC未達成はAJCを除いたコンボランプ、未プレイはスコア0だけを表示するフィルターになる', () => {
+test('AJC未達成はAJCを除いたコンボランプ、プレイ済み未達成は未プレイのみを表示するフィルターになる', () => {
   // Given
   const base = { difficulty: 'MASTER', excludeLockedSongs: false } as const
 
@@ -667,7 +668,11 @@ test('AJC未達成はAJCを除いたコンボランプ、未プレイはスコ�
 
   // Then
   assert.deepEqual(ajc.combo_lamp, ['ALL JUSTICE', 'FULL COMBO', null])
-  assert.deepEqual(played.score, { min: 0, max: 0 })
+  assert.equal(ajc.unplayedOnly, false)
+  assert.equal(played.unplayedOnly, true)
+  assert.equal(played.excludeNoPlay, false)
+  assert.deepEqual(played.score, DEFAULT_FILTER.score)
+  assert.equal(played.scoreFilterMode, DEFAULT_FILTER.scoreFilterMode)
 })
 
 test('チェック数は対象譜面のある通常マスだけを数え、未達成マスと合計のチェックを区別する', () => {

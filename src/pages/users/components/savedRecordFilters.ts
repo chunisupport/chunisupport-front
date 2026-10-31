@@ -251,6 +251,7 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
     isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
     typeof value.excludeNoPlay === 'boolean' &&
+    (value.unplayedOnly === undefined || typeof value.unplayedOnly === 'boolean') &&
     (value.updatedAt === undefined || isDateRangeFilter(value.updatedAt))
   )
 }

@@ -105,6 +105,11 @@ export function isRecordMatchedWithTitleMatcher(
     return false
   }
 
+  // 未プレイのみ。プレイ済み0点はスコア0の範囲条件には一致するが、ここでは除外する
+  if (filters.unplayedOnly && record.is_played) {
+    return false
+  }
+
   // 曲名
   if (!matchTitle(record)) {
     return false
