@@ -36,7 +36,7 @@ test('buildSavedFilterRequest は通常レコード用の保存リクエスト�
   // Then
   assert.equal(result.name, '高難度FC狙い')
   assert.equal(result.filter_type, 'standard')
-  assert.equal(result.schema_version, 10)
+  assert.equal(result.schema_version, 11)
   assert.deepEqual(result.filter, filter)
 })
 
@@ -180,6 +180,29 @@ test('toSavedFilter はschema 9へ楽曲名順の全フォルダ対象を補完�
   // Then
   assert.equal(result.isValid, true)
   assert.equal(result.filter?.nameFolders, null)
+})
+
+test('toSavedFilter はschema 10へ未プレイのみの既定値を補完する', async () => {
+  // Given
+  const { unplayedOnly: _unplayedOnly, ...legacyFilter } = getDefaultFilter()
+  const { toSavedFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '66666666-6666-6666-6666-666666666666',
+    name: 'schema 10',
+    filter_type: 'standard',
+    schema_version: 10,
+    filter: legacyFilter,
+    created_at: '2026-10-30T00:00:00Z',
+    updated_at: '2026-10-30T00:00:00Z',
+  }
+
+  // When
+  const result = toSavedFilter(dto)
+
+  // Then
+  assert.equal(result.isValid, true)
+  assert.equal(result.filter?.unplayedOnly, false)
+  assert.deepEqual(result.filter?.combo_lamp, legacyFilter.combo_lamp)
 })
 
 test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {

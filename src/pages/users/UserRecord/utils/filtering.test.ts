@@ -4,8 +4,9 @@ import type { FilterState } from '../../../../types/recordFilter'
 import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch.ts'
 import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults.ts'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from '../../../../utils/scoreRank.ts'
 import { createSearchTextCache } from '../../../../utils/searchHelpers.ts'
+import { buildUniFillMatrixRecordFilter } from '../../../../utils/uniFillMatrix.ts'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
@@ -487,6 +488,51 @@ test('isRecordMatched はALL JUSTICE CRITICALをコンボランプ条件とし�
   assert.equal(nonCritical, false)
 })
 
+test('プレイ済み未達成のフィルターは未プレイだけを一致させ、スコア未達成はプレイ済み0点を残す', () => {
+  // Given: プレイ済み0点、未プレイ、通常のプレイ済みスコア。
+  const playedZero = createRecord({
+    is_played: true,
+    score: 0,
+    combo_lamp: null,
+    full_chain: null,
+    clear_lamp: null,
+  })
+  const unplayed = createRecord({
+    is_played: false,
+    score: 0,
+    combo_lamp: null,
+    full_chain: null,
+    clear_lamp: null,
+  })
+  const played = createRecord({ is_played: true, score: 1_005_000 })
+  const playedFilter = buildUniFillMatrixRecordFilter(getDefaultFilter(), {
+    difficulty: 'MASTER',
+    achievement: 'played',
+    excludeLockedSongs: false,
+  })
+  const sssFilter = buildUniFillMatrixRecordFilter(getDefaultFilter(), {
+    difficulty: 'MASTER',
+    achievement: 'sss',
+    excludeLockedSongs: false,
+  })
+
+  // When / Then: プレイ済み条件の未達成は未プレイだけが対象。
+  assert.equal(isRecordMatched(playedZero, playedFilter), false)
+  assert.equal(isRecordMatched(unplayed, playedFilter), true)
+  assert.equal(isRecordMatched(played, playedFilter), false)
+
+  // Then: スコア系の未達成はプレイ済み0点と未プレイを残し、達成済みスコアを除く。
+  assert.equal(sssFilter.unplayedOnly, false)
+  assert.deepEqual(sssFilter.score, { min: 0, max: SCORE_RANK_MIN_SCORES.SSS - 1 })
+  assert.equal(isRecordMatched(playedZero, sssFilter), true)
+  assert.equal(isRecordMatched(unplayed, sssFilter), true)
+  assert.equal(isRecordMatched(played, sssFilter), true)
+  assert.equal(
+    isRecordMatched(createRecord({ is_played: true, score: SCORE_RANK_MIN_SCORES.SSS }), sssFilter),
+    false
+  )
+})
+
 test('isRecordMatched は未プレイ除外と未プレイのスコア0扱いを判定できる', () => {
   const record = createRecord({
     is_played: false,
@@ -497,6 +543,24 @@ test('isRecordMatched は未プレイ除外と未プレイのスコア0扱いを
   })
 
   assert.equal(isRecordMatched(record, { ...getDefaultFilter(), excludeNoPlay: true }), false)
+  assert.equal(isRecordMatched(record, { ...getDefaultFilter(), unplayedOnly: true }), true)
+  assert.equal(
+    isRecordMatched(
+      createRecord({
+        is_played: true,
+        score: 0,
+        combo_lamp: null,
+        full_chain: null,
+        clear_lamp: null,
+      }),
+      {
+        ...getDefaultFilter(),
+        score: { min: 0, max: 0 },
+        scoreFilterMode: 'number',
+      }
+    ),
+    true
+  )
   assert.equal(
     isRecordMatched(record, {
       ...getDefaultFilter(),

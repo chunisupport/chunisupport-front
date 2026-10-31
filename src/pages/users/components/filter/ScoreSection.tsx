@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js'
+import { type Component, Show } from 'solid-js'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
 import {
@@ -16,6 +16,9 @@ const SCORE_RANGE_TITLE = 'スコア'
 /** スコアランク範囲セクションの見出し */
 const SCORE_RANK_RANGE_TITLE = 'スコアランク'
 
+/** 未プレイ譜面だけを表示するチェックボックスのラベル */
+const UNPLAYED_ONLY_LABEL = '未プレイ譜面のみ'
+
 type ScoreSectionProps = {
   scoreFilterMode: 'number' | 'rank'
   scoreMinInput: string
@@ -23,6 +26,8 @@ type ScoreSectionProps = {
   scoreRankMin: string
   scoreRankMax: string
   excludeNoPlay: boolean
+  /** 未プレイ譜面だけを表示するか。未指定の画面ではチェックボックスを出さない */
+  unplayedOnly?: boolean
   onScoreFilterModeChange: (mode: 'number' | 'rank') => void
   onScoreMinInput: (value: string) => void
   onScoreMaxInput: (value: string) => void
@@ -30,12 +35,14 @@ type ScoreSectionProps = {
   onScoreMaxCommit: (value: string) => void
   onScoreRankChange: (type: 'min' | 'max', value: string) => void
   onExcludeNoPlayChange: (value: boolean) => void
+  /** 未プレイのみの切り替え。未指定の画面ではチェックボックスを出さない */
+  onUnplayedOnlyChange?: (value: boolean) => void
 }
 
 /**
  * スコア条件の入力欄とランク選択欄を表示する。
  *
- * @param props - スコア条件、表示モード、未プレイ除外状態、各変更ハンドラ。
+ * @param props - スコア条件、表示モード、プレイ状態、各変更ハンドラ。
  * @returns スコアフィルターセクションの JSX 要素。
  */
 const ScoreSection: Component<ScoreSectionProps> = (props) => (
@@ -102,6 +109,18 @@ const ScoreSection: Component<ScoreSectionProps> = (props) => (
         label="未プレイ譜面を除外"
       />
     </div>
+    <Show when={props.onUnplayedOnlyChange !== undefined}>
+      <div class="mt-2">
+        <CheckboxField
+          id="filter-unplayed-only"
+          checked={props.unplayedOnly === true}
+          onChange={(checked) => props.onUnplayedOnlyChange?.(checked)}
+          class="flex items-center gap-2"
+          textVariant="large"
+          label={UNPLAYED_ONLY_LABEL}
+        />
+      </div>
+    </Show>
   </div>
 )
 

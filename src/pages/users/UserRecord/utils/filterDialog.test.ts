@@ -78,6 +78,37 @@ test('isRecordFilterOptionsChanged は単曲レート範囲の変更を検出す
   assert.equal(result, true)
 })
 
+test('isRecordFilterOptionsChanged は未プレイのみの変更を検出すること', () => {
+  // Given
+  const defaultFilter = { ...DEFAULT_FILTER }
+  const currentFilter = { ...DEFAULT_FILTER, unplayedOnly: true }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isRecordDifficultyFilterOnlyChanged は未プレイのみの変更を難易度だけとは扱わないこと', () => {
+  // Given
+  const defaultFilter: FilterState = {
+    ...DEFAULT_FILTER,
+    difficulties: ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'],
+  }
+  const currentFilter: FilterState = {
+    ...DEFAULT_FILTER,
+    difficulties: ['MASTER', 'ULTIMA'],
+    unplayedOnly: true,
+  }
+
+  // When
+  const result = isRecordDifficultyFilterOnlyChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, false)
+})
+
 test('isRecordFilterOptionsChanged は未解禁曲除外の変更を検出すること', () => {
   // Given
   const defaultFilter = { ...DEFAULT_FILTER }

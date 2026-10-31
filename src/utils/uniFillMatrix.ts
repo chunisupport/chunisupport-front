@@ -470,12 +470,13 @@ const toScoreBelowFilter = (maxScore: number): Pick<FilterState, 'score' | 'scor
  * 埋め条件を満たしていない譜面だけを表示する条件へ変換する。
  *
  * @param achievement - 埋め終わりとみなす到達条件。
- * @returns 未達成譜面を絞り込む部分フィルター。
+ * @returns 未達成譜面を絞り込む部分フィルター。プレイ済みだけ未プレイのみを使う。
  */
 const resolveUnachievedFilter = (achievement: PlayerStatsAchievement): Partial<FilterState> => {
   switch (achievement) {
     case 'played':
-      return toScoreBelowFilter(SCORE_MIN)
+      // プレイ済み0点は達成扱いのため、スコア0ではなく未プレイ譜面だけを対象にする
+      return { unplayedOnly: true }
     case 's':
       return toScoreBelowFilter(SCORE_RANK_MIN_SCORES.S - 1)
     case 'sPlus':
