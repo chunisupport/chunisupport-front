@@ -74,7 +74,6 @@ import {
   STAFF_LOGIN_PATH,
   TOOLS_PATH,
   UNI_FILL_MATRIX_PATH,
-  UNIFIED_WEAK_CHART_INSPECTOR_PATH,
   WEAK_CHART_INSPECTOR_PATH,
   WORLDSEND_SONGS_PATH,
 } from './constants/routes'
@@ -132,9 +131,6 @@ const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPa
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const OnlineWeakChartInspectorPage = lazy(
   () => import('./pages/tools/OnlineWeakChartInspectorPage')
-)
-const UnifiedWeakChartInspectorPage = lazy(
-  () => import('./pages/tools/UnifiedWeakChartInspectorPage')
 )
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
@@ -458,19 +454,6 @@ const ToolsPage = () => {
 }
 
 const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
-const LoadableUnifiedWeakChartInspectorPage = withRouteLoadBoundary(UnifiedWeakChartInspectorPage)
-
-/**
- * 統合分析ツールへの直接アクセスを管理者に限定する。
- * @returns ADMIN権限とプレイヤーデータ登録を満たす場合のみ表示する統合分析画面。
- */
-const GuardedUnifiedWeakChartInspectorPage = () => (
-  <RequireRole allowedRoles={['ADMIN']}>
-    <RequirePlayerData>
-      <LoadableUnifiedWeakChartInspectorPage />
-    </RequirePlayerData>
-  </RequireRole>
-)
 const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePage)
 const LoadableAdminChartRankingPage = withRouteLoadBoundary(AdminChartRankingPage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
@@ -779,10 +762,6 @@ const App = () => {
       <Route
         path={ONLINE_WEAK_CHART_INSPECTOR_PATH}
         component={withNavBar(withPlayerData(withRouteLoadBoundary(OnlineWeakChartInspectorPage)))}
-      />
-      <Route
-        path={UNIFIED_WEAK_CHART_INSPECTOR_PATH}
-        component={withNavBar(GuardedUnifiedWeakChartInspectorPage)}
       />
       <Route
         path={RANDOM_SONG_SELECTOR_PATH}

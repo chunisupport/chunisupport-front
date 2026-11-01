@@ -13,7 +13,6 @@ import {
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   UNI_FILL_MATRIX_PATH,
-  UNIFIED_WEAK_CHART_INSPECTOR_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
@@ -144,7 +143,7 @@ export const TOOL_LINKS: ToolLink[] = [
     title: '苦手譜面インスペクター',
     href: WEAK_CHART_INSPECTOR_PATH,
     icon: 'chart',
-    description: 'プレイ済み譜面を譜面定数ごとに比較し、得意・苦手譜面を推測します。',
+    description: '同レート帯の平均との差を自分の普段の差と比べ、見直す譜面の優先順位を確認します。',
   },
   {
     title: '苦手譜面インスペクター Online',
@@ -188,13 +187,6 @@ export const TOOL_LINKS: ToolLink[] = [
     icon: 'discover',
     description:
       '筐体上とChuniSupport上のOPの差から、未解禁曲の候補を絞り込むことができます。',
-    adminOnly: true,
-  },
-  {
-    title: '苦手譜面インスペクター Unified',
-    href: UNIFIED_WEAK_CHART_INSPECTOR_PATH,
-    icon: 'discover',
-    description: '同レート帯の平均との差を自分の普段の差と比べ、見直す譜面の優先順位を確認します。',
     adminOnly: true,
   },
 ]
