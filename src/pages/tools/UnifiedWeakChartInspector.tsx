@@ -110,11 +110,15 @@ const APTITUDE_TICKS = Array.from(
  * 判定で絞り込んでも点の位置と横軸の範囲が変わらないよう、点と軸は判定で絞り込む前の譜面から求める。
  * @param props.entries - 表示・集計範囲で絞り込み、判定では絞り込む前の統合分析結果。
  * @param props.category - 表示する判定。すべての場合は 'all'。
+ * @param props.constMin - 表示対象の譜面がない場合の横軸の下限。
+ * @param props.constMax - 表示対象の譜面がない場合の横軸の上限。
  * @returns 横軸が譜面定数、縦軸が得意度の散布図。
  */
 const UnifiedWeakChartScatter = (props: {
   entries: UnifiedWeakChartEntry[]
   category: CategoryFilter
+  constMin: number
+  constMax: number
 }): JSX.Element => {
   let canvasRef!: HTMLCanvasElement
   let tooltipRef!: HTMLDivElement
@@ -124,7 +128,10 @@ const UnifiedWeakChartScatter = (props: {
     themePreference()
     accentPreference()
     const points = buildUnifiedWeakChartPoints(props.entries, UNIFIED_WEAK_CHART_POINT_JITTER)
-    const consts = points.map((point) => point.entry.record.const)
+    const consts =
+      points.length > 0
+        ? points.map((point) => point.entry.record.const)
+        : props.entries.map((entry) => entry.record.const)
     const textColor = resolveChartColor('--cs-color-text-muted', CHART_COLOR_FALLBACK)
     const gridColor = resolveChartColor('--cs-color-border', CHART_COLOR_FALLBACK)
     const zones = UNIFIED_WEAK_CHART_ZONES.map((zone) => ({
@@ -186,8 +193,12 @@ const UnifiedWeakChartScatter = (props: {
         },
         scales: {
           x: {
-            min: Math.min(...consts) - UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
-            max: Math.max(...consts) + UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
+            min:
+              (consts.length > 0 ? Math.min(...consts) : props.constMin) -
+              UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
+            max:
+              (consts.length > 0 ? Math.max(...consts) : props.constMax) +
+              UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
             grid: { color: gridColor },
             ticks: {
               color: textColor,
@@ -634,10 +645,13 @@ const UnifiedWeakChartInspector = (): JSX.Element => {
               class="flex w-full flex-wrap"
               itemClass="min-h-10 flex-1 whitespace-nowrap"
             />
+            <UnifiedWeakChartScatter
+              entries={displayed()}
+              category={category()}
+              constMin={settings().constMin}
+              constMax={settings().constMax}
+            />
             <Show when={filtered().length > 0} fallback={<EmptyState label={COPY.empty} />}>
-              <Show when={filtered().some((entry) => entry.aptitude !== null)}>
-                <UnifiedWeakChartScatter entries={displayed()} category={category()} />
-              </Show>
               <UnifiedComparisonTable
                 entries={filtered()}
                 initialScrollOffset={restoredScrollOffset}
