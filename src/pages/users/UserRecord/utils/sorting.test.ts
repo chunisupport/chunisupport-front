@@ -353,7 +353,7 @@ test('複数ソートは前の条件が同値の場合に次の条件で並べ�
   )
 })
 
-test('J数ソートは数値順に並べ、J数なし行は常に末尾に寄せる', () => {
+test('J数ソートは数値順に並べ、J数なし行は後続条件へ委譲する', () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2 }),
     createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', justice_count: 1 }),
@@ -368,14 +368,15 @@ test('J数ソートは数値順に並べ、J数なし行は常に末尾に寄せ
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, notes: 1000, score: 0 }),
   ]
 
+  // Then: J数なしの3件は後続条件がないため、入力順のまま末尾へ残る。
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'asc').map((record) => record.id),
-    ['aj-j0', 'aj-j1', 'aj-j2', 'fc', 'aj-null', 'unplayed']
+    ['aj-j0', 'aj-j1', 'aj-j2', 'aj-null', 'fc', 'unplayed']
   )
 
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j1', 'aj-j0', 'fc', 'aj-null', 'unplayed']
+    ['aj-j2', 'aj-j1', 'aj-j0', 'aj-null', 'fc', 'unplayed']
   )
 })
 

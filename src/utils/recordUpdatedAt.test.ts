@@ -11,6 +11,16 @@ test('更新日をyy/mm/dd形式で表示する', () => {
   assert.equal(formatUpdatedAt('2026-04-14T11:22:33Z'), '26/04/14')
 })
 
+test('更新日は日本時間基準の日付で表示する', () => {
+  assert.equal(formatUpdatedAt('2026-05-31T14:59:59Z'), '26/05/31')
+  assert.equal(formatUpdatedAt('2026-05-31T15:00:00Z'), '26/06/01')
+})
+
+test('カレンダー上に存在しない更新日はハイフンを返す', () => {
+  assert.equal(formatUpdatedAt('2026-99-99T00:00:00Z'), '-')
+  assert.equal(formatUpdatedAt('2026-02-30'), '-')
+})
+
 test('更新日が未設定や不正な場合はハイフンを返す', () => {
   assert.equal(formatUpdatedAt(null), '-')
   assert.equal(formatUpdatedAt('invalid'), '-')

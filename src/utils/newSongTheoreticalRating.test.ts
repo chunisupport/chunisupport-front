@@ -219,21 +219,37 @@ test('規定枠数未満の新曲譜面は採用した譜面数で平均する�
   assert.equal(result?.entries.length, 1)
 })
 
-test('譜面定数15.05の表示レーティングと候補スコア計算が一致すること', () => {
-  // Given: APIから小数第2位を含む譜面定数15.05が返る新曲譜面。
-  const songs = [createSong('new', '2026-07-02', [{ value: 15.05 }])]
+test('譜面定数15.1の表示レーティングと候補スコア計算が一致すること', () => {
+  // Given: APIが返す0.1刻みの譜面定数15.1を持つ新曲譜面。
+  const songs = [createSong('new', '2026-07-02', [{ value: 15.1 }])]
 
   // When: SSS+到達時のレーティングと、その1点手前から必要なスコア差を算出する。
   const result = calculateNewSongTheoreticalRating(songs, CURRENT_VERSIONS, CURRENT_DATE, 1)
   const scoreDifference = calculateCandidateScoreDifference(
     1_008_999,
-    15.05,
+    15.1,
     result?.entries[0]?.rating ?? 0
   )
 
   // Then: 共有計算と同じ17.25を表示し、SSS+到達にはあと1点と判定する。
   assert.equal(result?.entries[0]?.rating, 17.25)
   assert.equal(scoreDifference, -1)
+})
+
+test('譜面定数15.0と15.1は理論単曲レーティングを0.1差で扱うこと', () => {
+  // Given: APIの正常値である15.0と15.1の新曲譜面。
+  const songs = [
+    createSong('lower', '2026-07-02', [{ value: 15 }]),
+    createSong('upper', '2026-07-02', [{ value: 15.1 }]),
+  ]
+
+  // When: それぞれの理論単曲レーティングを算出する。
+  const lower = calculateNewSongTheoreticalRating([songs[0]], CURRENT_VERSIONS, CURRENT_DATE, 1)
+  const upper = calculateNewSongTheoreticalRating([songs[1]], CURRENT_VERSIONS, CURRENT_DATE, 1)
+
+  // Then: 15.0は17.15、15.1は17.25として区別する。
+  assert.equal(lower?.entries[0]?.rating, 17.15)
+  assert.equal(upper?.entries[0]?.rating, 17.25)
 })
 
 test('同率譜面はAPIの楽曲配列順にかかわらず楽曲IDと難易度順で採用すること', () => {

@@ -195,7 +195,7 @@ view.state.resetFiltersAndSort()
 // Then
 assert.deepEqual(afterFirstClick, [
   { key: 'level', direction: 'asc' },
-  { key: 'level', direction: 'desc' },
+  { key: 'score', direction: 'desc' },
   { key: 'title', direction: 'asc' },
 ])
 assert.deepEqual(afterSecondClick, { key: 'level', direction: 'desc' })

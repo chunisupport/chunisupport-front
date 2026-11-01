@@ -49,11 +49,12 @@ test('タイトル列は reading の日本語順にソートする', () => {
   )
 })
 
-test('ジャンルはマスタのsort_order順にソートする', () => {
+test('ジャンルはマスタのsort_order順にソートし、マスタ外は降順でも末尾に固定する', () => {
   const songs = [
     createSong({ id: 'touhou', genre: '東方Project' }),
     createSong({ id: 'pops', genre: 'POPS & ANIME' }),
     createSong({ id: 'niconico', genre: 'niconico' }),
+    createSong({ id: 'variety', genre: 'VARIETY' }),
   ]
   const genres = [
     { id: 1, name: 'POPS & ANIME', sort_order: 10 },
@@ -63,11 +64,11 @@ test('ジャンルはマスタのsort_order順にソートする', () => {
 
   assert.deepEqual(
     sortSongs(songs, 'genre', 'asc', genres).map((song) => song.id),
-    ['pops', 'niconico', 'touhou']
+    ['pops', 'niconico', 'touhou', 'variety']
   )
   assert.deepEqual(
     sortSongs(songs, 'genre', 'desc', genres).map((song) => song.id),
-    ['touhou', 'niconico', 'pops']
+    ['touhou', 'niconico', 'pops', 'variety']
   )
 })
 

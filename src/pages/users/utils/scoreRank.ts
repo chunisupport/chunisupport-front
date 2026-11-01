@@ -11,10 +11,10 @@ export type ScoreRank =
 /** スコアランクフィルターで選択できるランクラベル */
 export const SCORE_RANKS: ScoreRank[] = ['0点', 'AAA', 'S', 'S+', 'SS', 'SS+', 'SSS', 'SSS+']
 
-/** スコアランクフィルターの下限値 */
+/** スコアランクフィルターの下限値。AAA未満のランクはAAAへまとめる。 */
 export const SCORE_RANK_VALUES: Record<ScoreRank, number> = {
   '0点': 0,
-  AAA: SCORE_RANK_MIN_SCORES.AAA,
+  AAA: 1,
   S: SCORE_RANK_MIN_SCORES.S,
   'S+': SCORE_RANK_MIN_SCORES['S+'],
   SS: SCORE_RANK_MIN_SCORES.SS,

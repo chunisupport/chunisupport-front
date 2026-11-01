@@ -33,24 +33,30 @@ test('filterRankToScore はAAAの上下限を返すこと', () => {
   const min = filterRankToScore(rank, 'min')
   const max = filterRankToScore(rank, 'max')
 
-  // Then: AAAのスコア範囲になる。
-  assert.equal(min, 950000)
+  // Then: 0点を除くAAA未満を含む範囲になる。
+  assert.equal(min, 1)
   assert.equal(max, 974999)
 })
 
 test('scoreToFilterRank は0点とAAA帯をランクラベルへ変換すること', () => {
   // Given: 0点とAAA帯の境界値を用意する。
   const zeroScore = 0
+  const firstScore = 1
+  const belowAaaMinScore = 949999
   const aaaMinScore = 950000
   const aaaMaxScore = 974999
 
   // When: フィルター用ランクラベルへ変換する。
   const zeroRank = scoreToFilterRank(zeroScore)
+  const firstRank = scoreToFilterRank(firstScore)
+  const belowAaaMinRank = scoreToFilterRank(belowAaaMinScore)
   const aaaMinRank = scoreToFilterRank(aaaMinScore)
   const aaaMaxRank = scoreToFilterRank(aaaMaxScore)
 
-  // Then: 0点は0点、AAA帯はAAAとして扱う。
+  // Then: 0点は0点、AAA未満も含めた範囲はAAAとして扱う。
   assert.equal(zeroRank, '0点')
+  assert.equal(firstRank, 'AAA')
+  assert.equal(belowAaaMinRank, 'AAA')
   assert.equal(aaaMinRank, 'AAA')
   assert.equal(aaaMaxRank, 'AAA')
 })

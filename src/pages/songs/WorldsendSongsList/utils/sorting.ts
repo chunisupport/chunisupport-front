@@ -1,5 +1,8 @@
 import type { MasterItemDTO, WorldsendSongDTO } from '../../../../types/api'
-import { compareMasterItemNames, createMasterItemOrderMap } from '../../../../utils/masterData'
+import {
+  compareMasterItemNamesKeepingUnknownLast,
+  createMasterItemOrderMap,
+} from '../../../../utils/masterData'
 import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import {
   nextSortState as nextSharedSortState,
@@ -113,7 +116,12 @@ export const sortWorldsendSongs = (
           if (!left.genre || !right.genre) {
             comparison = compareNullableString(left.genre, right.genre, direction)
           } else {
-            comparison = compareMasterItemNames(left.genre, right.genre, genreOrderMap) * direction
+            comparison = compareMasterItemNamesKeepingUnknownLast(
+              left.genre,
+              right.genre,
+              genreOrderMap,
+              currentSortDirection
+            )
           }
           if (comparison !== 0) return comparison
           break

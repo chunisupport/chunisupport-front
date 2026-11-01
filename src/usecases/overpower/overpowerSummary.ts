@@ -18,6 +18,9 @@ import type {
   OverPowerSummaryRow,
 } from './types'
 
+/** マスタに対応する値がない集計行のラベル */
+const UNKNOWN_LABEL = '不明'
+
 type MutableSummary = {
   current: number
   max: number
@@ -74,8 +77,12 @@ const buildGenreSummaries = (
   const groups = new Map<string, MutableSummary>()
   const genreOrderMap = createMasterItemOrderMap(genres)
   for (const entry of entries) {
-    if (!entry.song.genre || entry.song.genre === '不明') continue
-    addToGroup(groups, entry.song.genre, entry.record?.overpower ?? 0, entry.maxOverPower)
+    addToGroup(
+      groups,
+      entry.song.genre || UNKNOWN_LABEL,
+      entry.record?.overpower ?? 0,
+      entry.maxOverPower
+    )
   }
 
   return [...groups.entries()]
@@ -117,8 +124,12 @@ const buildVersionSummaries = (
       .map((version, index) => [getShortVersionName(version.name), index])
   )
   for (const entry of entries) {
-    if (!entry.versionName) continue
-    addToGroup(groups, entry.versionName, entry.record?.overpower ?? 0, entry.maxOverPower)
+    addToGroup(
+      groups,
+      entry.versionName || UNKNOWN_LABEL,
+      entry.record?.overpower ?? 0,
+      entry.maxOverPower
+    )
   }
 
   return [...groups.entries()]

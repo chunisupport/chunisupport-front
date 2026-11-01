@@ -4,9 +4,10 @@ import type { PlayerRecordDTO } from '../types/api'
 import type { ChartScoresResponse } from '../types/chartScores'
 import { truncateChartConst } from './chartConstFormat'
 import { compareRecordsWithRatingBand } from './onlineWeakChartInspector'
+import { quantile } from './quantile'
 import { compareSongsByReading } from './songTitleSorting'
 import type { SortDirection } from './sortingQuery'
-import { isWeakChartInspectionTarget, quantile } from './weakChartInspector'
+import { isWeakChartInspectionTarget } from './weakChartInspector'
 
 /** 自分の普段の失点比からのずれで決める判定。 */
 export type UnifiedWeakChartCategory =

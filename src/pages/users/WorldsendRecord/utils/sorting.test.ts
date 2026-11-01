@@ -73,13 +73,13 @@ test("WORLD'S ENDの既定ソートはスコア降順、属性昇順、レベル
   assert.deepEqual(result, expectedSortConditions)
 })
 
-test("WORLD'S ENDの初期ソートは第1ソートだけクエリ指定で置き換える", () => {
+test("WORLD'S ENDの初期ソートは第1ソートをクエリ指定にし、重複キーを既定条件で補完する", () => {
   // Given
   const sortKey = 'attribute'
   const sortDirection = 'asc'
   const expectedSortConditions = [
     { key: 'attribute', direction: 'asc' },
-    { key: 'attribute', direction: 'asc' },
+    { key: 'score', direction: 'desc' },
     { key: 'level', direction: 'desc' },
     { key: 'title', direction: 'asc' },
   ]
@@ -175,13 +175,13 @@ test("WORLD'S ENDの第4ソートは曲名指定でも方向を昇順へ固定�
   assert.deepEqual(result, expectedSortConditions)
 })
 
-test("WORLD'S ENDのソート条件は不足分を既定値で補って4条件にする", () => {
+test("WORLD'S ENDのソート条件は重複キーを除いて既定値で4条件に補う", () => {
   // Given
   const sortConditions = [{ key: 'level', direction: 'asc' }] as const
   const expectedSortConditions = [
     { key: 'level', direction: 'asc' },
+    { key: 'score', direction: 'desc' },
     { key: 'attribute', direction: 'asc' },
-    { key: 'level', direction: 'desc' },
     { key: 'title', direction: 'asc' },
   ]
 
@@ -231,23 +231,24 @@ test("WORLD'S ENDのランプソートはランプなし、FC、AJ、AJC、未�
   )
 })
 
-test("WORLD'S ENDのJ数ソートは数値順に並べ、J数なし行をスコア降順で並べる", () => {
+test("WORLD'S ENDのJ数ソートは数値順に並べ、J数なし行は後続条件へ委譲する", () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2, score: 1008000 }),
-    createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
     createRecord({ id: 'aj-null', combo_lamp: 'ALL JUSTICE', justice_count: null, score: 1009000 }),
     createRecord({ id: 'none-low', combo_lamp: null, score: 1007000 }),
+    createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
     createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', justice_count: 0, score: 1010000 }),
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, score: 0 }),
   ]
 
+  // Then: J数なしの4件は後続条件がないため、入力順のまま末尾へ残る。
   assert.deepEqual(
     sortWorldsendRecords(records, 'justiceCount', 'asc').map((record) => record.id),
-    ['aj-j0', 'aj-j2', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+    ['aj-j0', 'aj-j2', 'aj-null', 'none-low', 'fc-high', 'unplayed']
   )
 
   assert.deepEqual(
     sortWorldsendRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j0', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+    ['aj-j2', 'aj-j0', 'aj-null', 'none-low', 'fc-high', 'unplayed']
   )
 })

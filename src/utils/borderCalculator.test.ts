@@ -42,6 +42,24 @@ test('2800ノーツ、目標1007500、目標JUSTICE数100の場合は数学的�
   )
 })
 
+test('目標JUSTICE数と同値の候補を含むこと', () => {
+  // Given: 理論値ぴったりの目標スコアと、JUSTICE数0を目標にする。
+  const input = {
+    notes: 100,
+    targetScore: 1010000,
+    targetJustice: 0,
+    fullComboOnly: false,
+  }
+
+  // When
+  const result = calculateBorder(input)
+
+  // Then: 目標JUSTICE数そのものの候補を除外しない。
+  assert.equal(result.reachable, true)
+  assert.equal(result.mode, 'candidates')
+  assert.deepEqual(result.candidates, [{ justice: 0, attack: 0, miss: 0, loss: 0, score: 1010000 }])
+})
+
 test('目標JUSTICE数が未指定の場合はJUSTICE数を制限せず候補一覧を返すこと', () => {
   // Given
   const input = {
