@@ -81,6 +81,7 @@ import {
   ADMIN_ONLY_TOOL_LOCK_LABEL,
   DISABLED_TOOL_BADGE_TEXT,
   isToolLinkListed,
+  TOOL_CATEGORIES,
   TOOL_LINKS,
   type ToolLink,
   type ToolLinkIcon,
@@ -433,9 +434,9 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
 }
 
 /**
- * ツールページの見出しを表示する。
+ * ツールを分類ごとの見出しとカード一覧で表示する。
  * ADMIN 限定ツールは管理者以外の一覧から除外する。
- * @returns ツールページ
+ * @returns 分類ごとにまとめたツールページ。
  */
 const ToolsPage = () => {
   useDocumentTitle('ツール')
@@ -446,8 +447,21 @@ const ToolsPage = () => {
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
-      <div class="grid gap-3 sm:grid-cols-2">
-        <For each={listedTools()}>{(tool) => <ToolCardContent tool={tool} />}</For>
+      <div class="flex flex-col gap-6">
+        <For each={TOOL_CATEGORIES}>
+          {(category) => (
+            <section class="flex flex-col gap-3" aria-labelledby={`tool-category-${category.id}`}>
+              <h2 id={`tool-category-${category.id}`} class="text-lg font-semibold">
+                {category.title}
+              </h2>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <For each={listedTools().filter((tool) => tool.category === category.id)}>
+                  {(tool) => <ToolCardContent tool={tool} />}
+                </For>
+              </div>
+            </section>
+          )}
+        </For>
       </div>
     </div>
   )

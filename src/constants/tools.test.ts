@@ -14,6 +14,7 @@ const publicTool: ToolLink = {
   title: '公開ツール',
   href: '/tools/public',
   icon: 'chart',
+  category: 'analysis',
   description: '公開ツールの説明',
 }
 
