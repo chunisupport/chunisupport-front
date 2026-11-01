@@ -1,3 +1,4 @@
+import { fetchSystemStatus } from '../../api/maintenanceStatus'
 import { MAINTENANCE_DEFAULT_RETRY_AFTER_SECONDS } from '../../constants/maintenance'
 import {
   type AvailabilityState,
@@ -28,17 +29,6 @@ type FetchSystemStatus = (signal?: AbortSignal) => Promise<SystemStatusDTO>
 type AvailabilityRefresherDependencies = {
   fetchStatus: FetchSystemStatus
   now?: () => number
-}
-
-/**
- * 状態確認APIを必要になるまで読み込まずに実行する。
- *
- * @param signal - 呼び出しを中止するAbortSignal。
- * @returns APIが返したシステム状態。
- */
-const fetchDefaultSystemStatus: FetchSystemStatus = async (signal) => {
-  const { fetchSystemStatus } = await import('../../api/maintenanceStatus')
-  return fetchSystemStatus(signal)
 }
 
 /** 状態確認時に上書きできるメンテナンス再確認間隔 */
@@ -130,7 +120,7 @@ export const createAvailabilityRefresher = (
   }
 }
 
-const defaultRefresher = createAvailabilityRefresher({ fetchStatus: fetchDefaultSystemStatus })
+const defaultRefresher = createAvailabilityRefresher({ fetchStatus: fetchSystemStatus })
 
 /**
  * APIの現在状態を取得して共通可用性ストアへ反映する。

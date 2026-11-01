@@ -51,28 +51,30 @@ const hasSongFlags = <TSong extends CachedSong | CachedWorldsendSong>(
  * 楽曲キャッシュのメタデータが現行スキーマと更新日時に一致するか判定する。
  *
  * @param kind - 判定対象のキャッシュ種別。
- * @param songsUpdatedAt - API の更新日時。
+ * @param songsUpdatedAt - API の更新日時。undefined は鮮度を確認せずスキーマだけ検証する。
  * @returns キャッシュが利用可能な場合は true。
  */
 const hasValidSongMetadata = async (
   kind: SongCacheKind,
-  songsUpdatedAt: string | null
+  songsUpdatedAt: string | null | undefined
 ): Promise<boolean> => {
   const db = await getCacheDB()
   const metadata = await db.cacheMetadata.get(kind)
   return (
     metadata?.schemaVersion === CLIENT_CACHE_SCHEMA_VERSION &&
-    metadata.songsUpdatedAt === songsUpdatedAt
+    (songsUpdatedAt === undefined || metadata.songsUpdatedAt === songsUpdatedAt)
   )
 }
 
 /**
- * 通常楽曲一覧キャッシュを読み込む。
+ * 指定した鮮度確認条件で通常楽曲一覧キャッシュを読み込む。
  *
- * @param songsUpdatedAt - API から取得した楽曲更新日時。
+ * @param songsUpdatedAt - API の楽曲更新日時。undefined は先行表示用に鮮度確認を省く。
  * @returns 利用可能な通常楽曲キャッシュ。存在しない場合は null。
  */
-export const readCachedSongs = async (songsUpdatedAt: string | null): Promise<SongDTO[] | null> => {
+const readSongCache = async (
+  songsUpdatedAt: string | null | undefined
+): Promise<SongDTO[] | null> => {
   if (!(await hasValidSongMetadata('songs', songsUpdatedAt))) {
     return null
   }
@@ -93,6 +95,23 @@ export const readCachedSongs = async (songsUpdatedAt: string | null): Promise<So
     .sort((left, right) => left.sortOrder - right.sortOrder)
     .map((song) => song.data)
 }
+
+/**
+ * API の更新日時と一致する通常楽曲一覧キャッシュを読み込む。
+ *
+ * @param songsUpdatedAt - API で確認した楽曲更新日時。
+ * @returns 更新日時が一致する通常楽曲キャッシュ。利用できない場合は null。
+ */
+export const readCachedSongs = (songsUpdatedAt: string | null): Promise<SongDTO[] | null> =>
+  readSongCache(songsUpdatedAt)
+
+/**
+ * 先行表示のため、鮮度を確認せず通常楽曲一覧キャッシュを読み込む。
+ *
+ * @returns スキーマが有効な通常楽曲キャッシュ。利用できない場合は null。
+ */
+export const readCachedSongsWithoutFreshnessCheck = (): Promise<SongDTO[] | null> =>
+  readSongCache(undefined)
 
 /**
  * WORLD'S END 楽曲一覧キャッシュを読み込む。
@@ -129,14 +148,14 @@ export const readCachedWorldsendSongs = async (
  *
  * @param kind - 保存対象の楽曲キャッシュ種別。
  * @param songs - 保存する楽曲一覧。
- * @param songsUpdatedAt - API から取得した楽曲更新日時。
+ * @param songsUpdatedAt - 一覧取得前の楽曲更新日時。未確認なら undefined。
  * @param expectedGeneration - 一覧取得開始時点の楽曲キャッシュ世代。
  * @returns 保存完了後に解決される Promise。
  */
 const replaceSongCache = async <TKind extends SongCacheKind>(
   kind: TKind,
   songs: SongDataByKind[TKind][],
-  songsUpdatedAt: string | null,
+  songsUpdatedAt: string | null | undefined,
   expectedGeneration: number
 ): Promise<void> => {
   if (expectedGeneration !== songCacheGeneration) {
@@ -200,13 +219,13 @@ const replaceSongCache = async <TKind extends SongCacheKind>(
  * 通常楽曲一覧キャッシュを保存する。
  *
  * @param songs - 保存する通常楽曲一覧。
- * @param songsUpdatedAt - API から取得した楽曲更新日時。
+ * @param songsUpdatedAt - 一覧取得前の楽曲更新日時。未確認なら undefined。
  * @param expectedGeneration - 一覧取得開始時点の楽曲キャッシュ世代。
  * @returns 保存完了後に解決される Promise。
  */
 export const replaceCachedSongs = (
   songs: SongDTO[],
-  songsUpdatedAt: string | null,
+  songsUpdatedAt: string | null | undefined,
   expectedGeneration: number = songCacheGeneration
 ): Promise<void> => replaceSongCache('songs', songs, songsUpdatedAt, expectedGeneration)
 
