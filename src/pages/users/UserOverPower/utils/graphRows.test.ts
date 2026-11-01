@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { PlayerRecordDTO, SongDTO } from '../../../../types/api'
+import { buildOverPowerSummary } from '../../../../usecases/overpower/overpowerSummary'
 import type { OverPowerSummaryRow } from '../../../../usecases/overpower/types'
 import { buildChartRecordsBySummaryTab, buildGraphRows } from './graphRows.ts'
 
@@ -119,4 +120,50 @@ test('譜面単位グラフはレコードがない未プレイ譜面をOTHERへ
   // Then
   assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 1)
   assert.equal(result?.comboBands.find((band) => band.label === 'OTHER')?.count, 1)
+})
+
+test('不明ジャンルとバージョンのグラフ内訳はサマリー件数と一致する', () => {
+  // Given
+  const songs = [
+    createSong({ id: 'explicit-unknown', genre: '不明', release: null }),
+    createSong({ id: 'empty-genre', genre: '', release: null }),
+  ]
+  const records = [createRecord({ id: 'explicit-unknown', combo_lamp: 'ALL JUSTICE' })]
+  const summary = buildOverPowerSummary(songs, records, [], [])
+  const groups = buildChartRecordsBySummaryTab(
+    songs.map((song) => ({
+      song,
+      difficulty: 'MASTER',
+      chartConst: 15,
+      maxOverPower: 90,
+      level: '15',
+      versionName: '',
+      record: records.find((record) => record.id === song.id) ?? null,
+    }))
+  )
+
+  // When
+  const rows = [
+    ...buildGraphRows(summary.genres, groups.genres),
+    ...buildGraphRows(summary.versions, groups.versions),
+  ]
+
+  // Then
+  assert.equal(rows.length, 2)
+  for (const row of rows) {
+    assert.equal(row.summary.label, '不明')
+    assert.equal(row.summary.count, 2)
+    assert.equal(
+      row.scoreBands.reduce((total, band) => total + band.count, 0),
+      row.summary.count
+    )
+    assert.equal(
+      row.comboBands.reduce((total, band) => total + band.count, 0),
+      row.summary.count
+    )
+    assert.equal(row.scoreBands.find((band) => band.label === 'MAX')?.count, 1)
+    assert.equal(row.scoreBands.find((band) => band.label === 'OTHER')?.count, 1)
+    assert.equal(row.comboBands.find((band) => band.label === 'ALL JUSTICE')?.count, 1)
+    assert.equal(row.comboBands.find((band) => band.label === 'OTHER')?.count, 1)
+  }
 })

@@ -1,4 +1,5 @@
 import type { PlayerRecordDTO } from '../../../../types/api'
+import { OVER_POWER_UNKNOWN_LABEL } from '../../../../usecases/overpower/constants'
 import type { OverPowerChartEntry } from '../../../../usecases/overpower/types'
 import { getScoreRank, MAX_SCORE } from '../../../../utils/scoreRank'
 import { OVER_POWER_COMBO_BANDS, OVER_POWER_SCORE_BANDS } from '../constants'
@@ -28,7 +29,7 @@ const addRecordToGroup = (
 }
 
 /**
- * 未プレイを含む譜面エントリを表示軸ごとに分類する。
+ * 未プレイを含む譜面エントリを表示軸ごとに分類し、欠損した分類は不明行へ含める。
  *
  * @param entries - フィルター適用済みの譜面エントリ。
  * @returns 集計軸ごとのレコード分類Map。未プレイ譜面はnullで保持する。
@@ -47,12 +48,8 @@ export const buildChartRecordsBySummaryTab = (
     addRecordToGroup(groups.all, 'all', entry.record)
     addRecordToGroup(groups.difficulties, entry.difficulty, entry.record)
     addRecordToGroup(groups.levels, entry.level, entry.record)
-    if (entry.song.genre && entry.song.genre !== '不明') {
-      addRecordToGroup(groups.genres, entry.song.genre, entry.record)
-    }
-    if (entry.versionName) {
-      addRecordToGroup(groups.versions, entry.versionName, entry.record)
-    }
+    addRecordToGroup(groups.genres, entry.song.genre || OVER_POWER_UNKNOWN_LABEL, entry.record)
+    addRecordToGroup(groups.versions, entry.versionName || OVER_POWER_UNKNOWN_LABEL, entry.record)
   }
   return groups
 }

@@ -9,6 +9,7 @@ import { type ChartLevelLabel, getChartLevelSortKey, isLowChartLevel } from '../
 import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData'
 import { getShortVersionName } from '../../utils/versionConverter'
 import { buildOverPowerChartEntries, selectOverPowerChartEntries } from './aggregation'
+import { OVER_POWER_UNKNOWN_LABEL } from './constants'
 import type {
   OverPowerAggregationTarget,
   OverPowerChartEntry,
@@ -17,9 +18,6 @@ import type {
   OverPowerSummary,
   OverPowerSummaryRow,
 } from './types'
-
-/** マスタに対応する値がない集計行のラベル */
-const UNKNOWN_LABEL = '不明'
 
 type MutableSummary = {
   current: number
@@ -79,7 +77,7 @@ const buildGenreSummaries = (
   for (const entry of entries) {
     addToGroup(
       groups,
-      entry.song.genre || UNKNOWN_LABEL,
+      entry.song.genre || OVER_POWER_UNKNOWN_LABEL,
       entry.record?.overpower ?? 0,
       entry.maxOverPower
     )
@@ -126,7 +124,7 @@ const buildVersionSummaries = (
   for (const entry of entries) {
     addToGroup(
       groups,
-      entry.versionName || UNKNOWN_LABEL,
+      entry.versionName || OVER_POWER_UNKNOWN_LABEL,
       entry.record?.overpower ?? 0,
       entry.maxOverPower
     )
