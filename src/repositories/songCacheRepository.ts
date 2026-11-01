@@ -67,13 +67,13 @@ const hasValidSongMetadata = async (
 }
 
 /**
- * 通常楽曲一覧キャッシュを読み込む。
+ * 指定した鮮度確認条件で通常楽曲一覧キャッシュを読み込む。
  *
- * @param songsUpdatedAt - API の楽曲更新日時。省略時は鮮度未確認のキャッシュを読む。
+ * @param songsUpdatedAt - API の楽曲更新日時。undefined は先行表示用に鮮度確認を省く。
  * @returns 利用可能な通常楽曲キャッシュ。存在しない場合は null。
  */
-export const readCachedSongs = async (
-  songsUpdatedAt?: string | null
+const readSongCache = async (
+  songsUpdatedAt: string | null | undefined
 ): Promise<SongDTO[] | null> => {
   if (!(await hasValidSongMetadata('songs', songsUpdatedAt))) {
     return null
@@ -95,6 +95,23 @@ export const readCachedSongs = async (
     .sort((left, right) => left.sortOrder - right.sortOrder)
     .map((song) => song.data)
 }
+
+/**
+ * API の更新日時と一致する通常楽曲一覧キャッシュを読み込む。
+ *
+ * @param songsUpdatedAt - API で確認した楽曲更新日時。
+ * @returns 更新日時が一致する通常楽曲キャッシュ。利用できない場合は null。
+ */
+export const readCachedSongs = (songsUpdatedAt: string | null): Promise<SongDTO[] | null> =>
+  readSongCache(songsUpdatedAt)
+
+/**
+ * 先行表示のため、鮮度を確認せず通常楽曲一覧キャッシュを読み込む。
+ *
+ * @returns スキーマが有効な通常楽曲キャッシュ。利用できない場合は null。
+ */
+export const readCachedSongsWithoutFreshnessCheck = (): Promise<SongDTO[] | null> =>
+  readSongCache(undefined)
 
 /**
  * WORLD'S END 楽曲一覧キャッシュを読み込む。

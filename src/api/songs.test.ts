@@ -48,6 +48,24 @@ test('バージョン更新後は公開バージョン一覧をAPIから再取�
   assert.deepEqual(afterMutation, responseBodies[1])
 })
 
+test('fetchSongsUpdatedAt は不正な更新日時を拒否し、失敗をキャッシュせず再試行する', async () => {
+  // Given: 契約に違反する更新日時レスポンス。
+  for (const invalidResponse of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
+    let fetchCount = 0
+    installFetchRecorder(() => {
+      fetchCount += 1
+      return Response.json(fetchCount === 1 ? invalidResponse : { updated_at: null })
+    })
+    const { fetchSongsUpdatedAt } = await loadSongsApi()
+
+    // When / Then: 不正応答を拒否し、次の正常な null 応答は取得・キャッシュできる。
+    await assert.rejects(() => fetchSongsUpdatedAt(), TypeError)
+    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
+    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
+    assert.equal(fetchCount, 2)
+  }
+})
+
 test('fetchSongsUpdatedAt はTTL内であれば取得済みの更新日時を再利用する', async (t) => {
   // Given: 更新日時を一度取得済みで、TTL 直前まで時間が経過している。
   t.mock.timers.enable({ apis: ['Date'], now: 0 })

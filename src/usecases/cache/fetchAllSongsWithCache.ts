@@ -2,6 +2,7 @@ import { fetchAllSongs, fetchSongsUpdatedAt } from '../../api/songs'
 import {
   getSongCacheGeneration,
   readCachedSongs,
+  readCachedSongsWithoutFreshnessCheck,
   replaceCachedSongs,
 } from '../../repositories/songCacheRepository'
 import type { SongDTO } from '../../types/api'
@@ -35,7 +36,9 @@ export const fetchAllSongsWithCache = async (
       return response
     })
     .catch(() => undefined)
-  const cachedSongs = options.forceRefresh ? null : await readCachedSongs().catch(() => null)
+  const cachedSongs = options.forceRefresh
+    ? null
+    : await readCachedSongsWithoutFreshnessCheck().catch(() => null)
   if (cachedSongs && cacheGeneration === getSongCacheGeneration()) {
     options.onCached?.({ songs: cachedSongs })
   }

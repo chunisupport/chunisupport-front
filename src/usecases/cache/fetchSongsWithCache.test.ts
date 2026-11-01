@@ -117,6 +117,25 @@ afterEach(async () => {
   await clearSongCaches()
 })
 
+test('更新日時の欠落時はキャッシュを先行表示しても再検証済みとして返さないこと', async () => {
+  // Given: 旧キャッシュと、更新日時を欠いた API 応答。
+  const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
+  await replaceCachedSongs([cachedSong], SONGS_UPDATED_AT)
+  globalThis.fetch = async (input) =>
+    Response.json(String(input).endsWith('/updated-at') ? {} : { songs: [fetchedSong] })
+  const cachedResponses: SongDTO[][] = []
+
+  // When: キャッシュの先行表示と再検証を要求する。
+  const response = await fetchAllSongsWithCache({
+    onCached: ({ songs }) => cachedResponses.push(songs),
+  })
+
+  // Then: 先行表示は維持し、最終結果は一覧 API から取得する。不正日時は保存しない。
+  assert.deepEqual(cachedResponses, [[cachedSong]])
+  assert.deepEqual(response.songs, [fetchedSong])
+  assert.equal((await db.cacheMetadata.get('songs'))?.songsUpdatedAt, SONGS_UPDATED_AT)
+})
+
 test('通常楽曲の強制再取得はupdated-atが同じでもIndexedDBキャッシュを使わないこと', async () => {
   // Given: API と同じ更新日時を持つ旧楽曲キャッシュが存在する。
   const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
