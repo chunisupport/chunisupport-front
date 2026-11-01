@@ -1,4 +1,4 @@
-import { A, Navigate, Route, Router } from '@solidjs/router'
+import { A, Navigate, Route, Router, useLocation, usePreloadRoute } from '@solidjs/router'
 import {
   Calculator,
   ChartColumnStacked,
@@ -16,7 +16,7 @@ import {
   Trophy,
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
+import { createEffect, createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
 import { fetchMe } from './api/users'
 import {
@@ -169,48 +169,57 @@ type LazyRouteComponent<P extends object> = Component<P> & {
 }
 
 /**
- * 指定された画面を共通ナビゲーション内に表示する。
+ * 指定された画面のコード先読みを維持し、共通ナビゲーション内に表示する。
  *
  * @typeParam P - 対象画面の props 型。
  * @param Component - 共通ナビゲーション内へ配置する画面。
  * @returns 共通ナビゲーションを付与した route component。
  */
-const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
-  return (props: P) => (
-    <NavBar>
-      <Component {...props} />
-    </NavBar>
+const withNavBar = <P extends object>(Component: Component<P> & { preload?: () => void }) => {
+  return Object.assign(
+    (props: P) => (
+      <NavBar>
+        <Component {...props} />
+      </NavBar>
+    ),
+    { preload: Component.preload }
   )
 }
 
 /**
- * 指定された画面を認証 guard の許可分岐内に表示する。
+ * 指定された画面のコード先読みを維持し、認証 guard の許可分岐内に表示する。
  *
  * @typeParam P - 対象画面の props 型。
  * @param Component - 認証を要求する画面。
  * @returns 認証 guard を付与した route component。
  */
-const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
-  return (props: P) => (
-    <RequireAuth>
-      <Component {...props} />
-    </RequireAuth>
+const withAuth = <P extends object>(Component: Component<P> & { preload?: () => void }) => {
+  return Object.assign(
+    (props: P) => (
+      <RequireAuth>
+        <Component {...props} />
+      </RequireAuth>
+    ),
+    { preload: Component.preload }
   )
 }
 
 /**
- * 指定された画面をプレイヤーデータ guard の許可分岐内に表示する。
+ * 指定された画面のコード先読みを維持し、プレイヤーデータ guard の許可分岐内に表示する。
  * 未ログイン・プレイヤーデータ未登録の場合は、ログインまたはデータ登録を案内する。
  *
  * @typeParam P - 対象画面の props 型。
  * @param Component - 自分のプレイヤーデータを要求する画面。
  * @returns プレイヤーデータ guard を付与した route component。
  */
-const withPlayerData = <P extends object>(Component: (props: P) => JSX.Element) => {
-  return (props: P) => (
-    <RequirePlayerData>
-      <Component {...props} />
-    </RequirePlayerData>
+const withPlayerData = <P extends object>(Component: Component<P> & { preload?: () => void }) => {
+  return Object.assign(
+    (props: P) => (
+      <RequirePlayerData>
+        <Component {...props} />
+      </RequirePlayerData>
+    ),
+    { preload: Component.preload }
   )
 }
 
@@ -224,7 +233,7 @@ const withPlayerData = <P extends object>(Component: (props: P) => JSX.Element) 
 const withRouteLoadBoundary = <P extends object>(Component: LazyRouteComponent<P>) => {
   let loadedModule: { default: Component<P> } | undefined
 
-  return (props: P) => {
+  const RouteBoundary = (props: P) => {
     // route 全体を Suspense で囲むとページ内 resource の待機まで捕捉するため、module だけを明示的に待つ。
     const [routeModule] = createResource(
       () =>
@@ -246,6 +255,16 @@ const withRouteLoadBoundary = <P extends object>(Component: LazyRouteComponent<P
       </ErrorBoundary>
     )
   }
+
+  return Object.assign(RouteBoundary, {
+    /**
+     * 可用性判定中にコードだけを取得する。失敗は描画時の境界へ委ねる。
+     * @returns なし。
+     */
+    preload: (): void => {
+      void Component.preload().catch(() => {})
+    },
+  })
 }
 
 /**
@@ -633,13 +652,19 @@ const GuardedRegisterScoreTempPage = () => (
 )
 
 /**
- * ルーター配下の画面をAPI可用性ゲートと共通トースト領域で包む。
+ * ルートのコードを状態確認と並列に取得し、API可用性ゲートと共通トースト領域で包む。
  * 楽曲一覧のスクロール復元のため、直近の遷移種別も記録する。
  *
  * @param props - 現在のrouteが解決した画面。
  * @returns 可用性制御を適用したアプリケーションルート。
  */
 const ApplicationRoot = (props: { children?: JSX.Element }) => {
+  const location = useLocation()
+  const preloadRoute = usePreloadRoute()
+  // ゲート内の画面はマウントせず、遷移先のコードだけを状態確認と並列に取得する。
+  createEffect(() => {
+    preloadRoute(new URL(location.pathname, window.location.origin), { preloadData: false })
+  })
   useRobotsMeta()
   useRememberAppMainScrollNavigationType()
 

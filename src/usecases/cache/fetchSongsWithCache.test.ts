@@ -135,7 +135,10 @@ test('通常楽曲の強制再取得はupdated-atが同じでもIndexedDBキャ�
   }
 
   // When: CRUD 後の強制再取得を実行する。
-  const response = await fetchAllSongsWithCache({ forceRefresh: true })
+  const response = await fetchAllSongsWithCache({
+    forceRefresh: true,
+    onCached: () => assert.fail('強制再取得ではキャッシュを表示しない'),
+  })
 
   // Then: 一覧 API の正規 DTO を返し、IndexedDB も置き換える。
   assert.equal(songsFetchCount, 1)
@@ -322,3 +325,93 @@ for (const target of revalidationTargets) {
     assert.equal(getSongsFetchCount(), 0)
   })
 }
+
+test('更新日時の応答前にキャッシュを通知し、外部更新後の一覧に差し替えること', async () => {
+  // Given: 古いキャッシュがあり、更新日時 API の応答は保留されている。
+  const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
+  await replaceCachedSongs([cachedSong], SONGS_UPDATED_AT)
+  let resolveUpdatedAt!: (response: Response) => void
+  const updatedAtResponse = new Promise<Response>((resolve) => {
+    resolveUpdatedAt = resolve
+  })
+  globalThis.fetch = async (input) =>
+    String(input).endsWith('/updated-at')
+      ? updatedAtResponse
+      : Response.json({ songs: [fetchedSong] })
+  let notifyCached!: (songs: SongDTO[]) => void
+  const cacheNotification = new Promise<SongDTO[]>((resolve) => {
+    notifyCached = resolve
+  })
+
+  // When: 更新日時の応答を待たず、キャッシュの先行通知を受け取る。
+  const request = fetchAllSongsWithCache({ onCached: ({ songs }) => notifyCached(songs) })
+  assert.deepEqual(await cacheNotification, [cachedSong])
+  resolveUpdatedAt(Response.json({ updated_at: EXTERNALLY_UPDATED_SONGS_UPDATED_AT }))
+
+  // Then: 最終応答と IndexedDB は外部更新後の楽曲になる。
+  assert.deepEqual((await request).songs, [fetchedSong])
+  assert.deepEqual(
+    (await db.songs.toArray()).map((song) => song.data),
+    [fetchedSong]
+  )
+})
+
+test('キャッシュなしでは更新日時の応答を待たずに楽曲一覧を取得すること', async () => {
+  // Given: キャッシュがなく、更新日時 API は保留されている。
+  const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
+  let resolveUpdatedAt!: (response: Response) => void
+  let notifySongsRequest!: () => void
+  const updatedAtResponse = new Promise<Response>((resolve) => {
+    resolveUpdatedAt = resolve
+  })
+  const songsRequested = new Promise<void>((resolve) => {
+    notifySongsRequest = resolve
+  })
+  globalThis.fetch = async (input) => {
+    if (String(input).endsWith('/updated-at')) return updatedAtResponse
+    notifySongsRequest()
+    return Response.json({ songs: [fetchedSong] })
+  }
+
+  // When: 更新日時を返す前に一覧リクエストの開始を確認する。
+  const request = fetchAllSongsWithCache()
+  await songsRequested
+  resolveUpdatedAt(Response.json({ updated_at: SONGS_UPDATED_AT }))
+
+  // Then: 一覧を取得して保存できる。
+  assert.deepEqual((await request).songs, [fetchedSong])
+  assert.equal(await db.songs.count(), 1)
+})
+
+test('並列取得した一覧に後から確定した更新日時を付けず、次回に再検証すること', async () => {
+  // Given: 一覧が古い内容を返した後、更新日時は新しい値を返す。
+  const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
+  let resolveUpdatedAt!: (response: Response) => void
+  let notifySongsResponse!: () => void
+  const updatedAtResponse = new Promise<Response>((resolve) => {
+    resolveUpdatedAt = resolve
+  })
+  const songsResponded = new Promise<void>((resolve) => {
+    notifySongsResponse = resolve
+  })
+  globalThis.fetch = async (input) => {
+    if (String(input).endsWith('/updated-at')) return updatedAtResponse
+    notifySongsResponse()
+    return Response.json({ songs: [cachedSong] })
+  }
+
+  // When: 一覧の取得後に更新日時を確定する。
+  const initialRequest = fetchAllSongsWithCache()
+  await songsResponded
+  resolveUpdatedAt(Response.json({ updated_at: EXTERNALLY_UPDATED_SONGS_UPDATED_AT }))
+  await initialRequest
+
+  // Then: 未確認のキャッシュとして保存され、同じ更新日時でも最新一覧を取り直す。
+  assert.equal((await db.cacheMetadata.get('songs'))?.songsUpdatedAt, undefined)
+  globalThis.fetch = async () => Response.json({ songs: [fetchedSong] })
+  assert.deepEqual((await fetchAllSongsWithCache()).songs, [fetchedSong])
+  assert.equal(
+    (await db.cacheMetadata.get('songs'))?.songsUpdatedAt,
+    EXTERNALLY_UPDATED_SONGS_UPDATED_AT
+  )
+})

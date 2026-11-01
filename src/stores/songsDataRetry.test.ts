@@ -105,3 +105,57 @@ assert.equal(calls(), 2)
     '/internal/worldsend-songs'
   )
 })
+
+for (const shouldFail of [false, true]) {
+  test(`通常楽曲は再検証の完了前に表示でき、再検証${shouldFail ? '失敗時も表示を維持' : '成功時は外部更新を反映'}すること`, async () => {
+    await runBrowserTest(
+      `
+// Given: 表示可能なキャッシュがあり、更新日時 API の応答は保留されている。
+await import('fake-indexeddb/auto')
+const { replaceCachedSongs } = await import('./src/repositories/songCacheRepository.ts')
+const cachedSong = { id: 'cached', title: 'Cached', unlock_required: false, name_folder_code: 'NUMBER' }
+const fetchedSong = { ...cachedSong, title: 'Updated' }
+await replaceCachedSongs([cachedSong], 'old')
+let resolveUpdatedAt
+const updatedAtResponse = new Promise((resolve) => { resolveUpdatedAt = resolve })
+globalThis.fetch = async (input) => {
+  if (String(input).endsWith('/updated-at')) return updatedAtResponse
+  if (${shouldFail}) throw new TypeError('network error')
+  return Response.json({ songs: [fetchedSong] })
+}
+const waitUntil = async (predicate) => {
+  for (let i = 0; i < 200; i += 1) {
+    if (predicate()) return
+    await flush()
+  }
+  assert.fail('store did not settle')
+}
+
+// When: 更新日時の応答前にキャッシュを表示する。
+store.ensureSongsLoaded()
+await waitUntil(() => !store.isSongsLoading())
+assert.deepEqual(store.songsResponse().songs, [cachedSong])
+assert.equal(store.songsResponse.loading, true)
+resolveUpdatedAt(Response.json({ updated_at: 'new' }))
+
+// Then: 取得成功時は最新楽曲へ差し替え、失敗時はキャッシュ表示を維持する。
+await waitUntil(() => !store.songsResponse.loading)
+assert.deepEqual(store.songsResponse().songs, [${shouldFail ? 'cachedSong' : 'fetchedSong'}])
+assert.equal(store.songsResponse.error, undefined)
+${
+  shouldFail
+    ? `
+// When: 通信復旧後に同じ store を再度利用する。
+globalThis.fetch = async () => Response.json({ songs: [fetchedSong] })
+store.ensureSongsLoaded()
+await waitUntil(() => !store.songsResponse.loading)
+// Then: 背景再検証の失敗からも最新データへ復帰する。
+assert.deepEqual(store.songsResponse().songs, [fetchedSong])
+`
+    : ''
+}
+`,
+      '/internal/songs'
+    )
+  })
+}
