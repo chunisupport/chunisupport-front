@@ -13,6 +13,7 @@ import {
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   UNI_FILL_MATRIX_PATH,
+  UNIFIED_WEAK_CHART_INSPECTOR_TEST_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 
@@ -213,5 +214,13 @@ export const TOOL_LINKS: ToolLink[] = [
     category: 'analysis',
     icon: 'matrix',
     description: '細かい組み合わせごとに、何譜面埋め終わっているかを確認できます。',
+  },
+  {
+    title: '苦手譜面インスペクター Unified_test',
+    href: UNIFIED_WEAK_CHART_INSPECTOR_TEST_PATH,
+    category: 'analysis',
+    icon: 'discover',
+    description: '理論値まで詰めた成果と到達可能な上限を考慮して、得意・苦手譜面を推測します。',
+    adminOnly: true,
   },
 ]

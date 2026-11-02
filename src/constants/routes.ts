@@ -28,6 +28,8 @@ export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 /** レート帯別平均スコアと比較する苦手譜面インスペクター */
 export const ONLINE_WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector-online`
+/** 理論値付近の評価と到達可能上限補正を試す管理者向けツール。 */
+export const UNIFIED_WEAK_CHART_INSPECTOR_TEST_PATH = `${TOOLS_PATH}/weak-chart-inspector-unified-test`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
 /** 未解禁曲ディスカバー画面のパス */
 export const LOCKED_SONG_DISCOVERY_PATH = `${TOOLS_PATH}/locked-song-discovery`
