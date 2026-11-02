@@ -10,6 +10,12 @@ export const GOALS_LIMIT = 300
 export const GOAL_TITLE_MAX_LENGTH = 30
 
 /**
+ * 目標カードの長押しでドラッグ開始とみなすまでの時間（ms）。
+ * 長押し中に広がる円のアニメーション時間にも使う。
+ */
+export const GOAL_DRAG_ACTIVATION_DELAY_MS = 300
+
+/**
  * 複製した目標タイトルの末尾に付ける文言。
  */
 export const GOAL_COPY_TITLE_SUFFIX = '（コピー）'

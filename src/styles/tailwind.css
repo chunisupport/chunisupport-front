@@ -1695,6 +1695,32 @@
     .goal-card-progress-secondary {
     color: var(--color-primary-300);
   }
+
+  /* 円の半径 71% はカード中央から四隅まで届く最小値。短いタップやスクロールで光らないよう開始を遅らせる */
+  .goal-card-drag-ripple {
+    --goal-card-drag-ripple-start-delay: 80ms;
+
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: color-mix(in oklab, var(--color-action-primary) 24%, transparent);
+    clip-path: circle(0% at 50% 50%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 150ms ease-out,
+      clip-path 1ms linear 150ms;
+  }
+
+  [data-drag-pressed] > .goal-card-drag-ripple {
+    clip-path: circle(71% at 50% 50%);
+    opacity: 1;
+    transition:
+      opacity 0s linear var(--goal-card-drag-ripple-start-delay),
+      clip-path
+      calc(var(--goal-card-drag-activation-delay) - var(--goal-card-drag-ripple-start-delay)) linear
+      var(--goal-card-drag-ripple-start-delay);
+  }
 }
 
 @layer base {

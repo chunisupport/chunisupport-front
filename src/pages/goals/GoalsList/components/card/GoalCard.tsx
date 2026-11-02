@@ -9,7 +9,11 @@ import { getAppIconButtonClass } from '../../../../../components/common/AppButto
 import type { GoalDTO } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { isGoalRecordNavigationEnabled } from '../../../utils/goalRecordFilter'
-import { buildGoalDisclosureLabel, buildGoalDragLabel } from '../../constants'
+import {
+  buildGoalDisclosureLabel,
+  buildGoalDragLabel,
+  GOAL_DRAG_ACTIVATION_DELAY_MS,
+} from '../../constants'
 import { GoalCardActionMenu } from './GoalCardActionMenu'
 import { GoalCardProgress, GoalCardProgressPercentage } from './GoalCardProgress'
 
@@ -139,17 +143,19 @@ const GoalCard: Component<GoalCardProps> = (props) => {
       }}
       style={{
         transform: `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`,
+        '--goal-card-drag-activation-delay': `${GOAL_DRAG_ACTIVATION_DELAY_MS}ms`,
       }}
       tabIndex={props.isReordering ? -1 : 0}
       aria-label={buildGoalDragLabel(props.goal.title, props.position, props.total)}
       aria-roledescription="並び替え可能な目標"
       onKeyDown={handleKeyDown}
-      class={`cursor-grab select-none rounded-lg border p-4 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
+      class={`relative cursor-grab select-none rounded-lg border p-4 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${
         props.progress.achieved
           ? 'border-action-primary-border bg-action-primary-muted'
           : 'border-border bg-surface'
-      } ${sortable.isActiveDraggable ? 'relative z-10 cursor-grabbing opacity-80 shadow-lg' : ''}`}
+      } ${sortable.isActiveDraggable ? 'z-10 cursor-grabbing shadow-lg' : ''}`}
     >
+      <span class="goal-card-drag-ripple" aria-hidden="true" />
       <div class="flex items-start justify-between gap-3">
         <div class="flex min-w-0 flex-1 items-start gap-1">
           <Collapsible.Trigger

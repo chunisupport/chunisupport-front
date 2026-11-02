@@ -1,8 +1,10 @@
 import { useDragDropContext } from '@thisbeyond/solid-dnd'
 import { onCleanup, onMount } from 'solid-js'
 
-/** タッチ操作でドラッグ開始とみなす長押し時間（ms） */
-const TOUCH_DRAG_ACTIVATION_DELAY_MS = 300
+import { GOAL_DRAG_ACTIVATION_DELAY_MS } from '../../constants'
+
+/** 押下からドラッグ終了までカードに付与し、広がる円を表示する属性 */
+const DRAG_PRESSED_ATTRIBUTE = 'data-drag-pressed'
 
 /** 長押し前にこの距離（px）以上動いたらスクロール操作として扱う */
 const TOUCH_SCROLL_DISTANCE_THRESHOLD_PX = 10
@@ -30,13 +32,16 @@ export function GoalsListLongPressSensor() {
   let activationDraggableId: number | string | undefined
   let activeInput: ActiveInput | undefined
   let initialCoordinates = { x: 0, y: 0 }
+  let pressedElement: Element | undefined
 
-  /** ドラッグ開始待ちとドキュメントイベントを解除する */
+  /** ドラッグ開始待ち、押下中の表示、ドキュメントイベントを解除する */
   const detach = (): void => {
     if (activationTimeoutId !== undefined) {
       window.clearTimeout(activationTimeoutId)
       activationTimeoutId = undefined
     }
+    pressedElement?.removeAttribute(DRAG_PRESSED_ATTRIBUTE)
+    pressedElement = undefined
     document.removeEventListener('pointermove', handlePointerMove)
     document.removeEventListener('pointerup', handlePointerUp)
     document.removeEventListener('pointercancel', handlePointerCancel)
@@ -221,21 +226,27 @@ export function GoalsListLongPressSensor() {
     target.closest('a, button, input, select, textarea, [data-no-dnd]') !== null
 
   /**
-   * 共通の座標とカードIDを保持し、長押し開始待ちをセットする。
+   * 共通の座標とカードIDを保持し、長押し開始待ちとアニメーションを開始する。
    *
+   * @param event - カードで発生した押下イベント。
    * @param draggableId - 押下されたカードのID。
    * @param clientX - 押下位置のX座標。
    * @param clientY - 押下位置のY座標。
    * @returns なし。
    */
   const startActivation = (
+    event: Event,
     draggableId: number | string,
     clientX: number,
     clientY: number
   ): void => {
     activationDraggableId = draggableId
     initialCoordinates = { x: clientX, y: clientY }
-    activationTimeoutId = window.setTimeout(activate, TOUCH_DRAG_ACTIVATION_DELAY_MS)
+    if (event.currentTarget instanceof Element) {
+      pressedElement = event.currentTarget
+      pressedElement.setAttribute(DRAG_PRESSED_ATTRIBUTE, '')
+    }
+    activationTimeoutId = window.setTimeout(activate, GOAL_DRAG_ACTIVATION_DELAY_MS)
   }
 
   /**
@@ -256,7 +267,7 @@ export function GoalsListLongPressSensor() {
     }
 
     activeInput = { type: 'pointer', pointerId: event.pointerId }
-    startActivation(draggableId, event.clientX, event.clientY)
+    startActivation(event, draggableId, event.clientX, event.clientY)
     document.addEventListener('pointermove', handlePointerMove)
     document.addEventListener('pointerup', handlePointerUp)
     document.addEventListener('pointercancel', handlePointerCancel)
@@ -275,7 +286,7 @@ export function GoalsListLongPressSensor() {
     if (!touch) return
 
     activeInput = { type: 'touch', identifier: touch.identifier }
-    startActivation(draggableId, touch.clientX, touch.clientY)
+    startActivation(event, draggableId, touch.clientX, touch.clientY)
     document.addEventListener('touchmove', handleTouchMove, { passive: false })
     document.addEventListener('touchstart', handleAdditionalTouch)
     document.addEventListener('touchend', handleTouchEnd)
