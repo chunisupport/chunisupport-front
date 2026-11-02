@@ -183,7 +183,7 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
 /**
  * OVER POWER計算機ページを表示する。
  * 未ログインの自動インポート案内は、換算タブの直下だけに表示する。
- * 必要譜面数はスコアに応じた定数範囲で計算し、収録曲数以上を警告する。
+ * 必要譜面数はスコアに応じた定数範囲で計算し、収録曲数超過を警告する。
  * 必要譜面数の末尾で、定数に依存しない高スコア帯の条件を補足する。
  * 定数別平均の補間仕様は選択肢の注記と末尾の説明で補足する。
  *
@@ -292,7 +292,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       ),
     }))
   })
-  /** 表示中の必要譜面数に収録曲数以上の条件があるか返す。 */
+  /** 表示中の必要譜面数に収録曲数を超える条件があるか返す。 */
   const hasExcessiveChartCount = createMemo(() =>
     requiredChartCounts().some((cell) => cell.result.exceedsLimit)
   )

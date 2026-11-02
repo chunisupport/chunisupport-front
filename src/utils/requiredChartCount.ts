@@ -7,13 +7,13 @@ import {
 } from './overPowerCalculatorConstants'
 
 /**
- * 定数16.0〜1.0の必要譜面数を計算し、同じ結果は単一値にまとめ、範囲は「 〜 」で区切る。
+ * 共通定数の最大値・最小値で必要譜面数を計算し、同じ結果は単一値にまとめ、範囲は「 〜 」で区切る。
  * @param target - 理論OP、現在OP、目標達成率。
  * @param score - 目標スコア。
  * @param comboLamp - 目標コンボランプ。
  * @param currentScore - 現在の通常ランプのスコア。
- * @param songCount - 現在収録されている通常楽曲数。以上の必要数は×とする。
- * @returns 必要譜面数の表示と、収録曲数以上または範囲の一部で達成不能か。
+ * @param songCount - 現在収録されている通常楽曲数。この件数を超える必要数は×とする。
+ * @returns 必要譜面数の表示と、収録曲数超過または範囲の一部で達成不能か。
  */
 export const calculateRequiredChartCountResult = (
   target: OverPowerCalculatorBase & { percent: number },
@@ -29,13 +29,15 @@ export const calculateRequiredChartCountResult = (
   if (counts.every((count) => count === null)) {
     return { label: UNAVAILABLE_CHART_COUNT_LABEL, exceedsLimit: false }
   }
-  const exceedsLimit = counts.some((count) => count === null || (count > 0 && count >= songCount))
+  /**
+   * 計算不能な端点、または収録曲数を超える必要数か判定する。
+   * @param count - 端点の必要譜面数。増加OPがない場合はnull。
+   * @returns ×として表示する場合はtrue。
+   */
+  const isOverLimit = (count: number | null): boolean => count === null || count > songCount
+  const exceedsLimit = counts.some(isOverLimit)
   const labels = counts
     .sort((a, b) => (a ?? Number.POSITIVE_INFINITY) - (b ?? Number.POSITIVE_INFINITY))
-    .map((count) =>
-      count === null || (count > 0 && count >= songCount)
-        ? EXCESSIVE_CHART_COUNT_LABEL
-        : String(count)
-    )
+    .map((count) => (isOverLimit(count) ? EXCESSIVE_CHART_COUNT_LABEL : String(count)))
   return { label: [...new Set(labels)].join(REQUIRED_CHART_COUNT_RANGE_SEPARATOR), exceedsLimit }
 }

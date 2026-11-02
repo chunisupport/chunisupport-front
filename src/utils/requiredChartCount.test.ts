@@ -20,12 +20,12 @@ test('高スコアの更新は定数入力なしで単一の必要譜面数を�
   }
 })
 
-test('必要数が収録曲数未満なら表示し、同数以上の場合は×にする', () => {
+test('必要数が収録曲数以下なら表示し、超過した場合は×にする', () => {
   // Given: 必要譜面数40。
   // When & Then
   for (const [songCount, label, exceedsLimit] of [
     [41, '40', false],
-    [40, '×', true],
+    [40, '40', false],
     [39, '×', true],
     [0, '×', true],
   ] as const) {
@@ -39,19 +39,19 @@ test('必要数が収録曲数未満なら表示し、同数以上の場合は×
 test('90万点以下は定数16.0と1.0による必要数を少ない順の範囲で表示する', () => {
   // Given: 80万→85万、定数16はFCで14.25増、定数1はFCで0.5増。
   // When
-  const result = calculateRequiredChartCountResult(TARGET, 850000, 'FULL COMBO', 800000, 201)
+  const result = calculateRequiredChartCountResult(TARGET, 850000, 'FULL COMBO', 800000, 200)
   // Then
   assert.deepEqual(result, { label: '8 〜 200', exceedsLimit: false })
 })
 
-test('範囲の一部だけ収録曲数以上の場合は数値と×を表示する', () => {
+test('範囲の一部だけ収録曲数を超える場合は数値と×を表示する', () => {
   // Given & When
-  const result = calculateRequiredChartCountResult(TARGET, 850000, 'FULL COMBO', 800000, 200)
+  const result = calculateRequiredChartCountResult(TARGET, 850000, 'FULL COMBO', 800000, 199)
   // Then
   assert.deepEqual(result, { label: '8 〜 ×', exceedsLimit: true })
 })
 
-test('範囲全体が収録曲数以上の場合は×だけを表示する', () => {
+test('範囲全体が収録曲数を超える場合は×だけを表示する', () => {
   // Given & When
   const result = calculateRequiredChartCountResult(TARGET, 850000, 'FULL COMBO', 800000, 7)
   // Then
