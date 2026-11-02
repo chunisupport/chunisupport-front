@@ -53,28 +53,31 @@ type CourseFormMode = 'create' | 'edit'
 
 /**
  * Ⅰ〜Ⅴと∞をエンブレム、EXと未対応値をバッジで表示する。
+ * エンブレムと同じ大きさの枠内に中央揃えし、バッジとの中心位置を揃える。
  *
  * @param props - 表示するコースクラス。
  * @returns 一覧とクラス選択で使用するクラス表示。
  */
 const CourseClassDisplay: Component<{ courseClass: string }> = (props) => (
-  <Show
-    when={resolveCourseClassEmblemName(props.courseClass)}
-    fallback={
-      <span class={`${RECORD_COMPACT_BADGE_CLASS} ${courseClassBadgeClass(props.courseClass)}`}>
-        {formatCourseClass(props.courseClass)}
-      </span>
-    }
-  >
-    {(emblem) => (
-      <ClassEmblem
-        emblem={emblem()}
-        base={null}
-        label={formatCourseClass(props.courseClass)}
-        class="h-8 align-middle"
-      />
-    )}
-  </Show>
+  <span class="flex aspect-[94/46] h-8 items-center justify-center">
+    <Show
+      when={resolveCourseClassEmblemName(props.courseClass)}
+      fallback={
+        <span class={`${RECORD_COMPACT_BADGE_CLASS} ${courseClassBadgeClass(props.courseClass)}`}>
+          {formatCourseClass(props.courseClass)}
+        </span>
+      }
+    >
+      {(emblem) => (
+        <ClassEmblem
+          emblem={emblem()}
+          base={null}
+          label={formatCourseClass(props.courseClass)}
+          class="h-8"
+        />
+      )}
+    </Show>
+  </span>
 )
 
 type CourseFormDialogProps = {
@@ -458,7 +461,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
                     {COURSE_MANAGEMENT_COPY.idxLabel}
                   </th>
                   <th class="px-3 py-2 text-left">{COURSE_MANAGEMENT_COPY.nameLabel}</th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">
+                  <th class="whitespace-nowrap px-3 py-2 text-center">
                     {COURSE_MANAGEMENT_COPY.classLabel}
                   </th>
                   <th class="whitespace-nowrap px-3 py-2 text-left">
@@ -512,7 +515,9 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
                       <td class="whitespace-nowrap px-3 py-2 font-mono">{course.idx}</td>
                       <td class="px-3 py-2 font-sans">{course.name}</td>
                       <td class="whitespace-nowrap px-3 py-2">
-                        <CourseClassDisplay courseClass={course.class} />
+                        <div class="flex justify-center">
+                          <CourseClassDisplay courseClass={course.class} />
+                        </div>
                       </td>
                       <td class="whitespace-nowrap px-3 py-2">
                         {isManagedCourseDeleted(course)

@@ -1004,7 +1004,7 @@ const RegisterScoreChangeRow = (props: {
               class={`flex w-fit min-w-0 max-w-full items-center gap-1 border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 image-capture:block image-capture:w-full image-capture:truncate ${
                 isCopyHighlighted()
                   ? 'text-action-primary transition-none'
-                  : 'text-text transition-colors duration-700 motion-reduce:transition-none'
+                  : 'text-text transition-colors duration-700'
               }`}
               aria-label={`「${props.songTitle}」をコピー`}
               title={props.songTitle}
