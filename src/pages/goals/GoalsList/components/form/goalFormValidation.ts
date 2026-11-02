@@ -6,6 +6,7 @@ import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import {
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
+  OVERPOWER_TARGET_DECIMAL_PLACES,
   RATING_GOAL_DECIMAL_PLACES,
   RATING_GOAL_MIN_VALUE,
 } from './constants'
@@ -17,7 +18,6 @@ import {
 } from './goalFormModel'
 
 const MAX_OVERPOWER_PERCENT = 100
-const OVERPOWER_TARGET_DECIMAL_PLACES = 3
 
 export interface GoalFormValidationInput {
   title: string
@@ -150,11 +150,15 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
   }
 
   if (
-    input.achievementType === 'overpower_value' &&
-    input.totalMode !== 'all' &&
+    (input.achievementType === 'overpower_percent' ||
+      (input.achievementType === 'overpower_value' && input.totalMode !== 'all')) &&
     !isWithinDecimalPlaces(parsedTotal, OVERPOWER_TARGET_DECIMAL_PLACES)
   ) {
-    return `OVER POWERの目標値・残数・割合は小数第${OVERPOWER_TARGET_DECIMAL_PLACES}位以内で入力してください。`
+    const targetLabel =
+      input.achievementType === 'overpower_percent'
+        ? 'OVER POWER達成率'
+        : 'OVER POWERの目標値・残数・割合'
+    return `${targetLabel}は小数第${OVERPOWER_TARGET_DECIMAL_PLACES}位以内で入力してください。`
   }
 
   const dynamicTotalMax = canUseDynamicTotalTarget(input.achievementType)

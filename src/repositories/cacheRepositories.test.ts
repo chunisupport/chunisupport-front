@@ -1,15 +1,15 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
+import { db } from '../lib/db/cacheDB.ts'
 import {
   type CachedCourse,
   type CachedSong,
   CLIENT_CACHE_SCHEMA_VERSION,
   COURSE_CACHE_SCHEMA_VERSION,
-  db,
   type UserApiResponse,
   type ViewSetting,
-} from '../lib/db/cacheDB.ts'
+} from '../lib/db/cacheSchema.ts'
 import type {
   CourseDTO,
   SongDTO,

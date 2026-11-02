@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { Show } from 'solid-js'
-import placeholderImageUrl from '../../../../assets/placeholder.png'
+import placeholderImageUrl from '../../../../assets/placeholder.webp'
 import { JacketImage } from '../../../../components/common/JacketImage'
 import { buildWorldsendSongDetailPath } from '../../../../constants/routes'
 import type { VersionSummaryDTO, WorldsendChartDTO, WorldsendSongDTO } from '../../../../types/api'

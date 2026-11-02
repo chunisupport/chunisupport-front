@@ -1,5 +1,5 @@
 import { useNavigate } from '@solidjs/router'
-import { ArrowLeftRight, ArrowUpDown, Grid3X3 } from 'lucide-solid'
+import { ArrowLeftRight, ArrowUpDown, Grid3X3, Share2 } from 'lucide-solid'
 import type { Accessor, Component, JSX, Setter } from 'solid-js'
 import {
   batch,
@@ -12,16 +12,18 @@ import {
   on,
   Show,
 } from 'solid-js'
-import { render } from 'solid-js/web'
 import { fetchGenres } from '../../../api/genres'
 import { fetchVersions } from '../../../api/songs'
-import logoSingle from '../../../assets/logo_single.svg'
+import { fetchUserLockedSongs } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
-import { AppIconButton } from '../../../components/common/AppButton'
+import { AppIconButton, getAppButtonClass } from '../../../components/common/AppButton'
 import { AppSelect } from '../../../components/common/AppSelect'
 import { SegmentedToggleGroup } from '../../../components/common/AppTabs'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { HeatmapCountCell } from '../../../components/common/HeatmapCountCell'
+import { SingleImagePreviewDialog } from '../../../components/common/SingleImagePreviewDialog'
+import { SiteLogoMark } from '../../../components/common/SiteLogoMark'
+import { LOCKED_SONG_CALCULATION_EXCLUSION_LABEL } from '../../../constants/lockedSongs'
 import type { PlayerStatsHeatmapAxis } from '../../../constants/playerStats'
 import { UNI_FILL_MATRIX_PATH } from '../../../constants/routes'
 import { SITE_NAME } from '../../../constants/site'
@@ -31,9 +33,10 @@ import { saveStandardRecordFilterSetting } from '../../../repositories/viewSetti
 import { authSession } from '../../../stores/authSession'
 import { publishStandardRecordFilter } from '../../../stores/standardRecordNavigation'
 import { fetchOwnPlayerStatsData } from '../../../usecases/playerStats/fetchOwnPlayerStatsData'
-import { captureElementAsImage } from '../../../utils/domImageCapture'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
+import { excludeLockedSongRecords } from '../../../utils/lockedSongRecords'
 import { formatInteger } from '../../../utils/numberFormat'
+import { captureOffscreenRenderedImage } from '../../../utils/offscreenImageCapture'
 import { filterPlayerStatsRecords } from '../../../utils/playerStatsDashboard'
 import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import {
@@ -41,6 +44,7 @@ import {
   buildUniFillMatrixRecordFilter,
   countUniFillMatrixChecks,
   formatUniFillMatrixImageFilename,
+  resolveUniFillMatrixExcludeLockedSongs,
   type UniFillMatrix,
   type UniFillMatrixCell,
   type UniFillMatrixCellPosition,
@@ -69,7 +73,6 @@ import {
   type UniFillMatrixDifficultyOption,
   type UniFillMatrixDimensionOption,
 } from './constants'
-import { UniFillMatrixImagePreviewDialog } from './UniFillMatrixImagePreviewDialog'
 import {
   readUniFillMatrixViewSettings,
   saveUniFillMatrixViewSettings,
@@ -363,9 +366,20 @@ const UniFillMatrixPage: Component = () => {
       setHorizontal(currentVertical)
     })
   const [showPercent, setShowPercent] = createSignal(savedViewSettings.showPercent)
+  const [excludeLockedSongs, setExcludeLockedSongs] = createSignal(
+    savedViewSettings.excludeLockedSongs
+  )
   createEffect(
     on(
-      [difficulty, achievement, vertical, horizontal, levelConstAxis, showPercent],
+      [
+        difficulty,
+        achievement,
+        vertical,
+        horizontal,
+        levelConstAxis,
+        showPercent,
+        excludeLockedSongs,
+      ],
       ([
         nextDifficulty,
         nextAchievement,
@@ -373,6 +387,7 @@ const UniFillMatrixPage: Component = () => {
         nextHorizontal,
         nextLevelConstAxis,
         nextShowPercent,
+        nextExcludeLockedSongs,
       ]) =>
         saveUniFillMatrixViewSettings({
           difficulty: nextDifficulty.value,
@@ -381,6 +396,7 @@ const UniFillMatrixPage: Component = () => {
           horizontal: nextHorizontal,
           levelConstAxis: nextLevelConstAxis,
           showPercent: nextShowPercent,
+          excludeLockedSongs: nextExcludeLockedSongs,
         }),
       { defer: true }
     )
@@ -388,6 +404,18 @@ const UniFillMatrixPage: Component = () => {
   const [pageData] = createResource(fetchOwnPlayerStatsData)
   const [genres] = createResource(fetchGenres)
   const [versions] = createResource(fetchVersions)
+  const [lockedSongs] = createResource(
+    () => (authSession.status === 'authenticated' ? authSession.user?.username : undefined),
+    fetchUserLockedSongs
+  )
+  /**
+   * 集計とセル遷移で共通の未解禁曲除外を返す。
+   * 未解禁設定の取得に失敗している間は除外しない。
+   *
+   * @returns 実際に適用する除外フラグ。
+   */
+  const lockedSongsExcluded = (): boolean =>
+    resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs(), Boolean(lockedSongs.error))
   const [recordNavigationError, setRecordNavigationError] = createSignal('')
   const navigate = useNavigate()
   let matrixTable!: HTMLTableElement
@@ -395,9 +423,12 @@ const UniFillMatrixPage: Component = () => {
   const matrix = createMemo(() => {
     const data = pageData()
     if (!data) return undefined
+    // 未解禁設定の取得に失敗した場合は、集計とレコード遷移のどちらも除外しない
+    const currentLockedSongs = lockedSongsExcluded() ? lockedSongs()?.items : []
+    if (!currentLockedSongs) return undefined
 
     const records = filterPlayerStatsRecords(
-      data.records,
+      excludeLockedSongRecords(data.records, currentLockedSongs),
       difficulty().value,
       data.targetDifficultyBySongId
     )
@@ -414,6 +445,7 @@ const UniFillMatrixPage: Component = () => {
 
   /**
    * マスの条件で埋め条件を満たしていない譜面を通常レコードへ引き継いで遷移する。
+   * 未解禁曲除外は集計と同じ実効値を渡し、未解禁設定の取得失敗中は除外しない。
    *
    * @param target - レコード画面で絞り込むマスの位置。
    * @returns 保存と遷移処理の完了時に解決されるPromise。
@@ -430,6 +462,7 @@ const UniFillMatrixPage: Component = () => {
         ...target,
         difficulty: difficulty().value,
         achievement: achievement().value,
+        excludeLockedSongs: lockedSongsExcluded(),
       })
       await saveStandardRecordFilterSetting(filter)
       publishStandardRecordFilter(username, filter)
@@ -467,79 +500,51 @@ const UniFillMatrixPage: Component = () => {
     const currentCornerHeader = cornerHeader()
     const caption = matrixCaption()
 
-    const host = document.createElement('div')
-    host.className = 'pointer-events-none fixed top-0'
-    host.style.left = `${-imageWidth}px`
-    host.setAttribute('aria-hidden', 'true')
-    host.inert = true
-    document.body.appendChild(host)
-    let dispose: (() => void) | undefined
-    let sheet!: HTMLDivElement
-
-    try {
-      dispose = render(
-        () => (
-          <div
-            ref={sheet}
-            class="space-y-4 bg-surface font-sans text-text"
-            style={{ width: `${imageWidth}px`, padding: `${UNI_FILL_MATRIX_IMAGE_PADDING}px` }}
-          >
-            <header class="flex flex-wrap items-center justify-between gap-6">
-              <div class="min-w-0 flex-1 space-y-2">
-                <div class="flex items-center gap-3">
-                  <span
-                    aria-hidden="true"
-                    class="h-10 w-10 shrink-0 bg-text"
-                    style={{
-                      'mask-image': `url(${logoSingle})`,
-                      'mask-position': 'center',
-                      'mask-repeat': 'no-repeat',
-                      'mask-size': 'contain',
-                    }}
-                  />
-                  <h1 class="min-w-0 flex-1 text-2xl font-semibold">{tool.title}</h1>
-                </div>
-                <div class="text-sm text-text-muted">
-                  <p class="whitespace-nowrap">{difficultyLabel}</p>
-                  <p class="whitespace-nowrap">
-                    <strong class="font-bold">{UNI_FILL_MATRIX_COPY.imageGoalLabel}</strong>
-                    {`: ${achievementLabel}`}
-                  </p>
-                </div>
+    return captureOffscreenRenderedImage(
+      imageWidth,
+      () => (
+        <div
+          class="space-y-4 bg-surface font-sans text-text"
+          style={{ width: `${imageWidth}px`, padding: `${UNI_FILL_MATRIX_IMAGE_PADDING}px` }}
+        >
+          <header class="flex flex-wrap items-center justify-between gap-6">
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="flex items-center gap-3">
+                <SiteLogoMark class="h-10 w-10 bg-text" />
+                <h1 class="min-w-0 flex-1 text-2xl font-semibold">{tool.title}</h1>
               </div>
-              <p class="shrink-0 whitespace-nowrap font-jost tabular-nums">
-                <span class="sr-only">{UNI_FILL_MATRIX_COPY.imageChecksLabel}</span>
-                <span class="text-4xl font-semibold">{formatInteger(checks.count)}</span>
-                <span class="text-xl font-normal text-text-muted">
-                  {` / ${formatInteger(checks.total)}`}
-                </span>
-              </p>
-            </header>
-            <UniFillMatrixTable
-              matrix={currentMatrix}
-              caption={caption}
-              cornerHeader={currentCornerHeader}
-              showPercent={currentShowPercent}
-              imageMode
-            />
-            <footer class="text-right text-sm text-text-muted">
-              <span class="whitespace-nowrap">
-                {UNI_FILL_MATRIX_COPY.imageGeneratedBy}{' '}
-                <strong class="font-bold">{SITE_NAME}</strong>
+              <div class="text-sm text-text-muted">
+                <p class="whitespace-nowrap">{difficultyLabel}</p>
+                <p class="whitespace-nowrap">
+                  <strong class="font-bold">{UNI_FILL_MATRIX_COPY.imageGoalLabel}</strong>
+                  {`: ${achievementLabel}`}
+                </p>
+              </div>
+            </div>
+            <p class="shrink-0 whitespace-nowrap font-jost tabular-nums">
+              <span class="sr-only">{UNI_FILL_MATRIX_COPY.imageChecksLabel}</span>
+              <span class="text-4xl font-semibold">{formatInteger(checks.count)}</span>
+              <span class="text-xl font-normal text-text-muted">
+                {` / ${formatInteger(checks.total)}`}
               </span>
-            </footer>
-          </div>
-        ),
-        host
-      )
-      return await captureElementAsImage(sheet, {
-        format: 'png',
-        pixelRatio: UNI_FILL_MATRIX_IMAGE_PIXEL_RATIO,
-      })
-    } finally {
-      dispose?.()
-      host.remove()
-    }
+            </p>
+          </header>
+          <UniFillMatrixTable
+            matrix={currentMatrix}
+            caption={caption}
+            cornerHeader={currentCornerHeader}
+            showPercent={currentShowPercent}
+            imageMode
+          />
+          <footer class="text-right text-sm text-text-muted">
+            <span class="whitespace-nowrap">
+              {UNI_FILL_MATRIX_COPY.imageGeneratedBy} <strong class="font-bold">{SITE_NAME}</strong>
+            </span>
+          </footer>
+        </div>
+      ),
+      { format: 'png', pixelRatio: UNI_FILL_MATRIX_IMAGE_PIXEL_RATIO }
+    )
   }
 
   /**
@@ -660,6 +665,19 @@ const UniFillMatrixPage: Component = () => {
                       label={UNI_FILL_MATRIX_COPY.percentToggle}
                       class="min-h-8"
                     />
+                    <div class="flex flex-col">
+                      <CheckboxField
+                        checked={excludeLockedSongs()}
+                        onChange={setExcludeLockedSongs}
+                        label={LOCKED_SONG_CALCULATION_EXCLUSION_LABEL}
+                        class="min-h-8"
+                      />
+                      <Show when={excludeLockedSongs() && lockedSongs.error}>
+                        <p class="font-sans text-sm text-danger" role="alert">
+                          {UNI_FILL_MATRIX_COPY.lockedSongsLoadError}
+                        </p>
+                      </Show>
+                    </div>
                     <Show when={hasLevelConstAxis()}>
                       <SegmentedToggleGroup
                         value={levelConstAxis()}
@@ -670,11 +688,18 @@ const UniFillMatrixPage: Component = () => {
                         itemClass="flex-1 sm:flex-none"
                       />
                     </Show>
-                    <UniFillMatrixImagePreviewDialog
+                    <SingleImagePreviewDialog
                       captureImage={captureMatrixImage}
                       createFilename={createMatrixImageFilename}
                       disabled={!matrix()}
-                      triggerClass="self-start sm:self-auto"
+                      triggerClass={getAppButtonClass({
+                        variant: 'primary',
+                        class: 'self-start sm:self-auto',
+                      })}
+                      triggerIcon={<Share2 class="h-4 w-4" aria-hidden="true" />}
+                      triggerLabel={UNI_FILL_MATRIX_COPY.imageSaveLabel}
+                      title={UNI_FILL_MATRIX_COPY.imagePreviewTitle}
+                      imageAlt={UNI_FILL_MATRIX_COPY.imagePreviewAlt}
                     />
                   </div>
                 </div>

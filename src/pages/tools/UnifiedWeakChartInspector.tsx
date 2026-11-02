@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, type Plugin, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { ScanSearch, SearchX, Settings } from 'lucide-solid'
+import { SearchX, Settings } from 'lucide-solid'
 import {
   createEffect,
   createMemo,
@@ -35,9 +35,8 @@ import {
   WEAK_CHART_SETTINGS_COPY,
   WEAK_CHART_SETTINGS_DEFAULT,
 } from '../../components/common/WeakChartSettingsDialog.constants'
-import { buildSongDetailPath, UNIFIED_WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
-import { getToolLink } from '../../constants/tools'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { buildSongDetailPath } from '../../constants/routes'
+import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
@@ -111,11 +110,15 @@ const APTITUDE_TICKS = Array.from(
  * 判定で絞り込んでも点の位置と横軸の範囲が変わらないよう、点と軸は判定で絞り込む前の譜面から求める。
  * @param props.entries - 表示・集計範囲で絞り込み、判定では絞り込む前の統合分析結果。
  * @param props.category - 表示する判定。すべての場合は 'all'。
+ * @param props.constMin - 表示対象の譜面がない場合の横軸の下限。
+ * @param props.constMax - 表示対象の譜面がない場合の横軸の上限。
  * @returns 横軸が譜面定数、縦軸が得意度の散布図。
  */
 const UnifiedWeakChartScatter = (props: {
   entries: UnifiedWeakChartEntry[]
   category: CategoryFilter
+  constMin: number
+  constMax: number
 }): JSX.Element => {
   let canvasRef!: HTMLCanvasElement
   let tooltipRef!: HTMLDivElement
@@ -125,7 +128,10 @@ const UnifiedWeakChartScatter = (props: {
     themePreference()
     accentPreference()
     const points = buildUnifiedWeakChartPoints(props.entries, UNIFIED_WEAK_CHART_POINT_JITTER)
-    const consts = points.map((point) => point.entry.record.const)
+    const consts =
+      points.length > 0
+        ? points.map((point) => point.entry.record.const)
+        : props.entries.map((entry) => entry.record.const)
     const textColor = resolveChartColor('--cs-color-text-muted', CHART_COLOR_FALLBACK)
     const gridColor = resolveChartColor('--cs-color-border', CHART_COLOR_FALLBACK)
     const zones = UNIFIED_WEAK_CHART_ZONES.map((zone) => ({
@@ -187,8 +193,12 @@ const UnifiedWeakChartScatter = (props: {
         },
         scales: {
           x: {
-            min: Math.min(...consts) - UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
-            max: Math.max(...consts) + UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
+            min:
+              (consts.length > 0 ? Math.min(...consts) : props.constMin) -
+              UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
+            max:
+              (consts.length > 0 ? Math.max(...consts) : props.constMax) +
+              UNIFIED_WEAK_CHART_CONST_AXIS_PADDING,
             grid: { color: gridColor },
             ticks: {
               color: textColor,
@@ -298,10 +308,13 @@ const AptitudeMeter = (props: {
  * 判定と得意度による優先順位を仮想化テーブルで表示する。
  * 曲名のみ左寄せ、その他の列は Online 版の比較表と同じく中央揃えにする。
  * 列ヘッダーで昇順・降順・初期順（判定の優先順位）を切り替えられる。
- * @param props - 絞り込み済みの統合分析結果。
+ * @param props - 絞り込み済みの統合分析結果と、初回表示時のスクロール位置。
  * @returns 曲名リンク、難易度、定数、スコア、得意度、判定の表。
  */
-const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JSX.Element => {
+const UnifiedComparisonTable = (props: {
+  entries: UnifiedWeakChartEntry[]
+  initialScrollOffset: number
+}): JSX.Element => {
   const [sortKey, setSortKey] = createSignal<UnifiedWeakChartSortKey | null>(null)
   const [sortDirection, setSortDirection] = createSignal<SortDirection | null>(null)
   const rows = createMemo(() =>
@@ -311,6 +324,7 @@ const UnifiedComparisonTable = (props: { entries: UnifiedWeakChartEntry[] }): JS
     rowCount: () => rows().length,
     rowHeight: COMPACT_VIRTUAL_TABLE_ROW_HEIGHT,
     resetOnRowCountChange: true,
+    initialOffset: props.initialScrollOffset,
     layoutDeps: rows,
   })
   createEffect((previous?: UnifiedWeakChartEntry[]) => {
@@ -481,12 +495,10 @@ const EmptyState = (props: { label: string }): JSX.Element => (
 )
 
 /**
- * 同レート帯の平均との失点比を、自分の普段の失点比と比べて判定する管理者向け画面。
+ * 苦手譜面インスペクター新版。同レート帯の平均との失点比を、自分の普段の失点比と比べて判定する。
  * @returns 比較帯・表示・集計範囲・判定を選べる、譜面定数別の得意度の散布図と優先順位表。
  */
-const UnifiedWeakChartInspectorPage = (): JSX.Element => {
-  const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
-  useDocumentTitle(tool.title)
+const UnifiedWeakChartInspector = (): JSX.Element => {
   const username = () => authSession.user?.username ?? null
   const [bands] = createResource(fetchRatingBands)
   const [versions] = createResource(fetchVersions)
@@ -583,24 +595,14 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
     records.error ??
     snapshots.error ??
     (isOpTargetSelected() ? songsResponse.error : undefined)
+  // 楽曲属性の取得完了で一覧が先頭へ戻るため、復元は属性が揃うまで待つ。
+  const restoredScrollOffset = useAppMainScrollRestoration(
+    () => !loading() && attributesBySongId() !== undefined
+  )
 
   return (
-    <main class="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
-      <header class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <ScanSearch class="h-8 w-8 shrink-0 text-action-primary" aria-hidden="true" />
-          <h1 class="text-2xl font-semibold">{tool.title}</h1>
-        </div>
-        <AppIconButton
-          tone="ghost"
-          aria-label={WEAK_CHART_SETTINGS_COPY.open}
-          onClick={() => setSettingsOpen(true)}
-          class="shrink-0"
-        >
-          <Settings class="h-5 w-5" aria-hidden="true" />
-        </AppIconButton>
-      </header>
-      <section class="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-surface p-4">
+    <>
+      <section class="flex items-end justify-between gap-4 rounded-lg border border-border bg-surface p-4">
         <AppSelect<BandOption>
           options={bandOptions()}
           value={band()}
@@ -609,8 +611,16 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
           optionTextValue="label"
           formatLabel={(value) => value.label}
           label={COPY.ratingBand}
-          rootClass="w-full sm:w-48"
+          rootClass="min-w-0 flex-1 sm:w-48 sm:flex-none"
         />
+        <AppIconButton
+          tone="ghost"
+          aria-label={WEAK_CHART_SETTINGS_COPY.open}
+          onClick={() => setSettingsOpen(true)}
+          class="shrink-0"
+        >
+          <Settings class="h-5 w-5" aria-hidden="true" />
+        </AppIconButton>
       </section>
       <WeakChartSettingsDialog
         open={settingsOpen()}
@@ -635,17 +645,23 @@ const UnifiedWeakChartInspectorPage = (): JSX.Element => {
               class="flex w-full flex-wrap"
               itemClass="min-h-10 flex-1 whitespace-nowrap"
             />
+            <UnifiedWeakChartScatter
+              entries={displayed()}
+              category={category()}
+              constMin={settings().constMin}
+              constMax={settings().constMax}
+            />
             <Show when={filtered().length > 0} fallback={<EmptyState label={COPY.empty} />}>
-              <Show when={filtered().some((entry) => entry.aptitude !== null)}>
-                <UnifiedWeakChartScatter entries={displayed()} category={category()} />
-              </Show>
-              <UnifiedComparisonTable entries={filtered()} />
+              <UnifiedComparisonTable
+                entries={filtered()}
+                initialScrollOffset={restoredScrollOffset}
+              />
             </Show>
           </Show>
         </Show>
       </Show>
-    </main>
+    </>
   )
 }
 
-export default UnifiedWeakChartInspectorPage
+export default UnifiedWeakChartInspector

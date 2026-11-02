@@ -84,6 +84,8 @@ export type UniFillMatrixViewSettings = {
   levelConstAxis: PlayerStatsHeatmapAxis
   /** 達成件数の代わりに達成率を表示するか */
   showPercent: boolean
+  /** 未解禁設定に登録された楽曲・譜面を集計から除外するか */
+  excludeLockedSongs: boolean
 }
 
 /**
@@ -123,6 +125,10 @@ export const normalizeUniFillMatrixViewSettings = (
         ?.value ?? fallback.levelConstAxis,
     showPercent:
       typeof source.showPercent === 'boolean' ? source.showPercent : fallback.showPercent,
+    excludeLockedSongs:
+      typeof source.excludeLockedSongs === 'boolean'
+        ? source.excludeLockedSongs
+        : fallback.excludeLockedSongs,
   }
 }
 
@@ -401,7 +407,23 @@ export type UniFillMatrixRecordTarget = {
   nameFolder?: UniFillMatrixNameFolder
   /** レベル・譜面定数。レベル・定数の軸を含まないマスや合計のマスでは未指定 */
   levelConst?: UniFillMatrixLevelConst
+  /** 未解禁設定に登録された楽曲・譜面を除外するか */
+  excludeLockedSongs: boolean
 }
+
+/**
+ * 集計と通常レコード遷移で共通の未解禁曲除外を決める。
+ * 除外がオンでも未解禁設定の取得に失敗しているときは除外しない。
+ * 取得に成功して失敗状態が解消されれば、再び除外を適用する。
+ *
+ * @param excludeLockedSongs - 画面で未解禁曲除外がオンか。
+ * @param lockedSongsLoadFailed - 未解禁設定の取得に失敗しているか。
+ * @returns 集計と遷移先フィルターへ渡す除外フラグ。
+ */
+export const resolveUniFillMatrixExcludeLockedSongs = (
+  excludeLockedSongs: boolean,
+  lockedSongsLoadFailed: boolean
+): boolean => excludeLockedSongs && !lockedSongsLoadFailed
 
 /**
  * マトリクスの難易度を通常レコードの難易度・OP対象条件へ変換する。
@@ -448,12 +470,13 @@ const toScoreBelowFilter = (maxScore: number): Pick<FilterState, 'score' | 'scor
  * 埋め条件を満たしていない譜面だけを表示する条件へ変換する。
  *
  * @param achievement - 埋め終わりとみなす到達条件。
- * @returns 未達成譜面を絞り込む部分フィルター。
+ * @returns 未達成譜面を絞り込む部分フィルター。プレイ済みだけ未プレイのみを使う。
  */
 const resolveUnachievedFilter = (achievement: PlayerStatsAchievement): Partial<FilterState> => {
   switch (achievement) {
     case 'played':
-      return toScoreBelowFilter(SCORE_MIN)
+      // プレイ済み0点は達成扱いのため、スコア0ではなく未プレイ譜面だけを対象にする
+      return { unplayedOnly: true }
     case 's':
       return toScoreBelowFilter(SCORE_RANK_MIN_SCORES.S - 1)
     case 'sPlus':
@@ -501,6 +524,7 @@ export const buildUniFillMatrixRecordFilter = (
   ...defaultFilter,
   ...resolveUniFillMatrixDifficultyFilter(target.difficulty),
   ...resolveUnachievedFilter(target.achievement),
+  excludeLockedSongs: target.excludeLockedSongs,
   ...(target.genre === undefined ? {} : { genres: [target.genre] }),
   ...(target.version === undefined ? {} : { versions: [target.version] }),
   ...(target.nameFolder === undefined ? {} : { nameFolders: [target.nameFolder.code] }),

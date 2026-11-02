@@ -42,6 +42,7 @@ import {
  * 公開かつプレイヤーデータ連携済みのユーザー名はプロフィールページへのリンクとして表示する。
  * テーブルヘッダおよび全データ行のセルでテキストの自動改行（折り返し）を禁止し、
  * 内容が長い場合は親要素の overflow-x-auto により横スクロールで表示する。
+ * スクロール枠を絶対配置された非表示要素の配置基準にし、本文への横溢れを防ぐ。
  *
  * @returns ユーザー集計とユーザー管理操作を表示するページ。
  */
@@ -292,7 +293,7 @@ const AdminUsersPage = () => {
           </div>
         }
       >
-        <div class="overflow-x-auto rounded-lg border border-border bg-surface">
+        <div class="relative overflow-x-auto rounded-lg border border-border bg-surface">
           <table class="min-w-full text-sm">
             <thead class="bg-surface-muted">
               <tr>

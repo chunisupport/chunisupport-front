@@ -85,7 +85,7 @@ type WeakChartSettingsDialogProps = {
 }
 
 /**
- * 苦手譜面インスペクター（Online・Unified）の表示・集計範囲を編集するダイアログ。
+ * 苦手譜面インスペクター（新版・Online）の表示・集計範囲を編集するダイアログ。
  *
  * 難易度（理論値OVER POWER対象を含む）、ジャンル、バージョン、楽曲名順、譜面定数を編集し、
  * 「適用」で親へ渡す。画面固有の項目は children と onReset で追加する。

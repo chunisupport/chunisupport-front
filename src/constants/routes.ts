@@ -21,13 +21,13 @@ export const FRIEND_VS_PATH = `${TOOLS_PATH}/friend-vs`
 export const SONGS_PATH = '/songs'
 /** WORLD'S END楽曲一覧画面のパス */
 export const WORLDSEND_SONGS_PATH = `${SONGS_PATH}/worldsend`
+/** OVER POWER計算機の公開パス。 */
+export const OVER_POWER_CALCULATOR_PATH = `${TOOLS_PATH}/overpower-calc`
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
 export const BORDER_CALCULATOR_PATH = `${TOOLS_PATH}/border-calculator`
 export const WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector`
 /** レート帯別平均スコアと比較する苦手譜面インスペクター */
 export const ONLINE_WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector-online`
-/** 自分のスコア分布での外れ値とレート帯比較を統合する管理者向けツール。 */
-export const UNIFIED_WEAK_CHART_INSPECTOR_PATH = `${TOOLS_PATH}/weak-chart-inspector-unified`
 export const RANDOM_SONG_SELECTOR_PATH = `${TOOLS_PATH}/random-song-selector`
 /** 未解禁曲ディスカバー画面のパス */
 export const LOCKED_SONG_DISCOVERY_PATH = `${TOOLS_PATH}/locked-song-discovery`

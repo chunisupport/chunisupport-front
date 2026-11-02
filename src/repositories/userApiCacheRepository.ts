@@ -1,9 +1,9 @@
 import {
   type CachedUserSongRecord,
   CLIENT_CACHE_SCHEMA_VERSION,
-  db,
   type UserApiResponse,
-} from '../lib/db/cacheDB'
+} from '../lib/db/cacheSchema'
+import { getCacheDB } from '../lib/db/getCacheDB'
 import type {
   PlayerRecordDTO,
   UserRatingDTO,
@@ -83,6 +83,7 @@ const isUserSongRecordCacheMatched = (
 export const readCachedUserRating = async (
   match: UserApiCacheMatch
 ): Promise<UserRatingDTO | null> => {
+  const db = await getCacheDB()
   const cached = await db.userApiResponses.get('userRating')
   if (
     !isUserApiCacheMatched(cached, match) ||
@@ -104,6 +105,7 @@ export const readCachedUserRating = async (
 export const readCachedUserRecord = async (
   match: UserApiCacheMatch
 ): Promise<UserRecordDTO | null> => {
+  const db = await getCacheDB()
   const metadata = await db.cacheMetadata.get('userRecord')
   if (
     metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
@@ -147,6 +149,7 @@ export const readCachedStandardSongRecord = async (
   match: UserApiCacheMatch,
   songId: string
 ): Promise<PlayerRecordDTO[] | null> => {
+  const db = await getCacheDB()
   const cached = await db.userSongRecords.get(
     createUserSongRecordKey(match.username, 'standard', songId)
   )
@@ -168,6 +171,7 @@ export const readCachedWorldsendSongRecord = async (
   match: UserApiCacheMatch,
   songId: string
 ): Promise<WorldsendRecordDTO | null | undefined> => {
+  const db = await getCacheDB()
   const cached = await db.userSongRecords.get(
     createUserSongRecordKey(match.username, 'worldsend', songId)
   )
@@ -184,6 +188,7 @@ export const readCachedWorldsendSongRecord = async (
  * @returns キャッシュ削除完了後に解決されるPromise。
  */
 export const clearCachedUserApiResponses = async (): Promise<void> => {
+  const db = await getCacheDB()
   await db.transaction(
     'rw',
     db.userApiResponses,
@@ -217,6 +222,7 @@ export const saveCachedUserRating = async (
   songsUpdatedAt: string | null,
   data: UserRatingDTO
 ): Promise<void> => {
+  const db = await getCacheDB()
   await db.userApiResponses.put({
     key: 'userRating',
     username,
@@ -280,6 +286,7 @@ export const saveCachedUserRecord = async (
     })),
   ]
 
+  const db = await getCacheDB()
   await db.transaction('rw', db.userSongRecords, db.cacheMetadata, async () => {
     await db.userSongRecords.clear()
     await db.userSongRecords.bulkPut(entries)
@@ -303,12 +310,12 @@ export const saveCachedUserRecord = async (
  * @param data - 保存する通常譜面レコード。
  * @returns 保存完了後に解決されるPromise。
  */
-export const saveCachedStandardSongRecord = (
+export const saveCachedStandardSongRecord = async (
   match: UserApiCacheMatch,
   songId: string,
   data: PlayerRecordDTO[]
 ): Promise<string> =>
-  db.userSongRecords.put({
+  (await getCacheDB()).userSongRecords.put({
     key: createUserSongRecordKey(match.username, 'standard', songId),
     kind: 'standard',
     username: match.username,
@@ -329,12 +336,12 @@ export const saveCachedStandardSongRecord = (
  * @param data - 保存するWORLD'S ENDレコード。
  * @returns 保存完了後に解決されるPromise。
  */
-export const saveCachedWorldsendSongRecord = (
+export const saveCachedWorldsendSongRecord = async (
   match: UserApiCacheMatch,
   songId: string,
   data: WorldsendRecordDTO | null
 ): Promise<string> =>
-  db.userSongRecords.put({
+  (await getCacheDB()).userSongRecords.put({
     key: createUserSongRecordKey(match.username, 'worldsend', songId),
     kind: 'worldsend',
     username: match.username,

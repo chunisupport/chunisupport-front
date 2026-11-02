@@ -59,6 +59,7 @@ export function isRecordFilterOptionsChanged(
     current.constFilterMode !== defaultFilter.constFilterMode ||
     current.scoreFilterMode !== defaultFilter.scoreFilterMode ||
     current.excludeNoPlay !== defaultFilter.excludeNoPlay ||
+    current.unplayedOnly !== defaultFilter.unplayedOnly ||
     current.const.min !== defaultFilter.const.min ||
     current.const.max !== defaultFilter.const.max ||
     current.score.min !== defaultFilter.score.min ||
@@ -71,7 +72,7 @@ export function isRecordFilterOptionsChanged(
     current.overPower.max !== defaultFilter.overPower.max ||
     !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) ||
     !hasSameFilterValues(current.genres, defaultFilter.genres) ||
-    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameNullableFilterValues(current.versions, defaultFilter.versions) ||
     !hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||
@@ -100,6 +101,7 @@ export function isRecordDifficultyFilterOnlyChanged(
     current.constFilterMode === defaultFilter.constFilterMode &&
     current.scoreFilterMode === defaultFilter.scoreFilterMode &&
     current.excludeNoPlay === defaultFilter.excludeNoPlay &&
+    current.unplayedOnly === defaultFilter.unplayedOnly &&
     current.const.min === defaultFilter.const.min &&
     current.const.max === defaultFilter.const.max &&
     current.score.min === defaultFilter.score.min &&
@@ -112,7 +114,7 @@ export function isRecordDifficultyFilterOnlyChanged(
     current.overPower.max === defaultFilter.overPower.max &&
     !hasSameFilterValues(current.difficulties, defaultFilter.difficulties) &&
     hasSameFilterValues(current.genres, defaultFilter.genres) &&
-    hasSameFilterValues(current.versions, defaultFilter.versions) &&
+    hasSameNullableFilterValues(current.versions, defaultFilter.versions) &&
     hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) &&
     hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) &&
     hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) &&

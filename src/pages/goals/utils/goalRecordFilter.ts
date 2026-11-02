@@ -18,6 +18,10 @@ import { resolveRatingGoalMinimumChartConstant } from '../../../utils/goalRating
 import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
 import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import { MAX_SCORE } from '../../../utils/scoreRank'
+import { fromRatingHundredths, toRatingHundredths } from '../../../utils/singleRating'
+
+/** 単曲レート1段階（0.01）に相当する、0.01を1とした整数値 */
+const SINGLE_RATING_STEP_HUNDREDTHS = 1
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'rank_count',
@@ -86,6 +90,15 @@ const isNavigableFullChainGoal = (goal: GoalDTO): boolean => {
 }
 
 /**
+ * 単曲レート目標の未達成一覧に使う上限を0.01単位で求める。
+ *
+ * @param rating - 目標とする単曲レート。
+ * @returns 目標より0.01低い単曲レート。0未満にはしない。
+ */
+const resolveUnachievedRatingMax = (rating: number): number =>
+  fromRatingHundredths(Math.max(0, toRatingHundredths(rating) - SINGLE_RATING_STEP_HUNDREDTHS))
+
+/**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
  *
  * @param filter - 属性条件を反映済みのフィルター。
@@ -107,7 +120,7 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
       const params = goal.achievement_params as { rating: number }
       return {
         ...filter,
-        rating: { min: null, max: Math.max(0, params.rating - 0.01) },
+        rating: { min: null, max: resolveUnachievedRatingMax(params.rating) },
       }
     }
     case 'hardlamp_count': {

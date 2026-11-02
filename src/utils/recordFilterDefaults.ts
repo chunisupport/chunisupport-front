@@ -6,9 +6,10 @@ import {
 } from '../constants/recordFilterOptions'
 import type { MasterItemDTO, VersionSummaryDTO } from '../types/api'
 import type { FilterState } from '../types/recordFilter'
+import { toNullableAllFilterSelection } from './filterSelection'
 import { sortMasterItemsBySortOrder } from './masterData'
 import { MAX_SCORE } from './scoreRank'
-import { filterReleasedVersions, getShortVersionName } from './versionConverter'
+import { getReleasedVersionShortNames } from './versionConverter'
 
 /** フィルターのデフォルト値 */
 export const DEFAULT_FILTER: FilterState = {
@@ -19,7 +20,8 @@ export const DEFAULT_FILTER: FilterState = {
   favoriteSongsOnly: false,
   excludeLockedSongs: false,
   genres: [],
-  versions: [],
+  /** 全選択。バージョン不明の楽曲も含む */
+  versions: null,
   nameFolders: null,
   const: {
     min: CHART_CONST_MIN,
@@ -47,6 +49,7 @@ export const DEFAULT_FILTER: FilterState = {
   chain_lamp: [...RECORD_CHAIN_LAMP_OPTIONS],
   hard_lamp: [...RECORD_HARD_LAMP_OPTIONS],
   excludeNoPlay: false,
+  unplayedOnly: false,
   updatedAt: {
     min: '',
     max: '',
@@ -57,26 +60,27 @@ export const DEFAULT_FILTER: FilterState = {
  * マスタデータに依存するフィルター初期値を作成する。
  *
  * @param genres - ジャンル一覧。表示順に並べた全ジャンル名を初期値にする。
- * @param versions - バージョン一覧。未来分は除外して初期値にする。
+ * @param versions - バージョン一覧。公開済みの全選択は未指定（null）にする。
  * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
- * @returns マスタデータから作成したジャンルとバージョンの初期値。
+ * @returns マスタデータから作成したジャンルとバージョンの初期値。バージョンの全選択は null。
  */
 export const getMasterDataDefaults = (
   genres?: readonly MasterItemDTO[],
   versions?: VersionSummaryDTO[],
   referenceDate?: string
-) => ({
-  genres: sortMasterItemsBySortOrder(genres ?? []).map((genre) => genre.name),
-  versions: filterReleasedVersions(versions ?? [], referenceDate).map((version) =>
-    getShortVersionName(version.name)
-  ),
-})
+) => {
+  const releasedVersionNames = getReleasedVersionShortNames(versions ?? [], referenceDate)
+  return {
+    genres: sortMasterItemsBySortOrder(genres ?? []).map((genre) => genre.name),
+    versions: toNullableAllFilterSelection(releasedVersionNames, releasedVersionNames),
+  }
+}
 
 /**
  * レコードフィルターのデフォルト状態を作成する。
  *
  * @param genres - ジャンル一覧。表示順に並べた全ジャンル名を初期値にする。
- * @param versions - バージョン一覧。未来分は除外して初期値にする。
+ * @param versions - バージョン一覧。公開済みの全選択は未指定（null）にする。
  * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns 配列と範囲条件を複製したレコードフィルターの初期状態。
  */
@@ -121,6 +125,7 @@ export const normalizeFilterState = (
     opTargetType: filter.opTargetType ?? DEFAULT_FILTER.opTargetType,
     favoriteSongsOnly: filter.favoriteSongsOnly ?? DEFAULT_FILTER.favoriteSongsOnly,
     excludeLockedSongs: filter.excludeLockedSongs ?? DEFAULT_FILTER.excludeLockedSongs,
+    unplayedOnly: filter.unplayedOnly ?? DEFAULT_FILTER.unplayedOnly,
     nameFolders: filter.nameFolders ?? null,
     combo_lamp: filter.combo_lamp ?? [...RECORD_COMBO_LAMP_OPTIONS],
     chain_lamp: filter.chain_lamp ?? [...RECORD_CHAIN_LAMP_OPTIONS],

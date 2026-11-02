@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../../constants/chart.ts'
 import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
-import { normalizeWorldsendFilterState } from '../types/filterDefaults.ts'
+import {
+  buildDefaultWorldsendFilter,
+  normalizeWorldsendFilterState,
+} from '../types/filterDefaults.ts'
 import type { WorldsendRecordWithSongMeta } from '../types/filterTypes.ts'
 import {
   createWorldsendRecordTitleMatcher,
@@ -47,6 +51,84 @@ const createRecord = (
  */
 const matcher = (title = '') => createWorldsendRecordTitleMatcher(title)
 
+test("既定の全バージョン選択ではバージョン不明の WORLD'S END レコードを表示し、絞り込むと除外する", () => {
+  // Given: 公開済みバージョンがある既定フィルターと、配信日未登録のレコード。
+  const versions = [
+    { name: 'CHUNITHM LUMINOUS', short_name: 'LUMINOUS', released_at: '2023-01-01' },
+    { name: 'CHUNITHM VERSE', short_name: 'VERSE', released_at: '2024-12-12' },
+  ]
+  const filters = {
+    ...buildDefaultWorldsendFilter([], versions, '2026-10-22'),
+    attributes: ['狂' as const],
+  }
+  const unknown = createRecord({ release: null, release_version: '不明' })
+
+  // When / Then: 全選択は未指定なので不明も含め、一部選択では不明を除外する。
+  assert.equal(filters.versions, null)
+  assert.equal(isWorldsendRecordMatchedWithTitleMatcher(unknown, filters, matcher()), true)
+  assert.equal(
+    isWorldsendRecordMatchedWithTitleMatcher(
+      unknown,
+      { ...filters, versions: ['VERSE'] },
+      matcher()
+    ),
+    false
+  )
+  assert.equal(
+    isWorldsendRecordMatchedWithTitleMatcher(
+      createRecord({ release_version: 'VERSE' }),
+      { ...filters, versions: ['VERSE'] },
+      matcher()
+    ),
+    true
+  )
+})
+
+test("WORLD'S END フィルターは★レベル範囲が既定の全範囲なら★未登録の譜面を表示する", () => {
+  // Given: ★レベル範囲が既定（★1〜★5）のフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: WORLDSEND_LEVEL_STAR_MIN, max: WORLDSEND_LEVEL_STAR_MAX },
+  })
+
+  // When: ★未登録の譜面と、範囲内の★登録済み譜面を判定する。
+  const unregistered = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ level_star: null }),
+    filters,
+    matcher()
+  )
+  const registered = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ level_star: 3 }),
+    filters,
+    matcher()
+  )
+
+  // Then: 既定の全範囲では未登録も登録済みも表示する。
+  assert.equal(unregistered, true)
+  assert.equal(registered, true)
+})
+
+test("WORLD'S END フィルターは★レベル範囲を絞ると★未登録の譜面を除外する", () => {
+  // Given: 下限だけ、上限だけを既定から狭めたフィルター。
+  const narrowedMin = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: WORLDSEND_LEVEL_STAR_MIN + 1, max: WORLDSEND_LEVEL_STAR_MAX },
+  })
+  const narrowedMax = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: WORLDSEND_LEVEL_STAR_MIN, max: WORLDSEND_LEVEL_STAR_MAX - 1 },
+  })
+  const record = createRecord({ level_star: null })
+
+  // When: ★未登録の譜面を、範囲を絞ったフィルターで判定する。
+  const minNarrowed = isWorldsendRecordMatchedWithTitleMatcher(record, narrowedMin, matcher())
+  const maxNarrowed = isWorldsendRecordMatchedWithTitleMatcher(record, narrowedMax, matcher())
+
+  // Then: 絞り込み時の未登録譜面の扱いは未決のため、従来どおり除外する。
+  assert.equal(minNarrowed, false)
+  assert.equal(maxNarrowed, false)
+})
+
 test("WORLD'S END フィルターは属性・レベル・ジャンル・バージョンを判定できる", () => {
   // Given: 属性、レベル、ジャンル、バージョンが一致するフィルター。
   const filters = normalizeWorldsendFilterState({
@@ -85,6 +167,31 @@ test("WORLD'S END フィルターは曲名・アーティスト・読み検索�
 
   // Then: アーティスト名でも一致する。
   assert.equal(matched, true)
+})
+
+test("WORLD'S END レコードは読みが空欄なら曲名を読みとして検索する", () => {
+  // Given: 読みがないレコードと、濁点・小書きカナ・長音を正規化した検索条件。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+  })
+  const titleMatcher = matcher('カツツコウヒウ')
+  for (const reading of [undefined, null, '', ' ', '\t\n　']) {
+    const record = createRecord({ title: 'ガッツ・コーヒー', reading })
+
+    // When / Then: 曲名を読みとして使うため一致する。
+    assert.equal(isWorldsendRecordMatchedWithTitleMatcher(record, filters, titleMatcher), true)
+  }
+
+  // Then: 設定済みの読みは曲名の読みで上書きしない。
+  assert.equal(
+    isWorldsendRecordMatchedWithTitleMatcher(
+      createRecord({ title: 'ガッツ・コーヒー', reading: 'ソラ' }),
+      filters,
+      titleMatcher
+    ),
+    false
+  )
 })
 
 test("WORLD'S END フィルターはスコア・JUSTICE数・ランプ・未プレイ除外を判定できる", () => {

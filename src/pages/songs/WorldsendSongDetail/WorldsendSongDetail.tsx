@@ -20,7 +20,7 @@ import OwnScoreCard, { type OwnScoreItem } from '../SongDetail/components/OwnSco
 import SongStatsTabs from '../SongDetail/components/SongStatsTabs'
 import { buildWorldsendOwnScoreItem, getWorldsendTitleMeta } from '../worldsendDetailModel'
 import WorldsendSongInfoCard from './components/WorldsendSongInfoCard'
-import { getWorldsendDisplayIdSource } from './worldsendRouteParams'
+import { getWorldsendDisplayIdSource, isWorldsendSongDetailNotFound } from './worldsendRouteParams'
 
 const worldsendDifficulty = [{ label: "WORLD'S END", value: 'worldsend' }]
 
@@ -57,6 +57,12 @@ const fetchWorldsendSongDetailLoadState = async (
   }
 }
 
+/**
+ * WORLD'S END楽曲詳細を表示する。
+ * 不正な表示IDはAPIを呼ばず、Not Found を表示する。
+ *
+ * @returns WORLD'S END楽曲詳細、または Not Found。
+ */
 const WorldsendSongDetail = () => {
   const params = useParams<{ displayid: string }>()
 
@@ -128,7 +134,10 @@ const WorldsendSongDetail = () => {
   )
 
   return (
-    <Show when={songState()?.type !== 'notFound'} fallback={<NotFoundPage />}>
+    <Show
+      when={!isWorldsendSongDetailNotFound(displayIdSource(), songState()?.type)}
+      fallback={<NotFoundPage />}
+    >
       <Show when={!songLoadError()} fallback={<LoadError error={songLoadError()} />}>
         <SongDetailLayout
           song={song()}

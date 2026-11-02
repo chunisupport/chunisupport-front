@@ -63,8 +63,34 @@ export const buildGoalVersionNameMap = (
     ])
   )
 
+/** バージョン一覧ごとの、リリース日からバージョン番号への解決結果キャッシュ */
+const goalVersionValueCache = new WeakMap<readonly VersionDTO[], Map<string, number | undefined>>()
+
+/**
+ * 正規化済みのリリース日からバージョン番号を求める。
+ *
+ * @param normalizedReleaseDate - YYYY-MM-DD 形式のリリース日。
+ * @param sortedVersions - リリース日順に並べたバージョン一覧。
+ * @returns リリース日順の 1 始まり番号。該当しない場合は undefined。
+ */
+const findGoalVersionValue = (
+  normalizedReleaseDate: string,
+  sortedVersions: readonly VersionDTO[]
+): number | undefined => {
+  let candidate: number | undefined
+  sortedVersions.forEach((version, index) => {
+    if (normalizedReleaseDate >= version.released_at.slice(0, 10)) {
+      candidate = index + 1
+    }
+  })
+  return candidate
+}
+
 /**
  * 曲のリリース日から目標条件用のバージョン番号を解決する。
+ *
+ * 目標の進捗計算では全譜面に対して呼ばれるため、同じバージョン一覧に対する解決結果をリリース日単位でキャッシュする。
+ * バージョン一覧はAPI取得後に変更しない前提で、配列の参照をキャッシュキーにする。
  *
  * @param releaseDate - 曲のリリース日。
  * @param versions - API から返されたバージョン一覧。
@@ -80,12 +106,14 @@ export const resolveGoalVersionValueByReleaseDate = (
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/
   if (!dateRegex.test(normalizedReleaseDate)) return undefined
 
-  let candidate: number | undefined
-  sortGoalVersionsByReleaseDate(versions).forEach((version, index) => {
-    if (normalizedReleaseDate >= version.released_at.slice(0, 10)) {
-      candidate = index + 1
-    }
-  })
+  let cache = goalVersionValueCache.get(versions)
+  if (!cache) {
+    cache = new Map()
+    goalVersionValueCache.set(versions, cache)
+  }
+  if (cache.has(normalizedReleaseDate)) return cache.get(normalizedReleaseDate)
 
-  return candidate
+  const value = findGoalVersionValue(normalizedReleaseDate, sortGoalVersionsByReleaseDate(versions))
+  cache.set(normalizedReleaseDate, value)
+  return value
 }

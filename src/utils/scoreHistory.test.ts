@@ -55,6 +55,21 @@ test('横軸のUNIX時刻を年2桁の日付だけで表示する', () => {
   assert.equal(result, '26/06/22')
 })
 
+test('日付境界付近の更新日時と横軸をJSTの日付で表示する', () => {
+  // Given: UTCでは前日、太平洋側のタイムゾーンでは翌日になるJSTの日付境界付近
+  const values = ['2026-06-22T00:30:00+09:00', '2026-06-22T23:30:00+09:00']
+
+  for (const value of values) {
+    // When
+    const dateTime = formatScoreHistoryDateTime(value)
+    const timestamp = formatScoreHistoryTimestamp(new Date(value).getTime())
+
+    // Then
+    assert.equal(dateTime, '26/06/22')
+    assert.equal(timestamp, '26/06/22')
+  }
+})
+
 test('稼働日をまたぐ位置と最古履歴の末尾へバージョン行を挿入する', () => {
   // Given
   const entries = [

@@ -24,6 +24,10 @@ import {
   getChartLevelFilterBoundary,
   toChartLevelFilterLabel,
 } from '../../../../../utils/chartLevel'
+import {
+  toNullableAllDisplaySelection,
+  toNullableAllFilterSelection,
+} from '../../../../../utils/filterSelection'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import {
   parseNumberInput,
@@ -161,6 +165,34 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         min: nextMinValue,
         max: nextMaxValue,
       },
+    }))
+  }
+
+  /**
+   * 未プレイ除外を切り替える。オンにしたときは未プレイのみを解除する。
+   *
+   * @param checked - 未プレイ譜面を除外するか。
+   * @returns なし。
+   */
+  const handleExcludeNoPlayChange = (checked: boolean) => {
+    props.setFilters((prev) => ({
+      ...prev,
+      excludeNoPlay: checked,
+      unplayedOnly: checked ? false : prev.unplayedOnly,
+    }))
+  }
+
+  /**
+   * 未プレイのみを切り替える。オンにしたときは未プレイ除外を解除する。
+   *
+   * @param checked - 未プレイ譜面だけを表示するか。
+   * @returns なし。
+   */
+  const handleUnplayedOnlyChange = (checked: boolean) => {
+    props.setFilters((prev) => ({
+      ...prev,
+      unplayedOnly: checked,
+      excludeNoPlay: checked ? false : prev.excludeNoPlay,
     }))
   }
 
@@ -464,6 +496,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         scoreRankMin={scoreRankMin()}
         scoreRankMax={scoreRankMax()}
         excludeNoPlay={props.filters.excludeNoPlay}
+        unplayedOnly={props.filters.unplayedOnly}
         onScoreFilterModeChange={handleScoreFilterModeChange}
         onScoreMinInput={setScoreMinInput}
         onScoreMaxInput={setScoreMaxInput}
@@ -488,12 +521,8 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
           }))
         }}
         onScoreRankChange={handleScoreRankChange}
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
+        onUnplayedOnlyChange={handleUnplayedOnlyChange}
       />
       <NumericRangeSection
         config={SINGLE_RATING_RANGE_FILTER}
@@ -559,12 +588,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ),
           }))
         }
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
       />
       <LampSection
         title="FULL CHAIN"
@@ -581,12 +605,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ),
           }))
         }
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
       />
       <LampSection
         title="ハードランプ"
@@ -608,12 +627,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
             ),
           }))
         }
-        onExcludeNoPlayChange={(checked) =>
-          props.setFilters((prev) => ({
-            ...prev,
-            excludeNoPlay: checked,
-          }))
-        }
+        onExcludeNoPlayChange={handleExcludeNoPlayChange}
       />
       <MultiSelectFilterSection
         title="ジャンル"
@@ -631,13 +645,13 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       <MultiSelectFilterSection
         title="バージョン"
         options={versions()}
-        selected={props.filters.versions}
+        selected={toNullableAllDisplaySelection(props.filters.versions, versions())}
         placeholder="バージョンを選択"
         contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
         onChange={(selectedVersions) =>
           props.setFilters((prev) => ({
             ...prev,
-            versions: selectedVersions,
+            versions: toNullableAllFilterSelection(selectedVersions, versions()),
           }))
         }
       />

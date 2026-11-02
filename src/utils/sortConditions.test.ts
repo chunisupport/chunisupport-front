@@ -34,7 +34,7 @@ test('normalizeSortConditions は不足分を既定条件で補い最後の条�
   ])
 })
 
-test('createInitialSortConditions は第1条件だけ指定値で置き換える', () => {
+test('createInitialSortConditions は第1条件を指定値にし、重複キーを既定条件で補完する', () => {
   // Given
   const sortKey = 'level'
   const sortDirection = 'asc'
@@ -42,11 +42,27 @@ test('createInitialSortConditions は第1条件だけ指定値で置き換える
   // When
   const result = createInitialSortConditions(sortKey, sortDirection, DEFAULT_SORT_CONDITIONS)
 
-  // Then
+  // Then: 第2条件の level は重複するため、残りの既定条件で補完する。
   assert.deepEqual(result, [
     { key: 'level', direction: 'asc' },
-    { key: 'level', direction: 'desc' },
+    { key: 'score', direction: 'desc' },
     { key: 'title', direction: 'asc' },
+  ])
+})
+
+test('createInitialSortConditions は固定条件と同じキーを第1条件に指定しても重複しない', () => {
+  // Given: 既定の最終条件と同じ title を第1条件にする。
+  const sortKey = 'title'
+  const sortDirection = 'desc'
+
+  // When
+  const result = createInitialSortConditions(sortKey, sortDirection, DEFAULT_SORT_CONDITIONS)
+
+  // Then: 最終条件は未使用の既定条件で補完し、キーを重複させない。
+  assert.deepEqual(result, [
+    { key: 'title', direction: 'desc' },
+    { key: 'score', direction: 'desc' },
+    { key: 'level', direction: 'desc' },
   ])
 })
 

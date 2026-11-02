@@ -101,6 +101,16 @@ test('isValidSavedStandardFilter はお気に入り条件の省略を旧保存�
   assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, favoriteSongsOnly: 'true' }), false)
 })
 
+test('isValidSavedStandardFilter は未プレイのみの省略を旧保存値として許可すること', () => {
+  // Given
+  const { unplayedOnly: _unplayedOnly, ...legacyFilter } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, unplayedOnly: true }), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, unplayedOnly: 'true' }), false)
+})
+
 test('isValidSavedStandardFilter は未解禁曲除外条件の省略を旧保存値として許可すること', () => {
   // Given
   const { excludeLockedSongs: _excludeLockedSongs, ...legacyFilter } = DEFAULT_FILTER

@@ -216,3 +216,25 @@ export const updateUsername = async (
 
   return response.json()
 }
+
+/**
+ * ログインに使うFirebaseアカウントを変更先アカウントへ差し替える。
+ *
+ * @param newAccountIdToken - 変更先アカウントでサインインした直後のIDトークン。
+ * @param reauthToken - 現在のアカウントでFirebase再認証して取得したIDトークン。
+ * @returns 変更完了後に解決されるPromise。
+ */
+export const changeFirebaseAccount = async (
+  newAccountIdToken: string,
+  reauthToken: string
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/me/firebase-account`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Reauth-Token': reauthToken,
+    },
+    body: JSON.stringify({ id_token: newAccountIdToken }),
+    suppressUnauthorizedRedirectForCodes: ['recent_sign_in_required', 'invalid_credentials'],
+  })
+}

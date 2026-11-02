@@ -3,7 +3,7 @@ import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
 import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import { formatChartConst } from './chartConstFormat'
 import { getComboLampFilterValue } from './comboLampFilter'
-import { isNullableSelectionMatched } from './filterSelection'
+import { isNullableSelectionMatched, matchesNullableVersionFilter } from './filterSelection'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 import { getShortVersionName, resolveVersionNameByReleaseDate } from './versionConverter'
 
@@ -53,7 +53,8 @@ export type RandomSongCandidateWeightSummary = {
 export type RandomSongFilter = {
   difficulties: readonly RandomSongDifficultyFilter[]
   genres: readonly string[]
-  versions: readonly string[]
+  /** 対象バージョンの短縮名。null は全選択（未指定）で、バージョン不明の候補も含む。空配列は全件不一致 */
+  versions: readonly string[] | null
   /** 楽曲名順フォルダのコード。null は全選択、空配列は全件不一致を表す */
   nameFolders: readonly string[] | null
   minConst: number | null
@@ -437,7 +438,7 @@ export const filterRandomSongCandidates = (
         isRandomSongOpTargetCandidate(candidate))
     if (!matchesDifficulty) return false
     if (!filter.genres.includes(candidate.genre)) return false
-    if (!filter.versions.includes(candidate.version)) return false
+    if (!matchesNullableVersionFilter(candidate.version, filter.versions)) return false
     if (!isNullableSelectionMatched(candidate.song.name_folder_code, filter.nameFolders))
       return false
     if (filter.minConst !== null && candidate.chartConst < filter.minConst) return false
@@ -542,6 +543,7 @@ export const resolveRandomSongWeight = (
  * @param weight - 難易度別、定数別の倍率設定。
  * @param random - 0以上1未満の乱数を返す関数。
  * @returns ランダムに選ばれた候補一覧。
+ * @throws RangeError - 倍率の積または重み合計がオーバーフローする場合。
  */
 export const drawRandomSongs = (
   candidates: readonly RandomSongCandidate[],
@@ -560,6 +562,9 @@ export const drawRandomSongs = (
 
   for (let drawIndex = 0; drawIndex < drawCount; drawIndex += 1) {
     const totalWeight = pool.reduce((sum, entry) => sum + entry.weight, 0)
+    if (!Number.isFinite(totalWeight)) {
+      throw new RangeError('Random song weight total must be finite')
+    }
     let threshold = random() * totalWeight
     let selectedIndex = pool.length - 1
 

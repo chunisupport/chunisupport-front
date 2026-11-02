@@ -5,7 +5,28 @@ import {
   type WeakChartAggregationDifficulty,
 } from '../../utils/weakChartInspector'
 
-/** 苦手譜面インスペクターの画面表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
+/** 苦手譜面インスペクターの版。unified が新版、legacy が旧版。 */
+export type WeakChartInspectorVersion = 'unified' | 'legacy'
+
+/** 苦手譜面インスペクターの既定の版 */
+export const WEAK_CHART_INSPECTOR_DEFAULT_VERSION: WeakChartInspectorVersion = 'unified'
+
+/** 選択した版を保存する localStorage のキー */
+export const WEAK_CHART_INSPECTOR_VERSION_STORAGE_KEY = 'chunisupport-weak-chart-inspector-version'
+
+/** 版の切り替えのアクセシブルネーム */
+export const WEAK_CHART_INSPECTOR_VERSION_LABEL = '表示する版'
+
+/** 版の切り替えの選択肢 */
+export const WEAK_CHART_INSPECTOR_VERSION_OPTIONS: readonly {
+  value: WeakChartInspectorVersion
+  label: string
+}[] = [
+  { value: 'unified', label: '新' },
+  { value: 'legacy', label: '旧' },
+]
+
+/** 苦手譜面インスペクター旧版の画面表示文言。タイトルはツール一覧の定義を参照すること。 */
 export const WEAK_CHART_INSPECTOR_COPY = {
   chartTitle: '譜面定数別スコア分布',
   chartAccessibleLabel: '譜面定数ごとの獲得スコア散布図',

@@ -1,6 +1,6 @@
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createSignal, on } from 'solid-js'
-import placeholderImageUrl from '../../../../assets/placeholder.png'
+import placeholderImageUrl from '../../../../assets/placeholder.webp'
 import { JacketImage } from '../../../../components/common/JacketImage'
 
 type JacketLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error'

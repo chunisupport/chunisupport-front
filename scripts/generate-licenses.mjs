@@ -20,6 +20,11 @@ const projectRoot = join(__dirname, '..')
 
 const INPUT_PACKAGE_JSON = join(projectRoot, 'package.json')
 const HEADER_FILE = join(projectRoot, 'scripts', 'THIRD-PARTY-NOTICES-HEADER.txt')
+/**
+ * package.json の依存解決では対象外になるが、配布物に含まれるソフトウェアのライセンス情報。
+ * devDependencies のうち、ランタイムをビルド時に HTML へインライン化するものを列挙する。
+ */
+const APPENDIX_FILES = [join(projectRoot, 'scripts', 'licenses', 'rsbuild-plugin-assets-retry.txt')]
 const OUTPUT_ROOT = join(projectRoot, 'THIRD-PARTY-NOTICES.txt')
 const OUTPUT_PUBLIC = join(projectRoot, 'public', 'THIRD-PARTY-NOTICES.txt')
 const OUTPUT_FILES = [OUTPUT_ROOT, OUTPUT_PUBLIC]
@@ -30,7 +35,7 @@ const isCheckMode = process.argv.includes('--check')
  * @returns {Promise<string>} ヘッダーとツール生成分を結合したライセンス通知本文。
  */
 async function createLicenseNoticeText() {
-  const toolGeneratedText = await getLicenseFileText(INPUT_PACKAGE_JSON)
+  const toolGeneratedText = await getLicenseFileText(INPUT_PACKAGE_JSON, { append: APPENDIX_FILES })
   const header = readFileSync(HEADER_FILE, 'utf8')
 
   // ツールの出力には独自ヘッダーを差し込めないため、ヘッダーを先頭に置いて手動で結合する

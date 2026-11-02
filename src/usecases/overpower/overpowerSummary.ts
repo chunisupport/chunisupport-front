@@ -9,6 +9,7 @@ import { type ChartLevelLabel, getChartLevelSortKey, isLowChartLevel } from '../
 import { compareMasterItemNames, createMasterItemOrderMap } from '../../utils/masterData'
 import { getShortVersionName } from '../../utils/versionConverter'
 import { buildOverPowerChartEntries, selectOverPowerChartEntries } from './aggregation'
+import { OVER_POWER_UNKNOWN_LABEL } from './constants'
 import type {
   OverPowerAggregationTarget,
   OverPowerChartEntry,
@@ -74,8 +75,12 @@ const buildGenreSummaries = (
   const groups = new Map<string, MutableSummary>()
   const genreOrderMap = createMasterItemOrderMap(genres)
   for (const entry of entries) {
-    if (!entry.song.genre || entry.song.genre === '不明') continue
-    addToGroup(groups, entry.song.genre, entry.record?.overpower ?? 0, entry.maxOverPower)
+    addToGroup(
+      groups,
+      entry.song.genre || OVER_POWER_UNKNOWN_LABEL,
+      entry.record?.overpower ?? 0,
+      entry.maxOverPower
+    )
   }
 
   return [...groups.entries()]
@@ -117,8 +122,12 @@ const buildVersionSummaries = (
       .map((version, index) => [getShortVersionName(version.name), index])
   )
   for (const entry of entries) {
-    if (!entry.versionName) continue
-    addToGroup(groups, entry.versionName, entry.record?.overpower ?? 0, entry.maxOverPower)
+    addToGroup(
+      groups,
+      entry.versionName || OVER_POWER_UNKNOWN_LABEL,
+      entry.record?.overpower ?? 0,
+      entry.maxOverPower
+    )
   }
 
   return [...groups.entries()]

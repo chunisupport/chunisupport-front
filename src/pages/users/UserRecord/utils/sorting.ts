@@ -16,10 +16,7 @@ import {
 import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay.ts'
-import {
-  compareMissingJusticeCountRecords,
-  isJusticeCountMissing,
-} from '../../utils/justiceCountSorting'
+import { isJusticeCountMissing } from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
@@ -164,7 +161,8 @@ const compareRecordBySortCondition = (
       const rightMissing = isJusticeCountMissing(rightJusticeCount)
 
       if (leftMissing && rightMissing) {
-        return compareMissingJusticeCountRecords(left, right)
+        // J数がない同士は順序を決めず、後続のソート条件へ委譲する。
+        return 0
       }
 
       if (leftMissing) {

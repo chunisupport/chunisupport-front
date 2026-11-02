@@ -68,7 +68,12 @@ export interface FilterState {
   /** 未解禁設定に登録された楽曲・譜面を除外するか */
   excludeLockedSongs: boolean
   genres: string[]
-  versions: string[]
+  /**
+   * 対象バージョンの短縮名。
+   * null は全選択（未指定）で、バージョン不明の楽曲も含む。
+   * 空配列もバージョン条件なし。一部選択時はそのバージョンだけが対象で、バージョン不明は含まない。
+   */
+  versions: string[] | null
   /** 対象とする楽曲名順フォルダのコード。null は全フォルダ対象、空配列は全件不一致を表す */
   nameFolders: string[] | null
   const: NumericRangeFilter
@@ -83,6 +88,11 @@ export interface FilterState {
   chain_lamp: ChainLamp[]
   hard_lamp: HardLamp[]
   excludeNoPlay: boolean
+  /**
+   * 未プレイ譜面だけを表示するか。
+   * URLクエリには載せず、保存値に無い場合は false として扱う。
+   */
+  unplayedOnly: boolean
   /** 最終更新日の範囲フィルター。空文字列は未指定を意味する */
   updatedAt: DateRangeFilter
 }

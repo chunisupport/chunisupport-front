@@ -1,4 +1,5 @@
 import type { ScoreHistoryDifficulty } from '../api/songs'
+import { JST_TIME_ZONE } from '../constants/dateTime'
 import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../types/api'
 
 /** スコア履歴テーブルに表示するスコア行またはバージョン境界行 */
@@ -6,7 +7,9 @@ export type ScoreHistoryTableRow =
   | { type: 'score'; entry: ScoreHistoryEntryDTO }
   | { type: 'version'; name: string }
 
+/** バージョン稼働日の境界と同じJSTで履歴の日付を表示するフォーマッター */
 const scoreHistoryDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
+  timeZone: JST_TIME_ZONE,
   year: '2-digit',
   month: '2-digit',
   day: '2-digit',
@@ -32,7 +35,7 @@ export const parseScoreHistoryDifficulty = (
  * スコア履歴の更新日時を年月日の短縮表示へ整形する。
  *
  * @param value - ISO 8601形式の更新日時。
- * @returns yy/MM/dd形式の日付。不正値の場合はハイフン。
+ * @returns JSTのyy/MM/dd形式の日付。不正値の場合はハイフン。
  */
 export const formatScoreHistoryDateTime = (value: string): string => {
   const date = new Date(value)
@@ -43,7 +46,7 @@ export const formatScoreHistoryDateTime = (value: string): string => {
  * スコア履歴グラフの横軸値を年月日の短縮表示へ整形する。
  *
  * @param value - UNIXエポックからの経過ミリ秒。
- * @returns yy/MM/dd形式の日付。不正値の場合はハイフン。
+ * @returns JSTのyy/MM/dd形式の日付。不正値の場合はハイフン。
  */
 export const formatScoreHistoryTimestamp = (value: number): string => {
   const date = new Date(value)

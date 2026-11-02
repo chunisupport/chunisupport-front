@@ -5,6 +5,7 @@ import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { ADMIN_PREVIEWS_PAGE_TITLE } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import AdminNameplatePreviewPanel from './AdminNameplatePreviewPanel'
+import AdminOverPowerTierPreviewPanel from './AdminOverPowerTierPreviewPanel'
 import { ADMIN_PREVIEWS_TAB_OPTIONS } from './AdminPreviewsPage.constants'
 import AdminRatingImageDomPreviewPanel from './AdminRatingImageDomPreviewPanel'
 import { buildAdminPreviewsTabPath, resolveAdminPreviewsTab } from './adminPreviewsTab'
@@ -13,7 +14,7 @@ import { buildAdminPreviewsTabPath, resolveAdminPreviewsTab } from './adminPrevi
  * 表示確認用のテストページをタブでまとめて表示する。
  * 表示中のタブはURLに持たせ、非表示のタブは描画しない。
  *
- * @returns プロフィールカードとレーティング画像DOMの確認タブ。
+ * @returns プロフィールカード、レーティング画像DOM、OVER POWER数値色の確認タブ。
  */
 const AdminPreviewsPage = (): JSX.Element => {
   useDocumentTitle(ADMIN_PREVIEWS_PAGE_TITLE)
@@ -44,6 +45,9 @@ const AdminPreviewsPage = (): JSX.Element => {
         </AppTabContent>
         <AppTabContent value="ratingImage">
           <AdminRatingImageDomPreviewPanel />
+        </AppTabContent>
+        <AppTabContent value="overPowerTier">
+          <AdminOverPowerTierPreviewPanel />
         </AppTabContent>
       </UnderlineTabs>
     </div>

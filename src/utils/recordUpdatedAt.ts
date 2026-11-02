@@ -1,32 +1,19 @@
-/** ISO 8601形式の先頭から年月日を取得する正規表現 */
-const YMD_PATTERN = /^(\d{4})-(\d{2})-(\d{2})/
+import { toRecordDateString } from './dateFilter'
 
 /**
- * レコード更新日時を年2桁の日付表示へ整形する。
+ * レコード更新日時を日本時間基準の年2桁の日付表示へ整形する。
  *
  * @param updatedAt - ISO 8601形式の更新日時。未設定の場合はnull。
  * @returns `YY/MM/DD` 形式の日付。不正または未設定の場合はハイフン。
  */
 export const formatUpdatedAt = (updatedAt: string | null): string => {
-  if (!updatedAt) {
+  const recordDate = toRecordDateString(updatedAt)
+  if (!recordDate) {
     return '-'
   }
 
-  const matched = updatedAt.match(YMD_PATTERN)
-  if (matched) {
-    return `${matched[1].slice(-2)}/${matched[2]}/${matched[3]}`
-  }
-
-  const parsed = new Date(updatedAt)
-  if (Number.isNaN(parsed.getTime())) {
-    return '-'
-  }
-
-  const year = String(parsed.getUTCFullYear()).slice(-2)
-  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0')
-  const day = String(parsed.getUTCDate()).padStart(2, '0')
-
-  return `${year}/${month}/${day}`
+  const [year, month, day] = recordDate.split('-')
+  return `${year.slice(-2)}/${month}/${day}`
 }
 
 /**

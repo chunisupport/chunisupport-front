@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { applySystemStatus, availability, resetAvailability } from '../../stores/availability.ts'
+import { loadTestModule } from '../../test/setupTestEnvironment.ts'
 import type { SystemStatusDTO } from '../../types/api.ts'
-import { createAvailabilityRefresher } from './refreshAvailability.ts'
+
+const { createAvailabilityRefresher } = await loadTestModule(
+  () => import('./refreshAvailability.ts')
+)
 
 test('同時の状態確認は1つのin-flight Promiseへ集約される', async () => {
   // Given: 応答を手動で完了できる状態取得関数

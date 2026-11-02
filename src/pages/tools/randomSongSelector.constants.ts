@@ -62,7 +62,6 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   goalFilterNoneLabel: '絞り込みなし',
   goalFilterCancelLabel: 'キャンセル',
   goalFilterApplyLabel: '適用',
-  goalFilterUnavailableMessage: 'ログイン時のみ保存済み目標を利用できます。',
   goalFilterFetchErrorMessage: '目標を取得できませんでした。',
   goalFilterRecordFetchErrorMessage: '目標の未達成状況を取得できませんでした。',
   goalFilterEmptyMessage: '絞り込みに利用できる目標がありません。',
@@ -89,7 +88,6 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   minScoreLabel: 'スコア 下限',
   maxScoreLabel: 'スコア 上限',
   bestFrameLabel: 'ベスト枠',
-  recordUnavailableMessage: 'ログイン時のみ利用できます。',
   recordFetchErrorMessage: 'レコード情報を取得できませんでした。',
   favoriteFetchErrorMessage: 'お気に入り楽曲を取得できませんでした。',
   drawButtonLabel: '選曲',
@@ -106,7 +104,8 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   invalidCountMessage: '曲数は1以上で入力してください。',
   invalidConstRangeMessage: '定数の範囲を確認してください。',
   invalidScoreRangeMessage: 'スコアの範囲を確認してください。',
-  invalidWeightMessage: '出やすさは0以上の数値で入力してください。',
+  invalidWeightMessage:
+    '出やすさは0以上の数値で入力してください。倍率の積や重み合計が大きすぎる場合は、倍率を小さくしてください。',
 } as const
 
 /**

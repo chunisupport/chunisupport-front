@@ -18,7 +18,7 @@ import {
 import { fetchGoals } from '../../api/goals'
 import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchGoalFilterOptions, fetchVersions, type GoalFilterOptions } from '../../api/songs'
-import { fetchMe, fetchUserFavoriteSongs, fetchUserRating } from '../../api/users'
+import { fetchUserFavoriteSongs, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { MultiSelectField, toMultiSelectOptions } from '../../components/common/AppMultiSelect'
@@ -36,13 +36,22 @@ import {
   RECORD_CARD_HOVER_CLASS,
 } from '../../components/common/record/RecordDisplayParts'
 import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyleClasses'
+import { OwnDataNotice } from '../../components/LoginRequiredState'
 import { RANDOM_SONG_SELECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
+import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
+import type { PlayerDataStatus } from '../../usecases/auth/resolvePlayerDataStatus'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
+import {
+  normalizeVersionFilterSelection,
+  resolveReleasedVersionFilterSelection,
+  toNullableAllDisplaySelection,
+  toNullableAllFilterSelection,
+} from '../../utils/filterSelection'
 import {
   filterRandomSongCandidatesByGoal,
   isRandomSongGoalFilterAvailable,
@@ -162,7 +171,7 @@ type MyRandomSongRecordData =
       bestRecords: PlayerRecordDTO[]
     }
   | {
-      status: 'unauthenticated'
+      status: 'unauthenticated' | 'unregistered'
     }
   | {
       status: 'error'
@@ -175,11 +184,14 @@ type MyRandomSongFavoriteData =
       favoriteSongIds: ReadonlySet<string>
     }
   | {
-      status: 'unauthenticated'
+      status: 'unauthenticated' | 'unregistered'
     }
   | {
       status: 'error'
     }
+
+/** 自分のデータを取得できない理由。 */
+type MyRandomSongUnavailableStatus = 'unauthenticated' | 'unregistered' | 'error'
 
 /** ランダム選曲で利用するログイン中ユーザーデータの取得状態。 */
 type MyRandomSongUserData = {
@@ -196,7 +208,7 @@ type MyRandomSongGoalData =
       options: GoalFilterOptions
     }
   | {
-      status: 'unauthenticated'
+      status: 'unauthenticated' | 'unregistered'
     }
   | {
       status: 'error'
@@ -242,10 +254,12 @@ const parseRandomSongWeightForPercent = (value: string, enabled = true): number 
  *
  * @param weightMass - 対象項目に含まれる候補の重み総量。
  * @param total - 同じ設定グループ内の重み総量。
- * @returns 表示用のグループ内出現割合。
+ * @returns 表示用のグループ内出現割合。重みがオーバーフローする場合は無効値の表示。
  */
 const formatRandomSongWeightPercent = (weightMass: number | null, total: number): string => {
-  if (weightMass === null) return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+  if (weightMass === null || !Number.isFinite(weightMass) || !Number.isFinite(total)) {
+    return RANDOM_SONG_SELECTOR_COPY.invalidDrawRatePercentLabel
+  }
   if (total <= 0 || weightMass <= 0) return EMPTY_WEIGHT_PERCENT_LABEL
 
   return `${WEIGHT_PERCENT_FORMATTER.format((weightMass / total) * 100)}%`
@@ -496,24 +510,32 @@ const fetchMyRandomSongFavoriteData = async (
 }
 
 /**
- * ログイン中ユーザーのレコード情報・お気に入り楽曲・保存済み目標を取得する。
+ * プレイヤーデータ登録済みユーザーのレコード情報・お気に入り楽曲・保存済み目標を取得する。
  *
+ * @param username - プレイヤーデータ登録済みの本人のユーザー名。
  * @returns レコード情報・お気に入り楽曲・保存済み目標それぞれの取得状態。
  */
-const fetchMyRandomSongUserData = async (): Promise<MyRandomSongUserData> => {
-  try {
-    const me = await fetchMe({ redirectOnUnauthorized: false })
-    const [record, favorite, goal] = await Promise.all([
-      fetchMyRandomSongRecordData(me.username),
-      fetchMyRandomSongFavoriteData(me.username),
-      fetchMyRandomSongGoalData(),
-    ])
+const fetchMyRandomSongUserData = async (username: string): Promise<MyRandomSongUserData> => {
+  const [record, favorite, goal] = await Promise.all([
+    fetchMyRandomSongRecordData(username),
+    fetchMyRandomSongFavoriteData(username),
+    fetchMyRandomSongGoalData(),
+  ])
 
-    return { record, favorite, goal }
-  } catch (error) {
-    const status = isUnauthenticatedRandomSongError(error) ? 'unauthenticated' : 'error'
-    return { record: { status }, favorite: { status }, goal: { status } }
-  }
+  return { record, favorite, goal }
+}
+
+/**
+ * 自分のデータを使う機能が利用できない理由を返す。
+ *
+ * @param status - ログイン状態とプレイヤーデータ登録状態。判定失敗時は undefined。
+ * @returns 利用できない理由。登録済みの場合は null。
+ */
+const resolveMyRandomSongUnavailableStatus = (
+  status: PlayerDataStatus | undefined
+): MyRandomSongUnavailableStatus | null => {
+  if (status === 'registered') return null
+  return status ?? 'error'
 }
 
 /**
@@ -612,7 +634,33 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const { songsResponse, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [versionsResponse] = createResource(fetchVersions)
   const [nameFoldersResponse] = createResource(fetchNameFolders)
-  const [myUserData] = createResource(fetchMyRandomSongUserData)
+  const { status: playerDataStatus, noticeStatus, ownUsername } = createPlayerDataStatus()
+  const [fetchedMyUserData] = createResource(ownUsername, fetchMyRandomSongUserData)
+  /**
+   * 自分のデータを使う機能が利用できない理由を返す。
+   *
+   * @returns 利用できない理由。判定中または登録済みの場合は null。
+   */
+  const myUnavailableStatus = (): MyRandomSongUnavailableStatus | null =>
+    playerDataStatus.loading
+      ? null
+      : resolveMyRandomSongUnavailableStatus(
+          playerDataStatus.error ? undefined : playerDataStatus()
+        )
+  /** @returns レコード情報・お気に入り楽曲・保存済み目標の取得状態。 */
+  const myUserData = (): MyRandomSongUserData | undefined => {
+    const status = myUnavailableStatus()
+    return status === null
+      ? fetchedMyUserData()
+      : { record: { status }, favorite: { status }, goal: { status } }
+  }
+  /** @returns 自分のデータを判定・取得中の場合は true。 */
+  const isMyUserDataLoading = (): boolean => playerDataStatus.loading || fetchedMyUserData.loading
+  /** @returns 未ログイン・未登録により自分のデータを使う機能を無効化する場合は true。 */
+  const isMyDataUnavailable = (): boolean => {
+    const status = myUnavailableStatus()
+    return status === 'unauthenticated' || status === 'unregistered'
+  }
   /** @returns 保存済み目標の取得状態。 */
   const myGoalData = (): MyRandomSongGoalData | undefined => myUserData()?.goal
   const myRecordData = (): MyRandomSongRecordData | undefined => myUserData()?.record
@@ -624,7 +672,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     RandomSongDifficultyFilter[]
   >([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
   const [selectedGenres, setSelectedGenres] = createSignal<string[]>([])
-  const [selectedVersions, setSelectedVersions] = createSignal<string[]>([])
+  const [selectedVersions, setSelectedVersions] = createSignal<string[] | null>(null)
   const [selectedNameFolders, setSelectedNameFolders] = createSignal<string[] | null>(null)
   const [selectedGoalId, setSelectedGoalId] = createSignal<number | null>(null)
   const [recordFilterSettingsOpen, setRecordFilterSettingsOpen] = createSignal(false)
@@ -780,7 +828,10 @@ const RandomSongSelectorPage = (): JSX.Element => {
     const basicFilteredCandidates = filterRandomSongCandidates(allCandidates(), {
       difficulties: selectedDifficulties(),
       genres: selectedGenres(),
-      versions: selectedVersions(),
+      versions: resolveReleasedVersionFilterSelection(
+        normalizeVersionFilterSelection(selectedVersions(), versionOptions()),
+        versionOptions()
+      ),
       nameFolders: selectedNameFolders(),
       minConst: parsedMinConst(),
       maxConst: parsedMaxConst(),
@@ -836,17 +887,20 @@ const RandomSongSelectorPage = (): JSX.Element => {
   /**
    * 候補全体を一度だけ走査し、出現割合表示用の重みを分類別に集計する。
    *
-   * @returns 全体・難易度別・レベル別・譜面定数別の候補重み。
+   * @returns 抽選で有効な倍率を使った全体・難易度別・レベル別・譜面定数別の候補重み。
    */
   const candidateWeightSummary = createMemo(() => {
     const currentDifficultyWeights = difficultyWeights()
+    const currentDifficultyWeightOptions = selectedDifficultyWeightOptions()
     const currentConstWeights = constWeights()
     const currentConstWeightEnabled = constWeightEnabled()
 
     return aggregateRandomSongCandidateWeights(standardFilteredCandidates(), (candidate) => {
       const chartConst = formatChartConst(candidate.chartConst)
       const difficultyWeight = parseRandomSongWeightForPercent(
-        currentDifficultyWeights[candidate.difficulty]
+        currentDifficultyWeightOptions.includes(candidate.difficulty)
+          ? currentDifficultyWeights[candidate.difficulty]
+          : RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight
       )
       const constWeight = parseRandomSongWeightForPercent(
         currentConstWeights[chartConst] ?? RANDOM_SONG_SELECTOR_DEFAULTS.defaultWeight,
@@ -880,7 +934,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const hasInvalidWeights = createMemo(
     () =>
       hasInvalidRandomSongWeightValue(selectedDifficultyWeights()) ||
-      hasInvalidRandomSongWeightValue(selectedConstWeights())
+      hasInvalidRandomSongWeightValue(selectedConstWeights()) ||
+      !Number.isFinite(candidateWeightSummary().total)
   )
   const validationMessage = createMemo(() => {
     if (parsedCount() === null) return RANDOM_SONG_SELECTOR_COPY.invalidCountMessage
@@ -906,7 +961,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
 
     untrack(() => {
       setSelectedGenres(genres)
-      setSelectedVersions(versions)
+      setSelectedVersions(null)
       setFilterInitialized(true)
     })
   })
@@ -982,7 +1037,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
     setSelectedLamps([...RANDOM_SONG_LAMP_VALUES])
     setSelectedDifficulties([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
     setSelectedGenres(genreOptions())
-    setSelectedVersions(versionOptions())
+    setSelectedVersions(null)
     setSelectedNameFolders(null)
     setSelectedGoalId(null)
     setDifficultyWeights({
@@ -1165,6 +1220,8 @@ const RandomSongSelectorPage = (): JSX.Element => {
         </div>
       </header>
 
+      <OwnDataNotice status={noticeStatus()} />
+
       <ErrorBoundary fallback={(err) => <LoadError error={err} />}>
         <Show
           when={!songsResponse.error && !versionsResponse.error}
@@ -1194,11 +1251,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       label={RANDOM_SONG_SELECTOR_COPY.favoriteOnlyLabel}
                     />
                   </div>
-                  <Show when={myFavoriteData()?.status === 'unauthenticated'}>
-                    <p class="text-xs text-text-muted sm:col-start-2">
-                      {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
-                    </p>
-                  </Show>
                   <Show when={myFavoriteData()?.status === 'error'}>
                     <p class="text-xs text-danger sm:col-start-2">
                       {RANDOM_SONG_SELECTOR_COPY.favoriteFetchErrorMessage}
@@ -1252,11 +1304,18 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       <VersionMultiSelect
                         label={RANDOM_SONG_SELECTOR_COPY.versionLabel}
                         options={toMultiSelectOptions(versionOptions())}
-                        selected={selectedVersions()}
+                        selected={toNullableAllDisplaySelection(
+                          selectedVersions(),
+                          versionOptions()
+                        )}
                         placeholder={RANDOM_SONG_SELECTOR_COPY.versionLabel}
                         selectedPreviewLimit={6}
                         disabled={isGoalFilterActive()}
-                        onChange={setSelectedVersions}
+                        onChange={(selected) =>
+                          setSelectedVersions(
+                            toNullableAllFilterSelection(selected, versionOptions())
+                          )
+                        }
                       />
                     </div>
                     <div>
@@ -1302,7 +1361,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
                           variant: isRecordFilterActive() ? 'primary' : 'surface',
                           class: 'min-h-10 rounded-md',
                         })}
-                        disabled={isGoalFilterActive()}
+                        disabled={isGoalFilterActive() || isMyDataUnavailable()}
                         aria-pressed={isRecordFilterActive()}
                       >
                         <Funnel size={16} aria-hidden="true" />
@@ -1363,11 +1422,6 @@ const RandomSongSelectorPage = (): JSX.Element => {
                                   onChange={setSelectedLamps}
                                 />
                               </div>
-                              <Show when={myRecordData()?.status === 'unauthenticated'}>
-                                <p class="text-xs text-text-muted">
-                                  {RANDOM_SONG_SELECTOR_COPY.recordUnavailableMessage}
-                                </p>
-                              </Show>
                               <Show when={myRecordData()?.status === 'error'}>
                                 <p class="text-xs text-danger">
                                   {RANDOM_SONG_SELECTOR_COPY.recordFetchErrorMessage}
@@ -1387,16 +1441,14 @@ const RandomSongSelectorPage = (): JSX.Element => {
                     <RandomSongGoalDialog
                       goals={selectableGoals()}
                       selectedGoalId={selectedGoalId()}
-                      loading={myUserData.loading}
+                      loading={isMyUserDataLoading()}
+                      disabled={isMyDataUnavailable()}
                       error={
-                        myGoalData()?.status === 'unauthenticated' ||
-                        myRecordData()?.status === 'unauthenticated'
-                          ? RANDOM_SONG_SELECTOR_COPY.goalFilterUnavailableMessage
-                          : myGoalData()?.status === 'error'
-                            ? RANDOM_SONG_SELECTOR_COPY.goalFilterFetchErrorMessage
-                            : myRecordData()?.status === 'error'
-                              ? RANDOM_SONG_SELECTOR_COPY.goalFilterRecordFetchErrorMessage
-                              : undefined
+                        myGoalData()?.status === 'error'
+                          ? RANDOM_SONG_SELECTOR_COPY.goalFilterFetchErrorMessage
+                          : myRecordData()?.status === 'error'
+                            ? RANDOM_SONG_SELECTOR_COPY.goalFilterRecordFetchErrorMessage
+                            : undefined
                       }
                       onApply={setSelectedGoalId}
                     />

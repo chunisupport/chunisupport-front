@@ -1,7 +1,7 @@
 import { ListOrdered, TriangleAlert } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, For, Show } from 'solid-js'
-import { LoadError, Loading, PlayerDataEmptyState } from '../../components'
+import { LoadError, Loading } from '../../components'
 import { UserRecordCard } from '../../components/common/record/UserRecordCard'
 import { ALL_SONG_BEST_SLOT_COUNT } from '../../constants/rating'
 import { ALL_SONG_BEST_FRAME_PATH } from '../../constants/routes'
@@ -11,7 +11,6 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { authSession } from '../../stores/authSession'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { buildAllSongBestFrame } from '../../utils/allSongBestFrame'
-import { isNotFoundApiError } from '../../utils/apiError'
 import { formatNullablePlayerRating } from '../../utils/ratingFormat'
 import { ALL_SONG_BEST_FRAME_COPY } from './allSongBestFrame.constants'
 
@@ -82,17 +81,7 @@ const AllSongBestFramePage: Component = () => {
         </div>
       </header>
 
-      <Show
-        when={!record.error}
-        fallback={
-          <Show
-            when={isNotFoundApiError(record.error)}
-            fallback={<LoadError error={record.error} />}
-          >
-            <PlayerDataEmptyState />
-          </Show>
-        }
-      >
+      <Show when={!record.error} fallback={<LoadError error={record.error} />}>
         <Show
           when={!record.loading}
           fallback={

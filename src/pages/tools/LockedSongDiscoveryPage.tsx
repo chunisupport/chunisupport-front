@@ -28,7 +28,7 @@ import { Dynamic } from 'solid-js/web'
 import { fetchGenres } from '../../api/genres'
 import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchVersions } from '../../api/songs'
-import { LoadError, Loading, PlayerDataEmptyState } from '../../components'
+import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
 import { SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { LOCKED_SONG_DISCOVERY_PATH } from '../../constants/routes'
@@ -48,7 +48,6 @@ import {
   buildOverPowerSummary,
 } from '../../usecases/overpower/overpowerSummary'
 import type { OverPowerSummaryRow } from '../../usecases/overpower/types'
-import { isNotFoundApiError } from '../../utils/apiError'
 import {
   buildLockedSongDiscoveryCandidates,
   buildLockedSongDiscoveryCells,
@@ -528,14 +527,7 @@ const LockedSongDiscoveryPage: Component = () => {
         </ul>
       </section>
 
-      <Show
-        when={!loadError()}
-        fallback={
-          <Show when={isNotFoundApiError(loadError())} fallback={<LoadError error={loadError()} />}>
-            <PlayerDataEmptyState />
-          </Show>
-        }
-      >
+      <Show when={!loadError()} fallback={<LoadError error={loadError()} />}>
         <Show
           when={!loading() && summary()}
           fallback={

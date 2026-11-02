@@ -10,6 +10,7 @@ import {
   countUniFillMatrixChecks,
   formatUniFillMatrixImageFilename,
   normalizeUniFillMatrixViewSettings,
+  resolveUniFillMatrixExcludeLockedSongs,
   type UniFillMatrix,
   type UniFillMatrixLayout,
   type UniFillMatrixLevelConst,
@@ -448,6 +449,7 @@ test('レベル別のマスはジャンル・レベル範囲・スコア上限�
   const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
     difficulty: 'MASTER_ULTIMA',
     achievement: 'sss',
+    excludeLockedSongs: false,
     genre: 'POPS & ANIME',
     levelConst,
   })
@@ -459,6 +461,7 @@ test('レベル別のマスはジャンル・レベル範囲・スコア上限�
   assert.equal(result.constFilterMode, 'level')
   assert.deepEqual(result.score, { min: 0, max: 1_007_499 })
   assert.equal(result.scoreFilterMode, 'number')
+  assert.equal(result.unplayedOnly, false)
 })
 
 test('ジャンルとバージョンが交差するマスは両方の条件を引き継ぎ、譜面定数は既定値のままにする', () => {
@@ -466,6 +469,7 @@ test('ジャンルとバージョンが交差するマスは両方の条件を�
   const target = {
     difficulty: 'MASTER_ULTIMA',
     achievement: 'sss',
+    excludeLockedSongs: false,
     genre: 'ORIGINAL',
     version: 'VERSE PLUS',
   } as const
@@ -484,6 +488,7 @@ test('名前順フォルダのマスはフォルダのコードで楽曲名順�
   const target = {
     difficulty: 'MASTER_ULTIMA',
     achievement: 'sss',
+    excludeLockedSongs: false,
     nameFolder: { code: 'KA', label: 'か行' },
   } as const
 
@@ -497,7 +502,12 @@ test('名前順フォルダのマスはフォルダのコードで楽曲名順�
 
 test('名前順フォルダの軸を含まないマスは楽曲名順を全フォルダ対象のままにする', () => {
   // Given
-  const target = { difficulty: 'MASTER_ULTIMA', achievement: 'sss', genre: 'ORIGINAL' } as const
+  const target = {
+    difficulty: 'MASTER_ULTIMA',
+    achievement: 'sss',
+    genre: 'ORIGINAL',
+    excludeLockedSongs: false,
+  } as const
 
   // When
   const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, target)
@@ -514,6 +524,7 @@ test('レベル6以下はフィルターのレベル指定と範囲が異なる�
   const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
     difficulty: 'BASIC',
     achievement: 'sss',
+    excludeLockedSongs: false,
     levelConst,
   })
 
@@ -530,6 +541,7 @@ test('譜面定数別のマスは単一の譜面定数を数値指定したフ�
   const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
     difficulty: 'EXPERT',
     achievement: 'aj',
+    excludeLockedSongs: false,
     levelConst,
   })
 
@@ -546,6 +558,7 @@ test('OP理論値対象の総合計マスは全難易度の理論値OP対象と�
   const target = {
     difficulty: 'OP_TARGET',
     achievement: 'hard',
+    excludeLockedSongs: false,
   } as const
 
   // When
@@ -559,9 +572,82 @@ test('OP理論値対象の総合計マスは全難易度の理論値OP対象と�
   assert.deepEqual(result.hard_lamp, ['CLEAR', 'FAILED', null])
 })
 
+test('未解禁曲を除外する設定はレコードフィルターの未解禁曲除外へ引き継がれること', () => {
+  // Given
+  const target = { difficulty: 'MASTER', achievement: 'sss', excludeLockedSongs: true } as const
+
+  // When
+  const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, target)
+
+  // Then
+  assert.equal(result.excludeLockedSongs, true)
+})
+
+test('未解禁設定の取得に成功しているときは除外設定を集計とレコード遷移の両方へ適用すること', () => {
+  // Given
+  const excludeLockedSongs = true
+  const lockedSongsLoadFailed = false
+
+  // When
+  const applied = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, lockedSongsLoadFailed)
+  const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'MASTER',
+    achievement: 'sss',
+    excludeLockedSongs: applied,
+  })
+
+  // Then
+  assert.equal(applied, true)
+  assert.equal(filter.excludeLockedSongs, true)
+})
+
+test('未解禁設定の取得失敗時は集計とレコード遷移の両方で未解禁曲を除外しないこと', () => {
+  // Given
+  const excludeLockedSongs = true
+  const lockedSongsLoadFailed = true
+
+  // When
+  const applied = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, lockedSongsLoadFailed)
+  const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+    difficulty: 'MASTER',
+    achievement: 'sss',
+    excludeLockedSongs: applied,
+  })
+
+  // Then
+  assert.equal(applied, false)
+  assert.equal(filter.excludeLockedSongs, false)
+})
+
+test('未解禁設定の取得失敗から復旧したときは再び未解禁曲を除外すること', () => {
+  // Given
+  const excludeLockedSongs = true
+
+  // When
+  const duringFailure = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, true)
+  const afterRecovery = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, false)
+
+  // Then
+  assert.equal(duringFailure, false)
+  assert.equal(afterRecovery, true)
+})
+
+test('未解禁曲除外がオフのときは取得の成否に関わらず除外しないこと', () => {
+  // Given
+  const excludeLockedSongs = false
+
+  // When
+  const whenLoaded = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, false)
+  const whenFailed = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, true)
+
+  // Then
+  assert.equal(whenLoaded, false)
+  assert.equal(whenFailed, false)
+})
+
 test('全難易度のマスは全難易度を選択し、OP対象では絞り込まない', () => {
   // Given
-  const target = { difficulty: 'ALL', achievement: 'fc' } as const
+  const target = { difficulty: 'ALL', achievement: 'fc', excludeLockedSongs: false } as const
 
   // When
   const result = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, target)
@@ -572,9 +658,9 @@ test('全難易度のマスは全難易度を選択し、OP対象では絞り込
   assert.deepEqual(result.combo_lamp, [null])
 })
 
-test('AJC未達成はAJCを除いたコンボランプ、未プレイはスコア0だけを表示するフィルターになる', () => {
+test('AJC未達成はAJCを除いたコンボランプ、プレイ済み未達成は未プレイのみを表示するフィルターになる', () => {
   // Given
-  const base = { difficulty: 'MASTER' } as const
+  const base = { difficulty: 'MASTER', excludeLockedSongs: false } as const
 
   // When
   const ajc = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, { ...base, achievement: 'ajc' })
@@ -582,7 +668,11 @@ test('AJC未達成はAJCを除いたコンボランプ、未プレイはスコ�
 
   // Then
   assert.deepEqual(ajc.combo_lamp, ['ALL JUSTICE', 'FULL COMBO', null])
-  assert.deepEqual(played.score, { min: 0, max: 0 })
+  assert.equal(ajc.unplayedOnly, false)
+  assert.equal(played.unplayedOnly, true)
+  assert.equal(played.excludeNoPlay, false)
+  assert.deepEqual(played.score, DEFAULT_FILTER.score)
+  assert.equal(played.scoreFilterMode, DEFAULT_FILTER.scoreFilterMode)
 })
 
 test('チェック数は対象譜面のある通常マスだけを数え、未達成マスと合計のチェックを区別する', () => {
@@ -673,6 +763,7 @@ const VIEW_SETTINGS_FALLBACK: UniFillMatrixViewSettings = {
   horizontal: 'genre',
   levelConstAxis: 'level',
   showPercent: false,
+  excludeLockedSongs: false,
 }
 
 test('保存済みの表示設定が正しい場合はそのまま復元されること', () => {
@@ -684,6 +775,7 @@ test('保存済みの表示設定が正しい場合はそのまま復元され�
     horizontal: 'nameFolder',
     levelConstAxis: 'chartConstant',
     showPercent: true,
+    excludeLockedSongs: true,
   }
 
   // When
@@ -715,6 +807,7 @@ test('項目ごとに不正値だけが既定値へ戻ること', () => {
     horizontal: 'version',
     levelConstAxis: 'unknown',
     showPercent: 'true',
+    excludeLockedSongs: 1,
   }
 
   // When
@@ -727,6 +820,7 @@ test('項目ごとに不正値だけが既定値へ戻ること', () => {
     horizontal: 'version',
     levelConstAxis: 'level',
     showPercent: false,
+    excludeLockedSongs: false,
   })
 })
 

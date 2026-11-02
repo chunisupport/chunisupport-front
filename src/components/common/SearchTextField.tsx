@@ -2,6 +2,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { Search } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
+import { createComposingSearchInput } from '../../hooks/createComposingSearchInput'
 import {
   getSearchTextFieldFrameStateClass,
   getSearchTextFieldIconClass,
@@ -38,38 +39,52 @@ const SEARCH_TEXT_FIELD_INPUT_CLASS =
 
 /**
  * アプリ内で使う検索入力欄を共通スタイルで描画する。
+ * IME変換中は未確定の全文を表示し、検索値だけ末尾の全角英字を外して通知する。
  *
  * @param props - ラベル、入力値、強調状態、変更ハンドラーを含む表示設定。
  * @returns Kobalte TextField を使った検索入力欄。
  */
-export const SearchTextField: Component<SearchTextFieldProps> = (props) => (
-  <TextField class={props.class} value={props.value} onChange={props.onChange}>
-    <Show when={props.label}>
-      {(label) => (
-        <TextField.Label
-          class={`mb-1 block text-sm font-medium text-text-muted ${props.labelClass ?? ''}`}
-          for={props.id}
-        >
-          {label()}
-        </TextField.Label>
-      )}
-    </Show>
-    <div
-      class={`${SEARCH_TEXT_FIELD_FRAME_BASE_CLASS} ${getSearchTextFieldFrameStateClass(
-        Boolean(props.active)
-      )} ${props.frameClass ?? 'rounded-md'}`}
+export const SearchTextField: Component<SearchTextFieldProps> = (props) => {
+  const composition = createComposingSearchInput({
+    value: () => props.value,
+    onChange: (value) => props.onChange(value),
+  })
+
+  return (
+    <TextField
+      class={props.class}
+      value={composition.displayedValue()}
+      onChange={composition.handleChange}
     >
-      <Search
-        class={`h-4 w-4 shrink-0 ${getSearchTextFieldIconClass(Boolean(props.active))}`}
-        aria-hidden="true"
-      />
-      <TextField.Input
-        id={props.id}
-        type="search"
-        class={SEARCH_TEXT_FIELD_INPUT_CLASS}
-        aria-label={props.label ? undefined : props.ariaLabel}
-        placeholder={props.placeholder}
-      />
-    </div>
-  </TextField>
-)
+      <Show when={props.label}>
+        {(label) => (
+          <TextField.Label
+            class={`mb-1 block text-sm font-medium text-text-muted ${props.labelClass ?? ''}`}
+            for={props.id}
+          >
+            {label()}
+          </TextField.Label>
+        )}
+      </Show>
+      <div
+        class={`${SEARCH_TEXT_FIELD_FRAME_BASE_CLASS} ${getSearchTextFieldFrameStateClass(
+          Boolean(props.active)
+        )} ${props.frameClass ?? 'rounded-md'}`}
+      >
+        <Search
+          class={`h-4 w-4 shrink-0 ${getSearchTextFieldIconClass(Boolean(props.active))}`}
+          aria-hidden="true"
+        />
+        <TextField.Input
+          id={props.id}
+          type="search"
+          class={SEARCH_TEXT_FIELD_INPUT_CLASS}
+          aria-label={props.label ? undefined : props.ariaLabel}
+          placeholder={props.placeholder}
+          onCompositionStart={(event) => composition.beginComposition(event.currentTarget.value)}
+          onCompositionEnd={(event) => composition.endComposition(event.currentTarget.value)}
+        />
+      </div>
+    </TextField>
+  )
+}

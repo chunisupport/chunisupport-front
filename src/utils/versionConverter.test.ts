@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   filterReleasedVersions,
+  getReleasedVersionShortNames,
   getTodayChunithmDate,
   resolveVersionNameByReleaseDate,
 } from './versionConverter'
@@ -40,6 +41,21 @@ test('絞り込みで元の順序を変えず、元配列を変更しないこ�
     ['A']
   )
   assert.equal(versions.length, 2)
+})
+
+test('公開済みバージョンの短縮名を元の順序で返すこと', () => {
+  // Given: 過去と未来のバージョンがある。
+  const versions = [
+    { name: 'CHUNITHM', released_at: '2015-07-16' },
+    { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+    { name: 'CHUNITHM FUTURE', released_at: '2027-01-01' },
+  ]
+
+  // When: 基準日で短縮名を作る。
+  const result = getReleasedVersionShortNames(versions, '2026-09-03')
+
+  // Then: 未来分を除いた短縮名が元の順序で返る。
+  assert.deepEqual(result, ['CHUNITHM', 'VERSE'])
 })
 
 test('JST今日がYYYY-MM-DD形式で返ること', () => {

@@ -46,11 +46,12 @@ test("WORLD'S END楽曲を reading の日本語順にソートする", () => {
   )
 })
 
-test("WORLD'S END楽曲のジャンルはマスタのsort_order順にソートする", () => {
+test("WORLD'S END楽曲のジャンルはマスタ順にソートし、マスタ外は降順でも末尾に固定する", () => {
   const songs = [
     createSong({ id: 'touhou', genre: '東方Project' }),
     createSong({ id: 'pops', genre: 'POPS & ANIME' }),
     createSong({ id: 'niconico', genre: 'niconico' }),
+    createSong({ id: 'variety', genre: 'VARIETY' }),
   ]
   const genres = [
     { id: 1, name: 'POPS & ANIME', sort_order: 10 },
@@ -60,11 +61,11 @@ test("WORLD'S END楽曲のジャンルはマスタのsort_order順にソート�
 
   assert.deepEqual(
     sortWorldsendSongs(songs, 'genre', 'asc', genres).map((song) => song.id),
-    ['pops', 'niconico', 'touhou']
+    ['pops', 'niconico', 'touhou', 'variety']
   )
   assert.deepEqual(
     sortWorldsendSongs(songs, 'genre', 'desc', genres).map((song) => song.id),
-    ['touhou', 'niconico', 'pops']
+    ['touhou', 'niconico', 'pops', 'variety']
   )
 })
 

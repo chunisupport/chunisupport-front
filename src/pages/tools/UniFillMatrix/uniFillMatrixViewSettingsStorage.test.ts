@@ -35,6 +35,7 @@ test('画面を開き直しても全難易度・埋め条件と表示設定を�
           horizontal: 'nameFolder' as const,
           levelConstAxis: 'chartConstant' as const,
           showPercent: true,
+          excludeLockedSongs: true,
         }
 
         // When: 設定変更を保存し、ページ初期化時と同じ処理で読み直す。

@@ -13,3 +13,6 @@ export const OVER_POWER_THEORETICAL_TARGET = 'THEORETICAL_OP_TARGET' as const
 
 /** MASTERとULTIMAを譜面単位で合算する集計対象の型 */
 export type OverPowerMasterUltimaTarget = typeof OVER_POWER_MASTER_ULTIMA_TARGET
+
+/** マスタに対応する値がないOVER POWER集計行のラベル */
+export const OVER_POWER_UNKNOWN_LABEL = '不明'

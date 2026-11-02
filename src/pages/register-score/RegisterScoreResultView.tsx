@@ -1,7 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { Copy, Eye, EyeOff, Play } from 'lucide-solid'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-import logoSingle from '../../assets/logo_single.svg'
 import { AppIconButton } from '../../components/common/AppButton'
 import { AppSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
@@ -18,6 +17,7 @@ import {
   type SharedClearLamp,
   type SharedComboLamp,
 } from '../../components/common/record/recordStyleClasses'
+import { SiteLogoMark } from '../../components/common/SiteLogoMark'
 import type {
   PlayerDataCourseRecordChange,
   PlayerDataCourseRecordState,
@@ -1001,16 +1001,18 @@ const RegisterScoreChangeRow = (props: {
           </Show>
           <h3 class="min-w-0 flex-1">
             <Button
-              class={`flex w-fit min-w-0 max-w-full items-center gap-1 border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 ${
+              class={`flex w-fit min-w-0 max-w-full items-center gap-1 border-0 bg-transparent p-0 text-left font-sans text-base font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 image-capture:block image-capture:w-full image-capture:truncate ${
                 isCopyHighlighted()
                   ? 'text-action-primary transition-none'
-                  : 'text-text transition-colors duration-700 motion-reduce:transition-none'
+                  : 'text-text transition-colors duration-700'
               }`}
               aria-label={`「${props.songTitle}」をコピー`}
               title={props.songTitle}
               onClick={handleCopySongTitle}
             >
-              <span class="min-w-0 truncate">{props.songTitle}</span>
+              <span class="min-w-0 truncate image-capture:inline image-capture:overflow-visible image-capture:text-clip">
+                {props.songTitle}
+              </span>
               <Copy
                 class="h-3.5 w-3.5 shrink-0"
                 aria-hidden="true"
@@ -1141,16 +1143,9 @@ const RegisterCourseChangeRow = (props: {
  */
 const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateResult }) => (
   <header class="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-3">
-    <span
-      aria-hidden="true"
-      class="h-12 w-12 shrink-0"
-      style={{
-        'background-color': REGISTER_SCORE_REPORT_LOGO_COLOR,
-        'mask-image': `url(${logoSingle})`,
-        'mask-position': 'center',
-        'mask-repeat': 'no-repeat',
-        'mask-size': 'contain',
-      }}
+    <SiteLogoMark
+      class="h-12 w-12"
+      style={{ 'background-color': REGISTER_SCORE_REPORT_LOGO_COLOR }}
     />
     <div class="min-w-0 text-right">
       <h1 class="whitespace-nowrap text-2xl font-bold">{REGISTER_SCORE_COPY.reportTitle}</h1>

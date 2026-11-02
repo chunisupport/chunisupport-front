@@ -12,6 +12,8 @@ type FetchWithAuthOptions = RequestInit & {
   requireAuthentication?: boolean
   redirectOnUnauthorized?: boolean
   suppressUnauthorizedRedirectForCodes?: readonly ErrorCode[]
+  /** ログイン中のセッションとは別のアカウントで呼び出す場合のIDトークン */
+  idToken?: string
 }
 
 const AUTH_ERROR_CODES: ErrorCode[] = [
@@ -77,10 +79,11 @@ export const fetchWithAuth = async (
     requireAuthentication = false,
     redirectOnUnauthorized = true,
     suppressUnauthorizedRedirectForCodes = [],
+    idToken,
     ...requestInit
   } = init
 
-  const token = await getFirebaseIdToken()
+  const token = idToken ?? (await getFirebaseIdToken())
   if (requireAuthentication && !token) {
     clearAuthenticatedUser()
     if (redirectOnUnauthorized) {

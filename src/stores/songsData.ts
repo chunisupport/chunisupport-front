@@ -26,16 +26,33 @@ const invalidateSongsDataCache = async (): Promise<void> => {
  * @returns 通常楽曲と WORLD'S END 楽曲の共有 resource と操作関数。
  */
 const createSongsStore = () => {
+  let songsRevalidationFailed = false
   const [songsRequested, setSongsRequested] = createSignal(false)
   const [worldsendSongsRequested, setWorldsendSongsRequested] = createSignal(false)
   const [songsMustRefresh, setSongsMustRefresh] = createSignal(false)
   const [worldsendSongsMustRefresh, setWorldsendSongsMustRefresh] = createSignal(false)
 
-  const [songsResponse, { refetch: refetchSongs }] = createResource<{ songs: SongDTO[] }, true>(
+  const [songsResponse, { refetch: refetchSongs, mutate: mutateSongs }] = createResource<
+    { songs: SongDTO[] },
+    true
+  >(
     () => (songsRequested() ? true : undefined),
     async (_requested, info) => {
+      songsRevalidationFailed = false
+      let cachedResponse: { songs: SongDTO[] } | undefined
       const response = await fetchAllSongsWithCache({
         forceRefresh: untrack(songsMustRefresh) || Boolean(info.refetching),
+        onCached: (cached) => {
+          cachedResponse = cached
+          mutateSongs(cached)
+        },
+      }).catch((error: unknown) => {
+        // 再検証失敗時も表示中のキャッシュを保つ。メンテナンスは可用性ゲートが処理する。
+        if (cachedResponse) {
+          songsRevalidationFailed = true
+          return cachedResponse
+        }
+        throw error
       })
       setSongsMustRefresh(false)
       return response
@@ -55,9 +72,12 @@ const createSongsStore = () => {
     }
   )
 
-  /** 通常楽曲が未要求の場合に初回ロードを開始し、前回の取得が失敗していれば再試行する */
+  /** 通常楽曲の初回ロードを開始し、取得または背景再検証が失敗していれば再試行する */
   const ensureSongsLoaded = (): void => {
-    if (untrack(() => songsResponse.state) === 'errored') {
+    if (
+      untrack(() => songsResponse.state) === 'errored' ||
+      (songsRevalidationFailed && !untrack(() => songsResponse.loading))
+    ) {
       void refetchSongs(false)
       return
     }
@@ -73,8 +93,9 @@ const createSongsStore = () => {
     setWorldsendSongsRequested(true)
   }
 
-  /** @returns 通常楽曲の初回要求前または取得中の場合は true */
-  const isSongsLoading = (): boolean => !songsRequested() || songsResponse.loading
+  /** @returns 通常楽曲の表示可能なデータがまだない場合は true */
+  const isSongsLoading = (): boolean =>
+    !songsRequested() || (songsResponse.loading && !songsResponse())
 
   /** @returns WORLD'S END 楽曲の初回要求前または取得中の場合は true */
   const isWorldsendSongsLoading = (): boolean =>

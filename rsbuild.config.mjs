@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { defineConfig, loadEnv } from '@rsbuild/core'
+import { pluginAssetsRetry } from '@rsbuild/plugin-assets-retry'
 import { pluginBabel } from '@rsbuild/plugin-babel'
 import { pluginSolid } from '@rsbuild/plugin-solid'
 
@@ -28,7 +29,22 @@ const FRONTEND_BUILD_ID = randomUUID()
 const FAVICON_PATH = path.resolve(import.meta.dirname, 'src/assets/favicon.png')
 /** トップページの OGP に使用する画像の絶対パス。 */
 const OGP_IMAGE_PATH = path.resolve(import.meta.dirname, 'src/assets/ogp.png')
+/**
+ * 画面で使う Google Fonts のスタイルシート。
+ *
+ * Noto Sans / Noto Sans JP は可変フォントのため、ウェイトを個別指定すると
+ * 同じ woff2 を指す `@font-face` がウェイトごとに複製され CSS が肥大する。
+ * 範囲指定でも参照する woff2 は変わらない。
+ * Jost のイタリックはレーティング画像の NEW バッジなどで使用している。
+ */
+const GOOGLE_FONTS_STYLESHEET_URL =
+  'https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400..700&family=Noto+Sans+JP:wght@400..800&family=Oswald:wght@200..700&display=swap'
 const ASSET_HASH_LENGTH = 10
+
+/** 静的アセットの読み込み失敗時に再試行する最大回数。 */
+const ASSETS_RETRY_MAX = 3
+/** 静的アセットを再試行するまでの待機時間（ミリ秒）。デプロイ直後の配信反映待ちを兼ねる。 */
+const ASSETS_RETRY_DELAY_MS = 500
 
 /**
  * ファイル内容からキャッシュバスティング用の短縮ハッシュを生成する。
@@ -143,7 +159,7 @@ export default defineConfig(({ env, envMode }) => {
           tag: 'link',
           attrs: {
             rel: 'stylesheet',
-            href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700;800&family=Oswald:wght@200..700&display=swap',
+            href: GOOGLE_FONTS_STYLESHEET_URL,
             crossorigin: true,
           },
         },
@@ -212,6 +228,16 @@ export default defineConfig(({ env, envMode }) => {
     },
     plugins: [
       frontendVersionPlugin(),
+      // 存在しないアセットへの SPA フォールバック HTML がキャッシュされても、
+      // 再試行ごとに異なるクエリを付けてキャッシュを経由せず取り直す。
+      pluginAssetsRetry({
+        max: ASSETS_RETRY_MAX,
+        delay: ASSETS_RETRY_DELAY_MS,
+        // 自前のハッシュ付きアセットに限定する。元のクエリを持たないため addQuery で上書きしてよい。
+        test: /\/static\//,
+        // ブラウザへ文字列として埋め込まれるため、関数外の変数を参照しないこと。
+        addQuery: ({ times }) => `?retry=${times}&t=${Date.now()}`,
+      }),
       pluginBabel({
         include: /\.(?:jsx|tsx)$/,
       }),

@@ -27,7 +27,7 @@
     "@tanstack/solid-query": "^5.102.8",
     "@tanstack/solid-virtual": "^3.13.30",
     "@thisbeyond/solid-dnd": "^0.7.5",
-    "@zumer/snapdom": "^2.23.1",
+    "@zumer/snapdom": "^3.3.4",
     "chart.js": "^4.5.1",
     "dexie": "^4.4.4",
     "firebase": "^12.15.0",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
     "@rsbuild/core": "^2.1.1",
+    "@rsbuild/plugin-assets-retry": "^2.0.2",
     "@rsbuild/plugin-babel": "^2.0.0",
     "@rsbuild/plugin-solid": "^1.2.2",
     "@tailwindcss/postcss": "^4.3.1",

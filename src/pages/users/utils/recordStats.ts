@@ -4,6 +4,7 @@ import {
   SCORE_RANK_BAR_CLASS,
 } from '../../../components/common/record/recordStyleClasses'
 import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
+import { quantile } from '../../../utils/quantile'
 import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
 import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 
@@ -162,8 +163,8 @@ export function getRecordStats(records: RecordStatsSource[]): RecordStats {
       ? scores[(scores.length - 1) / 2]
       : Math.round((scores[scores.length / 2 - 1] + scores[scores.length / 2]) / 2)
     : 0
-  const q1 = scores.length ? scores[Math.floor((scores.length - 1) * 0.25)] : 0
-  const q3 = scores.length ? scores[Math.floor((scores.length - 1) * 0.75)] : 0
+  const q1 = scores.length ? quantile(scores, 0.25) : 0
+  const q3 = scores.length ? quantile(scores, 0.75) : 0
 
   return {
     rankDist: rankMap,

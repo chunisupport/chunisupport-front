@@ -23,6 +23,8 @@ import { fetchWithAuth } from './fetchWithAuth'
 
 type FetchMeOptions = {
   redirectOnUnauthorized?: boolean
+  /** ログイン中のセッションとは別のアカウントについて取得する場合のIDトークン */
+  idToken?: string
 }
 
 /** ユーザー更新日時の進行中リクエスト。ユーザー名ごとに同時呼び出しを共有する */
@@ -151,13 +153,14 @@ export const fetchUserWorldsendSongRecord = async (
 /**
  * Firebase にログインしている現在のユーザー情報を取得する。
  *
- * @param options - 未認証時のリダイレクト設定。
+ * @param options - 未認証時のリダイレクト設定と、別アカウントで取得する場合のIDトークン。
  * @returns 現在のユーザー情報。
  */
 export const fetchMe = async (options: FetchMeOptions = {}): Promise<UserDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
     requireAuthentication: true,
     redirectOnUnauthorized: options.redirectOnUnauthorized,
+    idToken: options.idToken,
   })
 
   return response.json()

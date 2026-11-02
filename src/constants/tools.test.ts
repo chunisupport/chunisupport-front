@@ -6,7 +6,7 @@ import {
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
   UNI_FILL_MATRIX_PATH,
-  UNIFIED_WEAK_CHART_INSPECTOR_PATH,
+  WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 import { getToolLink, isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
 
@@ -14,6 +14,7 @@ const publicTool: ToolLink = {
   title: '公開ツール',
   href: '/tools/public',
   icon: 'chart',
+  category: 'analysis',
   description: '公開ツールの説明',
 }
 
@@ -31,14 +32,15 @@ const disabledTool: ToolLink = {
   disabled: true,
 }
 
-test('Unifiedは管理者のみに表示し、公開ツールの固定ページから除外する', () => {
-  const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_PATH)
-  assert.equal(TOOL_LINKS[TOOL_LINKS.length - 1], tool)
-  for (const role of [undefined, 'PLAYER', 'EDITOR', 'EXTDEV'] as const) {
-    assert.equal(isToolLinkListed(tool, role), false)
+test('苦手譜面インスペクターは全アカウント種別に表示する公開ツールとして定義されていること', () => {
+  // Given
+  const tool = getToolLink(WEAK_CHART_INSPECTOR_PATH)
+
+  // When / Then
+  assert.equal(isPublicToolLink(tool), true)
+  for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {
+    assert.equal(isToolLinkListed(tool, accountType), true)
   }
-  assert.equal(isToolLinkListed(tool, 'ADMIN'), true)
-  assert.equal(isPublicToolLink(tool), false)
 })
 
 test('isToolLinkListed は通常ツールをアカウント種別に関係なく表示すること', () => {

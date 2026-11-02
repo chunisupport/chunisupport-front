@@ -1,4 +1,4 @@
-import { A, Navigate, Route, Router } from '@solidjs/router'
+import { A, Navigate, Route, Router, useLocation, usePreloadRoute } from '@solidjs/router'
 import {
   Calculator,
   ChartColumnStacked,
@@ -9,13 +9,14 @@ import {
   Grid3X3,
   ListOrdered,
   Lock,
+  Percent,
   ScanSearch,
   Swords,
   Target,
   Trophy,
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
+import { createEffect, createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
 import { fetchMe } from './api/users'
 import {
@@ -30,6 +31,7 @@ import {
 import ApplicationAvailabilityGate from './components/availability/ApplicationAvailabilityGate'
 import { SelectableCardLink } from './components/common/SelectableCardButton'
 import RequireAuth from './components/guards/RequireAuth'
+import RequirePlayerData from './components/guards/RequirePlayerData'
 import RequireRole from './components/guards/RequireRole'
 import { LandingProfileCard } from './components/LandingProfileCard/LandingProfileCard'
 
@@ -63,6 +65,7 @@ import {
   LOCKED_SONG_DISCOVERY_PATH,
   MAINTENANCE_LOGIN_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
+  OVER_POWER_CALCULATOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   RATING_THEORETICAL_CHECKER_PATH,
   REGISTER_SCORE_PATH,
@@ -71,7 +74,6 @@ import {
   STAFF_LOGIN_PATH,
   TOOLS_PATH,
   UNI_FILL_MATRIX_PATH,
-  UNIFIED_WEAK_CHART_INSPECTOR_PATH,
   WEAK_CHART_INSPECTOR_PATH,
   WORLDSEND_SONGS_PATH,
 } from './constants/routes'
@@ -79,6 +81,7 @@ import {
   ADMIN_ONLY_TOOL_LOCK_LABEL,
   DISABLED_TOOL_BADGE_TEXT,
   isToolLinkListed,
+  TOOL_CATEGORIES,
   TOOL_LINKS,
   type ToolLink,
   type ToolLinkIcon,
@@ -122,15 +125,13 @@ const RegisterScoreTempPage = lazy(
   () => import('./pages/register-score-temp/RegisterScoreTempPage')
 )
 
+const OverPowerCalculatorPage = lazy(() => import('./pages/tools/OverPowerCalculatorPage'))
 const ChartConstantCalculatorPage = lazy(() => import('./pages/tools/ChartConstantCalculatorPage'))
 const ChartStatsPage = lazy(() => import('./pages/tools/ChartStats'))
 const BorderCalculatorPage = lazy(() => import('./pages/tools/BorderCalculatorPage'))
 const WeakChartInspectorPage = lazy(() => import('./pages/tools/WeakChartInspectorPage'))
 const OnlineWeakChartInspectorPage = lazy(
   () => import('./pages/tools/OnlineWeakChartInspectorPage')
-)
-const UnifiedWeakChartInspectorPage = lazy(
-  () => import('./pages/tools/UnifiedWeakChartInspectorPage')
 )
 const RandomSongSelectorPage = lazy(() => import('./pages/tools/RandomSongSelectorPage'))
 const BestSlotRankingPage = lazy(() => import('./pages/tools/BestSlotRankingPage'))
@@ -165,32 +166,57 @@ type LazyRouteComponent<P extends object> = Component<P> & {
 }
 
 /**
- * 指定された画面を共通ナビゲーション内に表示する。
+ * 指定された画面のコード先読みを維持し、共通ナビゲーション内に表示する。
  *
  * @typeParam P - 対象画面の props 型。
  * @param Component - 共通ナビゲーション内へ配置する画面。
  * @returns 共通ナビゲーションを付与した route component。
  */
-const withNavBar = <P extends object>(Component: (props: P) => JSX.Element) => {
-  return (props: P) => (
-    <NavBar>
-      <Component {...props} />
-    </NavBar>
+const withNavBar = <P extends object>(Component: Component<P> & { preload?: () => void }) => {
+  return Object.assign(
+    (props: P) => (
+      <NavBar>
+        <Component {...props} />
+      </NavBar>
+    ),
+    { preload: Component.preload }
   )
 }
 
 /**
- * 指定された画面を認証 guard の許可分岐内に表示する。
+ * 指定された画面のコード先読みを維持し、認証 guard の許可分岐内に表示する。
  *
  * @typeParam P - 対象画面の props 型。
  * @param Component - 認証を要求する画面。
  * @returns 認証 guard を付与した route component。
  */
-const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
-  return (props: P) => (
-    <RequireAuth>
-      <Component {...props} />
-    </RequireAuth>
+const withAuth = <P extends object>(Component: Component<P> & { preload?: () => void }) => {
+  return Object.assign(
+    (props: P) => (
+      <RequireAuth>
+        <Component {...props} />
+      </RequireAuth>
+    ),
+    { preload: Component.preload }
+  )
+}
+
+/**
+ * 指定された画面のコード先読みを維持し、プレイヤーデータ guard の許可分岐内に表示する。
+ * 未ログイン・プレイヤーデータ未登録の場合は、ログインまたはデータ登録を案内する。
+ *
+ * @typeParam P - 対象画面の props 型。
+ * @param Component - 自分のプレイヤーデータを要求する画面。
+ * @returns プレイヤーデータ guard を付与した route component。
+ */
+const withPlayerData = <P extends object>(Component: Component<P> & { preload?: () => void }) => {
+  return Object.assign(
+    (props: P) => (
+      <RequirePlayerData>
+        <Component {...props} />
+      </RequirePlayerData>
+    ),
+    { preload: Component.preload }
   )
 }
 
@@ -204,7 +230,7 @@ const withAuth = <P extends object>(Component: (props: P) => JSX.Element) => {
 const withRouteLoadBoundary = <P extends object>(Component: LazyRouteComponent<P>) => {
   let loadedModule: { default: Component<P> } | undefined
 
-  return (props: P) => {
+  const RouteBoundary = (props: P) => {
     // route 全体を Suspense で囲むとページ内 resource の待機まで捕捉するため、module だけを明示的に待つ。
     const [routeModule] = createResource(
       () =>
@@ -226,6 +252,16 @@ const withRouteLoadBoundary = <P extends object>(Component: LazyRouteComponent<P
       </ErrorBoundary>
     )
   }
+
+  return Object.assign(RouteBoundary, {
+    /**
+     * 可用性判定中にコードだけを取得する。失敗は描画時の境界へ委ねる。
+     * @returns なし。
+     */
+    preload: (): void => {
+      void Component.preload().catch(() => {})
+    },
+  })
 }
 
 /**
@@ -340,6 +376,8 @@ const ToolCardIcon = (props: { icon: ToolLinkIcon; disabled?: boolean }) => {
       return <Dices class={iconClass} aria-hidden="true" />
     case 'ranking':
       return <Trophy class={iconClass} aria-hidden="true" />
+    case 'percent':
+      return <Percent class={iconClass} aria-hidden="true" />
     case 'gauge':
       return <Gauge class={iconClass} aria-hidden="true" />
     case 'list':
@@ -396,9 +434,9 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
 }
 
 /**
- * ツールページの見出しを表示する。
+ * ツールを分類ごとの見出しとカード一覧で表示する。
  * ADMIN 限定ツールは管理者以外の一覧から除外する。
- * @returns ツールページ
+ * @returns 分類ごとにまとめたツールページ。
  */
 const ToolsPage = () => {
   useDocumentTitle('ツール')
@@ -409,25 +447,27 @@ const ToolsPage = () => {
   return (
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
       <h1 class="text-2xl font-semibold">ツール</h1>
-      <div class="grid gap-3 sm:grid-cols-2">
-        <For each={listedTools()}>{(tool) => <ToolCardContent tool={tool} />}</For>
+      <div class="flex flex-col gap-6">
+        <For each={TOOL_CATEGORIES}>
+          {(category) => (
+            <section class="flex flex-col gap-3" aria-labelledby={`tool-category-${category.id}`}>
+              <h2 id={`tool-category-${category.id}`} class="text-lg font-semibold">
+                {category.title}
+              </h2>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <For each={listedTools().filter((tool) => tool.category === category.id)}>
+                  {(tool) => <ToolCardContent tool={tool} />}
+                </For>
+              </div>
+            </section>
+          )}
+        </For>
       </div>
     </div>
   )
 }
 
 const LoadableAdminPage = withRouteLoadBoundary(AdminPage)
-const LoadableUnifiedWeakChartInspectorPage = withRouteLoadBoundary(UnifiedWeakChartInspectorPage)
-
-/**
- * 統合分析ツールへの直接アクセスを管理者に限定する。
- * @returns ADMIN権限を満たす場合のみ表示する統合分析画面。
- */
-const GuardedUnifiedWeakChartInspectorPage = () => (
-  <RequireRole allowedRoles={['ADMIN']}>
-    <LoadableUnifiedWeakChartInspectorPage />
-  </RequireRole>
-)
 const LoadableAdminDataCoveragePage = withRouteLoadBoundary(AdminDataCoveragePage)
 const LoadableAdminChartRankingPage = withRouteLoadBoundary(AdminChartRankingPage)
 const LoadableAdminUsersPage = withRouteLoadBoundary(AdminUsersPage)
@@ -609,13 +649,19 @@ const GuardedRegisterScoreTempPage = () => (
 )
 
 /**
- * ルーター配下の画面をAPI可用性ゲートと共通トースト領域で包む。
+ * ルートのコードを状態確認と並列に取得し、API可用性ゲートと共通トースト領域で包む。
  * 楽曲一覧のスクロール復元のため、直近の遷移種別も記録する。
  *
  * @param props - 現在のrouteが解決した画面。
  * @returns 可用性制御を適用したアプリケーションルート。
  */
 const ApplicationRoot = (props: { children?: JSX.Element }) => {
+  const location = useLocation()
+  const preloadRoute = usePreloadRoute()
+  // ゲート内の画面はマウントせず、遷移先のコードだけを状態確認と並列に取得する。
+  createEffect(() => {
+    preloadRoute(new URL(location.pathname, window.location.origin), { preloadData: false })
+  })
   useRobotsMeta()
   useRememberAppMainScrollNavigationType()
 
@@ -705,7 +751,11 @@ const App = () => {
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />
       <Route
         path={FRIEND_VS_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(FriendVsPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(FriendVsPage)))}
+      />
+      <Route
+        path={OVER_POWER_CALCULATOR_PATH}
+        component={withNavBar(withRouteLoadBoundary(OverPowerCalculatorPage))}
       />
       <Route
         path={CHART_CONSTANT_CALCULATOR_PATH}
@@ -721,15 +771,11 @@ const App = () => {
       />
       <Route
         path={WEAK_CHART_INSPECTOR_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(WeakChartInspectorPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(WeakChartInspectorPage)))}
       />
       <Route
         path={ONLINE_WEAK_CHART_INSPECTOR_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(OnlineWeakChartInspectorPage)))}
-      />
-      <Route
-        path={UNIFIED_WEAK_CHART_INSPECTOR_PATH}
-        component={withNavBar(GuardedUnifiedWeakChartInspectorPage)}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(OnlineWeakChartInspectorPage)))}
       />
       <Route
         path={RANDOM_SONG_SELECTOR_PATH}
@@ -741,23 +787,23 @@ const App = () => {
       />
       <Route
         path={ALL_SONG_BEST_FRAME_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(AllSongBestFramePage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(AllSongBestFramePage)))}
       />
       <Route
         path={RATING_THEORETICAL_CHECKER_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(RatingTheoreticalCheckerPage)))}
+        component={withNavBar(withRouteLoadBoundary(RatingTheoreticalCheckerPage))}
       />
       <Route
         path={DASHBOARD_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(PlayerStatsDashboardPage)))}
       />
       <Route
         path={UNI_FILL_MATRIX_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(UniFillMatrixPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(UniFillMatrixPage)))}
       />
       <Route
         path={LOCKED_SONG_DISCOVERY_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(LockedSongDiscoveryPage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(LockedSongDiscoveryPage)))}
       />
 
       {/* 管理 */}

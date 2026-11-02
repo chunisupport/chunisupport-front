@@ -53,7 +53,7 @@ export function isWorldsendFilterOptionsChanged(
     current.justiceCount.max !== defaultFilter.justiceCount.max ||
     !hasSameFilterValues(current.attributes, defaultFilter.attributes) ||
     !hasSameFilterValues(current.genres, defaultFilter.genres) ||
-    !hasSameFilterValues(current.versions, defaultFilter.versions) ||
+    !hasSameNullableFilterValues(current.versions, defaultFilter.versions) ||
     !hasSameNullableFilterValues(current.nameFolders, defaultFilter.nameFolders) ||
     !hasSameFilterValues(current.combo_lamp, defaultFilter.combo_lamp) ||
     !hasSameFilterValues(current.chain_lamp, defaultFilter.chain_lamp) ||

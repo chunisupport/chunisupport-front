@@ -1,5 +1,8 @@
 import type { MasterItemDTO, SongDTO } from '../../../../types/api'
-import { compareMasterItemNames, createMasterItemOrderMap } from '../../../../utils/masterData'
+import {
+  compareMasterItemNamesKeepingUnknownLast,
+  createMasterItemOrderMap,
+} from '../../../../utils/masterData'
 import { compareSongsByReading } from '../../../../utils/songTitleSorting'
 import {
   nextSortState as nextSharedSortState,
@@ -95,9 +98,16 @@ export const sortSongs = (
         case 'artist':
           comparison = jaCollator.compare(left.artist, right.artist)
           break
-        case 'genre':
-          comparison = compareMasterItemNames(left.genre, right.genre, genreOrderMap)
+        case 'genre': {
+          const genreComparison = compareMasterItemNamesKeepingUnknownLast(
+            left.genre,
+            right.genre,
+            genreOrderMap,
+            currentSortDirection
+          )
+          if (genreComparison !== 0) return genreComparison
           break
+        }
         case 'release':
           comparison = compareNullableNumber(
             releaseTimestamp(left.release),

@@ -153,7 +153,7 @@ test('未プレイ曲は理論値対象難易度のレベルへ分類する', ()
   )
 })
 
-test('ジャンル不明とバージョン不明はALLに含め、各内訳から除外する', () => {
+test('ジャンル不明とバージョン不明も内訳に含め、ALLと内訳の合計を一致させる', () => {
   const summary = buildOverPowerSummary(
     [
       createSong({ id: 'known', genre: 'niconico', release: '2024-12-12', maxop: 90 }),
@@ -163,14 +163,25 @@ test('ジャンル不明とバージョン不明はALLに含め、各内訳か�
     versions
   )
 
+  const genreByLabel = new Map(summary.genres.map((row) => [row.label, row]))
+  const versionByLabel = new Map(summary.versions.map((row) => [row.label, row]))
+
   assert.equal(summary.all.current, 100)
   assert.deepEqual(
-    summary.genres.map((row) => row.label),
-    ['niconico']
+    [genreByLabel.get('niconico')?.current, genreByLabel.get('不明')?.current],
+    [60, 40]
   )
   assert.deepEqual(
-    summary.versions.map((row) => row.label),
-    ['VERSE']
+    [versionByLabel.get('VERSE')?.current, versionByLabel.get('不明')?.current],
+    [60, 40]
+  )
+  assert.equal(
+    summary.genres.reduce((total, row) => total + row.current, 0),
+    summary.all.current
+  )
+  assert.equal(
+    summary.versions.reduce((total, row) => total + row.current, 0),
+    summary.all.current
   )
 })
 

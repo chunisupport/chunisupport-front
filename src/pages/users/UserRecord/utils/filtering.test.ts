@@ -2,8 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { FilterState } from '../../../../types/recordFilter'
 import { createLockedSongKey } from '../../../../usecases/overpower/lockedSongsBatch.ts'
+import { buildDefaultFilter } from '../../../../utils/recordFilterDefaults.ts'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger.ts'
-import { MAX_SCORE } from '../../../../utils/scoreRank.ts'
+import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from '../../../../utils/scoreRank.ts'
+import { createSearchTextCache } from '../../../../utils/searchHelpers.ts'
+import { buildUniFillMatrixRecordFilter } from '../../../../utils/uniFillMatrix.ts'
 import {
   createRecordTitleMatcher,
   getDefaultFilter,
@@ -58,6 +61,23 @@ test('isRecordMatched は reading 正規化したクエリでも検索できる'
   assert.equal(isRecordMatched(record, filters), true)
 })
 
+test('通常レコードは読みが空欄なら曲名を読みとして検索する', () => {
+  // Given: 読みがないレコードと、濁点・小書きカナ・長音を正規化した検索条件。
+  const filters = { ...getDefaultFilter(), title: 'カツツコウヒウ' }
+  for (const reading of [undefined, null, '', ' ', '\t\n　']) {
+    const record = createRecord({ title: 'ガッツ・コーヒー', reading })
+
+    // When / Then: 曲名を読みとして使うため一致する。
+    assert.equal(isRecordMatched(record, filters), true)
+  }
+
+  // Then: 設定済みの読みは曲名の読みで上書きしない。
+  assert.equal(
+    isRecordMatched(createRecord({ title: 'ガッツ・コーヒー', reading: 'ソラ' }), filters),
+    false
+  )
+})
+
 test('isRecordMatchedWithTitleMatcher は事前生成したマッチャーで一致判定できる', () => {
   const record = createRecord({ artist: 'LeaF', reading: 'カッツ' })
   const filters = { ...getDefaultFilter(), title: 'ｶﾞｯﾂ' }
@@ -66,11 +86,47 @@ test('isRecordMatchedWithTitleMatcher は事前生成したマッチャーで一
   assert.equal(isRecordMatchedWithTitleMatcher(record, filters, matcher), true)
 })
 
-test('createRecordTitleMatcher は末尾の全角英字を除去して一致判定できる', () => {
-  const record = createRecord({ title: 'かもねぎ' })
-  const matcher = createRecordTitleMatcher('かもｎ')
+test('createRecordTitleMatcher は末尾の全角英字を残して一致判定できる', () => {
+  // Given: 曲名末尾が全角英字のレコードと、同じ文字を含む確定済み検索語
+  const record = createRecord({ title: 'TESTＡ' })
+  const matcher = createRecordTitleMatcher('TESTＡ')
 
+  // Then: 末尾の全角英字を含めて一致し、末尾付きの検索語は短い曲名や無関係な曲に一致しない
   assert.equal(matcher(record), true)
+  assert.equal(createRecordTitleMatcher('TESTＡ')(createRecord({ title: 'TEST' })), false)
+  assert.equal(
+    createRecordTitleMatcher('Ａ')(
+      createRecord({ title: 'かもねぎ', artist: '東雲めぐ', reading: 'カモネギ' })
+    ),
+    false
+  )
+  assert.equal(
+    createRecordTitleMatcher('かもｎ')(
+      createRecord({ title: 'かもねぎ', artist: '東雲めぐ', reading: 'カモネギ' })
+    ),
+    false
+  )
+})
+
+test('既定の全バージョン選択ではバージョン不明のレコードを表示し、絞り込むと除外する', () => {
+  // Given: 公開済みバージョンがある既定フィルターと、配信日未登録のレコード。
+  const versions = [
+    { name: 'CHUNITHM VERSE', short_name: 'VERSE', released_at: '2024-12-12' },
+    { name: 'CHUNITHM X-VERSE', short_name: 'X-VERSE', released_at: '2026-01-01' },
+  ]
+  const genres = [{ id: 1, name: 'POPS & ANIME', sort_order: 1 }]
+  const filters = buildDefaultFilter(genres, versions, '2026-10-22')
+  const unknown = createRecord({ release: null, release_version: '不明' })
+  const known = createRecord({ release: '2026-01-01', release_version: 'X-VERSE' })
+
+  // When / Then: 全選択は未指定なので不明も含め、一部選択では不明を除外する。
+  assert.equal(filters.versions, null)
+  assert.equal(isRecordMatched(unknown, filters), true)
+  assert.equal(isRecordMatched(known, filters), true)
+  assert.equal(isRecordMatched(unknown, { ...filters, versions: [] }), true)
+  assert.equal(isRecordMatched(unknown, { ...filters, versions: ['X-VERSE'] }), false)
+  assert.equal(isRecordMatched(known, { ...filters, versions: ['X-VERSE'] }), true)
+  assert.equal(isRecordMatched(known, { ...filters, versions: ['VERSE'] }), false)
 })
 
 test('isRecordMatched は難易度・ジャンル・バージョンの条件を判定できる', () => {
@@ -257,6 +313,18 @@ test('isRecordMatched は譜面定数とスコアの範囲を判定できる', (
   )
 })
 
+test('単曲レートの上限比較は0.01単位で隣の段階を除外しない', () => {
+  // Given: 17.45から0.01を引くと17.439999999999998になり、直接比較では17.44を除外する
+  const filters: FilterState = {
+    ...getDefaultFilter(),
+    rating: { min: null, max: 17.45 - 0.01 },
+  }
+
+  // When & Then
+  assert.equal(isRecordMatched(createRecord({ rating: 17.44 }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ rating: 17.45 }), filters), false)
+})
+
 test('単曲レート範囲は境界を含み定数不明譜面を除外する', () => {
   // Given
   const filters: FilterState = {
@@ -420,6 +488,51 @@ test('isRecordMatched はALL JUSTICE CRITICALをコンボランプ条件とし�
   assert.equal(nonCritical, false)
 })
 
+test('プレイ済み未達成のフィルターは未プレイだけを一致させ、スコア未達成はプレイ済み0点を残す', () => {
+  // Given: プレイ済み0点、未プレイ、通常のプレイ済みスコア。
+  const playedZero = createRecord({
+    is_played: true,
+    score: 0,
+    combo_lamp: null,
+    full_chain: null,
+    clear_lamp: null,
+  })
+  const unplayed = createRecord({
+    is_played: false,
+    score: 0,
+    combo_lamp: null,
+    full_chain: null,
+    clear_lamp: null,
+  })
+  const played = createRecord({ is_played: true, score: 1_005_000 })
+  const playedFilter = buildUniFillMatrixRecordFilter(getDefaultFilter(), {
+    difficulty: 'MASTER',
+    achievement: 'played',
+    excludeLockedSongs: false,
+  })
+  const sssFilter = buildUniFillMatrixRecordFilter(getDefaultFilter(), {
+    difficulty: 'MASTER',
+    achievement: 'sss',
+    excludeLockedSongs: false,
+  })
+
+  // When / Then: プレイ済み条件の未達成は未プレイだけが対象。
+  assert.equal(isRecordMatched(playedZero, playedFilter), false)
+  assert.equal(isRecordMatched(unplayed, playedFilter), true)
+  assert.equal(isRecordMatched(played, playedFilter), false)
+
+  // Then: スコア系の未達成はプレイ済み0点と未プレイを残し、達成済みスコアを除く。
+  assert.equal(sssFilter.unplayedOnly, false)
+  assert.deepEqual(sssFilter.score, { min: 0, max: SCORE_RANK_MIN_SCORES.SSS - 1 })
+  assert.equal(isRecordMatched(playedZero, sssFilter), true)
+  assert.equal(isRecordMatched(unplayed, sssFilter), true)
+  assert.equal(isRecordMatched(played, sssFilter), true)
+  assert.equal(
+    isRecordMatched(createRecord({ is_played: true, score: SCORE_RANK_MIN_SCORES.SSS }), sssFilter),
+    false
+  )
+})
+
 test('isRecordMatched は未プレイ除外と未プレイのスコア0扱いを判定できる', () => {
   const record = createRecord({
     is_played: false,
@@ -430,6 +543,24 @@ test('isRecordMatched は未プレイ除外と未プレイのスコア0扱いを
   })
 
   assert.equal(isRecordMatched(record, { ...getDefaultFilter(), excludeNoPlay: true }), false)
+  assert.equal(isRecordMatched(record, { ...getDefaultFilter(), unplayedOnly: true }), true)
+  assert.equal(
+    isRecordMatched(
+      createRecord({
+        is_played: true,
+        score: 0,
+        combo_lamp: null,
+        full_chain: null,
+        clear_lamp: null,
+      }),
+      {
+        ...getDefaultFilter(),
+        score: { min: 0, max: 0 },
+        scoreFilterMode: 'number',
+      }
+    ),
+    true
+  )
   assert.equal(
     isRecordMatched(record, {
       ...getDefaultFilter(),
@@ -475,4 +606,20 @@ test('isRecordMatched は楽曲名順が空配列の場合にどのレコード�
 
   // When & Then
   assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), false)
+})
+
+test('createRecordTitleMatcher は渡したキャッシュの検索用文字列で判定し、検索文字列を変えても同じ正規化結果を使うこと', () => {
+  // Given
+  const record = createRecord({ title: 'アルファ', artist: 'LeaF', reading: 'あるふぁ' })
+  const getSearchText = createSearchTextCache<PlayerRecordWithSongMeta>()
+  const cachedText = getSearchText(record)
+
+  // When
+  const results = ['leaf', 'アルフ', '存在しない曲'].map((query) =>
+    createRecordTitleMatcher(query, getSearchText)(record)
+  )
+
+  // Then
+  assert.deepEqual(results, [true, true, false])
+  assert.equal(getSearchText(record), cachedText)
 })

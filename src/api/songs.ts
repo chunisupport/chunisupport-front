@@ -119,7 +119,17 @@ const fetchSongsUpdatedAtFromApi = async (): Promise<UpdatedAtResponseDTO> => {
     cache: 'no-cache',
   })
 
-  return response.json()
+  const data: unknown = await response.json()
+  if (
+    typeof data !== 'object' ||
+    data === null ||
+    !('updated_at' in data) ||
+    (data.updated_at !== null && typeof data.updated_at !== 'string')
+  ) {
+    throw new TypeError('楽曲更新日時レスポンスの updated_at が不正です')
+  }
+
+  return { updated_at: data.updated_at }
 }
 
 /**

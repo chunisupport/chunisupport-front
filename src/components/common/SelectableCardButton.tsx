@@ -65,6 +65,8 @@ export type SelectableCardLinkProps = Omit<AnchorProps, 'class' | 'children'> &
   }
 
 export type SelectableCardItemProps = SelectableCardBaseProps & {
+  /** カード内のラベルとは別に操作できる入力欄などの追加内容 */
+  footer?: JSX.Element
   /** RadioGroup の選択値 */
   value: string
   /** 選択肢を操作不可にするか */
@@ -300,12 +302,14 @@ export const SelectableCardLink = (props: SelectableCardLinkProps): JSX.Element 
 
 /**
  * RadioGroup の選択肢をカード全体で押せる UI として表示する。
+ * 追加の入力欄では親ラジオのpointerdownによるフォーカス制御を抑止する。
  *
- * @param props - 選択肢値、アクセシブルラベル、表示内容、RadioGroup.Item の属性。
+ * @param props - 選択肢値、アクセシブルラベル、表示内容、追加の入力欄、RadioGroup.Item の属性。
  * @returns Kobalte RadioGroup.Item を使ったカード型選択肢。
  */
 export const SelectableCardItem = (props: SelectableCardItemProps): JSX.Element => {
   const [local] = splitProps(props, [
+    'footer',
     'value',
     'disabled',
     'selected',
@@ -362,6 +366,13 @@ export const SelectableCardItem = (props: SelectableCardItemProps): JSX.Element 
       >
         {local.children}
       </SelectableCardContent>
+      <Show when={local.footer}>
+        {(footer) => (
+          <div class="relative z-20 w-full pl-8" onPointerDown={(event) => event.stopPropagation()}>
+            {footer()}
+          </div>
+        )}
+      </Show>
       <RadioGroup.ItemLabel class={`${SELECTABLE_CARD_LABEL_CLASS} ${local.labelClass ?? ''}`}>
         <span class="sr-only">{local.ariaLabel}</span>
       </RadioGroup.ItemLabel>

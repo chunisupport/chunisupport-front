@@ -55,6 +55,25 @@ export function getShortVersionName(versionName: string): string {
 }
 
 /**
+ * 公開済みバージョンの短縮名一覧を返す。
+ * フィルター選択肢と、全選択を未指定へ揃える判定に使う。
+ *
+ * @param versions - APIから返されたバージョン一覧。
+ * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @returns 基準日以前に稼働開始したバージョンの短縮名。順序は変えない。
+ */
+export function getReleasedVersionShortNames(
+  versions: readonly VersionLike[],
+  referenceDate?: string
+): string[] {
+  const released =
+    referenceDate === undefined
+      ? filterReleasedVersions(versions)
+      : filterReleasedVersions(versions, referenceDate)
+  return released.map((version) => getShortVersionName(version.name))
+}
+
+/**
  * リリース日から該当するバージョン名を返す。
  *
  * @param releaseDate - 楽曲のリリース日。

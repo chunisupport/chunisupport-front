@@ -9,6 +9,7 @@ import { CheckboxField } from '../../components/common/CheckboxField'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { BORDER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
+import { createComposingSearchInput } from '../../hooks/createComposingSearchInput'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
@@ -189,6 +190,7 @@ const CompactNotesField: Component<{
 
 /**
  * 楽曲検索入力を選択中の曲名表示欄としても表示する。
+ * IME変換中は未確定の全文を表示し、検索値だけ末尾の全角英字を外す。
  *
  * @param props.query - 検索欄の入力値。
  * @param props.candidates - 検索条件に一致した楽曲候補。
@@ -203,62 +205,75 @@ const SongSearchField: Component<{
   showCandidates: boolean
   onQueryChange: (query: string) => void
   onSelectSong: (song: SongDTO) => void
-}> = (props) => (
-  <div class="relative min-w-0">
-    <TextField class="block text-sm" value={props.query} onChange={props.onQueryChange}>
-      <TextField.Label class="mb-1 block font-medium text-text-muted" for="border-song-search">
-        {BORDER_CALCULATOR_COPY.songSearchLabel}
-      </TextField.Label>
-      <TextField.Input
-        id="border-song-search"
-        name="border-song-search"
-        type="search"
-        class={`${COMPACT_FIELD_INPUT_CLASS} truncate font-sans`}
-        placeholder={BORDER_CALCULATOR_COPY.songSearchPlaceholder}
-        autocomplete="off"
-      />
-    </TextField>
+}> = (props) => {
+  const composition = createComposingSearchInput({
+    value: () => props.query,
+    onChange: (value) => props.onQueryChange(value),
+  })
 
-    <Show when={props.showCandidates && props.query.trim() !== ''}>
-      <div class="absolute left-0 right-0 top-full z-20 mt-1">
-        <Show
-          when={props.candidates.length > 0}
-          fallback={
-            <p class={`${EMPTY_STATE_CLASS} shadow-md`}>
-              {BORDER_CALCULATOR_COPY.noSongCandidatesMessage}
-            </p>
-          }
-        >
-          <ul
-            class="m-0 max-h-72 list-none overflow-y-auto rounded border border-border bg-surface p-0 shadow-md"
-            aria-label={BORDER_CALCULATOR_COPY.songCandidatesLabel}
+  return (
+    <div class="relative min-w-0">
+      <TextField
+        class="block text-sm"
+        value={composition.displayedValue()}
+        onChange={composition.handleChange}
+      >
+        <TextField.Label class="mb-1 block font-medium text-text-muted" for="border-song-search">
+          {BORDER_CALCULATOR_COPY.songSearchLabel}
+        </TextField.Label>
+        <TextField.Input
+          id="border-song-search"
+          name="border-song-search"
+          type="search"
+          class={`${COMPACT_FIELD_INPUT_CLASS} truncate font-sans`}
+          placeholder={BORDER_CALCULATOR_COPY.songSearchPlaceholder}
+          autocomplete="off"
+          onCompositionStart={(event) => composition.beginComposition(event.currentTarget.value)}
+          onCompositionEnd={(event) => composition.endComposition(event.currentTarget.value)}
+        />
+      </TextField>
+
+      <Show when={props.showCandidates && props.query.trim() !== ''}>
+        <div class="absolute left-0 right-0 top-full z-20 mt-1">
+          <Show
+            when={props.candidates.length > 0}
+            fallback={
+              <p class={`${EMPTY_STATE_CLASS} shadow-md`}>
+                {BORDER_CALCULATOR_COPY.noSongCandidatesMessage}
+              </p>
+            }
           >
-            <For each={props.candidates}>
-              {(song) => (
-                <li>
-                  <Button
-                    type="button"
-                    class={SONG_CANDIDATE_BUTTON_CLASS}
-                    onClick={() => props.onSelectSong(song)}
-                  >
-                    <span class="min-w-0">
-                      <span class="block truncate font-sans font-medium text-text">
-                        {song.title}
+            <ul
+              class="m-0 max-h-72 list-none overflow-y-auto rounded border border-border bg-surface p-0 shadow-md"
+              aria-label={BORDER_CALCULATOR_COPY.songCandidatesLabel}
+            >
+              <For each={props.candidates}>
+                {(song) => (
+                  <li>
+                    <Button
+                      type="button"
+                      class={SONG_CANDIDATE_BUTTON_CLASS}
+                      onClick={() => props.onSelectSong(song)}
+                    >
+                      <span class="min-w-0">
+                        <span class="block truncate font-sans font-medium text-text">
+                          {song.title}
+                        </span>
+                        <span class="block truncate font-sans text-xs text-text-muted">
+                          {song.artist}
+                        </span>
                       </span>
-                      <span class="block truncate font-sans text-xs text-text-muted">
-                        {song.artist}
-                      </span>
-                    </span>
-                  </Button>
-                </li>
-              )}
-            </For>
-          </ul>
-        </Show>
-      </div>
-    </Show>
-  </div>
-)
+                    </Button>
+                  </li>
+                )}
+              </For>
+            </ul>
+          </Show>
+        </div>
+      </Show>
+    </div>
+  )
+}
 
 /**
  * ボーダー計算の主要入力を横並びまたは折り返しで表示する。

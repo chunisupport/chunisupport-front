@@ -2,12 +2,13 @@ import { ADMIN_PREVIEWS_PATH } from '../../constants/routes'
 import { buildUrlTabPath, resolveUrlTab } from '../../utils/urlTab'
 
 /** テスト用ページ集のタブ */
-export type AdminPreviewsTabValue = 'nameplate' | 'ratingImage'
+export type AdminPreviewsTabValue = 'nameplate' | 'ratingImage' | 'overPowerTier'
 
 /** テスト用ページ集のタブに対応するURLパスセグメント。既定タブはセグメントなし */
 const ADMIN_PREVIEWS_TAB_PATH_SEGMENTS: Record<AdminPreviewsTabValue, string> = {
   nameplate: '',
   ratingImage: 'rating-image',
+  overPowerTier: 'over-power-tier',
 }
 
 /**

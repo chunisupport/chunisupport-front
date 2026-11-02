@@ -158,6 +158,26 @@ test('平均スコア目標では目標平均値未満の個別譜面だけに�
   assert.equal(isRecordMatched(createRecord({ score: 1005000 }), filter), false)
 })
 
+test('単曲レート目標17.45では17.44を未達成に含め17.45は含めない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 17.45, count: 1 },
+  })
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // When & Then
+  assert.equal(filter.rating.max, 17.44)
+  assert.equal(
+    isRecordMatched(createRecord({ const: 15.4, score: 1007900, rating: 17.44 }), filter),
+    true
+  )
+  assert.equal(
+    isRecordMatched(createRecord({ const: 15.4, score: 1007900, rating: 17.45 }), filter),
+    false
+  )
+})
+
 test('単曲レート目標では理論上到達可能かつ目標未満の譜面だけに一致する', () => {
   // Given
   const goal = createGoal({

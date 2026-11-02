@@ -9,8 +9,9 @@ import {
   RECORD_HARD_LAMP_OPTIONS,
 } from '../../../../constants/recordFilterOptions'
 import type { VersionSummaryDTO, WorldsendSongDTO } from '../../../../types/api'
+import { toNullableAllFilterSelection } from '../../../../utils/filterSelection'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
-import { filterReleasedVersions, getShortVersionName } from '../../../../utils/versionConverter'
+import { getReleasedVersionShortNames } from '../../../../utils/versionConverter'
 import type { WorldsendFilterState } from './filterTypes'
 
 /** WORLD'S END フィルターの初期値 */
@@ -22,7 +23,8 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
     max: WORLDSEND_LEVEL_STAR_MAX,
   },
   genres: [],
-  versions: [],
+  /** 全選択。バージョン不明の楽曲も含む */
+  versions: null,
   nameFolders: null,
   score: {
     min: SCORE_MIN,
@@ -47,9 +49,9 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
  * WORLD'S END 楽曲マスタからフィルターの初期選択肢を生成する。
  *
  * @param songs - WORLD'S END 楽曲マスタ。
- * @param versionSummaries - バージョン一覧。未来分は除外して初期値にする。
+ * @param versionSummaries - バージョン一覧。未来分は選択肢から除外する。
  * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
- * @returns ジャンル、バージョン、属性を全選択した初期値。
+ * @returns ジャンルと属性の全選択、および公開済みバージョンの短縮名。
  */
 export const getWorldsendSongDefaults = (
   songs: WorldsendSongDTO[],
@@ -59,9 +61,7 @@ export const getWorldsendSongDefaults = (
   const genres = Array.from(
     new Set(songs.map((song) => song.genre).filter((genre): genre is string => Boolean(genre)))
   ).sort((left, right) => left.localeCompare(right, 'ja'))
-  const releaseVersions = filterReleasedVersions(versionSummaries, referenceDate).map((version) =>
-    getShortVersionName(version.name)
-  )
+  const releaseVersions = getReleasedVersionShortNames(versionSummaries, referenceDate)
   const attributes = Array.from(
     new Set(songs.map((song) => song.charts.WORLDSEND?.attribute ?? null))
   ).sort((left, right) => (left ?? '').localeCompare(right ?? '', 'ja'))
@@ -73,7 +73,7 @@ export const getWorldsendSongDefaults = (
  * WORLD'S END フィルターの初期値を生成する。
  *
  * @param songs - WORLD'S END 楽曲マスタ。
- * @param versions - バージョン一覧。未来分は除外して初期値にする。
+ * @param versions - バージョン一覧。公開済みの全選択は未指定（null）にする。
  * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
  * @returns 楽曲マスタ由来の選択肢を反映したフィルター初期値。
  */
@@ -87,6 +87,7 @@ export const buildDefaultWorldsendFilter = (
   return {
     ...DEFAULT_WORLDSEND_FILTER,
     ...defaults,
+    versions: toNullableAllFilterSelection(defaults.versions, defaults.versions),
     score: { ...DEFAULT_WORLDSEND_FILTER.score },
     justiceCount: { ...DEFAULT_WORLDSEND_FILTER.justiceCount },
     levelStarRange: { ...DEFAULT_WORLDSEND_FILTER.levelStarRange },

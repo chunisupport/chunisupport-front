@@ -12,6 +12,7 @@ export type AppSwitchProps = Omit<SwitchRootProps, 'children'> & {
 
 /**
  * アプリ共通の見た目とアクセシブルなラベルを持つトグルスイッチを表示する。
+ * 非表示 input をスイッチ内に配置し、祖先のスクロール範囲が広がるのを防ぐ。
  *
  * @param props - スイッチの状態、変更通知、無効状態、ラベル。
  * @returns Kobalte Switch を使ったトグルスイッチ。
@@ -20,8 +21,8 @@ export const AppSwitch = (props: AppSwitchProps): JSX.Element => {
   const [local, switchProps] = splitProps(props, ['label', 'class'])
 
   return (
-    <Switch {...switchProps} class={local.class}>
-      <Switch.Input aria-label={local.label} />
+    <Switch {...switchProps} class={`relative ${local.class ?? ''}`}>
+      <Switch.Input aria-label={local.label} style={{ left: '0', top: '0' }} />
       <Switch.Control class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-border-strong transition data-[checked]:bg-action-primary data-disabled:cursor-not-allowed data-disabled:opacity-60">
         <Switch.Thumb class="inline-block h-5 w-5 translate-x-0.5 rounded-full bg-surface shadow-sm transition data-[checked]:translate-x-5" />
       </Switch.Control>

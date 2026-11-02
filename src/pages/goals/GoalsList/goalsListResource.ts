@@ -38,6 +38,7 @@ export interface GoalsListData {
 
 /**
  * 目標一覧画面で必要なログインユーザー・目標・マスタ・レコード・未解禁曲設定をまとめて取得する。
+ * プレイヤー未登録の場合はレコードと未解禁曲設定を取得せず、登録案内用の状態を返す。
  *
  * @param onUnauthorized - 認証切れを検出したときの遷移処理。
  * @returns 目標一覧画面で参照するデータ一式。
@@ -50,14 +51,15 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     throw error
   })
 
+  const profile = await fetchUserProfileSummary(me.username)
+
   const [
     goalsResponse,
     groupsResponse,
     songsResponse,
     masterData,
     versionData,
-    profile,
-    record,
+    records,
     lockedSongsResponse,
   ] = await Promise.all([
     fetchGoals(),
@@ -65,9 +67,8 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     fetchAllSongsWithCache(),
     fetchMasterData(),
     fetchVersions(),
-    fetchUserProfileSummary(me.username),
-    fetchUserRecordWithCache(me.username),
-    fetchUserLockedSongs(me.username),
+    profile.player ? fetchUserRecordWithCache(me.username).then((record) => record.standard) : [],
+    profile.player ? fetchUserLockedSongs(me.username) : { items: [] },
   ])
 
   return {
@@ -78,7 +79,7 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     songs: songsResponse.songs,
     masterData,
     versions: versionData.versions ?? [],
-    records: profile.player ? record.standard : [],
+    records,
     lockedSongs: lockedSongsResponse.items,
   }
 }
