@@ -10,6 +10,7 @@ import {
   toAptitudeLabelPlacement,
   UNIFIED_WEAK_CHART_ZONES,
   type UnifiedWeakChartEntry,
+  type UnifiedWeakChartMethod,
 } from './unifiedWeakChartInspector'
 
 /** 統合インスペクターのテストで比較するレート帯。 */
@@ -95,10 +96,14 @@ const createSnapshots = (averages: readonly TestAverage[]): ChartScoresResponse[
  *
  * @param records - 分析するユーザーレコード。
  * @param averages - レート帯平均の一覧。
+ * @param method - 比較する判定方式。省略時は既存方式。
  * @returns 分類済みの譜面一覧。
  */
-const inspect = (records: readonly PlayerRecordDTO[], averages: readonly TestAverage[]) =>
-  inspectUnifiedWeakCharts(records, createSnapshots(averages), RATING_BAND)
+const inspect = (
+  records: readonly PlayerRecordDTO[],
+  averages: readonly TestAverage[],
+  method: UnifiedWeakChartMethod = 'standard'
+) => inspectUnifiedWeakCharts(records, createSnapshots(averages), RATING_BAND, method)
 
 /**
  * 理論値からの失点を指定してレコードと平均の組を作る。
@@ -225,6 +230,127 @@ test('理論値付近の失点は下限点数として扱い、数十点の差�
   assert.equal(findEntry(entries, 'theoretical').aptitude, 80)
   assert.equal(findEntry(entries, 'theoretical').category, 'strength')
   assert.equal(findEntry(entries, 'near-max').category, 'normal')
+})
+
+test('試作方式は同じ定数帯と全譜面へのフォールバックの両方で理論値を苦手にしない', () => {
+  for (const peerConst of [12, 14]) {
+    // Given: 普段は平均の半分の失点だが、対象譜面は平均も理論値に近く上積みの余地がない。
+    const { records, averages } = createCharts([
+      ...Array.from({ length: 9 }, (_, index) => ({
+        id: `peer-${index}`,
+        chartConst: peerConst,
+        loss: 1000,
+        averageLoss: 2000,
+      })),
+      { id: 'theoretical', chartConst: 12, loss: 0, averageLoss: 50 },
+    ])
+
+    // When: 同じ入力を既存方式と試作方式で分析する。
+    const standard = findEntry(inspect(records, averages), 'theoretical')
+    const experimental = findEntry(inspect(records, averages, 'ceilingAdjusted'), 'theoretical')
+
+    // Then: 既存方式の誤判定を再現し、試作方式では到達可能な上限を満たすふつうになる。
+    assert.equal(standard.category, 'weakness')
+    assert.equal(experimental.category, 'normal')
+    assert.equal(experimental.aptitude, 50)
+    assert.equal(experimental.deviation, 0)
+  }
+})
+
+test('試作方式は100落ち・50落ち・10落ち・理論値を区別し、詰めるほど評価を上げる', () => {
+  // Given: 普段は平均の半分の失点で、平均50落ちの譜面を100落ちから理論値まで詰める。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 0.5),
+    { id: 'target', loss: 100, averageLoss: 50 },
+  ])
+
+  // When: 他の譜面と平均を固定して対象スコアだけを伸ばす。
+  const entries = [100, 50, 10, 0].map((loss) =>
+    findEntry(
+      inspect(
+        records.map((record) =>
+          record.id === 'target' ? { ...record, score: MAX_SCORE - loss } : record
+        ),
+        averages,
+        'ceilingAdjusted'
+      ),
+      'target'
+    )
+  )
+
+  // Then: 失点100点以下も計算上区別し、10落ちから理論値への成果は表示にも反映する。
+  for (let index = 1; index < entries.length; index += 1) {
+    assert.ok((entries[index].deviation ?? 0) > (entries[index - 1].deviation ?? 0))
+    assert.ok((entries[index].aptitude ?? 0) >= (entries[index - 1].aptitude ?? 0))
+  }
+  assertClose(entries[2].deviation, Math.log(100 / 110) / 0.1)
+  assert.equal(entries[2].aptitude, 40)
+  assert.equal(entries[3].aptitude, 50)
+})
+
+test('試作方式は平均自体が理論値でも有限の評価を返す', () => {
+  // Given: 比較平均も自分も理論値である。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 0.5),
+    { id: 'both-max', loss: 0, averageLoss: 0 },
+  ])
+
+  // When: 試作方式で分析する。
+  const entry = findEntry(inspect(records, averages, 'ceilingAdjusted'), 'both-max')
+
+  // Then: ゼロ除算せず、到達上限を満たすふつうになる。
+  assert.equal(entry.deviation, 0)
+  assert.equal(entry.aptitude, 50)
+  assert.equal(entry.category, 'normal')
+})
+
+test('試作方式は達成可能な普段の基準を維持し、得意と実際の失点が多い苦手を残す', () => {
+  // Given: 普段は平均の半分の失点で、同じ平均に対して理論値と失点の多い譜面がある。
+  const { records, averages } = createCharts([
+    ...Array.from({ length: 9 }, (_, index) => ({ id: `steady-${index}`, loss: 5000 })),
+    { id: 'strength', loss: 0, averageLoss: 1000 },
+    { id: 'weakness', loss: 10000, averageLoss: 1000 },
+  ])
+
+  // When: 試作方式で分析する。
+  const entries = inspect(records, averages, 'ceilingAdjusted')
+
+  // Then: 上限補正が不要な場合は従来どおり中央値からの差を評価する。
+  const baseline = Math.log(10100 / 5100)
+  assertClose(findEntry(entries, 'strength').deviation, (Math.log(1100 / 100) - baseline) / 0.1)
+  assert.equal(findEntry(entries, 'strength').category, 'strength')
+  assert.equal(findEntry(entries, 'weakness').category, 'weakness')
+  assert.equal(findEntry(entries, 'steady-0').aptitude, 50)
+})
+
+test('試作方式でも平均欠損・未プレイ・理論値超過の扱いを維持する', () => {
+  // Given: 比較可能な譜面に、平均なし・null平均・未プレイ・理論値超過を加える。
+  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0.5))
+  const baseline = findEntry(inspect(records, averages, 'ceilingAdjusted'), 'steady-0').deviation
+  records.push(
+    createRecord('missing', MAX_SCORE),
+    createRecord('null-average', MAX_SCORE),
+    createRecord('unplayed', 0, 'MASTER', { is_played: false }),
+    createRecord('over-score', MAX_SCORE + 1)
+  )
+  averages.push(
+    { songId: 'null-average', difficulty: 'MASTER', averageScore: null },
+    { songId: 'unplayed', difficulty: 'MASTER', averageScore: 1000000 },
+    { songId: 'over-score', difficulty: 'MASTER', averageScore: 1000000 }
+  )
+
+  // When: 試作方式で分析する。
+  const entries = inspect(records, averages, 'ceilingAdjusted')
+
+  // Then: 不適格な譜面は除外し、平均欠損はデータなしとして基準に影響させない。
+  assert.equal(entries.length, 11)
+  assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
+  for (const id of ['missing', 'null-average']) {
+    const entry = findEntry(entries, id)
+    assert.equal(entry.category, 'unavailable')
+    assert.equal(entry.aptitude, null)
+    assert.equal(entry.deviation, null)
+  }
 })
 
 test('普段の失点比は譜面定数の近い譜面だけで求める', () => {
