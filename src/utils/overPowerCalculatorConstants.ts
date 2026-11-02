@@ -16,3 +16,8 @@ export const REQUIRED_CHART_LAMP_COLUMNS = [
   { label: 'FULL COMBO', value: 'FULL COMBO' },
   { label: 'ALL JUSTICE', value: 'ALL JUSTICE' },
 ] as const
+
+/** 達成困難な必要譜面数の表示。 */
+export const EXCESSIVE_CHART_COUNT_LABEL = '×'
+/** OP増加のない条件や適用できないランプの表示。 */
+export const UNAVAILABLE_CHART_COUNT_LABEL = '—'

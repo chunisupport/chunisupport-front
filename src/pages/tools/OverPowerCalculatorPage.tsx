@@ -4,7 +4,7 @@ import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
 import { ArrowRight, CornerLeftUp, LockKeyhole, Percent, Plus, Slash } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
-import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import { createMemo, createResource, createSignal, For, onMount, Show } from 'solid-js'
 import { fetchGenres } from '../../api/genres'
 import { fetchNameFolders } from '../../api/nameFolders'
 import { fetchVersions } from '../../api/songs'
@@ -19,7 +19,6 @@ import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { ScoreField } from '../../components/common/ScoreField'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
-import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../constants/chart'
 import { getPossessionClassName } from '../../constants/possession'
 import { OVER_POWER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
@@ -38,7 +37,6 @@ import { formatInteger } from '../../utils/numberFormat'
 import {
   calculateOverPowerDifference,
   calculateOverPowerPercent,
-  calculateRequiredChartCount,
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
@@ -54,10 +52,10 @@ import {
   REQUIRED_CHART_LAMP_COLUMNS,
 } from '../../utils/overPowerCalculatorConstants'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
+import { calculateRequiredChartCountResult } from '../../utils/requiredChartCount'
 import LockedSongsDialog from '../users/UserOverPower/components/LockedSongsDialog'
 import {
   DEFAULT_MANUAL_FILL_SCORE,
-  DEFAULT_REQUIRED_CHART_CONSTANT,
   DEFAULT_REQUIRED_CURRENT_SCORE,
   DEFAULT_REQUIRED_TARGET_SCORE,
   OVER_POWER_CALCULATOR_COPY,
@@ -185,19 +183,17 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
 /**
  * OVER POWER計算機ページを表示する。
  * 未ログインの自動インポート案内は、換算タブの直下だけに表示する。
+ * 必要譜面数はスコアに応じた定数範囲で計算し、収録曲数以上を警告する。
  * 定数別平均の補間仕様は選択肢の注記と末尾の説明で補足する。
  *
  * @returns OVER POWERの数値と達成率を相互変換する計算フォーム。
  */
 const OverPowerCalculatorPage = (): JSX.Element => {
-  const { songsResponse, ensureSongsLoaded } = useSongsData()
+  const { songsResponse, ensureSongsLoaded, songCount } = useSongsData()
   const [addValue, setAddValue] = createSignal('')
   const [excludeLockedSongs, setExcludeLockedSongs] = createSignal(true)
   const [unplayedFillMode, setUnplayedFillMode] = createSignal<UnplayedOverPowerFillMode>('none')
   const [manualFillScore, setManualFillScore] = createSignal(DEFAULT_MANUAL_FILL_SCORE)
-  const [chartConstant, setChartConstant] = createSignal(
-    formatOverPowerInputValue(Number(DEFAULT_REQUIRED_CHART_CONSTANT), 1)
-  )
   const [currentChartScore, setCurrentChartScore] = createSignal(DEFAULT_REQUIRED_CURRENT_SCORE)
   const [targetChartScore, setTargetChartScore] = createSignal(DEFAULT_REQUIRED_TARGET_SCORE)
   const [selectedTab, setSelectedTab] =
@@ -207,11 +203,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const tool = getToolLink(OVER_POWER_CALCULATOR_PATH)
   useDocumentTitle(tool.title)
 
-  createEffect(() => {
-    if (authSession.status === 'authenticated') {
-      ensureSongsLoaded()
-    }
-  })
+  onMount(ensureSongsLoaded)
 
   const authenticatedUsername = createMemo(() =>
     authSession.status === 'authenticated' ? (authSession.user?.username ?? undefined) : undefined
@@ -280,21 +272,32 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   const targetDifference = createMemo(() =>
     calculateOverPowerDifference(requiredValue(), importedCurrentValue())
   )
-  const requiredChartCounts = createMemo(() =>
-    REQUIRED_CHART_LAMP_COLUMNS.map((lamp) => ({
+  /** 各ランプの必要譜面数表示と警告状態を返す。 */
+  const requiredChartCounts = createMemo(() => {
+    const count = songCount()
+    if (count === undefined) return []
+    return REQUIRED_CHART_LAMP_COLUMNS.map((lamp) => ({
       ...lamp,
-      count: calculateRequiredChartCount(
+      result: calculateRequiredChartCountResult(
         {
           max: parsedMaxValue(),
           current: importedCurrentValue(),
           percent: parsedTargetPercent(),
         },
         parseOverPowerInput(targetChartScore()) ?? 0,
-        parseOverPowerInput(chartConstant()) ?? CHART_CONST_MIN,
         lamp.value,
-        parseOverPowerInput(currentChartScore()) ?? 0
+        parseOverPowerInput(currentChartScore()) ?? 0,
+        count
       ),
     }))
+  })
+  /** 定数によって必要譜面数の表示が変わるか返す。 */
+  const showRequiredCountRange = createMemo(() =>
+    requiredChartCounts().some((cell) => cell.result.label.includes('-'))
+  )
+  /** 表示中の必要譜面数に収録曲数以上の条件があるか返す。 */
+  const hasExcessiveChartCount = createMemo(() =>
+    requiredChartCounts().some((cell) => cell.result.exceedsLimit)
   )
   const unplayedCalculation = createMemo(() =>
     calculateUnplayedOverPower({
@@ -554,17 +557,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             <p class="mb-4 text-sm text-text-muted">
               {OVER_POWER_CALCULATOR_COPY.requiredChartCountDescription}
             </p>
-            <OverPowerField
-              id="over-power-chart-constant"
-              label={OVER_POWER_CALCULATOR_COPY.chartConstantLabel}
-              value={chartConstant()}
-              min={CHART_CONST_MIN}
-              max={CHART_CONST_MAX}
-              step={0.1}
-              decimalPlaces={1}
-              widthClass="max-w-20"
-              onChange={setChartConstant}
-            />
             <div class="mt-4 flex items-end gap-2">
               <ScoreField
                 id="over-power-current-chart-score"
@@ -582,34 +574,58 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 onChange={setTargetChartScore}
               />
             </div>
-            <div class="mt-4 overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="border-b border-border text-text-muted">
-                  <tr>
-                    <th scope="col" class="px-2 py-2 text-left font-medium">
-                      {OVER_POWER_CALCULATOR_COPY.lampLabel}
-                    </th>
-                    <th scope="col" class="px-2 py-2 text-right font-medium">
-                      {OVER_POWER_CALCULATOR_COPY.requiredCountLabel}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={requiredChartCounts()}>
-                    {(cell) => (
-                      <tr class="border-b border-border last:border-0">
-                        <th scope="row" class="px-2 py-3 text-left font-medium">
-                          {cell.label}
-                        </th>
-                        <td class="px-2 py-3 text-right font-jost tabular-nums">
-                          {cell.count ?? OVER_POWER_CALCULATOR_COPY.unavailableCountLabel}
-                        </td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
-            </div>
+            <Show when={showRequiredCountRange()}>
+              <p class="mt-3 text-xs text-text-muted">
+                {OVER_POWER_CALCULATOR_COPY.requiredCountRangeNote}
+              </p>
+            </Show>
+            <Show
+              when={songCount() !== undefined}
+              fallback={
+                <div class="mt-4">
+                  <Show when={songsResponse.error} fallback={<Loading />}>
+                    <LoadError error={songsResponse.error} />
+                  </Show>
+                </div>
+              }
+            >
+              <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="border-b border-border text-text-muted">
+                    <tr>
+                      <th scope="col" class="px-2 py-2 text-left font-medium">
+                        {OVER_POWER_CALCULATOR_COPY.lampLabel}
+                      </th>
+                      <th scope="col" class="px-2 py-2 text-right font-medium">
+                        {OVER_POWER_CALCULATOR_COPY.requiredCountLabel}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={requiredChartCounts()}>
+                      {(cell) => (
+                        <tr class="border-b border-border last:border-0">
+                          <th scope="row" class="px-2 py-3 text-left font-medium">
+                            {cell.label}
+                          </th>
+                          <td class="px-2 py-3 text-right font-jost tabular-nums">
+                            {cell.result.label}
+                          </td>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
+              <Show when={hasExcessiveChartCount()}>
+                <p
+                  role="status"
+                  class="mt-3 rounded-md border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning"
+                >
+                  {OVER_POWER_CALCULATOR_COPY.excessiveCountWarning}
+                </p>
+              </Show>
+            </Show>
           </section>
         </AppTabContent>
 
