@@ -41,14 +41,14 @@ test('90万点以下は定数16.0と1.0による必要数を少ない順の範�
   // When
   const result = calculateRequiredChartCountResult(TARGET, 850000, 'FULL COMBO', 800000, 201)
   // Then
-  assert.deepEqual(result, { label: '8-200', exceedsLimit: false })
+  assert.deepEqual(result, { label: '8 〜 200', exceedsLimit: false })
 })
 
 test('範囲の一部だけ収録曲数以上の場合は数値と×を表示する', () => {
   // Given & When
   const result = calculateRequiredChartCountResult(TARGET, 850000, 'FULL COMBO', 800000, 200)
   // Then
-  assert.deepEqual(result, { label: '8-×', exceedsLimit: true })
+  assert.deepEqual(result, { label: '8 〜 ×', exceedsLimit: true })
 })
 
 test('範囲全体が収録曲数以上の場合は×だけを表示する', () => {
@@ -62,17 +62,17 @@ test('定数1.0で増分がない場合は範囲の上端を×にする', () => 
   // Given & When: 定数16は13.75 OP増加、定数1は0 OPのまま。
   const result = calculateRequiredChartCountResult(TARGET, 850000, null, 800000, 100)
   // Then
-  assert.deepEqual(result, { label: '8-×', exceedsLimit: true })
+  assert.deepEqual(result, { label: '8 〜 ×', exceedsLimit: true })
 })
 
 test('目標90万点ちょうどと、90万点をまたぐ更新も範囲計算する', () => {
   // Given & When & Then
   assert.deepEqual(calculateRequiredChartCountResult(TARGET, 900000, null, 800000, 100), {
-    label: '4-×',
+    label: '4 〜 ×',
     exceedsLimit: true,
   })
   assert.deepEqual(calculateRequiredChartCountResult(TARGET, 950000, null, 850000, 100), {
-    label: '4-×',
+    label: '4 〜 ×',
     exceedsLimit: true,
   })
 })
@@ -101,11 +101,11 @@ test('達成済み・増分なし・理論値のランプ列は既存の表示�
 test('90万点超でも低定数のOP下限補正による範囲を保つ', () => {
   // Given & When & Then: 90万点を超えても定数1ではOPが0になる場合がある。
   assert.deepEqual(calculateRequiredChartCountResult(TARGET, 950000, null, 900000, 100), {
-    label: '7-×',
+    label: '7 〜 ×',
     exceedsLimit: true,
   })
   assert.deepEqual(calculateRequiredChartCountResult(TARGET, 1000000, null, 950000, 100), {
-    label: '8-10',
+    label: '8 〜 10',
     exceedsLimit: false,
   })
 })

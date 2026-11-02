@@ -291,10 +291,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
       ),
     }))
   })
-  /** 定数によって必要譜面数の表示が変わるか返す。 */
-  const showRequiredCountRange = createMemo(() =>
-    requiredChartCounts().some((cell) => cell.result.label.includes('-'))
-  )
   /** 表示中の必要譜面数に収録曲数以上の条件があるか返す。 */
   const hasExcessiveChartCount = createMemo(() =>
     requiredChartCounts().some((cell) => cell.result.exceedsLimit)
@@ -574,11 +570,6 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 onChange={setTargetChartScore}
               />
             </div>
-            <Show when={showRequiredCountRange()}>
-              <p class="mt-3 text-xs text-text-muted">
-                {OVER_POWER_CALCULATOR_COPY.requiredCountRangeNote}
-              </p>
-            </Show>
             <Show
               when={songCount() !== undefined}
               fallback={

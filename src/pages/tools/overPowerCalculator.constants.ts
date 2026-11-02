@@ -20,7 +20,7 @@ export const OVER_POWER_CALCULATOR_COPY = {
   differenceLabel: 'あと',
   lampLabel: 'ランプ',
   requiredCountLabel: '必要譜面数',
-  currentScoreLabel: '現在のスコア',
+  currentScoreLabel: '伸ばす前のスコア',
   targetScoreLabel: '目標スコア',
   unplayedCalculatorTitle: '未プレイ補完計算',
   loginRequiredMessage: 'ログイン中のみ使用できます。',
@@ -36,8 +36,8 @@ export const OVER_POWER_CALCULATOR_COPY = {
   constAverageNote:
     '既プレイ譜面がない譜面定数の平均スコアは、前後の譜面定数の平均スコアから線形的に補間します。',
   requiredChartCountTitle: '達成までの必要譜面数',
-  requiredChartCountDescription: '指定したスコアの伸びで、目標OP%までに必要な譜面数を計算します。',
-  requiredCountRangeNote: '定数16.0〜1.0での必要譜面数の範囲です。',
+  requiredChartCountDescription:
+    '目標OP%を達成するために更新が必要な譜面数を、スコアの伸び具合を指定することで算出します。(事実上、全曲プレイ前提の指標です)',
   excessiveCountWarning: '目標OP%が高すぎるため、指定したスコアの伸びだけでは達成できません。',
   ratioLabel: '獲得値 / OVER POWER理論値',
 } as const

@@ -2,11 +2,12 @@ import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
 import { calculateRequiredChartCount, type OverPowerCalculatorBase } from './overPowerCalculator'
 import {
   EXCESSIVE_CHART_COUNT_LABEL,
+  REQUIRED_CHART_COUNT_RANGE_SEPARATOR,
   UNAVAILABLE_CHART_COUNT_LABEL,
 } from './overPowerCalculatorConstants'
 
 /**
- * 定数16.0〜1.0の必要譜面数を計算し、同じ結果は単一値にまとめる。
+ * 定数16.0〜1.0の必要譜面数を計算し、同じ結果は単一値にまとめ、範囲は「 〜 」で区切る。
  * @param target - 理論OP、現在OP、目標達成率。
  * @param score - 目標スコア。
  * @param comboLamp - 目標コンボランプ。
@@ -36,5 +37,5 @@ export const calculateRequiredChartCountResult = (
         ? EXCESSIVE_CHART_COUNT_LABEL
         : String(count)
     )
-  return { label: [...new Set(labels)].join('-'), exceedsLimit }
+  return { label: [...new Set(labels)].join(REQUIRED_CHART_COUNT_RANGE_SEPARATOR), exceedsLimit }
 }

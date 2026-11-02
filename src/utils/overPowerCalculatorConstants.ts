@@ -21,3 +21,6 @@ export const REQUIRED_CHART_LAMP_COLUMNS = [
 export const EXCESSIVE_CHART_COUNT_LABEL = '×'
 /** OP増加のない条件や適用できないランプの表示。 */
 export const UNAVAILABLE_CHART_COUNT_LABEL = '—'
+
+/** 必要譜面数の範囲表示で両端を区切る文字列。 */
+export const REQUIRED_CHART_COUNT_RANGE_SEPARATOR = ' 〜 '
