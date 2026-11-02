@@ -184,6 +184,7 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
  * OVER POWER計算機ページを表示する。
  * 未ログインの自動インポート案内は、換算タブの直下だけに表示する。
  * 必要譜面数はスコアに応じた定数範囲で計算し、収録曲数以上を警告する。
+ * 必要譜面数の末尾で、定数に依存しない高スコア帯の条件を補足する。
  * 定数別平均の補間仕様は選択肢の注記と末尾の説明で補足する。
  *
  * @returns OVER POWERの数値と達成率を相互変換する計算フォーム。
@@ -617,6 +618,9 @@ const OverPowerCalculatorPage = (): JSX.Element => {
                 </p>
               </Show>
             </Show>
+            <p class="mt-3 font-sans text-xs text-text-muted">
+              {OVER_POWER_CALCULATOR_COPY.requiredChartCountNote}
+            </p>
           </section>
         </AppTabContent>
 

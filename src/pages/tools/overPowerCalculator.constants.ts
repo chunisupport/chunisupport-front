@@ -38,7 +38,10 @@ export const OVER_POWER_CALCULATOR_COPY = {
   requiredChartCountTitle: '達成までの必要譜面数',
   requiredChartCountDescription:
     '目標OP%を達成するために更新が必要な譜面数を、スコアの伸び具合を指定することで算出します。(事実上、全曲プレイ前提の指標です)',
-  excessiveCountWarning: '目標OP%が高すぎるため、指定したスコアの伸びだけでは達成できません。',
+  /** 譜面定数の入力が不要となる高スコア帯の注記。 */
+  requiredChartCountNote: '※実用の範囲内では、必要譜面数は譜面定数に関係なく同じになります。',
+  excessiveCountWarning:
+    '目標OP%が高すぎる、もしくはスコアの伸び具合が小さすぎるため、達成が不可能です。',
   ratioLabel: '獲得値 / OVER POWER理論値',
 } as const
 
