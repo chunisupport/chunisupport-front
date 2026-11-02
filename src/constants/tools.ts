@@ -39,7 +39,7 @@ export const TOOL_CATEGORIES = [
   { id: 'calculator', title: '計算機' },
   { id: 'analysis', title: '分析・比較' },
   { id: 'data', title: 'データ閲覧' },
-  { id: 'selection', title: '選曲' },
+  { id: 'utility', title: '便利ツール' },
 ] as const
 
 /** ツールが所属する分類。 */
@@ -175,7 +175,7 @@ export const TOOL_LINKS: ToolLink[] = [
   {
     title: 'ランダム選曲',
     href: RANDOM_SONG_SELECTOR_PATH,
-    category: 'selection',
+    category: 'utility',
     icon: 'random',
     description: '条件に合う通常譜面から指定曲数をランダムに選びます。',
   },
@@ -201,18 +201,17 @@ export const TOOL_LINKS: ToolLink[] = [
     description: '全譜面SSS+時の理論値レーティングを確認できます。',
   },
   {
+    title: '未解禁曲ディスカバー',
+    href: LOCKED_SONG_DISCOVERY_PATH,
+    category: 'utility',
+    icon: 'discover',
+    description: '筐体上とChuniSupport上のOPの差から、未解禁曲の候補を絞り込むことができます。',
+  },
+  {
     title: 'ウニ埋めマトリックス',
     href: UNI_FILL_MATRIX_PATH,
     category: 'analysis',
     icon: 'matrix',
     description: '細かい組み合わせごとに、何譜面埋め終わっているかを確認できます。',
-  },
-  {
-    title: '未解禁曲ディスカバー',
-    href: LOCKED_SONG_DISCOVERY_PATH,
-    category: 'selection',
-    icon: 'discover',
-    description: '筐体上とChuniSupport上のOPの差から、未解禁曲の候補を絞り込むことができます。',
-    adminOnly: true,
   },
 ]

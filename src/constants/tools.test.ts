@@ -5,10 +5,18 @@ import {
   FRIEND_VS_PATH,
   LOCKED_SONG_DISCOVERY_PATH,
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
+  RANDOM_SONG_SELECTOR_PATH,
   UNI_FILL_MATRIX_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
-import { getToolLink, isPublicToolLink, isToolLinkListed, TOOL_LINKS, type ToolLink } from './tools'
+import {
+  getToolLink,
+  isPublicToolLink,
+  isToolLinkListed,
+  TOOL_CATEGORIES,
+  TOOL_LINKS,
+  type ToolLink,
+} from './tools'
 
 const publicTool: ToolLink = {
   title: '公開ツール',
@@ -71,14 +79,26 @@ test('isPublicToolLink は無効または ADMIN 限定のツールを公開対�
   assert.equal(isPublicToolLink(adminOnlyTool), false)
 })
 
-test('未解禁曲ディスカバーは ADMIN 限定ツールとして定義されていること', () => {
+test('未解禁曲ディスカバーは全アカウント種別に表示する公開ツールとして定義されていること', () => {
   // Given
-  const lockedSongDiscovery = TOOL_LINKS.find((tool) => tool.href === LOCKED_SONG_DISCOVERY_PATH)
+  const lockedSongDiscovery = getToolLink(LOCKED_SONG_DISCOVERY_PATH)
 
   // When / Then
-  assert.ok(lockedSongDiscovery)
-  assert.equal(lockedSongDiscovery.adminOnly, true)
-  assert.equal(isPublicToolLink(lockedSongDiscovery), false)
+  assert.equal(lockedSongDiscovery.adminOnly, undefined)
+  assert.equal(isPublicToolLink(lockedSongDiscovery), true)
+  for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {
+    assert.equal(isToolLinkListed(lockedSongDiscovery, accountType), true)
+  }
+})
+
+test('ランダム選曲と未解禁曲ディスカバーは便利ツールに分類されること', () => {
+  // Given
+  const utilityCategory = TOOL_CATEGORIES.find((category) => category.id === 'utility')
+
+  // When / Then
+  assert.equal(utilityCategory?.title, '便利ツール')
+  assert.equal(getToolLink(RANDOM_SONG_SELECTOR_PATH).category, 'utility')
+  assert.equal(getToolLink(LOCKED_SONG_DISCOVERY_PATH).category, 'utility')
 })
 
 test('ウニ埋めマトリックスは通常ユーザーにも表示する公開ツールとして定義されていること', () => {
