@@ -69,6 +69,7 @@ import {
   UNI_FILL_MATRIX_LEVEL_CONST_AXIS_OPTIONS,
   UNI_FILL_MATRIX_LINE_HEADER_WEIGHT,
   UNI_FILL_MATRIX_RECORD_SORT_QUERY,
+  UNI_FILL_MATRIX_REMAINING_PERCENT_COLUMN_MIN_SPACING,
   type UniFillMatrixAchievementOption,
   type UniFillMatrixDifficultyOption,
   type UniFillMatrixDimensionOption,
@@ -146,6 +147,7 @@ const toDimensionOption = (
  * @param props.caption - 表の読み上げ用説明。
  * @param props.cornerHeader - 左端の見出し列の名前。スクリーンリーダー向けにのみ提供する。
  * @param props.showPercent - 上段を達成率で表示するか。
+ * @param props.showRemaining - 上段を未達成の残り（残数・残り割合）で表示するか。
  * @param props.onSelectCell - 未達成の譜面が残るマスをクリックしたときの処理。
  * @param props.imageMode - 画像用に固定見出しと操作を無効にするか。
  * @param props.tableRef - 表の論理幅を取得するための参照設定。
@@ -156,6 +158,7 @@ const UniFillMatrixTable = (props: {
   caption: string
   cornerHeader: string
   showPercent: boolean
+  showRemaining: boolean
   onSelectCell?: (position: UniFillMatrixCellPosition) => void
   imageMode?: boolean
   tableRef?: (element: HTMLTableElement) => void
@@ -187,6 +190,16 @@ const UniFillMatrixTable = (props: {
   const columnWeight = () => props.matrix.columnHeaders.length + 1 + lineHeaderWeight()
 
   /**
+   * データ・合計列の最小幅を余白単位数で取得する。
+   *
+   * @returns 残数表示と%表示の併用時は「100.00%」が収まる幅、それ以外は共通ヒートマップセルの最小幅。
+   */
+  const dataColumnMinSpacing = () =>
+    props.showPercent && props.showRemaining
+      ? UNI_FILL_MATRIX_REMAINING_PERCENT_COLUMN_MIN_SPACING
+      : UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING
+
+  /**
    * 画像では通常配置に、画面では横スクロールに追従する左端セルのクラスを取得する。
    *
    * @returns 中央揃えと、画像では通常の右罫線、画面表示時は左端固定と追従する右罫線を適用するクラス。
@@ -206,6 +219,7 @@ const UniFillMatrixTable = (props: {
       count={gridCell.cell.count}
       total={gridCell.cell.total}
       showPercent={props.showPercent}
+      showRemaining={props.showRemaining}
       showCompleteMark
       showEmptyAsComplete
       class={isTotal ? TOTAL_CELL_CLASS : undefined}
@@ -220,7 +234,7 @@ const UniFillMatrixTable = (props: {
         ref={props.tableRef}
         class={`w-full table-fixed border-collapse ${props.imageMode ? '' : STICKY_LINE_HEADER_TABLE_CLASS}`}
         style={{
-          'min-width': `calc(var(--spacing) * ${UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING} * ${columnWeight()})`,
+          'min-width': `calc(var(--spacing) * ${dataColumnMinSpacing()} * ${columnWeight()})`,
         }}
       >
         <caption class="sr-only">{props.caption}</caption>
@@ -366,6 +380,7 @@ const UniFillMatrixPage: Component = () => {
       setHorizontal(currentVertical)
     })
   const [showPercent, setShowPercent] = createSignal(savedViewSettings.showPercent)
+  const [showRemaining, setShowRemaining] = createSignal(savedViewSettings.showRemaining)
   const [excludeLockedSongs, setExcludeLockedSongs] = createSignal(
     savedViewSettings.excludeLockedSongs
   )
@@ -378,6 +393,7 @@ const UniFillMatrixPage: Component = () => {
         horizontal,
         levelConstAxis,
         showPercent,
+        showRemaining,
         excludeLockedSongs,
       ],
       ([
@@ -387,6 +403,7 @@ const UniFillMatrixPage: Component = () => {
         nextHorizontal,
         nextLevelConstAxis,
         nextShowPercent,
+        nextShowRemaining,
         nextExcludeLockedSongs,
       ]) =>
         saveUniFillMatrixViewSettings({
@@ -396,6 +413,7 @@ const UniFillMatrixPage: Component = () => {
           horizontal: nextHorizontal,
           levelConstAxis: nextLevelConstAxis,
           showPercent: nextShowPercent,
+          showRemaining: nextShowRemaining,
           excludeLockedSongs: nextExcludeLockedSongs,
         }),
       { defer: true }
@@ -491,6 +509,7 @@ const UniFillMatrixPage: Component = () => {
     if (!currentMatrix || !tableWrapper) throw new Error('Uni fill matrix is not ready')
 
     const currentShowPercent = showPercent()
+    const currentShowRemaining = showRemaining()
     const checks = countUniFillMatrixChecks(currentMatrix)
     const tableBorderWidth = tableWrapper.offsetWidth - tableWrapper.clientWidth
     const imageWidth =
@@ -534,6 +553,7 @@ const UniFillMatrixPage: Component = () => {
             caption={caption}
             cornerHeader={currentCornerHeader}
             showPercent={currentShowPercent}
+            showRemaining={currentShowRemaining}
             imageMode
           />
           <footer class="text-right text-sm text-text-muted">
@@ -658,7 +678,13 @@ const UniFillMatrixPage: Component = () => {
                       rootClass="col-start-1 row-start-2 min-w-0 sm:flex-1 md:w-36 md:flex-none"
                     />
                   </div>
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center md:ml-auto">
+                  <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center md:ml-auto">
+                    <CheckboxField
+                      checked={showRemaining()}
+                      onChange={setShowRemaining}
+                      label={UNI_FILL_MATRIX_COPY.remainingToggle}
+                      class="min-h-8"
+                    />
                     <CheckboxField
                       checked={showPercent()}
                       onChange={setShowPercent}
@@ -714,6 +740,7 @@ const UniFillMatrixPage: Component = () => {
                       caption={matrixCaption()}
                       cornerHeader={cornerHeader()}
                       showPercent={showPercent()}
+                      showRemaining={showRemaining()}
                       onSelectCell={(target) => void handleSelectCell(target)}
                     />
                   )}
