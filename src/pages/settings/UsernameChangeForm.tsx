@@ -13,6 +13,7 @@ import {
   validateUsername,
 } from '../../utils/usernameInput'
 import { USERNAME_CHANGE_COPY } from './AccountSettings.constants'
+import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
 type UsernameChangeFormProps = {
   /** 現在のユーザーネーム。 */
@@ -87,8 +88,8 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
   }
 
   return (
-    <section aria-labelledby="username-change-title" class="mt-10 border-t border-border pt-6">
-      <h3 id="username-change-title" class="flex items-center gap-2 font-semibold text-text">
+    <section aria-labelledby="username-change-title" class={SETTINGS_SUBSECTION_CLASS}>
+      <h3 id="username-change-title" class={SETTINGS_SUBSECTION_TITLE_CLASS}>
         <UserRoundPen aria-hidden="true" class="h-5 w-5" />
         {USERNAME_CHANGE_COPY.title}
       </h3>

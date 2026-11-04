@@ -21,6 +21,7 @@ import {
   DATA_TRANSFER_COUNT_ITEMS,
   DATA_TRANSFER_MAX_FILE_SIZE_BYTES,
 } from './DataTransferSettings.constants'
+import { SETTINGS_ROW_LIST_CLASS } from './settingsStyles'
 
 type DataTransferSettingsSectionProps = {
   /** 現在のアカウントがプレイヤーデータを保持しているか */
@@ -205,7 +206,7 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
         <Collapsible.Content>
           <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.description}</p>
 
-          <div class="mt-4 divide-y divide-border border-y border-border">
+          <div class={`mt-4 ${SETTINGS_ROW_LIST_CLASS}`}>
             <article class="py-4">
               <h3 class="font-semibold text-text">{DATA_TRANSFER_COPY.exportTitle}</h3>
               <p class="mt-1 text-sm text-text-muted">{DATA_TRANSFER_COPY.exportDescription}</p>

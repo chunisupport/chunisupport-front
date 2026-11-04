@@ -30,6 +30,7 @@ import {
   GOOGLE_ACCOUNT_CHANGE_COPY,
   GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES,
 } from './AccountSettings.constants'
+import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
 /** ウィザードの各ステップ */
 type WizardStep = keyof typeof GOOGLE_ACCOUNT_CHANGE_COPY.steps
@@ -251,11 +252,8 @@ export const GoogleAccountChangeForm: Component<{
   }
 
   return (
-    <section
-      aria-labelledby="google-account-change-title"
-      class="mt-10 border-t border-border pt-6"
-    >
-      <h3 id="google-account-change-title" class="flex items-center gap-2 font-semibold text-text">
+    <section aria-labelledby="google-account-change-title" class={SETTINGS_SUBSECTION_CLASS}>
+      <h3 id="google-account-change-title" class={SETTINGS_SUBSECTION_TITLE_CLASS}>
         <ArrowRightLeft aria-hidden="true" class="h-5 w-5" />
         {GOOGLE_ACCOUNT_CHANGE_COPY.title}
       </h3>

@@ -29,6 +29,7 @@ import { LoginMethodSettingsSection } from './LoginMethodSettingsSection'
 import { PLAYER_DATA_DELETE_COPY } from './PlayerDataSettings.constants'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
+import { SETTINGS_ROW_LIST_CLASS, SETTINGS_SUBSECTION_CLASS } from './settingsStyles'
 import { UsernameChangeForm } from './UsernameChangeForm'
 
 type SettingsSummary = {
@@ -282,7 +283,7 @@ const Settings = () => {
                       <h2 id="profile-title" class="text-xl font-semibold text-text">
                         プロフィール
                       </h2>
-                      <div class="mt-5 flex items-center justify-between gap-4 border-b border-border py-4">
+                      <div class="mt-2 flex items-center justify-between gap-4 py-4">
                         <div>
                           <h3 class="font-medium text-text">プロフィールを非公開にする</h3>
                           <p class="mt-1 text-sm text-text-muted">
@@ -318,7 +319,7 @@ const Settings = () => {
                         <h2 id="player-data-title" class="text-xl font-semibold text-text">
                           プレイヤーデータ
                         </h2>
-                        <dl class="mt-5 divide-y divide-border border-y border-border">
+                        <dl class={`mt-2 ${SETTINGS_ROW_LIST_CLASS}`}>
                           <div class="flex justify-between gap-4 py-4">
                             <dt class="text-text-muted">連携状態</dt>
                             <dd class="font-medium text-text">
@@ -364,7 +365,7 @@ const Settings = () => {
                       <h2 id="account-title" class="text-xl font-semibold text-text">
                         アカウント
                       </h2>
-                      <dl class="mt-5 divide-y divide-border border-y border-border">
+                      <dl class={`mt-2 ${SETTINGS_ROW_LIST_CLASS}`}>
                         <div class="flex justify-between gap-4 py-4">
                           <dt class="text-text-muted">ユーザーネーム</dt>
                           <dd class="font-sans font-medium text-text">
@@ -391,8 +392,8 @@ const Settings = () => {
                           }
                         />
                       </Show>
-                      <div class="mt-10 border-t border-danger-border pt-6">
-                        <h3 class="font-semibold text-danger">退会</h3>
+                      <div class={SETTINGS_SUBSECTION_CLASS}>
+                        <h3 class="text-lg font-semibold text-danger">退会</h3>
                         <p class="mt-1 text-sm text-text-muted">
                           アカウントと関連データを完全に削除します。
                         </p>

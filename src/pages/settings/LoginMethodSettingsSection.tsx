@@ -21,6 +21,11 @@ import {
 import { syncXAccountFromResult } from '../../usecases/auth/syncXAccount'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { LOGIN_METHOD_COPY, LOGIN_METHOD_IN_USE_ERROR_CODE } from './AccountSettings.constants'
+import {
+  SETTINGS_ROW_LIST_CLASS,
+  SETTINGS_SUBSECTION_CLASS,
+  SETTINGS_SUBSECTION_TITLE_CLASS,
+} from './settingsStyles'
 
 /** ログイン方法欄に表示する連携アカウントと、その再読み込み */
 export type LoginMethodSettingsSectionProps = {
@@ -129,13 +134,13 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
     <section
       aria-labelledby="login-method-title"
       aria-busy={pendingKind() !== undefined}
-      class="mt-10 border-t border-border pt-6"
+      class={SETTINGS_SUBSECTION_CLASS}
     >
-      <h3 id="login-method-title" class="flex items-center gap-2 font-semibold text-text">
+      <h3 id="login-method-title" class={SETTINGS_SUBSECTION_TITLE_CLASS}>
         <KeyRound aria-hidden="true" class="h-5 w-5" />
         {LOGIN_METHOD_COPY.title}
       </h3>
-      <ul class="mt-4 max-w-md divide-y divide-border border-y border-border">
+      <ul class={`mt-2 max-w-md ${SETTINGS_ROW_LIST_CLASS}`}>
         <For each={AUTH_PROVIDERS}>
           {(provider) => {
             const account = () => findLinkedAuthAccount(props.accounts, provider.kind)
