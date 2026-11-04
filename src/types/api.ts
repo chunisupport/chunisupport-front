@@ -206,6 +206,10 @@ export type ErrorCode =
   | 'friend_not_found'
   | 'friend_score_comparison_unavailable'
   | 'favorite_song_limit_exceeded'
+  // X アカウント連携
+  | 'x_account_not_linked'
+  | 'invalid_x_credentials'
+  | 'x_api_unavailable'
   // 入力検証
   | 'username_empty'
   | 'username_too_short'
@@ -308,6 +312,9 @@ export const errorMessages: Record<ErrorCode, string> = {
   friend_not_found: '承認済みフレンドが見つかりません',
   friend_score_comparison_unavailable: 'プレイヤーデータが未連携のため比較できません',
   favorite_song_limit_exceeded: 'お気に入り楽曲の上限件数に達しています',
+  x_account_not_linked: 'Xが連携されていません',
+  invalid_x_credentials: 'Xの認証情報を確認できませんでした',
+  x_api_unavailable: 'Xからアカウント情報を取得できませんでした',
   username_empty: 'ユーザーネームが空です',
   username_too_short: 'ユーザーネームは5文字以上である必要があります',
   username_too_long: 'ユーザーネームは50文字以内である必要があります',
@@ -953,6 +960,26 @@ export interface UserDTO {
   account_type: AccountType
   is_private: boolean
   last_score_update: string | null
+}
+
+/** API に保存された、連携中の X アカウントの識別情報 */
+export interface XAccountDTO {
+  /** X の数値ユーザーID。Firebase の `twitter.com` プロバイダのユーザーIDと照合する */
+  id: string
+  /** `@` を除いた X のユーザー名 */
+  username: string
+}
+
+/** GET /internal/me/x-account のレスポンス */
+export interface XAccountResponse {
+  /** 一度も取得していない場合は null */
+  x_account: XAccountDTO | null
+}
+
+/** PUT /internal/me/x-account に送る、X ログイン直後の OAuth 1.0a アクセストークン */
+export interface XAccountSyncRequest {
+  access_token: string
+  access_token_secret: string
 }
 
 /** フレンド・申請一覧に表示する相手ユーザー概要 */

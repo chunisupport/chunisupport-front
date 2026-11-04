@@ -4,22 +4,26 @@ import test from 'node:test'
 import {
   canUnlinkAuthProvider,
   type LinkedAuthAccount,
+  resolveAuthAccountName,
   resolveAuthAccountSummary,
   resolveReauthProviderKind,
 } from './authProviders.ts'
 
 const googleAccount: LinkedAuthAccount = {
   providerId: 'google.com',
+  uid: 'google-uid',
   displayName: 'Alice',
   email: 'alice@example.com',
 }
 const xAccount: LinkedAuthAccount = {
   providerId: 'twitter.com',
+  uid: '1234567890',
   displayName: 'アリス',
   email: null,
 }
 const passwordAccount: LinkedAuthAccount = {
   providerId: 'password',
+  uid: 'staff@example.com',
   displayName: null,
   email: 'staff@example.com',
 }
@@ -121,4 +125,37 @@ test('未連携のプロバイダは連携を解除できないこと', () => {
 
   // Then
   assert.equal(result, false)
+})
+
+test('保存済みのXアカウントが連携中のアカウントと一致する場合は@IDで表示すること', () => {
+  // Given
+  const savedXAccount = { id: '1234567890', username: 'alice_x' }
+
+  // When
+  const result = resolveAuthAccountName(xAccount, 'x', savedXAccount)
+
+  // Then
+  assert.equal(result, '@alice_x')
+})
+
+test('保存済みのXアカウントが別のアカウントの場合は表示名で表示すること', () => {
+  // Given
+  const staleXAccount = { id: '999', username: 'previous_x' }
+
+  // When
+  const result = resolveAuthAccountName(xAccount, 'x', staleXAccount)
+
+  // Then
+  assert.equal(result, 'アリス')
+})
+
+test('Xアカウントを保存していない場合は表示名で表示すること', () => {
+  // Given
+  const savedXAccount = null
+
+  // When
+  const result = resolveAuthAccountName(xAccount, 'x', savedXAccount)
+
+  // Then
+  assert.equal(result, 'アリス')
 })

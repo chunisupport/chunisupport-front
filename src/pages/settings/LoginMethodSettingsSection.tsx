@@ -1,7 +1,8 @@
 import { linkWithPopup, type User, unlink } from 'firebase/auth'
 import { KeyRound } from 'lucide-solid'
-import { createSignal, For, Show } from 'solid-js'
+import { createResource, createSignal, For, Show } from 'solid-js'
 
+import { fetchXAccount } from '../../api/xAccount'
 import { AuthProviderIcon } from '../../components/auth/AuthProviderIcon'
 import { AppButton } from '../../components/common/AppButton'
 import { showSuccessToast } from '../../components/common/AppToast'
@@ -17,6 +18,7 @@ import {
   type LinkedAuthAccount,
   resolveAuthAccountName,
 } from '../../usecases/auth/authProviders'
+import { syncXAccountFromResult } from '../../usecases/auth/syncXAccount'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { LOGIN_METHOD_COPY, LOGIN_METHOD_IN_USE_ERROR_CODE } from './AccountSettings.constants'
 
@@ -46,6 +48,10 @@ type LoginMethodError = {
 export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProps) => {
   const [pendingKind, setPendingKind] = createSignal<AuthProviderKind>()
   const [operationError, setOperationError] = createSignal<LoginMethodError>()
+  // @ID は表示を補うだけなので、取得に失敗しても表示名で代用して欄全体は表示する。
+  const [xAccount, { mutate: mutateXAccount }] = createResource(() =>
+    fetchXAccount().catch(() => null)
+  )
 
   /**
    * 連携・解除を1件ずつ実行する。成功はトーストで知らせ、失敗は対象の行に表示する。
@@ -83,6 +89,7 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
 
   /**
    * ポップアップで認証したアカウントを、ログイン中のユーザーへ連携する。
+   * X を連携した場合は、連携直後にしか得られないトークンで @ID も取得して表示に反映する。
    *
    * @param provider - 連携する認証プロバイダ。
    * @returns 処理完了後に解決されるPromise。
@@ -90,7 +97,11 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
   const handleLink = (provider: AuthProviderDefinition): Promise<void> =>
     runOperation(
       provider,
-      (user) => linkWithPopup(user, createAuthProvider(provider.kind)),
+      async (user) => {
+        const result = await linkWithPopup(user, createAuthProvider(provider.kind))
+        const syncedXAccount = await syncXAccountFromResult(result)
+        if (syncedXAccount) mutateXAccount(syncedXAccount)
+      },
       LOGIN_METHOD_COPY.linkSuccess(provider.label),
       (error) => {
         if ((error as { code?: unknown } | null)?.code === LOGIN_METHOD_IN_USE_ERROR_CODE) {
@@ -128,6 +139,11 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
         <For each={AUTH_PROVIDERS}>
           {(provider) => {
             const account = () => findLinkedAuthAccount(props.accounts, provider.kind)
+            // Show の子関数は一度しか評価されないため、後から読み込まれる @ID を反映できるよう外で計算する。
+            const accountName = () => {
+              const linked = account()
+              return linked && resolveAuthAccountName(linked, provider.kind, xAccount())
+            }
             const isPending = () => pendingKind() === provider.kind
             const rowError = () => {
               const current = operationError()
@@ -142,9 +158,7 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
                     <div class="min-w-0">
                       <p class="font-medium text-text">{provider.label}</p>
                       <p class="break-all font-sans text-sm text-text-muted">
-                        <Show when={account()} fallback={LOGIN_METHOD_COPY.notLinked}>
-                          {(linked) => resolveAuthAccountName(linked(), provider.kind)}
-                        </Show>
+                        {accountName() ?? LOGIN_METHOD_COPY.notLinked}
                       </p>
                     </div>
                   </div>

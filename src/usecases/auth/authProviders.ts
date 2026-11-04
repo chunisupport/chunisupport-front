@@ -3,11 +3,14 @@ import {
   AUTH_PROVIDERS,
   type AuthProviderKind,
 } from '../../constants/authProviders.ts'
+import type { XAccountDTO } from '../../types/api.ts'
 
 /** Firebase ユーザーに連携された認証プロバイダのアカウント情報 */
 export type LinkedAuthAccount = {
   /** Firebase Authentication の providerId */
   providerId: string
+  /** プロバイダ側のユーザーID。X では数値のユーザーID */
+  uid: string
   /** プロバイダ側の表示名 */
   displayName: string | null
   /** プロバイダ側のメールアドレス */
@@ -41,19 +44,25 @@ export const findLinkedAuthAccount = (
 
 /**
  * 連携アカウントを利用者が見分けられる名前を取得する。
- * Google はメールアドレス、X は表示名で見分けるのが一般的なため、優先する項目を変える。
+ * Google はメールアドレス、X は @ID で見分けるのが一般的なため、優先する項目を変える。
+ * X の @ID は Firebase の連携情報に含まれないため、API に保存された値を使う。
+ * 連携し直した後などに古い値が残っている場合があるため、数値IDが現在の連携先と一致するときだけ使い、
+ * それ以外は表示名で代用する。
  *
  * @param account - 連携済みのアカウント。
  * @param kind - アカウントの認証プロバイダの種類。
- * @returns 表示名またはメールアドレス。どちらもない場合は空文字。
+ * @param xAccount - API に保存された X アカウント。未取得の場合は null または undefined。
+ * @returns @ID、表示名、メールアドレスのいずれか。どれもない場合は空文字。
  */
 export const resolveAuthAccountName = (
   account: LinkedAuthAccount,
-  kind: AuthProviderKind
-): string =>
-  (kind === 'google'
-    ? (account.email ?? account.displayName)
-    : (account.displayName ?? account.email)) ?? ''
+  kind: AuthProviderKind,
+  xAccount?: XAccountDTO | null
+): string => {
+  if (kind === 'google') return account.email ?? account.displayName ?? ''
+  if (xAccount?.id === account.uid) return `@${xAccount.username}`
+  return account.displayName ?? account.email ?? ''
+}
 
 /**
  * ログインに使った認証プロバイダのアカウント概要を取得する。

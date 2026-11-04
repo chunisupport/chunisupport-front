@@ -1,6 +1,6 @@
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
-import { signInWithPopup, signOut, type User } from 'firebase/auth'
+import { signInWithPopup, signOut, type User, type UserCredential } from 'firebase/auth'
 import { Check, Dot, Loader, X } from 'lucide-solid'
 import { createEffect, createSignal, For, onMount, Show } from 'solid-js'
 
@@ -21,6 +21,7 @@ import {
   resolveAuthAccountSummary,
 } from '../../../usecases/auth/authProviders'
 import { resolveRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
+import { syncXAccountFromResult, takeHeldXAuthResult } from '../../../usecases/auth/syncXAccount'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import {
@@ -51,6 +52,11 @@ const Register = () => {
   const [agreedToTerms, setAgreedToTerms] = createSignal(false)
   const [turnstileToken, setTurnstileToken] = createSignal('')
   const [turnstileResetKey, setTurnstileResetKey] = createSignal(0)
+  /**
+   * 認証プロバイダでの認証結果。X の @ID は登録完了後にしか保存できないため、登録まで保持する。
+   * ログイン画面から認証済みで来た場合は、ログイン画面で保持した結果を引き継ぐ。
+   */
+  let providerAuthResult: UserCredential | undefined
 
   // バリデーション用Signal
   const [isAlphanumeric, setIsAlphanumeric] = createSignal<boolean | null>(null)
@@ -104,7 +110,9 @@ const Register = () => {
   onMount(async () => {
     await auth.authStateReady()
     const firebaseUser = auth.currentUser
-    if (firebaseUser) showUsernameStep(firebaseUser)
+    if (!firebaseUser) return
+    providerAuthResult = takeHeldXAuthResult(firebaseUser.uid)
+    showUsernameStep(firebaseUser)
   })
 
   /**
@@ -119,6 +127,7 @@ const Register = () => {
     setErrorMessage('')
     try {
       const result = await signInWithPopup(auth, createAuthProvider(kind))
+      providerAuthResult = result
       const registrationEligibility = await resolveRegistrationEligibility(() =>
         fetchMe({ redirectOnUnauthorized: false })
       )
@@ -156,6 +165,7 @@ const Register = () => {
     setErrorMessage('')
     try {
       await postSignup({ username: username(), turnstile_token: verifiedToken })
+      if (providerAuthResult) void syncXAccountFromResult(providerAuthResult)
       await redirectAfterAuthentication(navigate)
     } catch (error) {
       resetTurnstile()
