@@ -1,4 +1,4 @@
-export type GoogleRegistrationEligibility = 'available' | 'registered'
+export type RegistrationEligibility = 'available' | 'registered'
 export type FetchCurrentUserForRegistration = () => Promise<unknown>
 
 /**
@@ -16,14 +16,14 @@ const isUnregisteredUserError = (error: unknown): boolean => {
 }
 
 /**
- * Google認証済みユーザーが新規登録可能か判定する。
+ * Firebase認証済みユーザーが新規登録可能か判定する。
  *
- * @param fetchCurrentUser - 現在のGoogle認証ユーザーに紐づくバックエンドユーザーを取得する関数。
+ * @param fetchCurrentUser - 現在のFirebase認証ユーザーに紐づくバックエンドユーザーを取得する関数。
  * @returns 未登録ならavailable、既存アカウントがあればregistered。
  */
-export const resolveGoogleRegistrationEligibility = async (
+export const resolveRegistrationEligibility = async (
   fetchCurrentUser: FetchCurrentUserForRegistration
-): Promise<GoogleRegistrationEligibility> => {
+): Promise<RegistrationEligibility> => {
   try {
     await fetchCurrentUser()
     return 'registered'

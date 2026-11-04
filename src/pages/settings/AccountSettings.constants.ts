@@ -17,6 +17,28 @@ export const USERNAME_CHANGE_COPY = {
   recentSignInExpired: '再認証の有効期限が切れています。もう一度お試しください。',
 } as const
 
+/** アカウント設定のログイン方法欄で使用する表示文言。 */
+export const LOGIN_METHOD_COPY = {
+  title: 'ログイン方法',
+  notLinked: '未連携',
+  link: '連携する',
+  linking: '連携中...',
+  unlink: '連携を解除',
+  unlinking: '解除中...',
+  linkFailure: '連携に失敗しました。',
+  unlinkFailure: '連携の解除に失敗しました。',
+  signedOut: 'ログインしていません。再度ログインしてください。',
+  /** 連携が完了した認証プロバイダを名指しする。 */
+  linkSuccess: (label: string) => `${label}を連携しました。`,
+  /** 連携を解除した認証プロバイダを名指しする。 */
+  unlinkSuccess: (label: string) => `${label}の連携を解除しました。`,
+  /** 別のユーザーが使っているアカウントを選んだ場合に、選び直してもらう。 */
+  alreadyInUse: (label: string) => `この${label}アカウントはすでに別のユーザーで使用されています。`,
+} as const
+
+/** 連携先のアカウントが別のユーザーで使われていることを表すFirebaseのエラーコード。 */
+export const LOGIN_METHOD_IN_USE_ERROR_CODE = 'auth/credential-already-in-use'
+
 /** アカウント設定のGoogleアカウント変更欄で使用する表示文言。 */
 export const GOOGLE_ACCOUNT_CHANGE_COPY = {
   title: 'Googleアカウントを変更',
@@ -40,6 +62,8 @@ export const GOOGLE_ACCOUNT_CHANGE_COPY = {
   /** 本人確認に使うアカウントを名指しして、選び直してもらう。 */
   userMismatch: (email: string) => `${email} を選択してください。`,
   recentSignInExpired: '有効期限が切れました。変更先をもう一度選択してください。',
+  /** 旧アカウントが削除されるため、連携していたXでのログインも使えなくなる。 */
+  xLinkRemoved: '変更するとXの連携は解除されます。',
 } as const
 
 /** Googleアカウント変更で、変更先を選び直す必要があるAPIエラーコード。 */

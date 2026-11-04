@@ -1,6 +1,7 @@
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import { Loading } from '../../../components'
-import { GoogleLoginForm } from '../../../components/auth/GoogleLoginForm'
+import { ProviderLoginForm } from '../../../components/auth/ProviderLoginForm'
+import { PROVIDER_LOGIN_ERROR_MESSAGE } from '../../../components/auth/providerLoginForm.constants'
 import { REGISTER_PATH } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
@@ -9,7 +10,7 @@ import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 
 /**
- * Google認証を利用するログイン画面を表示する。
+ * Google・X認証を利用するログイン画面を表示する。
  *
  * @returns ログインフォームの JSX 要素。
  */
@@ -22,7 +23,7 @@ const Login = () => {
   const { isCheckingAuth } = useRedirectIfAuthenticated(redirectParam())
 
   /**
-   * Google認証成功後に既存のログイン後遷移を実行する。
+   * 認証成功後に既存のログイン後遷移を実行する。
    *
    * @returns ログイン後のユーザー確認と遷移が完了した後に解決されるPromise。
    */
@@ -41,7 +42,7 @@ const Login = () => {
       return null
     }
 
-    return toUserFriendlyErrorMessage(error, 'Googleログインに失敗しました。')
+    return toUserFriendlyErrorMessage(error, PROVIDER_LOGIN_ERROR_MESSAGE)
   }
 
   useDocumentTitle('ログイン')
@@ -59,7 +60,7 @@ const Login = () => {
             </div>
 
             <div class="mb-6">
-              <GoogleLoginForm onSuccess={handleLoginSuccess} onFailure={handleLoginFailure} />
+              <ProviderLoginForm onSuccess={handleLoginSuccess} onFailure={handleLoginFailure} />
             </div>
 
             <div class="text-center">

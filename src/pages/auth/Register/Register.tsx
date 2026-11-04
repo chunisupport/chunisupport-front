@@ -1,25 +1,34 @@
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
-import { signInWithPopup, signOut } from 'firebase/auth'
+import { signInWithPopup, signOut, type User } from 'firebase/auth'
 import { Check, Dot, Loader, X } from 'lucide-solid'
-import { createEffect, createSignal, onMount, Show } from 'solid-js'
+import { createEffect, createSignal, For, onMount, Show } from 'solid-js'
 
 import { postSignup } from '../../../api/auth'
 import { fetchMe } from '../../../api/users'
 import { Loading, Turnstile } from '../../../components'
+import { AuthProviderIcon } from '../../../components/auth/AuthProviderIcon'
 import { AppButton } from '../../../components/common/AppButton'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { CF_TURNSTILE_SITE_KEY } from '../../../config'
+import { AUTH_PROVIDERS, type AuthProviderKind } from '../../../constants/authProviders'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
-import { auth, googleProvider } from '../../../lib/firebase'
+import { auth, createAuthProvider } from '../../../lib/firebase'
 import { clearAuthenticatedUser } from '../../../stores/authSession'
-import { resolveGoogleRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
+import {
+  type AuthAccountSummary,
+  resolveAuthAccountSummary,
+} from '../../../usecases/auth/authProviders'
+import { resolveRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import {
+  authAccountHeading,
   PRIVACY_POLICY_URL,
-  REGISTERED_GOOGLE_ACCOUNT_MESSAGE,
+  PROVIDER_AUTH_ERROR_MESSAGE,
+  providerContinueButtonLabel,
+  REGISTERED_ACCOUNT_MESSAGE,
   TERMS_URL,
   TURNSTILE_ERROR_MESSAGE,
   TURNSTILE_REQUIRED_MESSAGE,
@@ -27,14 +36,15 @@ import {
 } from './constants'
 
 /**
- * Google認証を利用する新規登録画面を表示する。
+ * Google・X認証を利用する新規登録画面を表示する。
  *
  * @returns 新規登録画面。
  */
 const Register = () => {
   const navigate = useNavigate()
-  const [step, setStep] = createSignal<'google_auth' | 'fill_username'>('google_auth')
-  const [googleEmail, setGoogleEmail] = createSignal('')
+  const [step, setStep] = createSignal<'provider_auth' | 'fill_username'>('provider_auth')
+  const [authAccount, setAuthAccount] = createSignal<AuthAccountSummary>()
+  const [authenticatingProvider, setAuthenticatingProvider] = createSignal<AuthProviderKind>()
   const [username, setUsername] = createSignal('')
   const [errorMessage, setErrorMessage] = createSignal('')
   const [isSubmitting, setIsSubmitting] = createSignal(false)
@@ -70,6 +80,17 @@ const Register = () => {
   const { isCheckingAuth } = useRedirectIfAuthenticated()
 
   /**
+   * 認証済みのFirebaseユーザーを表示し、ユーザー名入力へ進める。
+   *
+   * @param user - 認証済みのFirebaseユーザー。
+   * @returns なし。
+   */
+  const showUsernameStep = (user: User) => {
+    setAuthAccount(resolveAuthAccountSummary(user.providerData))
+    setStep('fill_username')
+  }
+
+  /**
    * Turnstile の応答トークンを破棄し、ウィジェットの再検証を要求する。
    *
    * @returns なし。
@@ -83,40 +104,37 @@ const Register = () => {
   onMount(async () => {
     await auth.authStateReady()
     const firebaseUser = auth.currentUser
-    if (firebaseUser) {
-      setGoogleEmail(firebaseUser.email ?? '')
-      setStep('fill_username')
-    }
+    if (firebaseUser) showUsernameStep(firebaseUser)
   })
 
-  // Step 1: Google認証してIDトークンを取得
   /**
-   * Step 1: Google認証後、既存アカウントでなければユーザー名入力へ進める。
+   * Step 1: 認証プロバイダで認証後、既存アカウントでなければユーザー名入力へ進める。
    *
+   * @param kind - 認証に使う認証プロバイダの種類。
    * @returns 処理完了後に解決されるPromise。
    */
-  const handleGoogleAuth = async () => {
+  const handleProviderAuth = async (kind: AuthProviderKind) => {
     setIsSubmitting(true)
+    setAuthenticatingProvider(kind)
     setErrorMessage('')
     try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const registrationEligibility = await resolveGoogleRegistrationEligibility(() =>
+      const result = await signInWithPopup(auth, createAuthProvider(kind))
+      const registrationEligibility = await resolveRegistrationEligibility(() =>
         fetchMe({ redirectOnUnauthorized: false })
       )
       if (registrationEligibility === 'registered') {
         await signOut(auth)
         clearAuthenticatedUser()
-        setGoogleEmail('')
-        setErrorMessage(REGISTERED_GOOGLE_ACCOUNT_MESSAGE)
+        setErrorMessage(REGISTERED_ACCOUNT_MESSAGE)
         return
       }
 
-      setGoogleEmail(result.user.email ?? '')
-      setStep('fill_username')
+      showUsernameStep(result.user)
     } catch (error) {
-      setErrorMessage(toUserFriendlyErrorMessage(error, 'Googleアカウントの認証に失敗しました。'))
+      setErrorMessage(toUserFriendlyErrorMessage(error, PROVIDER_AUTH_ERROR_MESSAGE))
     } finally {
       setIsSubmitting(false)
+      setAuthenticatingProvider(undefined)
     }
   }
 
@@ -200,56 +218,52 @@ const Register = () => {
               </p>
             </div>
 
-            {/* Step 1: Google認証 */}
-            <Show when={step() === 'google_auth'}>
+            {/* Step 1: 認証プロバイダで認証 */}
+            <Show when={step() === 'provider_auth'}>
               <div class="mb-6 text-center">
-                <p class="text-sm text-text-muted mb-4">Googleアカウントで新規登録します。</p>
                 {errorMessage() && (
                   <div class="mb-4 p-3 bg-danger-bg border border-danger-border rounded-md flex items-center text-left">
                     <X class="w-5 h-5 text-danger mr-2 shrink-0" />
                     <p class="text-sm text-danger">{errorMessage()}</p>
                   </div>
                 )}
-                <AppButton
-                  variant="surface"
-                  fullWidth
-                  class="gap-3 rounded-md"
-                  onClick={handleGoogleAuth}
-                  disabled={isSubmitting()}
-                >
-                  {isSubmitting() ? (
-                    <Loader class="w-5 h-5 animate-spin" />
-                  ) : (
-                    <svg class="w-5 h-5" viewBox="0 0 48 48" aria-hidden="true">
-                      <path
-                        fill="#EA4335"
-                        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                      />
-                      <path
-                        fill="#4285F4"
-                        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                      />
-                    </svg>
-                  )}
-                  <span class="text-sm font-medium text-text-muted">Googleで続ける</span>
-                </AppButton>
+                <div class="space-y-3">
+                  <For each={AUTH_PROVIDERS}>
+                    {(provider) => (
+                      <AppButton
+                        variant="surface"
+                        fullWidth
+                        class="gap-3 rounded-md"
+                        onClick={() => handleProviderAuth(provider.kind)}
+                        disabled={isSubmitting()}
+                      >
+                        {authenticatingProvider() === provider.kind ? (
+                          <Loader class="w-5 h-5 animate-spin" />
+                        ) : (
+                          <AuthProviderIcon kind={provider.kind} />
+                        )}
+                        <span class="text-sm font-medium text-text-muted">
+                          {providerContinueButtonLabel(provider.label)}
+                        </span>
+                      </AppButton>
+                    )}
+                  </For>
+                </div>
               </div>
             </Show>
 
             {/* Step 2: ユーザー名入力 */}
             <Show when={step() === 'fill_username'}>
               <div class="mb-6 text-left">
-                <div class="mb-4 p-3 bg-surface-hover border border-border-strong rounded-md text-sm text-text-muted">
-                  Googleアカウント: <span class="font-medium">{googleEmail()}</span>
-                </div>
+                <Show when={authAccount()}>
+                  {(account) => (
+                    <div class="mb-4 flex items-center gap-2 p-3 bg-surface-hover border border-border-strong rounded-md text-sm text-text-muted">
+                      <AuthProviderIcon kind={account().kind} class="h-4 w-4 shrink-0" />
+                      <span class="shrink-0">{authAccountHeading(account().label)}</span>
+                      <span class="min-w-0 break-all font-sans font-medium">{account().name}</span>
+                    </div>
+                  )}
+                </Show>
                 <TextField
                   class="mb-2"
                   validationState={

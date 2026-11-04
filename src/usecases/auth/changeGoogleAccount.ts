@@ -11,7 +11,8 @@ import { changeFirebaseAccount } from '../../api/settings'
 import { fetchMe } from '../../api/users'
 import { accountChangeGoogleProvider, auth, getAccountChangeAuth } from '../../lib/firebase'
 import { errorMessages } from '../../types/api'
-import { resolveGoogleRegistrationEligibility } from './registrationEligibility'
+import { findLinkedAuthAccount, type LinkedAuthAccount } from './authProviders'
+import { resolveRegistrationEligibility } from './registrationEligibility'
 
 /** 変更先として選択されたGoogleアカウント */
 export type GoogleAccountChangeTarget = {
@@ -23,14 +24,22 @@ export type GoogleAccountChangeTarget = {
 
 /**
  * ログイン中のアカウントがGoogleアカウント変更を利用できるかを判定する。
- * 再認証をGoogleで行うため、メール／パスワード専用アカウントでは利用できない。
+ * 再認証をGoogleで行うため、Googleを連携していないアカウントでは利用できない。
  *
- * @returns Googleでログインしている場合は true。
+ * @param accounts - ログイン中ユーザーに連携された認証プロバイダのアカウント。
+ * @returns Googleを連携している場合は true。
  */
-export const canChangeGoogleAccount = (): boolean =>
-  auth.currentUser?.providerData.some(
-    (provider) => provider.providerId === GoogleAuthProvider.PROVIDER_ID
-  ) ?? false
+export const canChangeGoogleAccount = (accounts: readonly LinkedAuthAccount[]): boolean =>
+  findLinkedAuthAccount(accounts, 'google') !== undefined
+
+/**
+ * ログイン中のユーザーに連携されたGoogleアカウントのメールアドレスを取得する。
+ * X で登録して Google を後から連携した場合、ユーザー全体のメールは Google のものとは限らない。
+ *
+ * @returns Googleアカウントのメールアドレス。取得できない場合は空文字。
+ */
+export const getCurrentGoogleEmail = (): string =>
+  findLinkedAuthAccount(auth.currentUser?.providerData ?? [], 'google')?.email ?? ''
 
 /**
  * エラーコード付きのエラーを作成する。
@@ -57,7 +66,7 @@ export const selectGoogleAccountChangeTarget = async (): Promise<GoogleAccountCh
       throw createCodedError('firebase_account_unchanged')
     }
     // 変更先のトークンで照会し、ログイン中のセッションには影響させない。
-    const eligibility = await resolveGoogleRegistrationEligibility(async () =>
+    const eligibility = await resolveRegistrationEligibility(async () =>
       fetchMe({ redirectOnUnauthorized: false, idToken: await result.user.getIdToken() })
     )
     if (eligibility === 'registered') {

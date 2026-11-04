@@ -5,9 +5,9 @@ const DEFAULT_USER_FRIENDLY_ERROR_MESSAGE =
 
 const FIREBASE_AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/account-exists-with-different-credential':
-    'このGoogleアカウントは別の認証方法ですでに使用されています。',
-  'auth/cancelled-popup-request': 'Google認証がキャンセルされました。もう一度お試しください。',
-  'auth/credential-already-in-use': 'このGoogleアカウントはすでに使用されています。',
+    'このメールアドレスは別のログイン方法で使用されています。元の方法でログインしてください。',
+  'auth/cancelled-popup-request': '認証がキャンセルされました。もう一度お試しください。',
+  'auth/credential-already-in-use': 'このアカウントはすでに別のユーザーで使用されています。',
   'auth/email-already-in-use': 'このメールアドレスはすでに使用されています。',
   'auth/internal-error': DEFAULT_USER_FRIENDLY_ERROR_MESSAGE,
   'auth/invalid-credential': '認証情報が無効です。もう一度ログインしてください。',
@@ -15,8 +15,9 @@ const FIREBASE_AUTH_ERROR_MESSAGES: Record<string, string> = {
     '通信に失敗しました。ネットワーク接続を確認してもう一度お試しください。',
   'auth/operation-not-allowed': 'この認証方法は現在利用できません。',
   'auth/popup-blocked': 'ポップアップがブロックされました。ブラウザの設定を確認してください。',
-  'auth/popup-closed-by-user': 'Google認証がキャンセルされました。',
-  'auth/requires-recent-login': '再認証が必要です。もう一度Googleログインを行ってください。',
+  'auth/popup-closed-by-user': '認証がキャンセルされました。',
+  'auth/provider-already-linked': 'このログイン方法はすでに連携されています。',
+  'auth/requires-recent-login': '再認証が必要です。もう一度ログインを行ってください。',
   'auth/too-many-requests': 'リクエストが多すぎます。しばらく待ってから再試行してください。',
   'auth/user-disabled': 'このアカウントは利用できません。',
   'auth/user-not-found': '認証情報が無効です。もう一度ログインしてください。',

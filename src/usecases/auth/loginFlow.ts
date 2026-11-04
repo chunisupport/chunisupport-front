@@ -62,7 +62,7 @@ export const normalizeRedirectParam = (
 ): string | undefined => (Array.isArray(redirect) ? redirect[0] : redirect)
 
 /**
- * Google認証直後のバックエンドログイン失敗が未登録ユーザー扱いか判定する。
+ * Firebase認証直後のバックエンドログイン失敗が未登録ユーザー扱いか判定する。
  *
  * @param error - ログイン処理で発生した不明なエラー値。
  * @returns 通常の新規登録画面へ進めるエラーの場合はtrue。

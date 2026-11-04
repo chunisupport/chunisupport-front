@@ -11,10 +11,12 @@ import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
 import { AppSwitch } from '../../components/common/AppSwitch'
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../components/common/filterStyles'
+import { createLinkedAuthAccounts } from '../../hooks/createLinkedAuthAccounts'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { auth } from '../../lib/firebase'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { authSession, clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession'
+import { findLinkedAuthAccount } from '../../usecases/auth/authProviders'
 import { canChangeGoogleAccount } from '../../usecases/auth/changeGoogleAccount'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { clearUsernameChangeCache } from '../../usecases/cache/clearUsernameChangeCache'
@@ -23,6 +25,7 @@ import { ACCOUNT_DELETE_COPY } from './AccountSettings.constants'
 import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
 import { DataTransferSettingsSection } from './DataTransferSettingsSection'
 import { GoogleAccountChangeForm } from './GoogleAccountChangeForm'
+import { LoginMethodSettingsSection } from './LoginMethodSettingsSection'
 import { PLAYER_DATA_DELETE_COPY } from './PlayerDataSettings.constants'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
@@ -54,6 +57,7 @@ const Settings = () => {
   const [accountDeleteDialogOpen, setAccountDeleteDialogOpen] = createSignal(false)
   const [accountDeleting, setAccountDeleting] = createSignal(false)
   const [accountDeleteError, setAccountDeleteError] = createSignal('')
+  const linkedAuthAccounts = createLinkedAuthAccounts()
 
   useDocumentTitle('設定')
 
@@ -376,8 +380,16 @@ const Settings = () => {
                         currentUsername={loadedSummary().me.username}
                         onChanged={handleUsernameChanged}
                       />
-                      <Show when={canChangeGoogleAccount()}>
-                        <GoogleAccountChangeForm />
+                      <LoginMethodSettingsSection
+                        accounts={linkedAuthAccounts.accounts()}
+                        onChanged={linkedAuthAccounts.refresh}
+                      />
+                      <Show when={canChangeGoogleAccount(linkedAuthAccounts.accounts())}>
+                        <GoogleAccountChangeForm
+                          xLinked={
+                            findLinkedAuthAccount(linkedAuthAccounts.accounts(), 'x') !== undefined
+                          }
+                        />
                       </Show>
                       <div class="mt-10 border-t border-danger-border pt-6">
                         <h3 class="font-semibold text-danger">退会</h3>

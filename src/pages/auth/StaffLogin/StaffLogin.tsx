@@ -15,7 +15,7 @@ import { isUnregisteredLoginError, normalizeRedirectParam } from '../../../useca
 import { loginWithPassword } from '../../../usecases/auth/loginWithPassword'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
-import { STAFF_LOGIN_COPY, STAFF_LOGIN_INPUT_CLASS } from './constants'
+import { STAFF_LOGIN_COPY, STAFF_LOGIN_INPUT_CLASS, STAFF_LOGIN_METHOD_ID } from './constants'
 
 /**
  * 公開導線を持たないメール・パスワード認証画面を表示する。
@@ -84,10 +84,9 @@ const StaffLogin = () => {
         </div>
         <Show when={!isCheckingAuth()} fallback={<Loading />}>
           <AuthenticationForm
-            login={login}
+            methods={[{ id: STAFF_LOGIN_METHOD_ID, label: STAFF_LOGIN_COPY.submit, login }]}
             onSuccess={handleSuccess}
             onFailure={handleFailure}
-            submitLabel={STAFF_LOGIN_COPY.submit}
             submittingLabel={STAFF_LOGIN_COPY.submitting}
             fallbackErrorMessage={STAFF_LOGIN_COPY.error}
           >

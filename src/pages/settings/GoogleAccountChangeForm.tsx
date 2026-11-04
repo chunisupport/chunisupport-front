@@ -9,6 +9,7 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
+  TriangleAlert,
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from 'solid-js'
@@ -20,6 +21,7 @@ import {
   cancelGoogleAccountChange,
   changeGoogleAccount,
   type GoogleAccountChangeTarget,
+  getCurrentGoogleEmail,
   selectGoogleAccountChangeTarget,
 } from '../../usecases/auth/changeGoogleAccount'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
@@ -92,11 +94,15 @@ const WizardStepIndicator: Component<{ current: WizardStep }> = (props) => {
  * 本人確認は別ダイアログで認証に使うアカウントを示してから始め、取り違えを防ぐ。
  * 各認証を別々のクリックで開始するのは、ポップアップがブロックされないようにするため。
  *
+ * @param props - ログイン中ユーザーがXも連携しているかどうか。
  * @returns Googleアカウント変更欄とウィザードダイアログ。
  */
-export const GoogleAccountChangeForm: Component = () => {
+export const GoogleAccountChangeForm: Component<{
+  /** Xも連携している場合は、変更で連携が外れることを知らせる */
+  xLinked: boolean
+}> = (props) => {
   const navigate = useNavigate()
-  const [currentEmail, setCurrentEmail] = createSignal(auth.currentUser?.email ?? '')
+  const [currentEmail, setCurrentEmail] = createSignal(getCurrentGoogleEmail())
   const [isOpen, setIsOpen] = createSignal(false)
   const [isReauthOpen, setIsReauthOpen] = createSignal(false)
   const [target, setTarget] = createSignal<GoogleAccountChangeTarget>()
@@ -215,7 +221,7 @@ export const GoogleAccountChangeForm: Component = () => {
         return
       }
       setIsReauthOpen(false)
-      setCurrentEmail(auth.currentUser?.email ?? selectedTarget.email)
+      setCurrentEmail(getCurrentGoogleEmail() || selectedTarget.email)
       setIsDone(true)
       // 変更先の認証情報は使用済みのため、保持し続けない。
       setTarget(undefined)
@@ -259,6 +265,12 @@ export const GoogleAccountChangeForm: Component = () => {
           <dd class="break-all font-sans text-text">{currentEmail()}</dd>
         </div>
       </dl>
+      <Show when={props.xLinked}>
+        <p class="mt-2 flex items-center gap-1 text-sm text-warning">
+          <TriangleAlert aria-hidden="true" class="h-4 w-4 shrink-0" />
+          {GOOGLE_ACCOUNT_CHANGE_COPY.xLinkRemoved}
+        </p>
+      </Show>
 
       <Dialog open={isOpen()} onOpenChange={handleOpenChange}>
         <Dialog.Trigger

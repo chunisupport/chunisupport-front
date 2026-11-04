@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from '@solidjs/router'
 import { signOut } from 'firebase/auth'
 
-import { GoogleLoginForm } from '../../components/auth/GoogleLoginForm'
+import { ProviderLoginForm } from '../../components/auth/ProviderLoginForm'
 import { MAINTENANCE_STAFF_ONLY_ERROR_MESSAGE } from '../../constants/maintenance'
 import { MAINTENANCE_LOGIN_PAGE_TITLE } from '../../constants/pageTitles'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -41,7 +41,7 @@ const clearRejectedStaffSession = async (): Promise<void> => {
 }
 
 /**
- * ADMINとEDITORだけが利用できる非公開導線のGoogleログイン画面を表示する。
+ * ADMINとEDITORだけが利用できる非公開導線のGoogle・Xログイン画面を表示する。
  *
  * @returns スタッフログインフォームを含むページ要素。
  */
@@ -102,7 +102,7 @@ const MaintenanceLoginPage = () => {
           <p class="mt-2 text-sm text-text-muted">{MAINTENANCE_LOGIN_DESCRIPTION}</p>
         </div>
 
-        <GoogleLoginForm onSuccess={handleLoginSuccess} onFailure={handleLoginFailure} />
+        <ProviderLoginForm onSuccess={handleLoginSuccess} onFailure={handleLoginFailure} />
       </div>
     </main>
   )
