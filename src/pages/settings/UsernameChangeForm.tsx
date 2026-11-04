@@ -5,7 +5,7 @@ import { createSignal } from 'solid-js'
 import { reauthenticateAndGetToken } from '../../api/reauthenticate'
 import { updateUsername } from '../../api/settings'
 import { AppButton } from '../../components/common/AppButton'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
@@ -72,10 +72,10 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
       setUsernameError('')
       setUsernameSuccess(USERNAME_CHANGE_COPY.success)
     } catch (caught) {
+      // 再認証のポップアップを自分で閉じただけなら、エラーとして扱わない。
+      if (isAuthPopupClosedError(caught)) return
       const apiError = caught as Error & { code?: string }
-      if (apiError.code === 'auth/popup-closed-by-user') {
-        setUsernameError(USERNAME_CHANGE_COPY.popupClosed)
-      } else if (apiError.code === 'auth/user-mismatch') {
+      if (apiError.code === 'auth/user-mismatch') {
         setUsernameError(USERNAME_CHANGE_COPY.userMismatch)
       } else if (apiError.code === 'recent_sign_in_required') {
         setUsernameError(USERNAME_CHANGE_COPY.recentSignInExpired)

@@ -12,7 +12,6 @@ export const USERNAME_CHANGE_COPY = {
   unchanged: '現在と異なるユーザーネームを入力してください。',
   success: 'ユーザーネームを変更しました。',
   failure: 'ユーザーネームの変更に失敗しました。',
-  popupClosed: '再認証がキャンセルされました。',
   userMismatch: 'ログイン中のアカウントと異なるアカウントで再認証されました。',
   recentSignInExpired: '再認証の有効期限が切れています。もう一度お試しください。',
 } as const
@@ -57,8 +56,6 @@ export const GOOGLE_ACCOUNT_CHANGE_COPY = {
   close: '閉じる',
   success: 'Googleアカウントを変更しました。',
   failure: 'Googleアカウントの変更に失敗しました。',
-  selectionClosed: 'Googleアカウントの選択がキャンセルされました。',
-  popupClosed: '再認証がキャンセルされました。',
   /** 本人確認に使うアカウントを名指しして、選び直してもらう。 */
   userMismatch: (email: string) => `${email} を選択してください。`,
   recentSignInExpired: '有効期限が切れました。変更先をもう一度選択してください。',
@@ -81,4 +78,7 @@ export const ACCOUNT_DELETE_COPY = {
   cancel: 'キャンセル',
   confirm: '退会する',
   deleting: '処理中...',
+  userMismatch: 'ログイン中のアカウントと異なるアカウントで再認証されました。',
+  recentSignInExpired: '再認証の有効期限が切れています。もう一度お試しください。',
+  failure: '退会処理に失敗しました。',
 } as const

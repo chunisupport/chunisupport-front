@@ -25,7 +25,7 @@ import {
   selectGoogleAccountChangeTarget,
 } from '../../usecases/auth/changeGoogleAccount'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   GOOGLE_ACCOUNT_CHANGE_COPY,
   GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES,
@@ -181,12 +181,8 @@ export const GoogleAccountChangeForm: Component<{
     try {
       setTarget(await selectGoogleAccountChangeTarget())
     } catch (caught) {
-      const code = (caught as { code?: string }).code
-      if (code === 'auth/popup-closed-by-user') {
-        // 選び直しを途中でやめただけなら、選択済みの変更先はそのまま残す。
-        setError(GOOGLE_ACCOUNT_CHANGE_COPY.selectionClosed)
-        return
-      }
+      // 選び直しを途中でやめただけなら、エラーは出さず選択済みの変更先もそのまま残す。
+      if (isAuthPopupClosedError(caught)) return
       setTarget(undefined)
       setError(toUserFriendlyErrorMessage(caught, GOOGLE_ACCOUNT_CHANGE_COPY.failure))
       await cancelGoogleAccountChange().catch(() => undefined)
@@ -239,9 +235,9 @@ export const GoogleAccountChangeForm: Component<{
         await cancelGoogleAccountChange().catch(() => undefined)
         return
       }
-      if (code === 'auth/popup-closed-by-user') {
-        setReauthError(GOOGLE_ACCOUNT_CHANGE_COPY.popupClosed)
-      } else if (code === 'auth/user-mismatch' || code === 'invalid_credentials') {
+      // 本人確認のポップアップを自分で閉じただけなら、エラーとして扱わない。
+      if (isAuthPopupClosedError(caught)) return
+      if (code === 'auth/user-mismatch' || code === 'invalid_credentials') {
         setReauthError(GOOGLE_ACCOUNT_CHANGE_COPY.userMismatch(currentEmail()))
       } else {
         setReauthError(toUserFriendlyErrorMessage(caught, GOOGLE_ACCOUNT_CHANGE_COPY.failure))

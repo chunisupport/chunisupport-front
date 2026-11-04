@@ -20,7 +20,7 @@ import { findLinkedAuthAccount } from '../../usecases/auth/authProviders'
 import { canChangeGoogleAccount } from '../../usecases/auth/changeGoogleAccount'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { clearUsernameChangeCache } from '../../usecases/cache/clearUsernameChangeCache'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { ACCOUNT_DELETE_COPY } from './AccountSettings.constants'
 import { ApiTokenSettingsSection } from './ApiTokenSettingsSection'
 import { DataTransferSettingsSection } from './DataTransferSettingsSection'
@@ -227,19 +227,29 @@ const Settings = () => {
       clearAuthenticatedUser()
       navigate('/login', { replace: true })
     } catch (error) {
+      // 再認証のポップアップを自分で閉じただけなら、エラーとして扱わない。
+      if (isAuthPopupClosedError(error)) return
       const err = error as Error & { code?: string }
-      if (err.code === 'auth/popup-closed-by-user') {
-        setAccountDeleteError('再認証がキャンセルされました。')
-      } else if (err.code === 'auth/user-mismatch') {
-        setAccountDeleteError('ログイン中のアカウントと異なるアカウントで再認証されました。')
+      if (err.code === 'auth/user-mismatch') {
+        setAccountDeleteError(ACCOUNT_DELETE_COPY.userMismatch)
       } else if (err.code === 'recent_sign_in_required') {
-        setAccountDeleteError('再認証の有効期限が切れています。もう一度お試しください。')
+        setAccountDeleteError(ACCOUNT_DELETE_COPY.recentSignInExpired)
       } else {
-        setAccountDeleteError(toUserFriendlyErrorMessage(error, '退会処理に失敗しました。'))
+        setAccountDeleteError(toUserFriendlyErrorMessage(error, ACCOUNT_DELETE_COPY.failure))
       }
     } finally {
       setAccountDeleting(false)
     }
+  }
+
+  /**
+   * 退会確認ダイアログの開閉を反映する。閉じたときは前回のエラーを持ち越さない。
+   *
+   * @param open - ダイアログを開く場合は true。
+   */
+  const handleAccountDeleteDialogOpenChange = (open: boolean): void => {
+    setAccountDeleteDialogOpen(open)
+    if (!open) setAccountDeleteError('')
   }
 
   return (
@@ -397,9 +407,6 @@ const Settings = () => {
                         <p class="mt-1 text-sm text-text-muted">
                           アカウントと関連データを完全に削除します。
                         </p>
-                        <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                          {accountDeleteError()}
-                        </p>
                         <AppButton
                           variant="danger"
                           class="mt-4"
@@ -455,7 +462,7 @@ const Settings = () => {
 
       <AppConfirmDialog
         open={accountDeleteDialogOpen()}
-        onOpenChange={setAccountDeleteDialogOpen}
+        onOpenChange={handleAccountDeleteDialogOpenChange}
         title={ACCOUNT_DELETE_COPY.title}
         description={ACCOUNT_DELETE_COPY.description}
         cancelLabel={ACCOUNT_DELETE_COPY.cancel}

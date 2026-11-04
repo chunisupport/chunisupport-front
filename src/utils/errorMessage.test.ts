@@ -8,7 +8,35 @@ test('メール認証のアカウント有無とパスワード不一致は同�
   assert.ok(messages.every((message) => !message.includes('secret')))
 })
 
-import { toUserFriendlyErrorMessage } from './errorMessage'
+import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from './errorMessage'
+
+test('認証ポップアップを閉じたエラーは中断として判定されること', () => {
+  // Given
+  const error = Object.assign(new Error('popup closed'), { code: 'auth/popup-closed-by-user' })
+
+  // When
+  const result = isAuthPopupClosedError(error)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('ポップアップ以外の認証エラーやコードのない値は中断として判定されないこと', () => {
+  // Given
+  const values: unknown[] = [
+    { code: 'auth/user-mismatch' },
+    { code: 'auth/cancelled-popup-request' },
+    new Error('no code'),
+    'auth/popup-closed-by-user',
+    null,
+  ]
+
+  // When
+  const results = values.map(isAuthPopupClosedError)
+
+  // Then
+  assert.deepEqual(results, [false, false, false, false, false])
+})
 
 test('APIエラーコードがある場合は対応するユーザー向け文言に変換されること', () => {
   // Given

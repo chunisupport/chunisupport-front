@@ -1,5 +1,8 @@
 import { type ErrorCode, errorMessages } from '../types/api'
 
+/** ユーザーが認証ポップアップを閉じたときに Firebase Auth が返すエラーコード。 */
+const AUTH_POPUP_CLOSED_ERROR_CODE = 'auth/popup-closed-by-user'
+
 const DEFAULT_USER_FRIENDLY_ERROR_MESSAGE =
   '予期せぬエラーが発生しました。時間をおいて再度お試しください。'
 
@@ -15,7 +18,7 @@ const FIREBASE_AUTH_ERROR_MESSAGES: Record<string, string> = {
     '通信に失敗しました。ネットワーク接続を確認してもう一度お試しください。',
   'auth/operation-not-allowed': 'この認証方法は現在利用できません。',
   'auth/popup-blocked': 'ポップアップがブロックされました。ブラウザの設定を確認してください。',
-  'auth/popup-closed-by-user': '認証がキャンセルされました。',
+  [AUTH_POPUP_CLOSED_ERROR_CODE]: '認証がキャンセルされました。',
   'auth/provider-already-linked': 'このログイン方法はすでに連携されています。',
   'auth/requires-recent-login': '再認証が必要です。もう一度ログインを行ってください。',
   'auth/too-many-requests': 'リクエストが多すぎます。しばらく待ってから再試行してください。',
@@ -53,6 +56,16 @@ type ErrorLike = {
  */
 const toErrorLike = (error: unknown): ErrorLike | null =>
   typeof error === 'object' && error !== null ? (error as ErrorLike) : null
+
+/**
+ * ユーザー自身が認証ポップアップを閉じて操作をやめたエラーかを判定する。
+ * 本人の意思による中断のため、呼び出し側ではエラー表示せずに元の状態へ戻す用途を想定する。
+ *
+ * @param error - catch で受け取った任意のエラー値。
+ * @returns 認証ポップアップを閉じたエラーなら true。
+ */
+export const isAuthPopupClosedError = (error: unknown): boolean =>
+  toErrorLike(error)?.code === AUTH_POPUP_CLOSED_ERROR_CODE
 
 /**
  * APIエラーコードに対応するユーザー向けメッセージを取得する。

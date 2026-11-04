@@ -19,7 +19,7 @@ import {
   resolveAuthAccountName,
 } from '../../usecases/auth/authProviders'
 import { syncXAccountFromResult } from '../../usecases/auth/syncXAccount'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { LOGIN_METHOD_COPY, LOGIN_METHOD_IN_USE_ERROR_CODE } from './AccountSettings.constants'
 import {
   SETTINGS_ROW_LIST_CLASS,
@@ -60,6 +60,7 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
 
   /**
    * 連携・解除を1件ずつ実行する。成功はトーストで知らせ、失敗は対象の行に表示する。
+   * ポップアップを閉じて中断した場合は何も表示しない。
    *
    * @param provider - 操作する認証プロバイダ。
    * @param operation - ログイン中のユーザーに対する Firebase への連携または解除処理。
@@ -85,6 +86,8 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
       await operation(user)
       showSuccessToast(successMessage)
     } catch (error) {
+      // 連携のポップアップを自分で閉じただけなら、エラーとして扱わない。
+      if (isAuthPopupClosedError(error)) return
       setOperationError({ kind: provider.kind, message: resolveErrorMessage(error) })
     } finally {
       props.onChanged()
