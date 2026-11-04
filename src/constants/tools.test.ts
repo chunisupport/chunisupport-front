@@ -7,7 +7,6 @@ import {
   ONLINE_WEAK_CHART_INSPECTOR_PATH,
   RANDOM_SONG_SELECTOR_PATH,
   UNI_FILL_MATRIX_PATH,
-  UNIFIED_WEAK_CHART_INSPECTOR_TEST_PATH,
   WEAK_CHART_INSPECTOR_PATH,
 } from './routes'
 import {
@@ -40,20 +39,6 @@ const disabledTool: ToolLink = {
   href: '/tools/disabled',
   disabled: true,
 }
-
-test('Unified_testは管理者のみに表示し、公開ツールの固定ページから除外する', () => {
-  // Given: 試作版が新版とは別のツールとして登録されている。
-  const tool = getToolLink(UNIFIED_WEAK_CHART_INSPECTOR_TEST_PATH)
-
-  // When / Then: 管理者にだけ表示し、公開固定ページに含めない。
-  for (const role of [undefined, 'PLAYER', 'EDITOR', 'EXTDEV'] as const) {
-    assert.equal(isToolLinkListed(tool, role), false)
-  }
-  assert.equal(isToolLinkListed(tool, 'ADMIN'), true)
-  assert.equal(isPublicToolLink(tool), false)
-  assert.equal(tool.title, '苦手譜面インスペクター Unified_test')
-  assert.equal(tool.category, 'analysis')
-})
 
 test('苦手譜面インスペクターは全アカウント種別に表示する公開ツールとして定義されていること', () => {
   // Given

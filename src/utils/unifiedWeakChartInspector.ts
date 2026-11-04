@@ -17,9 +17,6 @@ export type UnifiedWeakChartCategory =
   | 'strength'
   | 'unavailable'
 
-/** 既存の失点下限方式と、失点加算・到達可能上限補正を組み合わせた試作方式。 */
-export type UnifiedWeakChartMethod = 'standard' | 'ceilingAdjusted'
-
 /** 統合分析の譜面別信号。比較平均が欠ける譜面はずれと得意度を null にする。 */
 export interface UnifiedWeakChartEntry {
   record: PlayerRecordDTO
@@ -48,10 +45,7 @@ const MIN_WINDOW_SIZE = 5
 /** 中央絶対偏差を正規分布の標準偏差相当へ換算する係数。 */
 const MAD_TO_SIGMA = 1.4826
 
-/** 失点の下限点数。理論値付近で、数十点の差が大きな比にならないようにする。 */
-const MIN_LOSS = 100
-
-/** 試作方式で失点に加える点数。理論値付近の差を残しつつゼロ除算を防ぐ。 */
+/** 失点に加える点数。理論値付近の差を残しつつゼロ除算を防ぐ。 */
 const LOSS_OFFSET = 100
 
 /** ばらつきの下限（失点比の自然対数）。失点比がほぼ揃った定数帯で、わずかなずれを過敏に判定しないようにする。 */
@@ -82,15 +76,11 @@ const STRENGTH_APTITUDE = 60
 type LossRatioStats = { baseline: number; scale: number }
 
 /**
- * 理論値からの失点を求める。
+ * 理論値からの失点に補正値を加え、理論値付近の差を残す。
  * @param score - スコアまたは平均スコア。
- * @param method - 既存方式では失点を下限以上にし、試作方式では補正値を加える。
  * @returns 分析に用いる正の失点。
  */
-const toLoss = (score: number, method: UnifiedWeakChartMethod): number =>
-  method === 'ceilingAdjusted'
-    ? SCORE_THEORETICAL_MAX - score + LOSS_OFFSET
-    : Math.max(SCORE_THEORETICAL_MAX - score, MIN_LOSS)
+const toLoss = (score: number): number => SCORE_THEORETICAL_MAX - score + LOSS_OFFSET
 
 /**
  * レート帯平均の失点に対する自分の失点の比を、自然対数で求める。
@@ -100,11 +90,10 @@ const toLoss = (score: number, method: UnifiedWeakChartMethod): number =>
  *
  * @param score - 自分のスコア。
  * @param averageScore - レート帯の平均スコア。
- * @param method - 失点の補正方式。
  * @returns 平均より失点が少ないほど大きい値。失点が同じなら0。
  */
-const toLossRatio = (score: number, averageScore: number, method: UnifiedWeakChartMethod): number =>
-  Math.log(toLoss(averageScore, method) / toLoss(score, method))
+const toLossRatio = (score: number, averageScore: number): number =>
+  Math.log(toLoss(averageScore) / toLoss(score))
 
 /**
  * 失点比の中央値と、中央絶対偏差から求めたばらつきを算出する。
@@ -261,25 +250,23 @@ const toConstStep = (chartConst: number): number => Math.round(truncateChartCons
  * 近い譜面定数（前後0.5、判定する譜面自身を含む）の譜面で失点比の中央値を普段の失点比とし、
  * そこからのずれを中央絶対偏差によるばらつきで割り、偏差値形式の得意度に換算して判定する。
  * 自分の地力とレート帯のずれや、定数帯・スコア帯ごとのスコアの伸びにくさを打ち消せる。
- * 試作方式では失点に補正値を加えて理論値詰めの差を残し、比較基準を譜面ごとの到達可能上限で抑える。
+ * 失点に補正値を加えて理論値付近の差を残し、比較基準を譜面ごとの到達可能上限で抑える。
  *
  * @param records - 選択した集計条件内の通常譜面レコード。比較平均の有無で絞り込まない。
  * @param snapshots - 難易度別のスコア統計。
  * @param ratingBand - 比較するレート帯。
- * @param method - 判定方式。省略時は既存方式を使う。
  * @returns 優先順位順のプレイ済み譜面。平均欠損譜面も含む。
  */
 export const inspectUnifiedWeakCharts = (
   records: readonly PlayerRecordDTO[],
   snapshots: readonly ChartScoresResponse[],
-  ratingBand: string,
-  method: UnifiedWeakChartMethod = 'standard'
+  ratingBand: string
 ): UnifiedWeakChartEntry[] => {
   const played = records.filter(isWeakChartInspectionTarget)
   const comparisons = compareRecordsWithRatingBand(played, snapshots, ratingBand).map((entry) => ({
     record: entry.record,
-    ratio: toLossRatio(entry.record.score, entry.averageScore, method),
-    maximumRatio: toLossRatio(SCORE_THEORETICAL_MAX, entry.averageScore, method),
+    ratio: toLossRatio(entry.record.score, entry.averageScore),
+    maximumRatio: toLossRatio(SCORE_THEORETICAL_MAX, entry.averageScore),
     step: toConstStep(entry.record.const),
   }))
   const comparisonByKey = new Map(
@@ -311,8 +298,7 @@ export const inspectUnifiedWeakCharts = (
         return { record, deviation: null, aptitude: null, category: 'unavailable' }
       }
       const { baseline, scale } = statsFor(comparison.step)
-      const attainableBaseline =
-        method === 'ceilingAdjusted' ? Math.min(baseline, comparison.maximumRatio) : baseline
+      const attainableBaseline = Math.min(baseline, comparison.maximumRatio)
       const deviation = (comparison.ratio - attainableBaseline) / scale
       const aptitude = toAptitude(deviation)
       return { record, deviation, aptitude, category: classifyAptitude(aptitude) }
