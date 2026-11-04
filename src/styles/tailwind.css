@@ -881,6 +881,20 @@
     drop-shadow(0 0 1px rgb(0 0 0 / 90%));
 }
 
+/*
+ * X のロゴはブランドガイドで黒か白の単色に限られるため、明るいテーマでは黒、暗いテーマでは白にする。
+ * テーマを追加しても未定義にならないよう :root を既定値にし、部分的に明るいテーマを当てた要素では黒へ戻す。
+ */
+:root,
+[data-theme="light"],
+[data-theme="pastel-orange"] {
+  --cs-color-brand-x-logo: #000000;
+}
+
+:is([data-theme="dark"], [data-theme="dark-blue"], [data-theme="black"]) {
+  --cs-color-brand-x-logo: #ffffff;
+}
+
 @theme inline {
   /* 背景・サーフェス */
   --color-bg: var(--cs-color-bg);
@@ -896,6 +910,11 @@
   --color-text-inverse: var(--cs-color-text-inverse);
   --color-text-placeholder: var(--cs-color-text-placeholder);
   --color-nav-text: var(--cs-color-nav-text);
+
+  /* 外部サービスのロゴ */
+  --color-brand-x-logo: var(--cs-color-brand-x-logo);
+  /* Google の G は白い背景に置く規定のため、テーマによらず白にする。 */
+  --color-brand-google-logo-bg: var(--color-white);
 
   /* 枠線・フォーカスリング */
   --color-border: var(--cs-color-border);

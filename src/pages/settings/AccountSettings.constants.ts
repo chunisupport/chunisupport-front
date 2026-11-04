@@ -63,7 +63,7 @@ export const GOOGLE_ACCOUNT_CHANGE_COPY = {
   userMismatch: (email: string) => `${email} を選択してください。`,
   recentSignInExpired: '有効期限が切れました。変更先をもう一度選択してください。',
   /** 旧アカウントが削除されるため、連携していたXでのログインも使えなくなる。 */
-  xLinkRemoved: '変更するとXの連携は解除されます。',
+  xLinkRemoved: 'X連携は解除されます',
 } as const
 
 /** Googleアカウント変更で、変更先を選び直す必要があるAPIエラーコード。 */

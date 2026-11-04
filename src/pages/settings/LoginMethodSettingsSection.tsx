@@ -4,6 +4,7 @@ import { createSignal, For, Show } from 'solid-js'
 
 import { AuthProviderIcon } from '../../components/auth/AuthProviderIcon'
 import { AppButton } from '../../components/common/AppButton'
+import { showSuccessToast } from '../../components/common/AppToast'
 import {
   AUTH_PROVIDERS,
   type AuthProviderDefinition,
@@ -27,12 +28,10 @@ export type LoginMethodSettingsSectionProps = {
   onChanged: () => void
 }
 
-/** 操作した認証プロバイダの行に表示する結果 */
-type LoginMethodFeedback = {
-  /** 結果を表示する認証プロバイダ */
+/** 操作に失敗した認証プロバイダの行に表示するエラー */
+type LoginMethodError = {
+  /** エラーを表示する認証プロバイダ */
   kind: AuthProviderKind
-  /** 成功または失敗 */
-  tone: 'success' | 'error'
   /** 表示する文言 */
   message: string
 }
@@ -46,14 +45,14 @@ type LoginMethodFeedback = {
  */
 export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProps) => {
   const [pendingKind, setPendingKind] = createSignal<AuthProviderKind>()
-  const [feedback, setFeedback] = createSignal<LoginMethodFeedback>()
+  const [operationError, setOperationError] = createSignal<LoginMethodError>()
 
   /**
-   * 連携・解除を1件ずつ実行し、結果を対象の行へ表示する。
+   * 連携・解除を1件ずつ実行する。成功はトーストで知らせ、失敗は対象の行に表示する。
    *
    * @param provider - 操作する認証プロバイダ。
    * @param operation - ログイン中のユーザーに対する Firebase への連携または解除処理。
-   * @param successMessage - 成功時に表示する文言。
+   * @param successMessage - 成功時にトーストへ表示する文言。
    * @param resolveErrorMessage - 失敗時に表示する文言を決める関数。
    * @returns 処理完了後に解決されるPromise。
    */
@@ -65,17 +64,17 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
   ): Promise<void> => {
     const user = auth.currentUser
     if (!user) {
-      setFeedback({ kind: provider.kind, tone: 'error', message: LOGIN_METHOD_COPY.signedOut })
+      setOperationError({ kind: provider.kind, message: LOGIN_METHOD_COPY.signedOut })
       return
     }
 
     setPendingKind(provider.kind)
-    setFeedback(undefined)
+    setOperationError(undefined)
     try {
       await operation(user)
-      setFeedback({ kind: provider.kind, tone: 'success', message: successMessage })
+      showSuccessToast(successMessage)
     } catch (error) {
-      setFeedback({ kind: provider.kind, tone: 'error', message: resolveErrorMessage(error) })
+      setOperationError({ kind: provider.kind, message: resolveErrorMessage(error) })
     } finally {
       props.onChanged()
       setPendingKind(undefined)
@@ -130,8 +129,8 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
           {(provider) => {
             const account = () => findLinkedAuthAccount(props.accounts, provider.kind)
             const isPending = () => pendingKind() === provider.kind
-            const rowFeedback = () => {
-              const current = feedback()
+            const rowError = () => {
+              const current = operationError()
               return current?.kind === provider.kind ? current : undefined
             }
 
@@ -139,7 +138,7 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
               <li class="py-3">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <div class="flex min-w-0 items-center gap-3">
-                    <AuthProviderIcon kind={provider.kind} class="h-5 w-5 shrink-0" />
+                    <AuthProviderIcon kind={provider.kind} class="shrink-0" />
                     <div class="min-w-0">
                       <p class="font-medium text-text">{provider.label}</p>
                       <p class="break-all font-sans text-sm text-text-muted">
@@ -175,16 +174,9 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
                     </Show>
                   </Show>
                 </div>
-                <Show when={rowFeedback()}>
+                <Show when={rowError()}>
                   {(current) => (
-                    <p
-                      class="mt-2 text-sm"
-                      classList={{
-                        'text-danger': current().tone === 'error',
-                        'text-action-primary': current().tone === 'success',
-                      }}
-                      role={current().tone === 'error' ? 'alert' : 'status'}
-                    >
+                    <p class="mt-2 text-sm text-danger" role="alert">
                       {current().message}
                     </p>
                   )}

@@ -18,12 +18,27 @@
 - Firebase ユーザーへの連携を追加・削除するだけで、Firebase UID とアプリ内のデータは変わらない。
 - 最後に残ったログイン方法は解除できない。
 - 別のユーザーで使用中のアカウントは連携できない。未登録のまま認証だけ済ませた Firebase ユーザーがある場合も同様に拒否される。
-- 「Googleアカウントを変更」は Google を連携している場合だけ表示する。変更後は変更先の Google アカウントだけを持つ Firebase ユーザーになるため、X は改めて連携する必要がある。X を連携している場合は変更欄に注意を表示する。
+- 「Googleアカウントを変更」は Google を連携している場合だけ表示する。変更後は変更先の Google アカウントだけを持つ Firebase ユーザーになるため、X は改めて連携する必要がある。X を連携している場合は変更ダイアログに注意を表示する。
 
 ## 再認証
 
 - ユーザー名変更、退会、Google アカウント変更などの再認証は、連携済みの認証プロバイダで行う。Google を連携していれば Google、X だけなら X を使う。
 - Google ではログイン中のメールアドレスを事前選択させる。別アカウントを選ぶと Firebase が `auth/user-mismatch` で拒否する。
+
+## ロゴ
+
+ログイン方法のロゴは `src/components/auth/AuthProviderIcon.tsx` で表示する。各社の公式アセットを加工せずに使い、自作・トレースしたロゴは使わない。ロゴは20pxで固定し、プロバイダ間で並びがそろうよう、28pxの丸い枠の中央に置く。
+
+- Google: [Sign in with Google のブランドガイドライン](https://developers.google.com/identity/branding-guidelines) が配布する「G」ロゴ（`https://developers.google.com/static/identity/images/g-logo.png`）を `src/assets/brands/google-g-logo.png` に置いている（2026年11月取得、グラデーション版）。
+  - 標準色のまま使う。単色化・色変更・サイズ変更（20px で表示）はしない。
+  - G は白い背景の上に置く規定がある。テーマの面の色によらず満たすため、枠を白丸（`--color-brand-google-logo-bg`）にしている。
+  - ボタン自体の推奨色はライト（塗り `#FFFFFF`・線 `#747775`・文字 `#1F1F1F`）、ダーク（塗り `#131314`・線 `#8E918F`・文字 `#E3E3E3`）、ニュートラル（塗り `#F2F2F2`・線なし・文字 `#1F1F1F`）。
+  - 操作ボタンでは「G」だけにせず、ボタンの枠と文言（「Googleでログイン」「Googleで続ける」など）を付ける。他のログイン方法より目立たなくしない。
+  - ボタン画像一式は `https://developers.google.com/static/identity/images/signin-assets.zip` で配布されている。
+- X: [X Brand Quick Guide For External Partners](https://about.x.com/content/dam/about-twitter/x/brand-toolkit/x-brand-guidelines.pdf)（表紙の表記は August 2023 v1.0）の `logo.svg`（`https://about.x.com/content/dam/about-twitter/x/brand-toolkit/logo.svg`）のパスをそのまま埋め込んでいる。
+  - 色は黒（`#000000`）か白（`#FFFFFF`）だけ。原則は白背景に黒・黒背景に白で、単色でない環境では明るい背景に黒・暗い背景に白とする。明るいテーマでは黒、暗いテーマでは白を、デザイントークン `--cs-color-brand-x-logo` で切り替える。枠は透明にする。
+  - 形を崩さず、ロゴの周囲に余白を空ける。
+  - 画面上の呼び方は「X」を使い、「Twitter」とは書かない（Firebase の `twitter.com` や、Firebase コンソール上のプロバイダ名「Twitter」など外部の表記は除く）。
 
 ## Firebase・X の設定
 

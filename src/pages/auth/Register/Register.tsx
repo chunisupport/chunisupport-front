@@ -258,7 +258,7 @@ const Register = () => {
                 <Show when={authAccount()}>
                   {(account) => (
                     <div class="mb-4 flex items-center gap-2 p-3 bg-surface-hover border border-border-strong rounded-md text-sm text-text-muted">
-                      <AuthProviderIcon kind={account().kind} class="h-4 w-4 shrink-0" />
+                      <AuthProviderIcon kind={account().kind} class="shrink-0" />
                       <span class="shrink-0">{authAccountHeading(account().label)}</span>
                       <span class="min-w-0 break-all font-sans font-medium">{account().name}</span>
                     </div>

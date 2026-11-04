@@ -265,12 +265,6 @@ export const GoogleAccountChangeForm: Component<{
           <dd class="break-all font-sans text-text">{currentEmail()}</dd>
         </div>
       </dl>
-      <Show when={props.xLinked}>
-        <p class="mt-2 flex items-center gap-1 text-sm text-warning">
-          <TriangleAlert aria-hidden="true" class="h-4 w-4 shrink-0" />
-          {GOOGLE_ACCOUNT_CHANGE_COPY.xLinkRemoved}
-        </p>
-      </Show>
 
       <Dialog open={isOpen()} onOpenChange={handleOpenChange}>
         <Dialog.Trigger
@@ -325,6 +319,13 @@ export const GoogleAccountChangeForm: Component<{
                       <span class="sr-only">{GOOGLE_ACCOUNT_CHANGE_COPY.currentLabel}</span>
                       {currentEmail()}
                     </p>
+                    {/* 変更でXでのログインが使えなくなることを、変更前の操作の場で示す。 */}
+                    <Show when={props.xLinked}>
+                      <span class="inline-flex items-center gap-1 self-center rounded-full border border-warning-border bg-warning-bg px-2 py-0.5 text-xs text-warning">
+                        <TriangleAlert aria-hidden="true" class="h-3.5 w-3.5 shrink-0" />
+                        {GOOGLE_ACCOUNT_CHANGE_COPY.xLinkRemoved}
+                      </span>
+                    </Show>
                     <ArrowDown aria-hidden="true" class="h-5 w-5 self-center text-text-muted" />
                     {/* 変更先の枠そのものを押してアカウント選択を開く。選択済みなら選び直しになる。 */}
                     <Button
