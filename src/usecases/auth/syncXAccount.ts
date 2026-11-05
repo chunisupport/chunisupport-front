@@ -36,7 +36,7 @@ export const takeHeldXAuthResult = (firebaseUid: string): UserCredential | undef
 /**
  * X でのポップアップ認証の結果から、X の @ID を API に取得し直させる。
  * Firebase の連携情報には @ID が含まれず、X のアクセストークンは認証直後にしか得られないため、
- * ログイン・新規登録・連携のたびに呼ぶ。
+ * ログイン・新規登録・連携・再認証のたびに呼ぶ。
  * @ID は表示を補うだけなので、取得できなくても認証の処理は止めない。
  *
  * @param result - `signInWithPopup` などが返したポップアップ認証の結果。

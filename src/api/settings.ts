@@ -185,7 +185,7 @@ export const deletePlayerData = async (): Promise<void> => {
 }
 
 export const deleteAccount = async (): Promise<void> => {
-  const reauthToken = await reauthenticateAndGetToken()
+  const reauthToken = await reauthenticateAndGetToken({ skipXAccountSync: true })
   await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
     method: 'DELETE',
     headers: { 'X-Reauth-Token': reauthToken },
