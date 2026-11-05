@@ -61,7 +61,6 @@ export const WEAK_CHART_SETTINGS_COPY = {
   displaySection: '表示の絞り込み',
   aggregationSection: '集計対象の絞り込み',
   scoreRangeLabel: 'スコア',
-  constRangeLabel: '譜面定数',
   cancel: 'キャンセル',
   reset: '初期値に戻す',
   apply: '適用',

@@ -2,8 +2,12 @@ import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import { RotateCcw } from 'lucide-solid'
 import { createEffect, createSignal, For, type JSX, on } from 'solid-js'
-import { CHART_CONST_MAX, CHART_CONST_MIN } from '../../constants/chart'
+import {
+  type ChartConstRangeSelection,
+  createChartConstRangeDraft,
+} from '../../hooks/createChartConstRangeDraft'
 import type { NameFolderDTO } from '../../types/api'
+import { createFullChartConstRange, normalizeChartConstRange } from '../../utils/chartLevel'
 import { clampNumericInput } from '../../utils/numberInput'
 import {
   ONLINE_WEAK_CHART_OP_TARGET_FILTER,
@@ -14,6 +18,7 @@ import {
 import { getShortVersionName } from '../../utils/versionConverter'
 import { AppButton, AppIconButton } from './AppButton'
 import { toMultiSelectOptions } from './AppMultiSelect'
+import ChartConstRangeField from './ChartConstRangeField'
 import { CheckboxField } from './CheckboxField'
 import {
   GenreMultiSelect,
@@ -87,7 +92,7 @@ type WeakChartSettingsDialogProps = {
 /**
  * 苦手譜面インスペクター（新版・Online）の表示・集計範囲を編集するダイアログ。
  *
- * 難易度（理論値OVER POWER対象を含む）、ジャンル、バージョン、楽曲名順、譜面定数を編集し、
+ * 難易度（理論値OVER POWER対象を含む）、ジャンル、バージョン、楽曲名順、レベル／譜面定数範囲を編集し、
  * 「適用」で親へ渡す。画面固有の項目は children と onReset で追加する。
  *
  * @param props - 開閉状態、適用中の条件、初期値、選択肢と変更処理。
@@ -95,8 +100,16 @@ type WeakChartSettingsDialogProps = {
  */
 export const WeakChartSettingsDialog = (props: WeakChartSettingsDialogProps): JSX.Element => {
   const [difficulties, setDifficulties] = createSignal<OnlineWeakChartDifficulty[]>([])
-  const [constMin, setConstMin] = createSignal('')
-  const [constMax, setConstMax] = createSignal('')
+  const [appliedConstMode, setAppliedConstMode] =
+    createSignal<ChartConstRangeSelection['constFilterMode']>('level')
+  const [constSelection, setConstSelection] = createSignal<ChartConstRangeSelection>({
+    constFilterMode: 'level',
+    constRange: createFullChartConstRange(),
+  })
+  const constRangeDraft = createChartConstRangeDraft({
+    get: constSelection,
+    set: setConstSelection,
+  })
   const [genres, setGenres] = createSignal<string[] | null>(null)
   const [versions, setVersions] = createSignal<string[] | null>(null)
   const [nameFolders, setNameFolders] = createSignal<string[] | null>(null)
@@ -106,12 +119,14 @@ export const WeakChartSettingsDialog = (props: WeakChartSettingsDialogProps): JS
    * 条件を編集欄へ読み込む。
    *
    * @param settings - 読み込む条件。
+   * @param mode - 復元する範囲入力モード。
    * @returns なし。
    */
-  const load = (settings: WeakChartSettings): void => {
+  const load = (settings: WeakChartSettings, mode = appliedConstMode()): void => {
     setDifficulties([...settings.difficulties])
-    setConstMin(String(settings.constMin))
-    setConstMax(String(settings.constMax))
+    const constRange = { min: settings.constMin, max: settings.constMax }
+    setConstSelection({ constFilterMode: mode, constRange })
+    constRangeDraft.sync(constRange)
     setGenres(settings.genres === null ? null : [...settings.genres])
     setVersions(settings.versions === null ? null : [...settings.versions])
     setNameFolders(settings.nameFolders === null ? null : [...settings.nameFolders])
@@ -132,22 +147,23 @@ export const WeakChartSettingsDialog = (props: WeakChartSettingsDialogProps): JS
    * @returns なし。
    */
   const reset = (): void => {
-    load(props.defaults)
+    load(props.defaults, 'level')
     props.onReset?.()
   }
 
   /**
-   * 編集中の条件を適用して閉じる。譜面定数は空欄なら全範囲とし、大小が逆なら入れ替える。
+   * 編集中の条件を適用して閉じる。逆順の範囲は昇順に揃え、レベル指定ではレベル全体を含める。
    *
    * @returns なし。
    */
   const apply = (): void => {
-    const min = Number(constMin()) || CHART_CONST_MIN
-    const max = Number(constMax()) || CHART_CONST_MAX
+    const { constRange, constFilterMode } = constSelection()
+    const { min, max } = normalizeChartConstRange(constRange, constFilterMode)
+    setAppliedConstMode(constFilterMode)
     props.onApply({
       difficulties: [...difficulties()],
-      constMin: Math.min(min, max),
-      constMax: Math.max(min, max),
+      constMin: min,
+      constMax: max,
       genres: genres(),
       versions: versions(),
       nameFolders: nameFolders(),
@@ -237,30 +253,7 @@ export const WeakChartSettingsDialog = (props: WeakChartSettingsDialogProps): JS
               disabled={!props.attributesReady}
             />
             {props.children}
-            <div class="space-y-1">
-              <span class="block text-sm text-text-muted">{COPY.chartConstRange}</span>
-              <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-center gap-2">
-                <WeakChartSettingsNumberField
-                  value={constMin()}
-                  min={CHART_CONST_MIN}
-                  max={CHART_CONST_MAX}
-                  step={0.1}
-                  label={COPY.chartConstMin}
-                  onChange={setConstMin}
-                />
-                <span class="text-center text-text-muted" aria-hidden="true">
-                  ～
-                </span>
-                <WeakChartSettingsNumberField
-                  value={constMax()}
-                  min={CHART_CONST_MIN}
-                  max={CHART_CONST_MAX}
-                  step={0.1}
-                  label={COPY.chartConstMax}
-                  onChange={setConstMax}
-                />
-              </div>
-            </div>
+            <ChartConstRangeField idPrefix={props.idPrefix} {...constRangeDraft.fieldProps} />
           </div>
           <div class="mt-6 flex shrink-0 justify-end gap-2">
             <AppButton onClick={() => props.onOpenChange(false)}>{COPY.cancel}</AppButton>

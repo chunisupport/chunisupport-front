@@ -44,6 +44,8 @@ export type AppSelectProps<T> = KobalteSingleSelectProps<T> & {
   triggerClass?: string
   /** Trigger に付与する id */
   triggerId?: string
+  /** Trigger の補足説明として関連付ける外部要素の id */
+  triggerDescriptionId?: string
   /** Value に追加で適用する Tailwind クラス */
   valueClass?: string
   /** Item に追加で適用する Tailwind クラス */
@@ -125,6 +127,7 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
     'formatLabel',
     'triggerClass',
     'triggerId',
+    'triggerDescriptionId',
     'valueClass',
     'itemClass',
     'contentClass',
@@ -163,6 +166,8 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
       </Show>
       <Select.Trigger
         id={local.triggerId}
+        aria-describedby={local.triggerDescriptionId}
+        aria-invalid={selectProps.validationState === 'invalid' ? true : undefined}
         class={`${APP_SELECT_TRIGGER_CLASS} ${local.triggerClass ?? ''}`}
       >
         <Select.Value<T> class={`${APP_SELECT_VALUE_CLASS} ${local.valueClass ?? ''}`}>

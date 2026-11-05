@@ -25,21 +25,22 @@ import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
 import { ChartCanvasFrame } from '../../components/common/ChartCanvasFrame'
+import ChartConstRangeField from '../../components/common/ChartConstRangeField'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import { getSortAriaValue, SortableHeaderButton } from '../../components/common/SortableTableHeader'
+import { SCORE_MIN, SCORE_THEORETICAL_MAX } from '../../constants/chart'
 import {
-  CHART_CONST_MAX,
-  CHART_CONST_MIN,
-  SCORE_MIN,
-  SCORE_THEORETICAL_MAX,
-} from '../../constants/chart'
+  type ChartConstRangeSelection,
+  createChartConstRangeDraft,
+} from '../../hooks/createChartConstRangeDraft'
 import { useAppMainScrollRestoration } from '../../hooks/useAppMainScrollRestoration'
 import { accentPreference, themePreference } from '../../stores/themePreferences'
 import type { PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { fetchTheoreticalTargetDifficultyBySongId } from '../../usecases/overpower/fetchTheoreticalTargetDifficulties'
 import { formatChartConst, truncateChartConst } from '../../utils/chartConstFormat'
+import { normalizeChartConstRange } from '../../utils/chartLevel'
 import {
   CHART_SCATTER_TOOLTIP_CLASS,
   updateChartScatterTooltip,
@@ -476,14 +477,36 @@ const LegacyWeakChartInspector = (): JSX.Element => {
   // 表示の絞り込み 編集中
   const [editYMin, setEditYMin] = createSignal('')
   const [editYMax, setEditYMax] = createSignal('')
-  const [editXMin, setEditXMin] = createSignal('')
-  const [editXMax, setEditXMax] = createSignal('')
+  const [appliedAxisConstMode, setAppliedAxisConstMode] =
+    createSignal<ChartConstRangeSelection['constFilterMode']>('level')
+  const [axisConstSelection, setAxisConstSelection] = createSignal<ChartConstRangeSelection>({
+    constFilterMode: 'level',
+    constRange: {
+      min: WEAK_CHART_AXIS_SETTINGS_DEFAULT.xMin,
+      max: WEAK_CHART_AXIS_SETTINGS_DEFAULT.xMax,
+    },
+  })
+  const axisConstDraft = createChartConstRangeDraft({
+    get: axisConstSelection,
+    set: setAxisConstSelection,
+  })
 
   // 集計対象の絞り込み 編集中
   const [editAggScoreMin, setEditAggScoreMin] = createSignal('')
   const [editAggScoreMax, setEditAggScoreMax] = createSignal('')
-  const [editAggConstMin, setEditAggConstMin] = createSignal('')
-  const [editAggConstMax, setEditAggConstMax] = createSignal('')
+  const [appliedAggConstMode, setAppliedAggConstMode] =
+    createSignal<ChartConstRangeSelection['constFilterMode']>('level')
+  const [aggConstSelection, setAggConstSelection] = createSignal<ChartConstRangeSelection>({
+    constFilterMode: 'level',
+    constRange: {
+      min: WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.constMin,
+      max: WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.constMax,
+    },
+  })
+  const aggConstDraft = createChartConstRangeDraft({
+    get: aggConstSelection,
+    set: setAggConstSelection,
+  })
 
   /** 集計対象難易度 編集中 */
   const [editAggDifficulties, setEditAggDifficulties] = createSignal<
@@ -498,12 +521,14 @@ const LegacyWeakChartInspector = (): JSX.Element => {
   const openSettings = (): void => {
     setEditYMin(String(axisSettings().yMin))
     setEditYMax(String(axisSettings().yMax))
-    setEditXMin(String(axisSettings().xMin))
-    setEditXMax(String(axisSettings().xMax))
+    const axisRange = { min: axisSettings().xMin, max: axisSettings().xMax }
+    setAxisConstSelection({ constFilterMode: appliedAxisConstMode(), constRange: axisRange })
+    axisConstDraft.sync(axisRange)
     setEditAggScoreMin(String(aggregationSettings().scoreMin))
     setEditAggScoreMax(String(aggregationSettings().scoreMax))
-    setEditAggConstMin(String(aggregationSettings().constMin))
-    setEditAggConstMax(String(aggregationSettings().constMax))
+    const aggRange = { min: aggregationSettings().constMin, max: aggregationSettings().constMax }
+    setAggConstSelection({ constFilterMode: appliedAggConstMode(), constRange: aggRange })
+    aggConstDraft.sync(aggRange)
     setEditAggDifficulties([...aggregationDifficulties()])
     setSettingsOpen(true)
   }
@@ -518,24 +543,34 @@ const LegacyWeakChartInspector = (): JSX.Element => {
   }
 
   /**
-   * 編集内容を反映してダイアログを閉じる。
+   * 範囲の端点を昇順に揃えて編集内容を反映し、ダイアログを閉じる。
    *
    * @returns なし。
    */
   const applySettings = (): void => {
+    const axisRange = normalizeChartConstRange(
+      axisConstSelection().constRange,
+      axisConstSelection().constFilterMode
+    )
+    const aggRange = normalizeChartConstRange(
+      aggConstSelection().constRange,
+      aggConstSelection().constFilterMode
+    )
     setAxisSettings({
       yMin: Number(editYMin()),
       yMax: Number(editYMax()),
-      xMin: Number(editXMin()),
-      xMax: Number(editXMax()),
+      xMin: axisRange.min,
+      xMax: axisRange.max,
     })
     setAggregationSettings({
       scoreMin: Number(editAggScoreMin()),
       scoreMax: Number(editAggScoreMax()),
-      constMin: Number(editAggConstMin()),
-      constMax: Number(editAggConstMax()),
+      constMin: aggRange.min,
+      constMax: aggRange.max,
     })
     setAggregationDifficulties([...editAggDifficulties()])
+    setAppliedAxisConstMode(axisConstSelection().constFilterMode)
+    setAppliedAggConstMode(aggConstSelection().constFilterMode)
     setSettingsOpen(false)
   }
 
@@ -547,12 +582,20 @@ const LegacyWeakChartInspector = (): JSX.Element => {
   const resetSettings = (): void => {
     setEditYMin(String(WEAK_CHART_AXIS_SETTINGS_DEFAULT.yMin))
     setEditYMax(String(WEAK_CHART_AXIS_SETTINGS_DEFAULT.yMax))
-    setEditXMin(String(WEAK_CHART_AXIS_SETTINGS_DEFAULT.xMin))
-    setEditXMax(String(WEAK_CHART_AXIS_SETTINGS_DEFAULT.xMax))
+    const axisRange = {
+      min: WEAK_CHART_AXIS_SETTINGS_DEFAULT.xMin,
+      max: WEAK_CHART_AXIS_SETTINGS_DEFAULT.xMax,
+    }
+    setAxisConstSelection({ constFilterMode: 'level', constRange: axisRange })
+    axisConstDraft.sync(axisRange)
     setEditAggScoreMin(String(WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.scoreMin))
     setEditAggScoreMax(String(WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.scoreMax))
-    setEditAggConstMin(String(WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.constMin))
-    setEditAggConstMax(String(WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.constMax))
+    const aggRange = {
+      min: WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.constMin,
+      max: WEAK_CHART_AGGREGATION_SETTINGS_DEFAULT.constMax,
+    }
+    setAggConstSelection({ constFilterMode: 'level', constRange: aggRange })
+    aggConstDraft.sync(aggRange)
     setEditAggDifficulties([...WEAK_CHART_AGGREGATION_DIFFICULTIES_DEFAULT])
   }
 
@@ -711,33 +754,10 @@ const LegacyWeakChartInspector = (): JSX.Element => {
                           />
                         </div>
                       </div>
-                      {/* 譜面定数範囲 */}
-                      <div class="space-y-1">
-                        <span class="block text-sm text-text-muted">
-                          {WEAK_CHART_SETTINGS_COPY.constRangeLabel}
-                        </span>
-                        <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                          <SettingsNumberField
-                            value={editAggConstMin()}
-                            min={CHART_CONST_MIN}
-                            max={CHART_CONST_MAX}
-                            step={0.1}
-                            label="集計対象 譜面定数 最小"
-                            onChange={setEditAggConstMin}
-                          />
-                          <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
-                            <span aria-hidden="true">～</span>
-                          </div>
-                          <SettingsNumberField
-                            value={editAggConstMax()}
-                            min={CHART_CONST_MIN}
-                            max={CHART_CONST_MAX}
-                            step={0.1}
-                            label="集計対象 譜面定数 最大"
-                            onChange={setEditAggConstMax}
-                          />
-                        </div>
-                      </div>
+                      <ChartConstRangeField
+                        idPrefix="weak-chart-aggregation"
+                        {...aggConstDraft.fieldProps}
+                      />
                     </div>
                   </fieldset>
 
@@ -779,33 +799,10 @@ const LegacyWeakChartInspector = (): JSX.Element => {
                               />
                             </div>
                           </div>
-                          {/* 譜面定数範囲 */}
-                          <div class="space-y-1">
-                            <span class="block text-sm text-text-muted">
-                              {WEAK_CHART_SETTINGS_COPY.constRangeLabel}
-                            </span>
-                            <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                              <SettingsNumberField
-                                value={editXMin()}
-                                min={CHART_CONST_MIN}
-                                max={CHART_CONST_MAX}
-                                step={0.1}
-                                label="表示の絞り込み 譜面定数 最小"
-                                onChange={setEditXMin}
-                              />
-                              <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
-                                <span aria-hidden="true">～</span>
-                              </div>
-                              <SettingsNumberField
-                                value={editXMax()}
-                                min={CHART_CONST_MIN}
-                                max={CHART_CONST_MAX}
-                                step={0.1}
-                                label="表示の絞り込み 譜面定数 最大"
-                                onChange={setEditXMax}
-                              />
-                            </div>
-                          </div>
+                          <ChartConstRangeField
+                            idPrefix="weak-chart-display"
+                            {...axisConstDraft.fieldProps}
+                          />
                         </div>
                       </fieldset>
                     </Collapsible.Content>

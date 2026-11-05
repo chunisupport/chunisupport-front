@@ -18,6 +18,10 @@ const CONST_VALUE_RANGE_TITLE = '譜面定数'
 export type ChartConstRangeFieldProps = {
   /** 入力欄IDの接頭辞 */
   idPrefix?: string
+  /** 目標条件など別の条件を使用している間は入力を無効化する */
+  disabled?: boolean
+  /** 範囲入力の直下に表示するエラー */
+  errorMessage?: string | null
   constFilterMode: 'level' | 'number'
   minValue: string
   maxValue: string
@@ -43,10 +47,13 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
       <TextRangeInput
         title={CONST_VALUE_RANGE_TITLE}
         inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
+        errorMessage={props.errorMessage}
         start={{
           id: `${props.idPrefix ?? 'filter'}-const-min`,
           label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
           value: props.minValue,
+          disabled: props.disabled,
+          invalid: !!props.errorMessage,
           inputMode: 'decimal',
           pattern: '[0-9]*[.]?[0-9]*',
           normalizeInput: normalizeChartConstRangeInput,
@@ -57,6 +64,8 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
           id: `${props.idPrefix ?? 'filter'}-const-max`,
           label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
           value: props.maxValue,
+          disabled: props.disabled,
+          invalid: !!props.errorMessage,
           inputMode: 'decimal',
           pattern: '[0-9]*[.]?[0-9]*',
           normalizeInput: normalizeChartConstRangeInput,
@@ -68,6 +77,8 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
       <SelectRangeInput
         title={CONST_LEVEL_RANGE_TITLE}
         options={[...CHART_LEVEL_FILTER_OPTIONS]}
+        disabled={props.disabled}
+        errorMessage={props.errorMessage}
         placeholder="選択…"
         start={{
           value: props.constLevelMin,
@@ -85,8 +96,9 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
       <CheckboxField
         id={`${props.idPrefix ?? 'filter'}-const-mode`}
         checked={props.constFilterMode === 'number'}
+        disabled={props.disabled}
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
-        class="flex items-center gap-2"
+        class="relative flex items-center gap-2"
         textVariant="large"
         label="譜面定数で指定"
       />

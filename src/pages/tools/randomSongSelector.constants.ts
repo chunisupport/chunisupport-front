@@ -15,8 +15,6 @@ export const RANDOM_SONG_RESULTS_STORAGE_KEY = 'chunisupport:random-song-selecto
  */
 export const RANDOM_SONG_SELECTOR_DEFAULTS = {
   count: '3',
-  minConst: '',
-  maxConst: '',
   minScore: '',
   maxScore: '',
   defaultWeight: '1',
@@ -48,7 +46,6 @@ export const RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS = {
  * ランダム選曲ツールで使う短い入力項目ラベル。
  */
 export const RANDOM_SONG_SELECTOR_FIELD_LABELS = {
-  const: '定数',
   score: 'スコア',
   drawRate: '出やすさ',
 } as const
@@ -71,8 +68,6 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   genreLabel: 'ジャンル',
   versionLabel: 'バージョン',
   nameFolderLabel: '楽曲名順',
-  minConstLabel: '定数 下限',
-  maxConstLabel: '定数 上限',
   advancedSettingsLabel: '高度な設定',
   recordFilterSettingsLabel: '自分のレコードで絞る',
   drawRateLabel: RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate,
@@ -102,7 +97,7 @@ export const RANDOM_SONG_SELECTOR_COPY = {
   noCandidatesMessage: '条件に合う譜面はありません。',
   noResultsMessage: '選曲すると結果が表示されます。',
   invalidCountMessage: '曲数は1以上で入力してください。',
-  invalidConstRangeMessage: '定数の範囲を確認してください。',
+  invalidConstRangeMessage: 'レベル・譜面定数の範囲を確認してください。',
   invalidScoreRangeMessage: 'スコアの範囲を確認してください。',
   invalidWeightMessage:
     '出やすさは0以上の数値で入力してください。倍率の積や重み合計が大きすぎる場合は、倍率を小さくしてください。',

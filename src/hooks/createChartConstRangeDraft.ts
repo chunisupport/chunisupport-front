@@ -120,15 +120,12 @@ export const createChartConstRangeDraft = (
     }
     const minLevel = toChartLevelFilterLabel(constRange.min)
     const maxLevel = toChartLevelFilterLabel(constRange.max)
-    setLevelMin(minLevel)
-    setLevelMax(maxLevel)
-    options.set({
-      constFilterMode: mode,
-      constRange: {
-        min: getChartLevelFilterBoundary(minLevel, 'min'),
-        max: getChartLevelFilterBoundary(maxLevel, 'max'),
-      },
-    })
+    const nextRange = {
+      min: getChartLevelFilterBoundary(minLevel, 'min'),
+      max: getChartLevelFilterBoundary(maxLevel, 'max'),
+    }
+    sync(nextRange)
+    options.set({ constFilterMode: mode, constRange: nextRange })
   }
 
   return {
