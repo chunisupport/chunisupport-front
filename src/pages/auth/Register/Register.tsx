@@ -11,9 +11,10 @@ import { AuthProviderIcon } from '../../../components/auth/AuthProviderIcon'
 import { AppButton } from '../../../components/common/AppButton'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { CF_TURNSTILE_SITE_KEY } from '../../../config'
-import { AUTH_PROVIDERS, type AuthProviderKind } from '../../../constants/authProviders'
+import type { AuthProviderKind } from '../../../constants/authProviders'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
+import { VISIBLE_AUTH_PROVIDERS } from '../../../lib/authProviders'
 import { auth, createAuthProvider } from '../../../lib/firebase'
 import { clearAuthenticatedUser } from '../../../stores/authSession'
 import {
@@ -37,7 +38,7 @@ import {
 } from './constants'
 
 /**
- * Google・X認証を利用する新規登録画面を表示する。
+ * 現在の環境で表示する認証プロバイダ（Google、有効な環境では X）を利用する新規登録画面を表示する。
  *
  * @returns 新規登録画面。
  */
@@ -238,7 +239,7 @@ const Register = () => {
                   </div>
                 )}
                 <div class="space-y-3">
-                  <For each={AUTH_PROVIDERS}>
+                  <For each={VISIBLE_AUTH_PROVIDERS}>
                     {(provider) => (
                       <AppButton
                         variant="surface"

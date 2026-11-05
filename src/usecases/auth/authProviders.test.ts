@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { AUTH_PROVIDER_BY_KIND, AUTH_PROVIDERS } from '../../constants/authProviders.ts'
 import {
   canUnlinkAuthProvider,
   type LinkedAuthAccount,
   resolveAuthAccountName,
   resolveAuthAccountSummary,
   resolveReauthProviderKind,
+  selectVisibleAuthProviders,
 } from './authProviders.ts'
 
 const googleAccount: LinkedAuthAccount = {
@@ -158,4 +160,44 @@ test('Xアカウントを保存していない場合は表示名で表示する�
 
   // Then
   assert.equal(result, 'アリス')
+})
+
+test('feature-flagが有効な環境ではフラグ付きの認証プロバイダも表示順のまま表示すること', () => {
+  // Given: 全ての機能が有効
+  const isFeatureEnabled = () => true
+
+  // When
+  const result = selectVisibleAuthProviders(AUTH_PROVIDERS, isFeatureEnabled)
+
+  // Then
+  assert.deepEqual(
+    result.map((provider) => provider.kind),
+    ['google', 'x']
+  )
+})
+
+test('feature-flagが無効な環境ではフラグ付きの認証プロバイダだけを表示しないこと', () => {
+  // Given: X でのログイン（x_login）だけが無効
+  const isFeatureEnabled = (name: string) => name !== 'x_login'
+
+  // When
+  const result = selectVisibleAuthProviders(AUTH_PROVIDERS, isFeatureEnabled)
+
+  // Then: フラグを持たない Google は常に表示する
+  assert.deepEqual(
+    result.map((provider) => provider.kind),
+    ['google']
+  )
+})
+
+test('表示しない認証プロバイダしか残らない場合は連携を解除できないこと', () => {
+  // Given: Google と X を連携しているが、X は表示しない環境
+  const accounts = [googleAccount, xAccount]
+  const visibleProviders = [AUTH_PROVIDER_BY_KIND.google]
+
+  // When
+  const result = canUnlinkAuthProvider(accounts, 'google', visibleProviders)
+
+  // Then: 解除するとログイン画面から使える方法がなくなる
+  assert.equal(result, false)
 })

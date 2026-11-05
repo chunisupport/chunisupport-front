@@ -1,3 +1,5 @@
+import type { FeatureFlagName } from './featureFlags'
+
 /** ログインに利用できる認証プロバイダの種類 */
 export type AuthProviderKind = 'google' | 'x'
 
@@ -9,6 +11,8 @@ export type AuthProviderDefinition = {
   providerId: string
   /** 画面に表示するサービス名 */
   label: string
+  /** 画面への表示を切り替える feature-flag。省略時は常に表示する。 */
+  featureFlag?: FeatureFlagName
 }
 
 /**
@@ -17,7 +21,7 @@ export type AuthProviderDefinition = {
  */
 export const AUTH_PROVIDER_BY_KIND = {
   google: { kind: 'google', providerId: 'google.com', label: 'Google' },
-  x: { kind: 'x', providerId: 'twitter.com', label: 'X' },
+  x: { kind: 'x', providerId: 'twitter.com', label: 'X', featureFlag: 'x_login' },
 } as const satisfies Record<AuthProviderKind, AuthProviderDefinition>
 
 /** ログインに利用できる認証プロバイダ。画面にはこの順序で表示する。 */

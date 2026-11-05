@@ -2,9 +2,11 @@
 
 ## 概要
 
-- 通常のログイン（`/login`）、新規登録（`/register`）、スタッフ向けのメンテナンス中ログインでは、Google と X のどちらでもログインできる。
+- 通常のログイン（`/login`）、新規登録（`/register`）、スタッフ向けのメンテナンス中ログインでは、Google と X のどちらでもログインできる（X は feature-flag `x_login` が有効な環境のみ。後述）。
 - Firebase Authentication のポップアップ認証（`signInWithPopup`）を使い、Turnstile と既存の `/internal/auth/login`・`/internal/auth/signup` で検証する。API は Firebase の ID トークンだけを検証するため、認証プロバイダごとの API の違いはない。
 - 認証プロバイダの一覧と表示順は `src/constants/authProviders.ts` で管理する。X は Firebase 上では `twitter.com` として扱われる。
+- X でのログインは feature-flag `x_login` で切り替える（develop / staging で有効、production で無効）。無効な環境では、ログイン・新規登録・メンテナンス中ログインの X ボタンと、設定の「ログイン方法」の X の行を表示せず、`@ID` の取得もしない。切り替えるフラグは `src/constants/authProviders.ts` の各定義の `featureFlag` に持たせ、画面に出す一覧は `src/lib/authProviders.ts` の `VISIBLE_AUTH_PROVIDERS` にまとめている。
+- 連携済みアカウントの判定や再認証の認証プロバイダ選択は、フラグに関係なく全プロバイダを対象にする。本番の Firebase で X を有効にする前にフラグを有効にしないこと。
 - ログイン画面では Turnstile を1回確認すれば、どちらのボタンでもログインできる。
 
 ## 新規登録
@@ -16,7 +18,7 @@
 
 - 設定の「アカウント」にある「ログイン方法」から、ログイン中のユーザーへ Google・X を連携（`linkWithPopup`）・解除（`unlink`）できる。連携すると、どちらでも同じユーザーとしてログインできる。
 - Firebase ユーザーへの連携を追加・削除するだけで、Firebase UID とアプリ内のデータは変わらない。
-- 最後に残ったログイン方法は解除できない。
+- 最後に残ったログイン方法は解除できない。画面に表示しない認証プロバイダ（`x_login` が無効な環境の X）は残る方法に数えない。
 - 別のユーザーで使用中のアカウントは連携できない。未登録のまま認証だけ済ませた Firebase ユーザーがある場合も同様に拒否される。
 - 「Googleアカウントを変更」は Google を連携している場合だけ表示する。変更後は変更先の Google アカウントだけを持つ Firebase ユーザーになるため、X は改めて連携する必要がある。X を連携している場合は変更ダイアログに注意を表示する。
 

@@ -7,11 +7,9 @@ import { AuthProviderIcon } from '../../components/auth/AuthProviderIcon'
 import { AppButton } from '../../components/common/AppButton'
 import { showSuccessToast } from '../../components/common/AppToast'
 import { AppTooltipIconButton } from '../../components/common/AppTooltipIconButton'
-import {
-  AUTH_PROVIDERS,
-  type AuthProviderDefinition,
-  type AuthProviderKind,
-} from '../../constants/authProviders'
+import type { AuthProviderDefinition, AuthProviderKind } from '../../constants/authProviders'
+import { VISIBLE_AUTH_PROVIDERS } from '../../lib/authProviders'
+import { isFeatureEnabled } from '../../lib/featureFlags'
 import { auth, createAuthProvider } from '../../lib/firebase'
 import {
   canUnlinkAuthProvider,
@@ -71,8 +69,10 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
   const [pending, setPending] = createSignal<PendingLoginMethodOperation>()
   const [operationError, setOperationError] = createSignal<LoginMethodError>()
   // @ID は表示を補うだけなので、取得に失敗しても表示名で代用して欄全体は表示する。
-  const [xAccount, { mutate: mutateXAccount }] = createResource(() =>
-    fetchXAccount().catch(() => null)
+  // X でのログインが無効な環境では X の行を出さないため、取得もしない。
+  const [xAccount, { mutate: mutateXAccount }] = createResource(
+    () => isFeatureEnabled('x_login') || undefined,
+    () => fetchXAccount().catch(() => null)
   )
 
   /**
@@ -191,7 +191,7 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
         {LOGIN_METHOD_COPY.title}
       </h3>
       <ul class={`mt-2 max-w-md ${SETTINGS_ROW_LIST_CLASS}`}>
-        <For each={AUTH_PROVIDERS}>
+        <For each={VISIBLE_AUTH_PROVIDERS}>
           {(provider) => {
             const account = () => findLinkedAuthAccount(props.accounts, provider.kind)
             // Show の子関数は一度しか評価されないため、後から読み込まれる @ID を反映できるよう外で計算する。
@@ -253,7 +253,13 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
                         </AppTooltipIconButton>
                       </Show>
                       {/* 最後のログイン方法を外すとログインできなくなるため、解除ボタンを出さない。 */}
-                      <Show when={canUnlinkAuthProvider(props.accounts, provider.kind)}>
+                      <Show
+                        when={canUnlinkAuthProvider(
+                          props.accounts,
+                          provider.kind,
+                          VISIBLE_AUTH_PROVIDERS
+                        )}
+                      >
                         <AppButton
                           variant="dangerOutline"
                           size="sm"

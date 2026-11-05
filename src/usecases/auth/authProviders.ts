@@ -1,8 +1,10 @@
 import {
   AUTH_PROVIDER_BY_KIND,
   AUTH_PROVIDERS,
+  type AuthProviderDefinition,
   type AuthProviderKind,
 } from '../../constants/authProviders.ts'
+import type { FeatureFlagName } from '../../constants/featureFlags.ts'
 import type { XAccountDTO } from '../../types/api.ts'
 
 /** Firebase ユーザーに連携された認証プロバイダのアカウント情報 */
@@ -26,6 +28,22 @@ export type AuthAccountSummary = {
   /** アカウントを識別するための表示名またはメールアドレス */
   name: string
 }
+
+/**
+ * 画面に選択肢として表示する認証プロバイダを、各定義の feature-flag で絞り込む。
+ * 連携済みアカウントの判定や再認証には全プロバイダを使うため、この結果は表示と解除可否の判定にだけ使う。
+ *
+ * @param providers - 表示順に並んだ認証プロバイダ。
+ * @param isFeatureEnabled - 現在の環境で機能が有効かを返す関数。
+ * @returns 表示する認証プロバイダ。順序は維持する。
+ */
+export const selectVisibleAuthProviders = (
+  providers: readonly AuthProviderDefinition[],
+  isFeatureEnabled: (name: FeatureFlagName) => boolean
+): readonly AuthProviderDefinition[] =>
+  providers.filter(
+    (provider) => provider.featureFlag === undefined || isFeatureEnabled(provider.featureFlag)
+  )
 
 /**
  * 指定した認証プロバイダで連携済みのアカウントを探す。
@@ -101,12 +119,20 @@ export const resolveReauthProviderKind = (
 /**
  * 認証プロバイダの連携を解除できるか判定する。
  * ログイン方法がなくなるとログインできなくなるため、最後の1つは解除させない。
+ * 画面に表示しない認証プロバイダは、ログイン画面からも使えないため残る方法に数えない。
  *
  * @param accounts - Firebase ユーザーの providerData。
  * @param kind - 解除する認証プロバイダの種類。
- * @returns 連携済みかつ他のログイン方法が残る場合は true。
+ * @param visibleProviders - 現在の環境で画面に表示する認証プロバイダ。省略時は全プロバイダ。
+ * @returns 連携済みかつ表示中の他のログイン方法が残る場合は true。
  */
 export const canUnlinkAuthProvider = (
   accounts: readonly LinkedAuthAccount[],
-  kind: AuthProviderKind
-): boolean => findLinkedAuthAccount(accounts, kind) !== undefined && accounts.length > 1
+  kind: AuthProviderKind,
+  visibleProviders: readonly AuthProviderDefinition[] = AUTH_PROVIDERS
+): boolean =>
+  findLinkedAuthAccount(accounts, kind) !== undefined &&
+  visibleProviders.some(
+    (provider) =>
+      provider.kind !== kind && findLinkedAuthAccount(accounts, provider.kind) !== undefined
+  )

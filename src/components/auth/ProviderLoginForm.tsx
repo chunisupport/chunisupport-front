@@ -1,4 +1,4 @@
-import { AUTH_PROVIDERS } from '../../constants/authProviders'
+import { VISIBLE_AUTH_PROVIDERS } from '../../lib/authProviders'
 import { loginWithProvider } from '../../usecases/auth/loginWithProvider'
 import { AuthenticationForm, type AuthenticationFormProps } from './AuthenticationForm'
 import { AuthProviderIcon } from './AuthProviderIcon'
@@ -12,14 +12,14 @@ import {
 export type ProviderLoginFormProps = Pick<AuthenticationFormProps, 'onSuccess' | 'onFailure'>
 
 /**
- * Google・Xのポップアップ認証とTurnstileを使うログインフォームを表示する。
+ * 現在の環境で表示する認証プロバイダのポップアップ認証とTurnstileを使うログインフォームを表示する。
  *
  * @param props - ログイン成功・失敗後のページ固有コールバック。
  * @returns 認証プロバイダごとのログインボタンを並べたフォーム要素。
  */
 export const ProviderLoginForm = (props: ProviderLoginFormProps) => {
   // アイコンのDOMを画面ごとに作るため、ログイン方法はコンポーネント内で組み立てる。
-  const methods = AUTH_PROVIDERS.map((provider) => ({
+  const methods = VISIBLE_AUTH_PROVIDERS.map((provider) => ({
     id: provider.kind,
     label: providerLoginButtonLabel(provider.label),
     icon: <AuthProviderIcon kind={provider.kind} />,
