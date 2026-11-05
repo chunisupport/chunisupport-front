@@ -1,6 +1,8 @@
 /// <reference types="@rsbuild/core/types" />
 
 interface ImportMetaEnv {
+  /** feature-flag の運用環境。Rsbuild 設定で値を検証する。 */
+  readonly PUBLIC_APP_ENV: string
   readonly PUBLIC_BACKEND_URL: string
   readonly PUBLIC_FRONTEND_URL: string
   readonly PUBLIC_CHART_STATS_BASE_URL?: string

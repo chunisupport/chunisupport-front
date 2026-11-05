@@ -37,6 +37,14 @@ Solid.js + Rsbuild をベースに、CHUNITHM プレイデータの閲覧・管�
 pnpm install
 ```
 
+`.env.example` を参考に、ローカルの `.env` に公開環境変数を設定してください。既存の `.env` にも次の必須設定を追加してください。
+
+```dotenv
+PUBLIC_APP_ENV=develop
+```
+
+`PUBLIC_APP_ENV` は feature-flag の運用環境で、`develop` / `staging` / `production` のいずれかを指定します。未設定・不正値の場合は `pnpm dev` / `pnpm start` / `pnpm build` が失敗します。配備先ごとに明示設定し、環境別にビルドしてください。ホスティング側の各環境にもマージ前に設定が必要です。詳細は [feature-flag](docs/feature-flag.md) を参照してください。
+
 ## 開発コマンド
 
 ```bash

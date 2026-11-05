@@ -1,4 +1,6 @@
+/** アプリケーションで読み取る公開環境変数のキー。 */
 const ENV_KEYS = [
+  'PUBLIC_APP_ENV',
   'PUBLIC_BACKEND_URL',
   'PUBLIC_FRONTEND_URL',
   'PUBLIC_CHART_STATS_BASE_URL',
