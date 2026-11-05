@@ -1,6 +1,6 @@
 # フロントエンド feature-flag
 
-運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは0件です。
+運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは、配備設定の確認用の `feature_flag_probe` だけです（後述）。
 
 API からのフラグ取得、ユーザー単位・割合での公開、実行中の切り替え、緊急停止スイッチは扱いません。無効な機能のコードをバンドルから除去する仕組みでもないため、隠したい情報は含めないでください。
 
@@ -28,7 +28,7 @@ CI は `.env.example` をコピーするため、`develop` としてのみ検証
 
 ## 定義と判定
 
-`src/constants/featureFlags.ts` の `FEATURE_FLAG_DEFINITIONS` に定義します。以下は追加時の書式例であり、現在は登録されていません。
+`src/constants/featureFlags.ts` の `FEATURE_FLAG_DEFINITIONS` に定義します。以下は追加時の書式例です。
 
 ```typescript
 export const FEATURE_FLAG_DEFINITIONS = {
@@ -69,7 +69,7 @@ export const FEATURE_FLAG_DEFINITIONS = {
 
 ### 固定 HTML 生成
 
-現在は登録フラグが0件のため、`scripts/generate-static-page-html.mjs` の生成対象の絞り込みは実装していません。固定 HTML 生成対象のページに初めてフラグを付ける際に、次の対応を行ってください。
+現在は固定 HTML 生成対象のページにフラグを付けていないため、`scripts/generate-static-page-html.mjs` の生成対象の絞り込みは実装していません。固定 HTML 生成対象のページに初めてフラグを付ける際に、次の対応を行ってください。
 
 - `loadEnv()` で読んだ `PUBLIC_APP_ENV` を検証し、`resolveEnabledFeatures` に明示的に渡す。
 - ツール一覧と同じ判定で生成対象を絞り、無効なページのタイトル・説明・OGP を含む固定 HTML を出力しない。
@@ -83,6 +83,19 @@ export const FEATURE_FLAG_DEFINITIONS = {
 - 無効化・ロールバックは原則フロント → API の順に行います。
 - 配信済み・起動中の古いフロントから無効化済み API を呼ぶと 404 が返り得ます。既存のエラー処理で扱ってください。
 - フロントのフラグは表示制御のみです。認可・保護は API 側で担保します。
+
+## 配備設定の確認用フラグ
+
+`feature_flag_probe` は、各環境で feature-flag が意図どおりに効いているかを確かめるためのフラグです。API の同名フラグと同じく develop / staging で有効、production で無効です。
+
+管理メニュー（`/admin`）に、運用環境（`PUBLIC_APP_ENV`）、フロントの判定、API の判定を並べて表示します。API は `GET /internal/admin/feature-flag-probe` が 200 なら ON、404（無効な環境ではルートが登録されない）なら OFF です。表示自体はフラグで隠さず、production でも両方 OFF であることを確認できます。
+
+| 環境 | フロント | API |
+| --- | --- | --- |
+| develop / staging | ON | ON |
+| production | OFF | OFF |
+
+確認が済んだら、API・フロントの両方から定義・ルート・表示を削除します。
 
 ## 追加・公開・削除の手順
 

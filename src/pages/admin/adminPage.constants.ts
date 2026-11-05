@@ -14,6 +14,18 @@ export const ADMIN_PAGE_COPY = {
   description: '管理者向けのメニューです。',
 } as const
 
+/** 管理メニューの feature-flag 確認表示の文言 */
+export const ADMIN_FEATURE_FLAG_PROBE_COPY = {
+  title: 'feature-flag',
+  environment: '環境:',
+  frontend: 'フロント:',
+  api: 'API:',
+  enabled: 'ON',
+  disabled: 'OFF',
+  failed: '取得失敗',
+  loading: 'API の feature-flag を確認中',
+} as const
+
 /** 管理メニューに表示する各管理画面へのリンク */
 export const ADMIN_PAGE_LINKS = [
   {

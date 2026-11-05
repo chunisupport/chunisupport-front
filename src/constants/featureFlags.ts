@@ -15,7 +15,8 @@ export const INVALID_APP_ENVIRONMENT_MESSAGE = `PUBLIC_APP_ENV は ${APP_ENVIRON
  * API 側と同じ機能を制御する場合は、feature-flag.yml と同じ snake_case 名を使う。
  */
 export const FEATURE_FLAG_DEFINITIONS = {
-  // 書式例: new_ranking_page: { develop: true, staging: true, production: false },
+  /** 管理画面から配備設定を確認するための機能。API と同名。確認が済んだら削除する。 */
+  feature_flag_probe: { develop: true, staging: true, production: false },
 } as const satisfies Record<string, FeatureFlagDefinition>
 
 /** 登録済みの機能名。定義が0件の場合は never。 */
