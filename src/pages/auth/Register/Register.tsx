@@ -22,7 +22,11 @@ import {
   resolveAuthAccountSummary,
 } from '../../../usecases/auth/authProviders'
 import { resolveRegistrationEligibility } from '../../../usecases/auth/registrationEligibility'
-import { syncXAccountFromResult, takeHeldXAuthResult } from '../../../usecases/auth/syncXAccount'
+import {
+  readXUsernameFromResult,
+  syncXAccountFromResult,
+  takeHeldXAuthResult,
+} from '../../../usecases/auth/syncXAccount'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import {
@@ -88,12 +92,14 @@ const Register = () => {
 
   /**
    * 認証済みのFirebaseユーザーを表示し、ユーザー名入力へ進める。
+   * X は認証結果が手元にあれば @ID で表示する。再読み込みなどで結果がない場合は表示名で代用する。
    *
    * @param user - 認証済みのFirebaseユーザー。
    * @returns なし。
    */
   const showUsernameStep = (user: User) => {
-    setAuthAccount(resolveAuthAccountSummary(user.providerData))
+    const xUsername = providerAuthResult && readXUsernameFromResult(providerAuthResult)
+    setAuthAccount(resolveAuthAccountSummary(user.providerData, xUsername))
     setStep('fill_username')
   }
 

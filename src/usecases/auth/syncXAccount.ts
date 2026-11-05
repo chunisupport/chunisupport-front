@@ -1,4 +1,4 @@
-import { TwitterAuthProvider, type UserCredential } from 'firebase/auth'
+import { getAdditionalUserInfo, TwitterAuthProvider, type UserCredential } from 'firebase/auth'
 
 import { syncXAccount } from '../../api/xAccount'
 import { AUTH_PROVIDER_BY_KIND } from '../../constants/authProviders'
@@ -31,6 +31,18 @@ export const takeHeldXAuthResult = (firebaseUid: string): UserCredential | undef
   const result = heldXAuthResult
   heldXAuthResult = undefined
   return result?.user.uid === firebaseUid ? result : undefined
+}
+
+/**
+ * X でのポップアップ認証の結果から、X の @ID（先頭の @ を除く）を読み取る。
+ * 新規登録の完了前は API に @ID を保存できないため、画面表示には認証結果に含まれる値を使う。
+ *
+ * @param result - `signInWithPopup` などが返したポップアップ認証の結果。
+ * @returns X の @ID。X 以外の認証、または含まれていない場合は undefined。
+ */
+export const readXUsernameFromResult = (result: UserCredential): string | undefined => {
+  if (result.providerId !== AUTH_PROVIDER_BY_KIND.x.providerId) return undefined
+  return getAdditionalUserInfo(result)?.username ?? undefined
 }
 
 /**

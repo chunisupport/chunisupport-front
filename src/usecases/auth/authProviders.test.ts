@@ -52,6 +52,30 @@ test('Xアカウントは表示名で表示すること', () => {
   assert.deepEqual(result, { kind: 'x', label: 'X', name: 'アリス' })
 })
 
+test('認証直後に得たXの@IDがあれば@IDで表示すること', () => {
+  // Given: 新規登録の認証結果から @ID を得ている
+  const accounts = [xAccount]
+  const xUsername = 'alice_x'
+
+  // When
+  const result = resolveAuthAccountSummary(accounts, xUsername)
+
+  // Then
+  assert.deepEqual(result, { kind: 'x', label: 'X', name: '@alice_x' })
+})
+
+test('Google優先で表示する場合はXの@IDを使わないこと', () => {
+  // Given: Google と X を連携しており、X の @ID も得ている
+  const accounts = [xAccount, googleAccount]
+  const xUsername = 'alice_x'
+
+  // When
+  const result = resolveAuthAccountSummary(accounts, xUsername)
+
+  // Then
+  assert.deepEqual(result, { kind: 'google', label: 'Google', name: 'alice@example.com' })
+})
+
 test('GoogleとXの両方を連携している場合はGoogleを代表とすること', () => {
   // Given
   const accounts = [xAccount, googleAccount]

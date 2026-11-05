@@ -678,7 +678,8 @@ const UniFillMatrixPage: Component = () => {
                       rootClass="col-start-1 row-start-2 min-w-0 sm:flex-1 md:w-36 md:flex-none"
                     />
                   </div>
-                  <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center md:ml-auto">
+                  {/* 横に並べる幅では表示切り替えを最後の段に送り、軸の切り替えと画像化を1段目の右端に残す。縦に積む幅ではチェックボックス同士の間隔を詰める。 */}
+                  <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 md:order-last md:basis-full md:justify-end">
                     <CheckboxField
                       checked={showRemaining()}
                       onChange={setShowRemaining}
@@ -704,6 +705,8 @@ const UniFillMatrixPage: Component = () => {
                         </p>
                       </Show>
                     </div>
+                  </div>
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center md:ml-auto">
                     <Show when={hasLevelConstAxis()}>
                       <SegmentedToggleGroup
                         value={levelConstAxis()}

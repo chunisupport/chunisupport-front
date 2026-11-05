@@ -53,7 +53,7 @@ type HeatmapCountCellProps = {
  * 達成件数と総数を色の濃淡付きで描画する表セル。
  *
  * @param props - 達成件数、総数、達成率表示・残り表示の有無、全件達成マークの有無、空セルの背景色指定、追加クラス、クリック時の処理。
- * @returns 上段に件数・残数・達成率・残り割合のいずれか、下段に件数/総数（達成件数表示時は/総数のみ）を表示するセル。総数が0件の場合は記号のみ表示し、showEmptyAsComplete指定時は全件達成時の背景色と大きめの白い記号で表示する。
+ * @returns 上段に件数・残数・達成率・残り割合のいずれか、下段に件数/総数（達成件数・残数表示時は/総数のみ）を表示するセル。総数が0件の場合は記号のみ表示し、showEmptyAsComplete指定時は全件達成時の背景色と大きめの白い記号で表示する。
  * 全件達成マーク有効時に全件達成していればチェックアイコンのみ表示する。onSelect 指定時はセル全体がボタンになる。
  */
 export const HeatmapCountCell = (props: HeatmapCountCellProps): JSX.Element => {
@@ -64,11 +64,12 @@ export const HeatmapCountCell = (props: HeatmapCountCellProps): JSX.Element => {
    */
   const showRemaining = () => props.showRemaining === true
   /**
-   * 下段に達成件数を表示するか判定する。上段が達成件数のときは重複するため省く。
+   * 下段に達成件数を表示するか判定する。
+   * 件数表示（達成件数・残数）のときは通常表示と同じ「/総数」の2段構成にそろえるため省く。
    *
-   * @returns 上段が達成率または残りの場合はtrue。
+   * @returns 上段が達成率または残り割合の場合はtrue。
    */
-  const showsCountInDetail = () => props.showPercent || showRemaining()
+  const showsCountInDetail = () => props.showPercent
   /**
    * セル内の件数表示または全件達成マークを描画する。
    *

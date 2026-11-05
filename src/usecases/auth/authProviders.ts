@@ -85,12 +85,15 @@ export const resolveAuthAccountName = (
 /**
  * ログインに使った認証プロバイダのアカウント概要を取得する。
  * 複数連携している場合は、画面の表示順で先頭のプロバイダを代表とする。
+ * X は @ID で見分けるのが一般的なため、認証直後に得た @ID があれば表示名より優先する。
  *
  * @param accounts - Firebase ユーザーの providerData。
+ * @param xUsername - 認証直後の結果から得た X の @ID（先頭の @ を除く）。得られない場合は省略する。
  * @returns アカウント概要。対応する認証プロバイダが連携されていない場合は undefined。
  */
 export const resolveAuthAccountSummary = (
-  accounts: readonly LinkedAuthAccount[]
+  accounts: readonly LinkedAuthAccount[],
+  xUsername?: string
 ): AuthAccountSummary | undefined => {
   for (const provider of AUTH_PROVIDERS) {
     const account = findLinkedAuthAccount(accounts, provider.kind)
@@ -98,7 +101,10 @@ export const resolveAuthAccountSummary = (
       return {
         kind: provider.kind,
         label: provider.label,
-        name: resolveAuthAccountName(account, provider.kind),
+        name:
+          provider.kind === 'x' && xUsername
+            ? `@${xUsername}`
+            : resolveAuthAccountName(account, provider.kind),
       }
     }
   }
