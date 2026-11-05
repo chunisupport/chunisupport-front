@@ -23,6 +23,7 @@ export const UNI_FILL_MATRIX_COPY = {
   horizontalAxisLabel: '横軸',
   swapAxesLabel: '縦軸と横軸を入れ替え',
   percentToggle: '%表示',
+  remainingToggle: '残数表示',
   totalHeader: '合計',
   cellActionLabel: '未達成の譜面をレコードで表示',
   recordNavigationError: 'レコード画面へ移動できませんでした。',
@@ -169,7 +170,7 @@ export const UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT: UniFillMatrixAchievementOption
   label: PLAYER_STATS_ACHIEVEMENT_LABEL.sss,
 }
 
-/** 保存済みの値がない場合に使う表示設定（難易度・埋め条件・両軸・%表示・未解禁曲除外） */
+/** 保存済みの値がない場合に使う表示設定（難易度・埋め条件・両軸・%表示・残数表示・未解禁曲除外） */
 export const UNI_FILL_MATRIX_DEFAULT_VIEW_SETTINGS: UniFillMatrixViewSettings = {
   difficulty: UNI_FILL_MATRIX_DEFAULT_DIFFICULTY.value,
   achievement: UNI_FILL_MATRIX_DEFAULT_ACHIEVEMENT.value,
@@ -177,6 +178,7 @@ export const UNI_FILL_MATRIX_DEFAULT_VIEW_SETTINGS: UniFillMatrixViewSettings = 
   horizontal: UNI_FILL_MATRIX_DEFAULT_HORIZONTAL,
   levelConstAxis: 'level',
   showPercent: false,
+  showRemaining: false,
   excludeLockedSongs: false,
 }
 
@@ -191,6 +193,9 @@ export const UNI_FILL_MATRIX_LINE_HEADER_WEIGHT: Record<UniFillMatrixHeader['kin
 
 /** 共通ヒートマップセルの最小幅（min-w-16）に合わせる余白単位数。 */
 export const UNI_FILL_MATRIX_DATA_COLUMN_MIN_SPACING = 16
+
+/** 残数表示と%表示を併用したときに、未達成のみのマスの「100.00%」が収まる余白単位数。 */
+export const UNI_FILL_MATRIX_REMAINING_PERCENT_COLUMN_MIN_SPACING = 18
 
 /** 画像内の左右余白（p-6相当）。 */
 export const UNI_FILL_MATRIX_IMAGE_PADDING = 24

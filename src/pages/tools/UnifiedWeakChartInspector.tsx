@@ -496,10 +496,9 @@ const EmptyState = (props: { label: string }): JSX.Element => (
 
 /**
  * 苦手譜面インスペクター新版。同レート帯の平均との失点比を、自分の普段の失点比と比べて判定する。
- * @param props - 試作方式を使う場合は experimental を指定する。
  * @returns 比較帯・表示・集計範囲・判定を選べる、譜面定数別の得意度の散布図と優先順位表。
  */
-const UnifiedWeakChartInspector = (props: { experimental?: boolean }): JSX.Element => {
+const UnifiedWeakChartInspector = (): JSX.Element => {
   const username = () => authSession.user?.username ?? null
   const [bands] = createResource(fetchRatingBands)
   const [versions] = createResource(fetchVersions)
@@ -556,8 +555,7 @@ const UnifiedWeakChartInspector = (props: { experimental?: boolean }): JSX.Eleme
         isWeakChartDifficultySelected(record, difficulties(), targetDifficultyBySongId())
       ),
       snapshots() ?? [],
-      band()?.value ?? '',
-      props.experimental ? 'ceilingAdjusted' : 'standard'
+      band()?.value ?? ''
     )
   )
   // 譜面定数・ジャンル・バージョン・楽曲名順は、普段の失点比が変わらないよう判定の後に絞り込む。

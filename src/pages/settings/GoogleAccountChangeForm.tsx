@@ -9,6 +9,7 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
+  TriangleAlert,
 } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from 'solid-js'
@@ -20,14 +21,16 @@ import {
   cancelGoogleAccountChange,
   changeGoogleAccount,
   type GoogleAccountChangeTarget,
+  getCurrentGoogleEmail,
   selectGoogleAccountChangeTarget,
 } from '../../usecases/auth/changeGoogleAccount'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   GOOGLE_ACCOUNT_CHANGE_COPY,
   GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES,
 } from './AccountSettings.constants'
+import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
 /** ウィザードの各ステップ */
 type WizardStep = keyof typeof GOOGLE_ACCOUNT_CHANGE_COPY.steps
@@ -92,11 +95,15 @@ const WizardStepIndicator: Component<{ current: WizardStep }> = (props) => {
  * 本人確認は別ダイアログで認証に使うアカウントを示してから始め、取り違えを防ぐ。
  * 各認証を別々のクリックで開始するのは、ポップアップがブロックされないようにするため。
  *
+ * @param props - ログイン中ユーザーがXも連携しているかどうか。
  * @returns Googleアカウント変更欄とウィザードダイアログ。
  */
-export const GoogleAccountChangeForm: Component = () => {
+export const GoogleAccountChangeForm: Component<{
+  /** Xも連携している場合は、変更で連携が外れることを知らせる */
+  xLinked: boolean
+}> = (props) => {
   const navigate = useNavigate()
-  const [currentEmail, setCurrentEmail] = createSignal(auth.currentUser?.email ?? '')
+  const [currentEmail, setCurrentEmail] = createSignal(getCurrentGoogleEmail())
   const [isOpen, setIsOpen] = createSignal(false)
   const [isReauthOpen, setIsReauthOpen] = createSignal(false)
   const [target, setTarget] = createSignal<GoogleAccountChangeTarget>()
@@ -174,12 +181,8 @@ export const GoogleAccountChangeForm: Component = () => {
     try {
       setTarget(await selectGoogleAccountChangeTarget())
     } catch (caught) {
-      const code = (caught as { code?: string }).code
-      if (code === 'auth/popup-closed-by-user') {
-        // 選び直しを途中でやめただけなら、選択済みの変更先はそのまま残す。
-        setError(GOOGLE_ACCOUNT_CHANGE_COPY.selectionClosed)
-        return
-      }
+      // 選び直しを途中でやめただけなら、エラーは出さず選択済みの変更先もそのまま残す。
+      if (isAuthPopupClosedError(caught)) return
       setTarget(undefined)
       setError(toUserFriendlyErrorMessage(caught, GOOGLE_ACCOUNT_CHANGE_COPY.failure))
       await cancelGoogleAccountChange().catch(() => undefined)
@@ -215,7 +218,7 @@ export const GoogleAccountChangeForm: Component = () => {
         return
       }
       setIsReauthOpen(false)
-      setCurrentEmail(auth.currentUser?.email ?? selectedTarget.email)
+      setCurrentEmail(getCurrentGoogleEmail() || selectedTarget.email)
       setIsDone(true)
       // 変更先の認証情報は使用済みのため、保持し続けない。
       setTarget(undefined)
@@ -232,9 +235,9 @@ export const GoogleAccountChangeForm: Component = () => {
         await cancelGoogleAccountChange().catch(() => undefined)
         return
       }
-      if (code === 'auth/popup-closed-by-user') {
-        setReauthError(GOOGLE_ACCOUNT_CHANGE_COPY.popupClosed)
-      } else if (code === 'auth/user-mismatch' || code === 'invalid_credentials') {
+      // 本人確認のポップアップを自分で閉じただけなら、エラーとして扱わない。
+      if (isAuthPopupClosedError(caught)) return
+      if (code === 'auth/user-mismatch' || code === 'invalid_credentials') {
         setReauthError(GOOGLE_ACCOUNT_CHANGE_COPY.userMismatch(currentEmail()))
       } else {
         setReauthError(toUserFriendlyErrorMessage(caught, GOOGLE_ACCOUNT_CHANGE_COPY.failure))
@@ -245,11 +248,8 @@ export const GoogleAccountChangeForm: Component = () => {
   }
 
   return (
-    <section
-      aria-labelledby="google-account-change-title"
-      class="mt-10 border-t border-border pt-6"
-    >
-      <h3 id="google-account-change-title" class="flex items-center gap-2 font-semibold text-text">
+    <section aria-labelledby="google-account-change-title" class={SETTINGS_SUBSECTION_CLASS}>
+      <h3 id="google-account-change-title" class={SETTINGS_SUBSECTION_TITLE_CLASS}>
         <ArrowRightLeft aria-hidden="true" class="h-5 w-5" />
         {GOOGLE_ACCOUNT_CHANGE_COPY.title}
       </h3>
@@ -313,6 +313,13 @@ export const GoogleAccountChangeForm: Component = () => {
                       <span class="sr-only">{GOOGLE_ACCOUNT_CHANGE_COPY.currentLabel}</span>
                       {currentEmail()}
                     </p>
+                    {/* 変更でXでのログインが使えなくなることを、変更前の操作の場で示す。 */}
+                    <Show when={props.xLinked}>
+                      <span class="inline-flex items-center gap-1 self-center rounded-full border border-warning-border bg-warning-bg px-2 py-0.5 text-xs text-warning">
+                        <TriangleAlert aria-hidden="true" class="h-3.5 w-3.5 shrink-0" />
+                        {GOOGLE_ACCOUNT_CHANGE_COPY.xLinkRemoved}
+                      </span>
+                    </Show>
                     <ArrowDown aria-hidden="true" class="h-5 w-5 self-center text-text-muted" />
                     {/* 変更先の枠そのものを押してアカウント選択を開く。選択済みなら選び直しになる。 */}
                     <Button

@@ -5,7 +5,7 @@ Solid.js + Rsbuild をベースに、CHUNITHM プレイデータの閲覧・管�
 
 ## 主な機能
 
-- 認証（ログイン / 新規登録）
+- 認証（Google・X でのログイン / 新規登録。詳細は [ログイン方法](docs/authentication.md)）
 - ユーザページ（プレイヤー情報、リザルト、統計）
 - 楽曲一覧・楽曲詳細（通常 / WORLD'S END）
 - 目標管理

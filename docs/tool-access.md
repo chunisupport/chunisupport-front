@@ -15,7 +15,7 @@ route に `RequirePlayerData`（`src/components/guards/RequirePlayerData.tsx`）
 
 - ダッシュボード
 - フレンドVS
-- 苦手譜面インスペクター（Online・Unified_test を含む。Unified_test は ADMIN 権限も必要）
+- 苦手譜面インスペクター（Online を含む）
 - 全曲ベスト枠
 - ウニ埋めマトリックス
 - 未解禁曲ディスカバー

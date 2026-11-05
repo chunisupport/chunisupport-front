@@ -12,6 +12,7 @@ import {
   calculatePlayerStatsPercent,
   filterPlayerStatsRecords,
   findPlayerStatsCandidates,
+  formatPlayerStatsHeatmapValue,
   hasPlayerStatsAchievement,
   isPlayerStatsFilterModified,
 } from './playerStatsDashboard'
@@ -32,6 +33,62 @@ test('総数が0件の場合の達成率は0になる', () => {
   const result = calculatePlayerStatsPercent(count, total)
 
   assert.equal(result, 0)
+})
+
+test('ヒートマップの表示値は件数・残数・達成率・残り割合を切り替えられること', () => {
+  // Given: 3譜面中1譜面を達成している。
+  const count = 1
+  const total = 3
+
+  // When: 割合表示と残り表示の組み合わせごとに整形する。
+  const results = [
+    { showPercent: false, showRemaining: false },
+    { showPercent: false, showRemaining: true },
+    { showPercent: true, showRemaining: false },
+    { showPercent: true, showRemaining: true },
+  ].map((options) => formatPlayerStatsHeatmapValue(count, total, options))
+
+  // Then: 残り割合は切り捨てた達成率との合計が100%になる。
+  assert.deepEqual(results, ['1', '2', '33.33%', '66.67%'])
+})
+
+test('ヒートマップの残り割合は端数を切り捨てた達成率から求めること', () => {
+  // Given: 達成率が99.99%をわずかに超え、100%未満になる。
+  const count = 99_999
+  const total = 100_000
+
+  // When
+  const percent = formatPlayerStatsHeatmapValue(count, total, {
+    showPercent: true,
+    showRemaining: false,
+  })
+  const remaining = formatPlayerStatsHeatmapValue(count, total, {
+    showPercent: true,
+    showRemaining: true,
+  })
+
+  // Then: 未達成が残る間は0.00%にならない。
+  assert.deepEqual([percent, remaining], ['99.99%', '0.01%'])
+})
+
+test('ヒートマップの残りは未達成のみなら100.00%、全件達成なら0になること', () => {
+  // Given: 3譜面中、未達成のみと全件達成の2通り。
+  const total = 3
+  const options = [
+    { showPercent: false, showRemaining: true },
+    { showPercent: true, showRemaining: true },
+  ]
+
+  // When
+  const [noneCount, nonePercent] = options.map((option) =>
+    formatPlayerStatsHeatmapValue(0, total, option)
+  )
+  const [allCount, allPercent] = options.map((option) =>
+    formatPlayerStatsHeatmapValue(total, total, option)
+  )
+
+  // Then
+  assert.deepEqual([noneCount, nonePercent, allCount, allPercent], ['3', '100.00%', '0', '0.00%'])
 })
 
 /**

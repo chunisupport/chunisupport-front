@@ -14,6 +14,7 @@ import {
   toChartLevelLabel,
 } from './chartLevel'
 import { isNullableSelectionMatched } from './filterSelection'
+import { formatInteger, truncateDecimal } from './numberFormat'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES } from './scoreRank'
 import { isTheoreticalOverPowerTargetDifficulty } from './theoreticalOverPowerTarget'
 
@@ -208,6 +209,44 @@ export const isPlayerStatsFilterModified = (
  */
 export const calculatePlayerStatsPercent = (count: number, total: number): number =>
   total > 0 ? (count / total) * 100 : 0
+
+/** 全件達成時の達成率 */
+const PLAYER_STATS_PERCENT_MAX = 100
+
+/** 達成状況ヒートマップに表示する達成率・残り割合の小数点以下桁数 */
+const PLAYER_STATS_HEATMAP_PERCENT_DECIMAL_PLACES = 2
+
+/** 達成状況ヒートマップのセル上段に表示する値の指定 */
+export type PlayerStatsHeatmapValueOptions = {
+  /** 件数の代わりに割合で表示するか */
+  showPercent: boolean
+  /** 達成済みの代わりに未達成の残りを表示するか */
+  showRemaining: boolean
+}
+
+/**
+ * 達成状況ヒートマップのセル上段に表示する値を整形する。
+ * 残り割合は、切り捨てた達成率との合計が100%になるよう求める。
+ *
+ * @param count - 達成件数。
+ * @param total - 集計対象の全譜面数。
+ * @param options - 割合表示・残り表示の有無。
+ * @returns 達成件数、残数、小数第2位までの達成率、または残り割合。
+ */
+export const formatPlayerStatsHeatmapValue = (
+  count: number,
+  total: number,
+  options: PlayerStatsHeatmapValueOptions
+): string => {
+  if (!options.showPercent) return formatInteger(options.showRemaining ? total - count : count)
+
+  const percent = truncateDecimal(
+    calculatePlayerStatsPercent(count, total),
+    PLAYER_STATS_HEATMAP_PERCENT_DECIMAL_PLACES
+  )
+  const value = options.showRemaining ? PLAYER_STATS_PERCENT_MAX - percent : percent
+  return `${value.toFixed(PLAYER_STATS_HEATMAP_PERCENT_DECIMAL_PLACES)}%`
+}
 
 /**
  * レコードが指定した到達条件を満たすか判定する。

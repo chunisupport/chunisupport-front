@@ -1,6 +1,5 @@
 import { Collapsible } from '@kobalte/core/collapsible'
 import { ToggleGroup } from '@kobalte/core/toggle-group'
-import { Tooltip } from '@kobalte/core/tooltip'
 import {
   type CollisionDetector,
   closestCenter,
@@ -23,6 +22,7 @@ import type { Component } from 'solid-js'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { AppIconButton } from '../../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../../components/common/AppDisclosureTrigger'
+import { AppTooltipIconButton } from '../../../../../components/common/AppTooltipIconButton'
 import type { GoalDTO } from '../../../../../types/api'
 import {
   ADD_GOAL_LABEL,
@@ -499,29 +499,20 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
           </div>
           <div class="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
             <Show when={displayedGoals().length > 0}>
-              <Tooltip placement="bottom" gutter={4} openDelay={400}>
-                <Tooltip.Trigger
-                  as={AppIconButton}
-                  tone="ghost"
-                  aria-label={
-                    areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL
-                  }
-                  disabled={props.isReordering}
-                  onClick={handleToggleAll}
+              <AppTooltipIconButton
+                tone="ghost"
+                placement="bottom"
+                label={areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL}
+                disabled={props.isReordering}
+                onClick={handleToggleAll}
+              >
+                <Show
+                  when={areAllGoalsClosed()}
+                  fallback={<ChevronsRight size={18} aria-hidden="true" />}
                 >
-                  <Show
-                    when={areAllGoalsClosed()}
-                    fallback={<ChevronsRight size={18} aria-hidden="true" />}
-                  >
-                    <ChevronsDown size={18} aria-hidden="true" />
-                  </Show>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content class="z-50 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
-                    {areAllGoalsClosed() ? EXPAND_ALL_GOALS_LABEL : COLLAPSE_ALL_GOALS_LABEL}
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip>
+                  <ChevronsDown size={18} aria-hidden="true" />
+                </Show>
+              </AppTooltipIconButton>
             </Show>
             <GoalGroupDisplayModeToggle
               value={props.groupDisplayMode}

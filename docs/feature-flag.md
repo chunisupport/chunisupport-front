@@ -1,6 +1,6 @@
 # フロントエンド feature-flag
 
-運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは、配備設定の確認用の `feature_flag_probe` だけです（後述）。
+運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは、配備設定の確認用の `feature_flag_probe`（後述）と、X でのログインを切り替える `x_login`（[ログイン方法](authentication.md)）です。
 
 API からのフラグ取得、ユーザー単位・割合での公開、実行中の切り替え、緊急停止スイッチは扱いません。無効な機能のコードをバンドルから除去する仕組みでもないため、隠したい情報は含めないでください。
 
@@ -48,6 +48,7 @@ export const FEATURE_FLAG_DEFINITIONS = {
 | `src/constants/featureFlags.ts` | 運用環境・型・フラグ定義 |
 | `src/utils/featureFlag.ts` | 環境名の検証、有効な機能名の集合を返す純粋関数 |
 | `src/lib/featureFlags.ts` | 公開環境変数の取得・検証、アプリ用の一度だけの解決 |
+| `src/lib/authProviders.ts` | 認証プロバイダの定義の `featureFlag` で絞った、画面に表示する一覧（`isFeatureEnabled` を使うため画面側に置く） |
 
 画面からは `src/lib/featureFlags.ts` の `APP_ENVIRONMENT` / `isFeatureEnabled` を利用します。環境は実行中に変わらないため、Signal や Primitive / store は使いません。
 

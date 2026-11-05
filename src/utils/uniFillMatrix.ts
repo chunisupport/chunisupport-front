@@ -84,6 +84,8 @@ export type UniFillMatrixViewSettings = {
   levelConstAxis: PlayerStatsHeatmapAxis
   /** 達成件数の代わりに達成率を表示するか */
   showPercent: boolean
+  /** 達成済みの代わりに未達成の残り（残数・残り割合）を表示するか */
+  showRemaining: boolean
   /** 未解禁設定に登録された楽曲・譜面を集計から除外するか */
   excludeLockedSongs: boolean
 }
@@ -125,6 +127,8 @@ export const normalizeUniFillMatrixViewSettings = (
         ?.value ?? fallback.levelConstAxis,
     showPercent:
       typeof source.showPercent === 'boolean' ? source.showPercent : fallback.showPercent,
+    showRemaining:
+      typeof source.showRemaining === 'boolean' ? source.showRemaining : fallback.showRemaining,
     excludeLockedSongs:
       typeof source.excludeLockedSongs === 'boolean'
         ? source.excludeLockedSongs

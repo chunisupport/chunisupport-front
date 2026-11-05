@@ -17,6 +17,8 @@ export const INVALID_APP_ENVIRONMENT_MESSAGE = `PUBLIC_APP_ENV は ${APP_ENVIRON
 export const FEATURE_FLAG_DEFINITIONS = {
   /** 管理画面から配備設定を確認するための機能。API と同名。確認が済んだら削除する。 */
   feature_flag_probe: { develop: true, staging: true, production: false },
+  /** X でのログイン・新規登録・ログイン方法の連携。本番の Firebase で X を有効にするまで無効にする。 */
+  x_login: { develop: true, staging: true, production: false },
 } as const satisfies Record<string, FeatureFlagDefinition>
 
 /** 登録済みの機能名。定義が0件の場合は never。 */

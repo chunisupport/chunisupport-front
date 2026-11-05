@@ -5,7 +5,7 @@ import { createSignal } from 'solid-js'
 import { reauthenticateAndGetToken } from '../../api/reauthenticate'
 import { updateUsername } from '../../api/settings'
 import { AppButton } from '../../components/common/AppButton'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
@@ -13,6 +13,7 @@ import {
   validateUsername,
 } from '../../utils/usernameInput'
 import { USERNAME_CHANGE_COPY } from './AccountSettings.constants'
+import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
 type UsernameChangeFormProps = {
   /** 現在のユーザーネーム。 */
@@ -71,10 +72,10 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
       setUsernameError('')
       setUsernameSuccess(USERNAME_CHANGE_COPY.success)
     } catch (caught) {
+      // 再認証のポップアップを自分で閉じただけなら、エラーとして扱わない。
+      if (isAuthPopupClosedError(caught)) return
       const apiError = caught as Error & { code?: string }
-      if (apiError.code === 'auth/popup-closed-by-user') {
-        setUsernameError(USERNAME_CHANGE_COPY.popupClosed)
-      } else if (apiError.code === 'auth/user-mismatch') {
+      if (apiError.code === 'auth/user-mismatch') {
         setUsernameError(USERNAME_CHANGE_COPY.userMismatch)
       } else if (apiError.code === 'recent_sign_in_required') {
         setUsernameError(USERNAME_CHANGE_COPY.recentSignInExpired)
@@ -87,8 +88,8 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
   }
 
   return (
-    <section aria-labelledby="username-change-title" class="mt-10 border-t border-border pt-6">
-      <h3 id="username-change-title" class="flex items-center gap-2 font-semibold text-text">
+    <section aria-labelledby="username-change-title" class={SETTINGS_SUBSECTION_CLASS}>
+      <h3 id="username-change-title" class={SETTINGS_SUBSECTION_TITLE_CLASS}>
         <UserRoundPen aria-hidden="true" class="h-5 w-5" />
         {USERNAME_CHANGE_COPY.title}
       </h3>

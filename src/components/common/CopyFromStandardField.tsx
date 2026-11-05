@@ -1,4 +1,3 @@
-import { Tooltip } from '@kobalte/core/tooltip'
 import { CornerDownLeft } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createEffect, createSignal, createUniqueId, Show } from 'solid-js'
@@ -8,7 +7,7 @@ import {
   findStandardSongWikiPageTitle,
   type StandardSongLookupItem,
 } from '../../utils/standardSongLookup'
-import { AppIconButton } from './AppButton'
+import { AppTooltipIconButton } from './AppTooltipIconButton'
 import { COPY_FROM_STANDARD_COPY } from './CopyFromStandardField.constants'
 
 type CopyFromStandardFieldBaseProps = {
@@ -134,29 +133,21 @@ const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element =
   }
 
   const copyButton = (
-    <Tooltip placement="top" gutter={4} openDelay={400}>
-      <Tooltip.Trigger
-        as={AppIconButton}
-        class="relative h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
-        disabled={isCopyDisabled()}
-        aria-label={copy().ariaLabel}
-        aria-describedby={errorMessage() ? errorId : undefined}
-        onClick={handleCopy}
+    <AppTooltipIconButton
+      class="relative h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
+      disabled={isCopyDisabled()}
+      label={copy().ariaLabel}
+      aria-describedby={errorMessage() ? errorId : undefined}
+      onClick={handleCopy}
+    >
+      <CornerDownLeft class="h-4 w-4" aria-hidden="true" />
+      <span
+        class="absolute right-0.5 top-0.5 origin-top-right scale-75 bg-inherit px-0.5 py-0.5 font-oswald text-xs font-semibold leading-none [text-box:trim-both_cap_alphabetic]"
+        aria-hidden="true"
       >
-        <CornerDownLeft class="h-4 w-4" aria-hidden="true" />
-        <span
-          class="absolute right-0.5 top-0.5 origin-top-right scale-75 bg-inherit px-0.5 py-0.5 font-oswald text-xs font-semibold leading-none [text-box:trim-both_cap_alphabetic]"
-          aria-hidden="true"
-        >
-          {COPY_FROM_STANDARD_COPY.standardBadge}
-        </span>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Content class="z-60 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
-          {copy().ariaLabel}
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip>
+        {COPY_FROM_STANDARD_COPY.standardBadge}
+      </span>
+    </AppTooltipIconButton>
   )
   const children = props.children
 

@@ -3,8 +3,8 @@ import { Check } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 import { getHeatmapBackground } from '../../utils/heatmapColor'
-import { formatInteger, formatTruncatedFixed } from '../../utils/numberFormat'
-import { calculatePlayerStatsPercent } from '../../utils/playerStatsDashboard'
+import { formatInteger } from '../../utils/numberFormat'
+import { formatPlayerStatsHeatmapValue } from '../../utils/playerStatsDashboard'
 
 /** 達成件数と総数の区切り文字 */
 const HEATMAP_COUNT_SEPARATOR = '/'
@@ -32,6 +32,11 @@ type HeatmapCountCellProps = {
   total: number
   /** 上段を達成率で表示するか */
   showPercent: boolean
+  /**
+   * 上段を未達成の残り（残数・残り割合）で表示するか。
+   * 達成率表示と併用すると未達成のみのセルが「100.00%」になり最小幅（min-w-16）に収まらないため、呼び出し側で列幅を広げること。
+   */
+  showRemaining?: boolean
   /** 全件達成時に数値の代わりにチェックアイコンを表示するか */
   showCompleteMark?: boolean
   /** 集計対象がないセルを全件達成時と同じ背景色と大きめの白い記号で表示するか */
@@ -47,12 +52,24 @@ type HeatmapCountCellProps = {
 /**
  * 達成件数と総数を色の濃淡付きで描画する表セル。
  *
- * @param props - 達成件数、総数、達成率表示の有無、全件達成マークの有無、空セルの背景色指定、追加クラス、クリック時の処理。
- * @returns 上段に件数または達成率、下段に件数/総数を表示するセル。総数が0件の場合は記号のみ表示し、showEmptyAsComplete指定時は全件達成時の背景色と大きめの白い記号で表示する。
+ * @param props - 達成件数、総数、達成率表示・残り表示の有無、全件達成マークの有無、空セルの背景色指定、追加クラス、クリック時の処理。
+ * @returns 上段に件数・残数・達成率・残り割合のいずれか、下段に件数/総数（達成件数・残数表示時は/総数のみ）を表示するセル。総数が0件の場合は記号のみ表示し、showEmptyAsComplete指定時は全件達成時の背景色と大きめの白い記号で表示する。
  * 全件達成マーク有効時に全件達成していればチェックアイコンのみ表示する。onSelect 指定時はセル全体がボタンになる。
  */
 export const HeatmapCountCell = (props: HeatmapCountCellProps): JSX.Element => {
-  const percent = () => calculatePlayerStatsPercent(props.count, props.total)
+  /**
+   * 上段を未達成の残りで表示するか判定する。
+   *
+   * @returns 残り表示が指定されている場合はtrue。
+   */
+  const showRemaining = () => props.showRemaining === true
+  /**
+   * 下段に達成件数を表示するか判定する。
+   * 件数表示（達成件数・残数）のときは通常表示と同じ「/総数」の2段構成にそろえるため省く。
+   *
+   * @returns 上段が達成率または残り割合の場合はtrue。
+   */
+  const showsCountInDetail = () => props.showPercent
   /**
    * セル内の件数表示または全件達成マークを描画する。
    *
@@ -64,12 +81,13 @@ export const HeatmapCountCell = (props: HeatmapCountCellProps): JSX.Element => {
       fallback={
         <>
           <span class="block font-jost text-sm font-semibold leading-tight tabular-nums text-text">
-            {props.showPercent
-              ? `${formatTruncatedFixed(percent(), 2)}%`
-              : formatInteger(props.count)}
+            {formatPlayerStatsHeatmapValue(props.count, props.total, {
+              showPercent: props.showPercent,
+              showRemaining: showRemaining(),
+            })}
           </span>
           <span class="block font-jost text-xs leading-tight tabular-nums text-text-muted">
-            <Show when={props.showPercent}>{formatInteger(props.count)}</Show>
+            <Show when={showsCountInDetail()}>{formatInteger(props.count)}</Show>
             {HEATMAP_COUNT_SEPARATOR}
             {formatInteger(props.total)}
           </span>

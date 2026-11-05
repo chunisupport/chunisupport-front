@@ -25,6 +25,7 @@ import {
 } from './ApiTokenSettings.constants'
 import { isApiTokenNameError, isValidApiTokenName, normalizeApiTokenName } from './apiTokenName'
 import { formatSettingsDateTime } from './settingsDateTime'
+import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
 type ApiTokenSettingsSectionProps = {
   /** APIトークン一覧の取得を開始する認証済みユーザー名 */
@@ -361,10 +362,10 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
         <span class="sr-only">{EXTERNAL_LINK_NEW_TAB_DESCRIPTION}</span>
       </a>
 
-      <div id="api-token" class="mt-8 border-t border-border pt-6">
+      <div id="api-token" class={SETTINGS_SUBSECTION_CLASS}>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 class="text-lg font-semibold text-text">{API_TOKEN_SETTINGS_COPY.title}</h3>
+            <h3 class={SETTINGS_SUBSECTION_TITLE_CLASS}>{API_TOKEN_SETTINGS_COPY.title}</h3>
             <p class="mt-1 text-sm text-text-muted">{API_TOKEN_SETTINGS_COPY.description}</p>
           </div>
           <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">

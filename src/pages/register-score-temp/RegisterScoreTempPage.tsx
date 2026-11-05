@@ -26,7 +26,6 @@ const RegisterScoreTempPage = () => {
   const [selectedFile, setSelectedFile] = createSignal<File | null>(null)
   const [format, setFormat] = createSignal<UploadFormat | null>(null)
   const [isSubmitting, setIsSubmitting] = createSignal(false)
-  const [copied, setCopied] = createSignal(false)
 
   const detectFormat = (file: File): UploadFormat | null => {
     const extension = file.name.split('.').pop()?.toLowerCase()
@@ -159,50 +158,6 @@ const RegisterScoreTempPage = () => {
         >
           {isSubmitting() ? '送信中...' : 'アップロードする'}
         </AppButton>
-      </div>
-
-      <div class="mt-8">
-        <h2 class="text-lg font-semibold mb-2">ブックマークレットコード</h2>
-        <div>
-          <pre class="bg-surface-hover rounded-md p-4 overflow-x-auto text-sm">
-            {`javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();`}
-          </pre>
-        </div>
-        <div class="mt-2 flex items-center justify-end gap-2">
-          <Show when={copied()}>
-            <span class="text-action-primary text-xs">コピーしました！</span>
-          </Show>
-          <AppButton
-            variant="primary"
-            class="p-3"
-            onClick={() => {
-              const code =
-                'javascript:(function(){var e=document.createElement("script");e.src="https://reiwa.f5.si/bookmarklets/chunisupport_test.js?%22+Math.floor(Date.now()/1000);document.body.appendChild(e)})();'
-              if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-                navigator.clipboard.writeText(code).then(() => {
-                  setCopied(true)
-                  setTimeout(() => setCopied(false), 2000)
-                })
-              } else {
-                // フォールバック: テキストエリアを使ってコピー
-                const textarea = document.createElement('textarea')
-                textarea.value = code
-                document.body.appendChild(textarea)
-                textarea.select()
-                try {
-                  document.execCommand('copy')
-                  setCopied(true)
-                  setTimeout(() => setCopied(false), 2000)
-                } catch (_e) {
-                  alert('コピーに失敗しました。手動でコピーしてください。')
-                }
-                document.body.removeChild(textarea)
-              }
-            }}
-          >
-            コピー
-          </AppButton>
-        </div>
       </div>
     </div>
   )

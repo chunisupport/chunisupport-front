@@ -763,6 +763,7 @@ const VIEW_SETTINGS_FALLBACK: UniFillMatrixViewSettings = {
   horizontal: 'genre',
   levelConstAxis: 'level',
   showPercent: false,
+  showRemaining: false,
   excludeLockedSongs: false,
 }
 
@@ -775,6 +776,7 @@ test('保存済みの表示設定が正しい場合はそのまま復元され�
     horizontal: 'nameFolder',
     levelConstAxis: 'chartConstant',
     showPercent: true,
+    showRemaining: true,
     excludeLockedSongs: true,
   }
 
@@ -807,6 +809,7 @@ test('項目ごとに不正値だけが既定値へ戻ること', () => {
     horizontal: 'version',
     levelConstAxis: 'unknown',
     showPercent: 'true',
+    showRemaining: 1,
     excludeLockedSongs: 1,
   }
 
@@ -820,6 +823,7 @@ test('項目ごとに不正値だけが既定値へ戻ること', () => {
     horizontal: 'version',
     levelConstAxis: 'level',
     showPercent: false,
+    showRemaining: false,
     excludeLockedSongs: false,
   })
 })
@@ -840,7 +844,7 @@ test('縦軸と横軸が同じ属性または片方が不正な場合は両軸�
   }
 })
 
-test('旧形式の保存設定は既存の軸を維持し、難易度と埋め条件のみ既定値で補うこと', () => {
+test('旧形式の保存設定は既存の軸を維持し、保存されていない項目のみ既定値で補うこと', () => {
   // Given
   const saved = { vertical: 'version', horizontal: 'nameFolder', showPercent: true }
 

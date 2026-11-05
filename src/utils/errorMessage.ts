@@ -1,13 +1,16 @@
 import { type ErrorCode, errorMessages } from '../types/api'
 
+/** ユーザーが認証ポップアップを閉じたときに Firebase Auth が返すエラーコード。 */
+const AUTH_POPUP_CLOSED_ERROR_CODE = 'auth/popup-closed-by-user'
+
 const DEFAULT_USER_FRIENDLY_ERROR_MESSAGE =
   '予期せぬエラーが発生しました。時間をおいて再度お試しください。'
 
 const FIREBASE_AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/account-exists-with-different-credential':
-    'このGoogleアカウントは別の認証方法ですでに使用されています。',
-  'auth/cancelled-popup-request': 'Google認証がキャンセルされました。もう一度お試しください。',
-  'auth/credential-already-in-use': 'このGoogleアカウントはすでに使用されています。',
+    'このメールアドレスは別のログイン方法で使用されています。元の方法でログインしてください。',
+  'auth/cancelled-popup-request': '認証がキャンセルされました。もう一度お試しください。',
+  'auth/credential-already-in-use': 'このアカウントはすでに別のユーザーで使用されています。',
   'auth/email-already-in-use': 'このメールアドレスはすでに使用されています。',
   'auth/internal-error': DEFAULT_USER_FRIENDLY_ERROR_MESSAGE,
   'auth/invalid-credential': '認証情報が無効です。もう一度ログインしてください。',
@@ -15,8 +18,9 @@ const FIREBASE_AUTH_ERROR_MESSAGES: Record<string, string> = {
     '通信に失敗しました。ネットワーク接続を確認してもう一度お試しください。',
   'auth/operation-not-allowed': 'この認証方法は現在利用できません。',
   'auth/popup-blocked': 'ポップアップがブロックされました。ブラウザの設定を確認してください。',
-  'auth/popup-closed-by-user': 'Google認証がキャンセルされました。',
-  'auth/requires-recent-login': '再認証が必要です。もう一度Googleログインを行ってください。',
+  [AUTH_POPUP_CLOSED_ERROR_CODE]: '認証がキャンセルされました。',
+  'auth/provider-already-linked': 'このログイン方法はすでに連携されています。',
+  'auth/requires-recent-login': '再認証が必要です。もう一度ログインを行ってください。',
   'auth/too-many-requests': 'リクエストが多すぎます。しばらく待ってから再試行してください。',
   'auth/user-disabled': 'このアカウントは利用できません。',
   'auth/user-not-found': '認証情報が無効です。もう一度ログインしてください。',
@@ -52,6 +56,16 @@ type ErrorLike = {
  */
 const toErrorLike = (error: unknown): ErrorLike | null =>
   typeof error === 'object' && error !== null ? (error as ErrorLike) : null
+
+/**
+ * ユーザー自身が認証ポップアップを閉じて操作をやめたエラーかを判定する。
+ * 本人の意思による中断のため、呼び出し側ではエラー表示せずに元の状態へ戻す用途を想定する。
+ *
+ * @param error - catch で受け取った任意のエラー値。
+ * @returns 認証ポップアップを閉じたエラーなら true。
+ */
+export const isAuthPopupClosedError = (error: unknown): boolean =>
+  toErrorLike(error)?.code === AUTH_POPUP_CLOSED_ERROR_CODE
 
 /**
  * APIエラーコードに対応するユーザー向けメッセージを取得する。

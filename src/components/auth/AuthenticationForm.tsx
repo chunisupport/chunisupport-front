@@ -1,15 +1,21 @@
 import type { JSX } from 'solid-js'
-import { createSignal, createUniqueId, Show } from 'solid-js'
+import { createSignal, createUniqueId, For, Show } from 'solid-js'
 
 import { CF_TURNSTILE_SITE_KEY } from '../../config'
 import type { UserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { AppButton } from '../common/AppButton'
 import { Turnstile } from '../Turnstile/Turnstile'
-import { TURNSTILE_ERROR_MESSAGE } from './googleLoginForm.constants'
+import { TURNSTILE_ERROR_MESSAGE } from './providerLoginForm.constants'
 
-/** 認証方法固有の処理・入力欄と、ログイン結果の通知先を指定する。 */
-export type AuthenticationFormProps = {
+/** フォームから選べるログイン方法 */
+export type AuthenticationMethod = {
+  /** フォーム内でログイン方法を区別する値 */
+  id: string
+  /** 送信ボタンの文言 */
+  label: string
+  /** 送信ボタンのアイコン */
+  icon?: JSX.Element
   /**
    * Firebase認証とAPIログインを実行する。
    *
@@ -17,14 +23,16 @@ export type AuthenticationFormProps = {
    * @returns バックエンドで検証済みのユーザー情報。
    */
   login: (turnstileToken: string) => Promise<UserDTO>
-  /** 送信ボタンの文言 */
-  submitLabel: string
+}
+
+/** 認証方法固有の処理・入力欄と、ログイン結果の通知先を指定する。 */
+export type AuthenticationFormProps = {
+  /** 送信ボタンとして並べるログイン方法。Enterキーでの送信は先頭の方法を使う。 */
+  methods: readonly AuthenticationMethod[]
   /** 処理中の送信ボタンの文言 */
   submittingLabel: string
   /** 失敗処理でエラーが発生した場合の文言 */
   fallbackErrorMessage: string
-  /** 送信ボタンのアイコン */
-  icon?: JSX.Element
   /** 認証方法固有の入力欄 */
   children?: JSX.Element
   /**
@@ -45,14 +53,16 @@ export type AuthenticationFormProps = {
 
 /**
  * Turnstileと送信・失敗処理を共通化したログインフォームを表示する。
+ * 複数のログイン方法を並べても、Turnstileの確認は1回で済むようにフォームを共有する。
  *
- * @param props - ログイン成功・失敗後のページ固有コールバック。
+ * @param props - ログイン方法と、ログイン成功・失敗後のページ固有コールバック。
  * @returns 認証用のフォーム要素。
  */
 export const AuthenticationForm = (props: AuthenticationFormProps) => {
   const formErrorId = createUniqueId()
   const [errorMessage, setErrorMessage] = createSignal('')
-  const [isSubmitting, setIsSubmitting] = createSignal(false)
+  const [submittingMethodId, setSubmittingMethodId] = createSignal<string>()
+  const isSubmitting = () => submittingMethodId() !== undefined
   const [turnstileToken, setTurnstileToken] = createSignal('')
   const [turnstileResetKey, setTurnstileResetKey] = createSignal(0)
 
@@ -82,7 +92,7 @@ export const AuthenticationForm = (props: AuthenticationFormProps) => {
   }
 
   /**
-   * ログインを1回だけ送信し、成功・失敗を親ページへ通知する。
+   * 押されたボタンのログイン方法で1回だけ送信し、成功・失敗を親ページへ通知する。
    *
    * @param event - ログインフォームの送信イベント。
    * @returns ログイン処理の完了後に解決されるPromise。
@@ -92,16 +102,20 @@ export const AuthenticationForm = (props: AuthenticationFormProps) => {
     const verifiedToken = turnstileToken()
     if (!verifiedToken || isSubmitting()) return
 
-    setIsSubmitting(true)
+    const submitterValue = (event.submitter as HTMLButtonElement | null)?.value
+    const method = props.methods.find((entry) => entry.id === submitterValue) ?? props.methods[0]
+    if (!method) return
+
+    setSubmittingMethodId(method.id)
     setErrorMessage('')
     try {
-      const user = await props.login(verifiedToken)
+      const user = await method.login(verifiedToken)
       await props.onSuccess(user)
     } catch (error) {
       resetTurnstile()
       await handleLoginFailure(error)
     } finally {
-      setIsSubmitting(false)
+      setSubmittingMethodId(undefined)
     }
   }
 
@@ -131,16 +145,23 @@ export const AuthenticationForm = (props: AuthenticationFormProps) => {
           {errorMessage()}
         </p>
       </Show>
-      <AppButton
-        type="submit"
-        variant="surface"
-        fullWidth
-        disabled={isSubmitting() || !turnstileToken()}
-        class="min-h-11 rounded-md shadow-sm"
-      >
-        {props.icon}
-        {isSubmitting() ? props.submittingLabel : props.submitLabel}
-      </AppButton>
+      <div class="space-y-3">
+        <For each={props.methods}>
+          {(method) => (
+            <AppButton
+              type="submit"
+              value={method.id}
+              variant="surface"
+              fullWidth
+              disabled={isSubmitting() || !turnstileToken()}
+              class="min-h-11 rounded-md shadow-sm"
+            >
+              {method.icon}
+              {submittingMethodId() === method.id ? props.submittingLabel : method.label}
+            </AppButton>
+          )}
+        </For>
+      </div>
     </form>
   )
 }

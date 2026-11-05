@@ -1,11 +1,10 @@
 import { TextField } from '@kobalte/core/text-field'
-import { Tooltip } from '@kobalte/core/tooltip'
 import { CornerDownLeft, ExternalLink } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { WIKI_BASE_URL } from '../../config'
 import { SONG_EDIT_INPUT_LIMITS } from '../../constants/songMaster'
 import { buildWikiPageUrl, generateWikiPageTitle } from '../../utils/wiki'
-import { AppIconButton } from './AppButton'
+import { AppTooltipIconButton } from './AppTooltipIconButton'
 import { WIKI_PAGE_TITLE_FIELD_COPY as COPY } from './WikiPageTitleField.constants'
 
 type WikiPageTitleFieldProps = {
@@ -57,38 +56,22 @@ const WikiPageTitleField = (props: WikiPageTitleFieldProps): JSX.Element => {
           />
         </TextField>
         {props.leadingAction}
-        <Tooltip placement="top" gutter={4} openDelay={400}>
-          <Tooltip.Trigger
-            as={AppIconButton}
-            class="h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
-            disabled={!props.title.trim()}
-            aria-label={COPY.generate}
-            onClick={() => props.onInput(generateWikiPageTitle(props.title))}
-          >
-            <CornerDownLeft class="h-4 w-4" aria-hidden="true" />
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content class="z-60 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
-              {COPY.generate}
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip>
-        <Tooltip placement="top" gutter={4} openDelay={400}>
-          <Tooltip.Trigger
-            as={AppIconButton}
-            class="h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
-            disabled={!pageUrl()}
-            aria-label={COPY.open}
-            onClick={openPage}
-          >
-            <ExternalLink class="h-4 w-4" aria-hidden="true" />
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content class="z-60 rounded-md border border-border-strong bg-surface-raised px-2 py-1 text-xs text-text shadow-lg">
-              {COPY.open}
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip>
+        <AppTooltipIconButton
+          class="h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
+          disabled={!props.title.trim()}
+          label={COPY.generate}
+          onClick={() => props.onInput(generateWikiPageTitle(props.title))}
+        >
+          <CornerDownLeft class="h-4 w-4" aria-hidden="true" />
+        </AppTooltipIconButton>
+        <AppTooltipIconButton
+          class="h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
+          disabled={!pageUrl()}
+          label={COPY.open}
+          onClick={openPage}
+        >
+          <ExternalLink class="h-4 w-4" aria-hidden="true" />
+        </AppTooltipIconButton>
       </div>
     </div>
   )

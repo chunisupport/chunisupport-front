@@ -1,13 +1,16 @@
 import { initializeApp } from 'firebase/app'
 import {
   type Auth,
+  type AuthProvider,
   browserPopupRedirectResolver,
   GoogleAuthProvider,
   getAuth,
   initializeAuth,
   inMemoryPersistence,
+  TwitterAuthProvider,
 } from 'firebase/auth'
 
+import type { AuthProviderKind } from '../constants/authProviders'
 import { getEnv, getRequiredEnv } from './env'
 
 const env = getEnv()
@@ -26,7 +29,34 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
-export const googleProvider = new GoogleAuthProvider()
+
+/** 認証プロバイダ作成時の追加指定 */
+type AuthProviderOptions = {
+  /** Google のアカウント選択画面で事前選択するメールアドレス */
+  loginHint?: string
+}
+
+/**
+ * 認証プロバイダの種類から Firebase のプロバイダを作成する。
+ *
+ * @param kind - 認証プロバイダの種類。
+ * @param options - Google のアカウント選択画面への追加指定。
+ * @returns ポップアップ認証に渡す Firebase のプロバイダ。
+ */
+export const createAuthProvider = (
+  kind: AuthProviderKind,
+  options: AuthProviderOptions = {}
+): AuthProvider => {
+  switch (kind) {
+    case 'google': {
+      const provider = new GoogleAuthProvider()
+      if (options.loginHint) provider.setCustomParameters({ login_hint: options.loginHint })
+      return provider
+    }
+    case 'x':
+      return new TwitterAuthProvider()
+  }
+}
 
 /** ログイン用アカウント変更で変更先のサインインに使う Firebase App 名 */
 const ACCOUNT_CHANGE_APP_NAME = 'account-change'
