@@ -5,8 +5,11 @@ import { defineConfig, loadEnv } from '@rsbuild/core'
 import { pluginAssetsRetry } from '@rsbuild/plugin-assets-retry'
 import { pluginBabel } from '@rsbuild/plugin-babel'
 import { pluginSolid } from '@rsbuild/plugin-solid'
+import { APP_ENVIRONMENTS, INVALID_APP_ENVIRONMENT_MESSAGE } from './src/constants/featureFlags.ts'
 
+/** 開発・ビルド時に必須とする公開環境変数。 */
 const REQUIRED_PUBLIC_ENV_KEYS = [
+  'PUBLIC_APP_ENV',
   'PUBLIC_BACKEND_URL',
   'PUBLIC_FRONTEND_URL',
   'PUBLIC_DOCUMENTATION_URL',
@@ -104,6 +107,11 @@ export default defineConfig(({ env, envMode }) => {
   if (missingEnvKeys.length > 0) {
     envResult.cleanup()
     throw new Error(`必須環境変数が設定されていません: ${missingEnvKeys.join(', ')}`)
+  }
+
+  if (!APP_ENVIRONMENTS.includes(envResult.rawPublicVars.PUBLIC_APP_ENV)) {
+    envResult.cleanup()
+    throw new Error(INVALID_APP_ENVIRONMENT_MESSAGE)
   }
 
   const publicEnvDefine = {
