@@ -129,7 +129,15 @@ const createSongsStore = () => {
     }
   }
 
+  /**
+   * 取得済みの有効な通常楽曲数を返す。
+   * @returns 収録曲数。取得前または取得失敗時はundefined。
+   */
+  const songCount = (): number | undefined =>
+    songsResponse.error ? undefined : songsResponse()?.songs.length
+
   return {
+    songCount,
     songsResponse,
     worldsendSongsResponse,
     ensureSongsLoaded,
