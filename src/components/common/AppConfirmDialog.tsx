@@ -29,11 +29,39 @@ type AppConfirmDialogProps = {
 
 /**
  * 取り消しにくい操作の前に内容を確認するダイアログを表示する。
+ * 閉じた後は、開く直前にフォーカスしていた要素が画面に残っていればフォーカスを戻す。
  *
  * @param props - 見出し、説明、ボタン文言、送信状態と操作ハンドラー。
  * @returns Kobalte AlertDialog による確認ダイアログ。
  */
 export const AppConfirmDialog = (props: AppConfirmDialogProps): JSX.Element => {
+  /** ダイアログを開く直前にフォーカスしていた要素。閉じた後にフォーカスを戻す先 */
+  let returnFocusTarget: HTMLElement | undefined
+
+  /**
+   * ダイアログ表示時に、開く直前のフォーカス要素を閉じた後の戻り先として記録する。
+   * Trigger を使わずに開くため、Kobalte はトリガー要素へフォーカスを戻せない。
+   *
+   * @returns なし。
+   */
+  const rememberReturnFocusTarget = (): void => {
+    const activeElement = document.activeElement
+    returnFocusTarget =
+      activeElement instanceof HTMLElement && activeElement !== document.body
+        ? activeElement
+        : undefined
+  }
+
+  /**
+   * ダイアログを閉じた後、開く直前のフォーカス要素がまだ画面にあればフォーカスを戻す。
+   *
+   * @returns なし。
+   */
+  const restoreFocus = (): void => {
+    if (returnFocusTarget?.isConnected) returnFocusTarget.focus({ preventScroll: true })
+    returnFocusTarget = undefined
+  }
+
   /**
    * Esc、オーバーレイ、キャンセルボタンからの開閉要求を、送信中を除いて呼び出し側へ通知する。
    *
@@ -49,7 +77,11 @@ export const AppConfirmDialog = (props: AppConfirmDialogProps): JSX.Element => {
     <AlertDialog open={props.open} onOpenChange={requestOpenChange}>
       <AlertDialog.Portal>
         <AlertDialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <AlertDialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface p-5 shadow-lg sm:p-6">
+        <AlertDialog.Content
+          onOpenAutoFocus={rememberReturnFocusTarget}
+          onCloseAutoFocus={restoreFocus}
+          class="fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface p-5 shadow-lg sm:p-6"
+        >
           <AlertDialog.Title class="shrink-0 text-lg font-bold text-text">
             {props.title}
           </AlertDialog.Title>
