@@ -16,12 +16,10 @@ import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import SongUnlockRequiredIcon from '../../components/SongUnlockRequiredIcon'
 import {
   SONG_CARD_CHART_ROW_HEIGHT_PX,
-  SONG_CARD_COPY,
   SONG_CARD_HEIGHT_PX,
   SONG_CARD_JACKET_HEIGHT_PX,
-  SONG_CARD_NOTES_EMPTY,
-  SONG_CARD_VERSION_NAME_CLASS,
-} from '../constants'
+} from '../../components/songCardLayout.constants.ts'
+import { SONG_CARD_COPY, SONG_CARD_NOTES_EMPTY, SONG_CARD_VERSION_NAME_CLASS } from '../constants'
 import {
   formatSongCardReleaseDate,
   formatSongCardReleaseLine,
