@@ -2,7 +2,7 @@ import {
   SONG_CARD_COLUMN_GAP_PX,
   SONG_CARD_PAGE_HORIZONTAL_PADDING_PX,
   SONG_CARD_WIDTH_PX,
-} from '../constants'
+} from '../../components/songCardLayout.constants.ts'
 
 /**
  * メイン領域からカード本文に使える幅を求める。

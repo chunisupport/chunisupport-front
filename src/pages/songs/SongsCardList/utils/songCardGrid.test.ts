@@ -2,12 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   SONG_CARD_COLUMN_GAP_PX,
-  SONG_CARD_DEFAULT_SORT_OPTION_ID,
   SONG_CARD_FHD_COLUMN_COUNT,
   SONG_CARD_FHD_CONTENT_WIDTH_PX,
-  SONG_CARD_SORT_OPTIONS,
   SONG_CARD_WIDTH_PX,
-} from '../constants'
+} from '../../components/songCardLayout.constants.ts'
+import { SONG_CARD_DEFAULT_SORT_OPTION_ID, SONG_CARD_SORT_OPTIONS } from '../constants'
 import {
   getSongCardContentWidth,
   getSongCardGridWidth,
