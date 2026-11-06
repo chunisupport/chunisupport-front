@@ -78,13 +78,29 @@ export const SONG_MANAGEMENT_MESSAGES = {
   standardCreated: '通常楽曲を追加しました。',
   standardDeleted: '楽曲を削除しました。',
   standardRestored: '楽曲を復活しました。',
-  standardDeleteConfirm: 'この楽曲を削除しますか？',
   worldsendUpdated: "WORLD'S END楽曲を更新しました。",
   worldsendCreated: "WORLD'S END楽曲を追加しました。",
   worldsendDeleted: "WORLD'S END楽曲を削除しました。",
   worldsendRestored: "WORLD'S END楽曲を復活しました。",
-  worldsendDeleteConfirm: "このWORLD'S END楽曲を削除しますか？",
 } as const
+
+/** 楽曲管理画面の削除確認ダイアログ文言 */
+export const SONG_MANAGEMENT_DELETE_DIALOG_COPY = {
+  standardTitle: '楽曲を削除しますか？',
+  worldsendTitle: "WORLD'S END楽曲を削除しますか？",
+  cancel: 'キャンセル',
+  submit: '削除する',
+  deleting: '削除中...',
+} as const
+
+/**
+ * 楽曲削除の確認ダイアログに表示する対象の説明を生成する。
+ *
+ * @param songTitle - 削除対象の楽曲名。
+ * @returns 確認ダイアログの説明文。
+ */
+export const formatManagedSongDeleteTargetMessage = (songTitle: string): string =>
+  `「${songTitle}」を削除します。`
 
 /** 楽曲管理一覧の仮想スクロール設定 */
 export const MANAGED_SONG_LIST_VIRTUAL = {

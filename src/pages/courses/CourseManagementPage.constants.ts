@@ -34,7 +34,9 @@ export const COURSE_MANAGEMENT_COPY = {
   deleteError: 'コースの削除に失敗しました。',
   restoreSuccess: 'コースを復元しました。',
   restoreError: 'コースの復元に失敗しました。',
-  deleteConfirm: 'このコースを削除しますか？',
+  deleteDialogTitle: 'コースを削除しますか？',
+  deleteSubmit: '削除する',
+  deleting: '削除中...',
 } as const
 
 /** コース入力のAPI制約 */
@@ -58,6 +60,15 @@ export const formatCourseEditLabel = (courseName: string): string => `${courseNa
  * @returns スクリーンリーダー向けの削除ラベル。
  */
 export const formatCourseDeleteLabel = (courseName: string): string => `${courseName}を削除`
+
+/**
+ * コース削除の確認ダイアログに表示する対象の説明を生成する。
+ *
+ * @param courseName - 削除対象のコース名。
+ * @returns 確認ダイアログの説明文。
+ */
+export const formatCourseDeleteTargetMessage = (courseName: string): string =>
+  `「${courseName}」を削除します。`
 
 /**
  * コース復元ボタンのアクセシブルなラベルを生成する。

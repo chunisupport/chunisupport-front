@@ -27,6 +27,10 @@ export const ADMIN_USER_LIST_COPY = {
   suspiciousUpdateSuccess: '不審アカウントフラグを変更しました。',
   privateLabel: '非公開フラグ',
   deleteButton: '削除',
+  deleteDialogTitle: 'ユーザーを物理削除しますか？',
+  deleteDialogCancel: 'キャンセル',
+  deleteDialogSubmit: '削除する',
+  deleting: '削除中...',
   deleteError: '削除に失敗しました。',
   deleteSuccess: 'ユーザーを削除しました。',
   tableHeaders: {
@@ -44,13 +48,13 @@ export const ADMIN_USER_LIST_COPY = {
 } as const
 
 /**
- * ユーザー物理削除の確認文言を作成する。
+ * ユーザー物理削除の確認ダイアログに表示する対象と影響の説明を作成する。
  *
  * @param username - 削除対象のユーザー名。
- * @returns 確認ダイアログに表示する文言。
+ * @returns 確認ダイアログの説明文。
  */
-export const formatAdminUserDeleteConfirmation = (username: string): string =>
-  `ユーザー ${username} を物理削除しますか？この操作は取り消せません。`
+export const formatAdminUserDeleteTargetMessage = (username: string): string =>
+  `ユーザー「${username}」を物理削除します。この操作は取り消せません。`
 
 /**
  * ユーザーごとのフラグ切り替えに使うアクセシブルなラベルを作成する。

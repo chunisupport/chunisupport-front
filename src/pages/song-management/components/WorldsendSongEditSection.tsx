@@ -7,6 +7,7 @@ import type { MasterItemDTO, NameFolderDTO, VersionSummaryDTO } from '../../../t
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
+  SONG_MANAGEMENT_DELETE_DIALOG_COPY,
   SONG_MANAGEMENT_INPUT_LIMITS,
   SONG_MANAGEMENT_SECTION_COPY,
 } from '../constants'
@@ -273,6 +274,10 @@ const WorldsendSongEditSection = (props: WorldsendSongEditSectionProps) => {
                     saving={props.management.saving()}
                     deleted={Boolean(props.management.selectedSong()?.is_deleted)}
                     canDelete={props.canDelete}
+                    deleteDialogTitle={SONG_MANAGEMENT_DELETE_DIALOG_COPY.worldsendTitle}
+                    deleteTargetTitle={
+                      props.management.selectedSong()?.title ?? currentDraft().title
+                    }
                     onSave={props.management.save}
                     onDelete={() => props.management.remove(currentDraft().id)}
                     onRestore={() => props.management.restore(currentDraft().id)}
