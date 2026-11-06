@@ -1,8 +1,9 @@
+import { LocateFixed } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
-import { GOAL_NO_TARGET_LABEL } from '../../constants'
+import { GOAL_GAUGE_START_LABEL, GOAL_NO_TARGET_LABEL } from '../../constants'
 import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
 /** 目標カードの進捗表示に必要なプロパティ */
@@ -15,6 +16,10 @@ interface GoalCardProgressProps {
   invertValue: boolean
   /** 達成率を達成までの残り割合として表示するか */
   invertPercentage: boolean
+  /** 進捗ゲージを0%として描く値。0なら従来どおり0から描く */
+  gaugeStart: number
+  /** 達成率表示もゲージと同じくスタート位置から計算するか */
+  applyGaugeStartToPercentage: boolean
   /** 現在値、目標値、達成率を含む進捗情報 */
   progress: GoalProgressResult
   /** 現在値、目標値、達成率の数値表示を含めるか */
@@ -24,7 +29,12 @@ interface GoalCardProgressProps {
 /** 折りたたみ時の割合表示に必要なプロパティ */
 type GoalCardProgressPercentageProps = Pick<
   GoalCardProgressProps,
-  'achievementType' | 'invertValue' | 'invertPercentage' | 'progress'
+  | 'achievementType'
+  | 'invertValue'
+  | 'invertPercentage'
+  | 'gaugeStart'
+  | 'applyGaugeStartToPercentage'
+  | 'progress'
 >
 
 /**
@@ -33,9 +43,24 @@ type GoalCardProgressPercentageProps = Pick<
 const INVERT_PROGRESS_LABEL = '残り'
 
 /**
+ * 目標の表示設定を反映した表示用進捗を取得する。
+ *
+ * @param props - 目標種別、反転設定、ゲージのスタート位置、進捗情報。
+ * @returns 目標カードに表示する数値・割合・ゲージ値。
+ */
+const resolveDisplayProgress = (props: GoalCardProgressPercentageProps) =>
+  resolveGoalCardDisplayProgress(
+    props.progress,
+    props.achievementType,
+    props.invertValue,
+    props.invertPercentage,
+    { value: props.gaugeStart, applyToPercentage: props.applyGaugeStartToPercentage }
+  )
+
+/**
  * 折りたたんだ目標カードに割合・平均目標の残り点数・対象なしの状態を表示する。
  *
- * @param props - 目標種別、反転設定、進捗情報。
+ * @param props - 目標種別、反転設定、ゲージのスタート位置、進捗情報。
  * @returns 折りたたみ時の進捗要約 JSX 要素。
  */
 export const GoalCardProgressPercentage: Component<GoalCardProgressPercentageProps> = (props) => {
@@ -44,13 +69,7 @@ export const GoalCardProgressPercentage: Component<GoalCardProgressPercentagePro
    *
    * @returns 目標種別に応じた進捗要約の表示情報。
    */
-  const displayProgress = () =>
-    resolveGoalCardDisplayProgress(
-      props.progress,
-      props.achievementType,
-      props.invertValue,
-      props.invertPercentage
-    )
+  const displayProgress = () => resolveDisplayProgress(props)
 
   return (
     <Show
@@ -73,17 +92,11 @@ export const GoalCardProgressPercentage: Component<GoalCardProgressPercentagePro
 /**
  * 目標カード共通の進捗数値とゲージを表示する。
  *
- * @param props - タイトル、目標種別、実数値・割合の反転表示、進捗情報、数値表示の有無。
+ * @param props - タイトル、目標種別、実数値・割合の反転表示、ゲージのスタート位置、進捗情報、数値表示の有無。
  * @returns 目標カードの進捗表示 JSX 要素。
  */
 export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
-  const displayProgress = () =>
-    resolveGoalCardDisplayProgress(
-      props.progress,
-      props.achievementType,
-      props.invertValue,
-      props.invertPercentage
-    )
+  const displayProgress = () => resolveDisplayProgress(props)
 
   return (
     <div class="mt-2">
@@ -132,6 +145,16 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
           aria-label={`${props.title} 進捗`}
           aria-valuetext={displayProgress().ariaValueText}
         />
+        <Show when={(props.showValues ?? true) && displayProgress().gaugeStartText}>
+          {(gaugeStartText) => (
+            // フォームの「現在値」ボタンと同じアイコンで、ゲージの起点の値であることを示す。
+            <p class="mt-1 flex items-center gap-0.5 font-oswald text-xs leading-none text-text-muted">
+              <LocateFixed size={12} aria-hidden="true" />
+              <span class="sr-only">{GOAL_GAUGE_START_LABEL} </span>
+              {gaugeStartText()}
+            </p>
+          )}
+        </Show>
       </Show>
     </div>
   )

@@ -19,6 +19,8 @@ const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
   attributes: { diff: [3], const: { min: 14, max: 15 } },
   invert_value: true,
   invert_percentage: false,
+  gauge_start: 0,
+  apply_gauge_start_to_percentage: false,
   sort_order: 2,
   created_at: '2026-08-04T00:00:00Z',
   ...overrides,
@@ -76,5 +78,7 @@ test('複製リクエストは同じグループと目標条件を引き継ぐ',
     attributes: goal.attributes,
     invert_value: goal.invert_value,
     invert_percentage: goal.invert_percentage,
+    gauge_start: goal.gauge_start,
+    apply_gauge_start_to_percentage: goal.apply_gauge_start_to_percentage,
   })
 })

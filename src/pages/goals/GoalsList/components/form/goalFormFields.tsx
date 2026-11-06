@@ -38,6 +38,12 @@ interface GoalNumberFieldProps {
   step?: number
   /** 入力操作を無効化するか */
   disabled?: boolean
+  /** 入力欄の下に表示する検証エラー。指定時は入力欄を不正状態にする */
+  errorMessage?: string
+  /** 入力欄の右に並べる操作要素 */
+  trailing?: JSX.Element
+  /** 入力要素を受け取る。検証エラー時にフォーカスを移すために使う */
+  inputRef?: (element: HTMLInputElement) => void
   /** 入力値が変更されたときの通知先 */
   onChange: (value: string) => void
 }
@@ -108,7 +114,7 @@ export const GoalTextField: Component<GoalTextFieldProps> = (props) => (
 /**
  * 目標設定ダイアログで使う数値入力欄を描画する。
  *
- * @param props - 表示ラベル、入力値、補足説明、数値制約、無効状態、変更ハンドラ。
+ * @param props - 表示ラベル、入力値、補足説明、数値制約、無効状態、検証エラー、右側の操作要素、入力要素の参照、変更ハンドラ。
  * @returns Kobalte NumberField を使った入力欄。
  */
 export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
@@ -117,22 +123,30 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
     value={props.value}
     onChange={props.onChange}
     disabled={props.disabled}
+    validationState={props.errorMessage ? 'invalid' : undefined}
     format={false}
     allowedInput={/[0-9.]/}
     step={props.step ?? 1}
   >
     <NumberField.Label class="mb-1 block text-text-muted">{props.label}</NumberField.Label>
-    <NumberField.Input
-      class={`${GOAL_FIELD_INPUT_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
-      min={props.min}
-      max={props.max}
-      step={props.step ?? 1}
-    />
+    <div class="flex items-center gap-2">
+      <NumberField.Input
+        ref={props.inputRef}
+        class={`${GOAL_FIELD_INPUT_CLASS} min-w-0 data-invalid:border-danger-border disabled:cursor-not-allowed disabled:opacity-60`}
+        min={props.min}
+        max={props.max}
+        step={props.step ?? 1}
+      />
+      {props.trailing}
+    </div>
     <Show when={props.description}>
       <NumberField.Description class="mt-1 text-xs text-text-muted">
         {props.description}
       </NumberField.Description>
     </Show>
+    <NumberField.ErrorMessage class="mt-1 text-xs text-danger">
+      {props.errorMessage}
+    </NumberField.ErrorMessage>
   </NumberField>
 )
 

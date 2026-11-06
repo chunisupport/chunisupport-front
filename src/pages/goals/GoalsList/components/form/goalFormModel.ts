@@ -9,6 +9,7 @@ import type {
   GoalAchievementParams,
   GoalAchievementType,
   GoalAttributes,
+  GoalCreateRequest,
   GoalDTO,
 } from '../../../../../types/api'
 import { normalizeGoalNameFolderCodes } from '../../../../../utils/goalAttributes'
@@ -20,6 +21,7 @@ import {
   isFullChainGoalValue,
   isHardLampGoalValue,
 } from '../../../../../utils/goalLamp'
+import { truncateDecimal } from '../../../../../utils/numberFormat'
 import {
   getScoreRank,
   MAX_SCORE,
@@ -27,7 +29,8 @@ import {
   type ScoreRank,
 } from '../../../../../utils/scoreRank'
 import { buildGoalTargetParam, type GoalTargetMode } from '../../../utils/goalCountTarget'
-import { DEFAULT_RATING_GOAL_VALUE } from './constants'
+import { isOverPowerAchievementType } from '../../goalsListProgress'
+import { DEFAULT_RATING_GOAL_VALUE, OVERPOWER_TARGET_DECIMAL_PLACES } from './constants'
 
 export type RankGoalValue = ScoreRank | 'THEORETICAL'
 export type GoalChartTargetMode = 'normal' | 'op_target'
@@ -47,6 +50,10 @@ export interface GoalFormState {
   fullChain: FullChainGoalValue
   invertValue: boolean
   invertPercentage: boolean
+  /** ゲージのスタート位置の入力値。空欄は0として扱う */
+  gaugeStart: string
+  /** 達成率表示もゲージのスタート位置から計算するか */
+  applyGaugeStartToPercentage: boolean
   chartTargetMode: GoalChartTargetMode
   diffs: string[]
   constMin: string
@@ -55,6 +62,16 @@ export interface GoalFormState {
   versions: string[]
   /** 選択中の楽曲名順フォルダのコード */
   nameFolders: string[]
+}
+
+/** ゲージのスタート位置に関するフォーム入力値 */
+export interface GoalFormGaugeStartInput {
+  /** スタート位置の単位と、達成率への適用可否を決める目標種別 */
+  achievementType: GoalAchievementType
+  /** ゲージのスタート位置の入力値。空欄は0として扱う */
+  gaugeStart: string
+  /** 達成率表示もゲージのスタート位置から計算するか */
+  applyGaugeStartToPercentage: boolean
 }
 
 interface GoalFormSelectionFallbacks {
@@ -102,6 +119,69 @@ export const DEFAULT_OVERPOWER_VALUE_GOAL_VALUE = '10'
 export const DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE = '90'
 export const DEFAULT_RANK_GOAL = 'S' satisfies RankGoalValue
 export const THEORETICAL_RANK_GOAL = 'THEORETICAL' satisfies RankGoalValue
+/** ゲージのスタート位置の初期値。0は従来どおり0からゲージを描く */
+export const DEFAULT_GAUGE_START_VALUE = '0'
+/** スタート位置を指定したとき、ゲージと達成率表示をそろえるのを標準にする */
+export const DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE = true
+
+/**
+ * 目標種別のスタート位置で許可する小数桁数を取得する。
+ * スタート位置は現在値と同じ単位のため、小数を持つのはOVER POWER系だけ。
+ *
+ * @param type - 目標種別。
+ * @returns 許可する小数桁数。
+ */
+export const getGoalGaugeStartDecimalPlaces = (type: GoalAchievementType): number =>
+  isOverPowerAchievementType(type) ? OVERPOWER_TARGET_DECIMAL_PLACES : 0
+
+/**
+ * 目標種別が達成率をパーセンテージで表示し、スタート位置の適用を選べるか判定する。
+ *
+ * @param type - 目標種別。
+ * @returns 平均スコア目標以外ならtrue。平均スコア目標は割合の代わりに残り点数を表示する。
+ */
+export const canApplyGaugeStartToPercentage = (type: GoalAchievementType): boolean =>
+  type !== 'avg_score'
+
+/**
+ * ゲージのスタート位置の入力値を数値へ変換する。
+ *
+ * @param value - 入力欄の文字列。
+ * @returns 空欄なら0、それ以外は数値。数値として解釈できない場合は NaN。
+ */
+export const parseGoalGaugeStart = (value: string): number =>
+  value.trim() === '' ? 0 : Number(value)
+
+/**
+ * 現在値をゲージのスタート位置の入力値へ変換する。
+ *
+ * @param current - 進捗の現在値。
+ * @param type - 目標種別。
+ * @returns 目標種別で許可する桁数に切り捨てたスタート位置の入力値。
+ */
+export const buildGoalGaugeStartInputFromCurrent = (
+  current: number,
+  type: GoalAchievementType
+): string => String(truncateDecimal(current, getGoalGaugeStartDecimalPlaces(type)))
+
+/**
+ * フォーム入力値から保存・プレビュー共通のゲージ設定を組み立てる。
+ *
+ * @param input - 目標種別、スタート位置、達成率への適用指定。
+ * @returns API送信値と同じ形のゲージ設定。スタート位置が0または割合を表示しない種別では適用指定をfalseにする。
+ */
+export const buildGoalFormGaugeStartParams = (
+  input: GoalFormGaugeStartInput
+): Pick<GoalCreateRequest, 'gauge_start' | 'apply_gauge_start_to_percentage'> => {
+  const gaugeStart = parseGoalGaugeStart(input.gaugeStart)
+  return {
+    gauge_start: gaugeStart,
+    apply_gauge_start_to_percentage:
+      input.applyGaugeStartToPercentage &&
+      gaugeStart > 0 &&
+      canApplyGaugeStartToPercentage(input.achievementType),
+  }
+}
 
 /**
  * ランク目標の選択値を保存用スコアへ変換する。
@@ -325,6 +405,8 @@ export const createDefaultGoalFormState = (
   fullChain: 'GOLD',
   invertValue: false,
   invertPercentage: false,
+  gaugeStart: DEFAULT_GAUGE_START_VALUE,
+  applyGaugeStartToPercentage: DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
   chartTargetMode: 'normal',
   diffs: fallbacks.defaultDifficultySelections,
   constMin: String(CHART_CONST_MIN),
@@ -388,6 +470,12 @@ export const createGoalFormInitialState = (
     fullChain: fullChainValue ?? defaultState.fullChain,
     invertValue: goal.invert_value,
     invertPercentage: goal.invert_percentage,
+    gaugeStart: String(goal.gauge_start),
+    // スタート位置が未設定の目標では適用指定が保存されていないため、作成時と同じ既定値を使う。
+    applyGaugeStartToPercentage:
+      goal.gauge_start > 0 && canApplyGaugeStartToPercentage(goal.achievement_type)
+        ? goal.apply_gauge_start_to_percentage
+        : defaultState.applyGaugeStartToPercentage,
     chartTargetMode: goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal',
     diffs: resolveInitialAttributeSelection(
       goal.attributes.diff,

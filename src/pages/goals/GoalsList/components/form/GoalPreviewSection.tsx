@@ -8,13 +8,17 @@ interface GoalPreviewSectionProps {
   achievementType: GoalAchievementType
   invertValue: boolean
   invertPercentage: boolean
+  /** 進捗ゲージを0%として描く値。0なら従来どおり0から描く */
+  gaugeStart: number
+  /** 達成率表示もゲージと同じくスタート位置から計算するか */
+  applyGaugeStartToPercentage: boolean
   progress: GoalProgressResult
 }
 
 /**
  * 目標フォームのプレビューを描画する。
  *
- * @param props - プレビュー表示に使うタイトル、達成種別、表示形式、進捗。
+ * @param props - プレビュー表示に使うタイトル、達成種別、表示形式、ゲージのスタート位置、進捗。
  * @returns プレビューカードの JSX 要素。
  */
 export const GoalPreviewSection: Component<GoalPreviewSectionProps> = (props) => (
@@ -37,6 +41,8 @@ export const GoalPreviewSection: Component<GoalPreviewSectionProps> = (props) =>
         achievementType={props.achievementType}
         invertValue={props.invertValue}
         invertPercentage={props.invertPercentage}
+        gaugeStart={props.gaugeStart}
+        applyGaugeStartToPercentage={props.applyGaugeStartToPercentage}
         progress={props.progress}
       />
     </article>

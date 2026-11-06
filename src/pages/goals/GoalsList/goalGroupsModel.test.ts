@@ -31,6 +31,8 @@ const createGoal = (id: number, groupId: number | null, sortOrder: number): Goal
     attributes: {},
     invert_value: false,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
     sort_order: sortOrder,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO,

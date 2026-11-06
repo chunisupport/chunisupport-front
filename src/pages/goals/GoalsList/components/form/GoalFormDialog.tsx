@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createSignal } from 'solid-js'
+import { createEffect, createMemo, createSignal, untrack } from 'solid-js'
 import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
 import type {
   GoalAchievementType,
@@ -38,8 +38,12 @@ import {
   buildDefaultDifficultySelections,
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,
+  buildGoalFormGaugeStartParams,
+  buildGoalGaugeStartInputFromCurrent,
   canUseDynamicTotalTarget,
   createGoalFormInitialState,
+  DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
+  DEFAULT_GAUGE_START_VALUE,
   DEFAULT_GOAL_ACHIEVEMENT_TYPE,
   DEFAULT_RANK_GOAL,
   type GoalChartTargetMode,
@@ -50,7 +54,7 @@ import {
   type RankGoalValue,
   toggleSelection,
 } from './goalFormModel'
-import { validateGoalForm } from './goalFormValidation'
+import { validateGoalForm, validateGoalGaugeStart } from './goalFormValidation'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -143,6 +147,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [fullChain, setFullChain] = createSignal<FullChainGoalValue>('GOLD')
   const [invertValue, setInvertValue] = createSignal(false)
   const [invertPercentage, setInvertPercentage] = createSignal(false)
+  const [gaugeStart, setGaugeStart] = createSignal(DEFAULT_GAUGE_START_VALUE)
+  const [applyGaugeStartToPercentage, setApplyGaugeStartToPercentage] = createSignal(
+    DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE
+  )
+  const [gaugeStartErrorMessage, setGaugeStartErrorMessage] = createSignal('')
+  let gaugeStartInput: HTMLInputElement | undefined
 
   const [chartTargetMode, setChartTargetMode] = createSignal<GoalChartTargetMode>('normal')
   const [diffs, setDiffs] = createSignal<string[]>([])
@@ -230,6 +240,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   createEffect(() => {
     if (!props.open) return
     setErrorMessage('')
+    setGaugeStartErrorMessage('')
 
     const nextState = createGoalFormInitialState(props.initialGoal, {
       allDifficultySelections: allDifficultySelections(),
@@ -254,6 +265,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setFullChain(nextState.fullChain)
     setInvertValue(nextState.invertValue)
     setInvertPercentage(nextState.invertPercentage)
+    setGaugeStart(nextState.gaugeStart)
+    setApplyGaugeStartToPercentage(nextState.applyGaugeStartToPercentage)
     setChartTargetMode(nextState.chartTargetMode)
     setDiffs(nextState.diffs)
     setConstMin(nextState.constMin)
@@ -306,6 +319,18 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
    */
   const buildDraftAchievementParams = (type: GoalAchievementType) =>
     buildGoalFormAchievementParams(getAchievementParamsInput(type))
+
+  /**
+   * 現在のフォーム入力値から保存・プレビュー共通のゲージ設定を組み立てる。
+   *
+   * @returns API送信値と同じ形のゲージのスタート位置と達成率への適用指定。
+   */
+  const buildDraftGaugeStartParams = () =>
+    buildGoalFormGaugeStartParams({
+      achievementType: achievementType(),
+      gaugeStart: gaugeStart(),
+      applyGaugeStartToPercentage: applyGaugeStartToPercentage(),
+    })
 
   /**
    * 現在の対象条件に一致する譜面数または楽曲数を表示用テキストへ変換する。
@@ -361,8 +386,40 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       attributes,
       invert_value: invertValue(),
       invert_percentage: invertPercentage(),
+      // ゲージ設定は進捗計算に影響しないため、スタート位置の入力のたびに対象譜面を再集計しない。
+      ...untrack(buildDraftGaugeStartParams),
     })
   })
+
+  /**
+   * 現在値をゲージのスタート位置へ入れられるか判定する。
+   *
+   * @returns 対象があり未達成ならtrue。達成済みの現在値は目標値以上のため入れない。
+   */
+  const canFillGaugeStartWithCurrent = (): boolean =>
+    previewProgress().targetCount > 0 && !previewProgress().achieved
+
+  /**
+   * ゲージのスタート位置の入力値を更新し、前回の検証エラーを消す。
+   *
+   * @param value - 入力欄の文字列。
+   * @returns なし。
+   */
+  const handleGaugeStartChange = (value: string): void => {
+    setGaugeStart(value)
+    setGaugeStartErrorMessage('')
+  }
+
+  /**
+   * プレビューの現在値をゲージのスタート位置へ入れる。
+   *
+   * @returns なし。
+   */
+  const handleFillGaugeStartWithCurrent = (): void => {
+    handleGaugeStartChange(
+      buildGoalGaugeStartInputFromCurrent(previewProgress().current, achievementType())
+    )
+  }
 
   /**
    * 件数入力で指定できる上限を表示用に組み立てる。
@@ -416,6 +473,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setTotalMode('all')
     }
     setTotal(getDefaultTotalGoalValue(nextType))
+    // スタート位置は目標種別の現在値と同じ単位のため、種別を変えたら0に戻す。
+    handleGaugeStartChange(DEFAULT_GAUGE_START_VALUE)
     if (nextType === 'rank_count') {
       setRank(DEFAULT_RANK_GOAL)
       setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
@@ -460,9 +519,21 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       allCount,
       theoreticalTotal: getTheoreticalTotal(currentType),
     })
+    // スタート位置は入力欄の近くに表示するため、全体の検証エラーとは別に保持する。
+    const gaugeStartError = validateGoalGaugeStart({
+      achievementType: currentType,
+      gaugeStart: gaugeStart(),
+      target: previewProgress().target,
+    })
+    setGaugeStartErrorMessage(gaugeStartError ?? '')
 
     if (validationError) {
       setErrorMessage(validationError)
+      return
+    }
+    if (gaugeStartError) {
+      // 入力欄がスクロール領域の外にあると保存ボタンが反応しないように見えるため、エラー箇所へ移る。
+      gaugeStartInput?.focus()
       return
     }
 
@@ -476,6 +547,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       attributes,
       invert_value: invertValue(),
       invert_percentage: invertPercentage(),
+      ...buildDraftGaugeStartParams(),
     })
   }
 
@@ -548,6 +620,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               fullChain={fullChain()}
               invertValue={invertValue()}
               invertPercentage={invertPercentage()}
+              gaugeStart={gaugeStart()}
+              applyGaugeStartToPercentage={applyGaugeStartToPercentage()}
+              gaugeStartErrorMessage={gaugeStartErrorMessage()}
+              canFillGaugeStartWithCurrent={canFillGaugeStartWithCurrent()}
               countMax={props.resolveAllCount(
                 getDraftAttributes(),
                 achievementType(),
@@ -571,6 +647,12 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               onFullChainChange={setFullChain}
               onInvertValueChange={setInvertValue}
               onInvertPercentageChange={setInvertPercentage}
+              onGaugeStartChange={handleGaugeStartChange}
+              onApplyGaugeStartToPercentageChange={setApplyGaugeStartToPercentage}
+              onFillGaugeStartWithCurrent={handleFillGaugeStartWithCurrent}
+              gaugeStartInputRef={(element) => {
+                gaugeStartInput = element
+              }}
               canUseDynamicTotalTarget={canUseDynamicTotalTarget}
             />
 
@@ -579,6 +661,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               achievementType={achievementType()}
               invertValue={invertValue()}
               invertPercentage={invertPercentage()}
+              gaugeStart={buildDraftGaugeStartParams().gauge_start}
+              applyGaugeStartToPercentage={
+                buildDraftGaugeStartParams().apply_gauge_start_to_percentage
+              }
               progress={previewProgress()}
             />
           </div>

@@ -33,6 +33,8 @@ test('保存用ペイロードは実数値と割合の反転フラグを独立�
     attributes: {},
     invert_value: true,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
     sort_order: 1,
     created_at: '2026-08-07T00:00:00+09:00',
   } satisfies GoalDTO
@@ -77,4 +79,29 @@ test('楽曲名順が空配列の条件は対象譜面なしとして表示す�
 
   // Then
   assert.equal(result, '対象譜面なし')
+})
+
+test('保存用ペイロードはゲージのスタート位置と達成率への適用指定を引き継ぐ', () => {
+  // Given: スタート位置を持つ保存済み目標
+  const goal = {
+    id: 1,
+    group_id: null,
+    title: 'OP達成率99.8%',
+    achievement_type: 'overpower_percent',
+    achievement_params: { total: 99.8 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 99.6,
+    apply_gauge_start_to_percentage: true,
+    sort_order: 1,
+    created_at: '2026-08-07T00:00:00+09:00',
+  } satisfies GoalDTO
+
+  // When: 保存用ペイロードへ変換する
+  const result = buildGoalPayload(goal)
+
+  // Then
+  assert.equal(result.gauge_start, 99.6)
+  assert.equal(result.apply_gauge_start_to_percentage, true)
 })

@@ -55,6 +55,8 @@ test('データ未取得時の下書き進捗は未達成の初期値を返す',
     attributes: {},
     invert_value: false,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
   } satisfies GoalCreateRequest
 
   // When
@@ -123,6 +125,8 @@ test('同じ対象条件の目標が複数あっても、目標ごとの成果�
     attributes: { diff: [4] },
     invert_value: false,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
     ...overrides,
   })
   const data = {

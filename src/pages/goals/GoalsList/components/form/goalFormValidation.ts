@@ -5,6 +5,9 @@ import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import {
+  buildGaugeStartDecimalErrorMessage,
+  ERROR_MESSAGE_GAUGE_START_INTEGER,
+  ERROR_MESSAGE_GAUGE_START_NOT_BELOW_TARGET,
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
   OVERPOWER_TARGET_DECIMAL_PLACES,
   RATING_GOAL_DECIMAL_PLACES,
@@ -12,8 +15,10 @@ import {
 } from './constants'
 import {
   canUseDynamicTotalTarget,
+  getGoalGaugeStartDecimalPlaces,
   getRankGoalScore,
   isCountAchievementType,
+  parseGoalGaugeStart,
   type RankGoalValue,
 } from './goalFormModel'
 
@@ -178,5 +183,37 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
     return ERROR_MESSAGE_INVALID_COUNT_TARGET
   }
 
+  return undefined
+}
+
+/** ゲージのスタート位置の保存前検証に使う入力 */
+export interface GoalGaugeStartValidationInput {
+  achievementType: GoalAchievementType
+  /** ゲージのスタート位置の入力値。空欄は0として扱う */
+  gaugeStart: string
+  /** 現在の入力内容から解決した目標値 */
+  target: number
+}
+
+/**
+ * ゲージのスタート位置を保存前に検証する。
+ * 0は従来どおり0から描く指定のため、目標値に関係なく許可する。
+ *
+ * @param input - 目標種別、スタート位置の入力値、現在の目標値。
+ * @returns 入力欄の下に表示するエラーメッセージ。問題なければundefined。
+ */
+export const validateGoalGaugeStart = (
+  input: GoalGaugeStartValidationInput
+): string | undefined => {
+  const gaugeStart = parseGoalGaugeStart(input.gaugeStart)
+  const decimalPlaces = getGoalGaugeStartDecimalPlaces(input.achievementType)
+  if (!isWithinDecimalPlaces(gaugeStart, decimalPlaces) || gaugeStart < 0) {
+    return decimalPlaces > 0
+      ? buildGaugeStartDecimalErrorMessage(decimalPlaces)
+      : ERROR_MESSAGE_GAUGE_START_INTEGER
+  }
+  if (gaugeStart > 0 && gaugeStart >= input.target) {
+    return ERROR_MESSAGE_GAUGE_START_NOT_BELOW_TARGET
+  }
   return undefined
 }

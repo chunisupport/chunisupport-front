@@ -249,6 +249,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
                   achievementType={props.goal.achievement_type}
                   invertValue={props.goal.invert_value}
                   invertPercentage={props.goal.invert_percentage}
+                  gaugeStart={props.goal.gauge_start}
+                  applyGaugeStartToPercentage={props.goal.apply_gauge_start_to_percentage}
                   progress={props.progress}
                 />
               }
@@ -269,6 +271,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               achievementType={props.goal.achievement_type}
               invertValue={props.goal.invert_value}
               invertPercentage={props.goal.invert_percentage}
+              gaugeStart={props.goal.gauge_start}
+              applyGaugeStartToPercentage={props.goal.apply_gauge_start_to_percentage}
               progress={props.progress}
             />
           </Collapsible.Content>
@@ -278,6 +282,8 @@ const GoalCard: Component<GoalCardProps> = (props) => {
               achievementType={props.goal.achievement_type}
               invertValue={props.goal.invert_value}
               invertPercentage={props.goal.invert_percentage}
+              gaugeStart={props.goal.gauge_start}
+              applyGaugeStartToPercentage={props.goal.apply_gauge_start_to_percentage}
               progress={props.progress}
               showValues={false}
             />
