@@ -1,14 +1,14 @@
 /** バージョン管理画面で使用する表示文言 */
 export const ADMIN_VERSIONS_COPY = {
   pageTitle: 'バージョン管理',
-  pageDescription: 'バージョン名、超ショート名、稼働日を管理します。',
+  pageDescription: 'バージョン名、略称、稼働日を管理します。',
   createButton: 'バージョンを追加',
   createDialogTitle: 'バージョンを追加',
-  createDialogDescription: 'バージョン名、超ショート名、稼働日を入力します。',
+  createDialogDescription: 'バージョン名、略称、稼働日を入力します。',
   editDialogTitle: 'バージョンを編集',
-  editDialogDescription: '稼働日は変更せず、バージョン名と超ショート名を更新します。',
+  editDialogDescription: '稼働日は変更せず、バージョン名と略称を更新します。',
   nameLabel: 'バージョン名',
-  shortNameLabel: '超ショート名',
+  shortNameLabel: '略称',
   releasedAtLabel: '稼働日',
   cancelButton: 'キャンセル',
   createSubmit: '追加する',
