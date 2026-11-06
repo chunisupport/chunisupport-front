@@ -143,7 +143,7 @@ export const BatchJobCard = (props: BatchJobCardProps): JSX.Element => {
 
       <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
         <div>
-          <dt class="text-text-muted">{BATCH_JOB_COPY.startedAt}</dt>
+          <dt class="font-sans text-text-muted">{BATCH_JOB_COPY.startedAt}</dt>
           <dd class="font-medium text-text">
             <Show when={startedAt()} fallback={BATCH_JOB_COPY.startedAtUnknown}>
               {(formatted) => <time datetime={props.job.started_at}>{formatted()}</time>}
@@ -153,7 +153,7 @@ export const BatchJobCard = (props: BatchJobCardProps): JSX.Element => {
         <Show when={duration()}>
           {(value) => (
             <div>
-              <dt class="text-text-muted">{BATCH_JOB_COPY.duration}</dt>
+              <dt class="font-sans text-text-muted">{BATCH_JOB_COPY.duration}</dt>
               <dd class="font-medium text-text">{value()}</dd>
             </div>
           )}

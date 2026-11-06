@@ -76,7 +76,7 @@ const SongBatchJobCard = (props: { job: SongBatchJobDTO }): JSX.Element => (
     details={
       <Show when={props.job.warning_count > 0}>
         <div>
-          <dt class="text-text-muted">{SONG_BATCH_COPY.warningCount}</dt>
+          <dt class="font-sans text-text-muted">{SONG_BATCH_COPY.warningCount}</dt>
           <dd class="font-medium text-warning">{props.job.warning_count}</dd>
         </div>
       </Show>

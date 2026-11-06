@@ -103,7 +103,7 @@ export const StaffMenuPage = (props: StaffMenuPageProps) => {
           {(link) => (
             <SelectableCardLink
               href={link.href}
-              class="min-h-24 items-center"
+              class="min-h-24 items-center font-sans"
               icon={
                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
                   <StaffMenuCardIcon icon={link.icon} />
