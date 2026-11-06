@@ -1,7 +1,5 @@
-import { LocateFixed } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
-import { AppButton } from '../../../../../components/common/AppButton'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
@@ -18,8 +16,9 @@ import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_GAUGE_START_LABEL } from '../../constants'
 import {
   LABEL_APPLY_GAUGE_START_TO_PERCENTAGE,
-  LABEL_FILL_GAUGE_START_WITH_CURRENT,
-  LABEL_FILL_GAUGE_START_WITH_CURRENT_ARIA,
+  LABEL_GAUGE_START_MODE_CURRENT,
+  LABEL_GAUGE_START_MODE_CUSTOM,
+  LABEL_GAUGE_START_MODE_ZERO,
   LABEL_INVERT_PERCENTAGE,
   LABEL_INVERT_VALUE,
   OVERPOWER_TARGET_DECIMAL_PLACES,
@@ -36,8 +35,8 @@ import {
 } from './goalFormFields'
 import {
   canApplyGaugeStartToPercentage,
+  type GoalGaugeStartMode,
   getGoalGaugeStartDecimalPlaces,
-  parseGoalGaugeStart,
   type RankGoalValue,
   THEORETICAL_RANK_GOAL,
 } from './goalFormModel'
@@ -64,14 +63,22 @@ interface GoalAchievementSectionProps {
   fullChain: FullChainGoalValue
   invertValue: boolean
   invertPercentage: boolean
-  /** ゲージのスタート位置の入力値 */
+  /** ゲージのスタート位置の決め方 */
+  gaugeStartMode: GoalGaugeStartMode
+  /** 「任意の数値から」で使うスタート位置の入力値 */
   gaugeStart: string
   /** 達成率表示もゲージのスタート位置から計算するか */
   applyGaugeStartToPercentage: boolean
-  /** ゲージのスタート位置の検証エラー */
+  /** 「任意の数値から」の入力欄の下に表示する検証エラー */
   gaugeStartErrorMessage?: string
-  /** 現在値をスタート位置へ入れられるか。対象がない、または達成済みの場合はfalse */
-  canFillGaugeStartWithCurrent: boolean
+  /** スタート位置の選択欄の下に表示するエラー。「現在値から」を使えない状態で選んでいる場合に出す */
+  gaugeStartGroupErrorMessage?: string
+  /** 「現在値から」を選べるか。対象がない、達成済み、または現在値が0の場合はfalse */
+  canUseCurrentGaugeStart: boolean
+  /** 「現在値から」を選んだときに保存されるスタート位置の表示文字列 */
+  currentGaugeStartText: string
+  /** スタート位置が0より大きく、達成率への適用指定が効くか */
+  hasGaugeStart: boolean
   countMax: number
   countLimitText: string
   targetCountText: string
@@ -91,13 +98,15 @@ interface GoalAchievementSectionProps {
   onFullChainChange: (lamp: FullChainGoalValue) => void
   onInvertValueChange: (invertValue: boolean) => void
   onInvertPercentageChange: (invertPercentage: boolean) => void
-  /** ゲージのスタート位置の入力値が変わったときの通知先 */
+  /** ゲージのスタート位置の決め方が変わったときの通知先 */
+  onGaugeStartModeChange: (mode: GoalGaugeStartMode) => void
+  /** 「任意の数値から」の入力値が変わったときの通知先 */
   onGaugeStartChange: (gaugeStart: string) => void
   /** 達成率への適用指定が変わったときの通知先 */
   onApplyGaugeStartToPercentageChange: (applyGaugeStartToPercentage: boolean) => void
-  /** 現在値をゲージのスタート位置へ入れる */
-  onFillGaugeStartWithCurrent: () => void
-  /** ゲージのスタート位置の入力要素を受け取る。検証エラー時にフォーカスを移すために使う */
+  /** ゲージのスタート位置の欄全体を受け取る。検証エラー時に表示位置へ移るために使う */
+  gaugeStartFieldRef: (element: HTMLDivElement) => void
+  /** 「任意の数値から」の入力要素を受け取る。検証エラー時にフォーカスを移すために使う */
   gaugeStartInputRef: (element: HTMLInputElement) => void
   canUseDynamicTotalTarget: (type: GoalAchievementType) => boolean
 }
@@ -118,6 +127,13 @@ const TOTAL_MODE_OPTIONS: GoalSelectOption<GoalTargetMode>[] = [
   { value: 'number', label: '目標値を指定' },
   { value: 'remaining', label: '最大値に対する残数' },
   { value: 'percent', label: '最大値に対する割合' },
+]
+
+/** ゲージのスタート位置の決め方の選択肢。 */
+const GAUGE_START_MODE_OPTIONS: GoalSelectOption<GoalGaugeStartMode>[] = [
+  { value: 'zero', label: LABEL_GAUGE_START_MODE_ZERO },
+  { value: 'current', label: LABEL_GAUGE_START_MODE_CURRENT },
+  { value: 'custom', label: LABEL_GAUGE_START_MODE_CUSTOM },
 ]
 
 const HARD_LAMP_SELECT_OPTIONS: GoalSelectOption<HardLampGoalValue>[] = HARD_LAMP_OPTIONS.map(
@@ -348,35 +364,50 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
             label={LABEL_INVERT_PERCENTAGE}
           />
         </Show>
-        <GoalNumberField
-          label={GOAL_GAUGE_START_LABEL}
-          value={props.gaugeStart}
-          min={0}
-          step={10 ** -getGoalGaugeStartDecimalPlaces(props.achievementType)}
-          errorMessage={props.gaugeStartErrorMessage}
-          inputRef={props.gaugeStartInputRef}
-          onChange={props.onGaugeStartChange}
-          trailing={
-            // スクロール領域内のため、フォーカスリングを内側に出して切れないようにする。
-            <AppButton
-              variant="surface"
-              size="sm"
-              class="shrink-0 focus-visible:ring-inset"
-              leftIcon={<LocateFixed size={16} aria-hidden="true" />}
-              aria-label={LABEL_FILL_GAUGE_START_WITH_CURRENT_ARIA}
-              disabled={!props.canFillGaugeStartWithCurrent}
-              onClick={props.onFillGaugeStartWithCurrent}
-            >
-              {LABEL_FILL_GAUGE_START_WITH_CURRENT}
-            </AppButton>
+        <div ref={props.gaugeStartFieldRef}>
+          <GoalTargetModeRadioGroup
+            label={GOAL_GAUGE_START_LABEL}
+            name="goal-gauge-start-mode"
+            value={props.gaugeStartMode}
+            options={GAUGE_START_MODE_OPTIONS}
+            // 選択中の項目まで無効にすると Tab で欄に入れず選び直せないため、使えない状態はエラーで示す。
+            isOptionDisabled={(option) =>
+              option.value === 'current' &&
+              !props.canUseCurrentGaugeStart &&
+              props.gaugeStartMode !== 'current'
+            }
+            errorMessage={props.gaugeStartGroupErrorMessage}
+            onChange={props.onGaugeStartModeChange}
+            renderOptionContent={(option) =>
+              option.value !== props.gaugeStartMode ? null : option.value === 'current' ? (
+                <p class="-mt-3 text-xs leading-none text-text-muted">
+                  {props.currentGaugeStartText}
+                </p>
+              ) : option.value === 'custom' ? (
+                <GoalNumberField
+                  label=""
+                  ariaLabel={GOAL_GAUGE_START_LABEL}
+                  value={props.gaugeStart}
+                  min={0}
+                  step={10 ** -getGoalGaugeStartDecimalPlaces(props.achievementType)}
+                  errorMessage={props.gaugeStartErrorMessage}
+                  inputRef={props.gaugeStartInputRef}
+                  onChange={props.onGaugeStartChange}
+                />
+              ) : null
+            }
+          />
+        </div>
+        <Show
+          when={
+            props.gaugeStartMode !== 'zero' && canApplyGaugeStartToPercentage(props.achievementType)
           }
-        />
-        <Show when={canApplyGaugeStartToPercentage(props.achievementType)}>
-          {/* スタート位置が0の間は達成率が変わらないため、選択状態を残したまま操作だけ止める。 */}
+        >
+          {/* スタート位置が未入力・0の間は達成率が変わらないため、選択状態を残したまま操作だけ止める。 */}
           <CheckboxField
             class="relative flex items-center gap-2 text-sm text-text-muted"
             checked={props.applyGaugeStartToPercentage}
-            disabled={!(parseGoalGaugeStart(props.gaugeStart) > 0)}
+            disabled={!props.hasGaugeStart}
             onChange={props.onApplyGaugeStartToPercentageChange}
             label={LABEL_APPLY_GAUGE_START_TO_PERCENTAGE}
           />

@@ -194,80 +194,127 @@ test('単曲レート入力の不正は到達可能譜面0件より先に報告�
   assert.match(result ?? '', /単曲レート/)
 })
 
-test('ゲージのスタート位置は空欄と0を目標値に関係なく許可する', () => {
+const gaugeStartInput = {
+  achievementType: 'score_count',
+  gaugeStartMode: 'custom',
+  gaugeStart: '50',
+  current: 40,
+  target: 100,
+} as const
+
+test('「最初から」は目標値に関係なくゲージのスタート位置の検証を通過する', () => {
   // Given / When
-  const empty = validateGoalGaugeStart({
-    achievementType: 'score_count',
-    gaugeStart: '',
-    target: 0,
+  const result = validateGoalGaugeStart({ ...gaugeStartInput, gaugeStartMode: 'zero', target: 0 })
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('「現在値から」は現在値が目標値に達している場合にエラーになる', () => {
+  // Given / When
+  const reached = validateGoalGaugeStart({
+    ...gaugeStartInput,
+    gaugeStartMode: 'current',
+    current: 100,
   })
-  const zero = validateGoalGaugeStart({
-    achievementType: 'score_count',
-    gaugeStart: '0',
-    target: 0,
+  const below = validateGoalGaugeStart({ ...gaugeStartInput, gaugeStartMode: 'current' })
+
+  // Then
+  assert.equal(reached, '現在値が目標値に達しているため、現在値からは始められません。')
+  assert.equal(below, undefined)
+})
+
+test('「任意の数値から」で空欄や数値でない入力はエラーになる', () => {
+  // Given / When
+  const empty = validateGoalGaugeStart({ ...gaugeStartInput, gaugeStart: '' })
+  const invalid = validateGoalGaugeStart({
+    ...gaugeStartInput,
+    achievementType: 'overpower_value',
+    gaugeStart: '1..2',
   })
 
   // Then
-  assert.equal(empty, undefined)
-  assert.equal(zero, undefined)
+  assert.equal(empty, 'ゲージのスタート位置は0以上の整数で入力してください。')
+  assert.equal(invalid, 'ゲージのスタート位置は0以上、小数第3位以内で入力してください。')
 })
 
-test('件数系のゲージのスタート位置は整数だけを許可する', () => {
+test('件数系の「任意の数値から」は整数だけを許可する', () => {
   // Given / When
-  const result = validateGoalGaugeStart({
-    achievementType: 'score_count',
-    gaugeStart: '10.5',
-    target: 100,
-  })
+  const result = validateGoalGaugeStart({ ...gaugeStartInput, gaugeStart: '10.5' })
 
   // Then
   assert.equal(result, 'ゲージのスタート位置は0以上の整数で入力してください。')
 })
 
-test('OVER POWER系のゲージのスタート位置は小数第3位まで許可する', () => {
-  // Given / When
-  const valid = validateGoalGaugeStart({
+test('OVER POWER系の「任意の数値から」は小数第3位まで許可する', () => {
+  // Given
+  const overPowerInput = {
+    ...gaugeStartInput,
     achievementType: 'overpower_percent',
-    gaugeStart: '99.612',
     target: 99.8,
-  })
-  const invalid = validateGoalGaugeStart({
-    achievementType: 'overpower_percent',
-    gaugeStart: '99.6123',
-    target: 99.8,
-  })
+  } as const
+
+  // When
+  const valid = validateGoalGaugeStart({ ...overPowerInput, gaugeStart: '99.612' })
+  const invalid = validateGoalGaugeStart({ ...overPowerInput, gaugeStart: '99.6123' })
 
   // Then
   assert.equal(valid, undefined)
   assert.equal(invalid, 'ゲージのスタート位置は0以上、小数第3位以内で入力してください。')
 })
 
-test('ゲージのスタート位置が目標値以上の場合は保存前検証でエラーになる', () => {
-  // Given / When
-  const equal = validateGoalGaugeStart({
+test('「任意の数値から」が目標値以上の場合はエラーになる', () => {
+  // Given
+  const averageInput = {
+    ...gaugeStartInput,
     achievementType: 'avg_score',
-    gaugeStart: '1008000',
     target: 1008000,
-  })
-  const below = validateGoalGaugeStart({
-    achievementType: 'avg_score',
-    gaugeStart: '1007999',
-    target: 1008000,
-  })
+  } as const
+
+  // When
+  const equal = validateGoalGaugeStart({ ...averageInput, gaugeStart: '1008000' })
+  const below = validateGoalGaugeStart({ ...averageInput, gaugeStart: '1007999' })
 
   // Then
   assert.equal(equal, 'ゲージのスタート位置は目標値より小さくしてください。')
   assert.equal(below, undefined)
 })
 
-test('ゲージのスタート位置が数値として解釈できない場合は保存前検証でエラーになる', () => {
+test('「任意の数値から」で0を入力した場合は目標値に関係なく許可する', () => {
+  // Given / When
+  const result = validateGoalGaugeStart({ ...gaugeStartInput, gaugeStart: '0', target: 0 })
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('「現在値から」は現在値と目標値がともに0なら許可する', () => {
   // Given / When
   const result = validateGoalGaugeStart({
-    achievementType: 'overpower_value',
-    gaugeStart: '1..2',
-    target: 100,
+    ...gaugeStartInput,
+    gaugeStartMode: 'current',
+    current: 0,
+    target: 0,
   })
 
   // Then
-  assert.equal(result, 'ゲージのスタート位置は0以上、小数第3位以内で入力してください。')
+  assert.equal(result, undefined)
+})
+
+test('「現在値から」は切り捨て後の現在値が目標値に届くかで判定する', () => {
+  // Given
+  const overPowerInput = {
+    ...gaugeStartInput,
+    achievementType: 'overpower_percent',
+    gaugeStartMode: 'current',
+    target: 99.8,
+  } as const
+
+  // When
+  const reached = validateGoalGaugeStart({ ...overPowerInput, current: 99.8004 })
+  const below = validateGoalGaugeStart({ ...overPowerInput, current: 99.7999 })
+
+  // Then
+  assert.equal(reached, '現在値が目標値に達しているため、現在値からは始められません。')
+  assert.equal(below, undefined)
 })

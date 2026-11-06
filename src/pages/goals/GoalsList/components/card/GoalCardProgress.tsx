@@ -147,7 +147,7 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
         />
         <Show when={(props.showValues ?? true) && displayProgress().gaugeStartText}>
           {(gaugeStartText) => (
-            // フォームの「現在値」ボタンと同じアイコンで、ゲージの起点の値であることを示す。
+            // 数字だけでは何の値か分からないため、起点を表すアイコンを添える。
             <p class="mt-1 flex items-center gap-0.5 font-oswald text-xs leading-none text-text-muted">
               <LocateFixed size={12} aria-hidden="true" />
               <span class="sr-only">{GOAL_GAUGE_START_LABEL} </span>

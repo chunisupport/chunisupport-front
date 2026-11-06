@@ -24,15 +24,20 @@ export const LABEL_INVERT_PERCENTAGE = '達成までの残り割合を表示'
  */
 export const LABEL_APPLY_GAUGE_START_TO_PERCENTAGE = '達成率もスタート位置から計算'
 
-/**
- * ゲージのスタート位置へ現在値を入れるボタンのラベル。
- */
-export const LABEL_FILL_GAUGE_START_WITH_CURRENT = '現在値'
+/** ゲージを0から描く選択肢のラベル。 */
+export const LABEL_GAUGE_START_MODE_ZERO = '最初から'
+
+/** 保存時点の現在値からゲージを描く選択肢のラベル。 */
+export const LABEL_GAUGE_START_MODE_CURRENT = '現在値から'
+
+/** 入力した数値からゲージを描く選択肢のラベル。 */
+export const LABEL_GAUGE_START_MODE_CUSTOM = '任意の数値から'
 
 /**
- * ゲージのスタート位置へ現在値を入れるボタンの読み上げ名。表示ラベルだけでは操作内容が伝わらないため補う。
+ * 「現在値から」を選んだ後に目標値を下げ、現在値が目標値に達した場合に表示するエラーメッセージ。
  */
-export const LABEL_FILL_GAUGE_START_WITH_CURRENT_ARIA = '現在値をゲージのスタート位置に入力'
+export const ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET =
+  '現在値が目標値に達しているため、現在値からは始められません。'
 
 /**
  * ゲージのスタート位置が整数でない、または負の場合に表示するエラーメッセージ。

@@ -6,6 +6,7 @@ import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import {
   buildGaugeStartDecimalErrorMessage,
+  ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET,
   ERROR_MESSAGE_GAUGE_START_INTEGER,
   ERROR_MESSAGE_GAUGE_START_NOT_BELOW_TARGET,
   ERROR_MESSAGE_INVALID_COUNT_TARGET,
@@ -15,11 +16,12 @@ import {
 } from './constants'
 import {
   canUseDynamicTotalTarget,
+  type GoalFormGaugeStartValueInput,
   getGoalGaugeStartDecimalPlaces,
   getRankGoalScore,
   isCountAchievementType,
-  parseGoalGaugeStart,
   type RankGoalValue,
+  resolveGoalFormGaugeStart,
 } from './goalFormModel'
 
 const MAX_OVERPOWER_PERCENT = 100
@@ -187,25 +189,30 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
 }
 
 /** ゲージのスタート位置の保存前検証に使う入力 */
-export interface GoalGaugeStartValidationInput {
-  achievementType: GoalAchievementType
-  /** ゲージのスタート位置の入力値。空欄は0として扱う */
-  gaugeStart: string
+export interface GoalGaugeStartValidationInput extends GoalFormGaugeStartValueInput {
   /** 現在の入力内容から解決した目標値 */
   target: number
 }
 
 /**
  * ゲージのスタート位置を保存前に検証する。
- * 0は従来どおり0から描く指定のため、目標値に関係なく許可する。
+ * 0から描く指定は目標値に関係なく許可する。
  *
- * @param input - 目標種別、スタート位置の入力値、現在の目標値。
- * @returns 入力欄の下に表示するエラーメッセージ。問題なければundefined。
+ * @param input - 目標種別、スタート位置の決め方と入力値、現在値、現在の目標値。
+ * @returns スタート位置の欄に表示するエラーメッセージ。問題なければundefined。
  */
 export const validateGoalGaugeStart = (
   input: GoalGaugeStartValidationInput
 ): string | undefined => {
-  const gaugeStart = parseGoalGaugeStart(input.gaugeStart)
+  const gaugeStart = resolveGoalFormGaugeStart(input)
+  if (input.gaugeStartMode === 'current') {
+    // 選択後に目標値を下げて達成済みになった場合は、現在値を起点にできない。
+    return gaugeStart > 0 && gaugeStart >= input.target
+      ? ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET
+      : undefined
+  }
+  if (input.gaugeStartMode === 'zero') return undefined
+
   const decimalPlaces = getGoalGaugeStartDecimalPlaces(input.achievementType)
   if (!isWithinDecimalPlaces(gaugeStart, decimalPlaces) || gaugeStart < 0) {
     return decimalPlaces > 0
