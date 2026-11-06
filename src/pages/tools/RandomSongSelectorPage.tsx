@@ -23,6 +23,7 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { MultiSelectField, toMultiSelectOptions } from '../../components/common/AppMultiSelect'
 import { FormSelect } from '../../components/common/AppSelect'
+import ChartConstRangeField from '../../components/common/ChartConstRangeField'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'
 import {
@@ -39,6 +40,10 @@ import { SCORE_RANK_TEXT_CLASS } from '../../components/common/record/recordStyl
 import { OwnDataNotice } from '../../components/LoginRequiredState'
 import { RANDOM_SONG_SELECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
+import {
+  type ChartConstRangeSelection,
+  createChartConstRangeDraft,
+} from '../../hooks/createChartConstRangeDraft'
 import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
@@ -46,6 +51,7 @@ import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO } from '../../types
 import type { PlayerDataStatus } from '../../usecases/auth/resolvePlayerDataStatus'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
 import { formatChartConst } from '../../utils/chartConstFormat'
+import { createFullChartConstRange } from '../../utils/chartLevel'
 import {
   normalizeVersionFilterSelection,
   resolveReleasedVersionFilterSelection,
@@ -84,7 +90,7 @@ import {
   restoreRandomSongResults,
   toggleRandomSongDifficultyFilter,
 } from '../../utils/randomSongSelector'
-import { normalizeChartConstRangeInput, normalizeScoreRangeInput } from '../../utils/rangeInput'
+import { normalizeScoreRangeInput } from '../../utils/rangeInput'
 import { getScoreRank } from '../../utils/scoreRank'
 import { filterReleasedVersions, getShortVersionName } from '../../utils/versionConverter'
 import { RandomSongGoalDialog } from './RandomSongGoalDialog'
@@ -666,8 +672,18 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const myRecordData = (): MyRandomSongRecordData | undefined => myUserData()?.record
   const myFavoriteData = (): MyRandomSongFavoriteData | undefined => myUserData()?.favorite
   const [count, setCount] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.count)
-  const [minConst, setMinConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.minConst)
-  const [maxConst, setMaxConst] = createSignal(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
+  const [constSelection, setConstSelection] = createSignal<ChartConstRangeSelection>({
+    constFilterMode: 'level',
+    constRange: createFullChartConstRange(),
+  })
+  const constRangeDraft = createChartConstRangeDraft({
+    get: constSelection,
+    set: setConstSelection,
+  })
+  /** @returns 入力途中も含む譜面定数の下限文字列。 */
+  const minConst = (): string => constRangeDraft.fieldProps.minValue
+  /** @returns 入力途中も含む譜面定数の上限文字列。 */
+  const maxConst = (): string => constRangeDraft.fieldProps.maxValue
   const [selectedDifficulties, setSelectedDifficulties] = createSignal<
     RandomSongDifficultyFilter[]
   >([...RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES])
@@ -1026,8 +1042,9 @@ const RandomSongSelectorPage = (): JSX.Element => {
    */
   const handleReset = (): void => {
     setCount(RANDOM_SONG_SELECTOR_DEFAULTS.count)
-    setMinConst(RANDOM_SONG_SELECTOR_DEFAULTS.minConst)
-    setMaxConst(RANDOM_SONG_SELECTOR_DEFAULTS.maxConst)
+    const fullRange = createFullChartConstRange()
+    setConstSelection({ constFilterMode: 'level', constRange: fullRange })
+    constRangeDraft.sync(fullRange)
     setMinScore(RANDOM_SONG_SELECTOR_DEFAULTS.minScore)
     setMaxScore(RANDOM_SONG_SELECTOR_DEFAULTS.maxScore)
     setShowRecord(RANDOM_SONG_SELECTOR_DEFAULTS.showRecord)
@@ -1330,19 +1347,11 @@ const RandomSongSelectorPage = (): JSX.Element => {
                       />
                     </div>
                     <div class="sm:col-span-2">
-                      <RandomSongRangeField
+                      <ChartConstRangeField
                         idPrefix="random-song-const"
-                        label={RANDOM_SONG_SELECTOR_FIELD_LABELS.const}
-                        minLabel={RANDOM_SONG_SELECTOR_COPY.minConstLabel}
-                        maxLabel={RANDOM_SONG_SELECTOR_COPY.maxConstLabel}
-                        minValue={minConst()}
-                        maxValue={maxConst()}
-                        inputMode="decimal"
+                        {...constRangeDraft.fieldProps}
                         disabled={isGoalFilterActive()}
-                        error={isGoalFilterActive() ? null : constRangeError()}
-                        normalizeInput={normalizeChartConstRangeInput}
-                        onMinChange={setMinConst}
-                        onMaxChange={setMaxConst}
+                        errorMessage={isGoalFilterActive() ? null : constRangeError()}
                       />
                     </div>
                   </div>

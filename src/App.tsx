@@ -403,7 +403,7 @@ const ToolCardContent = (props: { tool: ToolLink }) => {
       <SelectableCardLink
         href={props.tool.href}
         disabled={props.tool.disabled}
-        class={`min-h-24 items-center ${props.tool.adminOnly === true ? 'pr-8' : ''}`}
+        class={`min-h-24 items-center font-sans ${props.tool.adminOnly === true ? 'pr-8' : ''}`}
         icon={
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
             <ToolCardIcon icon={props.tool.icon} disabled={props.tool.disabled} />

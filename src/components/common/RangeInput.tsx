@@ -1,7 +1,7 @@
 import { NumberField } from '@kobalte/core/number-field'
 import { TextField } from '@kobalte/core/text-field'
 import type { JSX } from 'solid-js'
-import { Show } from 'solid-js'
+import { createUniqueId, Show } from 'solid-js'
 import { AppSelect, type AppSelectProps } from './AppSelect'
 
 /** 範囲の開始側フィールドに使うスクリーンリーダー向け接尾辞 */
@@ -125,6 +125,7 @@ export type SelectRangeInputProps<T> = Pick<
   AppSelectProps<T>,
   | 'contentClass'
   | 'contentZIndexClass'
+  | 'disabled'
   | 'formatLabel'
   | 'itemClass'
   | 'listboxClass'
@@ -319,60 +320,73 @@ export const TextRangeInput = (props: TextRangeInputProps): JSX.Element => (
 )
 
 /**
- * Select の範囲入力欄を共通レイアウトで表示する。
+ * Select の範囲入力欄を共通レイアウトで表示し、エラーを両端の入力欄へ関連付ける。
  *
  * @param props - 選択肢、左右の選択値、表示変換、クラス設定。
  * @returns Select 範囲入力欄。
  */
-export const SelectRangeInput = <T,>(props: SelectRangeInputProps<T>): JSX.Element => (
-  <div class={props.class}>
-    <Show when={props.title}>
-      {(title) => <div class="mb-1 text-sm font-medium">{title()}</div>}
-    </Show>
-    <RangeControlRow
-      start={
-        <AppSelect<T>
-          options={props.options}
-          value={props.start.value}
-          onChange={(value) => {
-            if (value !== null) props.start.onChange(value)
-          }}
-          rootClass="w-full"
-          label={props.start.label}
-          labelVariant="srOnly"
-          placeholder={props.placeholder}
-          formatLabel={props.formatLabel}
-          triggerClass={props.triggerClass}
-          valueClass={props.valueClass}
-          itemClass={props.itemClass}
-          contentClass={props.contentClass}
-          contentZIndexClass={props.contentZIndexClass}
-          listboxClass={props.listboxClass}
-        />
-      }
-      end={
-        <AppSelect<T>
-          options={props.options}
-          value={props.end.value}
-          onChange={(value) => {
-            if (value !== null) props.end.onChange(value)
-          }}
-          rootClass="w-full"
-          label={props.end.label}
-          labelVariant="srOnly"
-          placeholder={props.placeholder}
-          formatLabel={props.formatLabel}
-          triggerClass={props.triggerClass}
-          valueClass={props.valueClass}
-          itemClass={props.itemClass}
-          contentClass={props.contentClass}
-          contentZIndexClass={props.contentZIndexClass}
-          listboxClass={props.listboxClass}
-        />
-      }
-    />
-    <Show when={props.errorMessage}>
-      {(errorMessage) => <p class="mt-1 text-xs text-danger">{errorMessage()}</p>}
-    </Show>
-  </div>
-)
+export const SelectRangeInput = <T,>(props: SelectRangeInputProps<T>): JSX.Element => {
+  const errorId = createUniqueId()
+  return (
+    <div class={props.class}>
+      <Show when={props.title}>
+        {(title) => <div class="mb-1 text-sm font-medium">{title()}</div>}
+      </Show>
+      <RangeControlRow
+        start={
+          <AppSelect<T>
+            options={props.options}
+            value={props.start.value}
+            disabled={props.disabled}
+            validationState={props.errorMessage ? 'invalid' : 'valid'}
+            triggerDescriptionId={props.errorMessage ? errorId : undefined}
+            onChange={(value) => {
+              if (value !== null) props.start.onChange(value)
+            }}
+            rootClass="w-full"
+            label={props.start.label}
+            labelVariant="srOnly"
+            placeholder={props.placeholder}
+            formatLabel={props.formatLabel}
+            triggerClass={props.triggerClass}
+            valueClass={props.valueClass}
+            itemClass={props.itemClass}
+            contentClass={props.contentClass}
+            contentZIndexClass={props.contentZIndexClass}
+            listboxClass={props.listboxClass}
+          />
+        }
+        end={
+          <AppSelect<T>
+            options={props.options}
+            value={props.end.value}
+            disabled={props.disabled}
+            validationState={props.errorMessage ? 'invalid' : 'valid'}
+            triggerDescriptionId={props.errorMessage ? errorId : undefined}
+            onChange={(value) => {
+              if (value !== null) props.end.onChange(value)
+            }}
+            rootClass="w-full"
+            label={props.end.label}
+            labelVariant="srOnly"
+            placeholder={props.placeholder}
+            formatLabel={props.formatLabel}
+            triggerClass={props.triggerClass}
+            valueClass={props.valueClass}
+            itemClass={props.itemClass}
+            contentClass={props.contentClass}
+            contentZIndexClass={props.contentZIndexClass}
+            listboxClass={props.listboxClass}
+          />
+        }
+      />
+      <Show when={props.errorMessage}>
+        {(errorMessage) => (
+          <p id={errorId} class="mt-1 text-xs text-danger" aria-live="polite">
+            {errorMessage()}
+          </p>
+        )}
+      </Show>
+    </div>
+  )
+}

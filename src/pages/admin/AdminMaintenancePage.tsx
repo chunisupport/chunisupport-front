@@ -96,7 +96,7 @@ const MaintenanceStatusSummary = (props: MaintenanceStatusSummaryProps): JSX.Ele
       </div>
       <dl class="mt-3 text-sm">
         <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <dt class="text-text-muted">{ADMIN_MAINTENANCE_COPY.updatedAt}</dt>
+          <dt class="font-sans text-text-muted">{ADMIN_MAINTENANCE_COPY.updatedAt}</dt>
           <dd class="font-medium text-text">
             <Show when={formattedUpdatedAt()} fallback={ADMIN_MAINTENANCE_COPY.updatedAtUnknown}>
               {(formatted) => <time datetime={props.updatedAt ?? undefined}>{formatted()}</time>}

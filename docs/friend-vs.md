@@ -1,6 +1,6 @@
 # フレンドVS
 
-`/tools/friend-vs` では、ログインユーザーと承認済みフレンド1人の通常譜面またはWORLD'S END譜面のスコアを比較する。ツール一覧から開いた場合は相手を選択する。
+`/tools/friend-vs` では、ログインユーザーと承認済みフレンド1人の通常譜面またはWORLD'S END譜面のスコアを比較する。ツール一覧から開いた場合は相手を選択する。相手の選択肢にはプレイヤー名と、その下に小さく `@ユーザー名` を表示する。プレイヤー名がない場合は `@ユーザー名` だけを表示する。選択中の表示はプレイヤー名（ない場合は `@ユーザー名`）の1行とする。選択肢の名前とユーザー名には `font-sans` を使う。
 
 「難易度」プルダウンで `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA`、`WORLD'S END` から1つ選ぶ。初期値は `MASTER` とする。通常難易度ではFirebase認証付きの `GET /internal/friend-comparisons/:username/charts/:difficulty`、WORLD'S ENDでは `GET /internal/friend-comparisons/:username/worldsend` を呼び出す。難易度ごとの比較結果は別々にキャッシュする。
 

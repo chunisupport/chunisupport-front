@@ -20,7 +20,7 @@ export const OVER_POWER_CALCULATOR_COPY = {
   differenceLabel: 'あと',
   lampLabel: 'ランプ',
   requiredCountLabel: '必要譜面数',
-  currentScoreLabel: '現在のスコア',
+  currentScoreLabel: '伸ばす前のスコア',
   targetScoreLabel: '目標スコア',
   unplayedCalculatorTitle: '未プレイ補完計算',
   loginRequiredMessage: 'ログイン中のみ使用できます。',
@@ -37,9 +37,11 @@ export const OVER_POWER_CALCULATOR_COPY = {
     '既プレイ譜面がない譜面定数の平均スコアは、前後の譜面定数の平均スコアから線形的に補間します。',
   requiredChartCountTitle: '達成までの必要譜面数',
   requiredChartCountDescription:
-    '目標OP%の達成のために、指定した譜面定数の譜面をいくつ伸ばす必要があるかを計算できます。スコアの伸び具合を「現在のスコア」「目標スコア」欄に入力してください。',
-  chartConstantLabel: '譜面定数',
-  unavailableCountLabel: '—',
+    '目標OP%を達成するために更新が必要な譜面数を、スコアの伸び具合を指定することで算出します。(事実上、全曲プレイ前提の指標です)',
+  /** 譜面定数の入力が不要となる高スコア帯の注記。 */
+  requiredChartCountNote: '※実用の範囲内では、必要譜面数は譜面定数に関係なく同じになります。',
+  excessiveCountWarning:
+    '目標OP%が高すぎる、もしくはスコアの伸び具合が小さすぎるため、達成が不可能です。',
   ratioLabel: '獲得値 / OVER POWER理論値',
 } as const
 
@@ -58,8 +60,6 @@ export const QUICK_TARGET_PERCENTS = [
 ] as const
 /** 指定スコア補完の初期値。 */
 export const DEFAULT_MANUAL_FILL_SCORE = '1007500'
-/** 必要譜面数を計算する譜面定数の初期値。 */
-export const DEFAULT_REQUIRED_CHART_CONSTANT = '15.0'
 /** 必要譜面数を計算する現在スコアの初期値。 */
 export const DEFAULT_REQUIRED_CURRENT_SCORE = '1005000'
 /** 必要譜面数を計算する目標スコアの初期値。 */

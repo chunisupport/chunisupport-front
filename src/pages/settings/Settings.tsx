@@ -297,7 +297,7 @@ const Settings = () => {
                         <div>
                           <h3 class="font-medium text-text">プロフィールを非公開にする</h3>
                           <p class="mt-1 text-sm text-text-muted">
-                            プロフィールとプレイ情報を自分だけに表示します。
+                            プロフィールとプレイ情報を自分とフレンドだけに表示します。
                           </p>
                         </div>
                         <AppSwitch

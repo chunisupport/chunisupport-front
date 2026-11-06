@@ -94,6 +94,27 @@ export const getChartLevelFilterBoundary = (
 }
 
 /**
+ * 適用する範囲の端点を昇順に揃え、レベル指定では各レベル全体を含める。
+ *
+ * @param range - 編集中の定数範囲。逆順の端点も受け付ける。
+ * @param mode - レベル指定または数値指定。
+ * @returns 両端の順序とレベル境界を補正した定数範囲。
+ */
+export const normalizeChartConstRange = (
+  range: NumericRangeFilter,
+  mode: 'level' | 'number'
+): NumericRangeFilter => {
+  const min = Math.min(range.min, range.max)
+  const max = Math.max(range.min, range.max)
+  return mode === 'level'
+    ? {
+        min: getChartLevelFilterBoundary(toChartLevelFilterLabel(min), 'min'),
+        max: getChartLevelFilterBoundary(toChartLevelFilterLabel(max), 'max'),
+      }
+    : { min, max }
+}
+
+/**
  * 譜面定数範囲が全範囲（未指定）から変更されているか判定する。
  *
  * @param range - 判定する譜面定数範囲。
