@@ -168,8 +168,10 @@ const FriendVsPage = (): JSX.Element => {
                 onChange={(friend) => setSearchParams({ friend: friend?.username })}
                 label={FRIEND_VS_COPY.selectFriend}
                 formatLabel={(friend) => friend.player_name || `@${friend.username}`}
+                formatItemDescription={(friend) => friend.player_name && `@${friend.username}`}
                 placeholder={FRIEND_VS_COPY.selectPrompt}
                 rootClass="font-sans"
+                contentClass="font-sans"
               />
               <AppSelect<FriendComparisonDifficulty>
                 options={[...FRIEND_VS_DIFFICULTY_OPTIONS]}

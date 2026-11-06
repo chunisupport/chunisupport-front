@@ -40,6 +40,8 @@ export type AppSelectProps<T> = KobalteSingleSelectProps<T> & {
   errorMessage?: JSX.Element
   /** 選択肢と選択中の値を表示用ラベルへ変換する処理 */
   formatLabel?: (option: T) => JSX.Element
+  /** 選択肢のラベル下に小さく表示する補足へ変換する処理。空値を返した選択肢には表示しない */
+  formatItemDescription?: (option: T) => JSX.Element
   /** Trigger に追加で適用する Tailwind クラス */
   triggerClass?: string
   /** Trigger に付与する id */
@@ -89,12 +91,13 @@ const formatDefaultSelectLabel = <T,>(option: T): string => String(option)
 /**
  * 単一選択 Select の選択肢表示を組み立てる。
  *
- * @param props - 選択肢と表示ラベル生成に使う設定。
+ * @param props - 選択肢と表示ラベル・補足の生成に使う設定。
  * @returns Kobalte Select.Item の JSX 要素。
  */
 const renderAppSelectItem = <T,>(props: {
   item: SelectRootItemComponentProps<T>['item']
   formatLabel: (option: T) => JSX.Element
+  formatDescription?: (option: T) => JSX.Element
   itemClass?: string
 }): JSX.Element => (
   <Select.Item item={props.item} class={`${APP_SELECT_ITEM_CLASS} ${props.itemClass ?? ''}`}>
@@ -104,7 +107,16 @@ const renderAppSelectItem = <T,>(props: {
           <Check class="h-3.5 w-3.5" aria-hidden="true" />
         </Select.ItemIndicator>
       </span>
-      <Select.ItemLabel>{props.formatLabel(props.item.rawValue)}</Select.ItemLabel>
+      <div>
+        <Select.ItemLabel>{props.formatLabel(props.item.rawValue)}</Select.ItemLabel>
+        <Show when={props.formatDescription?.(props.item.rawValue)}>
+          {(description) => (
+            <Select.ItemDescription class="text-xs font-normal text-text-muted">
+              {description()}
+            </Select.ItemDescription>
+          )}
+        </Show>
+      </div>
     </div>
   </Select.Item>
 )
@@ -125,6 +137,7 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
     'description',
     'errorMessage',
     'formatLabel',
+    'formatItemDescription',
     'triggerClass',
     'triggerId',
     'triggerDescriptionId',
@@ -149,6 +162,7 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
         renderAppSelectItem({
           item: itemProps.item,
           formatLabel,
+          formatDescription: local.formatItemDescription,
           itemClass: local.itemClass,
         })
       }
