@@ -6,7 +6,9 @@ import {
   buildDefaultDifficultySelections,
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,
+  buildGoalFormGaugeStartParams,
   createGoalFormInitialState,
+  resolveGoalFormGaugeStart,
 } from './goalFormModel'
 
 const selectionFallbacks = {
@@ -28,6 +30,9 @@ test('作成フォームの初期状態はMASTER/ULTIMA選択と標準値で作�
   assert.equal(result.countMode, 'all')
   assert.equal(result.invertValue, false)
   assert.equal(result.invertPercentage, false)
+  assert.equal(result.gaugeStartMode, 'zero')
+  assert.equal(result.gaugeStart, '')
+  assert.equal(result.applyGaugeStartToPercentage, true)
   assert.equal(result.chartTargetMode, 'normal')
   assert.equal(result.constMin, String(CHART_CONST_MIN))
   assert.equal(result.constMax, String(CHART_CONST_MAX))
@@ -65,6 +70,8 @@ test('編集フォームでdiffが未指定の場合は全難易度が選択さ�
     attributes: { genre: [10], ver: [2] },
     invert_value: false,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
     sort_order: 1,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO
@@ -93,6 +100,8 @@ test('編集フォームの初期状態は保存済み目標から復元され�
     },
     invert_value: true,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
     sort_order: 1,
     created_at: '2026-01-01T00:00:00Z',
   } satisfies GoalDTO
@@ -278,6 +287,8 @@ test('単曲レート達成数の編集状態はレートと残数指定を復�
     attributes: {},
     invert_value: false,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
     sort_order: 1,
     created_at: '2026-09-07T00:00:00Z',
   } satisfies GoalDTO
@@ -302,6 +313,8 @@ test('FULL CHAIN目標の編集状態は保存済みランプと全件指定を�
     attributes: {},
     invert_value: false,
     invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
     sort_order: 1,
     created_at: '2026-09-02T00:00:00Z',
   } satisfies GoalDTO
@@ -312,4 +325,190 @@ test('FULL CHAIN目標の編集状態は保存済みランプと全件指定を�
   // Then
   assert.equal(result.fullChain, 'PLATINUM')
   assert.equal(result.countMode, 'all')
+})
+
+test('編集フォームは保存済みのスタート位置を「任意の数値から」として復元する', () => {
+  // Given: スタート位置を持ち、達成率へは適用しない保存済み目標
+  const goal = {
+    id: 1,
+    group_id: null,
+    title: 'OP達成率99.8%',
+    achievement_type: 'overpower_percent',
+    achievement_params: { total: 99.8 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 99.6,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: 「現在値から」は保存時点の値として記録されるため、数値として編集できる形に戻す
+  assert.equal(result.gaugeStartMode, 'custom')
+  assert.equal(result.gaugeStart, '99.6')
+  assert.equal(result.applyGaugeStartToPercentage, false)
+})
+
+test('スタート位置が未設定の目標は「最初から」と達成率への適用の既定値で復元する', () => {
+  // Given: スタート位置が0のため、適用指定がfalseで保存された目標
+  const goal = {
+    id: 1,
+    group_id: null,
+    title: 'AJ 100譜面',
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'AJ', count: 100 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then
+  assert.equal(result.gaugeStartMode, 'zero')
+  assert.equal(result.gaugeStart, '')
+  assert.equal(result.applyGaugeStartToPercentage, true)
+})
+
+test('スタート位置は決め方に応じて0・現在値・入力値から解決される', () => {
+  // Given
+  const base = {
+    achievementType: 'overpower_percent',
+    gaugeStart: '99.6',
+    current: 99.71234,
+  } as const
+
+  // When
+  const zero = resolveGoalFormGaugeStart({ ...base, gaugeStartMode: 'zero' })
+  const current = resolveGoalFormGaugeStart({ ...base, gaugeStartMode: 'current' })
+  const custom = resolveGoalFormGaugeStart({ ...base, gaugeStartMode: 'custom' })
+
+  // Then: 現在値は目標種別で保存できる小数第3位までに切り捨てる
+  assert.equal(zero, 0)
+  assert.equal(current, 99.712)
+  assert.equal(custom, 99.6)
+})
+
+test('件数系と平均スコアの現在値は整数に切り捨ててスタート位置にする', () => {
+  // Given / When
+  const averageScore = resolveGoalFormGaugeStart({
+    achievementType: 'avg_score',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 1007600.7,
+  })
+  const count = resolveGoalFormGaugeStart({
+    achievementType: 'combolamp_count',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 950,
+  })
+
+  // Then
+  assert.equal(averageScore, 1007600)
+  assert.equal(count, 950)
+})
+
+test('ゲージ設定は「最初から」なら達成率への適用をfalseにして送信する', () => {
+  // Given
+  const base = {
+    achievementType: 'overpower_percent',
+    gaugeStart: '99.6',
+    current: 99.7,
+    applyGaugeStartToPercentage: true,
+  } as const
+
+  // When
+  const custom = buildGoalFormGaugeStartParams({ ...base, gaugeStartMode: 'custom' })
+  const zero = buildGoalFormGaugeStartParams({ ...base, gaugeStartMode: 'zero' })
+
+  // Then
+  assert.deepEqual(custom, { gauge_start: 99.6, apply_gauge_start_to_percentage: true })
+  assert.deepEqual(zero, { gauge_start: 0, apply_gauge_start_to_percentage: false })
+})
+
+test('平均スコア目標は割合を表示しないため達成率への適用をfalseにして送信する', () => {
+  // Given / When
+  const result = buildGoalFormGaugeStartParams({
+    achievementType: 'avg_score',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 1007000,
+    applyGaugeStartToPercentage: true,
+  })
+
+  // Then
+  assert.deepEqual(result, { gauge_start: 1007000, apply_gauge_start_to_percentage: false })
+})
+
+test('「現在値から」で現在値が0なら達成率への適用をfalseにして送信する', () => {
+  // Given / When
+  const withCurrent = buildGoalFormGaugeStartParams({
+    achievementType: 'combolamp_count',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 950,
+    applyGaugeStartToPercentage: true,
+  })
+  const withoutCurrent = buildGoalFormGaugeStartParams({
+    achievementType: 'combolamp_count',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 0,
+    applyGaugeStartToPercentage: true,
+  })
+
+  // Then
+  assert.deepEqual(withCurrent, { gauge_start: 950, apply_gauge_start_to_percentage: true })
+  assert.deepEqual(withoutCurrent, { gauge_start: 0, apply_gauge_start_to_percentage: false })
+})
+
+test('「任意の数値から」が空欄の間はスタート位置をNaNにし、達成率への適用をfalseにする', () => {
+  // Given / When: プレビューはNaNを0から描く扱いにし、保存前検証で止める
+  const result = buildGoalFormGaugeStartParams({
+    achievementType: 'overpower_percent',
+    gaugeStartMode: 'custom',
+    gaugeStart: '',
+    current: 99.7,
+    applyGaugeStartToPercentage: true,
+  })
+
+  // Then
+  assert.ok(Number.isNaN(result.gauge_start))
+  assert.equal(result.apply_gauge_start_to_percentage, false)
+})
+
+test('平均スコア目標のスタート位置は「任意の数値から」と達成率への適用の既定値で復元する', () => {
+  // Given: 平均スコア目標は適用指定をfalseで保存する
+  const goal = {
+    id: 1,
+    group_id: null,
+    title: '平均1,008,000',
+    achievement_type: 'avg_score',
+    achievement_params: { score: 1008000 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 1007000,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: 他の目標種別へ変えたときに標準の適用指定で始められるよう、既定値を使う
+  assert.equal(result.gaugeStartMode, 'custom')
+  assert.equal(result.gaugeStart, '1007000')
+  assert.equal(result.applyGaugeStartToPercentage, true)
 })

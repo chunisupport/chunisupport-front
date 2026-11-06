@@ -38,6 +38,12 @@ interface GoalNumberFieldProps {
   step?: number
   /** 入力操作を無効化するか */
   disabled?: boolean
+  /** 入力欄の下に表示する検証エラー。指定時は入力欄を不正状態にする */
+  errorMessage?: string
+  /** 表示ラベルを省略した場合に入力欄へ付ける読み上げ名 */
+  ariaLabel?: string
+  /** 入力要素を受け取る。検証エラー時にフォーカスを移すために使う */
+  inputRef?: (element: HTMLInputElement) => void
   /** 入力値が変更されたときの通知先 */
   onChange: (value: string) => void
 }
@@ -61,12 +67,16 @@ interface GoalTargetModeRadioGroupProps<TValue extends string> {
   name: string
   /** 現在選択中の値 */
   value: TValue
-  /** 選択できる目標値指定方法 */
+  /** 選択肢 */
   options: GoalSelectOption<TValue>[]
   /** 選択値が変更されたときの通知先 */
   onChange: (value: TValue) => void
   /** 選択肢カード内へ追加表示する入力欄などの内容 */
   renderOptionContent?: (option: GoalSelectOption<TValue>) => JSX.Element
+  /** 選択肢を操作不可にするか。選択中の項目を無効にすると Tab で欄に入れなくなるため、呼び出し側で避ける */
+  isOptionDisabled?: (option: GoalSelectOption<TValue>) => boolean
+  /** グループの下に表示する検証エラー。指定時はグループを不正状態にして読み上げと関連付ける */
+  errorMessage?: string
 }
 
 /**
@@ -108,7 +118,7 @@ export const GoalTextField: Component<GoalTextFieldProps> = (props) => (
 /**
  * 目標設定ダイアログで使う数値入力欄を描画する。
  *
- * @param props - 表示ラベル、入力値、補足説明、数値制約、無効状態、変更ハンドラ。
+ * @param props - 表示ラベル、入力値、補足説明、数値制約、無効状態、検証エラー、読み上げ名、入力要素の参照、変更ハンドラ。
  * @returns Kobalte NumberField を使った入力欄。
  */
 export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
@@ -117,13 +127,16 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
     value={props.value}
     onChange={props.onChange}
     disabled={props.disabled}
+    validationState={props.errorMessage ? 'invalid' : undefined}
     format={false}
     allowedInput={/[0-9.]/}
     step={props.step ?? 1}
   >
     <NumberField.Label class="mb-1 block text-text-muted">{props.label}</NumberField.Label>
     <NumberField.Input
-      class={`${GOAL_FIELD_INPUT_CLASS} disabled:cursor-not-allowed disabled:opacity-60`}
+      ref={props.inputRef}
+      class={`${GOAL_FIELD_INPUT_CLASS} data-invalid:border-danger-border disabled:cursor-not-allowed disabled:opacity-60`}
+      aria-label={props.ariaLabel}
       min={props.min}
       max={props.max}
       step={props.step ?? 1}
@@ -133,6 +146,9 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
         {props.description}
       </NumberField.Description>
     </Show>
+    <NumberField.ErrorMessage class="mt-1 text-xs text-danger">
+      {props.errorMessage}
+    </NumberField.ErrorMessage>
   </NumberField>
 )
 
@@ -181,10 +197,10 @@ export const GoalFilterCheckbox: Component<GoalFilterCheckboxProps> = (props) =>
 )
 
 /**
- * 目標値の指定方法をラジオボタンで選択する欄を描画する。
+ * 目標値の指定方法やゲージのスタート位置の決め方など、カード型のラジオボタンで選択する欄を描画する。
  *
- * @param props - 表示ラベル、name属性、選択値、選択肢、変更ハンドラ、追加内容の描画関数。
- * @returns Kobalte RadioGroup を使った目標値指定方法の選択欄。
+ * @param props - 表示ラベル、name属性、選択値、選択肢、変更ハンドラ、追加内容の描画関数、選択肢の無効判定、検証エラー。
+ * @returns Kobalte RadioGroup を使ったカード型の選択欄。
  */
 export const GoalTargetModeRadioGroup = <TValue extends string>(
   props: GoalTargetModeRadioGroupProps<TValue>
@@ -193,6 +209,7 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
     name={props.name}
     value={props.value}
     onChange={(value) => props.onChange(value as TValue)}
+    validationState={props.errorMessage ? 'invalid' : undefined}
     class="space-y-2 text-sm"
   >
     <RadioGroup.Label class="block text-text-muted">{props.label}</RadioGroup.Label>
@@ -204,10 +221,15 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
               layout: 'block',
               density: 'compact',
               selected: props.value === option.value,
+              disabled: props.isOptionDisabled?.(option),
               class: 'rounded text-sm',
             })}
           >
-            <RadioGroup.Item value={option.value} class="contents">
+            <RadioGroup.Item
+              value={option.value}
+              disabled={props.isOptionDisabled?.(option)}
+              class="contents"
+            >
               <RadioGroup.ItemInput class="peer" />
               <div class={GOAL_RADIO_ITEM_HEADER_CLASS}>
                 <RadioGroup.ItemControl class={GOAL_RADIO_CONTROL_CLASS}>
@@ -215,7 +237,7 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
                 </RadioGroup.ItemControl>
                 <span class="pointer-events-none">{option.label}</span>
               </div>
-              <RadioGroup.ItemLabel class="absolute inset-0 z-10 cursor-pointer rounded focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring">
+              <RadioGroup.ItemLabel class="absolute inset-0 z-10 cursor-pointer rounded data-[disabled]:cursor-not-allowed focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring">
                 <span class="sr-only">{option.label}</span>
               </RadioGroup.ItemLabel>
             </RadioGroup.Item>
@@ -230,5 +252,8 @@ export const GoalTargetModeRadioGroup = <TValue extends string>(
         )}
       </For>
     </div>
+    <RadioGroup.ErrorMessage class="text-xs text-danger">
+      {props.errorMessage}
+    </RadioGroup.ErrorMessage>
   </RadioGroup>
 )

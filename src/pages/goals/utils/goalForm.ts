@@ -47,6 +47,8 @@ export const buildGoalPayload = (goal: GoalDTO): GoalRequest => ({
   attributes: goal.attributes,
   invert_value: goal.invert_value,
   invert_percentage: goal.invert_percentage,
+  gauge_start: goal.gauge_start,
+  apply_gauge_start_to_percentage: goal.apply_gauge_start_to_percentage,
 })
 
 export const resolveGoalAchievementTypeLabel = (

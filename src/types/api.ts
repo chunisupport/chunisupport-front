@@ -187,6 +187,7 @@ export type ErrorCode =
   | 'goal_invalid_achievement_type'
   | 'goal_invalid_achievement_params'
   | 'goal_invalid_attributes'
+  | 'goal_invalid_gauge_start'
   | 'goal_invalid_order'
   | 'invalid_goal_input'
   | 'goal_group_not_found'
@@ -295,6 +296,7 @@ export const errorMessages: Record<ErrorCode, string> = {
   goal_invalid_achievement_type: '目標種別が不正です',
   goal_invalid_achievement_params: '目標パラメータが不正です',
   goal_invalid_attributes: '目標条件が不正です',
+  goal_invalid_gauge_start: 'ゲージのスタート位置が不正です',
   goal_invalid_order: '目標の並び順が不正です',
   invalid_goal_input: '目標入力が不正です',
   goal_group_not_found: '目標グループが見つかりません',
@@ -903,6 +905,10 @@ export interface GoalDTO {
   invert_value: boolean
   /** 達成率を残り割合として表示するか */
   invert_percentage: boolean
+  /** 進捗ゲージを0%として描く値。単位は目標種別の現在値と同じで、0は従来どおり0から描く */
+  gauge_start: number
+  /** 達成率表示もゲージと同じくスタート位置から計算するか */
+  apply_gauge_start_to_percentage: boolean
   sort_order: number
   created_at: string
 }

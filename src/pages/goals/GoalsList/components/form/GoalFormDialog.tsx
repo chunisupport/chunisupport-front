@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createSignal } from 'solid-js'
+import { createEffect, createMemo, createSignal, on } from 'solid-js'
 import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
 import type {
   GoalAchievementType,
@@ -24,7 +24,11 @@ import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { resolveGoalFormGroupId } from '../../goalGroupsModel'
-import { DEFAULT_RATING_GOAL_VALUE } from './constants'
+import { formatGoalCardValue } from '../card/goalCardProgressModel'
+import {
+  DEFAULT_RATING_GOAL_VALUE,
+  ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET,
+} from './constants'
 import { GoalAchievementSection } from './GoalAchievementSection'
 import { GoalFormFooter } from './GoalFormFooter'
 import { GoalGroupSection } from './GoalGroupSection'
@@ -38,19 +42,25 @@ import {
   buildDefaultDifficultySelections,
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,
+  buildGoalFormGaugeStartParams,
   canUseDynamicTotalTarget,
   createGoalFormInitialState,
+  DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
+  DEFAULT_GAUGE_START_MODE,
+  DEFAULT_GAUGE_START_VALUE,
   DEFAULT_GOAL_ACHIEVEMENT_TYPE,
   DEFAULT_RANK_GOAL,
   type GoalChartTargetMode,
   type GoalFormAchievementParamsInput,
+  type GoalGaugeStartMode,
   getDefaultTotalGoalValue,
   getRankGoalScore,
   isCountAchievementType,
   type RankGoalValue,
+  resolveGoalGaugeStartFromCurrent,
   toggleSelection,
 } from './goalFormModel'
-import { validateGoalForm } from './goalFormValidation'
+import { validateGoalForm, validateGoalGaugeStart } from './goalFormValidation'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -143,6 +153,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const [fullChain, setFullChain] = createSignal<FullChainGoalValue>('GOLD')
   const [invertValue, setInvertValue] = createSignal(false)
   const [invertPercentage, setInvertPercentage] = createSignal(false)
+  const [gaugeStartMode, setGaugeStartMode] =
+    createSignal<GoalGaugeStartMode>(DEFAULT_GAUGE_START_MODE)
+  const [gaugeStart, setGaugeStart] = createSignal(DEFAULT_GAUGE_START_VALUE)
+  const [applyGaugeStartToPercentage, setApplyGaugeStartToPercentage] = createSignal(
+    DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE
+  )
+  const [gaugeStartErrorMessage, setGaugeStartErrorMessage] = createSignal('')
+  let gaugeStartField: HTMLDivElement | undefined
+  let gaugeStartInput: HTMLInputElement | undefined
 
   const [chartTargetMode, setChartTargetMode] = createSignal<GoalChartTargetMode>('normal')
   const [diffs, setDiffs] = createSignal<string[]>([])
@@ -230,6 +249,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   createEffect(() => {
     if (!props.open) return
     setErrorMessage('')
+    setGaugeStartErrorMessage('')
 
     const nextState = createGoalFormInitialState(props.initialGoal, {
       allDifficultySelections: allDifficultySelections(),
@@ -254,6 +274,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setFullChain(nextState.fullChain)
     setInvertValue(nextState.invertValue)
     setInvertPercentage(nextState.invertPercentage)
+    setGaugeStartMode(nextState.gaugeStartMode)
+    setGaugeStart(nextState.gaugeStart)
+    setApplyGaugeStartToPercentage(nextState.applyGaugeStartToPercentage)
     setChartTargetMode(nextState.chartTargetMode)
     setDiffs(nextState.diffs)
     setConstMin(nextState.constMin)
@@ -361,8 +384,92 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       attributes,
       invert_value: invertValue(),
       invert_percentage: invertPercentage(),
+      // ゲージ設定は進捗計算に使わず、「現在値から」はこの進捗の現在値に依存するため、固定値で渡す。
+      gauge_start: 0,
+      apply_gauge_start_to_percentage: false,
     })
   })
+
+  /**
+   * 現在のフォーム入力値から保存・プレビュー共通のゲージ設定を組み立てる。
+   *
+   * @returns API送信値と同じ形のゲージのスタート位置と達成率への適用指定。
+   */
+  const buildDraftGaugeStartParams = () =>
+    buildGoalFormGaugeStartParams({
+      achievementType: achievementType(),
+      gaugeStartMode: gaugeStartMode(),
+      gaugeStart: gaugeStart(),
+      current: previewProgress().current,
+      applyGaugeStartToPercentage: applyGaugeStartToPercentage(),
+    })
+
+  /**
+   * 「現在値から」を選んだときに保存されるスタート位置を取得する。
+   *
+   * @returns 目標種別の桁数で切り捨てた現在値。
+   */
+  const currentGaugeStart = (): number =>
+    resolveGoalGaugeStartFromCurrent(previewProgress().current, achievementType())
+
+  /**
+   * 「現在値から」を選べるか判定する。
+   *
+   * @returns 対象があり未達成で、現在値が0より大きければtrue。
+   *   達成済みの現在値は目標値以上のため起点にできず、0なら「最初から」と同じになる。
+   */
+  const canUseCurrentGaugeStart = (): boolean =>
+    previewProgress().targetCount > 0 && !previewProgress().achieved && currentGaugeStart() > 0
+
+  /**
+   * 「現在値から」を選んだときに保存されるスタート位置を表示用に整形する。
+   *
+   * @returns 目標種別の桁数で切り捨てた現在値の表示文字列。
+   */
+  const currentGaugeStartText = (): string =>
+    formatGoalCardValue(currentGaugeStart(), achievementType())
+
+  /**
+   * スタート位置の選択欄の下に出すエラーを取得する。
+   * 「現在値から」を選んだ後に目標値を下げて達成済みになった状態を、保存を待たずに示す。
+   *
+   * @returns 「現在値から」を使えない状態で選んでいる場合はエラーメッセージ、それ以外は空文字。
+   */
+  const gaugeStartGroupErrorMessage = (): string =>
+    gaugeStartMode() === 'current' && previewProgress().achieved
+      ? ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET
+      : ''
+
+  // 目標値が変わると「任意の数値から」の前回の検証結果が古くなるため、表示中のエラーを消す。
+  createEffect(
+    on(
+      () => previewProgress().target,
+      () => setGaugeStartErrorMessage(''),
+      { defer: true }
+    )
+  )
+
+  /**
+   * ゲージのスタート位置の決め方を更新し、前回の検証エラーを消す。
+   *
+   * @param mode - 選択されたスタート位置の決め方。
+   * @returns なし。
+   */
+  const handleGaugeStartModeChange = (mode: GoalGaugeStartMode): void => {
+    setGaugeStartMode(mode)
+    setGaugeStartErrorMessage('')
+  }
+
+  /**
+   * 「任意の数値から」の入力値を更新し、前回の検証エラーを消す。
+   *
+   * @param value - 入力欄の文字列。
+   * @returns なし。
+   */
+  const handleGaugeStartChange = (value: string): void => {
+    setGaugeStart(value)
+    setGaugeStartErrorMessage('')
+  }
 
   /**
    * 件数入力で指定できる上限を表示用に組み立てる。
@@ -416,6 +523,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       setTotalMode('all')
     }
     setTotal(getDefaultTotalGoalValue(nextType))
+    // スタート位置は目標種別の現在値と同じ単位のため、種別を変えたら「最初から」に戻す。
+    handleGaugeStartModeChange(DEFAULT_GAUGE_START_MODE)
+    setGaugeStart(DEFAULT_GAUGE_START_VALUE)
     if (nextType === 'rank_count') {
       setRank(DEFAULT_RANK_GOAL)
       setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
@@ -460,9 +570,28 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       allCount,
       theoreticalTotal: getTheoreticalTotal(currentType),
     })
+    // スタート位置はその欄の近くに表示するため、全体の検証エラーとは別に保持する。
+    // 「現在値から」のエラーは選択欄の下に常時表示しているため、入力欄のエラーとしては持たない。
+    const gaugeStartError = validateGoalGaugeStart({
+      achievementType: currentType,
+      gaugeStartMode: gaugeStartMode(),
+      gaugeStart: gaugeStart(),
+      current: previewProgress().current,
+      target: previewProgress().target,
+    })
+    setGaugeStartErrorMessage(gaugeStartMode() === 'custom' ? (gaugeStartError ?? '') : '')
 
     if (validationError) {
       setErrorMessage(validationError)
+      return
+    }
+    if (gaugeStartError) {
+      // 欄がスクロール領域の外にあると保存ボタンが反応しないように見えるため、エラー箇所へフォーカスを移す。
+      if (gaugeStartMode() === 'custom') {
+        gaugeStartInput?.focus()
+      } else {
+        gaugeStartField?.querySelector<HTMLInputElement>('input[type="radio"]:checked')?.focus()
+      }
       return
     }
 
@@ -476,6 +605,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       attributes,
       invert_value: invertValue(),
       invert_percentage: invertPercentage(),
+      ...buildDraftGaugeStartParams(),
     })
   }
 
@@ -548,6 +678,14 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               fullChain={fullChain()}
               invertValue={invertValue()}
               invertPercentage={invertPercentage()}
+              gaugeStartMode={gaugeStartMode()}
+              gaugeStart={gaugeStart()}
+              applyGaugeStartToPercentage={applyGaugeStartToPercentage()}
+              gaugeStartErrorMessage={gaugeStartErrorMessage()}
+              gaugeStartGroupErrorMessage={gaugeStartGroupErrorMessage()}
+              canUseCurrentGaugeStart={canUseCurrentGaugeStart()}
+              currentGaugeStartText={currentGaugeStartText()}
+              hasGaugeStart={buildDraftGaugeStartParams().gauge_start > 0}
               countMax={props.resolveAllCount(
                 getDraftAttributes(),
                 achievementType(),
@@ -571,6 +709,15 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               onFullChainChange={setFullChain}
               onInvertValueChange={setInvertValue}
               onInvertPercentageChange={setInvertPercentage}
+              onGaugeStartModeChange={handleGaugeStartModeChange}
+              onGaugeStartChange={handleGaugeStartChange}
+              onApplyGaugeStartToPercentageChange={setApplyGaugeStartToPercentage}
+              gaugeStartFieldRef={(element) => {
+                gaugeStartField = element
+              }}
+              gaugeStartInputRef={(element) => {
+                gaugeStartInput = element
+              }}
               canUseDynamicTotalTarget={canUseDynamicTotalTarget}
             />
 
@@ -579,6 +726,10 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               achievementType={achievementType()}
               invertValue={invertValue()}
               invertPercentage={invertPercentage()}
+              gaugeStart={buildDraftGaugeStartParams().gauge_start}
+              applyGaugeStartToPercentage={
+                buildDraftGaugeStartParams().apply_gauge_start_to_percentage
+              }
               progress={previewProgress()}
             />
           </div>

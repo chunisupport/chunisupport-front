@@ -74,6 +74,8 @@ const createGoal = (params: GoalDTO['achievement_params']): GoalDTO => ({
   attributes: {},
   invert_value: false,
   invert_percentage: false,
+  gauge_start: 0,
+  apply_gauge_start_to_percentage: false,
   sort_order: 1,
   created_at: '2026-01-01',
 })

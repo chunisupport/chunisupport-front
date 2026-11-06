@@ -18,6 +18,8 @@
 
 ## カード型一覧
 
+通常曲とWORLD'S ENDは `pages/songs/components/SongCardGrid.tsx` を共有し、カード本体とDTOはそれぞれの一覧に保持します。カード寸法・仮想化のoverscanは同じディレクトリの `songCardLayout.constants.ts` に集約しています。初期スクロール位置を復元し、表示件数が変わったときだけ先頭へ戻します。列数変更時は既存の `createWindowVirtualTable` でレイアウトを再計算し、`virtualGrid` で表示対象の行を切り出します。
+
 通常曲とWORLD'S ENDの楽曲一覧は、保存済みの設定がない場合はカード表示を初期表示とします。画面右上のアイコンボタンでカード表示と表表示を切り替えます。表示形式は通常曲とWORLD'S ENDで共有し、ブラウザの localStorage（キー: `chunisupport-song-list-view`、値: `card` / `table`）へ保存して、再読み込みや次回アクセス時にも復元します。保存値が不正な場合や読み取りに失敗した場合はカード表示になります。保存できない環境でも、その画面での表示切り替えは利用できます。
 
 通常曲とWORLD'S ENDのカード表示では、要解禁楽曲のカード右上に南京錠アイコンを表示します。
