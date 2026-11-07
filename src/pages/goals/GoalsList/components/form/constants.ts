@@ -40,6 +40,19 @@ export const ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET =
   '現在値が目標値に達しているため、現在値からは始められません。'
 
 /**
+ * 「現在値から」を選んだ後に、保存される現在値が0以下になった場合のエラーメッセージ。
+ * 0を保存すると「最初から」と同じ起点になるため、選択を残したまま保存できないようにする。
+ */
+export const ERROR_MESSAGE_GAUGE_START_CURRENT_NOT_POSITIVE =
+  '現在値が0のため、現在値からは始められません。'
+
+/**
+ * 「現在値から」を選んだ後に対象がなくなった場合に表示するエラーメッセージ。
+ */
+export const ERROR_MESSAGE_GAUGE_START_CURRENT_NO_TARGET =
+  '対象がないため、現在値からは始められません。'
+
+/**
  * ゲージのスタート位置が整数でない、または負の場合に表示するエラーメッセージ。
  */
 export const ERROR_MESSAGE_GAUGE_START_INTEGER =
