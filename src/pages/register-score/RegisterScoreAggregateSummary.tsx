@@ -1,8 +1,8 @@
 import { For, Show } from 'solid-js'
+import { formatInteger } from '../../utils/numberFormat'
 import { REGISTER_SCORE_COPY } from './constants'
 import {
   formatRegisterScoreStatisticDelta,
-  formatRegisterScoreValue,
   getRegisterScoreStatisticColumnDividerClass,
   getRegisterScoreStatisticDifficultyTextClass,
   getRegisterScoreTotalHighScoreDeltaClass,
@@ -70,17 +70,17 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
 /**
  * 登録後の通常譜面およびWORLD'S END集計を表示する。
  *
- * @param props - 表示設定を反映済みのTOTAL HIGH SCORE行・RECORD STATISTICS行と、各セクションを表示するか。
+ * @param props - 表示設定を反映済みのTOTAL HIGH SCORE行・RECORD STATISTICS行と、各セクションをレポートへ表示するか。
  * @returns 集計値セクション。
  */
 export const RegisterScoreAggregateSummary = (props: {
   totalHighScoreRows: RegisterScoreTotalHighScoreRow[]
   statisticRows: RegisterScoreStatisticRow[]
-  showTotalHighScore: boolean
-  showRecordStatistics: boolean
+  totalHighScoreDisplayed: boolean
+  recordStatisticsDisplayed: boolean
 }) => (
   <>
-    <Show when={props.showTotalHighScore}>
+    <Show when={props.totalHighScoreDisplayed}>
       <section class="py-4">
         <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
           {REGISTER_SCORE_COPY.totalHighScoreTitle}
@@ -95,9 +95,7 @@ export const RegisterScoreAggregateSummary = (props: {
                   {row.label}
                 </span>
                 <span class="min-w-0">
-                  <span class="block font-jost font-medium">
-                    {formatRegisterScoreValue(row.value.after)}
-                  </span>
+                  <span class="block font-jost font-medium">{formatInteger(row.value.after)}</span>
                   <Show when={row.value.delta !== 0}>
                     <span
                       class={`block font-jost text-xs font-bold ${getRegisterScoreTotalHighScoreDeltaClass(row.value.delta)}`}
@@ -113,7 +111,7 @@ export const RegisterScoreAggregateSummary = (props: {
       </section>
     </Show>
 
-    <Show when={props.showRecordStatistics}>
+    <Show when={props.recordStatisticsDisplayed}>
       <section class="py-4">
         <h2 class="mb-3 whitespace-nowrap text-xl font-extrabold leading-6">
           {REGISTER_SCORE_COPY.recordStatsTitle}

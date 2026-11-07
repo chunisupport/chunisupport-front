@@ -15,6 +15,7 @@ import type {
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
 } from '../../types/api'
+import { formatInteger } from '../../utils/numberFormat'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatRatingFixed2 } from '../../utils/ratingFormat'
 import {
@@ -26,7 +27,6 @@ import {
   courseClassBadgeClass,
   formatCourseClass,
   formatRegisterScoreChangeDelta,
-  formatRegisterScoreValue,
   getRegisterScoreDifficultyBadgeClass,
   getRegisterScoreShortDifficultyLabel,
   REGISTER_SCORE_NO_DATA_TEXT,
@@ -134,9 +134,7 @@ const BeforeRecordScore = (props: {
       <span class="font-jost font-semibold text-text-subtle">{REGISTER_SCORE_NO_DATA_TEXT}</span>
     }
   >
-    {(before) => (
-      <span class="font-jost font-semibold">{formatRegisterScoreValue(before().score)}</span>
-    )}
+    {(before) => <span class="font-jost font-semibold">{formatInteger(before().score)}</span>}
   </Show>
 )
 
@@ -296,7 +294,7 @@ export const RegisterScoreSongChangeCard = (props: {
                   ? 'text-action-primary transition-none'
                   : 'text-text transition-colors duration-700'
               }`}
-              aria-label={`「${props.songTitle}」をコピー`}
+              aria-label={REGISTER_SCORE_COPY.copySongTitleLabel(props.songTitle)}
               title={props.songTitle}
               onClick={handleCopySongTitle}
             >
@@ -337,9 +335,7 @@ export const RegisterScoreSongChangeCard = (props: {
             <RegisterScoreChangeDelta change={props.change} />
           </div>
           <div class="w-fit">
-            <span class="font-jost font-semibold">
-              {formatRegisterScoreValue(props.change.after.score)}
-            </span>
+            <span class="font-jost font-semibold">{formatInteger(props.change.after.score)}</span>
             <RecordLampBadges state={props.change.after} />
             <Show when={REGISTER_SCORE_SHOW_SONG_METRICS && metrics()}>
               <RegisterScoreSongMetricValues metrics={metrics()?.after ?? null} />
@@ -405,9 +401,7 @@ export const RegisterScoreCourseChangeCard = (props: {
           <RegisterScoreChangeDelta change={props.change} />
         </div>
         <div class={COURSE_CHANGE_SCORE_VALUE_CLASS}>
-          <span class="font-jost font-semibold">
-            {formatRegisterScoreValue(props.change.after.score)}
-          </span>
+          <span class="font-jost font-semibold">{formatInteger(props.change.after.score)}</span>
           <CourseRecordLampBadges state={props.change.after} />
         </div>
       </div>

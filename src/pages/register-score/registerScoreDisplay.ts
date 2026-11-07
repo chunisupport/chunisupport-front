@@ -3,10 +3,12 @@ import {
   type SharedClearLamp,
   type SharedComboLamp,
 } from '../../components/common/record/recordStyleClasses'
-import { DIFFICULTY_SHORT_NAME_MAP } from '../../constants/difficulty'
+import {
+  DIFFICULTY_SHORT_NAME_MAP,
+  normalizePlayerDataDifficulty,
+} from '../../constants/difficulty'
 import type {
   PlayerDataCourseRecordState,
-  PlayerDataDifficulty,
   PlayerDataRecordChange,
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
@@ -61,14 +63,6 @@ export type RegisterScoreLampRecord = {
 }
 
 /**
- * 数値をスコア表示用の3桁区切り文字列へ変換する。
- *
- * @param score - 表示対象のスコアまたは集計値。
- * @returns 日本語ロケールの3桁区切り文字列。
- */
-export const formatRegisterScoreValue = (score: number): string => formatInteger(score)
-
-/**
  * レーティングが存在する場合だけ表示用文字列へ変換する。
  *
  * @param value - APIから返却されたレーティング。
@@ -84,7 +78,7 @@ export const formatRegisterScoreNullableRating = (value: number | null): string 
  * @returns 正数にはプラス記号を付けた3桁区切りの差分文字列。
  */
 export const formatRegisterScoreStatisticDelta = (delta: number): string =>
-  delta > 0 ? `+${formatRegisterScoreValue(delta)}` : formatRegisterScoreValue(delta)
+  delta > 0 ? `+${formatInteger(delta)}` : formatInteger(delta)
 
 /**
  * TOTAL HIGH SCOREの差分文字色を返す。
@@ -107,7 +101,7 @@ export const formatRegisterScoreChangeDelta = (change: PlayerDataRecordChange): 
   const delta = change.after.score - change.before.score
   if (delta <= 0) return ''
 
-  return `+${formatRegisterScoreValue(delta)}`
+  return `+${formatInteger(delta)}`
 }
 
 /**
@@ -123,15 +117,15 @@ export const formatRegisterScoreImportedAt = (isoDateTime: string): string =>
  * 楽曲差分の難易度を短縮表記へ変換する。
  *
  * @param change - APIから返却された1譜面分の差分。
- * @returns 難易度の短縮表記。未対応の難易度はプレースホルダー。
+ * @returns 難易度の短縮表記。通常譜面の難易度として解釈できない値はプレースホルダー。
  */
 export const getRegisterScoreShortDifficultyLabel = (
   change: PlayerDataSongRecordChange
 ): string => {
   if (change.record_type === 'worldsend') return REGISTER_SCORE_WORLDSEND_DIFFICULTY_LABEL
 
-  const label: string | undefined = DIFFICULTY_SHORT_NAME_MAP[change.diff as PlayerDataDifficulty]
-  return label ?? REGISTER_SCORE_NO_DATA_TEXT
+  const difficulty = normalizePlayerDataDifficulty(change.diff)
+  return difficulty ? DIFFICULTY_SHORT_NAME_MAP[difficulty] : REGISTER_SCORE_NO_DATA_TEXT
 }
 
 /**
@@ -149,11 +143,11 @@ export const getRegisterScoreDifficultyBadgeClass = (change: PlayerDataSongRecor
  * 集計行の難易度ラベルへゲーム公式色の文字色クラスを適用する。
  *
  * @param difficulty - 表示対象の難易度。全体行の場合はnull。
- * @returns 難易度色のTailwindクラス。全体行の場合は空文字。
+ * @returns 難易度色のTailwindクラス。全体行や未対応の値の場合は空文字。
  */
 export const getRegisterScoreStatisticDifficultyTextClass = (
   difficulty: PlayerDataStatisticsDifficulty | null
-): string => (difficulty ? REGISTER_SCORE_STATISTIC_DIFFICULTY_TEXT_CLASS[difficulty] : '')
+): string => (difficulty ? (REGISTER_SCORE_STATISTIC_DIFFICULTY_TEXT_CLASS[difficulty] ?? '') : '')
 
 /**
  * RECORD STATISTICSの列に適用する区切り線クラスを返す。

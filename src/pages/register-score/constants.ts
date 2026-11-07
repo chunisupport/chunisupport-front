@@ -43,6 +43,7 @@ export const REGISTER_SCORE_COPY = {
   shareImageError: '共有に失敗しました。',
   copySongTitleSuccess: '曲名をコピーしました。',
   copySongTitleError: '曲名のコピーに失敗しました。',
+  copySongTitleLabel: (songTitle: string) => `「${songTitle}」をコピー`,
   excludeChangeFromImage: '画像から除外',
   includeChangeInImage: '画像に含める',
   showClassEmblem: 'クラスエンブレムを表示',

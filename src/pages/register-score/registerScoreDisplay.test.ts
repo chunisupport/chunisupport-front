@@ -12,7 +12,6 @@ import {
   formatRegisterScoreChangeDelta,
   formatRegisterScoreNullableRating,
   formatRegisterScoreStatisticDelta,
-  formatRegisterScoreValue,
   formatWorldsendChartLevel,
   getRegisterScoreDifficultyBadgeClass,
   getRegisterScoreShortDifficultyLabel,
@@ -158,17 +157,6 @@ test('未対応のコースクラスはsuccess色バッジを返すこと', () =
   assert.ok(result.includes('text-success'))
 })
 
-test('スコアと集計値を3桁区切りで表示すること', () => {
-  // Given: 理論値と0。
-  const values = [1_010_000, 0]
-
-  // When: スコア表示用に変換する。
-  const result = values.map(formatRegisterScoreValue)
-
-  // Then: 日本語ロケールの3桁区切りになる。
-  assert.deepEqual(result, ['1,010,000', '0'])
-})
-
 test('レーティングがない場合はプレースホルダーを表示すること', () => {
   // Given: レーティング未取得。
   const rating = null
@@ -251,6 +239,17 @@ test('楽曲差分の難易度を短縮表記とバッジ色へ変換するこ�
   assert.deepEqual(labels, ['ULT', 'WE'])
   assert.ok(badgeClasses[0].includes('bg-difficulty-ultima-bg'))
   assert.ok(badgeClasses[1].includes('bg-[image:var(--cs-color-worldsend-label-bg)]'))
+})
+
+test('通常譜面の難易度は大文字小文字を区別せず短縮表記へ変換すること', () => {
+  // Given: 小文字のEXPERT。
+  const change = createSongChange({ diff: 'expert' as PlayerDataSongRecordChange['diff'] })
+
+  // When
+  const result = getRegisterScoreShortDifficultyLabel(change)
+
+  // Then: バッジ色と同じく大文字のドメイン値として扱う。
+  assert.equal(result, 'EXP')
 })
 
 test('通常譜面で未対応の難易度はプレースホルダーを表示すること', () => {

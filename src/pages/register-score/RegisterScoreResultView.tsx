@@ -132,8 +132,8 @@ export const RegisterScoreResultView = (props: RegisterScoreResultViewProps) => 
             <RegisterScoreAggregateSummary
               totalHighScoreRows={totalHighScore.visibleRows()}
               statisticRows={recordStatistics.visibleRows()}
-              showTotalHighScore={totalHighScore.displayed()}
-              showRecordStatistics={recordStatistics.displayed()}
+              totalHighScoreDisplayed={totalHighScore.displayed()}
+              recordStatisticsDisplayed={recordStatistics.displayed()}
             />
             <RegisterScoreSongChangesSection
               changes={changeList.songChanges()}
