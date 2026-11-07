@@ -1,3 +1,4 @@
+import { JST_TIME_ZONE } from '../../constants/dateTime'
 import type { AccountType, AdminUserListResponse } from '../../types/api'
 
 type AdminUserListEditableFields = Pick<AdminUserListResponse, 'account_type' | 'is_suspicious'>
@@ -10,7 +11,7 @@ const adminUserDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   minute: '2-digit',
   second: '2-digit',
   hour12: false,
-  timeZone: 'Asia/Tokyo',
+  timeZone: JST_TIME_ZONE,
 })
 
 export const formatAdminUserDateTime = (value: string | null): string => {

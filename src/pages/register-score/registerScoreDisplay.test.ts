@@ -11,6 +11,7 @@ import {
   courseClassBadgeClass,
   formatCourseClass,
   formatRegisterScoreChangeDelta,
+  formatRegisterScoreImportedAt,
   formatRegisterScoreNullableRating,
   formatRegisterScoreStatisticDelta,
   formatWorldsendChartLevel,
@@ -335,4 +336,26 @@ test('コースのランプはCLEAR状態とコンボランプだけを表示す
     combo_lamp: 'FULL COMBO',
     full_chain: null,
   })
+})
+
+test('登録日時は実行環境のタイムゾーンによらずJSTで表示すること', () => {
+  // Given: UTCで表した登録日時。
+  const importedAt = '2026-11-07T15:04:05Z'
+
+  // When
+  const result = formatRegisterScoreImportedAt(importedAt)
+
+  // Then: JSTでは翌日の00時台になる。
+  assert.equal(result, '2026/11/08 00:04:05')
+})
+
+test('解釈できない登録日時はプレースホルダーを表示すること', () => {
+  // Given
+  const importedAt = 'not-a-date'
+
+  // When
+  const result = formatRegisterScoreImportedAt(importedAt)
+
+  // Then
+  assert.equal(result, REGISTER_SCORE_NO_DATA_TEXT)
 })

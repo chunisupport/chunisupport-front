@@ -15,7 +15,7 @@ import type {
   PlayerDataStatisticsDifficulty,
 } from '../../types/api'
 import { difficultyBadgeClass } from '../../utils/difficultyUtils'
-import { formatLocalDateTime } from '../../utils/localDateTime'
+import { formatJstDateTime } from '../../utils/jstDateTime'
 import { formatInteger } from '../../utils/numberFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
 import { REGISTER_SCORE_INCREASE_TEXT_CLASS } from './constants'
@@ -109,10 +109,10 @@ export const formatRegisterScoreChangeDelta = (change: PlayerDataRecordChange): 
  * ISO日時を更新差分レポートの表示用日時文字列へ変換する。
  *
  * @param isoDateTime - APIから返却されたISO形式の日時。
- * @returns `YYYY/MM/DD HH:mm:ss` 形式のローカル日時文字列。
+ * @returns `YYYY/MM/DD HH:mm:ss` 形式のJST日時文字列。解釈できない場合はプレースホルダー。
  */
 export const formatRegisterScoreImportedAt = (isoDateTime: string): string =>
-  formatLocalDateTime(new Date(isoDateTime))
+  formatJstDateTime(isoDateTime) ?? REGISTER_SCORE_NO_DATA_TEXT
 
 /**
  * 楽曲差分の難易度を短縮表記へ変換する。

@@ -1,18 +1,9 @@
 import type { ChartStats } from '../../../types/chartStats'
 import { calculateChartStatsPercent, isWorldsendChartStats } from '../../../utils/chartStats'
 import { getConstDisplay } from '../../../utils/constDisplay'
+import { formatJstDateTimeMinute } from '../../../utils/jstDateTime'
 import { formatInteger, formatTruncatedFixed } from '../../../utils/numberFormat'
 import type { ChartStatsValueMode } from './constants'
-
-const GENERATED_AT_FORMATTER = new Intl.DateTimeFormat('ja-JP', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZone: 'Asia/Tokyo',
-})
 
 /**
  * 統計値を人数または達成率として表示用に整形する。
@@ -64,7 +55,5 @@ export const getChartStatsLevelClass = (chart: ChartStats): string =>
  * @param value - ISO 8601形式の生成日時。
  * @returns 日本時間の日時。不正な値の場合はハイフン。
  */
-export const formatChartStatsGeneratedAt = (value: string): string => {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? '-' : GENERATED_AT_FORMATTER.format(date)
-}
+export const formatChartStatsGeneratedAt = (value: string): string =>
+  formatJstDateTimeMinute(value) ?? '-'
