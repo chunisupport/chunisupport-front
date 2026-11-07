@@ -14,6 +14,50 @@ import { formatWorldsendChartLevel, REGISTER_SCORE_UNKNOWN_TITLE } from './regis
 import type { RegisterScoreSongSortValues } from './registerScoreSorting'
 
 /**
+ * 更新差分から楽曲タイトルを解決する関数。
+ *
+ * @param change - APIが返した1件分の更新差分。
+ * @returns 楽曲タイトル。
+ */
+export type RegisterScoreSongTitleResolver = (change: PlayerDataRecordChange) => string
+
+/**
+ * 更新差分から譜面レベルの表示文字列を解決する関数。
+ *
+ * @param change - APIが返した1件分の更新差分。
+ * @returns 譜面レベル表記。解決できない場合はundefined。
+ */
+export type RegisterScoreChartLevelResolver = (change: PlayerDataRecordChange) => string | undefined
+
+/**
+ * 更新差分のソート用レベル・単曲レーティングを解決する関数。
+ *
+ * @param change - APIが返した1譜面分の楽曲差分。
+ * @returns ソート用のレベルと単曲レーティング。
+ */
+export type RegisterScoreSongSortValuesResolver = (
+  change: PlayerDataSongRecordChange
+) => RegisterScoreSongSortValues
+
+/**
+ * 更新差分の前後の単曲メトリクスを解決する関数。
+ *
+ * @param change - 対象の楽曲差分。
+ * @returns 前後の値。対象外または未取得の場合はnull。
+ */
+export type RegisterScoreSongMetricsResolver = (
+  change: PlayerDataSongRecordChange
+) => RegisterScoreSongMetricChange | null
+
+/**
+ * コース差分からコースタイトルを解決する関数。
+ *
+ * @param change - APIが返した1コース分の差分。
+ * @returns コースタイトル。
+ */
+export type RegisterScoreCourseTitleResolver = (change: PlayerDataCourseRecordChange) => string
+
+/**
  * 更新差分に含まれる楽曲の表示名を解決する。
  *
  * @param change - APIが返した1譜面分の差分。
