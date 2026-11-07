@@ -27,7 +27,7 @@ const item = (
   selfPlayed: boolean,
   friendPlayed: boolean
 ): FriendScoreComparisonItemDTO => ({
-  song: { id, title: id, artist: '' },
+  song: { id, title: id, reading: null, artist: '' },
   chart: { const: 14, is_const_unknown: false },
   self: {
     is_played: selfPlayed,
@@ -132,6 +132,44 @@ test('各ヘッダーで昇順・降順に並び替え、解除時はAPI順に�
     items.map((row) => row.song.id),
     ['zeta', 'alpha', 'beta']
   )
+})
+
+test('楽曲名は表記ではなく読みで昇順・降順に並べ、読みがなければ曲名を使う', () => {
+  // Given: 曲名の表記順と読み順が異なる通常譜面とWORLD'S END譜面。
+  const items = [
+    {
+      ...item('love', 0, true, true),
+      song: { id: 'love', title: '愛', artist: '', reading: 'ラブ' },
+    },
+    {
+      ...item('sky', 0, true, true),
+      song: { id: 'sky', title: '空', artist: '', reading: 'ソラ' },
+    },
+    {
+      ...item('apple', 0, true, true),
+      song: { id: 'apple', title: 'リンゴ', artist: '', reading: null },
+    },
+  ]
+  const worldsendItems = items.map((row) => ({
+    ...row,
+    chart: { level_star: 4, attribute: '蔵' },
+  }))
+
+  // When & Then: 両方の譜面種別で読み順を使い、元の配列は変更しない。
+  for (const rows of [items, worldsendItems]) {
+    assert.deepEqual(
+      sortFriendVsItems(rows, 'title', 'asc').map((row) => row.song.id),
+      ['sky', 'love', 'apple']
+    )
+    assert.deepEqual(
+      sortFriendVsItems(rows, 'title', 'desc').map((row) => row.song.id),
+      ['apple', 'love', 'sky']
+    )
+    assert.deepEqual(
+      rows.map((row) => row.song.id),
+      ['love', 'sky', 'apple']
+    )
+  }
 })
 
 test("WORLD'S ENDの星数・属性と楽曲リンクを使い、星数順に並べる", () => {

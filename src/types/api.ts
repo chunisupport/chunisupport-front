@@ -565,6 +565,8 @@ export interface FriendScoreComparisonSongDTO {
   id: string
   /** 楽曲名 */
   title: string
+  /** 楽曲名の読み。未設定の場合はnull。 */
+  reading: string | null
   /** アーティスト名 */
   artist: string
 }
