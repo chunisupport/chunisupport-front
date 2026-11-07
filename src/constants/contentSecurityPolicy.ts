@@ -22,6 +22,12 @@ const X_SYNDICATION_ORIGIN = 'https://syndication.twitter.com'
 const GOOGLE_APIS_SCRIPT_ORIGIN = 'https://apis.google.com'
 /** Firebase Analytics が読み込む gtag.js の配信元。 */
 const GOOGLE_TAG_MANAGER_ORIGIN = 'https://*.googletagmanager.com'
+/**
+ * Cloudflare Web Analytics が自動で差し込むビーコンスクリプトの配信元。
+ *
+ * 計測データは同一オリジンの `/cdn-cgi/rum` へ送信されるため、`connect-src` への追加は不要。
+ */
+const CLOUDFLARE_INSIGHTS_SCRIPT_ORIGIN = 'https://static.cloudflareinsights.com'
 /** Firebase Analytics の計測送信先。 */
 const GOOGLE_ANALYTICS_ORIGINS = [
   'https://*.google-analytics.com',
@@ -43,6 +49,7 @@ export const CSP_SCRIPT_ORIGINS = [
   ...X_WIDGET_ORIGINS,
   GOOGLE_APIS_SCRIPT_ORIGIN,
   GOOGLE_TAG_MANAGER_ORIGIN,
+  CLOUDFLARE_INSIGHTS_SCRIPT_ORIGIN,
 ]
 
 /** `style-src` に追加する外部オリジン。 */
