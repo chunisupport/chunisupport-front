@@ -27,10 +27,7 @@ import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { resolveGoalFormGroupId } from '../../goalGroupsModel'
 import { formatGoalCardValue } from '../card/goalCardProgressModel'
-import {
-  DEFAULT_RATING_GOAL_VALUE,
-  ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET,
-} from './constants'
+import { DEFAULT_RATING_GOAL_VALUE } from './constants'
 import { GoalAchievementSection } from './GoalAchievementSection'
 import { GoalFormFooter } from './GoalFormFooter'
 import { GoalGroupSection } from './GoalGroupSection'
@@ -63,7 +60,11 @@ import {
   resolveGoalGaugeStartFromCurrent,
   toggleSelection,
 } from './goalFormModel'
-import { validateGoalForm, validateGoalGaugeStart } from './goalFormValidation'
+import {
+  resolveGoalGaugeStartGroupErrorMessage,
+  validateGoalForm,
+  validateGoalGaugeStart,
+} from './goalFormValidation'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -438,14 +439,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   /**
    * スタート位置の選択欄の下に出すエラーを取得する。
-   * 「現在値から」を選んだ後に目標値を下げて達成済みになった状態を、保存を待たずに示す。
+   * 「現在値から」を選んだ後に対象がなくなった、現在値が0になった、達成済みになった状態を、保存を待たずに示す。
    *
    * @returns 「現在値から」を使えない状態で選んでいる場合はエラーメッセージ、それ以外は空文字。
    */
-  const gaugeStartGroupErrorMessage = (): string =>
-    gaugeStartMode() === 'current' && previewProgress().achieved
-      ? ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET
-      : ''
+  const gaugeStartGroupErrorMessage = (): string => {
+    const progress = previewProgress()
+    return resolveGoalGaugeStartGroupErrorMessage({
+      gaugeStartMode: gaugeStartMode(),
+      currentGaugeStart: currentGaugeStart(),
+      achieved: progress.achieved,
+      targetCount: progress.targetCount,
+    })
+  }
 
   // 目標値が変わると「任意の数値から」の前回の検証結果が古くなるため、表示中のエラーを消す。
   createEffect(

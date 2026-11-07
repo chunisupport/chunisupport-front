@@ -7,6 +7,8 @@ import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { GOAL_TITLE_MAX_LENGTH } from '../../constants'
 import {
   buildGaugeStartDecimalErrorMessage,
+  ERROR_MESSAGE_GAUGE_START_CURRENT_NO_TARGET,
+  ERROR_MESSAGE_GAUGE_START_CURRENT_NOT_POSITIVE,
   ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET,
   ERROR_MESSAGE_GAUGE_START_INTEGER,
   ERROR_MESSAGE_GAUGE_START_NOT_BELOW_TARGET,
@@ -18,6 +20,7 @@ import {
 import {
   canUseDynamicTotalTarget,
   type GoalFormGaugeStartValueInput,
+  type GoalGaugeStartMode,
   getGoalGaugeStartDecimalPlaces,
   getRankGoalScore,
   isCountAchievementType,
@@ -180,9 +183,22 @@ export interface GoalGaugeStartValidationInput extends GoalFormGaugeStartValueIn
   target: number
 }
 
+/** 「現在値から」の選択欄に出すエラーを決める入力 */
+export interface GoalGaugeStartGroupErrorInput {
+  /** 選択中のスタート位置の決め方 */
+  gaugeStartMode: GoalGaugeStartMode
+  /** 目標種別の桁数で切り捨てた、保存される現在値 */
+  currentGaugeStart: number
+  /** プレビュー進捗が達成済みか */
+  achieved: boolean
+  /** 条件に一致する対象数。0件のとき「現在値から」は使えない */
+  targetCount: number
+}
+
 /**
  * ゲージのスタート位置を保存前に検証する。
  * 0から描く指定は目標値に関係なく許可する。
+ * 「現在値から」は、切り捨て後の現在値が0以下のときと目標値以上のときにエラーにする。
  *
  * @param input - 目標種別、スタート位置の決め方と入力値、現在値、現在の目標値。
  * @returns スタート位置の欄に表示するエラーメッセージ。問題なければundefined。
@@ -192,10 +208,11 @@ export const validateGoalGaugeStart = (
 ): string | undefined => {
   const gaugeStart = resolveGoalFormGaugeStart(input)
   if (input.gaugeStartMode === 'current') {
+    // 0以下を保存すると「最初から」と同じ起点になるため、選択済みでもエラーにする。
+    if (!(gaugeStart > 0)) return ERROR_MESSAGE_GAUGE_START_CURRENT_NOT_POSITIVE
     // 選択後に目標値を下げて達成済みになった場合は、現在値を起点にできない。
-    return gaugeStart > 0 && gaugeStart >= input.target
-      ? ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET
-      : undefined
+    if (gaugeStart >= input.target) return ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET
+    return undefined
   }
   if (input.gaugeStartMode === 'zero') return undefined
 
@@ -209,4 +226,21 @@ export const validateGoalGaugeStart = (
     return ERROR_MESSAGE_GAUGE_START_NOT_BELOW_TARGET
   }
   return undefined
+}
+
+/**
+ * 「現在値から」を選んだまま条件が変わり、使えなくなったときの選択欄エラーを返す。
+ * 対象0件・現在値0・達成済みは選択を残したまま示し、「最初から」へは書き換えない。
+ *
+ * @param input - スタート位置の決め方と、プレビューから分かる現在値・達成状態・対象数。
+ * @returns 選択欄の下に表示するメッセージ。問題なければ空文字。
+ */
+export const resolveGoalGaugeStartGroupErrorMessage = (
+  input: GoalGaugeStartGroupErrorInput
+): string => {
+  if (input.gaugeStartMode !== 'current') return ''
+  if (input.targetCount <= 0) return ERROR_MESSAGE_GAUGE_START_CURRENT_NO_TARGET
+  if (!(input.currentGaugeStart > 0)) return ERROR_MESSAGE_GAUGE_START_CURRENT_NOT_POSITIVE
+  if (input.achieved) return ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET
+  return ''
 }
