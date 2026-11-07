@@ -1,18 +1,16 @@
 import { TextField } from '@kobalte/core/text-field'
 import { UserRoundPen } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createSignal } from 'solid-js'
 import { reauthenticateAndGetToken } from '../../api/reauthenticate'
 import { updateUsername } from '../../api/settings'
 import { AppButton } from '../../components/common/AppButton'
-import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_PATTERN,
-  validateUsername,
 } from '../../utils/usernameInput'
 import { USERNAME_CHANGE_COPY } from './AccountSettings.constants'
+import { createUsernameChange } from './createUsernameChange'
 import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
 type UsernameChangeFormProps = {
@@ -23,69 +21,18 @@ type UsernameChangeFormProps = {
 }
 
 /**
- * ユーザーネーム入力の検証結果を設定画面向けの文言へ変換する。
- *
- * @param username - 入力中のユーザーネーム。
- * @param currentUsername - 現在のユーザーネーム。
- * @returns 入力エラー文言。有効な場合は空文字。
- */
-const validateUsernameChange = (username: string, currentUsername: string): string => {
-  if (username.length === 0) return ''
-
-  const validationError = validateUsername(username)
-  if (validationError === 'invalid') return USERNAME_CHANGE_COPY.invalid
-  if (username === currentUsername) return USERNAME_CHANGE_COPY.unchanged
-  return ''
-}
-
-/**
  * 再認証を伴うユーザーネーム変更フォームを表示する。
  *
  * @param props - 現在のユーザーネームと変更完了通知。
  * @returns ユーザーネーム変更フォーム。
  */
 export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) => {
-  const [username, setUsername] = createSignal('')
-  const [usernameError, setUsernameError] = createSignal('')
-  const [usernameSuccess, setUsernameSuccess] = createSignal('')
-  const [isSubmitting, setIsSubmitting] = createSignal(false)
-
-  /** 入力されたユーザーネームを検証し、結果をフォームへ反映する。 */
-  const validateUsernameInput = (): boolean => {
-    const message = validateUsernameChange(username(), props.currentUsername)
-    setUsernameError(message)
-    return message.length === 0
-  }
-
-  /** 再認証後にユーザーネームを変更し、確定値を親へ通知する。 */
-  const handleUsernameSubmit = async (event: SubmitEvent): Promise<void> => {
-    event.preventDefault()
-    setUsernameSuccess('')
-    if (username().length === 0 || !validateUsernameInput()) return
-
-    setIsSubmitting(true)
-    try {
-      const reauthToken = await reauthenticateAndGetToken()
-      const result = await updateUsername(username(), reauthToken)
-      await props.onChanged(result.username)
-      setUsername('')
-      setUsernameError('')
-      setUsernameSuccess(USERNAME_CHANGE_COPY.success)
-    } catch (caught) {
-      // 再認証のポップアップを自分で閉じただけなら、エラーとして扱わない。
-      if (isAuthPopupClosedError(caught)) return
-      const apiError = caught as Error & { code?: string }
-      if (apiError.code === 'auth/user-mismatch') {
-        setUsernameError(USERNAME_CHANGE_COPY.userMismatch)
-      } else if (apiError.code === 'recent_sign_in_required') {
-        setUsernameError(USERNAME_CHANGE_COPY.recentSignInExpired)
-      } else {
-        setUsernameError(toUserFriendlyErrorMessage(caught, USERNAME_CHANGE_COPY.failure))
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const change = createUsernameChange({
+    currentUsername: () => props.currentUsername,
+    reauthenticate: () => reauthenticateAndGetToken(),
+    updateUsername,
+    onChanged: (username) => props.onChanged(username),
+  })
 
   return (
     <section aria-labelledby="username-change-title" class={SETTINGS_SUBSECTION_CLASS}>
@@ -93,16 +40,18 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
         <UserRoundPen aria-hidden="true" class="h-5 w-5" />
         {USERNAME_CHANGE_COPY.title}
       </h3>
-      <form class="mt-4 max-w-md" onSubmit={handleUsernameSubmit}>
+      <form
+        class="mt-4 max-w-md"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void change.submit()
+        }}
+      >
         <TextField
-          value={username()}
-          onChange={(nextValue) => {
-            setUsername(nextValue)
-            if (usernameError()) setUsernameError('')
-            if (usernameSuccess()) setUsernameSuccess('')
-          }}
-          validationState={usernameError() ? 'invalid' : undefined}
-          disabled={isSubmitting()}
+          value={change.username()}
+          onChange={change.setUsername}
+          validationState={change.error() ? 'invalid' : undefined}
+          disabled={change.submitting()}
         >
           <TextField.Label class="block text-sm font-medium text-text">
             {USERNAME_CHANGE_COPY.label}
@@ -114,25 +63,25 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
             maxlength={USERNAME_MAX_LENGTH}
             pattern={USERNAME_PATTERN.source}
             aria-describedby="username-change-hint username-change-error"
-            onBlur={validateUsernameInput}
+            onBlur={change.validate}
           />
           <TextField.Description id="username-change-hint" class="mt-1 text-sm text-text-muted">
             {USERNAME_CHANGE_COPY.formatHint}
           </TextField.Description>
           <TextField.ErrorMessage id="username-change-error" class="mt-2 text-sm text-danger">
-            {usernameError()}
+            {change.error()}
           </TextField.ErrorMessage>
         </TextField>
         <p class="mt-2 text-sm text-action-primary empty:hidden" role="status">
-          {usernameSuccess()}
+          {change.success()}
         </p>
         <AppButton
           type="submit"
           variant="primary"
           class="mt-4"
-          disabled={isSubmitting() || username().length === 0}
+          disabled={change.submitting() || change.username().length === 0}
         >
-          {isSubmitting() ? USERNAME_CHANGE_COPY.submitting : USERNAME_CHANGE_COPY.submit}
+          {change.submitting() ? USERNAME_CHANGE_COPY.submitting : USERNAME_CHANGE_COPY.submit}
         </AppButton>
       </form>
     </section>

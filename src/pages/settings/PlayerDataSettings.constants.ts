@@ -6,4 +6,6 @@ export const PLAYER_DATA_DELETE_COPY = {
   cancel: 'キャンセル',
   confirm: '削除する',
   deleting: '削除中...',
+  success: 'プレイヤーデータを削除しました。必要であれば再登録してください。',
+  failure: 'プレイヤーデータ削除に失敗しました。',
 } as const
