@@ -6,6 +6,7 @@ import type {
   WorldsendFriendScoreComparisonItemDTO,
 } from '../types/api'
 import { getConstDisplay } from './constDisplay'
+import { compareSongsByReading } from './songTitleSorting'
 import type { SortDirection } from './sortingQuery'
 
 /** 通常譜面またはWORLD'S END譜面の比較行。 */
@@ -86,7 +87,7 @@ export const filterFriendVsItems = (
 }
 
 /**
- * APIのマスタ順または選択した列の値で比較行を並べる。
+ * APIのマスタ順または選択した列の値で比較行を並べ、楽曲名には読み順を使う。
  *
  * @param items - 表示対象の比較行。
  * @param sortKey - 選択された列。null はAPIの楽曲順。
@@ -102,7 +103,7 @@ export const sortFriendVsItems = (
 
   const multiplier = direction === 'asc' ? 1 : -1
   return [...items].sort((a, b) => {
-    if (sortKey === 'title') return multiplier * a.song.title.localeCompare(b.song.title, 'ja-JP')
+    if (sortKey === 'title') return multiplier * compareSongsByReading(a.song, b.song)
     if (sortKey === 'const') {
       const aLevel = 'const' in a.chart ? a.chart.const : (a.chart.level_star ?? -1)
       const bLevel = 'const' in b.chart ? b.chart.const : (b.chart.level_star ?? -1)
