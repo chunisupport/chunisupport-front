@@ -38,6 +38,9 @@
 - Google ではログイン中のメールアドレスを事前選択させる。別アカウントを選ぶと Firebase が `auth/user-mismatch` で拒否する。
 - 再認証、アカウント選択、ログイン方法の連携のポップアップをユーザーが閉じた場合（`auth/popup-closed-by-user`）は、本人の意思による中断として扱う。エラーは表示せず、操作前の状態に戻す。判定は `isAuthPopupClosedError`（`src/utils/errorMessage.ts`）に集約している。
 - 退会のエラーは確認ダイアログの中だけに表示し、ダイアログを閉じるとクリアする。
+- ユーザー名変更と退会のエラー文言は `resolveReauthErrorMessage`（`src/pages/settings/reauthErrorMessage.ts`）で決める。別アカウントでの再認証（`auth/user-mismatch`）と再認証の有効期限切れ（`recent_sign_in_required`）は専用の文言、それ以外はエラーコードやステータスに応じた文言にする。ユーザー名変更は入力欄、退会は確認ダイアログに表示する。
+- Google アカウント変更では、変更先を選び直す必要があるエラー（`recent_sign_in_required` など）はウィザード本体に、別アカウントでの本人確認（`auth/user-mismatch`・`invalid_credentials`）などやり直せるエラーは本人確認ダイアログに表示する。
+- 退会後と、Google アカウント変更後にセッションを変更先へ切り替えられなかった場合は、`discardLocalSession`（`src/usecases/auth/discardLocalSession.ts`）で端末内のログイン状態とキャッシュを破棄してログイン画面へ遷移する。サーバー側の処理は完了しているため、サインアウトやキャッシュの削除に失敗しても遷移を止めない。
 
 ## ロゴ
 

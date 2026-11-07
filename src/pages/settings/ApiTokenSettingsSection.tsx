@@ -3,7 +3,7 @@ import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
 import { ExternalLink } from 'lucide-solid'
 import type { Component } from 'solid-js'
-import { createResource, createSignal, For, onCleanup, Show } from 'solid-js'
+import { createSignal, For, onCleanup, Show } from 'solid-js'
 import { deleteApiToken, fetchApiTokens, issueApiToken, renameApiToken } from '../../api/settings'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
@@ -12,12 +12,7 @@ import { SelectableCardItem } from '../../components/common/SelectableCardButton
 import { API_DOCUMENTATION_URL } from '../../config'
 import { DEVELOPER_API_COPY } from '../../constants/developerApi'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
-import type { AccountType, ApiToken, ApiTokenPermission } from '../../types/api'
-import {
-  canIssueReadWriteApiToken,
-  resolveApiTokenIssuePermission,
-} from '../../utils/apiTokenPermission'
-import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import type { AccountType, ApiTokenPermission } from '../../types/api'
 import {
   API_TOKEN_MAX_COUNT,
   API_TOKEN_PERMISSION_OPTIONS,
@@ -25,7 +20,7 @@ import {
   formatApiTokenDeleteTargetMessage,
   formatApiTokenPermission,
 } from './ApiTokenSettings.constants'
-import { isApiTokenNameError, isValidApiTokenName, normalizeApiTokenName } from './apiTokenName'
+import { createApiTokenSettings } from './createApiTokenSettings'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
@@ -49,11 +44,6 @@ type ApiTokenNameFieldProps = {
   error: string
   /** 入力値の変更通知先 */
   onChange: (value: string) => void
-}
-
-type TokenActionError = {
-  tokenId: number
-  message: string
 }
 
 const API_TOKEN_NAME_INPUT_CLASS =
@@ -89,44 +79,16 @@ const ApiTokenNameField: Component<ApiTokenNameFieldProps> = (props) => (
 )
 
 /**
- * APIの最新契約に合わせた複数APIトークン管理欄を表示する。
+ * 発行直後の平文APIトークンと、クリップボードへのコピー操作を表示する。
+ * 発行し直すと作り直されるため、コピー済みやコピー失敗の表示を前のトークンから持ち越さない。
  *
- * @param props - 認証済みユーザー情報。
- * @returns 発行、一覧、名称変更、削除を行う設定セクション。
+ * @param props - 発行直後の平文APIトークン。
+ * @returns 平文APIトークンの表示欄。
  */
-export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = (props) => {
-  const [issueName, setIssueName] = createSignal('')
-  const [issuePermission, setIssuePermission] = createSignal<ApiTokenPermission>('read')
-  const [isIssueFormOpen, setIsIssueFormOpen] = createSignal(false)
-  const [issueNameError, setIssueNameError] = createSignal('')
-  const [issueActionError, setIssueActionError] = createSignal('')
-  const [issueSuccess, setIssueSuccess] = createSignal('')
-  const [isIssuing, setIsIssuing] = createSignal(false)
-  const [generatedToken, setGeneratedToken] = createSignal<
-    Awaited<ReturnType<typeof issueApiToken>> | undefined
-  >()
+const GeneratedApiTokenNotice: Component<{ token: string }> = (props) => {
   const [copied, setCopied] = createSignal(false)
   const [copyError, setCopyError] = createSignal('')
-  const [editingTokenId, setEditingTokenId] = createSignal<number | null>(null)
-  const [editingName, setEditingName] = createSignal('')
-  const [editingNameError, setEditingNameError] = createSignal('')
-  const [mutatingTokenId, setMutatingTokenId] = createSignal<number | null>(null)
-  const [tokenActionError, setTokenActionError] = createSignal<TokenActionError | null>(null)
-  const [tokenActionSuccess, setTokenActionSuccess] = createSignal('')
-  const [deleteTargetToken, setDeleteTargetToken] = createSignal<ApiToken | null>(null)
   let copiedResetTimer: number | undefined
-
-  const [apiTokens, { mutate: mutateApiTokens }] = createResource(
-    () => props.username,
-    async () => fetchApiTokens()
-  )
-
-  /**
-   * 現在のアカウントが書き込み権限付きAPIトークンを発行できるか判定する。
-   *
-   * @returns EDITORまたはADMINの場合はtrue。
-   */
-  const canIssueReadWriteToken = (): boolean => canIssueReadWriteApiToken(props.accountType)
 
   onCleanup(() => {
     if (typeof copiedResetTimer !== 'undefined') {
@@ -135,106 +97,13 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
   })
 
   /**
-   * 一覧取得前・発行中・上限到達時に発行操作を無効化する。
-   *
-   * @returns APIトークンを発行できない場合はtrue。
-   */
-  const isIssueDisabled = (): boolean =>
-    isIssuing() || !apiTokens() || (apiTokens()?.tokens.length ?? 0) >= API_TOKEN_MAX_COUNT
-
-  /**
-   * APIトークン名を発行用入力欄へ反映し、既存エラーを解消する。
-   *
-   * @param value - 新しい入力値。
-   * @returns なし。
-   */
-  const handleIssueNameChange = (value: string): void => {
-    setIssueName(value)
-    setIssueNameError('')
-  }
-
-  /**
-   * 発行中の誤操作によるダイアログ閉じを防ぎつつ開閉状態を更新する。
-   *
-   * @param open - 次のダイアログ開閉状態。
-   * @returns なし。
-   */
-  const handleIssueDialogOpenChange = (open: boolean): void => {
-    if (isIssuing()) {
-      return
-    }
-    setIsIssueFormOpen(open)
-    if (open) {
-      setIssueNameError('')
-      setIssueActionError('')
-      if (!canIssueReadWriteToken()) {
-        setIssuePermission('read')
-      }
-    }
-  }
-
-  /**
-   * 入力された名前でAPIトークンを追加発行する。
-   *
-   * @returns 発行処理完了後に解決されるPromise。
-   */
-  const handleIssueApiToken = async (): Promise<void> => {
-    setIssueNameError('')
-    setIssueActionError('')
-    setIssueSuccess('')
-    setTokenActionSuccess('')
-    if (!isValidApiTokenName(issueName())) {
-      setIssueNameError(API_TOKEN_SETTINGS_COPY.nameValidationError)
-      return
-    }
-
-    setIsIssuing(true)
-    try {
-      const result = await issueApiToken({
-        name: normalizeApiTokenName(issueName()),
-        permission: resolveApiTokenIssuePermission(props.accountType, issuePermission()),
-      })
-      setGeneratedToken(result)
-      setCopied(false)
-      setCopyError('')
-      setIssueName('')
-      setIssuePermission('read')
-      setIsIssueFormOpen(false)
-      setIssueSuccess(API_TOKEN_SETTINGS_COPY.issueSuccess)
-      const issuedMetadata: ApiToken = {
-        id: result.id,
-        name: result.name,
-        permission: result.permission,
-        token_prefix: result.token_prefix,
-        last_used_at: result.last_used_at,
-        created_at: result.created_at,
-      }
-      mutateApiTokens((current) => ({ tokens: [issuedMetadata, ...(current?.tokens ?? [])] }))
-    } catch (error) {
-      const message = toUserFriendlyErrorMessage(error, API_TOKEN_SETTINGS_COPY.issueFailure)
-      if (isApiTokenNameError(error)) {
-        setIssueNameError(message)
-      } else {
-        setIssueActionError(message)
-      }
-    } finally {
-      setIsIssuing(false)
-    }
-  }
-
-  /**
    * 発行直後の平文APIトークンをクリップボードへコピーする。
    *
    * @returns コピー処理完了後に解決されるPromise。
    */
   const handleCopyToken = async (): Promise<void> => {
-    const currentGeneratedToken = generatedToken()
-    if (!currentGeneratedToken) {
-      return
-    }
-
     try {
-      await navigator.clipboard.writeText(currentGeneratedToken.token)
+      await navigator.clipboard.writeText(props.token)
       setCopyError('')
       setCopied(true)
       if (typeof copiedResetTimer !== 'undefined') {
@@ -246,128 +115,43 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
     }
   }
 
-  /**
-   * 指定したAPIトークンの名称変更入力を開始する。
-   *
-   * @param token - 名称変更対象のAPIトークン。
-   * @returns なし。
-   */
-  const startRenaming = (token: ApiToken): void => {
-    setEditingTokenId(token.id)
-    setEditingName(token.name)
-    setEditingNameError('')
-    setTokenActionError(null)
-    setTokenActionSuccess('')
-  }
+  return (
+    <div class="mt-4 rounded-lg border border-success-border bg-success-bg p-4">
+      <p class="text-sm font-semibold text-text">{API_TOKEN_SETTINGS_COPY.generatedTitle}</p>
+      <p class="mt-1 text-xs text-text-muted">{API_TOKEN_SETTINGS_COPY.generatedNotice}</p>
+      <p class="mt-3 break-all rounded border border-border bg-surface p-2 font-mono text-xs text-text">
+        {props.token}
+      </p>
+      <div class="mt-3 flex items-center gap-2">
+        <AppButton size="xs" onClick={handleCopyToken} class="rounded-md">
+          {API_TOKEN_SETTINGS_COPY.copy}
+        </AppButton>
+        <span class="text-xs text-action-primary empty:hidden" role="status">
+          {copied() ? API_TOKEN_SETTINGS_COPY.copied : ''}
+        </span>
+      </div>
+      <p class="mt-2 text-sm text-danger empty:hidden" role="alert">
+        {copyError()}
+      </p>
+    </div>
+  )
+}
 
-  /**
-   * APIトークンの名称変更入力を終了する。
-   *
-   * @returns なし。
-   */
-  const cancelRenaming = (): void => {
-    setEditingTokenId(null)
-    setEditingName('')
-    setEditingNameError('')
-  }
-
-  /**
-   * 入力されたAPIトークン名を保存する。
-   *
-   * @param tokenId - 名称変更対象のAPIトークンID。
-   * @returns 更新処理完了後に解決されるPromise。
-   */
-  const handleRenameApiToken = async (tokenId: number): Promise<void> => {
-    setEditingNameError('')
-    setTokenActionError(null)
-    setTokenActionSuccess('')
-    if (!isValidApiTokenName(editingName())) {
-      setEditingNameError(API_TOKEN_SETTINGS_COPY.nameValidationError)
-      return
-    }
-
-    setMutatingTokenId(tokenId)
-    try {
-      const renamed = await renameApiToken(tokenId, {
-        name: normalizeApiTokenName(editingName()),
-      })
-      mutateApiTokens((current) =>
-        current
-          ? {
-              tokens: current.tokens.map((token) => (token.id === renamed.id ? renamed : token)),
-            }
-          : current
-      )
-      cancelRenaming()
-      setTokenActionSuccess(API_TOKEN_SETTINGS_COPY.renameSuccess)
-    } catch (error) {
-      const message = toUserFriendlyErrorMessage(error, API_TOKEN_SETTINGS_COPY.renameFailure)
-      if (isApiTokenNameError(error)) {
-        setEditingNameError(message)
-      } else {
-        setTokenActionError({ tokenId, message })
-      }
-    } finally {
-      setMutatingTokenId(null)
-    }
-  }
-
-  /**
-   * 前回の操作結果を消し、指定APIトークンの削除確認ダイアログを開く。
-   *
-   * @param token - 削除対象のAPIトークン。
-   * @returns なし。
-   */
-  const openDeleteDialog = (token: ApiToken): void => {
-    setTokenActionError(null)
-    setTokenActionSuccess('')
-    setDeleteTargetToken(token)
-  }
-
-  /**
-   * 削除確認ダイアログの開閉要求を反映する。開く操作は削除ボタンから行うため、閉じる要求のみ扱う。
-   *
-   * @param open - ダイアログを開く場合はtrue。
-   * @returns なし。
-   */
-  const handleDeleteDialogOpenChange = (open: boolean): void => {
-    if (open) return
-    setDeleteTargetToken(null)
-  }
-
-  /**
-   * 確認ダイアログで確定されたAPIトークンを削除し、完了後にダイアログを閉じる。
-   * 失敗時のエラーは対象トークンの行に表示する。
-   *
-   * @returns 削除処理完了後に解決されるPromise。
-   */
-  const handleDeleteApiToken = async (): Promise<void> => {
-    const token = deleteTargetToken()
-    if (!token) return
-
-    setMutatingTokenId(token.id)
-    try {
-      await deleteApiToken(token.id)
-      mutateApiTokens((current) =>
-        current ? { tokens: current.tokens.filter((item) => item.id !== token.id) } : current
-      )
-      if (generatedToken()?.id === token.id) {
-        setGeneratedToken(undefined)
-      }
-      if (editingTokenId() === token.id) {
-        cancelRenaming()
-      }
-      setTokenActionSuccess(API_TOKEN_SETTINGS_COPY.deleteSuccess)
-    } catch (error) {
-      setTokenActionError({
-        tokenId: token.id,
-        message: toUserFriendlyErrorMessage(error, API_TOKEN_SETTINGS_COPY.deleteFailure),
-      })
-    } finally {
-      setMutatingTokenId(null)
-      setDeleteTargetToken(null)
-    }
-  }
+/**
+ * APIの最新契約に合わせた複数APIトークン管理欄を表示する。
+ *
+ * @param props - 認証済みユーザー情報。
+ * @returns 発行、一覧、名称変更、削除を行う設定セクション。
+ */
+export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = (props) => {
+  const settings = createApiTokenSettings({
+    username: () => props.username,
+    accountType: () => props.accountType,
+    fetchTokens: fetchApiTokens,
+    issueToken: issueApiToken,
+    renameToken: renameApiToken,
+    deleteToken: deleteApiToken,
+  })
 
   return (
     <section aria-labelledby="api-integration-title">
@@ -393,16 +177,16 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
             <p class="mt-1 text-sm text-text-muted">{API_TOKEN_SETTINGS_COPY.description}</p>
           </div>
           <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
-            {apiTokens()?.tokens.length ?? 0} / {API_TOKEN_MAX_COUNT}
+            {settings.tokens()?.tokens.length ?? 0} / {API_TOKEN_MAX_COUNT}
           </span>
         </div>
 
-        <Dialog open={isIssueFormOpen()} onOpenChange={handleIssueDialogOpenChange}>
+        <Dialog open={settings.issueFormOpen()} onOpenChange={settings.setIssueFormOpen}>
           <Dialog.Trigger
             as="button"
             type="button"
             class={getAppButtonClass({ variant: 'primary', class: 'mt-4 w-fit' })}
-            disabled={isIssueDisabled()}
+            disabled={settings.isIssueDisabled()}
           >
             {API_TOKEN_SETTINGS_COPY.startIssueButton}
           </Dialog.Trigger>
@@ -413,7 +197,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                 {API_TOKEN_SETTINGS_COPY.issueDialogTitle}
               </Dialog.Title>
               <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
-                {canIssueReadWriteToken()
+                {settings.canIssueReadWrite()
                   ? API_TOKEN_SETTINGS_COPY.issueDialogDescription
                   : API_TOKEN_SETTINGS_COPY.issueReadOnlyDialogDescription}
               </Dialog.Description>
@@ -422,24 +206,24 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                 class="mt-5 flex min-h-0 flex-col"
                 onSubmit={(event) => {
                   event.preventDefault()
-                  void handleIssueApiToken()
+                  void settings.issue()
                 }}
               >
                 <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
                   <ApiTokenNameField
                     label={API_TOKEN_SETTINGS_COPY.issueLabel}
-                    value={issueName()}
+                    value={settings.issueName()}
                     placeholder={API_TOKEN_SETTINGS_COPY.issuePlaceholder}
-                    disabled={isIssuing()}
-                    error={issueNameError()}
-                    onChange={handleIssueNameChange}
+                    disabled={settings.issuing()}
+                    error={settings.issueNameError()}
+                    onChange={settings.setIssueName}
                   />
-                  <Show when={canIssueReadWriteToken()}>
+                  <Show when={settings.canIssueReadWrite()}>
                     <RadioGroup
                       name="api-token-permission"
-                      value={issuePermission()}
-                      onChange={(value) => setIssuePermission(value as ApiTokenPermission)}
-                      disabled={isIssuing()}
+                      value={settings.issuePermission()}
+                      onChange={(value) => settings.setIssuePermission(value as ApiTokenPermission)}
+                      disabled={settings.issuing()}
                       class="grid gap-2"
                     >
                       <RadioGroup.Label class="text-sm font-medium text-text-muted">
@@ -453,8 +237,8 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                               title={option.label}
                               description={option.description}
                               ariaLabel={option.label}
-                              selected={issuePermission() === option.value}
-                              disabled={isIssuing()}
+                              selected={settings.issuePermission() === option.value}
+                              disabled={settings.issuing()}
                               density="compact"
                               class="rounded-md"
                             />
@@ -464,21 +248,21 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                     </RadioGroup>
                   </Show>
                   <p class="text-sm text-danger empty:hidden" role="alert">
-                    {issueActionError()}
+                    {settings.issueActionError()}
                   </p>
                 </div>
                 <div class="mt-5 flex shrink-0 justify-end gap-2">
                   <Dialog.CloseButton
                     class={getAppButtonClass({ variant: 'secondary' })}
-                    disabled={isIssuing()}
+                    disabled={settings.issuing()}
                   >
                     {API_TOKEN_SETTINGS_COPY.cancelIssueButton}
                   </Dialog.CloseButton>
                   <AppButton
                     variant="primary"
                     type="submit"
-                    disabled={isIssuing()}
-                    aria-busy={isIssuing()}
+                    disabled={settings.issuing()}
+                    aria-busy={settings.issuing()}
                   >
                     {API_TOKEN_SETTINGS_COPY.issueButton}
                   </AppButton>
@@ -490,39 +274,20 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
       </div>
 
       <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-        {issueSuccess()}
+        {settings.issueSuccess()}
       </p>
 
-      <Show when={generatedToken()}>
-        {(issued) => (
-          <div class="mt-4 rounded-lg border border-success-border bg-success-bg p-4">
-            <p class="text-sm font-semibold text-text">{API_TOKEN_SETTINGS_COPY.generatedTitle}</p>
-            <p class="mt-1 text-xs text-text-muted">{API_TOKEN_SETTINGS_COPY.generatedNotice}</p>
-            <p class="mt-3 break-all rounded border border-border bg-surface p-2 font-mono text-xs text-text">
-              {issued().token}
-            </p>
-            <div class="mt-3 flex items-center gap-2">
-              <AppButton size="xs" onClick={handleCopyToken} class="rounded-md">
-                {API_TOKEN_SETTINGS_COPY.copy}
-              </AppButton>
-              <span class="text-xs text-action-primary empty:hidden" role="status">
-                {copied() ? API_TOKEN_SETTINGS_COPY.copied : ''}
-              </span>
-            </div>
-            <p class="mt-2 text-sm text-danger empty:hidden" role="alert">
-              {copyError()}
-            </p>
-          </div>
-        )}
+      <Show when={settings.generatedToken()} keyed>
+        {(issued) => <GeneratedApiTokenNotice token={issued.token} />}
       </Show>
 
       <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-        {tokenActionSuccess()}
+        {settings.tokenActionSuccess()}
       </p>
 
       <div class="mt-4">
-        <Show when={!apiTokens.error} fallback={<LoadError error={apiTokens.error} />}>
-          <Show when={apiTokens()} fallback={<Loading />}>
+        <Show when={!settings.tokens.error} fallback={<LoadError error={settings.tokens.error} />}>
+          <Show when={settings.tokens()} fallback={<Loading />}>
             {(loaded) => (
               <Show
                 when={loaded().tokens.length > 0}
@@ -561,7 +326,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                       <For each={loaded().tokens}>
                         {(token) => (
                           <Show
-                            when={editingTokenId() === token.id}
+                            when={settings.editingTokenId() === token.id}
                             fallback={
                               <tr class="border-t border-border">
                                 <th
@@ -591,8 +356,8 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                                   <div class="flex gap-2 whitespace-nowrap">
                                     <AppButton
                                       size="xs"
-                                      onClick={() => startRenaming(token)}
-                                      disabled={mutatingTokenId() !== null}
+                                      onClick={() => settings.startRenaming(token)}
+                                      disabled={settings.mutatingTokenId() !== null}
                                       aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.renameAriaLabelSuffix}`}
                                     >
                                       {API_TOKEN_SETTINGS_COPY.rename}
@@ -600,18 +365,16 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                                     <AppButton
                                       size="xs"
                                       variant="danger"
-                                      onClick={() => openDeleteDialog(token)}
-                                      disabled={mutatingTokenId() !== null}
-                                      aria-busy={mutatingTokenId() === token.id}
+                                      onClick={() => settings.openDeleteDialog(token)}
+                                      disabled={settings.mutatingTokenId() !== null}
+                                      aria-busy={settings.mutatingTokenId() === token.id}
                                       aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
                                     >
                                       {API_TOKEN_SETTINGS_COPY.delete}
                                     </AppButton>
                                   </div>
                                   <p class="mt-2 text-sm text-danger empty:hidden" role="alert">
-                                    {tokenActionError()?.tokenId === token.id
-                                      ? tokenActionError()?.message
-                                      : ''}
+                                    {settings.tokenActionErrorFor(token.id)}
                                   </p>
                                 </td>
                               </tr>
@@ -623,34 +386,31 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                                   class="flex flex-col gap-3 sm:flex-row sm:items-end"
                                   onSubmit={(event) => {
                                     event.preventDefault()
-                                    void handleRenameApiToken(token.id)
+                                    void settings.rename(token.id)
                                   }}
                                 >
                                   <ApiTokenNameField
                                     label={API_TOKEN_SETTINGS_COPY.renameLabel}
-                                    value={editingName()}
-                                    disabled={mutatingTokenId() === token.id}
-                                    error={editingNameError()}
-                                    onChange={(value) => {
-                                      setEditingName(value)
-                                      setEditingNameError('')
-                                    }}
+                                    value={settings.editingName()}
+                                    disabled={settings.mutatingTokenId() === token.id}
+                                    error={settings.editingNameError()}
+                                    onChange={settings.setEditingName}
                                   />
                                   <div class="flex shrink-0 gap-2">
                                     <AppButton
                                       size="xs"
                                       variant="primary"
                                       type="submit"
-                                      disabled={mutatingTokenId() === token.id}
-                                      aria-busy={mutatingTokenId() === token.id}
+                                      disabled={settings.mutatingTokenId() === token.id}
+                                      aria-busy={settings.mutatingTokenId() === token.id}
                                       aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.saveAriaLabelSuffix}`}
                                     >
                                       {API_TOKEN_SETTINGS_COPY.save}
                                     </AppButton>
                                     <AppButton
                                       size="xs"
-                                      onClick={cancelRenaming}
-                                      disabled={mutatingTokenId() === token.id}
+                                      onClick={settings.cancelRenaming}
+                                      disabled={settings.mutatingTokenId() === token.id}
                                       aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.cancelAriaLabelSuffix}`}
                                     >
                                       {API_TOKEN_SETTINGS_COPY.cancel}
@@ -658,9 +418,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                                   </div>
                                 </form>
                                 <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                                  {tokenActionError()?.tokenId === token.id
-                                    ? tokenActionError()?.message
-                                    : ''}
+                                  {settings.tokenActionErrorFor(token.id)}
                                 </p>
                               </td>
                             </tr>
@@ -677,19 +435,19 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
       </div>
 
       <AppConfirmDialog
-        open={deleteTargetToken() !== null}
-        onOpenChange={handleDeleteDialogOpenChange}
+        open={settings.deleteTarget() !== null}
+        onOpenChange={settings.setDeleteDialogOpen}
         title={API_TOKEN_SETTINGS_COPY.deleteDialogTitle}
-        description={formatApiTokenDeleteTargetMessage(deleteTargetToken()?.name ?? '')}
+        description={formatApiTokenDeleteTargetMessage(settings.deleteTarget()?.name ?? '')}
         cancelLabel={API_TOKEN_SETTINGS_COPY.cancel}
         confirmLabel={
-          mutatingTokenId() !== null
+          settings.mutatingTokenId() !== null
             ? API_TOKEN_SETTINGS_COPY.deleting
             : API_TOKEN_SETTINGS_COPY.deleteDialogSubmit
         }
         confirmVariant="danger"
-        pending={mutatingTokenId() !== null}
-        onConfirm={() => void handleDeleteApiToken()}
+        pending={settings.mutatingTokenId() !== null}
+        onConfirm={() => void settings.confirmDelete()}
       />
     </section>
   )
