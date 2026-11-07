@@ -55,7 +55,7 @@ export const formatCourseClass = (courseClass: string): string =>
  * コースクラスに応じたバッジ用Tailwindクラスを返す。
  *
  * @param courseClass - APIから返却されたコースクラス。
- * @returns 背景色と文字色のトークンクラス。未対応値はsuccess色を返す。
+ * @returns 背景色・文字色・文字影のトークンクラス。未対応値はsuccess色を返す。
  */
 export const courseClassBadgeClass = (courseClass: string): string => {
   const normalized = courseClass.toLowerCase()

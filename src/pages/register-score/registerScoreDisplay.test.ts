@@ -6,6 +6,7 @@ import type {
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
 } from '../../types/api'
+import { REGISTER_SCORE_INCREASE_TEXT_CLASS } from './constants.ts'
 import {
   courseClassBadgeClass,
   formatCourseClass,
@@ -145,6 +146,19 @@ test('コースクラス ∞ はAJCと同じ薄い虹グラデーション背景
   assert.ok(result.includes('text-course-class-text'))
 })
 
+test('コースクラスバッジは未対応値を含むすべてのクラスで共通の文字影を持つこと', () => {
+  // Given: 全コースクラスと未知のコースクラス。
+  const courseClasses = ['1', '2', '3', '4', '5', 'inf', 'extra', 'special']
+
+  // When: バッジクラスを取得する。
+  const result = courseClasses.map(courseClassBadgeClass)
+
+  // Then: 更新差分カードはこの文字影だけに頼るため、すべてのバッジに含まれる。
+  result.forEach((className, index) => {
+    assert.ok(className.includes('text-shadow-badge'), `${courseClasses[index]}: 文字影を含むはず`)
+  })
+})
+
 test('未対応のコースクラスはsuccess色バッジを返すこと', () => {
   // Given: 未知のコースクラス。
   const courseClass = 'special'
@@ -179,13 +193,13 @@ test('集計値の差分は正数だけにプラス記号を付けること', ()
   assert.deepEqual(result, ['+1,234', '0', '-5'])
 })
 
-test('TOTAL HIGH SCOREの差分は正数だけ強調色にすること', () => {
+test('TOTAL HIGH SCOREの差分は正数だけ他の差分と同じ増加色にすること', () => {
   // Given / When
   const positive = getRegisterScoreTotalHighScoreDeltaClass(1)
   const zero = getRegisterScoreTotalHighScoreDeltaClass(0)
 
   // Then
-  assert.equal(positive, 'text-blue-700')
+  assert.equal(positive, REGISTER_SCORE_INCREASE_TEXT_CLASS)
   assert.equal(zero, 'text-text')
 })
 
