@@ -1,6 +1,25 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createRegisterScoreImageFiles } from './registerScoreImageFiles'
+import { formatFileTimestamp } from '../../utils/localDateTime'
+import {
+  createRegisterScoreImageFiles,
+  formatRegisterScoreImageFilename,
+} from './registerScoreImageFiles'
+
+test('更新日時をローカル日時へ変換して画像のファイル名を作る', () => {
+  // Given: APIが返すISO形式の更新日時。
+  const importedAt = '2026-11-07T03:04:05Z'
+
+  // When
+  const result = formatRegisterScoreImageFilename(importedAt)
+
+  // Then: 接頭辞とローカル日時のタイムスタンプを持つJPEGファイル名になる。
+  assert.equal(
+    result,
+    `chunisupport-score-update-${formatFileTimestamp(new Date(importedAt), '-')}.jpg`
+  )
+  assert.match(result, /^chunisupport-score-update-\d{8}-\d{6}\.jpg$/)
+})
 
 test('1枚の画像は従来のファイル名とJPEGの内容を維持する', async () => {
   // Given: 単一のJPEG画像。

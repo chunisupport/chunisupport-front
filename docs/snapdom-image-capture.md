@@ -294,4 +294,8 @@ OVER POWER画面のグラフ表示中に、表示中のカード（全体カー�
 - [SnapDOM API](https://github.com/zumerlab/snapdom/blob/main/docs/docs/api/index.html)
 - [SnapDOM Options](https://github.com/zumerlab/snapdom/blob/main/docs/docs/options/index.html)
 - [SnapDOM Features](https://github.com/zumerlab/snapdom/blob/main/FEATURES.md)
-- 基準実装: [`RegisterScoreResultView.tsx`](../src/pages/register-score/RegisterScoreResultView.tsx)
+- 基準実装（更新差分レポート）
+  - 表示用の縮小枠: [`RegisterScoreReportScaleFrame.tsx`](../src/pages/register-score/RegisterScoreReportScaleFrame.tsx)
+  - 画像化する原寸DOM: [`RegisterScoreReport.tsx`](../src/pages/register-score/RegisterScoreReport.tsx)
+  - 曲名の1行省略: [`RegisterScoreChangeCards.tsx`](../src/pages/register-score/RegisterScoreChangeCards.tsx)
+  - 自動分割と画像化: [`registerScoreImageCapture.ts`](../src/pages/register-score/registerScoreImageCapture.ts)
