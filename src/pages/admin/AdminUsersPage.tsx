@@ -11,6 +11,7 @@ import {
 } from '../../api/users'
 import { Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { AppSelect } from '../../components/common/AppSelect'
 import { AppSwitch } from '../../components/common/AppSwitch'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
@@ -25,7 +26,7 @@ import { buildUserProfilePagePath } from '../../utils/userProfileRoute'
 import {
   ADMIN_USER_LIST_COPY,
   ADMIN_USER_STATISTICS_COPY,
-  formatAdminUserDeleteConfirmation,
+  formatAdminUserDeleteTargetMessage,
   formatAdminUserFlagLabel,
 } from './AdminUsersPage.constants'
 import {
@@ -65,6 +66,8 @@ const AdminUsersPage = () => {
   const [suspiciousErrorMessages, setSuspiciousErrorMessages] = createSignal<
     Record<string, string>
   >({})
+  const [deleteTargetUsername, setDeleteTargetUsername] = createSignal<string | null>(null)
+  const [deleting, setDeleting] = createSignal(false)
 
   const [usersResponse, { mutate: mutateUsers }] = createResource(
     () => ({ name: searchName(), page: page(), refresh: refreshKey() }),
@@ -112,19 +115,35 @@ const AdminUsersPage = () => {
   })
 
   /**
-   * 指定されたユーザーを確認後に物理削除する。
+   * 削除確認ダイアログの開閉要求を反映する。開く操作は削除ボタンから行うため、閉じる要求のみ扱う。
    *
-   * @param username - 削除対象のユーザー名。
+   * @param open - ダイアログを開く場合はtrue。
+   * @returns なし。
+   */
+  const handleDeleteDialogOpenChange = (open: boolean): void => {
+    if (open) return
+    setDeleteTargetUsername(null)
+  }
+
+  /**
+   * 確認ダイアログで確定されたユーザーを物理削除し、完了後にダイアログを閉じる。
+   *
    * @returns 処理完了後に解決されるPromise。
    */
-  const handleDelete = async (username: string) => {
-    if (!window.confirm(formatAdminUserDeleteConfirmation(username))) return
+  const handleDelete = async (): Promise<void> => {
+    const username = deleteTargetUsername()
+    if (!username) return
+
+    setDeleting(true)
     try {
       await deleteUserByUsername(username)
       showSuccessToast(ADMIN_USER_LIST_COPY.deleteSuccess)
       refresh()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, ADMIN_USER_LIST_COPY.deleteError))
+    } finally {
+      setDeleting(false)
+      setDeleteTargetUsername(null)
     }
   }
 
@@ -439,7 +458,7 @@ const AdminUsersPage = () => {
                       <AppButton
                         variant="danger"
                         size="xs"
-                        onClick={() => handleDelete(user.username)}
+                        onClick={() => setDeleteTargetUsername(user.username)}
                       >
                         {ADMIN_USER_LIST_COPY.deleteButton}
                       </AppButton>
@@ -455,6 +474,20 @@ const AdminUsersPage = () => {
       <Show when={!usersResponse.loading && !hasRows() && page() === 1}>
         <p class="text-sm text-text-subtle">{ADMIN_USER_LIST_COPY.empty}</p>
       </Show>
+
+      <AppConfirmDialog
+        open={deleteTargetUsername() !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title={ADMIN_USER_LIST_COPY.deleteDialogTitle}
+        description={formatAdminUserDeleteTargetMessage(deleteTargetUsername() ?? '')}
+        cancelLabel={ADMIN_USER_LIST_COPY.deleteDialogCancel}
+        confirmLabel={
+          deleting() ? ADMIN_USER_LIST_COPY.deleting : ADMIN_USER_LIST_COPY.deleteDialogSubmit
+        }
+        confirmVariant="danger"
+        pending={deleting()}
+        onConfirm={() => void handleDelete()}
+      />
     </div>
   )
 }

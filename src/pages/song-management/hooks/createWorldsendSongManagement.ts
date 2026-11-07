@@ -219,13 +219,12 @@ export const createWorldsendSongManagement = (
   }
 
   /**
-   * 指定されたWORLD'S END楽曲を確認後に削除する。
+   * 指定されたWORLD'S END楽曲を削除する。削除前の確認は呼び出し側の確認ダイアログで行う。
    *
    * @param displayId - 削除対象の楽曲表示ID。
    * @returns 処理完了後に解決されるPromise。
    */
   const remove = async (displayId: string): Promise<void> => {
-    if (!window.confirm(SONG_MANAGEMENT_MESSAGES.worldsendDeleteConfirm)) return
     try {
       await deleteWorldsendSongByDisplayId(displayId)
       mutateManagedSongs((current) =>

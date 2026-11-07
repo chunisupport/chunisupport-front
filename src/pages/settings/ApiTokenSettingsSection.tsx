@@ -7,6 +7,7 @@ import { createResource, createSignal, For, onCleanup, Show } from 'solid-js'
 import { deleteApiToken, fetchApiTokens, issueApiToken, renameApiToken } from '../../api/settings'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { API_DOCUMENTATION_URL } from '../../config'
 import { DEVELOPER_API_COPY } from '../../constants/developerApi'
@@ -21,6 +22,7 @@ import {
   API_TOKEN_MAX_COUNT,
   API_TOKEN_PERMISSION_OPTIONS,
   API_TOKEN_SETTINGS_COPY,
+  formatApiTokenDeleteTargetMessage,
   formatApiTokenPermission,
 } from './ApiTokenSettings.constants'
 import { isApiTokenNameError, isValidApiTokenName, normalizeApiTokenName } from './apiTokenName'
@@ -111,6 +113,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
   const [mutatingTokenId, setMutatingTokenId] = createSignal<number | null>(null)
   const [tokenActionError, setTokenActionError] = createSignal<TokenActionError | null>(null)
   const [tokenActionSuccess, setTokenActionSuccess] = createSignal('')
+  const [deleteTargetToken, setDeleteTargetToken] = createSignal<ApiToken | null>(null)
   let copiedResetTimer: number | undefined
 
   const [apiTokens, { mutate: mutateApiTokens }] = createResource(
@@ -310,17 +313,37 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
   }
 
   /**
-   * 確認後に指定APIトークンを削除する。
+   * 前回の操作結果を消し、指定APIトークンの削除確認ダイアログを開く。
    *
    * @param token - 削除対象のAPIトークン。
-   * @returns 削除処理完了後に解決されるPromise。
+   * @returns なし。
    */
-  const handleDeleteApiToken = async (token: ApiToken): Promise<void> => {
+  const openDeleteDialog = (token: ApiToken): void => {
     setTokenActionError(null)
     setTokenActionSuccess('')
-    if (!window.confirm(`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteConfirmationSuffix}`)) {
-      return
-    }
+    setDeleteTargetToken(token)
+  }
+
+  /**
+   * 削除確認ダイアログの開閉要求を反映する。開く操作は削除ボタンから行うため、閉じる要求のみ扱う。
+   *
+   * @param open - ダイアログを開く場合はtrue。
+   * @returns なし。
+   */
+  const handleDeleteDialogOpenChange = (open: boolean): void => {
+    if (open) return
+    setDeleteTargetToken(null)
+  }
+
+  /**
+   * 確認ダイアログで確定されたAPIトークンを削除し、完了後にダイアログを閉じる。
+   * 失敗時のエラーは対象トークンの行に表示する。
+   *
+   * @returns 削除処理完了後に解決されるPromise。
+   */
+  const handleDeleteApiToken = async (): Promise<void> => {
+    const token = deleteTargetToken()
+    if (!token) return
 
     setMutatingTokenId(token.id)
     try {
@@ -342,6 +365,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
       })
     } finally {
       setMutatingTokenId(null)
+      setDeleteTargetToken(null)
     }
   }
 
@@ -576,7 +600,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                                     <AppButton
                                       size="xs"
                                       variant="danger"
-                                      onClick={() => handleDeleteApiToken(token)}
+                                      onClick={() => openDeleteDialog(token)}
                                       disabled={mutatingTokenId() !== null}
                                       aria-busy={mutatingTokenId() === token.id}
                                       aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
@@ -651,6 +675,22 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
           </Show>
         </Show>
       </div>
+
+      <AppConfirmDialog
+        open={deleteTargetToken() !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title={API_TOKEN_SETTINGS_COPY.deleteDialogTitle}
+        description={formatApiTokenDeleteTargetMessage(deleteTargetToken()?.name ?? '')}
+        cancelLabel={API_TOKEN_SETTINGS_COPY.cancel}
+        confirmLabel={
+          mutatingTokenId() !== null
+            ? API_TOKEN_SETTINGS_COPY.deleting
+            : API_TOKEN_SETTINGS_COPY.deleteDialogSubmit
+        }
+        confirmVariant="danger"
+        pending={mutatingTokenId() !== null}
+        onConfirm={() => void handleDeleteApiToken()}
+      />
     </section>
   )
 }
