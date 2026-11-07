@@ -1,9 +1,4 @@
-import {
-  CHART_CONST_MAX,
-  CHART_CONST_MIN,
-  GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES,
-  SCORE_MIN,
-} from '../../../../../constants/chart'
+import { GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES, SCORE_MIN } from '../../../../../constants/chart'
 import { normalizePlayerDataDifficulty } from '../../../../../constants/difficulty'
 import type {
   GoalAchievementParams,
@@ -12,7 +7,12 @@ import type {
   GoalCreateRequest,
   GoalDTO,
 } from '../../../../../types/api'
-import { normalizeGoalNameFolderCodes } from '../../../../../utils/goalAttributes'
+import { createFullChartConstRange } from '../../../../../utils/chartLevel'
+import {
+  type GoalConstSelection,
+  normalizeGoalNameFolderCodes,
+  resolveGoalConstSelection,
+} from '../../../../../utils/goalAttributes'
 import {
   type ComboLampGoalValue,
   type FullChainGoalValue,
@@ -63,8 +63,8 @@ export interface GoalFormState {
   applyGaugeStartToPercentage: boolean
   chartTargetMode: GoalChartTargetMode
   diffs: string[]
-  constMin: string
-  constMax: string
+  /** 譜面定数範囲と入力方法 */
+  constSelection: GoalConstSelection
   genres: string[]
   versions: string[]
   /** 選択中の楽曲名順フォルダのコード */
@@ -103,8 +103,8 @@ export interface GoalFormAttributesInput {
   achievementType: GoalAchievementType
   chartTargetMode: GoalChartTargetMode
   diffs: string[]
-  constMin: string
-  constMax: string
+  /** 譜面定数範囲と入力方法 */
+  constSelection: GoalConstSelection
   genres: string[]
   versions: string[]
   /** 選択中の楽曲名順フォルダのコード */
@@ -427,6 +427,16 @@ export const toggleSelection = (current: string[], value: string, checked: boole
 }
 
 /**
+ * 新規作成時の譜面定数範囲を作成する。新規目標はレベル指定を既定とする。
+ *
+ * @returns 全範囲をレベル指定で表す範囲条件。
+ */
+export const createDefaultGoalConstSelection = (): GoalConstSelection => ({
+  constFilterMode: 'level',
+  constRange: createFullChartConstRange(),
+})
+
+/**
  * 作成フォームで使う初期状態を作成する。
  *
  * @param fallbacks - マスタデータ由来の全選択値と、作成時の難易度初期選択値。
@@ -454,8 +464,7 @@ export const createDefaultGoalFormState = (
   applyGaugeStartToPercentage: DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
   chartTargetMode: 'normal',
   diffs: fallbacks.defaultDifficultySelections,
-  constMin: String(CHART_CONST_MIN),
-  constMax: String(CHART_CONST_MAX),
+  constSelection: createDefaultGoalConstSelection(),
   genres: fallbacks.allGenreSelections,
   versions: fallbacks.allVersionSelections,
   nameFolders: fallbacks.allNameFolderSelections,
@@ -527,14 +536,7 @@ export const createGoalFormInitialState = (
       goal.attributes.diff,
       fallbacks.allDifficultySelections
     ),
-    constMin:
-      typeof goal.attributes.const?.min === 'number'
-        ? String(goal.attributes.const.min)
-        : String(CHART_CONST_MIN),
-    constMax:
-      typeof goal.attributes.const?.max === 'number'
-        ? String(goal.attributes.const.max)
-        : String(CHART_CONST_MAX),
+    constSelection: resolveGoalConstSelection(goal.attributes),
     genres: resolveInitialAttributeSelection(goal.attributes.genre, fallbacks.allGenreSelections),
     versions: resolveInitialAttributeSelection(goal.attributes.ver, fallbacks.allVersionSelections),
     nameFolders:
@@ -558,12 +560,10 @@ export const buildGoalFormAttributes = (input: GoalFormAttributesInput): GoalAtt
     ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'normal'
       ? { diff: parseAttributeSelection(input.diffs) }
       : {}),
-    ...(input.achievementType !== 'rainbow_count' && (input.constMin || input.constMax)
+    ...(input.achievementType !== 'rainbow_count'
       ? {
-          const: {
-            ...(input.constMin ? { min: Number(input.constMin) } : {}),
-            ...(input.constMax ? { max: Number(input.constMax) } : {}),
-          },
+          const: { ...input.constSelection.constRange },
+          const_filter_mode: input.constSelection.constFilterMode,
         }
       : {}),
     genre: parseAttributeSelection(input.genres),

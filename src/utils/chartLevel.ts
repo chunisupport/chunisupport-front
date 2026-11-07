@@ -94,6 +94,16 @@ export const getChartLevelFilterBoundary = (
 }
 
 /**
+ * 譜面定数範囲の両端が、レベル指定で選べる境界と一致するか判定する。
+ *
+ * @param range - 判定する譜面定数範囲。
+ * @returns 下限がいずれかのレベルの下端、上限がいずれかのレベルの上端ならtrue。
+ */
+export const isChartLevelFilterRange = (range: NumericRangeFilter): boolean =>
+  getChartLevelFilterBoundary(toChartLevelFilterLabel(range.min), 'min') === range.min &&
+  getChartLevelFilterBoundary(toChartLevelFilterLabel(range.max), 'max') === range.max
+
+/**
  * 適用する範囲の端点を昇順に揃え、レベル指定では各レベル全体を含める。
  *
  * @param range - 編集中の定数範囲。逆順の端点も受け付ける。

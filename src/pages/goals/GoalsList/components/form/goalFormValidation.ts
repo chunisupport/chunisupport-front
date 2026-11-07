@@ -1,5 +1,6 @@
 import { SCORE_MIN } from '../../../../../constants/chart'
 import type { GoalAchievementType } from '../../../../../types/api'
+import type { NumericRangeFilter } from '../../../../../types/record'
 import { truncateDecimal } from '../../../../../utils/numberFormat'
 import { MAX_SCORE } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
@@ -36,8 +37,8 @@ export interface GoalFormValidationInput {
   countMode: GoalTargetMode
   total: string
   totalMode: GoalTargetMode
-  constMin: string
-  constMax: string
+  /** 対象譜面の譜面定数範囲 */
+  constRange: NumericRangeFilter
   allCount: number
   theoreticalTotal: number
 }
@@ -74,17 +75,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
     canUseDynamicTotalTarget(input.achievementType) && input.totalMode === 'all'
       ? input.theoreticalTotal
       : Number(input.total)
-  const parsedConstMin = input.constMin === '' ? undefined : Number(input.constMin)
-  const parsedConstMax = input.constMax === '' ? undefined : Number(input.constMax)
   const isCountType = isCountAchievementType(input.achievementType)
-
-  if (
-    input.achievementType !== 'rainbow_count' &&
-    ((typeof parsedConstMin === 'number' && !Number.isFinite(parsedConstMin)) ||
-      (typeof parsedConstMax === 'number' && !Number.isFinite(parsedConstMax)))
-  ) {
-    return '定数範囲が不正です。'
-  }
 
   if (
     input.achievementType === 'rating_count' &&
@@ -94,12 +85,7 @@ export const validateGoalForm = (input: GoalFormValidationInput): string | undef
   ) {
     return `単曲レートは${RATING_GOAL_MIN_VALUE}以上、小数第${RATING_GOAL_DECIMAL_PLACES}位以内で入力してください。`
   }
-  if (
-    input.achievementType !== 'rainbow_count' &&
-    typeof parsedConstMin === 'number' &&
-    typeof parsedConstMax === 'number' &&
-    parsedConstMin > parsedConstMax
-  ) {
+  if (input.achievementType !== 'rainbow_count' && input.constRange.min > input.constRange.max) {
     return '定数の最小値は最大値以下にしてください。'
   }
 

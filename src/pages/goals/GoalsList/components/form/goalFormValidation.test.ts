@@ -15,8 +15,7 @@ const validInput = {
   countMode: 'number',
   total: '10',
   totalMode: 'number',
-  constMin: '13',
-  constMax: '15',
+  constRange: { min: 13, max: 15 },
   allCount: 20,
   theoreticalTotal: 20,
 } as const
@@ -147,8 +146,7 @@ test('単曲レートは0.01以上かつ小数第2位以内を要求する', () 
     countMode: 'all' as const,
     total: '0',
     totalMode: 'number' as const,
-    constMin: '1',
-    constMax: '16',
+    constRange: { min: 1, max: 16 },
     allCount: 1,
     theoreticalTotal: 0,
   }
@@ -184,8 +182,7 @@ test('単曲レート入力の不正は到達可能譜面0件より先に報告�
     countMode: 'all',
     total: '0',
     totalMode: 'number',
-    constMin: '1',
-    constMax: '16',
+    constRange: { min: 1, max: 16 },
     allCount: 0,
     theoreticalTotal: 0,
   })

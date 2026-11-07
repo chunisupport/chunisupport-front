@@ -105,3 +105,45 @@ test('保存用ペイロードはゲージのスタート位置と達成率へ�
   assert.equal(result.gauge_start, 99.6)
   assert.equal(result.apply_gauge_start_to_percentage, true)
 })
+
+test('レベル指定で保存した定数範囲はレベルで表示する', () => {
+  // Given / When
+  const result = formatGoalAttributesLabel(
+    { const: { min: 13.5, max: 14.4 }, const_filter_mode: 'level' },
+    MASTER_DATA,
+    VERSIONS
+  )
+
+  // Then
+  assert.equal(result, 'レベル: 13+ ～ 14')
+})
+
+test('数値指定または入力方法のない定数範囲は譜面定数で表示する', () => {
+  // Given / When
+  const numberResult = formatGoalAttributesLabel(
+    { const: { min: 14, max: 14.9 }, const_filter_mode: 'number' },
+    MASTER_DATA,
+    VERSIONS
+  )
+  const legacyResult = formatGoalAttributesLabel(
+    { const: { min: 13.7, max: 14.2 } },
+    MASTER_DATA,
+    VERSIONS
+  )
+
+  // Then
+  assert.equal(numberResult, '定数: 14 ～ 14.9')
+  assert.equal(legacyResult, '定数: 13.7 ～ 14.2')
+})
+
+test('レベル指定でもレベル境界と一致しない定数範囲は譜面定数で表示する', () => {
+  // Given / When
+  const result = formatGoalAttributesLabel(
+    { const: { min: 13.7, max: 14.2 }, const_filter_mode: 'level' },
+    MASTER_DATA,
+    VERSIONS
+  )
+
+  // Then
+  assert.equal(result, '定数: 13.7 ～ 14.2')
+})

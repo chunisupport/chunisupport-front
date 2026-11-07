@@ -5,6 +5,7 @@ import {
   getChartLevelConstRange,
   getChartLevelFilterBoundary,
   getChartLevelSortKey,
+  isChartLevelFilterRange,
   isLowChartLevel,
   normalizeChartConstRange,
   toChartLevelFilterLabel,
@@ -83,4 +84,20 @@ test('レベル範囲の適用は低レベルと最高レベルの端点も維�
   // Given, When & Then: 低レベルは小数9まで含み、最高レベルは定数上限で止まる。
   assert.deepEqual(normalizeChartConstRange({ min: 6, max: 5.9 }, 'level'), { min: 5, max: 6.9 })
   assert.deepEqual(normalizeChartConstRange({ min: 1, max: 16 }, 'level'), { min: 1, max: 16 })
+})
+
+test('レベル境界と一致する譜面定数範囲をレベル範囲として判定する', () => {
+  // Given / When / Then
+  assert.equal(isChartLevelFilterRange({ min: 14, max: 14.9 }), true)
+  assert.equal(isChartLevelFilterRange({ min: 13.5, max: 14.4 }), true)
+  assert.equal(isChartLevelFilterRange({ min: 1, max: 16 }), true)
+  assert.equal(isChartLevelFilterRange({ min: 6, max: 6.9 }), true)
+})
+
+test('レベル境界と一致しない譜面定数範囲はレベル範囲として判定しない', () => {
+  // Given / When / Then
+  assert.equal(isChartLevelFilterRange({ min: 13.7, max: 14.9 }), false)
+  assert.equal(isChartLevelFilterRange({ min: 14, max: 14.2 }), false)
+  // 6以下は「6 = 6.0〜6.9」にまとめるため、6.5は下端にならない
+  assert.equal(isChartLevelFilterRange({ min: 6.5, max: 6.9 }), false)
 })

@@ -7,9 +7,11 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../types/api'
+import { toChartLevelFilterLabel } from '../../../utils/chartLevel'
 import {
   normalizeGoalAttributeIds,
   normalizeGoalNameFolderCodes,
+  resolveGoalConstSelection,
 } from '../../../utils/goalAttributes'
 import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
 
@@ -109,7 +111,12 @@ export const formatGoalAttributesLabel = (
   }
 
   if (typeof attributes.const?.min === 'number' || typeof attributes.const?.max === 'number') {
-    parts.push(`定数: ${attributes.const?.min ?? '-'} ～ ${attributes.const?.max ?? '-'}`)
+    const { constFilterMode, constRange } = resolveGoalConstSelection(attributes)
+    parts.push(
+      constFilterMode === 'level'
+        ? `レベル: ${toChartLevelFilterLabel(constRange.min)} ～ ${toChartLevelFilterLabel(constRange.max)}`
+        : `定数: ${attributes.const?.min ?? '-'} ～ ${attributes.const?.max ?? '-'}`
+    )
   }
 
   if (genreIds && genreIds.length > 0) {
