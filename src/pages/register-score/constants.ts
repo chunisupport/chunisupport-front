@@ -43,6 +43,7 @@ export const REGISTER_SCORE_COPY = {
   shareImageError: '共有に失敗しました。',
   copySongTitleSuccess: '曲名をコピーしました。',
   copySongTitleError: '曲名のコピーに失敗しました。',
+  copySongTitleLabel: (songTitle: string) => `「${songTitle}」をコピー`,
   excludeChangeFromImage: '画像から除外',
   includeChangeInImage: '画像に含める',
   showClassEmblem: 'クラスエンブレムを表示',
@@ -50,6 +51,8 @@ export const REGISTER_SCORE_COPY = {
   showPlayerLevel: 'レベルを表示',
 } as const
 
+/** 更新差分画像のファイル名へ付与する接頭辞 */
+export const REGISTER_SCORE_IMAGE_FILENAME_PREFIX = 'chunisupport-score-update'
 /** 更新差分画像の余白とページ番号を含む論理高さ上限 */
 export const REGISTER_SCORE_IMAGE_MAX_HEIGHT = 1_800
 /** 更新差分画像を原寸で出力するピクセル比 */
@@ -59,6 +62,14 @@ export const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
 /** 更新差分画像下部のページ番号の共通スタイル */
 export const REGISTER_SCORE_IMAGE_PAGE_NUMBER_CLASS =
   'px-4 pt-3 text-center font-jost text-sm leading-5 text-text-muted whitespace-nowrap'
+
+/** 画像化する更新差分レポートの論理幅を固定するクラス */
+export const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
+/** 更新差分レポートの表示領域を論理幅以下に制限するクラス */
+export const REGISTER_SCORE_STACK_MAX_WIDTH_CLASS = 'max-w-[31rem]'
+/** コンポーネント幅が59rem以上なら27remの設定欄と論理幅のレポートを横並びにするクラス */
+export const REGISTER_SCORE_RESULT_LAYOUT_CLASS =
+  'mx-auto grid w-full min-w-0 max-w-[31rem] gap-4 @min-[59rem]:max-w-none @min-[59rem]:grid-cols-[27rem_31rem] @min-[59rem]:items-start @min-[59rem]:justify-center'
 
 /**
  * 楽曲カードの主ソート選択肢に表示するラベル。
