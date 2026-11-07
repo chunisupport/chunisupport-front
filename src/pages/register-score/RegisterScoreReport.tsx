@@ -4,9 +4,6 @@ import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerSc
 import { REGISTER_SCORE_COPY } from './constants'
 import { formatRegisterScoreImportedAt } from './registerScoreDisplay'
 
-/** 更新差分レポートヘッダに表示するロゴの色 */
-const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
-
 /**
  * スコア登録結果のヘッダーを表示する。
  *
@@ -15,10 +12,7 @@ const REGISTER_SCORE_REPORT_LOGO_COLOR = '#444444'
  */
 const RegisterScoreReportHeader = (props: { result: NormalizedPlayerDataUpdateResult }) => (
   <header class="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-3">
-    <SiteLogoMark
-      class="h-12 w-12"
-      style={{ 'background-color': REGISTER_SCORE_REPORT_LOGO_COLOR }}
-    />
+    <SiteLogoMark class="h-12 w-12 bg-text-muted" />
     <div class="min-w-0 text-right">
       <h1 class="whitespace-nowrap text-2xl font-bold">{REGISTER_SCORE_COPY.reportTitle}</h1>
       <p class="mt-1 text-sm">

@@ -63,6 +63,9 @@ export const REGISTER_SCORE_IMAGE_JPEG_QUALITY = 0.9
 export const REGISTER_SCORE_IMAGE_PAGE_NUMBER_CLASS =
   'px-4 pt-3 text-center font-jost text-sm leading-5 text-text-muted whitespace-nowrap'
 
+/** 更新差分レポートで値の増加を表す文字色クラス。意味固定色の情報色を使う。 */
+export const REGISTER_SCORE_INCREASE_TEXT_CLASS = 'text-info'
+
 /** 画像化する更新差分レポートの論理幅を固定するクラス */
 export const REGISTER_SCORE_REPORT_WIDTH_CLASS = 'w-[31rem]'
 /** 更新差分レポートの表示領域を論理幅以下に制限するクラス */

@@ -20,6 +20,7 @@ import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPo
 import { formatRatingFixed2 } from '../../utils/ratingFormat'
 import {
   REGISTER_SCORE_COPY,
+  REGISTER_SCORE_INCREASE_TEXT_CLASS,
   REGISTER_SCORE_SHOW_SONG_METRICS,
   REGISTER_SCORE_SHOW_SONG_OP_PERCENT,
 } from './constants'
@@ -62,7 +63,7 @@ const SCORE_CHANGE_SCORE_GRID_CLASS =
 const COURSE_CHANGE_SCORE_VALUE_CLASS = 'w-[95px] shrink-0'
 /** コースクラスバッジの共通レイアウトクラス */
 const COURSE_CLASS_BADGE_LAYOUT_CLASS =
-  'inline-flex min-w-6 shrink-0 items-center justify-center rounded font-sans text-xs font-bold uppercase leading-5 [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]'
+  'inline-flex min-w-6 shrink-0 items-center justify-center rounded font-sans text-xs font-bold uppercase leading-5'
 
 /**
  * 曲名をクリップボードへコピーし、結果をトーストで通知する。
@@ -148,10 +149,15 @@ const RegisterScoreChangeDelta = (props: {
   change: PlayerDataSongRecordChange | PlayerDataCourseRecordChange
 }) => (
   <>
-    <Play class="mt-1.5 h-3.5 w-3.5 fill-current text-blue-700" aria-hidden="true" />
+    <Play
+      class={`mt-1.5 h-3.5 w-3.5 fill-current ${REGISTER_SCORE_INCREASE_TEXT_CLASS}`}
+      aria-hidden="true"
+    />
     <Show when={formatRegisterScoreChangeDelta(props.change)}>
       {(delta) => (
-        <span class="font-sans text-sm font-bold leading-4 text-blue-700">{delta()}</span>
+        <span class={`font-sans text-sm font-bold leading-4 ${REGISTER_SCORE_INCREASE_TEXT_CLASS}`}>
+          {delta()}
+        </span>
       )}
     </Show>
   </>

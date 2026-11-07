@@ -18,6 +18,7 @@ import { difficultyBadgeClass } from '../../utils/difficultyUtils'
 import { formatLocalDateTime } from '../../utils/localDateTime'
 import { formatInteger } from '../../utils/numberFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
+import { REGISTER_SCORE_INCREASE_TEXT_CLASS } from './constants'
 import {
   type REGISTER_SCORE_STAT_COLUMNS,
   REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN,
@@ -84,10 +85,10 @@ export const formatRegisterScoreStatisticDelta = (delta: number): string =>
  * TOTAL HIGH SCOREの差分文字色を返す。
  *
  * @param delta - 表示対象の差分値。
- * @returns プラスの場合はNEW RECORDSと同じ青、それ以外は通常文字色のクラス。
+ * @returns プラスの場合は他の差分と同じ増加色、それ以外は通常文字色のクラス。
  */
 export const getRegisterScoreTotalHighScoreDeltaClass = (delta: number): string =>
-  delta > 0 ? 'text-blue-700' : 'text-text'
+  delta > 0 ? REGISTER_SCORE_INCREASE_TEXT_CLASS : 'text-text'
 
 /**
  * 更新差分がスコア更新を含む場合に増分を表示する。

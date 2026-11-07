@@ -1,5 +1,6 @@
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerRating } from '../../utils/ratingFormat'
+import { REGISTER_SCORE_INCREASE_TEXT_CLASS } from './constants'
 
 /**
  * 数値差分を指定フォーマットの符号付き文字列へ変換する。
@@ -55,5 +56,5 @@ export const formatRegisterScoreOverPowerPercentDelta = (delta: number | null): 
  */
 export const getRegisterScoreMetricDeltaClass = (delta: number | null): string => {
   if (delta === null || delta === 0) return 'text-text'
-  return delta > 0 ? 'text-info' : 'text-danger'
+  return delta > 0 ? REGISTER_SCORE_INCREASE_TEXT_CLASS : 'text-danger'
 }

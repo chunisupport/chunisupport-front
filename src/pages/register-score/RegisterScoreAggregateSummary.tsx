@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js'
 import { formatInteger } from '../../utils/numberFormat'
-import { REGISTER_SCORE_COPY } from './constants'
+import { REGISTER_SCORE_COPY, REGISTER_SCORE_INCREASE_TEXT_CLASS } from './constants'
 import {
   formatRegisterScoreStatisticDelta,
   getRegisterScoreStatisticColumnDividerClass,
@@ -52,7 +52,9 @@ const RegisterScoreLampStatistics = (props: { rows: RegisterScoreStatisticRow[] 
                   >
                     <div class="font-jost">{row.values[column].after}</div>
                     <Show when={row.values[column].delta !== 0}>
-                      <div class="font-jost text-[0.65rem] font-bold text-blue-700">
+                      <div
+                        class={`font-jost text-[0.65rem] font-bold ${REGISTER_SCORE_INCREASE_TEXT_CLASS}`}
+                      >
                         {formatRegisterScoreStatisticDelta(row.values[column].delta)}
                       </div>
                     </Show>
