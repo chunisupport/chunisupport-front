@@ -836,6 +836,9 @@ export type GoalAchievementType =
   | 'overpower_value'
   | 'overpower_percent'
 
+/** 目標の譜面定数範囲の入力方法。`level` はレベル指定、`number` は譜面定数指定 */
+export type GoalConstFilterMode = 'level' | 'number'
+
 export interface GoalAttributes {
   diff?: number | number[]
   chart_target?: 'OP_TARGET'
@@ -843,6 +846,11 @@ export interface GoalAttributes {
     min?: number
     max?: number
   }
+  /**
+   * `const` の入力方法。再編集時の表示復元にのみ使い、絞り込みには常に `const` を使う。
+   * 入力方法の保存前に作成した目標では省略され、`number` として扱う。
+   */
+  const_filter_mode?: GoalConstFilterMode
   genre?: number | number[]
   ver?: number | number[]
   /** 楽曲名順フォルダのコード。未指定時は全楽曲名順が対象 */

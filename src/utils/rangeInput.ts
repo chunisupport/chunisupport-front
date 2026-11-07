@@ -112,6 +112,16 @@ export function parseNumberInput(value: string): number | undefined {
 }
 
 /**
+ * 入力欄の確定時の文字列を数値へ変換する。
+ * 確定時には入力が終わっているため、「14.」のような末尾の小数点は整数部分として扱う。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @returns 確定した数値。空欄や数値として解釈できない入力はundefined。
+ */
+export const parseCommittedNumberInput = (value: string): number | undefined =>
+  parseNumberInput(value.endsWith('.') ? value.slice(0, -1) : value)
+
+/**
  * 数値を範囲入力用の小数桁数へ正規化する。
  *
  * @param value - 正規化する数値。

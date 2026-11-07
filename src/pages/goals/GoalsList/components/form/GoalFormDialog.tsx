@@ -2,6 +2,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, on } from 'solid-js'
 import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
+import { createChartConstRangeDraft } from '../../../../../hooks/createChartConstRangeDraft'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -12,6 +13,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../../../types/api'
+import type { GoalConstSelection } from '../../../../../utils/goalAttributes'
 import type {
   ComboLampGoalValue,
   FullChainGoalValue,
@@ -44,6 +46,7 @@ import {
   buildGoalFormAttributes,
   buildGoalFormGaugeStartParams,
   canUseDynamicTotalTarget,
+  createDefaultGoalConstSelection,
   createGoalFormInitialState,
   DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
   DEFAULT_GAUGE_START_MODE,
@@ -165,8 +168,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const [chartTargetMode, setChartTargetMode] = createSignal<GoalChartTargetMode>('normal')
   const [diffs, setDiffs] = createSignal<string[]>([])
-  const [constMin, setConstMin] = createSignal('')
-  const [constMax, setConstMax] = createSignal('')
+  const [constSelection, setConstSelection] = createSignal<GoalConstSelection>(
+    createDefaultGoalConstSelection()
+  )
+  const constRangeDraft = createChartConstRangeDraft({
+    get: constSelection,
+    set: setConstSelection,
+  })
   const [genres, setGenres] = createSignal<string[]>([])
   const [versions, setVersions] = createSignal<string[]>([])
   const [nameFolders, setNameFolders] = createSignal<string[]>([])
@@ -279,8 +287,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setApplyGaugeStartToPercentage(nextState.applyGaugeStartToPercentage)
     setChartTargetMode(nextState.chartTargetMode)
     setDiffs(nextState.diffs)
-    setConstMin(nextState.constMin)
-    setConstMax(nextState.constMax)
+    setConstSelection(nextState.constSelection)
+    constRangeDraft.sync(nextState.constSelection.constRange)
     setGenres(nextState.genres)
     setVersions(nextState.versions)
     setNameFolders(nextState.nameFolders)
@@ -291,8 +299,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       achievementType: achievementType(),
       chartTargetMode: chartTargetMode(),
       diffs: diffs(),
-      constMin: constMin(),
-      constMax: constMax(),
+      constSelection: constSelection(),
       genres: genres(),
       versions: versions(),
       nameFolders: nameFolders(),
@@ -565,8 +572,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       countMode: countMode(),
       total: total(),
       totalMode: totalMode(),
-      constMin: constMin(),
-      constMax: constMax(),
+      constRange: constSelection().constRange,
       allCount,
       theoreticalTotal: getTheoreticalTotal(currentType),
     })
@@ -632,8 +638,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               isRainbowGoal={achievementType() === 'rainbow_count'}
               chartTargetMode={chartTargetMode()}
               diffs={diffs()}
-              constMin={constMin()}
-              constMax={constMax()}
+              constRangeFieldProps={constRangeDraft.fieldProps}
               genreOptions={genreSelectOptions()}
               selectedGenres={genres()}
               versionOptions={versionSelectOptions()}
@@ -658,8 +663,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               onGenresChange={setGenres}
               onVersionsChange={setVersions}
               onNameFoldersChange={setNameFolders}
-              onConstMinChange={setConstMin}
-              onConstMaxChange={setConstMax}
             />
 
             <GoalAchievementSection

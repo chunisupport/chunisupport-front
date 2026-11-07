@@ -5,6 +5,7 @@ import {
   normalizeChartConstRangeInput,
   normalizeHundredthsInput,
   normalizeScoreRangeInput,
+  parseCommittedNumberInput,
   parseNumberInput,
   parseOptionalRangeNumberInput,
   sanitizeRangeInput,
@@ -62,6 +63,16 @@ test('parseNumberInput は確定済みの数値だけを返すこと', () => {
   assert.equal(parseNumberInput('5.'), undefined)
   assert.equal(parseNumberInput('12'), 12)
   assert.equal(parseNumberInput('abc'), undefined)
+})
+
+test('parseCommittedNumberInput は末尾の小数点を整数部分として確定すること', () => {
+  // Given, When & Then
+  assert.equal(parseCommittedNumberInput('14.'), 14)
+  assert.equal(parseCommittedNumberInput('14.5'), 14.5)
+  assert.equal(parseCommittedNumberInput('.5'), 0.5)
+  assert.equal(parseCommittedNumberInput('.'), undefined)
+  assert.equal(parseCommittedNumberInput(''), undefined)
+  assert.equal(parseCommittedNumberInput('abc'), undefined)
 })
 
 test('parseOptionalRangeNumberInput は整数指定と小数桁数を正規化すること', () => {

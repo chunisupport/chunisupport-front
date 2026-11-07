@@ -3,19 +3,17 @@ import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../components/common/AppButton'
 import type { AppMultiSelectOption } from '../../../../../components/common/AppMultiSelect'
 import {
+  ChartConstRangeField,
+  type ChartConstRangeFieldProps,
+} from '../../../../../components/common/ChartConstRangeField'
+import {
   GenreMultiSelect,
   NameFolderMultiSelect,
   VersionMultiSelect,
 } from '../../../../../components/common/DomainMultiSelect'
-import {
-  RANGE_END_LABEL_SUFFIX,
-  RANGE_START_LABEL_SUFFIX,
-  TextRangeInput,
-} from '../../../../../components/common/RangeInput'
 import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../../../../constants/chart'
 import type { MasterDataDTO } from '../../../../../types/api'
-import { normalizeChartConstRangeInput } from '../../../../../utils/rangeInput'
-import { GOAL_FIELD_INPUT_CLASS, GoalFilterCheckbox } from './goalFormFields'
+import { GoalFilterCheckbox } from './goalFormFields'
 import type { GoalChartTargetMode } from './goalFormModel'
 import {
   GOAL_MULTI_SELECT_CONTENT_Z_INDEX_CLASS,
@@ -31,8 +29,8 @@ interface GoalTargetChartsSectionProps {
   isRainbowGoal: boolean
   chartTargetMode: GoalChartTargetMode
   diffs: string[]
-  constMin: string
-  constMax: string
+  /** レベル・譜面定数の範囲入力欄へ渡すプロパティ */
+  constRangeFieldProps: Omit<ChartConstRangeFieldProps, 'idPrefix'>
   genreOptions: AppMultiSelectOption<string>[]
   selectedGenres: string[]
   versionOptions: AppMultiSelectOption<string>[]
@@ -49,12 +47,9 @@ interface GoalTargetChartsSectionProps {
   onVersionsChange: (versions: string[]) => void
   /** 楽曲名順フォルダの選択変更時に呼ばれる */
   onNameFoldersChange: (nameFolders: string[]) => void
-  onConstMinChange: (value: string) => void
-  onConstMaxChange: (value: string) => void
 }
 
 const TARGET_CHART_COUNT_LABEL = '対象数:'
-const GOAL_CHART_CONST_RANGE_TITLE = '譜面定数'
 
 /**
  * 目標フォームの対象譜面セクションを描画する。
@@ -154,28 +149,10 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
         </fieldset>
 
         <Show when={!props.isRainbowGoal}>
-          <TextRangeInput
-            title={GOAL_CHART_CONST_RANGE_TITLE}
-            titleClass="mb-1 text-sm text-text-muted"
-            inputClass={GOAL_FIELD_INPUT_CLASS}
-            start={{
-              id: 'goal-chart-const-min',
-              label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
-              value: props.constMin,
-              inputMode: 'decimal',
-              pattern: '[0-9]*[.]?[0-9]*',
-              normalizeInput: normalizeChartConstRangeInput,
-              onChange: props.onConstMinChange,
-            }}
-            end={{
-              id: 'goal-chart-const-max',
-              label: `${GOAL_CHART_CONST_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
-              value: props.constMax,
-              inputMode: 'decimal',
-              pattern: '[0-9]*[.]?[0-9]*',
-              normalizeInput: normalizeChartConstRangeInput,
-              onChange: props.onConstMaxChange,
-            }}
+          <ChartConstRangeField
+            idPrefix="goal-chart"
+            checkboxTextVariant="normal"
+            {...props.constRangeFieldProps}
           />
         </Show>
       </div>
