@@ -72,8 +72,14 @@ const Settings = () => {
       return { me, profile }
     }
   )
+  /**
+   * 取得済みの設定画面データを返す。取得に失敗したResourceを読むと例外になるため、失敗時は未取得として扱う。
+   *
+   * @returns 取得済みのデータ。取得中または取得失敗時は undefined。
+   */
+  const currentSummary = (): SettingsSummary | undefined => (summary.error ? undefined : summary())
   const privacy = createPrivacySetting({
-    source: () => summary()?.me.is_private,
+    source: () => currentSummary()?.me.is_private,
     update: updatePrivacy,
     refresh: fetchPrivacy,
     onSaved: (isPrivate) =>
@@ -82,7 +88,7 @@ const Settings = () => {
       ),
   })
   const playerDataDeletion = createPlayerDataDeletion({
-    username: () => summary()?.me.username,
+    username: () => currentSummary()?.me.username,
     deletePlayerData,
     onDeleted: () => Promise.allSettled([invalidateCurrentUserFriendRankings(), refetchSummary()]),
   })
@@ -106,7 +112,7 @@ const Settings = () => {
    * @returns 状態更新とキャッシュ破棄の試行完了後に解決されるPromise。
    */
   const handleUsernameChanged = async (username: string): Promise<void> => {
-    const previousUsername = authSession.user?.username ?? summary()?.me.username
+    const previousUsername = authSession.user?.username ?? currentSummary()?.me.username
     const currentUser = authSession.user
     if (currentUser) {
       setAuthenticatedUser({ ...currentUser, username })
@@ -216,9 +222,6 @@ const Settings = () => {
                             </dd>
                           </div>
                         </dl>
-                        <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                          {playerDataDeletion.error()}
-                        </p>
                         <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
                           {playerDataDeletion.success()}
                         </p>
@@ -324,7 +327,7 @@ const Settings = () => {
           </TextField.Label>
           <TextField.Input
             class={`mt-2 w-full rounded border border-border-strong bg-surface px-3 py-2 font-sans text-text placeholder:text-text-muted ${FILTER_DIALOG_FIELD_FOCUS_CLASS}`}
-            placeholder={summary()?.me.username}
+            placeholder={currentSummary()?.me.username}
             autocomplete="off"
             autocapitalize="off"
             spellcheck={false}

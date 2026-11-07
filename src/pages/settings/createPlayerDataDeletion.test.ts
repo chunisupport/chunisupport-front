@@ -80,7 +80,7 @@ dispose()
 `)
 })
 
-test('ダイアログを開き直すと前回の確認入力とエラーを消すこと', async () => {
+test('ダイアログを閉じるとエラーを消し、開き直すと確認入力を空にすること', async () => {
   await runPlayerDataDeletionTest(`
 // Given: 失敗した後の確認ダイアログ
 const { deletion, dispose } = setup({
@@ -93,13 +93,18 @@ deletion.setConfirmInput('alice')
 await deletion.submit()
 assert.equal(deletion.error(), COPY.failure)
 
-// When: 閉じてから開き直す
+// When: 閉じる
 deletion.setDialogOpen(false)
+
+// Then: エラーを持ち越さない
+assert.equal(deletion.dialogOpen(), false)
+assert.equal(deletion.error(), '')
+
+// When: 開き直す
 deletion.openDialog()
 
-// Then: 入力とエラーが空になる
+// Then: 確認入力が空になる
 assert.equal(deletion.confirmInput(), '')
-assert.equal(deletion.error(), '')
 dispose()
 `)
 })

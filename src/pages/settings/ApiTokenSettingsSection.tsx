@@ -14,6 +14,7 @@ import { DEVELOPER_API_COPY } from '../../constants/developerApi'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
 import type { AccountType, ApiTokenPermission } from '../../types/api'
 import {
+  API_TOKEN_COPIED_FEEDBACK_DURATION_MS,
   API_TOKEN_MAX_COUNT,
   API_TOKEN_PERMISSION_OPTIONS,
   API_TOKEN_SETTINGS_COPY,
@@ -29,6 +30,11 @@ type ApiTokenSettingsSectionProps = {
   username: string
   /** APIトークンを発行するユーザーのアカウント種別 */
   accountType: AccountType
+}
+
+type GeneratedApiTokenNoticeProps = {
+  /** 発行直後の平文APIトークン */
+  token: string
 }
 
 type ApiTokenNameFieldProps = {
@@ -85,7 +91,7 @@ const ApiTokenNameField: Component<ApiTokenNameFieldProps> = (props) => (
  * @param props - 発行直後の平文APIトークン。
  * @returns 平文APIトークンの表示欄。
  */
-const GeneratedApiTokenNotice: Component<{ token: string }> = (props) => {
+const GeneratedApiTokenNotice: Component<GeneratedApiTokenNoticeProps> = (props) => {
   const [copied, setCopied] = createSignal(false)
   const [copyError, setCopyError] = createSignal('')
   let copiedResetTimer: number | undefined
@@ -109,7 +115,10 @@ const GeneratedApiTokenNotice: Component<{ token: string }> = (props) => {
       if (typeof copiedResetTimer !== 'undefined') {
         window.clearTimeout(copiedResetTimer)
       }
-      copiedResetTimer = window.setTimeout(() => setCopied(false), 2000)
+      copiedResetTimer = window.setTimeout(
+        () => setCopied(false),
+        API_TOKEN_COPIED_FEEDBACK_DURATION_MS
+      )
     } catch {
       setCopyError(API_TOKEN_SETTINGS_COPY.copyFailure)
     }
@@ -177,7 +186,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
             <p class="mt-1 text-sm text-text-muted">{API_TOKEN_SETTINGS_COPY.description}</p>
           </div>
           <span class="inline-flex w-fit rounded-full bg-surface-hover px-3 py-1 text-sm font-semibold text-text-muted">
-            {settings.tokens()?.tokens.length ?? 0} / {API_TOKEN_MAX_COUNT}
+            {settings.loadedTokens()?.tokens.length ?? 0} / {API_TOKEN_MAX_COUNT}
           </span>
         </div>
 
@@ -287,7 +296,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
 
       <div class="mt-4">
         <Show when={!settings.tokens.error} fallback={<LoadError error={settings.tokens.error} />}>
-          <Show when={settings.tokens()} fallback={<Loading />}>
+          <Show when={settings.loadedTokens()} fallback={<Loading />}>
             {(loaded) => (
               <Show
                 when={loaded().tokens.length > 0}

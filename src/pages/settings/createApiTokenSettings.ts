@@ -33,7 +33,9 @@ type ApiTokenSettingsOptions = {
 
 /** 操作に失敗したAPIトークンの行に表示するエラー */
 type TokenActionError = {
+  /** エラーを表示する行のAPIトークンID */
   tokenId: number
+  /** 表示する文言 */
   message: string
 }
 
@@ -58,7 +60,7 @@ const toApiTokenMetadata = (issued: ApiTokenIssueResponse): ApiToken => ({
  * 各操作の成功後は一覧を取得し直さずに結果を反映し、失敗時のエラーは操作した入力欄・ダイアログ・行に表示する。
  *
  * @param options - 対象ユーザー、アカウント種別、およびAPIトークンのAPI呼び出し。
- * @returns 一覧、各操作の入力・処理中・成功・失敗の状態、および操作関数。
+ * @returns 一覧のResourceと取得済みの一覧、各操作の入力・処理中・成功・失敗の状態、および操作関数。
  */
 export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   const [issueName, setIssueNameSignal] = createSignal('')
@@ -82,6 +84,14 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   )
 
   /**
+   * 取得済みのAPIトークン一覧を返す。
+   * 取得に失敗したResourceを読むと例外になるため、失敗時は未取得として扱う。
+   *
+   * @returns 取得済みの一覧。取得中または取得失敗時は undefined。
+   */
+  const loadedTokens = (): ApiTokenListResponse | undefined => (tokens.error ? undefined : tokens())
+
+  /**
    * 現在のアカウントが書き込み権限付きAPIトークンを発行できるか判定する。
    *
    * @returns EDITORまたはADMINの場合は true。
@@ -93,8 +103,10 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
    *
    * @returns APIトークンを発行できない場合は true。
    */
-  const isIssueDisabled = (): boolean =>
-    issuing() || !tokens() || (tokens()?.tokens.length ?? 0) >= API_TOKEN_MAX_COUNT
+  const isIssueDisabled = (): boolean => {
+    const loaded = loadedTokens()
+    return issuing() || !loaded || loaded.tokens.length >= API_TOKEN_MAX_COUNT
+  }
 
   /**
    * 発行用の名前入力を反映し、入力欄のエラーを解消する。
@@ -313,6 +325,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
 
   return {
     tokens,
+    loadedTokens,
     canIssueReadWrite,
     isIssueDisabled,
     issueFormOpen,

@@ -5,7 +5,7 @@ import { runSolidBrowserScript } from '../../test/runSolidBrowserScript'
  * ブラウザ向けSolidの実行条件でAPIトークン設定Primitiveを検証する。
  *
  * 検証コードでは次の値を利用できる。
- * - `setup(overrides)`: ID 1・2 のAPIトークンを持つ `alice`（USER）としてPrimitiveを生成し、
+ * - `setup(overrides)`: ID 1・2 のAPIトークンを持つ `alice`（PLAYER）としてPrimitiveを生成し、
  *   一覧の取得を待ってから `{ settings, calls, dispose }` を返す。
  *   `calls` には `fetch` の回数と `issue` / `rename` / `delete` の引数が記録される。
  * - `token(id, name)`: APIトークン管理情報を作成する。
@@ -40,7 +40,7 @@ const setup = async (overrides = {}) => {
   const view = createRoot((dispose) => {
     const settings = createApiTokenSettings({
       username: () => 'alice',
-      accountType: () => 'USER',
+      accountType: () => 'PLAYER',
       fetchTokens: async () => {
         calls.fetch++
         return { tokens: [token(1, 'Bot'), token(2, 'CLI')] }
@@ -92,7 +92,7 @@ dispose()
 
 test('書き込み権限を発行できないアカウントは選択に関わらず読み取りで発行すること', async () => {
   await runApiTokenSettingsTest(`
-// Given: USERアカウントで書き込み権限が選ばれた状態
+// Given: PLAYERアカウントで書き込み権限が選ばれた状態
 const { settings, calls, dispose } = await setup()
 settings.setIssueFormOpen(true)
 settings.setIssueName('Bot')
@@ -219,6 +219,28 @@ settings.setIssueName('Bot')
 await settings.issue()
 
 // Then: 発行できず、APIも呼ばない
+assert.equal(settings.isIssueDisabled(), true)
+assert.equal(calls.issue.length, 0)
+dispose()
+`)
+})
+
+test('一覧の取得に失敗した場合は例外を投げずに発行できない状態にすること', async () => {
+  await runApiTokenSettingsTest(`
+// Given: 401で失敗する一覧API
+const { settings, calls, dispose } = await setup({
+  fetchTokens: async () => {
+    throw codedError('token_expired', 401)
+  },
+})
+
+// When: 取得済みの一覧と発行可否を見て、発行する
+settings.setIssueName('Bot')
+await settings.issue()
+
+// Then: 取得失敗を保持し、一覧は未取得として扱って発行しない
+assert.equal(settings.tokens.error.code, 'token_expired')
+assert.equal(settings.loadedTokens(), undefined)
 assert.equal(settings.isIssueDisabled(), true)
 assert.equal(calls.issue.length, 0)
 dispose()

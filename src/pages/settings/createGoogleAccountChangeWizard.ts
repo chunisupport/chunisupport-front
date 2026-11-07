@@ -3,17 +3,13 @@ import type { GoogleAccountChangeTarget } from '../../usecases/auth/changeGoogle
 import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   GOOGLE_ACCOUNT_CHANGE_COPY,
+  GOOGLE_ACCOUNT_CHANGE_REAUTH_MISMATCH_ERROR_CODES,
   GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES,
+  RECENT_SIGN_IN_REQUIRED_ERROR_CODE,
 } from './AccountSettings.constants.ts'
 
 /** ウィザードの各ステップ */
 export type GoogleAccountChangeStep = keyof typeof GOOGLE_ACCOUNT_CHANGE_COPY.steps
-
-/** 本人確認で、ログイン中とは別のアカウントが選ばれたことを表すエラーコード */
-const REAUTH_MISMATCH_ERROR_CODES: ReadonlySet<string> = new Set([
-  'auth/user-mismatch',
-  'invalid_credentials',
-])
 
 type GoogleAccountChangeWizardOptions = {
   /** ログイン中のユーザーに連携されたGoogleアカウントのメールアドレスを取得する */
@@ -171,7 +167,7 @@ export const createGoogleAccountChangeWizard = (options: GoogleAccountChangeWiza
         setIsReauthOpen(false)
         setTarget(undefined)
         setError(
-          code === 'recent_sign_in_required'
+          code === RECENT_SIGN_IN_REQUIRED_ERROR_CODE
             ? GOOGLE_ACCOUNT_CHANGE_COPY.recentSignInExpired
             : toUserFriendlyErrorMessage(caught, GOOGLE_ACCOUNT_CHANGE_COPY.failure)
         )
@@ -181,7 +177,7 @@ export const createGoogleAccountChangeWizard = (options: GoogleAccountChangeWiza
       // 本人確認のポップアップを自分で閉じただけなら、エラーとして扱わない。
       if (isAuthPopupClosedError(caught)) return
       setReauthError(
-        typeof code === 'string' && REAUTH_MISMATCH_ERROR_CODES.has(code)
+        typeof code === 'string' && GOOGLE_ACCOUNT_CHANGE_REAUTH_MISMATCH_ERROR_CODES.has(code)
           ? GOOGLE_ACCOUNT_CHANGE_COPY.userMismatch(currentEmail())
           : toUserFriendlyErrorMessage(caught, GOOGLE_ACCOUNT_CHANGE_COPY.failure)
       )

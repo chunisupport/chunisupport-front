@@ -31,6 +31,7 @@ import {
 } from './createGoogleAccountChangeWizard'
 import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
 
+/** ウィザードのステップを進む順に並べたもの */
 const WIZARD_STEPS: readonly GoogleAccountChangeStep[] = ['select', 'confirm', 'done']
 
 /** ダイアログ下部のボタン配置 */

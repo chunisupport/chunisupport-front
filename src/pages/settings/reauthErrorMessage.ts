@@ -1,10 +1,8 @@
 import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
-
-/** 再認証で別のアカウントが選ばれたことを表すFirebaseのエラーコード。 */
-const REAUTH_USER_MISMATCH_ERROR_CODE = 'auth/user-mismatch'
-
-/** 再認証の有効期限切れを表すAPIのエラーコード。 */
-const RECENT_SIGN_IN_REQUIRED_ERROR_CODE = 'recent_sign_in_required'
+import {
+  AUTH_USER_MISMATCH_ERROR_CODE,
+  RECENT_SIGN_IN_REQUIRED_ERROR_CODE,
+} from './AccountSettings.constants.ts'
 
 /** 再認証を伴う操作の失敗時に表示する文言。 */
 export type ReauthErrorCopy = {
@@ -28,7 +26,7 @@ export const resolveReauthErrorMessage = (error: unknown, copy: ReauthErrorCopy)
   if (isAuthPopupClosedError(error)) return null
 
   const code = (error as { code?: unknown } | null)?.code
-  if (code === REAUTH_USER_MISMATCH_ERROR_CODE) return copy.userMismatch
+  if (code === AUTH_USER_MISMATCH_ERROR_CODE) return copy.userMismatch
   if (code === RECENT_SIGN_IN_REQUIRED_ERROR_CODE) return copy.recentSignInExpired
   return toUserFriendlyErrorMessage(error, copy.failure)
 }

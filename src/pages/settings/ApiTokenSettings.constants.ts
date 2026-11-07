@@ -6,6 +6,9 @@ export const API_TOKEN_NAME_MAX_LENGTH = 50
 /** 1ユーザーが所有できるAPIトークンの最大件数 */
 export const API_TOKEN_MAX_COUNT = 10
 
+/** APIトークンのコピー完了表示を出し続けるミリ秒数 */
+export const API_TOKEN_COPIED_FEEDBACK_DURATION_MS = 2000
+
 /** APIトークン発行時に選択できる権限 */
 export const API_TOKEN_PERMISSION_OPTIONS: readonly {
   value: ApiTokenPermission

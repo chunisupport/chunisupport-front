@@ -46,8 +46,11 @@ export const LOGIN_METHOD_COPY = {
 /** 連携先のアカウントが別のユーザーで使われていることを表すFirebaseのエラーコード。 */
 export const LOGIN_METHOD_IN_USE_ERROR_CODE = 'auth/credential-already-in-use'
 
-/** 再認証で連携中とは別のアカウントが選ばれたことを表すFirebaseのエラーコード。 */
-export const LOGIN_METHOD_USER_MISMATCH_ERROR_CODE = 'auth/user-mismatch'
+/** 再認証でログイン中・連携中とは別のアカウントが選ばれたことを表すFirebaseのエラーコード。 */
+export const AUTH_USER_MISMATCH_ERROR_CODE = 'auth/user-mismatch'
+
+/** 再認証から操作の確定までに有効期限が切れたことを表すAPIのエラーコード。 */
+export const RECENT_SIGN_IN_REQUIRED_ERROR_CODE: ErrorCode = 'recent_sign_in_required'
 
 /** アカウント設定のGoogleアカウント変更欄で使用する表示文言。 */
 export const GOOGLE_ACCOUNT_CHANGE_COPY = {
@@ -76,9 +79,15 @@ export const GOOGLE_ACCOUNT_CHANGE_COPY = {
 
 /** Googleアカウント変更で、変更先を選び直す必要があるAPIエラーコード。 */
 export const GOOGLE_ACCOUNT_CHANGE_RESELECT_ERROR_CODES: ReadonlySet<string> = new Set<ErrorCode>([
-  'recent_sign_in_required',
+  RECENT_SIGN_IN_REQUIRED_ERROR_CODE,
   'firebase_uid_already_linked',
   'firebase_account_unchanged',
+])
+
+/** Googleアカウント変更の本人確認で、ログイン中とは別のアカウントが選ばれたことを表すエラーコード。 */
+export const GOOGLE_ACCOUNT_CHANGE_REAUTH_MISMATCH_ERROR_CODES: ReadonlySet<string> = new Set([
+  AUTH_USER_MISMATCH_ERROR_CODE,
+  'invalid_credentials',
 ])
 
 /** 退会確認ダイアログで使用する表示文言。 */

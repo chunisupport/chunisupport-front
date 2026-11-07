@@ -14,12 +14,13 @@ type PlayerDataDeletionOptions = {
 /**
  * プレイヤーデータ削除の確認ダイアログと、削除中・成功・失敗の表示状態を管理する。
  * 画面を開いたままの誤操作で削除されないよう、確認入力が自分のユーザーネームと一致するまで削除しない。
+ * 失敗時のエラーは確認ダイアログの中だけに表示するため、ダイアログを閉じると消す。
  *
  * @param options - 照合するユーザーネームと、削除・削除後の再取得の処理。
  * @returns ダイアログの開閉状態、確認入力、削除中か、成功・失敗の文言、および操作関数。
  */
 export const createPlayerDataDeletion = (options: PlayerDataDeletionOptions) => {
-  const [dialogOpen, setDialogOpen] = createSignal(false)
+  const [dialogOpen, setDialogOpenSignal] = createSignal(false)
   const [confirmInput, setConfirmInput] = createSignal('')
   const [deleting, setDeleting] = createSignal(false)
   const [error, setError] = createSignal('')
@@ -36,6 +37,17 @@ export const createPlayerDataDeletion = (options: PlayerDataDeletionOptions) => 
   }
 
   /**
+   * 確認ダイアログの開閉を反映する。閉じたときは前回のエラーを持ち越さない。
+   *
+   * @param open - ダイアログを開く場合は true。
+   * @returns なし。
+   */
+  const setDialogOpen = (open: boolean): void => {
+    setDialogOpenSignal(open)
+    if (!open) setError('')
+  }
+
+  /**
    * 確認入力と前回のエラーを空にして、確認ダイアログを開く。
    *
    * @returns なし。
@@ -43,7 +55,7 @@ export const createPlayerDataDeletion = (options: PlayerDataDeletionOptions) => 
   const openDialog = (): void => {
     setConfirmInput('')
     setError('')
-    setDialogOpen(true)
+    setDialogOpenSignal(true)
   }
 
   /**
