@@ -149,7 +149,11 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
         </fieldset>
 
         <Show when={!props.isRainbowGoal}>
-          <ChartConstRangeField idPrefix="goal-chart" {...props.constRangeFieldProps} />
+          <ChartConstRangeField
+            idPrefix="goal-chart"
+            checkboxTextVariant="normal"
+            {...props.constRangeFieldProps}
+          />
         </Show>
       </div>
     </div>
