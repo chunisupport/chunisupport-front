@@ -1,16 +1,15 @@
+import { JST_TIME_ZONE } from '../constants/dateTime'
 import type { VersionDTO, VersionSummaryDTO } from '../types/api'
 
 type VersionLike = Pick<VersionDTO, 'name' | 'released_at'> | VersionSummaryDTO
 
 const ORIGINAL_VERSION_NAMES = new Set(['CHUNITHM', 'CHUNITHM PLUS'])
 
-/** CHUNITHMの現行日付判定に使うIANAタイムゾーン */
-const CHUNITHM_TIME_ZONE = 'Asia/Tokyo'
 /** YYYY-MM-DD形式で日付を得るためのロケール */
 const DATE_ONLY_LOCALE = 'sv-SE'
 /** CHUNITHM稼働地域の現在日を生成するフォーマッター */
 const CHUNITHM_DATE_FORMATTER = new Intl.DateTimeFormat(DATE_ONLY_LOCALE, {
-  timeZone: CHUNITHM_TIME_ZONE,
+  timeZone: JST_TIME_ZONE,
 })
 
 /**

@@ -1,4 +1,6 @@
+import { JST_TIME_ZONE } from '../constants/dateTime'
 import type { PlayerMetricHistoryEntryDTO } from '../types/api'
+import { formatJstDateTimeMinute } from './jstDateTime'
 
 /** 公式指標履歴の並び順 */
 export type PlayerMetricHistorySortOrder = 'ascending' | 'descending'
@@ -30,21 +32,11 @@ export type PlayerMetricHistoryAxisRangeOptions = {
 const PLAYER_METRIC_HISTORY_NOT_FOUND_CODE = 'player_metric_history_not_found'
 const INVALID_DATE_LABEL = '-'
 const PLAYER_METRIC_HISTORY_AXIS_RANGE_DECIMAL_PLACES = 10
-const PLAYER_METRIC_HISTORY_TIME_ZONE = 'Asia/Tokyo'
-const playerMetricHistoryDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-  timeZone: PLAYER_METRIC_HISTORY_TIME_ZONE,
-})
 const playerMetricHistoryAxisDateFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: '2-digit',
   month: '2-digit',
   day: '2-digit',
-  timeZone: PLAYER_METRIC_HISTORY_TIME_ZONE,
+  timeZone: JST_TIME_ZONE,
 })
 
 /**
@@ -179,12 +171,8 @@ export const hasPlayerMetricHistoryValues = (
  * @param value - ISO 8601形式の取得日時。
  * @returns yyyy/MM/dd HH:mm形式の日時。不正値の場合はハイフン。
  */
-export const formatPlayerMetricHistoryDateTime = (value: string): string => {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? INVALID_DATE_LABEL
-    : playerMetricHistoryDateTimeFormatter.format(date)
-}
+export const formatPlayerMetricHistoryDateTime = (value: string): string =>
+  formatJstDateTimeMinute(value) ?? INVALID_DATE_LABEL
 
 /**
  * 公式指標履歴グラフの横軸日時を日本時間の日付表示へ整形する。
@@ -205,12 +193,8 @@ export const formatPlayerMetricHistoryAxisTimestamp = (value: number): string =>
  * @param value - UNIXエポックからの経過ミリ秒。
  * @returns yyyy/MM/dd HH:mm形式の日時。不正値の場合はハイフン。
  */
-export const formatPlayerMetricHistoryTooltipTimestamp = (value: number): string => {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? INVALID_DATE_LABEL
-    : playerMetricHistoryDateTimeFormatter.format(date)
-}
+export const formatPlayerMetricHistoryTooltipTimestamp = (value: number): string =>
+  formatJstDateTimeMinute(value) ?? INVALID_DATE_LABEL
 
 /**
  * APIエラーが公式指標履歴なしを表すか判定する。

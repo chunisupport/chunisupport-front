@@ -103,6 +103,20 @@ export const PLAYER_METRIC_HISTORY_FONT_FAMILY_FALLBACK = 'sans-serif'
 export const PLAYER_METRIC_HISTORY_CHART_HEIGHT_CLASS = 'h-72 sm:h-80'
 /** 履歴一覧が狭い画面で列幅を維持するための最小幅 */
 export const PLAYER_METRIC_HISTORY_TABLE_MIN_WIDTH_CLASS = 'min-w-[24rem]'
+/**
+ * 履歴一覧の左端列（取得日時）の幅と余白。
+ * 列幅を中身に合わせて縮め、外側の余白は見出しと揃え、内側の余白は列間が均等になるよう画面幅に応じて広げる。
+ */
+export const PLAYER_METRIC_HISTORY_TABLE_FIRST_COLUMN_CLASS =
+  'w-px pl-4 pr-1 sm:pr-12 md:pr-20 lg:pr-24'
+/**
+ * 履歴一覧の右端列（OP%）の幅と余白。
+ * 左端列と左右対称にし、列幅を中身に合わせて縮める。
+ */
+export const PLAYER_METRIC_HISTORY_TABLE_LAST_COLUMN_CLASS =
+  'w-px pr-4 pl-1 sm:pl-12 md:pl-20 lg:pl-24'
+/** 履歴一覧の中央2列（RATING・OVER POWER）で残りの幅を等分する列幅 */
+export const PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS = 'w-1/2 px-1'
 /** 公式指標を画面に表示する小数点以下桁数 */
 export const PLAYER_METRIC_HISTORY_DECIMAL_PLACES = 2
 /** 折れ線グラフの通常時の点半径 */

@@ -12,6 +12,7 @@ import {
 } from '../../api/courses'
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { FormSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { ClassEmblem } from '../../components/common/profile/ClassEmblem'
@@ -34,6 +35,7 @@ import {
   COURSE_INPUT_LIMITS,
   COURSE_MANAGEMENT_COPY,
   formatCourseDeleteLabel,
+  formatCourseDeleteTargetMessage,
   formatCourseEditLabel,
   formatCourseRestoreLabel,
 } from './CourseManagementPage.constants'
@@ -289,6 +291,8 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
   const [editingCourse, setEditingCourse] = createSignal<ManagedCourseDTO | null>(null)
   const [saving, setSaving] = createSignal(false)
   const [formError, setFormError] = createSignal('')
+  const [deleteTargetCourse, setDeleteTargetCourse] = createSignal<ManagedCourseDTO | null>(null)
+  const [deleting, setDeleting] = createSignal(false)
 
   const [coursesResponse] = createResource(refreshKey, fetchManagedCourses)
   const courses = createMemo(() => sortManagedCourses(coursesResponse()?.courses ?? []))
@@ -382,20 +386,35 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
   }
 
   /**
-   * 指定したコースを確認後に削除する。
+   * 削除確認ダイアログの開閉要求を反映する。開く操作は削除ボタンから行うため、閉じる要求のみ扱う。
    *
-   * @param course - 削除対象のコース。
+   * @param open - ダイアログを開く場合はtrue。
+   * @returns なし。
+   */
+  const handleDeleteDialogOpenChange = (open: boolean): void => {
+    if (open) return
+    setDeleteTargetCourse(null)
+  }
+
+  /**
+   * 確認ダイアログで確定されたコースを削除し、完了後にダイアログを閉じる。
+   *
    * @returns 処理完了後に解決されるPromise。
    */
-  const handleDelete = async (course: ManagedCourseDTO): Promise<void> => {
-    if (!window.confirm(COURSE_MANAGEMENT_COPY.deleteConfirm)) return
+  const handleDelete = async (): Promise<void> => {
+    const course = deleteTargetCourse()
+    if (!course) return
 
+    setDeleting(true)
     try {
       await deleteCourseByDisplayId(course.id)
       showSuccessToast(COURSE_MANAGEMENT_COPY.deleteSuccess)
       refresh()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, COURSE_MANAGEMENT_COPY.deleteError))
+    } finally {
+      setDeleting(false)
+      setDeleteTargetCourse(null)
     }
   }
 
@@ -503,7 +522,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
                                 tone="danger"
                                 aria-label={formatCourseDeleteLabel(course.name)}
                                 title={COURSE_MANAGEMENT_COPY.deleteAction}
-                                onClick={() => void handleDelete(course)}
+                                onClick={() => setDeleteTargetCourse(course)}
                               >
                                 <Trash2 class="h-4 w-4" aria-hidden="true" />
                               </AppIconButton>
@@ -550,6 +569,20 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
         onOpenChange={handleFormOpenChange}
         onCreate={(request) => void handleCreate(request)}
         onUpdate={(request) => void handleUpdate(request)}
+      />
+
+      <AppConfirmDialog
+        open={deleteTargetCourse() !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+        title={COURSE_MANAGEMENT_COPY.deleteDialogTitle}
+        description={formatCourseDeleteTargetMessage(deleteTargetCourse()?.name ?? '')}
+        cancelLabel={COURSE_MANAGEMENT_COPY.cancelButton}
+        confirmLabel={
+          deleting() ? COURSE_MANAGEMENT_COPY.deleting : COURSE_MANAGEMENT_COPY.deleteSubmit
+        }
+        confirmVariant="danger"
+        pending={deleting()}
+        onConfirm={() => void handleDelete()}
       />
     </div>
   )

@@ -6,6 +6,9 @@ export const API_TOKEN_NAME_MAX_LENGTH = 50
 /** 1ユーザーが所有できるAPIトークンの最大件数 */
 export const API_TOKEN_MAX_COUNT = 10
 
+/** APIトークンのコピー完了表示を出し続けるミリ秒数 */
+export const API_TOKEN_COPIED_FEEDBACK_DURATION_MS = 2000
+
 /** APIトークン発行時に選択できる権限 */
 export const API_TOKEN_PERMISSION_OPTIONS: readonly {
   value: ApiTokenPermission
@@ -73,9 +76,20 @@ export const API_TOKEN_SETTINGS_COPY = {
   renameFailure: 'APIトークン名の変更に失敗しました。',
   delete: '削除',
   deleteAriaLabelSuffix: 'を削除',
-  deleteConfirmationSuffix: 'を削除します。よろしいですか？',
+  deleteDialogTitle: 'APIトークンを削除しますか？',
+  deleteDialogSubmit: '削除する',
+  deleting: '削除中...',
   deleteSuccess: 'APIトークンを削除しました。',
   deleteFailure: 'APIトークン削除に失敗しました。',
   migratedPrefix: '旧仕様から移行',
   unused: '未使用',
 } as const
+
+/**
+ * APIトークン削除の確認ダイアログに表示する対象の説明を作成する。
+ *
+ * @param tokenName - 削除対象のAPIトークン名。
+ * @returns 確認ダイアログの説明文。
+ */
+export const formatApiTokenDeleteTargetMessage = (tokenName: string): string =>
+  `「${tokenName}」を削除します。`

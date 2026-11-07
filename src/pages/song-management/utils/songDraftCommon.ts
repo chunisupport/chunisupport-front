@@ -1,3 +1,4 @@
+import { JST_TIME_ZONE } from '../../../constants/dateTime'
 import type { MasterItemDTO, PlayerDataDifficulty, SongDTO } from '../../../types/api'
 
 /** 楽曲管理画面で編集できる通常譜面の難易度名 */
@@ -18,7 +19,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   minute: '2-digit',
   second: '2-digit',
   hour12: false,
-  timeZone: 'Asia/Tokyo',
+  timeZone: JST_TIME_ZONE,
 })
 
 /**

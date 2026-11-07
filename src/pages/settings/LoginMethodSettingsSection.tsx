@@ -20,9 +20,9 @@ import {
 import { syncXAccountFromResult } from '../../usecases/auth/syncXAccount'
 import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
+  AUTH_USER_MISMATCH_ERROR_CODE,
   LOGIN_METHOD_COPY,
   LOGIN_METHOD_IN_USE_ERROR_CODE,
-  LOGIN_METHOD_USER_MISMATCH_ERROR_CODE,
 } from './AccountSettings.constants'
 import {
   SETTINGS_ROW_LIST_CLASS,
@@ -173,7 +173,7 @@ export const LoginMethodSettingsSection = (props: LoginMethodSettingsSectionProp
       },
       LOGIN_METHOD_COPY.refreshSuccess(provider.label),
       (error) => {
-        if ((error as { code?: unknown } | null)?.code === LOGIN_METHOD_USER_MISMATCH_ERROR_CODE) {
+        if ((error as { code?: unknown } | null)?.code === AUTH_USER_MISMATCH_ERROR_CODE) {
           return LOGIN_METHOD_COPY.refreshMismatch(provider.label)
         }
         return toUserFriendlyErrorMessage(error, LOGIN_METHOD_COPY.refreshFailure)

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   isWithinDecimalPlaces,
+  resolveGoalGaugeStartGroupErrorMessage,
   validateGoalForm,
   validateGoalGaugeStart,
 } from './goalFormValidation'
@@ -15,8 +16,7 @@ const validInput = {
   countMode: 'number',
   total: '10',
   totalMode: 'number',
-  constMin: '13',
-  constMax: '15',
+  constRange: { min: 13, max: 15 },
   allCount: 20,
   theoreticalTotal: 20,
 } as const
@@ -147,8 +147,7 @@ test('単曲レートは0.01以上かつ小数第2位以内を要求する', () 
     countMode: 'all' as const,
     total: '0',
     totalMode: 'number' as const,
-    constMin: '1',
-    constMax: '16',
+    constRange: { min: 1, max: 16 },
     allCount: 1,
     theoreticalTotal: 0,
   }
@@ -184,8 +183,7 @@ test('単曲レート入力の不正は到達可能譜面0件より先に報告�
     countMode: 'all',
     total: '0',
     totalMode: 'number',
-    constMin: '1',
-    constMax: '16',
+    constRange: { min: 1, max: 16 },
     allCount: 0,
     theoreticalTotal: 0,
   })
@@ -288,8 +286,8 @@ test('「任意の数値から」で0を入力した場合は目標値に関係�
   assert.equal(result, undefined)
 })
 
-test('「現在値から」は現在値と目標値がともに0なら許可する', () => {
-  // Given / When
+test('「現在値から」は現在値が0なら目標値に関係なくエラーになる', () => {
+  // Given / When: 目標値も0でも、起点0は「最初から」と同じになる
   const result = validateGoalGaugeStart({
     ...gaugeStartInput,
     gaugeStartMode: 'current',
@@ -298,7 +296,130 @@ test('「現在値から」は現在値と目標値がともに0なら許可す�
   })
 
   // Then
-  assert.equal(result, undefined)
+  assert.equal(result, '現在値が0のため、現在値からは始められません。')
+})
+
+test('「現在値から」は現在値が正から0になると保存前検証でエラーになる', () => {
+  // Given: 現在値が正で目標値未満のときは保存できる
+  const selectable = validateGoalGaugeStart({
+    achievementType: 'rank_count',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 4,
+    target: 10,
+  })
+
+  // When: 達成条件の変更で現在値だけが0になる（対象譜面自体はある）
+  const droppedToZero = validateGoalGaugeStart({
+    achievementType: 'rank_count',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 0,
+    target: 10,
+  })
+  const truncatedToZero = validateGoalGaugeStart({
+    achievementType: 'overpower_percent',
+    gaugeStartMode: 'current',
+    gaugeStart: '',
+    current: 0.0004,
+    target: 99.8,
+  })
+
+  // Then
+  assert.equal(selectable, undefined)
+  assert.equal(droppedToZero, '現在値が0のため、現在値からは始められません。')
+  assert.equal(truncatedToZero, '現在値が0のため、現在値からは始められません。')
+})
+
+test('「現在値から」は現在値が正から達成済みになると保存前検証でエラーになる', () => {
+  // Given
+  const selectable = validateGoalGaugeStart({
+    ...gaugeStartInput,
+    gaugeStartMode: 'current',
+    current: 12,
+    target: 30,
+  })
+
+  // When: 目標値を下げて、切り捨て後の現在値が目標値に達する
+  const achieved = validateGoalGaugeStart({
+    ...gaugeStartInput,
+    gaugeStartMode: 'current',
+    current: 30,
+    target: 30,
+  })
+
+  // Then
+  assert.equal(selectable, undefined)
+  assert.equal(achieved, '現在値が目標値に達しているため、現在値からは始められません。')
+})
+
+test('「現在値から」は対象が0件になると保存前検証と選択欄の両方でエラーになる', () => {
+  // Given: 対象があるあいだは保存でき、選択欄にもエラーを出さない
+  const selectable = validateGoalGaugeStart({
+    ...gaugeStartInput,
+    gaugeStartMode: 'current',
+    current: 8,
+    target: 20,
+  })
+  const selectableMessage = resolveGoalGaugeStartGroupErrorMessage({
+    gaugeStartMode: 'current',
+    currentGaugeStart: 8,
+    achieved: false,
+    targetCount: 20,
+  })
+
+  // When: 譜面条件の変更で対象が0件になり、現在値も0になる
+  const noCharts = validateGoalGaugeStart({
+    ...gaugeStartInput,
+    gaugeStartMode: 'current',
+    current: 0,
+    target: 20,
+  })
+  const noChartsMessage = resolveGoalGaugeStartGroupErrorMessage({
+    gaugeStartMode: 'current',
+    currentGaugeStart: 0,
+    achieved: false,
+    targetCount: 0,
+  })
+
+  // Then
+  assert.equal(selectable, undefined)
+  assert.equal(selectableMessage, '')
+  assert.equal(noCharts, '現在値が0のため、現在値からは始められません。')
+  assert.equal(noChartsMessage, '対象がないため、現在値からは始められません。')
+})
+
+test('「現在値から」の選択欄は現在値0と達成済みへの変化を保存前から示す', () => {
+  // Given
+  const base = {
+    gaugeStartMode: 'current' as const,
+    currentGaugeStart: 12,
+    achieved: false,
+    targetCount: 20,
+  }
+
+  // When
+  const droppedToZero = resolveGoalGaugeStartGroupErrorMessage({
+    ...base,
+    currentGaugeStart: 0,
+  })
+  const achieved = resolveGoalGaugeStartGroupErrorMessage({
+    ...base,
+    currentGaugeStart: 30,
+    achieved: true,
+  })
+  const otherMode = resolveGoalGaugeStartGroupErrorMessage({
+    ...base,
+    gaugeStartMode: 'zero',
+    currentGaugeStart: 0,
+    targetCount: 0,
+  })
+
+  // Then
+  assert.equal(resolveGoalGaugeStartGroupErrorMessage(base), '')
+  assert.equal(droppedToZero, '現在値が0のため、現在値からは始められません。')
+  assert.equal(achieved, '現在値が目標値に達しているため、現在値からは始められません。')
+  assert.equal(otherMode, '')
 })
 
 test('「現在値から」は切り捨て後の現在値が目標値に届くかで判定する', () => {

@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
 import { CHART_LEVEL_FILTER_OPTIONS } from '../../utils/chartLevel'
 import { normalizeChartConstRangeInput } from '../../utils/rangeInput'
-import { CheckboxField } from './CheckboxField'
+import { CheckboxField, type CheckboxFieldTextVariant } from './CheckboxField'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './filterStyles'
 import {
   RANGE_END_LABEL_SUFFIX,
@@ -22,6 +22,8 @@ export type ChartConstRangeFieldProps = {
   disabled?: boolean
   /** 範囲入力の直下に表示するエラー */
   errorMessage?: string | null
+  /** 「譜面定数で指定」チェックボックスの文字サイズ。画面内の他のチェックボックスに揃える */
+  checkboxTextVariant?: CheckboxFieldTextVariant
   constFilterMode: 'level' | 'number'
   minValue: string
   maxValue: string
@@ -99,7 +101,7 @@ export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props
         disabled={props.disabled}
         onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
         class="relative flex items-center gap-2"
-        textVariant="large"
+        textVariant={props.checkboxTextVariant ?? 'large'}
         label="譜面定数で指定"
       />
     </div>

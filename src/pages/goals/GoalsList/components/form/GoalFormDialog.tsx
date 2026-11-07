@@ -2,6 +2,7 @@ import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, on } from 'solid-js'
 import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
+import { createChartConstRangeDraft } from '../../../../../hooks/createChartConstRangeDraft'
 import type {
   GoalAchievementType,
   GoalAttributes,
@@ -12,6 +13,7 @@ import type {
   MasterDataDTO,
   VersionDTO,
 } from '../../../../../types/api'
+import type { GoalConstSelection } from '../../../../../utils/goalAttributes'
 import type {
   ComboLampGoalValue,
   FullChainGoalValue,
@@ -25,10 +27,7 @@ import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
 import { resolveGoalFormGroupId } from '../../goalGroupsModel'
 import { formatGoalCardValue } from '../card/goalCardProgressModel'
-import {
-  DEFAULT_RATING_GOAL_VALUE,
-  ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET,
-} from './constants'
+import { DEFAULT_RATING_GOAL_VALUE } from './constants'
 import { GoalAchievementSection } from './GoalAchievementSection'
 import { GoalFormFooter } from './GoalFormFooter'
 import { GoalGroupSection } from './GoalGroupSection'
@@ -44,6 +43,7 @@ import {
   buildGoalFormAttributes,
   buildGoalFormGaugeStartParams,
   canUseDynamicTotalTarget,
+  createDefaultGoalConstSelection,
   createGoalFormInitialState,
   DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
   DEFAULT_GAUGE_START_MODE,
@@ -60,7 +60,11 @@ import {
   resolveGoalGaugeStartFromCurrent,
   toggleSelection,
 } from './goalFormModel'
-import { validateGoalForm, validateGoalGaugeStart } from './goalFormValidation'
+import {
+  resolveGoalGaugeStartGroupErrorMessage,
+  validateGoalForm,
+  validateGoalGaugeStart,
+} from './goalFormValidation'
 
 type GoalRequest = GoalCreateRequest | GoalUpdateRequest
 
@@ -165,8 +169,13 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   const [chartTargetMode, setChartTargetMode] = createSignal<GoalChartTargetMode>('normal')
   const [diffs, setDiffs] = createSignal<string[]>([])
-  const [constMin, setConstMin] = createSignal('')
-  const [constMax, setConstMax] = createSignal('')
+  const [constSelection, setConstSelection] = createSignal<GoalConstSelection>(
+    createDefaultGoalConstSelection()
+  )
+  const constRangeDraft = createChartConstRangeDraft({
+    get: constSelection,
+    set: setConstSelection,
+  })
   const [genres, setGenres] = createSignal<string[]>([])
   const [versions, setVersions] = createSignal<string[]>([])
   const [nameFolders, setNameFolders] = createSignal<string[]>([])
@@ -279,8 +288,8 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
     setApplyGaugeStartToPercentage(nextState.applyGaugeStartToPercentage)
     setChartTargetMode(nextState.chartTargetMode)
     setDiffs(nextState.diffs)
-    setConstMin(nextState.constMin)
-    setConstMax(nextState.constMax)
+    setConstSelection(nextState.constSelection)
+    constRangeDraft.sync(nextState.constSelection.constRange)
     setGenres(nextState.genres)
     setVersions(nextState.versions)
     setNameFolders(nextState.nameFolders)
@@ -291,8 +300,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       achievementType: achievementType(),
       chartTargetMode: chartTargetMode(),
       diffs: diffs(),
-      constMin: constMin(),
-      constMax: constMax(),
+      constSelection: constSelection(),
       genres: genres(),
       versions: versions(),
       nameFolders: nameFolders(),
@@ -431,14 +439,19 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
 
   /**
    * スタート位置の選択欄の下に出すエラーを取得する。
-   * 「現在値から」を選んだ後に目標値を下げて達成済みになった状態を、保存を待たずに示す。
+   * 「現在値から」を選んだ後に対象がなくなった、現在値が0になった、達成済みになった状態を、保存を待たずに示す。
    *
    * @returns 「現在値から」を使えない状態で選んでいる場合はエラーメッセージ、それ以外は空文字。
    */
-  const gaugeStartGroupErrorMessage = (): string =>
-    gaugeStartMode() === 'current' && previewProgress().achieved
-      ? ERROR_MESSAGE_GAUGE_START_CURRENT_REACHED_TARGET
-      : ''
+  const gaugeStartGroupErrorMessage = (): string => {
+    const progress = previewProgress()
+    return resolveGoalGaugeStartGroupErrorMessage({
+      gaugeStartMode: gaugeStartMode(),
+      currentGaugeStart: currentGaugeStart(),
+      achieved: progress.achieved,
+      targetCount: progress.targetCount,
+    })
+  }
 
   // 目標値が変わると「任意の数値から」の前回の検証結果が古くなるため、表示中のエラーを消す。
   createEffect(
@@ -565,8 +578,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       countMode: countMode(),
       total: total(),
       totalMode: totalMode(),
-      constMin: constMin(),
-      constMax: constMax(),
+      constRange: constSelection().constRange,
       allCount,
       theoreticalTotal: getTheoreticalTotal(currentType),
     })
@@ -632,8 +644,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               isRainbowGoal={achievementType() === 'rainbow_count'}
               chartTargetMode={chartTargetMode()}
               diffs={diffs()}
-              constMin={constMin()}
-              constMax={constMax()}
+              constRangeFieldProps={constRangeDraft.fieldProps}
               genreOptions={genreSelectOptions()}
               selectedGenres={genres()}
               versionOptions={versionSelectOptions()}
@@ -658,8 +669,6 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
               onGenresChange={setGenres}
               onVersionsChange={setVersions}
               onNameFoldersChange={setNameFolders}
-              onConstMinChange={setConstMin}
-              onConstMaxChange={setConstMax}
             />
 
             <GoalAchievementSection

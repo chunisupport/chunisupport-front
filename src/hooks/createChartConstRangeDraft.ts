@@ -7,7 +7,7 @@ import {
   getChartLevelFilterBoundary,
   toChartLevelFilterLabel,
 } from '../utils/chartLevel'
-import { parseNumberInput, toInputValue } from '../utils/rangeInput'
+import { parseCommittedNumberInput, toInputValue } from '../utils/rangeInput'
 
 /** レベルまたは譜面定数で指定する範囲条件 */
 export type ChartConstRangeSelection = {
@@ -71,7 +71,7 @@ export const createChartConstRangeDraft = (
   }
 
   /**
-   * 譜面定数の入力値を範囲の端点へ確定する。空欄は全範囲の端点として扱う。
+   * 譜面定数の入力値を範囲の端点へ確定する。空欄は全範囲の端点とし、「14.」は14として扱う。
    *
    * @param endpoint - 更新する範囲の端点。
    * @param value - 入力欄の文字列。
@@ -79,7 +79,7 @@ export const createChartConstRangeDraft = (
    */
   const commitNumber = (endpoint: 'min' | 'max', value: string): void => {
     const fallback = endpoint === 'min' ? CHART_CONST_MIN : CHART_CONST_MAX
-    const nextValue = parseNumberInput(value) ?? fallback
+    const nextValue = parseCommittedNumberInput(value) ?? fallback
     if (endpoint === 'min') setMinInput(toInputValue(nextValue))
     else setMaxInput(toInputValue(nextValue))
     updateEndpoint(endpoint, nextValue)

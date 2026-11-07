@@ -92,6 +92,22 @@ assert.deepEqual(selection().constRange, { min: 5, max: 6.9 })
 `)
 })
 
+test('末尾が小数点の入力を確定すると整数部分を端点にする', async () => {
+  await runRangeTest(`
+// Given: 数値指定で範囲を変更する。
+field.onConstFilterModeChange('number')
+field.onMinCommit('14.5')
+field.onMaxCommit('15.4')
+// When: 小数部分を消して末尾が小数点の状態で確定する。
+field.onMinCommit('14.')
+field.onMaxCommit('15.')
+// Then: 全範囲の端点へ戻さず、入力した整数部分を端点にする。
+assert.deepEqual(selection().constRange, { min: 14, max: 15 })
+assert.equal(field.minValue, '14')
+assert.equal(field.maxValue, '15')
+`)
+})
+
 test('外部の適用値や初期値を同期しても数値範囲を丸めない', async () => {
   await runRangeTest(`
 // Given: 数値指定の適用済み範囲。

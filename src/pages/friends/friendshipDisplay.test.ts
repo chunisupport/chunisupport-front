@@ -30,15 +30,15 @@ test('formatFriendDateTime: null はハイフンを返す', () => {
   assert.equal(result, '-')
 })
 
-test('formatFriendDateTime: 正常なISO日時は日時文字列を返す', () => {
+test('formatFriendDateTime: 正常なISO日時は実行環境によらずJSTの日時文字列を返す', () => {
   // Given: APIが返す正常なISO日時。
   const value = '2026-07-08T12:00:00Z'
 
   // When: フレンド画面用日時へ変換する。
   const result = formatFriendDateTime(value)
 
-  // Then: 有効な日時は代替表示ではなく整形済み文字列になる。
-  assert.notEqual(result, '-')
+  // Then: JSTへ変換した日時になる。
+  assert.equal(result, '2026/07/08 21:00')
 })
 
 test('formatFriendOverPowerValue: OVER POWER値は小数点以下3桁で表示する', () => {

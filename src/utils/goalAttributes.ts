@@ -1,3 +1,8 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
+import type { GoalAttributes, GoalConstFilterMode } from '../types/api'
+import type { NumericRangeFilter } from '../types/record'
+import { isChartLevelFilterRange } from './chartLevel'
+
 /**
  * 目標属性で扱う単一IDまたはID配列の保存形式。
  */
@@ -42,3 +47,31 @@ export const isGoalNameFolderMatched = (
   nameFolderCodes: readonly string[] | undefined
 ): boolean =>
   !nameFolderCodes || (nameFolderCode !== undefined && nameFolderCodes.includes(nameFolderCode))
+
+/** 目標属性から復元した譜面定数範囲と入力方法 */
+export type GoalConstSelection = {
+  constFilterMode: GoalConstFilterMode
+  constRange: NumericRangeFilter
+}
+
+/**
+ * 目標属性から譜面定数範囲と入力方法を復元する。
+ * 入力方法を持たない目標は譜面定数で入力されたものとして数値指定にする。
+ * レベル指定でも範囲がレベル境界と一致しない場合は、範囲を変えないよう数値指定にする。
+ *
+ * @param attributes - 目標に保存された対象条件。
+ * @returns 未指定の端点を全範囲の端点で補った範囲と、表示に使う入力方法。
+ */
+export const resolveGoalConstSelection = (attributes: GoalAttributes): GoalConstSelection => {
+  const constRange = {
+    min: attributes.const?.min ?? CHART_CONST_MIN,
+    max: attributes.const?.max ?? CHART_CONST_MAX,
+  }
+  return {
+    constFilterMode:
+      attributes.const_filter_mode === 'level' && isChartLevelFilterRange(constRange)
+        ? 'level'
+        : 'number',
+    constRange,
+  }
+}

@@ -1,5 +1,6 @@
 import { HONOR_IMAGE_BASE_URL } from '../constants/honors'
 import type { AdminHonorDTO } from '../types/api'
+import { formatJstDateTimeMinute } from './jstDateTime'
 
 export type AdminHonorSortKey = 'id' | 'name' | 'type' | 'created-at' | 'image-url'
 export type AdminHonorSort = `${AdminHonorSortKey}-${'asc' | 'desc'}`
@@ -34,27 +35,14 @@ export const nextAdminHonorSort = (
   return key === 'id' || key === 'created-at' ? descending : ascending
 }
 
-const honorCreatedAtFormatter = new Intl.DateTimeFormat('ja-JP', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-  timeZone: 'Asia/Tokyo',
-})
-
 /**
  * APIの登録日時を日本時間で表示する。
  *
  * @param value - APIが返した登録日時。
  * @returns 表示用の日時。日時がない場合はハイフン。
  */
-export const formatAdminHonorCreatedAt = (value: string | null): string => {
-  if (!value) return '-'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? '-' : honorCreatedAtFormatter.format(date)
-}
+export const formatAdminHonorCreatedAt = (value: string | null): string =>
+  formatJstDateTimeMinute(value) ?? '-'
 
 /**
  * 登録日時を並べ替え用の時刻へ変換する。

@@ -7,6 +7,7 @@ import {
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,
   buildGoalFormGaugeStartParams,
+  createDefaultGoalConstSelection,
   createGoalFormInitialState,
   resolveGoalFormGaugeStart,
 } from './goalFormModel'
@@ -34,8 +35,10 @@ test('作成フォームの初期状態はMASTER/ULTIMA選択と標準値で作�
   assert.equal(result.gaugeStart, '')
   assert.equal(result.applyGaugeStartToPercentage, true)
   assert.equal(result.chartTargetMode, 'normal')
-  assert.equal(result.constMin, String(CHART_CONST_MIN))
-  assert.equal(result.constMax, String(CHART_CONST_MAX))
+  assert.deepEqual(result.constSelection, {
+    constFilterMode: 'level',
+    constRange: { min: CHART_CONST_MIN, max: CHART_CONST_MAX },
+  })
   assert.deepEqual(result.diffs, selectionFallbacks.defaultDifficultySelections)
   assert.deepEqual(result.genres, selectionFallbacks.allGenreSelections)
   assert.deepEqual(result.versions, selectionFallbacks.allVersionSelections)
@@ -118,11 +121,40 @@ test('編集フォームの初期状態は保存済み目標から復元され�
   assert.equal(result.invertValue, true)
   assert.equal(result.invertPercentage, false)
   assert.deepEqual(result.diffs, ['3'])
-  assert.equal(result.constMin, '13.5')
-  assert.equal(result.constMax, '15')
+  assert.deepEqual(result.constSelection, {
+    constFilterMode: 'number',
+    constRange: { min: 13.5, max: 15 },
+  })
   assert.deepEqual(result.genres, ['10'])
   assert.deepEqual(result.versions, ['2'])
   assert.deepEqual(result.nameFolders, ['KA'])
+})
+
+test('編集フォームはレベル指定で保存した目標をレベル指定で復元する', () => {
+  // Given: レベル14〜14+で保存した目標
+  const goal = {
+    id: 1,
+    group_id: null,
+    title: 'レベル14 AJ',
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'AJ', count: 10 },
+    attributes: { diff: 4, const: { min: 14, max: 14.9 }, const_filter_mode: 'level' },
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then
+  assert.deepEqual(result.constSelection, {
+    constFilterMode: 'level',
+    constRange: { min: 14, max: 14.9 },
+  })
 })
 
 test('対象属性は通常条件とOP対象条件をAPI送信用に変換する', () => {
@@ -131,8 +163,7 @@ test('対象属性は通常条件とOP対象条件をAPI送信用に変換する
     achievementType: 'score_count',
     chartTargetMode: 'normal',
     diffs: ['1', '2'],
-    constMin: '13',
-    constMax: '15',
+    constSelection: { constFilterMode: 'number', constRange: { min: 13, max: 15 } },
     genres: ['10'],
     versions: ['1', '2'],
     nameFolders: ['A', 'KA', 'SA'],
@@ -142,8 +173,7 @@ test('対象属性は通常条件とOP対象条件をAPI送信用に変換する
     achievementType: 'overpower_value',
     chartTargetMode: 'op_target',
     diffs: ['1'],
-    constMin: '',
-    constMax: '',
+    constSelection: { constFilterMode: 'level', constRange: { min: 14, max: 14.9 } },
     genres: [],
     versions: ['2'],
     nameFolders: ['A', 'KA', 'SA'],
@@ -154,24 +184,26 @@ test('対象属性は通常条件とOP対象条件をAPI送信用に変換する
   assert.deepEqual(normalAttributes, {
     diff: [1, 2],
     const: { min: 13, max: 15 },
+    const_filter_mode: 'number',
     genre: 10,
     ver: [1, 2],
   })
   assert.deepEqual(opTargetAttributes, {
     chart_target: 'OP_TARGET',
+    const: { min: 14, max: 14.9 },
+    const_filter_mode: 'level',
     genre: [],
     ver: 2,
   })
 })
 
-test('虹枠目標の対象属性から難易度・定数・OP対象を除外する', () => {
+test('虹枠目標の対象属性から難易度・定数範囲と入力方法・OP対象を除外する', () => {
   // Given / When
   const attributes = buildGoalFormAttributes({
     achievementType: 'rainbow_count',
     chartTargetMode: 'op_target',
     diffs: ['4'],
-    constMin: '13',
-    constMax: '15',
+    constSelection: { constFilterMode: 'level', constRange: { min: 13, max: 15.9 } },
     genres: ['10'],
     versions: ['2'],
     nameFolders: ['SA', 'A'],
@@ -192,8 +224,7 @@ test('楽曲名順は全選択なら属性から省略し、1件なら単一コ�
     achievementType: 'score_count' as const,
     chartTargetMode: 'normal' as const,
     diffs: ['4'],
-    constMin: '',
-    constMax: '',
+    constSelection: createDefaultGoalConstSelection(),
     genres: ['10'],
     versions: ['2'],
     allNameFolders: ['A', 'KA', 'SA'],
