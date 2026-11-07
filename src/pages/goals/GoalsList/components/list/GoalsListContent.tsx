@@ -87,6 +87,8 @@ interface GoalsListContentProps {
 }
 
 interface GoalGroupCardsProps {
+  /** ドラッグ元グループの変更通知。終了時はundefined、未分類はnull。 */
+  onDraggingGroupChange?: (groupId: number | null | undefined) => void
   /** カードを描画するグループ */
   groupView: GoalGroupView
   /** 目標カードの見出しレベル */
@@ -244,6 +246,30 @@ const GoalGroupDisplayModeToggle: Component<GoalGroupDisplayModeToggleProps> = (
 const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
   const autoScroll = createAutoScroll()
   let cardsContainer: HTMLDivElement | undefined
+  let isDragging = false
+
+  /**
+   * ドラッグ元グループを一覧へ通知する。
+   *
+   * @returns なし。
+   */
+  const handleDragStart = (): void => {
+    isDragging = true
+    props.onDraggingGroupChange?.(props.groupView.groupId)
+  }
+
+  /**
+   * ドラッグ終了・中断時に一覧のドラッグ表示を解除する。
+   *
+   * @returns なし。
+   */
+  const clearDraggingGroup = (): void => {
+    if (!isDragging) return
+    isDragging = false
+    props.onDraggingGroupChange?.(undefined)
+  }
+
+  onCleanup(clearDraggingGroup)
 
   /**
    * ドラッグ中のカード中心が対象グループ内にある場合だけ衝突対象を返す。
@@ -268,12 +294,13 @@ const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
   }
 
   /**
-   * ドロップ位置を対象グループの並び順に反映する。
+   * ドラッグ表示を解除し、ドロップ位置を対象グループの並び順に反映する。
    *
    * @param event - ドラッグ元とドロップ先を含む終了イベント。
    * @returns なし。
    */
   const handleDragEnd = (event: DragEvent): void => {
+    clearDraggingGroup()
     if (props.isReordering || props.isCopying || !event.droppable) return
     props.onReorder(props.groupView.groupId, Number(event.draggable.id), Number(event.droppable.id))
   }
@@ -304,7 +331,11 @@ const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
           </p>
         }
       >
-        <DragDropProvider collisionDetector={detectGroupCollision} onDragEnd={handleDragEnd}>
+        <DragDropProvider
+          collisionDetector={detectGroupCollision}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
           <GoalsListLongPressSensor />
           <VerticalAxisConstraint />
           <AutoScrollSetup autoScroll={autoScroll} />
@@ -355,6 +386,9 @@ const GoalGroupCards: Component<GoalGroupCardsProps> = (props) => {
 export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
   /** 一覧表示のグループ見出しを配置する基準となる固定ヘッダー要素 */
   let stickyHeaderRef!: HTMLDivElement
+
+  /** ドラッグ元グループ。未操作はundefined、未分類はnull。 */
+  const [draggingGroupId, setDraggingGroupId] = createSignal<number | null | undefined>()
 
   /** レスポンシブな固定ヘッダーの実測高 */
   const [stickyHeaderHeight, setStickyHeaderHeight] = createSignal(0)
@@ -588,7 +622,14 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                     open={isGroupOpen(groupView.groupId)}
                     onOpenChange={(open) => handleGroupOpenChange(groupView.groupId, open)}
                   >
-                    <section aria-labelledby={`goal-group-${groupView.groupId ?? 'none'}`}>
+                    <section
+                      aria-labelledby={`goal-group-${groupView.groupId ?? 'none'}`}
+                      classList={{
+                        'opacity-50':
+                          draggingGroupId() !== undefined &&
+                          draggingGroupId() !== groupView.groupId,
+                      }}
+                    >
                       <h2
                         id={`goal-group-${groupView.groupId ?? 'none'}`}
                         class="sticky z-10 bg-page-pattern"
@@ -605,6 +646,7 @@ export const GoalsListContent: Component<GoalsListContentProps> = (props) => {
                       <Collapsible.Content class="pt-3">
                         <GoalGroupCards
                           groupView={groupView}
+                          onDraggingGroupChange={setDraggingGroupId}
                           headingLevel={3}
                           goalsCount={props.goalsCount}
                           isReordering={props.isReordering}
