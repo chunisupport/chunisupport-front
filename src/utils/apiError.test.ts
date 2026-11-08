@@ -4,6 +4,7 @@ import {
   isForbiddenApiError,
   isNotFoundApiError,
   isNotFoundOrInvalidDisplayIdApiError,
+  isPlayerNotLinkedApiError,
 } from './apiError'
 
 test('404系のAPIエラーだけをNot Foundとして判定すること', () => {
@@ -55,6 +56,25 @@ test('存在しない表示IDと形式不正の表示IDをNot Found相当とし�
 
   // When
   const results = cases.map(({ error }) => isNotFoundOrInvalidDisplayIdApiError(error))
+
+  // Then
+  assert.deepEqual(
+    results,
+    cases.map(({ expected }) => expected)
+  )
+})
+
+test('プレイヤーデータ未連携のAPIエラーだけを未連携として判定すること', () => {
+  // Given
+  const cases = [
+    { error: { status: 404, code: 'player_not_linked' }, expected: true },
+    { error: { status: 404, code: 'user_not_found' }, expected: false },
+    { error: { status: 404 }, expected: false },
+    { error: null, expected: false },
+  ] as const
+
+  // When
+  const results = cases.map(({ error }) => isPlayerNotLinkedApiError(error))
 
   // Then
   assert.deepEqual(

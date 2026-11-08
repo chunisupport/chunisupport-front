@@ -1,4 +1,5 @@
 import { type Accessor, createMemo, createResource, createSignal, onCleanup } from 'solid-js'
+import { isPlayerNotLinkedApiError } from '../../../utils/apiError'
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 
 type SongSettingSource = {
@@ -10,6 +11,8 @@ type SettingResult<T> = {
   source: SongSettingSource
   value: T | undefined
   error: string | undefined
+  /** プレイヤーデータ未連携で設定を取得できなかった場合は true */
+  playerNotLinked?: boolean
 }
 
 type Options<T> = {
@@ -23,9 +26,10 @@ type Options<T> = {
 
 /**
  * 楽曲とユーザーに対応する設定を取得し、保存成功後に更新する。
+ * プレイヤーデータ未連携はエラー表示せず、操作不可の状態として返す。
  *
  * @param options - 対象ユーザーと楽曲、取得・保存処理、エラー文言。
- * @returns 設定値、操作可否、処理状態、エラー、および保存関数。
+ * @returns 設定値、操作可否、処理状態、未連携状態、エラー、および保存関数。
  */
 export const createSongDetailSetting = <T>(options: Options<T>) => {
   const source = createMemo(() => {
@@ -44,6 +48,14 @@ export const createSongDetailSetting = <T>(options: Options<T>) => {
       try {
         return { source: currentSource, value: await options.load(currentSource), error: undefined }
       } catch (error) {
+        if (isPlayerNotLinkedApiError(error)) {
+          return {
+            source: currentSource,
+            value: undefined,
+            error: undefined,
+            playerNotLinked: true,
+          }
+        }
         return {
           source: currentSource,
           value: undefined,
@@ -57,7 +69,9 @@ export const createSongDetailSetting = <T>(options: Options<T>) => {
     return current?.source === source() ? current : undefined
   }
   const busy = () => setting.loading || saving()
-  const disabled = () => !currentSetting() || Boolean(currentSetting()?.error) || busy()
+  const playerNotLinked = () => currentSetting()?.playerNotLinked ?? false
+  const disabled = () =>
+    !currentSetting() || Boolean(currentSetting()?.error) || playerNotLinked() || busy()
   const errorMessage = () =>
     (saveError()?.source === source() ? saveError()?.message : undefined) ?? currentSetting()?.error
 
@@ -90,5 +104,12 @@ export const createSongDetailSetting = <T>(options: Options<T>) => {
     }
   }
 
-  return { value: () => currentSetting()?.value, busy, disabled, errorMessage, save }
+  return {
+    value: () => currentSetting()?.value,
+    busy,
+    disabled,
+    playerNotLinked,
+    errorMessage,
+    save,
+  }
 }

@@ -5,7 +5,6 @@ export const OVER_POWER_CALCULATOR_PANEL_CLASS =
 /** OVER POWER計算機の表示文言。 */
 export const OVER_POWER_CALCULATOR_COPY = {
   lockedSongsSettingsLabel: '未解禁楽曲設定',
-  guestMessage: 'ログインして使用すると自動インポートされます。',
   excludeLockedSongsLabel: '未解禁曲を計算から除外する',
   valueToPercentTitle: '数値→%',
   percentToValueTitle: '%→数値',
@@ -23,7 +22,6 @@ export const OVER_POWER_CALCULATOR_COPY = {
   currentScoreLabel: '伸ばす前のスコア',
   targetScoreLabel: '目標スコア',
   unplayedCalculatorTitle: '未プレイ補完計算',
-  loginRequiredMessage: 'ログイン中のみ使用できます。',
   /**
    * 未プレイ曲数を含む補完選択欄のラベルを生成する。
    * @param count - 補完対象の未プレイ曲数。

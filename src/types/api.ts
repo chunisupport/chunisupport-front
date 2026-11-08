@@ -320,7 +320,8 @@ export const errorMessages: Record<ErrorCode, string> = {
   username_empty: 'ユーザーネームが空です',
   username_too_short: 'ユーザーネームは5文字以上である必要があります',
   username_too_long: 'ユーザーネームは50文字以内である必要があります',
-  username_invalid_char: 'ユーザーネームは小文字英数字のみ使用できます',
+  username_invalid_char:
+    'ユーザーネームは小文字英数字と_のみ使用でき、英数字を1文字以上含む必要があります',
   username_forbidden: 'このユーザーネームは使用できません',
   username_taken: 'このユーザーネームはすでに使用されています',
   password_too_short: 'パスワードは8文字以上である必要があります',

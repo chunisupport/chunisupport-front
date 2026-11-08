@@ -68,7 +68,7 @@ export const FRIENDS_COPY = {
   requestSuccess: 'フレンド申請を送信しました。',
   cancelSuccess: 'フレンド申請を取り消しました。',
   usernameRequired: '必須項目です。',
-  usernameInvalid: '5〜50文字の小文字英数字で入力してください。',
+  usernameInvalid: '5〜50文字の小文字英数字と_で、英数字を含めて入力してください。',
   acceptSuccess: 'フレンド申請を承認しました。',
   rejectSuccess: 'フレンド申請を拒否しました。',
   removeSuccess: 'フレンドを解除しました。',

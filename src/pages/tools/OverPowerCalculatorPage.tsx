@@ -19,12 +19,13 @@ import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
 import { ScoreField } from '../../components/common/ScoreField'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
+import { OwnDataNotice } from '../../components/LoginRequiredState'
 import { getPossessionClassName } from '../../constants/possession'
 import { OVER_POWER_CALCULATOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { createOverPowerCalculatorInputs } from '../../hooks/createOverPowerCalculatorInputs'
+import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
 import type { PlayerLockedSongRequest } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
@@ -182,7 +183,8 @@ const OverPowerRatio: Component<{ left: JSX.Element; right: JSX.Element; label: 
 
 /**
  * OVER POWER計算機ページを表示する。
- * 未ログインの自動インポート案内は、換算タブの直下だけに表示する。
+ * 自動インポートはプレイヤーデータ登録済みの場合だけ行い、
+ * 未ログイン・未登録時の案内は換算タブの直下、未プレイ補完タブでは本文の代わりに表示する。
  * 必要譜面数はスコアに応じた定数範囲で計算し、収録曲数超過を警告する。
  * 必要譜面数の末尾で、定数に依存しない高スコア帯の条件を補足する。
  * 定数別平均の補間仕様は選択肢の注記と末尾の説明で補足する。
@@ -206,12 +208,10 @@ const OverPowerCalculatorPage = (): JSX.Element => {
 
   onMount(ensureSongsLoaded)
 
-  const authenticatedUsername = createMemo(() =>
-    authSession.status === 'authenticated' ? (authSession.user?.username ?? undefined) : undefined
-  )
+  const { status: playerDataStatus, noticeStatus, ownUsername } = createPlayerDataStatus()
 
   const [importedData, { refetch: refetchImportedBase }] = createResource(
-    authenticatedUsername,
+    ownUsername,
     async (username) => {
       const [record, versions, lockedSongs, genres, nameFolders, profile] = await Promise.all([
         fetchUserRecordWithCache(username),
@@ -234,7 +234,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
   )
   const currentData = createMemo(() => {
     const data = importedData.error ? undefined : importedData()
-    return data?.username === authenticatedUsername() ? data : undefined
+    return data?.username === ownUsername() ? data : undefined
   })
   const importedBase = createMemo(() => {
     const data = currentData()
@@ -258,7 +258,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
     )
   )
   const { maxValue, setMaxValue, currentValue, setCurrentValue, targetPercent, setTargetPercent } =
-    createOverPowerCalculatorInputs(authenticatedUsername, importedBase, lockedSongsSelectionKey)
+    createOverPowerCalculatorInputs(ownUsername, importedBase, lockedSongsSelectionKey)
 
   const parsedMaxValue = createMemo(() => parseOverPowerInput(maxValue()) ?? 0)
   const parsedCurrentValue = createMemo(() => parseOverPowerInput(currentValue()) ?? 0)
@@ -365,7 +365,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
               <p class="mt-1 font-sans text-sm text-text-muted">{tool.description}</p>
             </div>
           </div>
-          <Show when={authSession.status === 'authenticated'}>
+          <Show when={ownUsername()}>
             <AppIconButton
               size="md"
               tone="surface"
@@ -379,7 +379,7 @@ const OverPowerCalculatorPage = (): JSX.Element => {
             </AppIconButton>
           </Show>
         </div>
-        <Show when={authSession.status === 'authenticated'}>
+        <Show when={ownUsername()}>
           <CheckboxField
             class="mt-4"
             checked={excludeLockedSongs()}
@@ -388,10 +388,10 @@ const OverPowerCalculatorPage = (): JSX.Element => {
           />
         </Show>
       </header>
-      <Show when={importLoading() && authenticatedUsername()}>
+      <Show when={playerDataStatus.loading || (importLoading() && ownUsername())}>
         <Loading />
       </Show>
-      <Show when={importError() && authenticatedUsername()}>
+      <Show when={importError() && ownUsername()}>
         <LoadError error={importError()} />
       </Show>
 
@@ -420,10 +420,10 @@ const OverPowerCalculatorPage = (): JSX.Element => {
         listClass="gap-0 sm:gap-2"
         triggerClass="whitespace-nowrap !px-2 !text-sm sm:!px-3 data-selected:!bg-transparent"
       >
-        <Show when={authSession.status !== 'authenticated' && selectedTab() !== 'unplayed'}>
-          <p class="mt-4 rounded-md border border-border bg-surface-muted px-4 py-3 text-sm text-text-muted">
-            {OVER_POWER_CALCULATOR_COPY.guestMessage}
-          </p>
+        <Show when={selectedTab() !== 'unplayed'}>
+          <div class="mt-4">
+            <OwnDataNotice status={noticeStatus()} />
+          </div>
         </Show>
         <AppTabContent value="value" class={OVER_POWER_CALCULATOR_PANEL_CLASS}>
           <p class="mb-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>
@@ -626,11 +626,11 @@ const OverPowerCalculatorPage = (): JSX.Element => {
 
         <AppTabContent value="unplayed" class={OVER_POWER_CALCULATOR_PANEL_CLASS}>
           <Show
-            when={authSession.status === 'authenticated'}
+            when={ownUsername()}
             fallback={
-              <p class="text-sm text-text-muted">
-                {OVER_POWER_CALCULATOR_COPY.loginRequiredMessage}
-              </p>
+              <Show when={!playerDataStatus.loading} fallback={<Loading />}>
+                <OwnDataNotice status={noticeStatus()} />
+              </Show>
             }
           >
             <p class="mb-1 text-sm text-text-muted">{OVER_POWER_CALCULATOR_COPY.resultLabel}</p>

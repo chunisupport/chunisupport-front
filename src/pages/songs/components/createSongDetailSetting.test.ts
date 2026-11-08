@@ -133,3 +133,27 @@ assert.equal(saves, 0)
 view.dispose()
 `)
 })
+
+test('プレイヤーデータ未連携時はエラー表示せず操作不可にし、保存を実行しない', async () => {
+  await runBrowserTest(`
+let saves = 0
+const view = createRoot((dispose) => {
+  const [songId, setSongId] = createSignal('song-a')
+  const setting = createSongDetailSetting({
+    username: () => 'alice', songId, ...messages,
+    load: async () => { throw Object.assign(new Error('not linked'), { status: 404, code: 'player_not_linked' }) },
+    save: async () => { saves++ },
+  })
+  return { dispose, setting, setSongId }
+})
+await settle()
+assert.equal(view.setting.playerNotLinked(), true)
+assert.equal(view.setting.errorMessage(), undefined)
+assert.equal(view.setting.disabled(), true)
+await view.setting.save(true)
+assert.equal(saves, 0)
+view.setSongId('song-b')
+assert.equal(view.setting.playerNotLinked(), false)
+view.dispose()
+`)
+})

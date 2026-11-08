@@ -30,6 +30,11 @@ import {
 import { toUserFriendlyErrorMessage } from '../../../utils/errorMessage'
 import { redirectAfterAuthentication } from '../../../utils/postAuthRedirect'
 import {
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_PATTERN,
+} from '../../../utils/usernameInput'
+import {
   authAccountHeading,
   PRIVACY_POLICY_URL,
   PROVIDER_AUTH_ERROR_MESSAGE,
@@ -38,6 +43,7 @@ import {
   TERMS_URL,
   TURNSTILE_ERROR_MESSAGE,
   TURNSTILE_REQUIRED_MESSAGE,
+  USERNAME_CHARSET_REQUIREMENT,
   USERNAME_FORBIDDEN_WORD_REQUIREMENT,
 } from './constants'
 
@@ -64,7 +70,7 @@ const Register = () => {
   let providerAuthResult: UserCredential | undefined
 
   // バリデーション用Signal
-  const [isAlphanumeric, setIsAlphanumeric] = createSignal<boolean | null>(null)
+  const [isValidCharset, setIsValidCharset] = createSignal<boolean | null>(null)
   const [isValidLength, setIsValidLength] = createSignal<boolean | null>(null)
   const [hasUsernameTouched, setHasUsernameTouched] = createSignal(false)
 
@@ -73,17 +79,16 @@ const Register = () => {
     const user = username()
 
     if (!user) {
-      setIsAlphanumeric(null)
+      setIsValidCharset(null)
       setIsValidLength(null)
       return
     }
 
-    // 条件1: 小文字英数字のみ
-    const alnum = /^[a-z0-9]+$/.test(user)
-    setIsAlphanumeric(alnum)
+    // 条件1: 小文字英数字とアンダーバーのみで、英数字を1文字以上含む
+    setIsValidCharset(USERNAME_PATTERN.test(user))
 
     // 条件2: 5〜50文字
-    const len = user.length >= 5 && user.length <= 50
+    const len = user.length >= USERNAME_MIN_LENGTH && user.length <= USERNAME_MAX_LENGTH
     setIsValidLength(len)
   })
 
@@ -210,7 +215,7 @@ const Register = () => {
   }
 
   const isUsernameValid = () => {
-    return isAlphanumeric() === true && isValidLength() === true
+    return isValidCharset() === true && isValidLength() === true
   }
 
   useDocumentTitle('新規登録')
@@ -297,7 +302,7 @@ const Register = () => {
                     }}
                   />
                   <TextField.Description class="mt-1">
-                    <ValidationItem status={isAlphanumeric()} text="小文字の英数字のみ" />
+                    <ValidationItem status={isValidCharset()} text={USERNAME_CHARSET_REQUIREMENT} />
                     <ValidationItem status={isValidLength()} text="5文字〜50文字" />
                     <ValidationItem status={null} text="他ユーザーと重複しないもの" />
                     <ValidationItem status={null} text={USERNAME_FORBIDDEN_WORD_REQUIREMENT} />

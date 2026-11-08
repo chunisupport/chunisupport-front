@@ -745,7 +745,7 @@ const App = () => {
       />
       <Route
         path={LATEST_SCORE_UPDATE_PATH}
-        component={withNavBar(withAuth(withRouteLoadBoundary(LatestScoreUpdatePage)))}
+        component={withNavBar(withPlayerData(withRouteLoadBoundary(LatestScoreUpdatePage)))}
       />
       <Route path={REGISTER_SCORE_TEMP_PATH} component={withNavBar(GuardedRegisterScoreTempPage)} />
       <Route path={TOOLS_PATH} component={withNavBar(ToolsPage)} />

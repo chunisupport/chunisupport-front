@@ -58,13 +58,15 @@ const SongLockedButtons = (props: Props) => {
         title={
           !username()
             ? SONG_DETAIL_LOCKED_COPY.loginRequired
-            : locked()
-              ? isUltima
-                ? SONG_DETAIL_LOCKED_COPY.ultimaUnlock
-                : SONG_DETAIL_LOCKED_COPY.unlock
-              : isUltima
-                ? SONG_DETAIL_LOCKED_COPY.ultimaLock
-                : SONG_DETAIL_LOCKED_COPY.lock
+            : setting.playerNotLinked()
+              ? SONG_DETAIL_LOCKED_COPY.playerNotLinked
+              : locked()
+                ? isUltima
+                  ? SONG_DETAIL_LOCKED_COPY.ultimaUnlock
+                  : SONG_DETAIL_LOCKED_COPY.unlock
+                : isUltima
+                  ? SONG_DETAIL_LOCKED_COPY.ultimaLock
+                  : SONG_DETAIL_LOCKED_COPY.lock
         }
         pressed={locked()}
         accentBackground
