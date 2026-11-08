@@ -6,7 +6,7 @@ import { runSolidBrowserScript } from '../../test/runSolidBrowserScript'
  *
  * 検証コードでは次の値を利用できる。
  * - `setup(overrides)`: 現在のユーザーネームを `alice` としてPrimitiveを生成し、`{ change, calls, dispose }` を返す。
- *   `calls` には再認証・変更・変更完了通知が呼ばれた順に記録される。
+ *   `calls` には再認証・変更・変更完了通知・成功通知が呼ばれた順に記録される。
  * - `codedError(code, status)`: コード付きのエラーを作成する。
  * - `COPY`: ユーザーネーム変更欄の表示文言。
  *
@@ -36,6 +36,9 @@ const setup = (overrides = {}) => {
       },
       onChanged: async (username) => {
         calls.push(['changed', username])
+      },
+      notifySuccess: (message) => {
+        calls.push(['success', message])
       },
       ...overrides,
     })
@@ -84,18 +87,16 @@ change.setUsername('bob12')
 // When: 送信する
 await change.submit()
 
-// Then: 再認証、変更、APIの確定値の通知の順に行い、成功文言を出す
-assert.deepEqual(calls, ['reauthenticate', ['update', 'bob12', 'reauth-token'], ['changed', 'bob123']])
+// Then: 再認証、変更、APIの確定値の通知、成功文言の通知の順に行う
+assert.deepEqual(calls, [
+  'reauthenticate',
+  ['update', 'bob12', 'reauth-token'],
+  ['changed', 'bob123'],
+  ['success', COPY.success],
+])
 assert.equal(change.username(), '')
-assert.equal(change.success(), COPY.success)
 assert.equal(change.error(), '')
 assert.equal(change.submitting(), false)
-
-// When: 入力し直す
-change.setUsername('carol')
-
-// Then: 前回の成功文言を消す
-assert.equal(change.success(), '')
 dispose()
 `)
 })
@@ -135,9 +136,8 @@ change.setUsername('bob12')
 // When: 送信する
 await change.submit()
 
-// Then: やり直しを促す文言を表示する
+// Then: やり直しを促す文言を表示し、成功は通知しない
 assert.equal(change.error(), COPY.recentSignInExpired)
-assert.equal(change.success(), '')
 assert.deepEqual(calls, ['reauthenticate', 'update'])
 dispose()
 `)
@@ -146,7 +146,7 @@ dispose()
 test('再認証のポップアップを閉じた場合はエラーを出さないこと', async () => {
   await runUsernameChangeTest(`
 // Given: ポップアップを閉じて中断する再認証
-const { change, dispose } = setup({
+const { change, calls, dispose } = setup({
   reauthenticate: async () => {
     throw codedError('auth/popup-closed-by-user')
   },
@@ -158,7 +158,7 @@ await change.submit()
 
 // Then: エラーも成功文言も出さず、入力を残す
 assert.equal(change.error(), '')
-assert.equal(change.success(), '')
+assert.deepEqual(calls, [])
 assert.equal(change.username(), 'bob12')
 assert.equal(change.submitting(), false)
 dispose()
@@ -187,7 +187,7 @@ assert.deepEqual(calls, ['reauthenticate'])
 assert.equal(change.submitting(), true)
 pending.resolve()
 await submitting
-assert.equal(change.success(), COPY.success)
+assert.deepEqual(calls.at(-1), ['success', COPY.success])
 dispose()
 `)
 })
