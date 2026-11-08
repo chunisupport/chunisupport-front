@@ -52,3 +52,12 @@ export const isForbiddenApiError = (error: unknown): boolean => {
   const apiError = toApiErrorLike(error)
   return apiError?.status === 403 || apiError?.code === 'forbidden'
 }
+
+/**
+ * API エラーがプレイヤーデータ未連携によるものかを判定する。
+ *
+ * @param error - 判定対象のエラー値。
+ * @returns プレイヤーデータ未連携の場合は true。
+ */
+export const isPlayerNotLinkedApiError = (error: unknown): boolean =>
+  toApiErrorLike(error)?.code === 'player_not_linked'

@@ -21,6 +21,7 @@ export const SONG_DETAIL_FAVORITE_COPY = {
   add: 'お気に入りに登録',
   remove: 'お気に入りから解除',
   loginRequired: 'ログインしてお気に入りに登録',
+  playerNotLinked: 'プレイヤーデータを連携してお気に入りに登録',
   loadError: 'お気に入り楽曲を取得できませんでした。',
   saveError: 'お気に入り楽曲を更新できませんでした。',
 } as const
@@ -34,6 +35,7 @@ export const SONG_DETAIL_LOCKED_COPY = {
   ultimaLock: '未解禁に設定 (ULTIMA)',
   ultimaUnlock: '解禁済みに設定 (ULTIMA)',
   loginRequired: 'ログインして解禁状態を設定',
+  playerNotLinked: 'プレイヤーデータを連携して解禁状態を設定',
   loadError: '未解禁設定を取得できませんでした。',
   saveError: '未解禁設定を更新できませんでした。',
   ultimaBadge: 'ULT',

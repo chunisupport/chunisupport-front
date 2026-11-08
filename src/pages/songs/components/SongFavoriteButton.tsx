@@ -44,9 +44,11 @@ const SongFavoriteButton = (props: Props) => {
         title={
           !username()
             ? SONG_DETAIL_FAVORITE_COPY.loginRequired
-            : registered()
-              ? SONG_DETAIL_FAVORITE_COPY.remove
-              : SONG_DETAIL_FAVORITE_COPY.add
+            : setting.playerNotLinked()
+              ? SONG_DETAIL_FAVORITE_COPY.playerNotLinked
+              : registered()
+                ? SONG_DETAIL_FAVORITE_COPY.remove
+                : SONG_DETAIL_FAVORITE_COPY.add
         }
         disabled={setting.disabled()}
         onClick={() => void setting.save(!registered())}
