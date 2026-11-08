@@ -1,5 +1,9 @@
 import { API_BASE_URL } from '../config'
-import type { FriendRequestCreateRequest, FriendshipListResponse } from '../types/api'
+import type {
+  FriendRequestCreateRequest,
+  FriendshipListResponse,
+  FriendshipSlotsResponse,
+} from '../types/api'
 import { assertValidUsername } from '../utils/usernameInput'
 import { fetchWithAuth } from './fetchWithAuth'
 
@@ -49,6 +53,24 @@ export const fetchSentFriendRequests = async (
   signal?: AbortSignal
 ): Promise<FriendshipListResponse> => {
   const response = await fetchWithAuth(`${FRIENDS_API_PATH}/requests/sent`, {
+    method: 'GET',
+    signal,
+    requireAuthentication: true,
+  })
+
+  return response.json()
+}
+
+/**
+ * フレンド枠の上限と使用数を取得する。
+ *
+ * @param signal - リクエストを中断するためのシグナル。
+ * @returns フレンド枠の上限と、承認済みフレンドと送信中申請を合わせた使用数。
+ */
+export const fetchFriendshipSlots = async (
+  signal?: AbortSignal
+): Promise<FriendshipSlotsResponse> => {
+  const response = await fetchWithAuth(`${FRIENDS_API_PATH}/slots`, {
     method: 'GET',
     signal,
     requireAuthentication: true,

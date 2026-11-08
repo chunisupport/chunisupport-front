@@ -65,18 +65,24 @@ test('フレンド操作ごとに必要なqueryだけを無効化対象にする
     ['friendships', 'alice', 'friends'],
     ['friendships', 'alice', 'requests', 'received'],
     ['friendships', 'alice', 'requests', 'sent'],
+    ['friendships', 'alice', 'slots'],
     ['friend-rankings', 'alice'],
   ])
   assert.deepEqual(acceptKeys, [
     ['friendships', 'alice', 'requests', 'received'],
     ['friendships', 'alice', 'friends'],
+    ['friendships', 'alice', 'slots'],
     ['friend-rankings', 'alice'],
     ['friend-comparisons', 'alice'],
   ])
   assert.deepEqual(rejectKeys, [['friendships', 'alice', 'requests', 'received']])
-  assert.deepEqual(cancelKeys, [['friendships', 'alice', 'requests', 'sent']])
+  assert.deepEqual(cancelKeys, [
+    ['friendships', 'alice', 'requests', 'sent'],
+    ['friendships', 'alice', 'slots'],
+  ])
   assert.deepEqual(removeKeys, [
     ['friendships', 'alice', 'friends'],
+    ['friendships', 'alice', 'slots'],
     ['friend-rankings', 'alice'],
     ['friend-comparisons', 'alice'],
   ])
