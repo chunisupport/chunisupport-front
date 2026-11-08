@@ -94,7 +94,7 @@ test('不正なusernameはすべての更新APIで送信前に拒否する', asy
   // When & Then: body と各 username パスの不正値を拒否する。
   await assert.rejects(() => createFriendRequest({ username: 'InvalidUser' }), TypeError)
   await assert.rejects(() => acceptFriendRequest('user name'), TypeError)
-  await assert.rejects(() => rejectFriendRequest('user_name'), TypeError)
+  await assert.rejects(() => rejectFriendRequest('_____'), TypeError)
   await assert.rejects(() => cancelFriendRequest('user-1'), TypeError)
   await assert.rejects(() => deleteFriend('user'), TypeError)
   assert.equal(calls.length, 0)

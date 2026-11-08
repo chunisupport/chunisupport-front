@@ -4,8 +4,11 @@ export const USERNAME_MIN_LENGTH = 5
 /** ユーザー名の最大文字数。 */
 export const USERNAME_MAX_LENGTH = 50
 
-/** ユーザー名の文字形式。 */
-export const USERNAME_PATTERN = /^[a-z0-9]+$/
+/**
+ * ユーザー名の文字形式。
+ * 小文字英数字とアンダーバーのみで構成し、アンダーバーだけの名前を防ぐため英数字を1文字以上含める。
+ */
+export const USERNAME_PATTERN = /^[a-z0-9_]*[a-z0-9][a-z0-9_]*$/
 
 /** ユーザー名のバリデーション結果。 */
 export type UsernameValidationError = 'required' | 'invalid' | null

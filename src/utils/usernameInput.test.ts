@@ -27,6 +27,28 @@ test('5〜50文字の小文字英数字は有効になること', () => {
   assert.equal(maximumLengthResult, null)
 })
 
+test('アンダーバーを含むユーザー名は有効になること', () => {
+  // Given
+  const values = ['chuni_user', '_chuni', 'chuni_']
+
+  // When
+  const results = values.map((value) => validateUsername(value))
+
+  // Then
+  assert.deepEqual(results, [null, null, null])
+})
+
+test('アンダーバーのみで英数字を含まないユーザー名は形式エラーになること', () => {
+  // Given
+  const value = '_____'
+
+  // When
+  const result = validateUsername(value)
+
+  // Then
+  assert.equal(result, 'invalid')
+})
+
 test('5文字未満または50文字超過は形式エラーになること', () => {
   // Given
   const tooShortValue = 'user'
@@ -43,14 +65,14 @@ test('5文字未満または50文字超過は形式エラーになること', ()
 
 test('大文字・記号・空白・全角文字は形式エラーになり入力値を変換しないこと', () => {
   // Given
-  const invalidValues = ['ChuniUser', 'chuni_user', 'chuni user', 'ｃｈｕｎｉ']
+  const invalidValues = ['ChuniUser', 'chuni-user', 'chuni user', 'ｃｈｕｎｉ']
 
   // When
   const results = invalidValues.map((value) => validateUsername(value))
 
   // Then
   assert.deepEqual(results, ['invalid', 'invalid', 'invalid', 'invalid'])
-  assert.deepEqual(invalidValues, ['ChuniUser', 'chuni_user', 'chuni user', 'ｃｈｕｎｉ'])
+  assert.deepEqual(invalidValues, ['ChuniUser', 'chuni-user', 'chuni user', 'ｃｈｕｎｉ'])
 })
 
 test('不正な username は API 呼び出し前の検証で例外になること', () => {

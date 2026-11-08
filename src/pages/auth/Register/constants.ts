@@ -34,5 +34,8 @@ export const TURNSTILE_REQUIRED_MESSAGE = '認証確認を完了してから登�
 export const TURNSTILE_ERROR_MESSAGE =
   '認証確認に失敗しました。しばらく待ってから再度お試しください。'
 
+/** ユーザー名に使える文字種を示す入力条件 */
+export const USERNAME_CHARSET_REQUIREMENT = '小文字英数字と_のみ（英数字を含む）'
+
 /** ユーザー名が登録禁止語に該当しないことを示す入力条件 */
 export const USERNAME_FORBIDDEN_WORD_REQUIREMENT = '登録禁止語に該当しないもの'
