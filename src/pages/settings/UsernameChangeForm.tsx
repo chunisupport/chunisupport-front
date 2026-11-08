@@ -4,6 +4,7 @@ import type { Component } from 'solid-js'
 import { reauthenticateAndGetToken } from '../../api/reauthenticate'
 import { updateUsername } from '../../api/settings'
 import { AppButton } from '../../components/common/AppButton'
+import { showSuccessToast } from '../../components/common/AppToast'
 import {
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
@@ -32,6 +33,7 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
     reauthenticate: () => reauthenticateAndGetToken(),
     updateUsername,
     onChanged: (username) => props.onChanged(username),
+    notifySuccess: showSuccessToast,
   })
 
   return (
@@ -72,9 +74,6 @@ export const UsernameChangeForm: Component<UsernameChangeFormProps> = (props) =>
             {change.error()}
           </TextField.ErrorMessage>
         </TextField>
-        <p class="mt-2 text-sm text-action-primary empty:hidden" role="status">
-          {change.success()}
-        </p>
         <AppButton
           type="submit"
           variant="primary"
