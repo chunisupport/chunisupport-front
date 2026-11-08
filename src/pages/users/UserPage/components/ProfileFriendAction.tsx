@@ -16,8 +16,10 @@ import { USER_NAMEPLATE_WIDTH_CLASS } from '../../../../components/common/profil
 import { Loading } from '../../../../components/Loading'
 import {
   friendMutationKeys,
+  friendshipSlotsQueryOptions,
   friendsQueryOptions,
   invalidateFriendQueriesAfterMutation,
+  invalidateFriendshipSlotsQuery,
   receivedFriendRequestsQueryOptions,
   sentFriendRequestsQueryOptions,
 } from '../../../../queries/friends'
@@ -27,6 +29,7 @@ import {
   syncFriendRequestNotificationFromReceivedCount,
 } from '../../../../stores/friendRequestNotification'
 import { toUserFriendlyErrorMessage } from '../../../../utils/errorMessage'
+import { isFriendshipSlotsFull } from '../../../../utils/friendshipSlots'
 import { resolveProfileFriendshipStatus } from '../../../../utils/profileFriendshipStatus'
 import {
   PROFILE_FRIEND_ACTION_COPY,
@@ -136,6 +139,9 @@ export const ProfileFriendAction: Component<ProfileFriendActionProps> = (props) 
   const receivedRequestsQuery = useQuery(() =>
     receivedFriendRequestsQueryOptions(friendshipUsername())
   )
+  const slotsQuery = useQuery(() => friendshipSlotsQueryOptions(friendshipUsername()))
+  /** フレンド枠が満杯なら、枠を使う申請・承認を止める */
+  const isSlotsFull = createMemo(() => isFriendshipSlotsFull(slotsQuery.data))
   const hasStatusData = createMemo(
     () =>
       friendsQuery.data !== undefined &&
@@ -327,6 +333,8 @@ export const ProfileFriendAction: Component<ProfileFriendActionProps> = (props) 
       setPendingAction(null)
     } catch (error) {
       setActionErrorMessage(toUserFriendlyErrorMessage(error, PROFILE_FRIEND_ACTION_COPY.failure))
+      const username = viewerUsername()
+      if (username) void invalidateFriendshipSlotsQuery(queryClient, username)
     }
   }
 
@@ -391,7 +399,10 @@ export const ProfileFriendAction: Component<ProfileFriendActionProps> = (props) 
                     fullWidth
                     size="md"
                     variant={item.variant}
-                    disabled={isMutating()}
+                    disabled={
+                      isMutating() ||
+                      (isSlotsFull() && (item.action === 'request' || item.action === 'accept'))
+                    }
                     leftIcon={<Icon class="h-4 w-4" aria-hidden="true" />}
                     onClick={() => openDialog(item.action)}
                   >

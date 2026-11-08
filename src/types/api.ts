@@ -1026,6 +1026,14 @@ export interface FriendshipListResponse {
   items: FriendshipUserDTO[]
 }
 
+/** GET /internal/friends/slots のレスポンス。フレンド枠の上限と使用数 */
+export interface FriendshipSlotsResponse {
+  /** フレンド枠の上限人数 */
+  limit: number
+  /** 使用中の枠数。承認済みフレンドと自分が送った申請中の合計で、届いた申請は含まない */
+  used: number
+}
+
 /** フレンド申請APIのリクエスト */
 export interface FriendRequestCreateRequest {
   /** 完全一致で検索する申請先ユーザー名 */

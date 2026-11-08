@@ -55,6 +55,8 @@ export const resolveFriendsTabValue = (segment: string | undefined): FriendsTabV
 /** フレンド画面で使う固定文言 */
 export const FRIENDS_COPY = {
   requestFormTitle: 'フレンド申請',
+  slotsLabel: 'フレンド枠',
+  slotsUnit: '人',
   usernameLabel: 'ユーザー名',
   usernamePlaceholder: 'username',
   ownUsernameLabel: 'あなたのユーザー名',

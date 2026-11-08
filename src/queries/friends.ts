@@ -1,5 +1,10 @@
 import { type QueryClient, type QueryKey, queryOptions } from '@tanstack/solid-query'
-import { fetchFriends, fetchReceivedFriendRequests, fetchSentFriendRequests } from '../api/friends'
+import {
+  fetchFriends,
+  fetchFriendshipSlots,
+  fetchReceivedFriendRequests,
+  fetchSentFriendRequests,
+} from '../api/friends'
 import { friendComparisonQueryKeys } from './friendComparisons'
 import { FRIEND_QUERY_STALE_TIME_MS } from './friendQueryConstants'
 import { friendRankingQueryKeys } from './friendRankings'
@@ -21,6 +26,7 @@ export const friendshipQueryKeys = {
   requests: (username: string | null) => ['friendships', username, 'requests'] as const,
   received: (username: string | null) => ['friendships', username, 'requests', 'received'] as const,
   sent: (username: string | null) => ['friendships', username, 'requests', 'sent'] as const,
+  slots: (username: string | null) => ['friendships', username, 'slots'] as const,
 }
 
 /** フレンドmutationのkey factory。 */
@@ -73,7 +79,22 @@ export const sentFriendRequestsQueryOptions = (username: string | null) =>
   })
 
 /**
+ * フレンド枠の上限と使用数query optionsを生成する。
+ *
+ * @param username - 現在の認証ユーザー名。
+ * @returns フレンド枠用query options。
+ */
+export const friendshipSlotsQueryOptions = (username: string | null) =>
+  queryOptions({
+    queryKey: friendshipQueryKeys.slots(username),
+    queryFn: ({ signal }) => fetchFriendshipSlots(signal),
+    enabled: Boolean(username),
+    staleTime: FRIEND_QUERY_STALE_TIME_MS,
+  })
+
+/**
  * フレンド操作ごとのquery無効化条件を返す。
+ * 拒否は届いた申請を消すだけでフレンド枠を使わないため、枠の再取得対象にしない。
  *
  * @param username - 操作した認証ユーザー名。
  * @param operation - 完了したフレンド操作。
@@ -86,20 +107,21 @@ export const getFriendMutationInvalidationFilters = (
   const friends = { queryKey: friendshipQueryKeys.friends(username), exact: true }
   const received = { queryKey: friendshipQueryKeys.received(username), exact: true }
   const sent = { queryKey: friendshipQueryKeys.sent(username), exact: true }
+  const slots = { queryKey: friendshipQueryKeys.slots(username), exact: true }
   const rankings = { queryKey: friendRankingQueryKeys.user(username) }
   const comparisons = { queryKey: friendComparisonQueryKeys.user(username) }
 
   switch (operation) {
     case 'request':
-      return [friends, received, sent, rankings]
+      return [friends, received, sent, slots, rankings]
     case 'accept':
-      return [received, friends, rankings, comparisons]
+      return [received, friends, slots, rankings, comparisons]
     case 'reject':
       return [received]
     case 'cancel':
-      return [sent]
+      return [sent, slots]
     case 'remove':
-      return [friends, rankings, comparisons]
+      return [friends, slots, rankings, comparisons]
   }
 }
 
@@ -122,6 +144,20 @@ export const invalidateFriendQueriesAfterMutation = async (
     )
   )
 }
+
+/**
+ * フレンド枠queryを無効化する。
+ * 申請・承認が失敗したとき、別端末の操作などで古くなった枠表示を実際の数へ追いつかせるために使う。
+ *
+ * @param queryClient - 更新対象のQueryClient。
+ * @param username - 操作した認証ユーザー名。
+ * @returns 表示中queryの再取得完了時に解決されるPromise。
+ */
+export const invalidateFriendshipSlotsQuery = (
+  queryClient: QueryClient,
+  username: string
+): Promise<void> =>
+  queryClient.invalidateQueries({ queryKey: friendshipQueryKeys.slots(username), exact: true })
 
 /**
  * 旧認証ユーザーのフレンド関連queryをキャンセルして削除する。

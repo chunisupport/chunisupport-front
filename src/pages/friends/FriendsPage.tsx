@@ -43,8 +43,10 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   type FriendshipMutationType,
   friendMutationKeys,
+  friendshipSlotsQueryOptions,
   friendsQueryOptions,
   invalidateFriendQueriesAfterMutation,
+  invalidateFriendshipSlotsQuery,
   receivedFriendRequestsQueryOptions,
   sentFriendRequestsQueryOptions,
 } from '../../queries/friends'
@@ -56,6 +58,7 @@ import {
 } from '../../stores/friendRequestNotification'
 import type { FriendshipUserDTO, MasterItemDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isFriendshipSlotsFull } from '../../utils/friendshipSlots'
 import { resolvePossessionName } from '../../utils/possession'
 import {
   USERNAME_MIN_LENGTH,
@@ -104,6 +107,8 @@ type FriendshipListProps = {
   emptyMessage: string
   /** 一覧内の操作を無効化するか */
   actionsDisabled: boolean
+  /** 承認だけを無効化するか。フレンド枠が満杯のときに使う */
+  acceptDisabled?: boolean
   /** 申請承認時の処理 */
   onAccept: (user: FriendshipUserDTO) => void
   /** 申請拒否時の処理 */
@@ -189,6 +194,8 @@ const FriendCardActions = (props: {
   variant: FriendsTabValue
   friendVsPath: string
   busy: boolean
+  /** 承認だけを無効化するか。フレンド枠が満杯のときに使う */
+  acceptDisabled?: boolean
   onAccept: () => void
   onReject: () => void
   onCancel: () => void
@@ -210,7 +217,7 @@ const FriendCardActions = (props: {
           size="sm"
           fullWidth
           leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
-          disabled={props.busy}
+          disabled={props.busy || props.acceptDisabled}
           onClick={props.onAccept}
         >
           {FRIENDS_COPY.accept}
@@ -389,6 +396,7 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
                 variant={props.variant}
                 friendVsPath={buildFriendVsPath(user.username)}
                 busy={props.actionsDisabled}
+                acceptDisabled={props.acceptDisabled}
                 onAccept={() => props.onAccept(user)}
                 onReject={() => props.onReject(user)}
                 onCancel={() => props.onCancel(user)}
@@ -428,6 +436,8 @@ const FriendsPage = () => {
     receivedFriendRequestsQueryOptions(ownUsername() || null)
   )
   const sentRequestsQuery = useQuery(() => sentFriendRequestsQueryOptions(ownUsername() || null))
+  /** フレンド枠。表示の補助なので、取得前や取得失敗時は枠表示を出さず申請も止めない */
+  const slotsQuery = useQuery(() => friendshipSlotsQueryOptions(ownUsername() || null))
   const [possessions] = createResource(fetchPossessions)
   /** カード背景に使うポゼッションマスタ。装飾用のため取得失敗時は空配列で既定色にする */
   const possessionMaster = createMemo(() => (possessions.state === 'ready' ? possessions() : []))
@@ -518,9 +528,12 @@ const FriendsPage = () => {
     )
   )
   const isRefreshing = createMemo(() =>
-    [friendsQuery, receivedRequestsQuery, sentRequestsQuery].some((query) => query.isFetching)
+    [friendsQuery, receivedRequestsQuery, sentRequestsQuery, slotsQuery].some(
+      (query) => query.isFetching
+    )
   )
   const isRequesting = createMemo(() => operation() === 'request')
+  const isSlotsFull = createMemo(() => isFriendshipSlotsFull(slotsQuery.data))
   const resolvedActiveTab = createMemo(() => resolveFriendsTabValue(params.tab))
   const activeTab = createMemo(() => resolvedActiveTab() ?? 'friends')
   const hasPendingReceivedRequest = createMemo(() =>
@@ -608,7 +621,7 @@ const FriendsPage = () => {
   })
 
   /**
-   * 3種類のフレンド一覧を再取得する。
+   * 3種類のフレンド一覧とフレンド枠を再取得する。
    *
    * @returns 全queryの再取得完了時に解決されるPromise。
    */
@@ -617,6 +630,7 @@ const FriendsPage = () => {
       friendsQuery.refetch(),
       receivedRequestsQuery.refetch(),
       sentRequestsQuery.refetch(),
+      slotsQuery.refetch(),
     ])
   }
 
@@ -665,6 +679,7 @@ const FriendsPage = () => {
       })
     } catch (error) {
       setRequestErrorMessage(formatFriendRequestErrorMessage(error))
+      void invalidateFriendshipSlotsQuery(queryClient, authenticatedUsername)
     }
   }
 
@@ -704,6 +719,7 @@ const FriendsPage = () => {
       }
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, FRIENDS_COPY.operationFailure))
+      void invalidateFriendshipSlotsQuery(queryClient, authenticatedUsername)
     }
   }
 
@@ -768,7 +784,18 @@ const FriendsPage = () => {
   return (
     <div class="mx-auto w-full max-w-5xl p-4">
       <header class="mb-4 flex items-center justify-between gap-3">
-        <h1 class="text-2xl font-semibold">{FRIENDS_PAGE_TITLE}</h1>
+        <div>
+          <h1 class="text-2xl font-semibold">{FRIENDS_PAGE_TITLE}</h1>
+          <Show when={slotsQuery.data}>
+            {(slots) => (
+              <p class="text-sm text-text-muted">
+                <span class="sr-only">{FRIENDS_COPY.slotsLabel}</span>
+                {slots().used} / {slots().limit}
+                {FRIENDS_COPY.slotsUnit}
+              </p>
+            )}
+          </Show>
+        </div>
         <AppButton
           variant="surface"
           size="sm"
@@ -869,7 +896,7 @@ const FriendsPage = () => {
             variant="primary"
             fullWidth
             leftIcon={<UserPlus class="h-4 w-4" aria-hidden="true" />}
-            disabled={operation() !== null}
+            disabled={operation() !== null || isSlotsFull()}
           >
             {isRequesting() ? FRIENDS_COPY.submittingRequest : FRIENDS_COPY.submitRequest}
           </AppButton>
@@ -912,6 +939,7 @@ const FriendsPage = () => {
                 possessions={possessionMaster()}
                 emptyMessage={FRIENDS_COPY.emptyReceived}
                 actionsDisabled={operation() !== null}
+                acceptDisabled={isSlotsFull()}
                 onAccept={handleAccept}
                 onReject={handleReject}
                 onRemove={handleRemove}
