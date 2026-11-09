@@ -4,6 +4,7 @@ import { Index } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO } from '../../../types/api'
+import { toDateInputValue } from '../../../utils/dateOnly'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
   SONG_MANAGEMENT_ACTION_COPY,
@@ -13,7 +14,6 @@ import {
 import type { StandardSongManagement } from '../hooks/createStandardSongManagement'
 import {
   hasNotesDesigner,
-  toDateInputValue,
   toOptionalNumberInput,
   toOptionalTextInput,
 } from '../utils/songDraftCommon'

@@ -15,10 +15,10 @@ import type {
   WorldsendSongDTO,
 } from '../../../types/api'
 import { formatChartConst } from '../../../utils/chartConstFormat'
+import { toDateOnly } from '../../../utils/dateOnly'
 import { toInputValue } from '../../../utils/rangeInput'
 import { SONG_EDIT_COPY } from '../songEditConstants'
 
-const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const NON_NEGATIVE_INTEGER_PATTERN = /^\d*$/
 
 export type SongMetaEditValues = {
@@ -89,43 +89,6 @@ export const canMarkChartConstUnknown = (constInput: string): boolean =>
  */
 export const toNullableTrimmedString = (value: string | null | undefined): string | null =>
   value?.trim() ? value.trim() : null
-
-/**
- * 日付入力を YYYY-MM-DD へ正規化する。
- *
- * @param value - 入力された日付文字列。
- * @returns 正規化できた場合は日付、空または不正な場合は null。
- */
-export const toDateOnly = (value: string | null | undefined): string | null => {
-  if (!value) return null
-  const trimmed = value.trim()
-  if (!trimmed) return null
-
-  if (DATE_ONLY_PATTERN.test(trimmed)) {
-    return trimmed
-  }
-
-  const datePrefixMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})/)
-  if (datePrefixMatch && DATE_ONLY_PATTERN.test(datePrefixMatch[1])) {
-    return datePrefixMatch[1]
-  }
-
-  const date = new Date(trimmed)
-  if (Number.isNaN(date.getTime())) {
-    return null
-  }
-
-  return date.toISOString().slice(0, 10)
-}
-
-/**
- * 日付入力欄へ渡す YYYY-MM-DD 文字列を返す。
- *
- * @param value - 楽曲のリリース日。
- * @returns 入力欄用の日付文字列。未設定時は空文字。
- */
-export const toDateInputValue = (value: string | null | undefined): string =>
-  toDateOnly(value) ?? ''
 
 /**
  * 非負整数の入力途中文字列だけを残す。

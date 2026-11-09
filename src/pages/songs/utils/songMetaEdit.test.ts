@@ -13,7 +13,6 @@ import {
   parseOptionalNonNegativeInteger,
   parseSongMetaEditValues,
   parseWorldsendChartMetaEditValues,
-  toDateOnly,
 } from './songMetaEdit.ts'
 
 const createSong = (overrides: Partial<SongDTO> = {}): SongDTO => ({
@@ -74,14 +73,6 @@ test('hasNotesDesigner: BASICとADVANCEDは入力対象外であること', () =
   assert.equal(hasNotesDesigner('EXPERT'), true)
   assert.equal(hasNotesDesigner('MASTER'), true)
   assert.equal(hasNotesDesigner('ULTIMA'), true)
-})
-
-test('toDateOnly: YYYY-MM-DDをそのまま返し、空文字はnullにすること', () => {
-  // Given / When / Then
-  assert.equal(toDateOnly('2025-06-19'), '2025-06-19')
-  assert.equal(toDateOnly('2025-06-19T12:00:00Z'), '2025-06-19')
-  assert.equal(toDateOnly(''), null)
-  assert.equal(toDateOnly('not-a-date'), null)
 })
 
 test('parseOptionalNonNegativeInteger: 空欄をnull、不正値をinvalidにすること', () => {

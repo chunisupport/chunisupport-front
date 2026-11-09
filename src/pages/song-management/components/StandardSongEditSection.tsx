@@ -5,6 +5,7 @@ import { Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
 import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO, NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
+import { toDateInputValue } from '../../../utils/dateOnly'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
   SONG_MANAGEMENT_ACTION_COPY,
@@ -16,7 +17,6 @@ import type { StandardSongManagement } from '../hooks/createStandardSongManageme
 import {
   formatUpdatedAt,
   hasNotesDesigner,
-  toDateInputValue,
   toOptionalNumberInput,
   toOptionalTextInput,
 } from '../utils/songDraftCommon'
