@@ -1,6 +1,23 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatJstDateTime, formatJstDateTimeMinute } from './jstDateTime'
+import { formatJstCompactDate, formatJstDateTime, formatJstDateTimeMinute } from './jstDateTime'
+
+test('UTC日時をJSTの区切りなし年月日へ整形し、日付をまたぐ場合は翌日になること', () => {
+  // Given
+  const value = '2026-11-08T15:00:00Z'
+
+  // When
+  const result = formatJstCompactDate(value)
+
+  // Then
+  assert.equal(result, '20261109')
+})
+
+test('区切りなし年月日は不正な日時やnullでnullを返すこと', () => {
+  // Given & When & Then
+  assert.equal(formatJstCompactDate('invalid'), null)
+  assert.equal(formatJstCompactDate(null), null)
+})
 
 test('UTC日時をJST固定かつ秒ありで表示すること', () => {
   // Given

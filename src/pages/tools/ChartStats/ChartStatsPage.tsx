@@ -1,6 +1,6 @@
+import { useQuery } from '@tanstack/solid-query'
 import { ChartColumnStacked } from 'lucide-solid'
-import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
-import { fetchChartStats } from '../../../api/chartStats'
+import { createMemo, createResource, createSignal, Match, onMount, Show, Switch } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import {
   AppTabContent,
@@ -12,16 +12,26 @@ import { SearchTextField } from '../../../components/common/SearchTextField'
 import { CHART_STATS_PATH } from '../../../constants/routes'
 import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { chartStatsQueryOptions } from '../../../queries/chartStats'
 import { fetchVersions } from '../../../queries/masterData'
 import { fetchNameFolders } from '../../../queries/nameFolders'
 import { useSongsData } from '../../../stores/songsData'
-import type { ChartStatsDifficulty, ChartStatsResponse } from '../../../types/chartStats'
-import type { ChartStatsAttributeFilter, ChartStatsCategory } from '../../../utils/chartStats'
+import type {
+  ChartStats,
+  ChartStatsDifficulty,
+  ChartStatsResponse,
+} from '../../../types/chartStats'
+import type {
+  ChartStatsAttributeFilter,
+  ChartStatsCategory,
+  ChartStatsSongMeta,
+} from '../../../utils/chartStats'
 import {
   buildChartStatsAttributesBySongId,
   createDefaultChartStatsAttributeFilter,
   filterChartStats,
 } from '../../../utils/chartStats'
+import { ChartStatsDownloadDialog } from './ChartStatsDownloadDialog'
 import { ChartStatsFilterPanel } from './ChartStatsFilterPanel'
 import { ChartStatsGraphTable } from './ChartStatsGraphTable'
 import { ChartStatsTable } from './ChartStatsTable'
@@ -71,6 +81,61 @@ const ChartStatsContent = (props: {
     return response?.songs
   })
 
+  /**
+   * 楽曲一覧とバージョン一覧から属性マップを生成する。どちらか未取得なら属性絞り込みを保留する。
+   *
+   * @param songs - 通常楽曲またはWORLD'S END楽曲の一覧。
+   * @returns song_idごとの属性マップ。未取得の場合はundefined。
+   */
+  const buildAttributes = (songs: readonly ChartStatsSongMeta[] | undefined) => {
+    const versionList = versions()?.versions
+    if (!songs || !versionList) return undefined
+    return buildChartStatsAttributesBySongId(songs, versionList)
+  }
+
+  const standardAttributesBySongId = createMemo(() => buildAttributes(songsResponse()?.songs))
+  const worldsendAttributesBySongId = createMemo(() =>
+    buildAttributes(worldsendSongsResponse()?.songs)
+  )
+
+  /**
+   * 難易度に対応する属性マップを返す。
+   *
+   * @param difficulty - 対象の難易度。
+   * @returns 通常楽曲またはWORLD'S END楽曲の属性マップ。
+   */
+  const getAttributesBySongId = (difficulty: ChartStatsDifficulty) =>
+    difficulty === "WORLD'S END" ? worldsendAttributesBySongId() : standardAttributesBySongId()
+
+  /**
+   * 画面の検索・フィルター条件で任意の難易度の譜面を絞り込む。ダウンロード時に表示外の難易度へも適用する。
+   *
+   * @param stats - 絞り込む難易度別統計。
+   * @returns 元の順序を保った絞り込み結果。
+   */
+  const filterStatsCharts = (stats: ChartStatsResponse): ChartStats[] =>
+    filterChartStats(
+      stats.charts,
+      searchQuery(),
+      getAttributesBySongId(stats.difficulty),
+      attributeFilter()
+    )
+
+  /**
+   * 選択した難易度すべてで、画面の属性フィルターを適用できる状態か判定する。
+   * 属性マップが未取得の間は属性条件が適用されないため、属性条件があるときは取得完了を待つ。
+   *
+   * @param difficulties - 判定する難易度。
+   * @returns 属性条件がない、または必要な属性マップがすべて取得済みの場合はtrue。
+   */
+  const isFilterReady = (difficulties: readonly ChartStatsDifficulty[]): boolean => {
+    const filter = attributeFilter()
+    if (filter.genres === null && filter.versions === null && filter.nameFolders === null) {
+      return true
+    }
+    return difficulties.every((difficulty) => getAttributesBySongId(difficulty) !== undefined)
+  }
+
   const genreOptions = createMemo(() => {
     const songs = targetSongs()
     if (!songs) return []
@@ -81,25 +146,25 @@ const ChartStatsContent = (props: {
 
   const versionOptions = createMemo(() => versions()?.versions ?? [])
 
-  const attributesBySongId = createMemo(() => {
-    const songs = targetSongs()
-    const versionList = versions()?.versions
-    if (!songs || !versionList) return undefined
-    return buildChartStatsAttributesBySongId(songs, versionList)
-  })
+  const attributesBySongId = () => getAttributesBySongId(props.difficulty)
 
-  const filteredCharts = createMemo(() =>
-    filterChartStats(props.data.charts, searchQuery(), attributesBySongId(), attributeFilter())
-  )
+  const filteredCharts = createMemo(() => filterStatsCharts(props.data))
   const resetKey = createMemo(
     () => `${props.difficulty}|${category()}|${searchQuery()}|${JSON.stringify(attributeFilter())}`
   )
 
   return (
     <div class="space-y-4">
-      <p class="font-jost text-xs tabular-nums text-text-muted">
-        {CHART_STATS_COPY.generatedAt} {formatChartStatsGeneratedAt(props.data.generated_at)}
-      </p>
+      <div class="flex items-center justify-between gap-3">
+        <p class="font-jost text-xs tabular-nums text-text-muted">
+          {CHART_STATS_COPY.generatedAt} {formatChartStatsGeneratedAt(props.data.generated_at)}
+        </p>
+        <ChartStatsDownloadDialog
+          currentDifficulty={props.difficulty}
+          filterCharts={filterStatsCharts}
+          isFilterReady={isFilterReady}
+        />
+      </div>
       <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div class="flex w-full min-w-0 flex-1 items-end lg:max-w-md">
           <SearchTextField
@@ -201,7 +266,7 @@ const ChartStatsPage = () => {
   const [difficulty, setDifficulty] = createSignal<ChartStatsDifficulty>(
     CHART_STATS_DEFAULT_DIFFICULTY
   )
-  const [stats] = createResource(difficulty, fetchChartStats)
+  const stats = useQuery(() => chartStatsQueryOptions(difficulty()))
 
   /**
    * 表示難易度を更新する。
@@ -236,11 +301,20 @@ const ChartStatsPage = () => {
         listClass="min-w-max"
       >
         <AppTabContent value={difficulty()} class="pt-4">
-          <ErrorBoundary fallback={(error) => <LoadError error={error} />}>
-            <Show when={!stats.loading ? stats() : undefined} fallback={<Loading />}>
-              {(data) => <ChartStatsContent data={data()} difficulty={difficulty()} />}
-            </Show>
-          </ErrorBoundary>
+          {/* 難易度ごとに検索・フィルターをリセットするため、統計本体は難易度単位で作り直す。
+              再取得でデータが差し替わっても画面の状態は保つ */}
+          <Show when={difficulty()} keyed>
+            {(current) => (
+              <Switch fallback={<Loading />}>
+                <Match when={stats.data?.difficulty === current ? stats.data : undefined}>
+                  {(data) => <ChartStatsContent data={data()} difficulty={current} />}
+                </Match>
+                <Match when={stats.isError && !stats.isFetching}>
+                  <LoadError error={stats.error} />
+                </Match>
+              </Switch>
+            )}
+          </Show>
         </AppTabContent>
       </UnderlineTabs>
     </div>

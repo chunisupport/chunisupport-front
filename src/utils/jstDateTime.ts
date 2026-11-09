@@ -63,6 +63,20 @@ export const formatJstDateTime = (value: string | number | null): string | null 
 }
 
 /**
+ * 日時をファイル名などに使うJST固定の区切りなし年月日へ整形する。
+ *
+ * @param value - 日時文字列、またはUNIXエポックからの経過ミリ秒。日時がない場合はnull。
+ * @returns YYYYMMDD形式の日付。不正な値またはnullの場合はnull。
+ */
+export const formatJstCompactDate = (value: string | number | null): string | null => {
+  const parts = toJstDateTimeParts(value)
+  if (!parts) return null
+
+  const { year, month, day } = parts
+  return `${year}${month}${day}`
+}
+
+/**
  * 日時をJST固定の年月日時分へ安全に整形する。
  *
  * @param value - APIが返した日時文字列、またはUNIXエポックからの経過ミリ秒。日時がない場合はnull。
