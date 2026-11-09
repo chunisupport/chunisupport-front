@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import { beforeEach, test } from 'node:test'
+import { appQueryClient } from '../lib/queryClient'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
+beforeEach(() => appQueryClient.clear())
+
 /**
- * モジュール内キャッシュをテストごとに分離してポゼッションAPIを読み込む。
+ * テスト用環境を準備してポゼッションqueryを読み込む。
  *
- * @returns ポゼッションAPIモジュール。
+ * @returns ポゼッションqueryモジュール。
  */
 const loadPossessionsApi = () =>
   loadTestModule((cacheKey) => import(`./possessions.ts?cache=${cacheKey}`))

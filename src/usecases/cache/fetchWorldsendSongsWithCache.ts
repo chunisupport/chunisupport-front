@@ -1,4 +1,5 @@
-import { fetchSongsUpdatedAt, fetchWorldsendSongs } from '../../api/songs'
+import { fetchWorldsendSongs } from '../../api/songs'
+import { fetchSongsUpdatedAt } from '../../queries/masterData'
 import {
   getSongCacheGeneration,
   readCachedWorldsendSongs,

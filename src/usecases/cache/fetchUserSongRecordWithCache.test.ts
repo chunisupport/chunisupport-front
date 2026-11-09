@@ -1,10 +1,13 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
-import { afterEach, test } from 'node:test'
+import { afterEach, beforeEach, test } from 'node:test'
 import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../../constants/songMaster.ts'
 import { db } from '../../lib/db/cacheDB.ts'
+import { appQueryClient } from '../../lib/queryClient'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession.ts'
 import type { PlayerRecordDTO, UserDTO } from '../../types/api.ts'
+
+beforeEach(() => appQueryClient.clear())
 
 const originalFetch = globalThis.fetch
 const API_BASE_URL = 'http://localhost:3000'
@@ -102,7 +105,10 @@ test('単曲レコード取得はTTL経過後に楽曲の外部更新を検知�
   t.mock.timers.enable({ apis: ['Date'], now: 0 })
   setupApiTestEnv()
   const [{ invalidateSongsUpdatedAtCache }, { fetchUserStandardSongRecordWithCache }] =
-    await Promise.all([import('../../api/songs.ts'), import('./fetchUserSongRecordWithCache.ts')])
+    await Promise.all([
+      import('../../queries/masterData.ts'),
+      import('./fetchUserSongRecordWithCache.ts'),
+    ])
   invalidateSongsUpdatedAtCache()
   setAuthenticatedUser(user)
   let songsUpdatedAt = '2026-07-06T00:00:00Z'

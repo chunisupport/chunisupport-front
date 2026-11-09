@@ -1,5 +1,5 @@
-import type { GoalFilterOptions } from '../api/songs'
 import { normalizePlayerDataDifficulty } from '../constants/difficulty'
+import type { GoalFilterOptions } from '../queries/masterData'
 import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO, VersionDTO } from '../types/api'
 import {
   isGoalNameFolderMatched,

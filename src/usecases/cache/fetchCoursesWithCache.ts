@@ -1,4 +1,5 @@
-import { fetchCourses, fetchCoursesUpdatedAt } from '../../api/songs'
+import { fetchCourses } from '../../api/songs'
+import { fetchCoursesUpdatedAt } from '../../queries/masterData'
 import { readCachedCourses, replaceCachedCourses } from '../../repositories/courseCacheRepository'
 import type { CourseDTO } from '../../types/api'
 

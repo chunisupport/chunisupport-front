@@ -1,9 +1,12 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
-import { afterEach, test } from 'node:test'
+import { afterEach, beforeEach, test } from 'node:test'
 import { db } from '../../lib/db/cacheDB.ts'
+import { appQueryClient } from '../../lib/queryClient'
 import { clearAuthenticatedUser, setAuthenticatedUser } from '../../stores/authSession.ts'
 import type { UserDTO } from '../../types/api.ts'
+
+beforeEach(() => appQueryClient.clear())
 
 const originalFetch = globalThis.fetch
 const API_BASE_URL = 'http://localhost:3000'

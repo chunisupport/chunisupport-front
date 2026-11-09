@@ -1,5 +1,5 @@
 import { createResource, createRoot, createSignal, untrack } from 'solid-js'
-import { invalidateSongsUpdatedAtCache } from '../api/songs'
+import { invalidateSongsUpdatedAtCache } from '../queries/masterData'
 import { clearCachedSongData } from '../repositories/songCacheRepository'
 import type { SongDTO, WorldsendSongDTO } from '../types/api'
 import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache'

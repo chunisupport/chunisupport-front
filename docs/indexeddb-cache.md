@@ -22,7 +22,7 @@ API サーバーと DB の負荷が高くなった場合でも、画面表示の
 
 - API キャッシュは **Dexie** を介して IndexedDB に保存する。
 - IndexedDB 操作は `src/lib/db/`（DB 定義）と `src/repositories/`（IndexedDB 操作）に閉じ込める。
-- API 呼び出しとキャッシュ判定は `src/usecases/cache/` に置く。コンポーネントや `createResource` の fetcher から IndexedDB を直接触らない。
+- API 呼び出しと更新日時によるキャッシュ判定は `src/usecases/cache/` に置き、TanStack Query の `queryFn` から利用する。コンポーネントや query から IndexedDB を直接触らない。既存の `createResource` は変更箇所から段階的に移行する。
 - キャッシュが有効なら API 本体を呼ばずにキャッシュを返す。キャッシュが無効なら API 本体の取得完了を待って最新データを返す。
 - キャッシュ判定には、既存 API の `updated-at` を使う。
 - `updated-at` 取得に失敗した場合、古いキャッシュは表示せず、通常どおり本 API を呼ぶ。
@@ -113,7 +113,7 @@ ChuniSupportCache
 
 通常楽曲と WORLD'S END 楽曲は、共通で `GET /internal/songs/updated-at` を使います。
 
-`songsUpdatedAt` は取得から5分間（`SONGS_UPDATED_AT_CACHE_TTL_MS`）メモリ上で再利用し、経過後は HTTP キャッシュを使わず（`cache: 'no-cache'`）API で再検証します。ユーザー系キャッシュの判定も同じ値を使うため、song-batch など外部経路での楽曲更新は、同じタブでも最大5分で検知されます。
+`songsUpdatedAt` は `src/queries/masterData.ts` の TanStack Query（`staleTime: SONGS_UPDATED_AT_CACHE_TTL_MS`）で取得から5分間メモリ上で再利用し、経過後は HTTP キャッシュを使わず（`cache: 'no-cache'`）API で再検証します。ユーザー系キャッシュの判定も同じ値を使うため、song-batch など外部経路での楽曲更新は、同じタブでも最大5分で検知されます。
 
 ```
 1. GET /internal/songs/updated-at を呼び、songsUpdatedAt を取得する。
@@ -189,7 +189,8 @@ src/
 - `src/lib/db/getCacheDB.ts`: `cacheDB.ts` を動的 import して Dexie インスタンスを返す。Dexie を初期バンドルから外すため、アプリケーションコードは `cacheDB.ts` を直接 import せずこの関数を使う（テストからの直接参照は可）。
 - `src/repositories/*`: IndexedDB の読み書きのみ。
 - `src/usecases/cache/*`: `updated-at` 判定、API 呼び出し、フォールバック制御。
-- コンポーネント: `createResource` の fetcher から usecase を呼び出す。
+- `src/queries/`: key factory と `queryOptions` を定義する。更新日時の同時取得共有・TTLは TanStack Query に任せる。ユーザー・コース更新日時は `staleTime: 0` で完了後は再取得し、楽曲更新日時の無効化は `removeQueries` で進行中の query ごと破棄する。対象 query は `retry: false` とし、失敗後は次の呼び出しで再取得する。楽曲更新日時の取得中に query が削除された場合は、`fetchQueryWithRestartOnRemoval` が最大1回だけ再取得し、待機中の呼び出し元にも最新値を返す。query を残した通常のキャンセルは再取得しない。
+- コンポーネント: `createQuery` から query を利用する。コンポーネント外では `appQueryClient.fetchQuery` を利用し、Dexie キャッシュが必要な query の `queryFn` から usecase を呼び出す。既存の `createResource` による利用は段階移行中。
 
 ## 画面・ストアからの利用
 

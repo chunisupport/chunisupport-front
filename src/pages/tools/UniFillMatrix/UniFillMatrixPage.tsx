@@ -12,8 +12,6 @@ import {
   on,
   Show,
 } from 'solid-js'
-import { fetchGenres } from '../../../api/genres'
-import { fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppIconButton, getAppButtonClass } from '../../../components/common/AppButton'
@@ -29,6 +27,7 @@ import { UNI_FILL_MATRIX_PATH } from '../../../constants/routes'
 import { SITE_NAME } from '../../../constants/site'
 import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { fetchGenres, fetchVersions } from '../../../queries/masterData'
 import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import { authSession } from '../../../stores/authSession'
 import { publishStandardRecordFilter } from '../../../stores/standardRecordNavigation'

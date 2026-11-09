@@ -1,4 +1,4 @@
-import { fetchMasterData, fetchVersions } from '../../api/songs'
+import { fetchMasterData, fetchVersions } from '../../queries/masterData'
 import type { PlayerDataDifficulty } from '../../types/api'
 import type {
   PlayerStatsNotesBySongId,

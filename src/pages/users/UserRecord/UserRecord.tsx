@@ -10,8 +10,6 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchNameFolders } from '../../../api/nameFolders'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import {
   addMyFavoriteSong,
   deleteMyFavoriteSong,
@@ -20,6 +18,8 @@ import {
 } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { createRecordViewState } from '../../../hooks/createRecordViewState'
+import { fetchMasterData, fetchVersions } from '../../../queries/masterData'
+import { fetchNameFolders } from '../../../queries/nameFolders'
 import {
   readStandardRecordColumnsSetting,
   readStandardRecordFilterSetting,
