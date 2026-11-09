@@ -1,8 +1,6 @@
 import { ChartColumnStacked } from 'lucide-solid'
 import { createMemo, createResource, createSignal, ErrorBoundary, onMount, Show } from 'solid-js'
 import { fetchChartStats } from '../../../api/chartStats'
-import { fetchNameFolders } from '../../../api/nameFolders'
-import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import {
   AppTabContent,
@@ -14,6 +12,8 @@ import { SearchTextField } from '../../../components/common/SearchTextField'
 import { CHART_STATS_PATH } from '../../../constants/routes'
 import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { fetchVersions } from '../../../queries/masterData'
+import { fetchNameFolders } from '../../../queries/nameFolders'
 import { useSongsData } from '../../../stores/songsData'
 import type { ChartStatsDifficulty, ChartStatsResponse } from '../../../types/chartStats'
 import type { ChartStatsAttributeFilter, ChartStatsCategory } from '../../../utils/chartStats'

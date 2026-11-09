@@ -1,5 +1,5 @@
 import type { MasterItemDTO } from '../types/api'
-import { fetchMasterData } from './songs'
+import { fetchMasterData } from './masterData'
 
 /**
  * ポゼッションマスタを取得する。

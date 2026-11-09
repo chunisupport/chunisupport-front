@@ -1,7 +1,7 @@
 import type { Accessor } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, onCleanup } from 'solid-js'
-import { fetchVersions } from '../api/songs'
 import { RATING_SLOT_COUNT } from '../constants/rating'
+import { fetchVersions } from '../queries/masterData'
 import { useSongsData } from '../stores/songsData'
 import {
   calculateBestTheoreticalRating,

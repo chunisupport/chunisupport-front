@@ -10,9 +10,6 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchGenres } from '../../../api/genres'
-import { fetchNameFolders } from '../../../api/nameFolders'
-import { fetchVersions } from '../../../api/songs'
 import { fetchUserLockedSongs, updateMyLockedSongsBatch } from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
 import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
@@ -20,6 +17,8 @@ import { AppSelect } from '../../../components/common/AppSelect'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { SingleImagePreviewDialog } from '../../../components/common/SingleImagePreviewDialog'
 import { LOCKED_SONG_CALCULATION_EXCLUSION_LABEL } from '../../../constants/lockedSongs'
+import { fetchGenres, fetchVersions } from '../../../queries/masterData'
+import { fetchNameFolders } from '../../../queries/nameFolders'
 import { saveStandardRecordFilterSetting } from '../../../repositories/viewSettingsRepository'
 import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'

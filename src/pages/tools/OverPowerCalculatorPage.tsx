@@ -5,9 +5,6 @@ import { TextField } from '@kobalte/core/text-field'
 import { ArrowRight, CornerLeftUp, LockKeyhole, Percent, Plus, Slash } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, For, onMount, Show } from 'solid-js'
-import { fetchGenres } from '../../api/genres'
-import { fetchNameFolders } from '../../api/nameFolders'
-import { fetchVersions } from '../../api/songs'
 import {
   fetchUserLockedSongs,
   fetchUserProfileSummary,
@@ -26,6 +23,8 @@ import { getToolLink } from '../../constants/tools'
 import { createOverPowerCalculatorInputs } from '../../hooks/createOverPowerCalculatorInputs'
 import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { fetchGenres, fetchVersions } from '../../queries/masterData'
+import { fetchNameFolders } from '../../queries/nameFolders'
 import { useSongsData } from '../../stores/songsData'
 import type { PlayerLockedSongRequest } from '../../types/api'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'

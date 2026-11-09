@@ -27,9 +27,6 @@ type FetchMeOptions = {
   idToken?: string
 }
 
-/** ユーザー更新日時の進行中リクエスト。ユーザー名ごとに同時呼び出しを共有する */
-const userUpdatedAtResponsePromises = new Map<string, Promise<UpdatedAtResponseDTO>>()
-
 export const fetchUserProfileSummary = async (username: string): Promise<UserProfileDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/profile`
@@ -64,29 +61,15 @@ export const fetchUserRatingOpHistory = async (
 
 /**
  * ユーザー系キャッシュの更新判定に使う最新更新日時を取得する。
- * 同じユーザーへの同時呼び出しは同一リクエストにまとめる。
  *
  * @param username - 更新日時を取得するユーザー名。
  * @returns ユーザー更新日時レスポンス。
  */
-export const fetchUserUpdatedAt = async (username: string): Promise<UpdatedAtResponseDTO> => {
-  const existingPromise = userUpdatedAtResponsePromises.get(username)
-  if (existingPromise) {
-    return existingPromise
-  }
-
-  const responsePromise = fetchWithAuth(
+export const requestUserUpdatedAt = async (username: string): Promise<UpdatedAtResponseDTO> => {
+  const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/updated-at`
-  ).then((response) => response.json() as Promise<UpdatedAtResponseDTO>)
-  userUpdatedAtResponsePromises.set(username, responsePromise)
-
-  try {
-    return await responsePromise
-  } finally {
-    if (userUpdatedAtResponsePromises.get(username) === responsePromise) {
-      userUpdatedAtResponsePromises.delete(username)
-    }
-  }
+  )
+  return response.json()
 }
 
 /**

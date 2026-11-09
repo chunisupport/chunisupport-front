@@ -16,8 +16,6 @@ import {
   untrack,
 } from 'solid-js'
 import { fetchGoals } from '../../api/goals'
-import { fetchNameFolders } from '../../api/nameFolders'
-import { fetchGoalFilterOptions, fetchVersions, type GoalFilterOptions } from '../../api/songs'
 import { fetchUserFavoriteSongs, fetchUserRating } from '../../api/users'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
@@ -46,6 +44,12 @@ import {
 } from '../../hooks/createChartConstRangeDraft'
 import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import {
+  fetchGoalFilterOptions,
+  fetchVersions,
+  type GoalFilterOptions,
+} from '../../queries/masterData'
+import { fetchNameFolders } from '../../queries/nameFolders'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import type { PlayerDataStatus } from '../../usecases/auth/resolvePlayerDataStatus'

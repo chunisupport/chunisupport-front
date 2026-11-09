@@ -1,14 +1,17 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
-import { afterEach, test } from 'node:test'
+import { afterEach, beforeEach, test } from 'node:test'
 import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../../constants/songMaster.ts'
 import { db } from '../../lib/db/cacheDB.ts'
+import { appQueryClient } from '../../lib/queryClient'
 import {
   clearCachedSongData,
   replaceCachedSongs,
   replaceCachedWorldsendSongs,
 } from '../../repositories/songCacheRepository.ts'
 import type { SongDTO, WorldsendSongDTO } from '../../types/api.ts'
+
+beforeEach(() => appQueryClient.clear())
 
 const SONGS_UPDATED_AT = '2026-07-20T09:00:00Z'
 /** 外部更新後を想定したサーバー側の楽曲更新日時 */
@@ -88,7 +91,7 @@ const setupApiTestEnv = (): void => {
 const loadSongsCacheUsecases = async () => {
   const [{ invalidateSongsUpdatedAtCache }, { fetchAllSongsWithCache }, worldsendUsecase] =
     await Promise.all([
-      import('../../api/songs.ts'),
+      import('../../queries/masterData.ts'),
       import('./fetchAllSongsWithCache.ts'),
       import('./fetchWorldsendSongsWithCache.ts'),
     ])

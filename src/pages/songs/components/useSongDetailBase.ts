@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router'
 import { createMemo, createResource } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import { fetchMasterData, fetchVersions } from '../../../queries/masterData'
 import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,

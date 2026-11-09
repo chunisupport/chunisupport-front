@@ -14,9 +14,9 @@ import {
   onMount,
   Show,
 } from 'solid-js'
-import { fetchPossessions } from '../../../api/possessions'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../constants/honors'
 import { getPossessionClassName } from '../../../constants/possession'
+import { fetchPossessions } from '../../../queries/possessions'
 import { useSongsData } from '../../../stores/songsData'
 import type {
   HonorDTO,

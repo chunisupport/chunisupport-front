@@ -1,5 +1,5 @@
 import type { NameFolderDTO } from '../types/api'
-import { fetchMasterData } from './songs'
+import { fetchMasterData } from './masterData'
 
 /**
  * 楽曲名順フォルダマスタを取得する。

@@ -1,7 +1,6 @@
 import { API_BASE_URL } from '../config'
 import type { CreateVersionRequestDTO, RenameVersionRequestDTO, VersionDTO } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
-import { invalidateVersionCaches } from './songs'
 
 const ADMIN_VERSIONS_API_PATH = `${API_BASE_URL}/internal/admin/versions`
 
@@ -23,16 +22,16 @@ export const fetchAdminVersions = async (): Promise<VersionDTO[]> => {
  * @param request - バージョン名、超ショート名と稼働日。
  * @returns 作成したバージョン。
  */
-export const createVersion = async (request: CreateVersionRequestDTO): Promise<VersionDTO> => {
+export const requestCreateVersion = async (
+  request: CreateVersionRequestDTO
+): Promise<VersionDTO> => {
   const response = await fetchWithAuth(ADMIN_VERSIONS_API_PATH, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
     requireAuthentication: true,
   })
-  const version = (await response.json()) as VersionDTO
-  invalidateVersionCaches()
-  return version
+  return response.json()
 }
 
 /**
@@ -42,7 +41,7 @@ export const createVersion = async (request: CreateVersionRequestDTO): Promise<V
  * @param request - 変更後のバージョン名と超ショート名。
  * @returns 更新したバージョン。
  */
-export const renameVersion = async (
+export const requestRenameVersion = async (
   id: number,
   request: RenameVersionRequestDTO
 ): Promise<VersionDTO> => {
@@ -52,9 +51,7 @@ export const renameVersion = async (
     body: JSON.stringify(request),
     requireAuthentication: true,
   })
-  const version = (await response.json()) as VersionDTO
-  invalidateVersionCaches()
-  return version
+  return response.json()
 }
 
 /**
@@ -63,10 +60,9 @@ export const renameVersion = async (
  * @param id - 削除対象のバージョンID。
  * @returns 削除完了時に解決するPromise。
  */
-export const deleteVersion = async (id: number): Promise<void> => {
+export const requestDeleteVersion = async (id: number): Promise<void> => {
   await fetchWithAuth(`${ADMIN_VERSIONS_API_PATH}/${id}`, {
     method: 'DELETE',
     requireAuthentication: true,
   })
-  invalidateVersionCaches()
 }

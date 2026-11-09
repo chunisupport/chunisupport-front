@@ -3,10 +3,10 @@ import { A } from '@solidjs/router'
 import { Trophy } from 'lucide-solid'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, Show } from 'solid-js'
-import { fetchVersions } from '../../../../api/songs'
 import { LoadError, Loading } from '../../../../components'
 import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import { fetchVersions } from '../../../../queries/masterData'
 import { authSession } from '../../../../stores/authSession'
 import type {
   FriendRankingEntryDTO,

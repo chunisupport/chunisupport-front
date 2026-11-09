@@ -8,11 +8,10 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-
-import { fetchNameFolders } from '../../../api/nameFolders'
-import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading } from '../../../components'
 import { createRecordViewState } from '../../../hooks/createRecordViewState'
+import { fetchVersions } from '../../../queries/masterData'
+import { fetchNameFolders } from '../../../queries/nameFolders'
 import {
   readWorldsendRecordColumnsSetting,
   saveWorldsendRecordColumnsSetting,
