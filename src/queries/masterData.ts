@@ -27,7 +27,7 @@ export const masterDataQueryKeys = {
 
 /**
  * バージョン一覧のquery optionsを生成する。
- * @returns 自動再試行せず、セッション中に再利用するquery options。
+ * @returns オフライン時も一時停止・自動再試行せず、セッション中に再利用するquery options。
  */
 export const versionsQueryOptions = () =>
   queryOptions({
@@ -36,6 +36,7 @@ export const versionsQueryOptions = () =>
     staleTime: Infinity,
     gcTime: Infinity,
     retry: false,
+    networkMode: 'always',
   })
 
 /**
@@ -46,7 +47,7 @@ export const fetchVersions = () => fetchQueryWithRestartOnRemoval(versionsQueryO
 
 /**
  * 全マスタのquery optionsを生成する。
- * @returns 自動再試行せず、セッション中に再利用するquery options。
+ * @returns オフライン時も一時停止・自動再試行せず、セッション中に再利用するquery options。
  */
 export const masterDataQueryOptions = () =>
   queryOptions({
@@ -55,6 +56,7 @@ export const masterDataQueryOptions = () =>
     staleTime: Infinity,
     gcTime: Infinity,
     retry: false,
+    networkMode: 'always',
   })
 
 /**
@@ -65,7 +67,7 @@ export const fetchMasterData = () => fetchQueryWithRestartOnRemoval(masterDataQu
 
 /**
  * ジャンル一覧のquery optionsを生成する。
- * @returns 自動再試行せず、セッション中に再利用するquery options。
+ * @returns オフライン時も一時停止・自動再試行せず、セッション中に再利用するquery options。
  */
 export const genresQueryOptions = () =>
   queryOptions({
@@ -74,6 +76,7 @@ export const genresQueryOptions = () =>
     staleTime: Infinity,
     gcTime: Infinity,
     retry: false,
+    networkMode: 'always',
   })
 
 /**
@@ -84,7 +87,7 @@ export const fetchGenres = () => appQueryClient.fetchQuery(genresQueryOptions())
 
 /**
  * 楽曲更新日時のquery optionsを生成する。
- * @returns 自動再試行せず、同時取得を共有するquery options。
+ * @returns オフライン時も一時停止・自動再試行せず、同時取得を共有するquery options。
  */
 export const songsUpdatedAtQueryOptions = () =>
   queryOptions({
@@ -92,6 +95,7 @@ export const songsUpdatedAtQueryOptions = () =>
     queryFn: requestSongsUpdatedAt,
     staleTime: SONGS_UPDATED_AT_CACHE_TTL_MS,
     retry: false,
+    networkMode: 'always',
   })
 
 /**
@@ -103,7 +107,7 @@ export const fetchSongsUpdatedAt = () =>
 
 /**
  * コース更新日時のquery optionsを生成する。
- * @returns 自動再試行せず、同時取得を共有するquery options。
+ * @returns オフライン時も一時停止・自動再試行せず、同時取得を共有するquery options。
  */
 export const coursesUpdatedAtQueryOptions = () =>
   queryOptions({
@@ -111,6 +115,7 @@ export const coursesUpdatedAtQueryOptions = () =>
     queryFn: requestCoursesUpdatedAt,
     staleTime: 0,
     retry: false,
+    networkMode: 'always',
   })
 
 /**

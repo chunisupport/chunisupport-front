@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
+import { onlineManager } from '@tanstack/solid-query'
 import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../constants/songMaster'
 import { appQueryClient } from '../lib/queryClient'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
@@ -481,4 +482,21 @@ test('全マスタキーの前方一致による無効化はバージョンと�
     appQueryClient.getQueryState(queries.masterDataQueryKeys.genres())?.isInvalidated,
     false
   )
+})
+
+test('オフライン時も更新日時とマスタの取得は一時停止せず、通信失敗を呼び出し元へ返す', async (t) => {
+  // Given: ブラウザーがオフラインで、通信が失敗する。
+  onlineManager.setOnline(false)
+  t.after(() => onlineManager.setOnline(true))
+  installFetchRecorder(() => {
+    throw new Error('network error')
+  })
+  const queries = await loadMasterDataQueries()
+
+  // When & Then: 再接続を待たずに通信失敗としてrejectされる。
+  await assert.rejects(() => queries.fetchSongsUpdatedAt(), /network error/)
+  await assert.rejects(() => queries.fetchCoursesUpdatedAt(), /network error/)
+  await assert.rejects(() => queries.fetchVersions(), /network error/)
+  await assert.rejects(() => queries.fetchMasterData(), /network error/)
+  await assert.rejects(() => queries.fetchGenres(), /network error/)
 })

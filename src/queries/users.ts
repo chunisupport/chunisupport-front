@@ -15,7 +15,7 @@ export const userQueryKeys = {
 /**
  * ユーザー更新日時のquery optionsを生成する。
  * @param username - 対象ユーザー名。
- * @returns 同時取得だけを共有し、自動再試行しないquery options。
+ * @returns 同時取得だけを共有し、オフライン時も一時停止・自動再試行しないquery options。
  */
 export const userUpdatedAtQueryOptions = (username: string) =>
   queryOptions({
@@ -23,6 +23,7 @@ export const userUpdatedAtQueryOptions = (username: string) =>
     queryFn: () => requestUserUpdatedAt(username),
     staleTime: 0,
     retry: false,
+    networkMode: 'always',
   })
 
 /**

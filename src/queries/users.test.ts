@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
+import { onlineManager } from '@tanstack/solid-query'
 import { appQueryClient } from '../lib/queryClient'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
@@ -92,4 +93,17 @@ test('更新日時はユーザーごとに異なるqueryとして同時取得す
   assert.equal(calls.length, 2)
   assert.notEqual(alice.updated_at, bob.updated_at)
   assert.deepEqual(userQueryKeys.updatedAt('alice'), ['users', 'alice', 'updated-at'])
+})
+
+test('fetchUserUpdatedAtはオフライン時も一時停止せず、通信失敗を呼び出し元へ返すこと', async (t) => {
+  // Given: ブラウザーがオフラインで、通信が失敗する。
+  onlineManager.setOnline(false)
+  t.after(() => onlineManager.setOnline(true))
+  installFetchRecorder(() => {
+    throw new Error('network error')
+  })
+  const { fetchUserUpdatedAt } = await loadUsersApi()
+
+  // When & Then: 再接続を待たずに通信失敗としてrejectされる。
+  await assert.rejects(() => fetchUserUpdatedAt('alice'), /network error/)
 })
