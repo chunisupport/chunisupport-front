@@ -6,7 +6,8 @@ import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { ImagePreviewDialog } from '../../components/common/ImagePreviewDialog'
 import { createImagePreview } from '../../hooks/createImagePreview'
-import { canShareFiles, downloadBlobFile } from '../../utils/domImageCapture'
+import { canShareFiles } from '../../utils/domImageCapture'
+import { downloadBlobFile } from '../../utils/fileDownload'
 import { REGISTER_SCORE_COPY } from './constants'
 import type {
   RegisterScoreImageCaptureResult,

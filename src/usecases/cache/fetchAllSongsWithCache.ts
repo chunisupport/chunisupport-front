@@ -1,4 +1,5 @@
-import { fetchAllSongs, fetchSongsUpdatedAt } from '../../api/songs'
+import { fetchAllSongs } from '../../api/songs'
+import { fetchSongsUpdatedAt } from '../../queries/masterData'
 import {
   getSongCacheGeneration,
   readCachedSongs,

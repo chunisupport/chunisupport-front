@@ -4,6 +4,7 @@ import CopyFromStandardField from '../../../components/common/CopyFromStandardFi
 import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import type { MasterItemDTO } from '../../../types/api'
+import { toDateInputValue } from '../../../utils/dateOnly'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
@@ -12,11 +13,7 @@ import {
   SONG_MANAGEMENT_SECTION_COPY,
 } from '../constants'
 import type { WorldsendSongManagement } from '../hooks/createWorldsendSongManagement'
-import {
-  toDateInputValue,
-  toOptionalNumberInput,
-  toOptionalTextInput,
-} from '../utils/songDraftCommon'
+import { toOptionalNumberInput, toOptionalTextInput } from '../utils/songDraftCommon'
 import {
   GenreSelectField,
   MANAGEMENT_TEXT_INPUT_CLASS,

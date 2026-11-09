@@ -30,7 +30,6 @@ import {
   deleteFriend,
   rejectFriendRequest,
 } from '../../api/friends'
-import { fetchPossessions } from '../../api/possessions'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
@@ -50,6 +49,7 @@ import {
   receivedFriendRequestsQueryOptions,
   sentFriendRequestsQueryOptions,
 } from '../../queries/friends'
+import { fetchPossessions } from '../../queries/possessions'
 import { authSession } from '../../stores/authSession'
 import {
   friendRequestNotification,

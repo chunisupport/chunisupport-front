@@ -14,6 +14,7 @@ import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigg
 import type { DataTransferCountsResponse } from '../../types/api'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { downloadBlobFile } from '../../utils/fileDownload'
 import {
   DATA_TRANSFER_ACCEPT,
   DATA_TRANSFER_BLOCKER_MESSAGES,
@@ -55,24 +56,6 @@ const DataTransferCounts: Component<DataTransferCountsProps> = (props) => (
 )
 
 /**
- * Blobをブラウザのダウンロードとして保存する。
- *
- * @param blob - 保存する署名付き移行JSON。
- * @param filename - ダウンロード時のファイル名。
- * @returns なし。
- */
-const downloadBlob = (blob: Blob, filename: string): void => {
-  const objectUrl = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = objectUrl
-  anchor.download = filename
-  document.body.append(anchor)
-  anchor.click()
-  anchor.remove()
-  URL.revokeObjectURL(objectUrl)
-}
-
-/**
  * ユーザーデータのエクスポート・検証・インポート操作を表示する。
  * 初期状態では折りたたんで表示する。
  *
@@ -108,7 +91,7 @@ export const DataTransferSettingsSection: Component<DataTransferSettingsSectionP
     setExporting(true)
     try {
       const exported = await exportUserDataTransfer()
-      downloadBlob(exported.blob, exported.filename)
+      downloadBlobFile(exported.blob, exported.filename)
       setExportSuccess(DATA_TRANSFER_COPY.exportSuccess)
     } catch (error) {
       setExportError(toUserFriendlyErrorMessage(error, DATA_TRANSFER_COPY.exportFailure))

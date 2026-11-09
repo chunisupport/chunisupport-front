@@ -6,8 +6,8 @@ import {
   updateGoalGroup,
 } from '../../../api/goalGroups'
 import { createGoal, deleteGoal, fetchGoals, reorderGoals, updateGoal } from '../../../api/goals'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
 import { fetchMe, fetchUserLockedSongs, fetchUserProfileSummary } from '../../../api/users'
+import { fetchMasterData, fetchVersions } from '../../../queries/masterData'
 import type {
   GoalCreateRequest,
   GoalDTO,

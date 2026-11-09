@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import { beforeEach, test } from 'node:test'
+import { appQueryClient } from '../lib/queryClient'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
+beforeEach(() => appQueryClient.clear())
+
 /**
- * モジュール内キャッシュをテストごとに分離して楽曲名順フォルダAPIを読み込む。
+ * テスト用環境を準備して楽曲名順フォルダqueryを読み込む。
  *
- * @returns 楽曲名順フォルダAPIモジュール。
+ * @returns 楽曲名順フォルダqueryモジュール。
  */
 const loadNameFoldersApi = () =>
   loadTestModule((cacheKey) => import(`./nameFolders.ts?cache=${cacheKey}`))

@@ -10,7 +10,6 @@ export type EditableDifficultyName = PlayerDataDifficulty
  */
 export type DraftRequestResult<T> = { ok: true; request: T } | { ok: false; message: string }
 
-const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
 const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
   month: 'numeric',
@@ -21,44 +20,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   hour12: false,
   timeZone: JST_TIME_ZONE,
 })
-
-/**
- * 日付または日時文字列を `YYYY-MM-DD` 形式へ正規化する。
- *
- * @param value 正規化対象の文字列
- * @returns 日付部分。空または解釈できない場合は null
- */
-export const toDateOnly = (value: string | null): string | null => {
-  if (!value) return null
-  const trimmed = value.trim()
-  if (!trimmed) return null
-
-  if (dateOnlyPattern.test(trimmed)) {
-    return trimmed
-  }
-
-  const datePrefixMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})/)
-  if (datePrefixMatch && dateOnlyPattern.test(datePrefixMatch[1])) {
-    return datePrefixMatch[1]
-  }
-
-  const date = new Date(trimmed)
-  if (Number.isNaN(date.getTime())) {
-    return null
-  }
-
-  return date.toISOString().slice(0, 10)
-}
-
-/**
- * 日付入力欄 (`type="date"`) に渡す値へ変換する。
- *
- * @param value 日付または日時文字列
- * @returns 日付入力欄の値。未設定なら空文字
- */
-export const toDateInputValue = (value: string | null): string => {
-  return toDateOnly(value) ?? ''
-}
 
 /**
  * 更新日時を日本時間の表示文字列へ整形する。

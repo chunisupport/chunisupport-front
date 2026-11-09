@@ -8,6 +8,7 @@ import { CheckboxField } from '../../../components/common/CheckboxField'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
 import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO } from '../../../types/api'
+import { toDateInputValue } from '../../../utils/dateOnly'
 import { toInputValue } from '../../../utils/rangeInput'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
@@ -19,7 +20,6 @@ import {
   normalizeNonNegativeIntegerInput,
   parseSongMetaEditValues,
   type SongMetaEditValues,
-  toDateInputValue,
 } from '../utils/songMetaEdit'
 import SongEditSaveButton from './SongEditSaveButton'
 

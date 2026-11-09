@@ -1,4 +1,5 @@
-import { fetchUserCourseRecords, fetchUserUpdatedAt } from '../../api/users'
+import { fetchUserCourseRecords } from '../../api/users'
+import { fetchUserUpdatedAt } from '../../queries/users'
 import {
   readCachedUserCourseRecords,
   replaceCachedUserCourseRecords,

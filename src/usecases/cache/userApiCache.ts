@@ -1,5 +1,6 @@
-import { fetchSongsUpdatedAt } from '../../api/songs'
-import { fetchMe, fetchUserUpdatedAt } from '../../api/users'
+import { fetchMe } from '../../api/users'
+import { fetchSongsUpdatedAt } from '../../queries/masterData'
+import { fetchUserUpdatedAt } from '../../queries/users'
 import { getAuthenticatedUser, getAuthStatus } from '../../stores/authSession'
 import { resolveAuthSession } from '../auth/resolveAuthSession'
 

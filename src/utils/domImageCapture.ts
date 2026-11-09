@@ -1,7 +1,5 @@
 /** DOM画像化時にCanvasの一辺へ許容する最大CSSピクセル数 */
 const DEFAULT_IMAGE_CAPTURE_MAX_CSS_SIDE = 8_000
-/** ダウンロード開始後にObject URLを解放するまでの待機時間 */
-const IMAGE_OBJECT_URL_REVOKE_DELAY_MS = 1_000
 /** DOM画像へ含めない要素を指定するデータ属性セレクター */
 const IMAGE_CAPTURE_EXCLUDED_SELECTOR = '[data-image-capture-excluded="true"]'
 /** クリップボードへ書き込む画像のMIMEタイプ */
@@ -310,24 +308,6 @@ export const captureElementAsImage = async (
   } finally {
     capture.dispose()
   }
-}
-
-/**
- * Blobを指定ファイル名でダウンロードする。
- *
- * @param blob - ダウンロードするファイル内容。
- * @param filename - ダウンロード時に使用する拡張子付きファイル名。
- * @returns なし。
- */
-export const downloadBlobFile = (blob: Blob, filename: string): void => {
-  const objectUrl = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.download = filename
-  link.href = objectUrl
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), IMAGE_OBJECT_URL_REVOKE_DELAY_MS)
 }
 
 /**

@@ -1,121 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../constants/songMaster'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 /**
- * モジュール内キャッシュをテストごとに分離して songs API を読み込む。
+ * テスト用環境を準備して songs API を読み込む。
  * @returns songs API モジュール。
  */
 const loadSongsApi = () => loadTestModule((cacheKey) => import(`./songs.ts?cache=${cacheKey}`))
-
-test('fetchVersions は一度取得したバージョン一覧をセッション中に再利用する', async () => {
-  const responseBody = {
-    versions: [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }],
-  }
-  let fetchCount = 0
-  installFetchRecorder(() => {
-    fetchCount += 1
-    return Response.json(responseBody)
-  })
-
-  const { fetchVersions } = await loadSongsApi()
-  const first = await fetchVersions()
-  const second = await fetchVersions()
-
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-})
-
-test('バージョン更新後は公開バージョン一覧をAPIから再取得する', async () => {
-  const responseBodies = [
-    { versions: [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }] },
-    { versions: [{ name: 'CHUNITHM X-VERSE', released_at: '2024-12-12' }] },
-  ]
-  let fetchCount = 0
-  installFetchRecorder(() => {
-    const responseBody = responseBodies[fetchCount]
-    fetchCount += 1
-    return Response.json(responseBody)
-  })
-  const { fetchVersions, invalidateVersionCaches } = await loadSongsApi()
-  await fetchVersions()
-
-  invalidateVersionCaches()
-  const afterMutation = await fetchVersions()
-
-  assert.equal(fetchCount, 2)
-  assert.deepEqual(afterMutation, responseBodies[1])
-})
-
-test('fetchSongsUpdatedAt は不正な更新日時を拒否し、失敗をキャッシュせず再試行する', async () => {
-  // Given: 契約に違反する更新日時レスポンス。
-  for (const invalidResponse of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
-    let fetchCount = 0
-    installFetchRecorder(() => {
-      fetchCount += 1
-      return Response.json(fetchCount === 1 ? invalidResponse : { updated_at: null })
-    })
-    const { fetchSongsUpdatedAt } = await loadSongsApi()
-
-    // When / Then: 不正応答を拒否し、次の正常な null 応答は取得・キャッシュできる。
-    await assert.rejects(() => fetchSongsUpdatedAt(), TypeError)
-    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
-    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
-    assert.equal(fetchCount, 2)
-  }
-})
-
-test('fetchSongsUpdatedAt はTTL内であれば取得済みの更新日時を再利用する', async (t) => {
-  // Given: 更新日時を一度取得済みで、TTL 直前まで時間が経過している。
-  t.mock.timers.enable({ apis: ['Date'], now: 0 })
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
-  let fetchCount = 0
-  installFetchRecorder((input) => {
-    if (String(input).endsWith('/internal/songs/updated-at')) {
-      fetchCount += 1
-      return Response.json(responseBody)
-    }
-    throw new Error(`unexpected fetch: ${String(input)}`)
-  })
-  const { fetchSongsUpdatedAt } = await loadSongsApi()
-  const first = await fetchSongsUpdatedAt()
-  t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS - 1)
-
-  // When: 再度更新日時を取得する。
-  const second = await fetchSongsUpdatedAt()
-
-  // Then: API は再実行されず、同じレスポンスを返す。
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-})
-
-test('fetchSongsUpdatedAt はTTL経過後にAPIから更新日時を再検証する', async (t) => {
-  // Given: 更新日時 T1 を取得済みで、その後サーバー側が T2 に更新されている。
-  t.mock.timers.enable({ apis: ['Date'], now: 0 })
-  const responseBodies = [
-    { updated_at: '2026-06-16T12:00:00Z' },
-    { updated_at: '2026-07-20T09:00:00Z' },
-  ]
-  let fetchCount = 0
-  const calls = installFetchRecorder(() => {
-    const responseBody = responseBodies[fetchCount]
-    fetchCount += 1
-    return Response.json(responseBody)
-  })
-  const { fetchSongsUpdatedAt } = await loadSongsApi()
-  await fetchSongsUpdatedAt()
-
-  // When: TTL 経過後に更新日時を取得する。
-  t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
-  const revalidated = await fetchSongsUpdatedAt()
-
-  // Then: HTTP キャッシュを使わずに API を再実行し、T2 を返す。
-  assert.equal(fetchCount, 2)
-  assert.deepEqual(revalidated, responseBodies[1])
-  assert.equal(String(calls[1]?.input), 'http://localhost:3000/internal/songs/updated-at')
-  assert.equal(calls[1]?.init?.cache, 'no-cache')
-})
 
 test('全曲APIは指定されたHTTPキャッシュ設定を利用する', async () => {
   // Given
@@ -143,67 +34,6 @@ test("WORLD'S END楽曲APIは指定されたHTTPキャッシュ設定を利用�
   assert.equal(calls[0]?.init?.cache, 'no-store')
 })
 
-test('楽曲更新日時キャッシュは無効化後にAPIから最新値を再取得する', async () => {
-  // Given: 初回の更新日時を取得してメモリへキャッシュする。
-  const responseBodies = [
-    { updated_at: '2026-06-16T12:00:00Z' },
-    { updated_at: '2026-07-20T09:00:00Z' },
-  ]
-  let fetchCount = 0
-  installFetchRecorder((input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/songs/updated-at')
-    const responseBody = responseBodies[fetchCount]
-    fetchCount += 1
-    return Response.json(responseBody)
-  })
-  const { fetchSongsUpdatedAt, invalidateSongsUpdatedAtCache } = await loadSongsApi()
-  await fetchSongsUpdatedAt()
-
-  // When: 楽曲 CRUD 後を想定して更新日時キャッシュを無効化し、再取得する。
-  invalidateSongsUpdatedAtCache()
-  const afterMutation = await fetchSongsUpdatedAt()
-
-  // Then: API が再実行され、更新後の値へ置き換わる。
-  assert.equal(fetchCount, 2)
-  assert.deepEqual(afterMutation, responseBodies[1])
-})
-
-test('無効化前に開始した楽曲更新日時リクエストは解決後もキャッシュへ戻さない', async () => {
-  // Given: 無効化前の更新日時リクエストを応答待ちにする。
-  const beforeMutation = { updated_at: '2026-06-16T12:00:00Z' }
-  const afterMutation = { updated_at: '2026-07-20T09:00:00Z' }
-  let fetchCount = 0
-  let resolveBeforeMutation!: (response: Response) => void
-  let notifyRequestStarted!: () => void
-  const requestStarted = new Promise<void>((resolve) => {
-    notifyRequestStarted = resolve
-  })
-  installFetchRecorder((input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/songs/updated-at')
-    fetchCount += 1
-    if (fetchCount === 1) {
-      notifyRequestStarted()
-      return new Promise<Response>((resolve) => {
-        resolveBeforeMutation = resolve
-      })
-    }
-    return Response.json(afterMutation)
-  })
-  const { fetchSongsUpdatedAt, invalidateSongsUpdatedAtCache } = await loadSongsApi()
-  const staleRequest = fetchSongsUpdatedAt()
-  await requestStarted
-
-  // When: リクエスト中に無効化してから古い応答を解決し、再取得する。
-  invalidateSongsUpdatedAtCache()
-  resolveBeforeMutation(Response.json(beforeMutation))
-  await staleRequest
-  const latest = await fetchSongsUpdatedAt()
-
-  // Then: 古い応答は再キャッシュされず、APIから更新後の値を取得する。
-  assert.equal(fetchCount, 2)
-  assert.deepEqual(latest, afterMutation)
-})
-
 test('コースマスタAPIはコース一覧を取得する', async () => {
   // Given
   const calls = installFetchRecorder(() =>
@@ -225,43 +55,6 @@ test('コースマスタAPIはコース一覧を取得する', async () => {
 
   // Then
   assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/courses')
-})
-
-test('fetchCoursesUpdatedAtは完了後の呼び出しで最新更新日時を再取得する', async () => {
-  // Given: コースマスタ更新日時APIが成功する。
-  let fetchCount = 0
-  installFetchRecorder((input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/courses/updated-at')
-    fetchCount += 1
-    return Response.json({ updated_at: '2026-07-15T09:00:00Z' })
-  })
-  const { fetchCoursesUpdatedAt } = await loadSongsApi()
-
-  // When: 直列に2回取得する。
-  await fetchCoursesUpdatedAt()
-  await fetchCoursesUpdatedAt()
-
-  // Then: 呼び出しごとにAPIから最新値を取得する。
-  assert.equal(fetchCount, 2)
-})
-
-test('fetchCoursesUpdatedAtは同時呼び出しを1リクエストにまとめる', async () => {
-  // Given: 応答まで待機するコースマスタ更新日時API。
-  let fetchCount = 0
-  installFetchRecorder(async (input) => {
-    assert.equal(String(input), 'http://localhost:3000/internal/courses/updated-at')
-    fetchCount += 1
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    return Response.json({ updated_at: '2026-07-15T09:00:00Z' })
-  })
-  const { fetchCoursesUpdatedAt } = await loadSongsApi()
-
-  // When: 同時に2回取得する。
-  const [first, second] = await Promise.all([fetchCoursesUpdatedAt(), fetchCoursesUpdatedAt()])
-
-  // Then: 1リクエストを共有する。
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
 })
 
 test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
@@ -363,68 +156,7 @@ test('フレンドランキングAPIはAbortSignalをHTTPリクエストへ引�
   )
 })
 
-test('fetchVersions は同時呼び出しを同じリクエストにまとめる', async () => {
-  const responseBody = {
-    versions: [{ name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' }],
-  }
-  let fetchCount = 0
-  installFetchRecorder(async () => {
-    fetchCount += 1
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    return Response.json(responseBody)
-  })
-
-  const { fetchVersions } = await loadSongsApi()
-  const [first, second] = await Promise.all([fetchVersions(), fetchVersions()])
-
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-})
-
-test('fetchSongsUpdatedAt は同時呼び出しを同じリクエストにまとめる', async () => {
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
-  let fetchCount = 0
-  installFetchRecorder(async (input) => {
-    if (String(input).endsWith('/internal/songs/updated-at')) {
-      fetchCount += 1
-      await new Promise((resolve) => setTimeout(resolve, 10))
-      return Response.json(responseBody)
-    }
-    throw new Error(`unexpected fetch: ${String(input)}`)
-  })
-
-  const { fetchSongsUpdatedAt } = await loadSongsApi()
-  const [first, second] = await Promise.all([fetchSongsUpdatedAt(), fetchSongsUpdatedAt()])
-
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-})
-
-test('fetchSongsUpdatedAt は失敗後に再試行できる', async () => {
-  let fetchCount = 0
-  installFetchRecorder((input) => {
-    if (!String(input).endsWith('/internal/songs/updated-at')) {
-      throw new Error(`unexpected fetch: ${String(input)}`)
-    }
-
-    fetchCount += 1
-    if (fetchCount === 1) {
-      throw new Error('network error')
-    }
-
-    return Response.json({ updated_at: '2026-06-16T12:00:00Z' })
-  })
-
-  const { fetchSongsUpdatedAt } = await loadSongsApi()
-
-  await assert.rejects(() => fetchSongsUpdatedAt(), /network error/)
-  const result = await fetchSongsUpdatedAt()
-
-  assert.equal(fetchCount, 2)
-  assert.equal(result.updated_at, '2026-06-16T12:00:00Z')
-})
-
-test('fetchMasterData は所持状況マスタをID順で受け取る', async () => {
+test('requestMasterData は所持状況マスタをID順で受け取る', async () => {
   // Given: 順不同の所持状況マスタを含むマスターデータ。
   installFetchRecorder(() =>
     Response.json({
@@ -442,8 +174,8 @@ test('fetchMasterData は所持状況マスタをID順で受け取る', async ()
   )
 
   // When: マスターデータを取得する。
-  const { fetchMasterData } = await loadSongsApi()
-  const result = await fetchMasterData()
+  const { requestMasterData } = await loadSongsApi()
+  const result = await requestMasterData()
 
   // Then: 所持状況がID昇順で受け取れる。
   assert.equal(result.possessions.length, 2)
@@ -451,7 +183,7 @@ test('fetchMasterData は所持状況マスタをID順で受け取る', async ()
   assert.equal(result.possessions[1]?.name, 'rainbow')
 })
 
-test('fetchMasterData は所持状況マスタが無い場合に空配列へ正規化する', async () => {
+test('requestMasterData は所持状況マスタが無い場合に空配列へ正規化する', async () => {
   // Given: 所持状況を含まない旧マスターデータ。
   installFetchRecorder(() =>
     Response.json({
@@ -465,8 +197,8 @@ test('fetchMasterData は所持状況マスタが無い場合に空配列へ正�
   )
 
   // When: マスターデータを取得する。
-  const { fetchMasterData } = await loadSongsApi()
-  const result = await fetchMasterData()
+  const { requestMasterData } = await loadSongsApi()
+  const result = await requestMasterData()
 
   // Then: 呼び出し側が未定義を扱わずに済む。
   assert.deepEqual(result.possessions, [])
@@ -479,11 +211,23 @@ test('楽曲名順フォルダはAPIの表示名を保持してsort_order順に�
     { code: 'A', name: 'APIのあ行', sort_order: 10 },
   ]
   installFetchRecorder(() => Response.json({ name_folders: folders }))
-  const { fetchMasterData } = await loadSongsApi()
+  const { requestMasterData } = await loadSongsApi()
 
   // When
-  const result = await fetchMasterData()
+  const result = await requestMasterData()
 
   // Then
   assert.deepEqual(result.name_folders, [folders[1], folders[0]])
+})
+
+test('requestSongsUpdatedAt は不正な updated_at を拒否し、HTTPキャッシュを再検証する', async () => {
+  // Given: 契約に反するレスポンス。
+  const { requestSongsUpdatedAt } = await loadSongsApi()
+  for (const invalid of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
+    const calls = installFetchRecorder(() => Response.json(invalid))
+
+    // When / Then: API層で型を検証し、HTTPキャッシュの再検証を要求する。
+    await assert.rejects(requestSongsUpdatedAt(), TypeError)
+    assert.equal(calls[0]?.init?.cache, 'no-cache')
+  }
 })

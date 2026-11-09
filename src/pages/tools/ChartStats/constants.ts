@@ -1,5 +1,6 @@
 import type { ChartStatsDifficulty } from '../../../types/chartStats'
 import type { ChartStatsCategory } from '../../../utils/chartStats'
+import type { ChartStatsExportFormat } from '../../../utils/chartStatsExport'
 
 /** レコード統計ページの表示形式 */
 export type ChartStatsViewMode = 'graph' | 'table'
@@ -57,6 +58,19 @@ export const CHART_STATS_VALUE_OPTIONS: readonly {
   { value: 'percent', label: '割合' },
 ]
 
+/** ダウンロード形式の選択肢 */
+export const CHART_STATS_EXPORT_OPTIONS: readonly {
+  value: ChartStatsExportFormat
+  label: string
+}[] = [
+  { value: 'json', label: 'JSON' },
+  { value: 'csv', label: 'CSV' },
+  { value: 'tsv', label: 'TSV' },
+]
+
+/** ダウンロードダイアログで初期選択する形式 */
+export const CHART_STATS_DEFAULT_EXPORT_FORMAT: ChartStatsExportFormat = 'csv'
+
 /** レコード統計ページの表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 export const CHART_STATS_COPY = {
   generatedAt: '最終更新',
@@ -79,4 +93,11 @@ export const CHART_STATS_COPY = {
   filterApply: '適用',
   filterUnselected: '未選択',
   filterHoldReset: 'フィルター リセット',
+  download: 'ダウンロード',
+  downloadClose: '閉じる',
+  downloadDifficulty: '難易度',
+  downloadFormat: '形式',
+  downloadApplyFilter: '検索・フィルターを適用',
+  downloadFailed: 'レコード統計の取得に失敗しました。時間をおいて再度お試しください。',
+  downloading: 'ダウンロード準備中',
 } as const

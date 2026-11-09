@@ -5,8 +5,6 @@ import {
   findGenreNameById,
   formatUpdatedAt,
   hasNotesDesigner,
-  toDateInputValue,
-  toDateOnly,
   toNullableTrimmedString,
   toOptionalNumberInput,
   toOptionalTextInput,
@@ -16,36 +14,6 @@ const genres = [
   { id: 1, name: 'POPS & ANIME' },
   { id: 2, name: 'ORIGINAL' },
 ]
-
-test('日付のみの文字列はそのまま日付として扱うこと', () => {
-  // Given
-  const value = ' 2025-01-02 '
-
-  // When
-  const result = toDateOnly(value)
-
-  // Then
-  assert.equal(result, '2025-01-02')
-})
-
-test('日時文字列は先頭の日付部分を取り出すこと', () => {
-  // Given
-  const value = '2025-01-02T23:59:59+09:00'
-
-  // When
-  const result = toDateOnly(value)
-
-  // Then
-  assert.equal(result, '2025-01-02')
-})
-
-test('空文字や解釈できない文字列は null になること', () => {
-  // Given / When / Then
-  assert.equal(toDateOnly(null), null)
-  assert.equal(toDateOnly('   '), null)
-  assert.equal(toDateOnly('invalid'), null)
-  assert.equal(toDateInputValue(null), '')
-})
 
 test('更新日時は日本時間で整形し、不正値は - になること', () => {
   // Given

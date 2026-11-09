@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GoalFilterOptions } from '../api/songs'
+import type { GoalFilterOptions } from '../queries/masterData'
 import type { GoalDTO, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
 import {
   filterRandomSongCandidatesByGoal,

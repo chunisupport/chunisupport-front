@@ -1,5 +1,5 @@
 import type { RatingBandDTO } from '../types/api'
-import { fetchMasterData } from './songs'
+import { fetchMasterData } from './masterData'
 
 /**
  * ベスト枠平均レーティング帯のマスター一覧を取得する。

@@ -12,9 +12,6 @@ import {
 } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
-import { fetchGenres } from '../../../api/genres'
-import { fetchNameFolders } from '../../../api/nameFolders'
-import { fetchVersions } from '../../../api/songs'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'
 import {
@@ -34,6 +31,8 @@ import {
 import { buildSongDetailPath, DASHBOARD_PATH } from '../../../constants/routes'
 import { getToolLink } from '../../../constants/tools'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { fetchGenres, fetchVersions } from '../../../queries/masterData'
+import { fetchNameFolders } from '../../../queries/nameFolders'
 import type { PlayerRecordDTO } from '../../../types/api'
 import { fetchOwnPlayerStatsData } from '../../../usecases/playerStats/fetchOwnPlayerStatsData'
 import { formatChartConst } from '../../../utils/chartConstFormat'
