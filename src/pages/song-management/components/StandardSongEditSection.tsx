@@ -3,14 +3,11 @@ import { Plus } from 'lucide-solid'
 import { Index, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
-import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO, NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
-import { toDateInputValue } from '../../../utils/dateOnly'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
   SONG_MANAGEMENT_ACTION_COPY,
   SONG_MANAGEMENT_DELETE_DIALOG_COPY,
-  SONG_MANAGEMENT_INPUT_LIMITS,
   SONG_MANAGEMENT_SECTION_COPY,
 } from '../constants'
 import type { StandardSongManagement } from '../hooks/createStandardSongManagement'
@@ -24,12 +21,11 @@ import { hasUltimaChart } from '../utils/standardSongDraft'
 import ManagedSongEditActions from './ManagedSongEditActions'
 import ManagedSongListPanel from './ManagedSongListPanel'
 import {
-  GenreSelectField,
   MANAGEMENT_READONLY_INPUT_CLASS,
-  MANAGEMENT_TEXT_INPUT_CLASS,
   ManagementCheckbox,
   ManagementTextField,
 } from './ManagementFields'
+import SongMetaFields from './SongMetaFields'
 
 type StandardSongEditSectionProps = {
   /** 通常楽曲管理の状態と操作 */
@@ -89,98 +85,48 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
             <Show when={props.management.draft()}>
               {(currentDraft) => (
                 <div class="min-w-0 space-y-4">
-                  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.updatedAt}
-                      value={formatUpdatedAt(currentDraft().updated_at)}
-                      inputClass={MANAGEMENT_READONLY_INPUT_CLASS}
-                      disabled
-                    />
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.title}
-                      value={currentDraft().title}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) => props.management.updateDraftField('title', value)}
-                    />
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.reading}
-                      value={currentDraft().reading ?? ''}
-                      maxLength={SONG_MANAGEMENT_INPUT_LIMITS.reading}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) =>
-                        props.management.updateDraftField('reading', toOptionalTextInput(value))
-                      }
-                    />
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.artist}
-                      value={currentDraft().artist}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) => props.management.updateDraftField('artist', value)}
-                    />
-                    <WikiPageTitleField
-                      class="col-span-2 text-sm"
-                      title={currentDraft().title}
-                      label={FIELD.wikiPageTitle}
-                      value={currentDraft().wiki_page_title ?? ''}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) =>
-                        props.management.updateDraftField(
-                          'wiki_page_title',
-                          toOptionalTextInput(value)
-                        )
-                      }
-                    />
-                    <GenreSelectField
-                      label={FIELD.genre}
-                      value={currentDraft().genre_id}
-                      genres={props.genres}
-                      placeholder={FIELD.genreEditPlaceholder}
-                      onChange={(value) => props.management.updateDraftField('genre_id', value)}
-                    />
-                    <ManagementTextField
-                      label={FIELD.bpm}
-                      type="number"
-                      value={currentDraft().bpm ?? ''}
-                      onInput={(value) =>
-                        props.management.updateDraftField('bpm', toOptionalNumberInput(value))
-                      }
-                    />
-                    <ManagementTextField
-                      label={FIELD.releasedAt}
-                      type="date"
-                      value={toDateInputValue(currentDraft().released_at)}
-                      onInput={(value) =>
-                        props.management.updateDraftField('released_at', toOptionalTextInput(value))
-                      }
-                    />
-                    <ManagementTextField
-                      label={FIELD.jacket}
-                      value={currentDraft().jacket ?? ''}
-                      onInput={(value) =>
-                        props.management.updateDraftField('jacket', toOptionalTextInput(value))
-                      }
-                    />
-                    <div class="flex flex-wrap items-end gap-x-4 gap-y-2 py-2">
-                      <ManagementCheckbox
-                        checked={currentDraft().is_new === true}
-                        ariaLabel={FIELD.isNew}
-                        label={FIELD.isNew}
-                        onChange={(checked) => props.management.updateDraftField('is_new', checked)}
+                  <SongMetaFields
+                    layout="edit"
+                    genres={props.genres}
+                    genrePlaceholder={FIELD.genreEditPlaceholder}
+                    title={currentDraft().title}
+                    reading={currentDraft().reading}
+                    artist={currentDraft().artist}
+                    wikiPageTitle={currentDraft().wiki_page_title}
+                    genreId={currentDraft().genre_id}
+                    bpm={currentDraft().bpm}
+                    releasedAt={currentDraft().released_at}
+                    jacket={currentDraft().jacket}
+                    isNew={currentDraft().is_new}
+                    unlockRequired={currentDraft().unlock_required}
+                    onTitleChange={(value) => props.management.updateDraftField('title', value)}
+                    onReadingChange={(value) => props.management.updateDraftField('reading', value)}
+                    onArtistChange={(value) => props.management.updateDraftField('artist', value)}
+                    onWikiPageTitleChange={(value) =>
+                      props.management.updateDraftField('wiki_page_title', value)
+                    }
+                    onGenreIdChange={(value) =>
+                      props.management.updateDraftField('genre_id', value)
+                    }
+                    onBpmChange={(value) => props.management.updateDraftField('bpm', value)}
+                    onReleasedAtChange={(value) =>
+                      props.management.updateDraftField('released_at', value)
+                    }
+                    onJacketChange={(value) => props.management.updateDraftField('jacket', value)}
+                    onIsNewChange={(value) => props.management.updateDraftField('is_new', value)}
+                    onUnlockRequiredChange={(value) =>
+                      props.management.updateDraftField('unlock_required', value)
+                    }
+                    leading={
+                      <ManagementTextField
+                        class="col-span-2 text-sm"
+                        label={FIELD.updatedAt}
+                        value={formatUpdatedAt(currentDraft().updated_at)}
+                        inputClass={MANAGEMENT_READONLY_INPUT_CLASS}
+                        disabled
                       />
-                      <ManagementCheckbox
-                        checked={currentDraft().unlock_required === true}
-                        ariaLabel={FIELD.unlockRequired}
-                        label={FIELD.unlockRequired}
-                        onChange={(checked) =>
-                          props.management.updateDraftField('unlock_required', checked)
-                        }
-                      />
-                    </div>
-                  </div>
+                    }
+                  />
 
                   <Show when={!hasUltimaChart(currentDraft())}>
                     <AppButton

@@ -2,9 +2,7 @@ import { TextField } from '@kobalte/core/text-field'
 import { Plus } from 'lucide-solid'
 import { Index } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
-import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import type { MasterItemDTO } from '../../../types/api'
-import { toDateInputValue } from '../../../utils/dateOnly'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
   SONG_MANAGEMENT_ACTION_COPY,
@@ -17,12 +15,8 @@ import {
   toOptionalNumberInput,
   toOptionalTextInput,
 } from '../utils/songDraftCommon'
-import {
-  GenreSelectField,
-  MANAGEMENT_TEXT_INPUT_CLASS,
-  ManagementCheckbox,
-  ManagementTextField,
-} from './ManagementFields'
+import { ManagementCheckbox, ManagementTextField } from './ManagementFields'
+import SongMetaFields from './SongMetaFields'
 
 type StandardSongCreateSectionProps = {
   /** 通常楽曲管理の状態と操作 */
@@ -44,93 +38,46 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
     <section class="rounded-lg border border-border bg-surface p-4">
       <h2 class="text-lg font-semibold">{SONG_MANAGEMENT_SECTION_COPY.standardCreate}</h2>
       <div class="mt-3 space-y-4">
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <ManagementTextField
-            label={FIELD.officialIdx}
-            value={draft().official_idx}
-            maxLength={SONG_MANAGEMENT_INPUT_LIMITS.officialIdx}
-            placeholder={FIELD.officialIdxPlaceholder}
-            onInput={(value) => props.management.updateCreateDraftField('official_idx', value)}
-          />
-          <ManagementTextField
-            label={FIELD.title}
-            value={draft().title}
-            inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => props.management.updateCreateDraftField('title', value)}
-          />
-          <ManagementTextField
-            label={FIELD.reading}
-            value={draft().reading ?? ''}
-            maxLength={SONG_MANAGEMENT_INPUT_LIMITS.reading}
-            inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) =>
-              props.management.updateCreateDraftField('reading', toOptionalTextInput(value))
-            }
-          />
-          <ManagementTextField
-            label={FIELD.artist}
-            value={draft().artist}
-            inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) => props.management.updateCreateDraftField('artist', value)}
-          />
-          <WikiPageTitleField
-            title={draft().title}
-            label={FIELD.wikiPageTitle}
-            value={draft().wiki_page_title ?? ''}
-            inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-            onInput={(value) =>
-              props.management.updateCreateDraftField('wiki_page_title', toOptionalTextInput(value))
-            }
-          />
-          <div class="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-3 lg:grid-cols-4">
-            <GenreSelectField
-              label={FIELD.genre}
-              value={draft().genre_id}
-              genres={props.genres}
-              placeholder={FIELD.genreCreatePlaceholder}
-              onChange={(value) => props.management.updateCreateDraftField('genre_id', value)}
-            />
+        <SongMetaFields
+          layout="create"
+          genres={props.genres}
+          genrePlaceholder={FIELD.genreCreatePlaceholder}
+          title={draft().title}
+          reading={draft().reading}
+          artist={draft().artist}
+          wikiPageTitle={draft().wiki_page_title}
+          genreId={draft().genre_id}
+          bpm={draft().bpm}
+          releasedAt={draft().released_at}
+          jacket={draft().jacket}
+          isNew={draft().is_new}
+          unlockRequired={draft().unlock_required}
+          onTitleChange={(value) => props.management.updateCreateDraftField('title', value)}
+          onReadingChange={(value) => props.management.updateCreateDraftField('reading', value)}
+          onArtistChange={(value) => props.management.updateCreateDraftField('artist', value)}
+          onWikiPageTitleChange={(value) =>
+            props.management.updateCreateDraftField('wiki_page_title', value)
+          }
+          onGenreIdChange={(value) => props.management.updateCreateDraftField('genre_id', value)}
+          onBpmChange={(value) => props.management.updateCreateDraftField('bpm', value)}
+          onReleasedAtChange={(value) =>
+            props.management.updateCreateDraftField('released_at', value)
+          }
+          onJacketChange={(value) => props.management.updateCreateDraftField('jacket', value)}
+          onIsNewChange={(value) => props.management.updateCreateDraftField('is_new', value)}
+          onUnlockRequiredChange={(value) =>
+            props.management.updateCreateDraftField('unlock_required', value)
+          }
+          leading={
             <ManagementTextField
-              label={FIELD.bpm}
-              type="number"
-              value={draft().bpm ?? ''}
-              onInput={(value) =>
-                props.management.updateCreateDraftField('bpm', toOptionalNumberInput(value))
-              }
+              label={FIELD.officialIdx}
+              value={draft().official_idx}
+              maxLength={SONG_MANAGEMENT_INPUT_LIMITS.officialIdx}
+              placeholder={FIELD.officialIdxPlaceholder}
+              onInput={(value) => props.management.updateCreateDraftField('official_idx', value)}
             />
-            <ManagementTextField
-              label={FIELD.releasedAt}
-              type="date"
-              value={toDateInputValue(draft().released_at)}
-              onInput={(value) =>
-                props.management.updateCreateDraftField('released_at', toOptionalTextInput(value))
-              }
-            />
-            <ManagementTextField
-              label={FIELD.jacket}
-              value={draft().jacket ?? ''}
-              onInput={(value) =>
-                props.management.updateCreateDraftField('jacket', toOptionalTextInput(value))
-              }
-            />
-            <div class="flex flex-wrap items-end gap-x-4 gap-y-2 py-2">
-              <ManagementCheckbox
-                checked={draft().is_new === true}
-                ariaLabel={FIELD.isNew}
-                label={FIELD.isNew}
-                onChange={(checked) => props.management.updateCreateDraftField('is_new', checked)}
-              />
-              <ManagementCheckbox
-                checked={draft().unlock_required === true}
-                ariaLabel={FIELD.unlockRequired}
-                label={FIELD.unlockRequired}
-                onChange={(checked) =>
-                  props.management.updateCreateDraftField('unlock_required', checked)
-                }
-              />
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         <div class="overflow-x-auto rounded border border-border">
           <table class="min-w-full text-sm">
