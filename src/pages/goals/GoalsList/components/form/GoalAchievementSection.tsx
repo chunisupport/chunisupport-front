@@ -15,6 +15,7 @@ import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../.
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
 import { getGoalValueUnit } from '../../../utils/goalValueFormat'
 import { GOAL_GAUGE_START_LABEL } from '../../constants'
+import { GoalValueWithUnit } from '../GoalValueWithUnit'
 import {
   LABEL_APPLY_GAUGE_START_TO_PERCENTAGE,
   LABEL_GAUGE_START_MODE_CURRENT,
@@ -383,7 +384,10 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
             renderOptionContent={(option) =>
               option.value !== props.gaugeStartMode ? null : option.value === 'current' ? (
                 <p class="-mt-3 text-xs leading-none text-text-muted">
-                  {props.currentGaugeStartText}
+                  <GoalValueWithUnit
+                    text={props.currentGaugeStartText}
+                    unit={getGoalValueUnit(props.achievementType)}
+                  />
                 </p>
               ) : option.value === 'custom' ? (
                 <GoalNumberField

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalAchievementType } from '../../../types/api'
-import { formatGoalValue, getGoalValueUnit } from './goalValueFormat'
+import { formatGoalValue, getGoalValueUnit, splitGoalValueDisplay } from './goalValueFormat'
 
 const GOAL_ACHIEVEMENT_TYPES = [
   'rank_count',
@@ -55,4 +55,27 @@ test('件数系の目標値は整数のまま単位を付けない', () => {
 
   // Then
   assert.equal(result, '1,234')
+})
+
+test('OVER POWER達成率の表示文字列は数値と%に分けられ、連結すると元に戻る', () => {
+  // Given
+  const text = formatGoalValue(97.5369, 'overpower_percent')
+
+  // When
+  const parts = splitGoalValueDisplay(text, getGoalValueUnit('overpower_percent'))
+
+  // Then
+  assert.deepEqual(parts, { numberText: '97.536', unitText: '%' })
+  assert.equal(`${parts.numberText}${parts.unitText}`, text)
+})
+
+test('単位のない目標値は分けずにそのまま返す', () => {
+  // Given
+  const text = formatGoalValue(1234.5679, 'overpower_value')
+
+  // When
+  const parts = splitGoalValueDisplay(text, getGoalValueUnit('overpower_value'))
+
+  // Then
+  assert.deepEqual(parts, { numberText: '1,234.567', unitText: '' })
 })

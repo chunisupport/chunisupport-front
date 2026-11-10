@@ -6,6 +6,7 @@ import { For, Show } from 'solid-js'
 import { FormSelect } from '../../../../../components/common/AppSelect'
 import { CheckboxField } from '../../../../../components/common/CheckboxField'
 import { getSelectableCardButtonClass } from '../../../../../components/common/SelectableCardButton'
+import { GOAL_VALUE_UNIT_CLASS } from '../../constants'
 
 interface GoalFilterCheckboxProps {
   label: string
@@ -140,7 +141,9 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
         <span class="sr-only">（{props.unit}）</span>
       </Show>
     </NumberField.Label>
-    <div class={props.unit ? 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2' : undefined}>
+    <div
+      class={props.unit ? 'grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2' : undefined}
+    >
       <NumberField.Input
         ref={props.inputRef}
         class={`${GOAL_FIELD_INPUT_CLASS} data-invalid:border-danger-border disabled:cursor-not-allowed disabled:opacity-60`}
@@ -156,7 +159,7 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
         step={props.step ?? 1}
       />
       <Show when={props.unit}>
-        <span aria-hidden="true" class="font-sans text-sm text-text-muted">
+        <span aria-hidden="true" class={`${GOAL_VALUE_UNIT_CLASS} font-sans text-text-muted`}>
           {props.unit}
         </span>
       </Show>

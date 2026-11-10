@@ -199,5 +199,11 @@ export const GOAL_NO_TARGET_LABEL = '対象譜面なし'
 /** 平均スコア目標の残り点数に付ける単位。 */
 export const GOAL_SCORE_UNIT = '点'
 
+/**
+ * OP%の単位を数値より小さく表示する文字サイズ。
+ * 親の数値サイズに対して 0.75 倍にし、行の高さが数値より広がらないようにする。
+ */
+export const GOAL_VALUE_UNIT_CLASS = 'text-[0.75em] leading-none'
+
 /** 進捗ゲージを0%として描く値の呼び名。フォームのラベルとカードの読み上げで共通に使う。 */
 export const GOAL_GAUGE_START_LABEL = 'ゲージのスタート位置'

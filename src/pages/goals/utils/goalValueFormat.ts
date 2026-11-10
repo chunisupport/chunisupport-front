@@ -66,3 +66,27 @@ const formatGoalValueNumber = (value: number, type: GoalAchievementType): string
  */
 export const formatGoalValue = (value: number, type: GoalAchievementType): string =>
   `${formatGoalValueNumber(value, type)}${getGoalValueUnit(type)}`
+
+/** 表示文字列を数値と単位に分けた結果。 */
+export interface GoalValueDisplayParts {
+  /** 単位を除いた数値表示。 */
+  numberText: string
+  /** 数値の後ろに付ける単位。ない場合は空文字。 */
+  unitText: string
+}
+
+/**
+ * 表示文字列を数値と、末尾の単位に分ける。
+ * 単位がない、または末尾が単位でない場合は文字列全体を数値として返す。
+ * 分けた結果を連結すると、読み上げやコピーに使う元の文字列に戻る。
+ *
+ * @param text - 単位を含む表示文字列。
+ * @param unit - 末尾に付いている単位。空文字なら分けない。
+ * @returns 数値部分と単位部分。
+ */
+export const splitGoalValueDisplay = (text: string, unit: string): GoalValueDisplayParts => {
+  if (unit !== '' && text.endsWith(unit)) {
+    return { numberText: text.slice(0, -unit.length), unitText: unit }
+  }
+  return { numberText: text, unitText: '' }
+}

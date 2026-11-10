@@ -3,7 +3,9 @@ import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { getGoalValueUnit } from '../../../utils/goalValueFormat'
 import { GOAL_GAUGE_START_LABEL, GOAL_NO_TARGET_LABEL } from '../../constants'
+import { GoalValueWithUnit } from '../GoalValueWithUnit'
 import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
 /** 目標カードの進捗表示に必要なプロパティ */
@@ -116,14 +118,20 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
               </span>
             )}
             <span class="font-oswald text-3xl font-bold leading-none text-text">
-              {displayProgress().currentText}
+              <GoalValueWithUnit
+                text={displayProgress().currentText}
+                unit={getGoalValueUnit(props.achievementType)}
+              />
             </span>
           </div>
           <div class="-mt-1.5 mb-2 flex items-end justify-between gap-3">
             <div class="flex min-w-0 w-full items-end gap-3 text-text-subtle">
               <div class="pb-0.5 font-oswald text-lg font-bold leading-none">/</div>
               <div class="goal-card-progress-secondary pb-0.5 font-oswald text-xl font-bold leading-none">
-                {displayProgress().targetText}
+                <GoalValueWithUnit
+                  text={displayProgress().targetText}
+                  unit={getGoalValueUnit(props.achievementType)}
+                />
               </div>
               {/* 右側の行高を縮めても、負の上余白がある下段と左側の位置を維持する。 */}
               <div class="goal-card-progress-secondary ml-auto flex min-h-7.5 items-end pb-0.5 text-right font-oswald font-semibold leading-none">
@@ -151,7 +159,10 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
             <p class="mt-1 flex items-center gap-0.5 font-oswald text-xs leading-none text-text-muted">
               <LocateFixed size={12} aria-hidden="true" />
               <span class="sr-only">{GOAL_GAUGE_START_LABEL} </span>
-              {gaugeStartText()}
+              <GoalValueWithUnit
+                text={gaugeStartText()}
+                unit={getGoalValueUnit(props.achievementType)}
+              />
             </p>
           )}
         </Show>
