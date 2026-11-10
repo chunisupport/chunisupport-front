@@ -1,11 +1,9 @@
-import {
-  CircleSlash,
-  type LucideIcon,
-  Minus,
-  Sparkles,
-  TrendingDown,
-  TriangleAlert,
-} from 'lucide-solid'
+import type { LucideIcon } from 'lucide-solid'
+import CircleSlash from 'lucide-solid/icons/circle-slash'
+import Minus from 'lucide-solid/icons/minus'
+import Sparkles from 'lucide-solid/icons/sparkles'
+import TrendingDown from 'lucide-solid/icons/trending-down'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
 import type {
   UnifiedWeakChartCategory,
   UnifiedWeakChartZone,

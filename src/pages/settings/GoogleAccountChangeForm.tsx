@@ -1,16 +1,14 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { useNavigate } from '@solidjs/router'
-import {
-  ArrowDown,
-  ArrowRightLeft,
-  Check,
-  CircleCheck,
-  Plus,
-  RefreshCw,
-  ShieldCheck,
-  TriangleAlert,
-} from 'lucide-solid'
+import ArrowDown from 'lucide-solid/icons/arrow-down'
+import ArrowRightLeft from 'lucide-solid/icons/arrow-right-left'
+import Check from 'lucide-solid/icons/check'
+import CircleCheck from 'lucide-solid/icons/circle-check'
+import Plus from 'lucide-solid/icons/plus'
+import RefreshCw from 'lucide-solid/icons/refresh-cw'
+import ShieldCheck from 'lucide-solid/icons/shield-check'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
 import type { Component } from 'solid-js'
 import { createEffect, For, on, onMount, Show } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'

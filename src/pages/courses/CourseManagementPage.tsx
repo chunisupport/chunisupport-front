@@ -1,6 +1,10 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Pencil, Plus, RotateCcw, Search, Trash2 } from 'lucide-solid'
+import Pencil from 'lucide-solid/icons/pencil'
+import Plus from 'lucide-solid/icons/plus'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
+import Search from 'lucide-solid/icons/search'
+import Trash2 from 'lucide-solid/icons/trash-2'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import {

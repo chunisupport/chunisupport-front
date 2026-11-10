@@ -1,20 +1,18 @@
 import { A, Navigate, Route, Router, useLocation, usePreloadRoute } from '@solidjs/router'
-import {
-  Calculator,
-  ChartColumnStacked,
-  ChartNoAxesCombined,
-  Dices,
-  Gauge,
-  Globe,
-  Grid3X3,
-  ListOrdered,
-  Lock,
-  Percent,
-  ScanSearch,
-  Swords,
-  Target,
-  Trophy,
-} from 'lucide-solid'
+import Calculator from 'lucide-solid/icons/calculator'
+import ChartColumnStacked from 'lucide-solid/icons/chart-column-stacked'
+import ChartNoAxesCombined from 'lucide-solid/icons/chart-no-axes-combined'
+import Dices from 'lucide-solid/icons/dices'
+import Gauge from 'lucide-solid/icons/gauge'
+import Globe from 'lucide-solid/icons/globe'
+import Grid3X3 from 'lucide-solid/icons/grid-3x3'
+import ListOrdered from 'lucide-solid/icons/list-ordered'
+import Lock from 'lucide-solid/icons/lock'
+import Percent from 'lucide-solid/icons/percent'
+import ScanSearch from 'lucide-solid/icons/scan-search'
+import Swords from 'lucide-solid/icons/swords'
+import Target from 'lucide-solid/icons/target'
+import Trophy from 'lucide-solid/icons/trophy'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 

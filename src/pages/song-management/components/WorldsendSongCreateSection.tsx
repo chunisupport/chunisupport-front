@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-solid'
+import Plus from 'lucide-solid/icons/plus'
 import { AppButton } from '../../../components/common/AppButton'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import type { MasterItemDTO } from '../../../types/api'

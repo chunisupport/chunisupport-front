@@ -1,7 +1,7 @@
 import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
 import { createVirtualizer } from '@tanstack/solid-virtual'
-import { Search } from 'lucide-solid'
+import Search from 'lucide-solid/icons/search'
 import { For, Show } from 'solid-js'
 import { createComposingSearchInput } from '../../../hooks/createComposingSearchInput'
 import type { NameFolderDTO, VersionSummaryDTO } from '../../../types/api'

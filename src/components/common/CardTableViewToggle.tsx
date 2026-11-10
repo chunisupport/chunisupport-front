@@ -1,4 +1,5 @@
-import { LayoutGrid, Table2 } from 'lucide-solid'
+import LayoutGrid from 'lucide-solid/icons/layout-grid'
+import Table2 from 'lucide-solid/icons/table-2'
 import type { JSX } from 'solid-js'
 import { AppIconButton } from './AppButton'
 import { CARD_TABLE_VIEW_TOGGLE_COPY } from './cardTableViewToggle.constants'

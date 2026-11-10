@@ -1,5 +1,6 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { ImageDown, Share2 } from 'lucide-solid'
+import ImageDown from 'lucide-solid/icons/image-down'
+import Share2 from 'lucide-solid/icons/share-2'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, on, Show } from 'solid-js'
 import { Loading } from '../../../../components'

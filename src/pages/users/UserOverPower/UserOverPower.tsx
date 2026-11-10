@@ -1,5 +1,8 @@
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ChartBarBig, ImageDown, LockKeyhole, Table2 } from 'lucide-solid'
+import ChartBarBig from 'lucide-solid/icons/chart-bar-big'
+import ImageDown from 'lucide-solid/icons/image-down'
+import LockKeyhole from 'lucide-solid/icons/lock-keyhole'
+import Table2 from 'lucide-solid/icons/table-2'
 import type { Component } from 'solid-js'
 import {
   createMemo,

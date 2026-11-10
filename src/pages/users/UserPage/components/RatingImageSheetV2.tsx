@@ -1,4 +1,4 @@
-import { Triangle } from 'lucide-solid'
+import Triangle from 'lucide-solid/icons/triangle'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
 import placeholderImageUrl from '../../../../assets/placeholder.webp'

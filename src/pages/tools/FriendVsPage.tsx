@@ -1,6 +1,6 @@
 import { A, useSearchParams } from '@solidjs/router'
 import { useQuery } from '@tanstack/solid-query'
-import { Swords } from 'lucide-solid'
+import Swords from 'lucide-solid/icons/swords'
 import type { JSX } from 'solid-js'
 import { createMemo, createSignal, onCleanup, Show } from 'solid-js'
 import { AppButton } from '../../components/common/AppButton'

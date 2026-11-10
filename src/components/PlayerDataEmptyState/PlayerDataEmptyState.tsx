@@ -1,4 +1,6 @@
-import { Check, Copy, ExternalLink } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import Copy from 'lucide-solid/icons/copy'
+import ExternalLink from 'lucide-solid/icons/external-link'
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
 import { AppButton } from '../common/AppButton'

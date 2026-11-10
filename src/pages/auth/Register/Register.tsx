@@ -1,7 +1,10 @@
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate } from '@solidjs/router'
 import { signInWithPopup, signOut, type User, type UserCredential } from 'firebase/auth'
-import { Check, Dot, Loader, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import Dot from 'lucide-solid/icons/dot'
+import Loader from 'lucide-solid/icons/loader'
+import X from 'lucide-solid/icons/x'
 import { createEffect, createSignal, For, onMount, Show } from 'solid-js'
 
 import { postSignup } from '../../../api/auth'

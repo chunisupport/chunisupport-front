@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight } from 'lucide-solid'
+import ChevronLeft from 'lucide-solid/icons/chevron-left'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
 import type { JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
 import { buildPaginationItems } from '../../utils/pagination'

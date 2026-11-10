@@ -1,7 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { ExternalLink } from 'lucide-solid'
+import ExternalLink from 'lucide-solid/icons/external-link'
 import type { Component } from 'solid-js'
 import { createSignal, For, onCleanup, Show } from 'solid-js'
 import { deleteApiToken, fetchApiTokens, issueApiToken, renameApiToken } from '../../api/settings'

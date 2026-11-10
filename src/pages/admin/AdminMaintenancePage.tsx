@@ -1,5 +1,6 @@
 import { TextField } from '@kobalte/core/text-field'
-import { CircleCheck, Wrench } from 'lucide-solid'
+import CircleCheck from 'lucide-solid/icons/circle-check'
+import Wrench from 'lucide-solid/icons/wrench'
 import type { JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { updateMaintenance } from '../../api/maintenance'

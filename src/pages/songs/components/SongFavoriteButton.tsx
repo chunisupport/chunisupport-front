@@ -1,4 +1,4 @@
-import { Star } from 'lucide-solid'
+import Star from 'lucide-solid/icons/star'
 import { Show } from 'solid-js'
 import { addMyFavoriteSong, deleteMyFavoriteSong, fetchUserFavoriteSongs } from '../../../api/users'
 import { authSession } from '../../../stores/authSession'

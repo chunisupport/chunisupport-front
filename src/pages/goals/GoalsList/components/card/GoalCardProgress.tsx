@@ -1,4 +1,4 @@
-import { LocateFixed } from 'lucide-solid'
+import LocateFixed from 'lucide-solid/icons/locate-fixed'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import type { GoalAchievementType } from '../../../../../types/api'

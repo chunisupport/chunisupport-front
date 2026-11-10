@@ -1,4 +1,4 @@
-import { CornerDownLeft } from 'lucide-solid'
+import CornerDownLeft from 'lucide-solid/icons/corner-down-left'
 import type { JSX } from 'solid-js'
 import { createEffect, createSignal, createUniqueId, Show } from 'solid-js'
 import {

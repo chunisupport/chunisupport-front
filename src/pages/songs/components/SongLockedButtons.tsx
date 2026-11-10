@@ -1,4 +1,5 @@
-import { LockKeyhole, LockKeyholeOpen } from 'lucide-solid'
+import LockKeyhole from 'lucide-solid/icons/lock-keyhole'
+import LockKeyholeOpen from 'lucide-solid/icons/lock-keyhole-open'
 import { Show } from 'solid-js'
 import { addMyLockedSong, deleteMyLockedSong, fetchUserLockedSongs } from '../../../api/users'
 import { authSession } from '../../../stores/authSession'

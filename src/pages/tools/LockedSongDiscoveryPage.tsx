@@ -1,18 +1,16 @@
 import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
-import {
-  ArrowDown,
-  ArrowUpDown,
-  CircleAlert,
-  CircleCheck,
-  CircleDashed,
-  Eraser,
-  ListMusic,
-  ScanSearch,
-  SearchX,
-  Ticket,
-  TriangleAlert,
-} from 'lucide-solid'
+import ArrowDown from 'lucide-solid/icons/arrow-down'
+import ArrowUpDown from 'lucide-solid/icons/arrow-up-down'
+import CircleAlert from 'lucide-solid/icons/circle-alert'
+import CircleCheck from 'lucide-solid/icons/circle-check'
+import CircleDashed from 'lucide-solid/icons/circle-dashed'
+import Eraser from 'lucide-solid/icons/eraser'
+import ListMusic from 'lucide-solid/icons/list-music'
+import ScanSearch from 'lucide-solid/icons/scan-search'
+import SearchX from 'lucide-solid/icons/search-x'
+import Ticket from 'lucide-solid/icons/ticket'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,

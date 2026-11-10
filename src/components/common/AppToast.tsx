@@ -1,5 +1,8 @@
 import { Toast, toaster } from '@kobalte/core/toast'
-import { CheckCircle, CircleAlert, Info, X } from 'lucide-solid'
+import CircleAlert from 'lucide-solid/icons/circle-alert'
+import CheckCircle from 'lucide-solid/icons/circle-check-big'
+import Info from 'lucide-solid/icons/info'
+import X from 'lucide-solid/icons/x'
 import type { JSX } from 'solid-js'
 import { Portal } from 'solid-js/web'
 

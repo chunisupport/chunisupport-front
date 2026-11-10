@@ -1,4 +1,5 @@
-import { ListOrdered, TriangleAlert } from 'lucide-solid'
+import ListOrdered from 'lucide-solid/icons/list-ordered'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, For, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'

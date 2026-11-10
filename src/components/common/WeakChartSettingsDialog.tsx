@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
-import { RotateCcw } from 'lucide-solid'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
 import { createEffect, createSignal, For, type JSX, on } from 'solid-js'
 import {
   type ChartConstRangeSelection,

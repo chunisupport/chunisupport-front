@@ -9,7 +9,12 @@ import {
   type DragEvent,
   SortableProvider,
 } from '@thisbeyond/solid-dnd'
-import { Check, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import GripVertical from 'lucide-solid/icons/grip-vertical'
+import Pencil from 'lucide-solid/icons/pencil'
+import Plus from 'lucide-solid/icons/plus'
+import Trash2 from 'lucide-solid/icons/trash-2'
+import X from 'lucide-solid/icons/x'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../../../components/common/AppButton'

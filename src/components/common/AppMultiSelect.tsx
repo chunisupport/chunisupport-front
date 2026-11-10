@@ -1,5 +1,6 @@
 import { Select } from '@kobalte/core/select'
-import { Check, ChevronsUpDown } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import ChevronsUpDown from 'lucide-solid/icons/chevrons-up-down'
 import type { JSX } from 'solid-js'
 import { createMemo, createSignal, For, Show } from 'solid-js'
 import { AppButton } from './AppButton'

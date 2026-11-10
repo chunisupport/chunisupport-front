@@ -8,16 +8,14 @@ import {
   SortableProvider,
   useDragDropContext,
 } from '@thisbeyond/solid-dnd'
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsDown,
-  ChevronsRight,
-  Folder,
-  GalleryHorizontal,
-  LayoutList,
-  Plus,
-} from 'lucide-solid'
+import ChevronLeft from 'lucide-solid/icons/chevron-left'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
+import ChevronsDown from 'lucide-solid/icons/chevrons-down'
+import ChevronsRight from 'lucide-solid/icons/chevrons-right'
+import Folder from 'lucide-solid/icons/folder'
+import GalleryHorizontal from 'lucide-solid/icons/gallery-horizontal'
+import LayoutList from 'lucide-solid/icons/layout-list'
+import Plus from 'lucide-solid/icons/plus'
 import type { Component } from 'solid-js'
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { AppIconButton } from '../../../../../components/common/AppButton'

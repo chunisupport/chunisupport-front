@@ -1,6 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { TextField } from '@kobalte/core/text-field'
-import { Target } from 'lucide-solid'
+import Target from 'lucide-solid/icons/target'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, ErrorBoundary, For, onMount, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'

@@ -2,7 +2,10 @@ import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Dices, Funnel, RotateCcw, SlidersHorizontal } from 'lucide-solid'
+import Dices from 'lucide-solid/icons/dices'
+import Funnel from 'lucide-solid/icons/funnel'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
+import SlidersHorizontal from 'lucide-solid/icons/sliders-horizontal'
 import type { Component, JSX } from 'solid-js'
 import {
   createEffect,

@@ -1,6 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { Link } from '@kobalte/core/link'
-import { ExternalLink } from 'lucide-solid'
+import ExternalLink from 'lucide-solid/icons/external-link'
 import type { JSX } from 'solid-js'
 import { ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'

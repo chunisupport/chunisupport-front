@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ImageOff } from 'lucide-solid'
+import ImageOff from 'lucide-solid/icons/image-off'
 import type { Accessor, Component, Resource } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'

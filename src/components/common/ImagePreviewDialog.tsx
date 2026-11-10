@@ -1,5 +1,5 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { RotateCcw } from 'lucide-solid'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
 import type { Component, JSX } from 'solid-js'
 import { Show } from 'solid-js'
 import { Loading } from '../Loading'

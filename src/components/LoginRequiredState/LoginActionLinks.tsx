@@ -1,5 +1,6 @@
 import { A, useLocation } from '@solidjs/router'
-import { LogIn, UserPlus } from 'lucide-solid'
+import LogIn from 'lucide-solid/icons/log-in'
+import UserPlus from 'lucide-solid/icons/user-plus'
 import type { Component } from 'solid-js'
 import { REGISTER_PATH } from '../../constants/routes'
 import { buildLoginRedirectPath } from '../../usecases/auth/redirectPath'

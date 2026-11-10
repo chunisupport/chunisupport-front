@@ -3,13 +3,11 @@ import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import {
-  ChartNoAxesCombined,
-  CircleCheckBig,
-  RotateCcw,
-  Settings,
-  TriangleAlert,
-} from 'lucide-solid'
+import ChartNoAxesCombined from 'lucide-solid/icons/chart-no-axes-combined'
+import CircleCheckBig from 'lucide-solid/icons/circle-check-big'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
+import Settings from 'lucide-solid/icons/settings'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
 import type { JSX } from 'solid-js'
 import {
   createEffect,

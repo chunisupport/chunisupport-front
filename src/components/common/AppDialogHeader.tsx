@@ -1,5 +1,5 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { X } from 'lucide-solid'
+import X from 'lucide-solid/icons/x'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { getAppIconButtonClass } from './AppButton'

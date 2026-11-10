@@ -1,4 +1,4 @@
-import { Pencil } from 'lucide-solid'
+import Pencil from 'lucide-solid/icons/pencil'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { AppIconButton } from '../../../components/common/AppButton'

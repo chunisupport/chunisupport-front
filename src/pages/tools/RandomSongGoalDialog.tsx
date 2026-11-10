@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { RadioGroup } from '@kobalte/core/radio-group'
-import { Target } from 'lucide-solid'
+import Target from 'lucide-solid/icons/target'
 import { createSignal, For, type JSX, Show } from 'solid-js'
 import { Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'

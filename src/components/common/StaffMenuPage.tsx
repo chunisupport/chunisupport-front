@@ -1,14 +1,12 @@
-import {
-  Award,
-  CalendarRange,
-  ChartPie,
-  DatabaseZap,
-  ImageDown,
-  Music,
-  Route,
-  Users,
-  Wrench,
-} from 'lucide-solid'
+import Award from 'lucide-solid/icons/award'
+import CalendarRange from 'lucide-solid/icons/calendar-range'
+import ChartPie from 'lucide-solid/icons/chart-pie'
+import DatabaseZap from 'lucide-solid/icons/database-zap'
+import ImageDown from 'lucide-solid/icons/image-down'
+import Music from 'lucide-solid/icons/music'
+import Route from 'lucide-solid/icons/route'
+import Users from 'lucide-solid/icons/users'
+import Wrench from 'lucide-solid/icons/wrench'
 import type { JSX } from 'solid-js'
 import { For } from 'solid-js'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'

@@ -1,7 +1,10 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { createVirtualizer } from '@tanstack/solid-virtual'
-import { CircleSlash2, Funnel, ListChecks, LoaderCircle } from 'lucide-solid'
+import CircleSlash2 from 'lucide-solid/icons/circle-slash-2'
+import Funnel from 'lucide-solid/icons/funnel'
+import ListChecks from 'lucide-solid/icons/list-checks'
+import LoaderCircle from 'lucide-solid/icons/loader-circle'
 import type { Accessor, JSX, Setter } from 'solid-js'
 import { For, Show } from 'solid-js'
 import {

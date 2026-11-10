@@ -1,5 +1,6 @@
 import { TextField } from '@kobalte/core/text-field'
-import { CornerDownLeft, ExternalLink } from 'lucide-solid'
+import CornerDownLeft from 'lucide-solid/icons/corner-down-left'
+import ExternalLink from 'lucide-solid/icons/external-link'
 import type { JSX } from 'solid-js'
 import { WIKI_BASE_URL } from '../../config'
 import { SONG_EDIT_INPUT_LIMITS } from '../../constants/songMaster'

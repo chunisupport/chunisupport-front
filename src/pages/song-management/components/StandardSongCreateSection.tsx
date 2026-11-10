@@ -1,5 +1,5 @@
 import { TextField } from '@kobalte/core/text-field'
-import { Plus } from 'lucide-solid'
+import Plus from 'lucide-solid/icons/plus'
 import { Index } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
 import type { MasterItemDTO } from '../../../types/api'

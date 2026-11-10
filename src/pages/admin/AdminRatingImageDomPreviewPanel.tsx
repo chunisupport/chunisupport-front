@@ -1,5 +1,5 @@
 import { Slider } from '@kobalte/core/slider'
-import { ImageDown } from 'lucide-solid'
+import ImageDown from 'lucide-solid/icons/image-down'
 import {
   createEffect,
   createMemo,

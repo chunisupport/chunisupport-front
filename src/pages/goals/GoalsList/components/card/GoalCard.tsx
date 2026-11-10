@@ -1,7 +1,8 @@
 import { Button } from '@kobalte/core/button'
 import { Collapsible } from '@kobalte/core/collapsible'
 import { createSortable, useDragDropContext } from '@thisbeyond/solid-dnd'
-import { ChevronRight, ExternalLink } from 'lucide-solid'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
+import ExternalLink from 'lucide-solid/icons/external-link'
 import type { Component } from 'solid-js'
 import { createEffect, onCleanup, Show } from 'solid-js'
 

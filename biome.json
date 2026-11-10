@@ -17,7 +17,20 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "lucide-solid": {
+                "message": "バレル経由だと全アイコンがビルド対象になります。'lucide-solid/icons/<name>' から個別に import してください。",
+                "allowImportNames": ["LucideIcon", "LucideProps"]
+              }
+            }
+          }
+        }
+      }
     }
   },
   "javascript": {

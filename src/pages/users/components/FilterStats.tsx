@@ -1,5 +1,7 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { Link2, ShieldCheck, Trophy } from 'lucide-solid'
+import Link2 from 'lucide-solid/icons/link-2'
+import ShieldCheck from 'lucide-solid/icons/shield-check'
+import Trophy from 'lucide-solid/icons/trophy'
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
 import { AppDisclosureTrigger } from '../../../components/common/AppDisclosureTrigger'

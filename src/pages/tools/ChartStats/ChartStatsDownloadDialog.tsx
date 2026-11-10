@@ -1,5 +1,5 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Download } from 'lucide-solid'
+import Download from 'lucide-solid/icons/download'
 import { createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'

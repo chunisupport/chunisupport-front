@@ -1,6 +1,10 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
-import { Check, Clock, UserMinus, UserPlus, X } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import Clock from 'lucide-solid/icons/clock'
+import UserMinus from 'lucide-solid/icons/user-minus'
+import UserPlus from 'lucide-solid/icons/user-plus'
+import X from 'lucide-solid/icons/x'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import {

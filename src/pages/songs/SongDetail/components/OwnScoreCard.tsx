@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { ChevronRight } from 'lucide-solid'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
 import { For, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { DifficultyBadge } from '../../../../components/common/DifficultyBadge'

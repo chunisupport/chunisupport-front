@@ -1,4 +1,4 @@
-import { Play } from 'lucide-solid'
+import Play from 'lucide-solid/icons/play'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { ClassEmblem } from '../../../../components/common/profile/ClassEmblem'

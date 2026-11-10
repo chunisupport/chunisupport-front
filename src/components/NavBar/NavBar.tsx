@@ -4,22 +4,20 @@ import { Dialog } from '@kobalte/core/dialog'
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { A, useLocation, useNavigate } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
-import {
-  BadgeQuestionMark,
-  ClipboardList,
-  Ellipsis,
-  ExternalLink,
-  FlagTriangleRight,
-  History,
-  House,
-  LogOut,
-  Music,
-  Palette,
-  Settings,
-  Shield,
-  UsersRound,
-  Wrench,
-} from 'lucide-solid'
+import BadgeQuestionMark from 'lucide-solid/icons/badge-question-mark'
+import ClipboardList from 'lucide-solid/icons/clipboard-list'
+import Ellipsis from 'lucide-solid/icons/ellipsis'
+import ExternalLink from 'lucide-solid/icons/external-link'
+import FlagTriangleRight from 'lucide-solid/icons/flag-triangle-right'
+import History from 'lucide-solid/icons/history'
+import House from 'lucide-solid/icons/house'
+import LogOut from 'lucide-solid/icons/log-out'
+import Music from 'lucide-solid/icons/music'
+import Palette from 'lucide-solid/icons/palette'
+import Settings from 'lucide-solid/icons/settings'
+import Shield from 'lucide-solid/icons/shield'
+import UsersRound from 'lucide-solid/icons/users-round'
+import Wrench from 'lucide-solid/icons/wrench'
 import type { JSX } from 'solid-js'
 import { createEffect, createSignal, For, onMount } from 'solid-js'
 import { isNavItemActive } from './navItemMatching'

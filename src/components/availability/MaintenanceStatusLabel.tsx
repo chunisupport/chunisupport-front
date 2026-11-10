@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { Wrench } from 'lucide-solid'
+import Wrench from 'lucide-solid/icons/wrench'
 import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 

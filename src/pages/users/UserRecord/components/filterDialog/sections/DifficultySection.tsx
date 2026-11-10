@@ -1,4 +1,4 @@
-import { Star } from 'lucide-solid'
+import Star from 'lucide-solid/icons/star'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { AppButton } from '../../../../../../components/common/AppButton'

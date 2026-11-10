@@ -1,6 +1,6 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Funnel } from 'lucide-solid'
+import Funnel from 'lucide-solid/icons/funnel'
 import { createSignal, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'

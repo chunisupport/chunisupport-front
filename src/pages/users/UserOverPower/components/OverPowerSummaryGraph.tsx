@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import { Funnel } from 'lucide-solid'
+import Funnel from 'lucide-solid/icons/funnel'
 import type { Component } from 'solid-js'
 import { For, Show } from 'solid-js'
 import { OverPowerTierValue } from '../../../../components/common/OverPowerTierValue'

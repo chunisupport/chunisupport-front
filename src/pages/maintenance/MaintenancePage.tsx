@@ -1,4 +1,4 @@
-import { Wrench } from 'lucide-solid'
+import Wrench from 'lucide-solid/icons/wrench'
 import { createMemo, onMount, Show } from 'solid-js'
 import { X_TIMELINE_HEADING, XTimeline } from '../../components/XTimeline'
 import { MAINTENANCE_PAGE_COPY } from '../../constants/maintenance'
