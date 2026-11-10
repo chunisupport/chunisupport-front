@@ -90,3 +90,30 @@ export const splitGoalValueDisplay = (text: string, unit: string): GoalValueDisp
   }
   return { numberText: text, unitText: '' }
 }
+
+/** 表示済み数値を整数部と小数部に分けた結果。 */
+export interface GoalNumberTextParts {
+  /** 小数点より前。小数がなければ文字列全体。 */
+  integerText: string
+  /** 小数点とそれ以降。小数がなければ空文字。 */
+  fractionText: string
+}
+
+/**
+ * 表示済みの数値文字列を整数部と小数部に分ける。
+ * 小数点とそれ以降を小数部にする。小数点がない場合は分けない。
+ * 連結すると元の文字列に戻る。
+ *
+ * @param numberText - 単位を除いた数値の表示文字列。
+ * @returns 整数部と、小数点を含む小数部。
+ */
+export const splitGoalNumberText = (numberText: string): GoalNumberTextParts => {
+  const decimalIndex = numberText.indexOf('.')
+  if (decimalIndex === -1) {
+    return { integerText: numberText, fractionText: '' }
+  }
+  return {
+    integerText: numberText.slice(0, decimalIndex),
+    fractionText: numberText.slice(decimalIndex),
+  }
+}

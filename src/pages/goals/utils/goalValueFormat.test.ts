@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalAchievementType } from '../../../types/api'
-import { formatGoalValue, getGoalValueUnit, splitGoalValueDisplay } from './goalValueFormat'
+import {
+  formatGoalValue,
+  getGoalValueUnit,
+  splitGoalNumberText,
+  splitGoalValueDisplay,
+} from './goalValueFormat'
 
 const GOAL_ACHIEVEMENT_TYPES = [
   'rank_count',
@@ -78,4 +83,34 @@ test('単位のない目標値は分けずにそのまま返す', () => {
 
   // Then
   assert.deepEqual(parts, { numberText: '1,234.567', unitText: '' })
+})
+
+test('小数を含む目標値は小数点以降を小数部に分け、連結すると元に戻る', () => {
+  // Given
+  const overPower = formatGoalValue(1234.5679, 'overpower_value')
+  const overPowerPercent = splitGoalValueDisplay(
+    formatGoalValue(97.5369, 'overpower_percent'),
+    '%'
+  ).numberText
+
+  // When
+  const overPowerParts = splitGoalNumberText(overPower)
+  const percentParts = splitGoalNumberText(overPowerPercent)
+
+  // Then
+  assert.deepEqual(overPowerParts, { integerText: '1,234', fractionText: '.567' })
+  assert.equal(`${overPowerParts.integerText}${overPowerParts.fractionText}`, overPower)
+  assert.deepEqual(percentParts, { integerText: '97', fractionText: '.536' })
+  assert.equal(`${percentParts.integerText}${percentParts.fractionText}`, overPowerPercent)
+})
+
+test('小数のない目標値は整数部だけを返す', () => {
+  // Given
+  const text = formatGoalValue(1234.9, 'score_count')
+
+  // When
+  const parts = splitGoalNumberText(text)
+
+  // Then
+  assert.deepEqual(parts, { integerText: '1,234', fractionText: '' })
 })
