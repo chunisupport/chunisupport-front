@@ -68,6 +68,31 @@ test('JST今日がYYYY-MM-DD形式で返ること', () => {
   assert.match(result, /^\d{4}-\d{2}-\d{2}$/)
 })
 
+test('新バージョンは稼働日のJST 07:00から公開済みになること', () => {
+  // Given: 旧バージョンと、稼働日が2026-09-03の新バージョン。
+  // 太平洋夏時間ではどちらの時刻も2026-09-02の午後になる。
+  const versions = [
+    { name: 'CHUNITHM X-VERSE', released_at: '2025-12-11' },
+    { name: 'CHUNITHM X-VERSE-X', released_at: '2026-09-03' },
+  ]
+  const beforeDayStart = getTodayChunithmDate(new Date('2026-09-02T21:59:59Z'))
+  const atDayStart = getTodayChunithmDate(new Date('2026-09-02T22:00:00Z'))
+
+  // When: 稼働開始の直前と開始時刻で公開済みを絞る。
+  const before = filterReleasedVersions(versions, beforeDayStart)
+  const atStart = filterReleasedVersions(versions, atDayStart)
+
+  // Then: 06:59:59は旧バージョンのまま、07:00:00から新バージョンを含む。
+  assert.deepEqual(
+    before.map((version) => version.name),
+    ['CHUNITHM X-VERSE']
+  )
+  assert.deepEqual(
+    atStart.map((version) => version.name),
+    ['CHUNITHM X-VERSE', 'CHUNITHM X-VERSE-X']
+  )
+})
+
 test('未来バージョンがあっても過去曲の解決結果は変わらないこと', () => {
   // Given: 未来バージョンを含む一覧がある。
   const versions = [

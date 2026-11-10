@@ -1,13 +1,14 @@
 import type { ScoreHistoryDifficulty } from '../api/songs'
 import { JST_TIME_ZONE } from '../constants/dateTime'
 import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../types/api'
+import { toChunithmDayStartTimestamp } from './chunithmDate'
 
 /** スコア履歴テーブルに表示するスコア行またはバージョン境界行 */
 export type ScoreHistoryTableRow =
   | { type: 'score'; entry: ScoreHistoryEntryDTO }
   | { type: 'version'; name: string }
 
-/** バージョン稼働日の境界と同じJSTで履歴の日付を表示するフォーマッター */
+/** スコア履歴の日付表示に使うJSTの暦日フォーマッター。バージョン境界の07:00とは別に、表示上の日付は暦日のまま */
 const scoreHistoryDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
   timeZone: JST_TIME_ZONE,
   year: '2-digit',
@@ -54,7 +55,7 @@ export const formatScoreHistoryTimestamp = (value: number): string => {
 }
 
 /**
- * スコア履歴へ、バージョン稼働日を表す境界行を時系列順に差し込む。
+ * スコア履歴へ、バージョン稼働日のJST 07:00を表す境界行を時系列順に差し込む。
  *
  * @param entries - 新しい順に並んだスコア履歴。
  * @param versions - バージョン名と稼働日の一覧。
@@ -67,7 +68,7 @@ export const buildScoreHistoryTableRows = (
   const versionBoundaries = versions
     .map((version) => ({
       name: version.name,
-      timestamp: new Date(`${version.released_at.slice(0, 10)}T00:00:00+09:00`).getTime(),
+      timestamp: toChunithmDayStartTimestamp(version.released_at),
     }))
     .filter((version) => !Number.isNaN(version.timestamp))
     .sort((left, right) => right.timestamp - left.timestamp)

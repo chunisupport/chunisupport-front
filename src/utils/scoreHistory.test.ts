@@ -94,6 +94,27 @@ test('稼働日をまたぐ位置と最古履歴の末尾へバージョン行�
   )
 })
 
+test('稼働日のJST 07:00から新バージョン側へ含め、直前は旧バージョン側に残す', () => {
+  // Given: 新バージョン稼働日の06:59:59と07:00:00。
+  const entries = [
+    createHistoryEntry('2026-06-18T07:00:00+09:00', 1_010_000),
+    createHistoryEntry('2026-06-18T06:59:59+09:00', 1_005_000),
+  ]
+  const versions = [
+    { name: 'CHUNITHM X-VERSE-X', short_name: 'XVSX', released_at: '2026-06-18' },
+    { name: 'CHUNITHM X-VERSE', short_name: 'XVRS', released_at: '2025-12-11' },
+  ]
+
+  // When
+  const result = buildScoreHistoryTableRows(entries, versions)
+
+  // Then: 07:00:00の履歴だけが新バージョン側に入る。
+  assert.deepEqual(
+    result.map((row) => (row.type === 'score' ? row.entry.score : row.name)),
+    [1_010_000, 'CHUNITHM X-VERSE-X', 1_005_000, 'CHUNITHM X-VERSE']
+  )
+})
+
 test('稼働日当日の履歴を新バージョン側へ含める', () => {
   // Given
   const entries = [
