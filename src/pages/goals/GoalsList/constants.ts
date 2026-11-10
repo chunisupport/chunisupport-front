@@ -207,9 +207,9 @@ export const GOAL_VALUE_UNIT_CLASS = 'text-[0.75em] leading-none'
 
 /**
  * 目標値の小数部を整数部より小さく表示する文字サイズ。
- * 整数部より小さく、OP%の単位（0.75倍）よりは大きくする。
+ * 親の数値サイズに対して 0.75 倍にする。
  */
-export const GOAL_VALUE_FRACTION_CLASS = 'text-[0.85em] leading-none'
+export const GOAL_VALUE_FRACTION_CLASS = 'text-[0.75em] leading-none'
 
 /** 進捗ゲージを0%として描く値の呼び名。フォームのラベルとカードの読み上げで共通に使う。 */
 export const GOAL_GAUGE_START_LABEL = 'ゲージのスタート位置'
