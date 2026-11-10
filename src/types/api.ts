@@ -218,6 +218,8 @@ export type ErrorCode =
   | 'username_invalid_char'
   | 'username_forbidden'
   | 'username_taken'
+  | 'comment_too_long'
+  | 'comment_invalid_char'
   | 'password_too_short'
   | 'password_too_long'
   | 'invalid_password'
@@ -324,6 +326,8 @@ export const errorMessages: Record<ErrorCode, string> = {
     'ユーザーネームは小文字英数字と_のみ使用でき、英数字を1文字以上含む必要があります',
   username_forbidden: 'このユーザーネームは使用できません',
   username_taken: 'このユーザーネームはすでに使用されています',
+  comment_too_long: 'コメントは100文字以内である必要があります',
+  comment_invalid_char: 'コメントに改行などの使用できない文字が含まれています',
   password_too_short: 'パスワードは8文字以上である必要があります',
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
@@ -997,6 +1001,12 @@ export interface XAccountResponse {
 export interface XAccountSyncRequest {
   access_token: string
   access_token_secret: string
+}
+
+/** GET /internal/users/:username/comment と PUT /internal/me/comment のレスポンス */
+export interface UserCommentResponse {
+  /** プロフィールコメント。未設定の場合は null */
+  comment: string | null
 }
 
 /** フレンド・申請一覧に表示する相手ユーザー概要 */
