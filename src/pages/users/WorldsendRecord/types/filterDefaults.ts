@@ -50,7 +50,7 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
  *
  * @param songs - WORLD'S END 楽曲マスタ。
  * @param versionSummaries - バージョン一覧。未来分は選択肢から除外する。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns ジャンルと属性の全選択、および公開済みバージョンの短縮名。
  */
 export const getWorldsendSongDefaults = (
@@ -74,7 +74,7 @@ export const getWorldsendSongDefaults = (
  *
  * @param songs - WORLD'S END 楽曲マスタ。
  * @param versions - バージョン一覧。公開済みの全選択は未指定（null）にする。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns 楽曲マスタ由来の選択肢を反映したフィルター初期値。
  */
 export const buildDefaultWorldsendFilter = (

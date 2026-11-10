@@ -11,13 +11,13 @@ import {
 } from '../utils/newSongTheoreticalRating'
 import { getTodayChunithmDate } from '../utils/versionConverter'
 
-/** 表示中のJST日付を更新する間隔 */
+/** 表示中のCHUNITHM運用日を更新する間隔 */
 const CURRENT_DATE_REFRESH_INTERVAL_MS = 60_000
 
 /**
- * CHUNITHMの稼働地域を基準に現在日を返す。
+ * CHUNITHMの運用日を返す。JST 07:00未満は前日。
  *
- * @returns YYYY-MM-DD形式のJST現在日。
+ * @returns YYYY-MM-DD形式の運用日。
  */
 const getCurrentChunithmDate = (): string => getTodayChunithmDate()
 

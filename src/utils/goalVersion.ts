@@ -27,7 +27,7 @@ export const sortGoalVersionsByReleaseDate = (versions: readonly VersionDTO[]): 
  * 進捗側の解決は全件で行い、未来曲が未来番号になることで現行目標から外れる。
  *
  * @param versions - API から返されたバージョン一覧。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns チェックボックスに描画する選択肢。
  */
 export const buildGoalVersionOptions = (
@@ -49,7 +49,7 @@ export const buildGoalVersionOptions = (
  * 目標条件のバージョン番号から表示名を引く Map を作る。
  *
  * @param versions - API から返されたバージョン一覧。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns リリース日順番号をキーにした表示名 Map。
  */
 export const buildGoalVersionNameMap = (

@@ -135,7 +135,7 @@ const toRatingTheoreticalEntry = ({
  * バージョン一覧から基準日時点の現行バージョン稼働開始日を返す。
  *
  * @param versions - 稼働開始日を持つバージョン一覧。
- * @param referenceDate - 現行判定に使うYYYY-MM-DD形式の基準日。
+ * @param referenceDate - 現行判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。
  * @returns 基準日以前で最新のYYYY-MM-DD形式の稼働開始日。対象がなければ未定義。
  */
 const resolveCurrentVersionReleaseDate = (
@@ -213,7 +213,7 @@ const calculateTheoreticalRating = (
  *
  * @param songs - リリース日と譜面定数を含む通常楽曲一覧。
  * @param versions - ベスト枠対象の終了日を解決するバージョン一覧。
- * @param referenceDate - 現行バージョンを判定するYYYY-MM-DD形式の基準日。
+ * @param referenceDate - 現行バージョンを判定するCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。
  * @param slotCount - ベスト枠の規定枠数。
  * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。現行バージョンを解決できなければ未定義。
  */
@@ -240,7 +240,7 @@ export const calculateBestTheoreticalRating = (
  *
  * @param songs - リリース日と譜面定数を含む通常楽曲一覧。配信日未登録の楽曲も含む。
  * @param versions - 新曲枠対象の開始日を解決するバージョン一覧。
- * @param referenceDate - 現行バージョンと配信済み楽曲を判定する基準日。
+ * @param referenceDate - 現行バージョンと配信済み楽曲を判定するCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。
  * @param slotCount - 新曲枠の規定枠数。
  * @returns 規定枠数までの上位譜面を採用譜面数で平均した理論値。新曲譜面がなければ未定義。
  */
