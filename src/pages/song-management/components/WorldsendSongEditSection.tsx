@@ -1,15 +1,11 @@
 import { Show } from 'solid-js'
 import { Loading } from '../../../components'
-import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
-import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import type { MasterItemDTO, NameFolderDTO, VersionSummaryDTO } from '../../../types/api'
-import { toDateInputValue } from '../../../utils/dateOnly'
 import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
 import {
   SONG_MANAGEMENT_FIELD_COPY as FIELD,
   SONG_MANAGEMENT_DELETE_DIALOG_COPY,
-  SONG_MANAGEMENT_INPUT_LIMITS,
   SONG_MANAGEMENT_SECTION_COPY,
 } from '../constants'
 import type { WorldsendSongManagement } from '../hooks/createWorldsendSongManagement'
@@ -21,12 +17,11 @@ import {
 import ManagedSongEditActions from './ManagedSongEditActions'
 import ManagedSongListPanel from './ManagedSongListPanel'
 import {
-  GenreSelectField,
   MANAGEMENT_READONLY_INPUT_CLASS,
   MANAGEMENT_TEXT_INPUT_CLASS,
-  ManagementCheckbox,
   ManagementTextField,
 } from './ManagementFields'
+import SongMetaFields from './SongMetaFields'
 
 type WorldsendSongEditSectionProps = {
   /** WORLD'S END 楽曲管理の状態と操作 */
@@ -90,184 +85,116 @@ const WorldsendSongEditSection = (props: WorldsendSongEditSectionProps) => {
             <Show when={props.management.draft()}>
               {(currentDraft) => (
                 <div class="space-y-4">
-                  <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.updatedAt}
-                      value={formatUpdatedAt(currentDraft().updated_at)}
-                      inputClass={MANAGEMENT_READONLY_INPUT_CLASS}
-                      disabled
-                    />
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.title}
-                      value={currentDraft().title}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) => props.management.updateDraftField('title', value)}
-                    />
-                    <CopyFromStandardField
-                      class="col-span-2"
-                      field="reading"
-                      songs={props.standardSongs}
-                      title={currentDraft().title}
-                      artist={currentDraft().artist}
-                      songsLoading={props.standardSongsLoading}
-                      onCopied={(reading) => props.management.updateDraftField('reading', reading)}
-                    >
+                  <SongMetaFields
+                    layout="edit"
+                    genres={props.genres}
+                    genrePlaceholder={FIELD.genreEditPlaceholder}
+                    title={currentDraft().title}
+                    reading={currentDraft().reading}
+                    artist={currentDraft().artist}
+                    wikiPageTitle={currentDraft().wiki_page_title}
+                    genreId={currentDraft().genre_id}
+                    bpm={currentDraft().bpm}
+                    releasedAt={currentDraft().released_at}
+                    jacket={currentDraft().jacket}
+                    isNew={currentDraft().is_new}
+                    unlockRequired={currentDraft().unlock_required}
+                    standardSongs={props.standardSongs}
+                    standardSongsLoading={props.standardSongsLoading}
+                    onTitleChange={(value) => props.management.updateDraftField('title', value)}
+                    onReadingChange={(value) => props.management.updateDraftField('reading', value)}
+                    onArtistChange={(value) => props.management.updateDraftField('artist', value)}
+                    onWikiPageTitleChange={(value) =>
+                      props.management.updateDraftField('wiki_page_title', value)
+                    }
+                    onGenreIdChange={(value) =>
+                      props.management.updateDraftField('genre_id', value)
+                    }
+                    onBpmChange={(value) => props.management.updateDraftField('bpm', value)}
+                    onReleasedAtChange={(value) =>
+                      props.management.updateDraftField('released_at', value)
+                    }
+                    onJacketChange={(value) => props.management.updateDraftField('jacket', value)}
+                    onIsNewChange={(value) => props.management.updateDraftField('is_new', value)}
+                    onUnlockRequiredChange={(value) =>
+                      props.management.updateDraftField('unlock_required', value)
+                    }
+                    onReadingCopied={(reading) =>
+                      props.management.updateDraftField('reading', reading)
+                    }
+                    onWikiPageTitleCopied={(wikiPageTitle) =>
+                      props.management.updateDraftField('wiki_page_title', wikiPageTitle)
+                    }
+                    onBpmCopied={(bpm) => props.management.updateDraftField('bpm', bpm)}
+                    leading={
                       <ManagementTextField
-                        class="text-sm"
-                        label={FIELD.reading}
-                        value={currentDraft().reading ?? ''}
-                        maxLength={SONG_MANAGEMENT_INPUT_LIMITS.reading}
-                        inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                        onInput={(value) =>
-                          props.management.updateDraftField('reading', toOptionalTextInput(value))
-                        }
+                        class="col-span-2 text-sm"
+                        label={FIELD.updatedAt}
+                        value={formatUpdatedAt(currentDraft().updated_at)}
+                        inputClass={MANAGEMENT_READONLY_INPUT_CLASS}
+                        disabled
                       />
-                    </CopyFromStandardField>
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.artist}
-                      value={currentDraft().artist}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) => props.management.updateDraftField('artist', value)}
-                    />
-                    <CopyFromStandardField
-                      class="col-span-2"
-                      field="wikiPageTitle"
-                      songs={props.standardSongs}
-                      title={currentDraft().title}
-                      artist={currentDraft().artist}
-                      songsLoading={props.standardSongsLoading}
-                      onCopied={(wikiPageTitle) =>
-                        props.management.updateDraftField('wiki_page_title', wikiPageTitle)
-                      }
-                    >
-                      {(copyButton) => (
-                        <WikiPageTitleField
-                          class="text-sm"
-                          title={currentDraft().title}
-                          label={FIELD.wikiPageTitle}
-                          value={currentDraft().wiki_page_title ?? ''}
+                    }
+                    trailing={
+                      <>
+                        <ManagementTextField
+                          class="col-span-1 text-sm"
+                          label={FIELD.attribute}
+                          value={currentDraft().attribute ?? ''}
                           inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
                           onInput={(value) =>
                             props.management.updateDraftField(
-                              'wiki_page_title',
+                              'attribute',
                               toOptionalTextInput(value)
                             )
                           }
-                          leadingAction={copyButton}
                         />
-                      )}
-                    </CopyFromStandardField>
-                    <GenreSelectField
-                      label={FIELD.genre}
-                      value={currentDraft().genre_id}
-                      genres={props.genres}
-                      placeholder={FIELD.genreEditPlaceholder}
-                      onChange={(value) => props.management.updateDraftField('genre_id', value)}
-                    />
-                    <CopyFromStandardField
-                      field="bpm"
-                      songs={props.standardSongs}
-                      title={currentDraft().title}
-                      artist={currentDraft().artist}
-                      songsLoading={props.standardSongsLoading}
-                      onCopied={(bpm) => props.management.updateDraftField('bpm', bpm)}
-                    >
-                      <ManagementTextField
-                        label={FIELD.bpm}
-                        type="number"
-                        value={currentDraft().bpm ?? ''}
-                        onInput={(value) =>
-                          props.management.updateDraftField('bpm', toOptionalNumberInput(value))
-                        }
-                      />
-                    </CopyFromStandardField>
-                    <ManagementTextField
-                      label={FIELD.releasedAt}
-                      type="date"
-                      value={toDateInputValue(currentDraft().released_at)}
-                      onInput={(value) =>
-                        props.management.updateDraftField('released_at', toOptionalTextInput(value))
-                      }
-                    />
-                    <ManagementTextField
-                      label={FIELD.jacket}
-                      value={currentDraft().jacket ?? ''}
-                      onInput={(value) =>
-                        props.management.updateDraftField('jacket', toOptionalTextInput(value))
-                      }
-                    />
-                    <div class="flex flex-wrap items-end gap-x-4 gap-y-2 py-2">
-                      <ManagementCheckbox
-                        checked={currentDraft().is_new === true}
-                        ariaLabel={FIELD.isNew}
-                        label={FIELD.isNew}
-                        onChange={(checked) => props.management.updateDraftField('is_new', checked)}
-                      />
-                      <ManagementCheckbox
-                        checked={currentDraft().unlock_required === true}
-                        ariaLabel={FIELD.unlockRequired}
-                        label={FIELD.unlockRequired}
-                        onChange={(checked) =>
-                          props.management.updateDraftField('unlock_required', checked)
-                        }
-                      />
-                    </div>
-                    <ManagementTextField
-                      class="col-span-1 text-sm"
-                      label={FIELD.attribute}
-                      value={currentDraft().attribute ?? ''}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) =>
-                        props.management.updateDraftField('attribute', toOptionalTextInput(value))
-                      }
-                    />
-                    <ManagementTextField
-                      class="col-span-1 text-sm"
-                      label={FIELD.level}
-                      type="number"
-                      min={String(WORLDSEND_LEVEL_STAR_MIN)}
-                      max={String(WORLDSEND_LEVEL_STAR_MAX)}
-                      value={currentDraft().level_star ?? ''}
-                      onInput={(value) =>
-                        props.management.updateDraftField(
-                          'level_star',
-                          toOptionalNumberInput(value)
-                        )
-                      }
-                    />
-                    <ManagementTextField
-                      class="col-span-1 text-sm"
-                      label={FIELD.notes}
-                      type="number"
-                      min="0"
-                      value={currentDraft().notes ?? ''}
-                      onInput={(value) =>
-                        props.management.updateDraftField('notes', toOptionalNumberInput(value))
-                      }
-                    />
-                    <ManagementTextField
-                      class="col-span-1 text-sm"
-                      label={FIELD.notesDesigner}
-                      value={currentDraft().notes_designer ?? ''}
-                      inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
-                      onInput={(value) =>
-                        props.management.updateDraftField(
-                          'notes_designer',
-                          toOptionalTextInput(value)
-                        )
-                      }
-                    />
-                    <ManagementTextField
-                      class="col-span-2 text-sm"
-                      label={FIELD.chartUpdatedAt}
-                      value={formatUpdatedAt(currentDraft().chart_updated_at)}
-                      inputClass={MANAGEMENT_READONLY_INPUT_CLASS}
-                      disabled
-                    />
-                  </div>
+                        <ManagementTextField
+                          class="col-span-1 text-sm"
+                          label={FIELD.level}
+                          type="number"
+                          min={String(WORLDSEND_LEVEL_STAR_MIN)}
+                          max={String(WORLDSEND_LEVEL_STAR_MAX)}
+                          value={currentDraft().level_star ?? ''}
+                          onInput={(value) =>
+                            props.management.updateDraftField(
+                              'level_star',
+                              toOptionalNumberInput(value)
+                            )
+                          }
+                        />
+                        <ManagementTextField
+                          class="col-span-1 text-sm"
+                          label={FIELD.notes}
+                          type="number"
+                          min="0"
+                          value={currentDraft().notes ?? ''}
+                          onInput={(value) =>
+                            props.management.updateDraftField('notes', toOptionalNumberInput(value))
+                          }
+                        />
+                        <ManagementTextField
+                          class="col-span-1 text-sm"
+                          label={FIELD.notesDesigner}
+                          value={currentDraft().notes_designer ?? ''}
+                          inputClass={MANAGEMENT_TEXT_INPUT_CLASS}
+                          onInput={(value) =>
+                            props.management.updateDraftField(
+                              'notes_designer',
+                              toOptionalTextInput(value)
+                            )
+                          }
+                        />
+                        <ManagementTextField
+                          class="col-span-2 text-sm"
+                          label={FIELD.chartUpdatedAt}
+                          value={formatUpdatedAt(currentDraft().chart_updated_at)}
+                          inputClass={MANAGEMENT_READONLY_INPUT_CLASS}
+                          disabled
+                        />
+                      </>
+                    }
+                  />
 
                   <ManagedSongEditActions
                     changed={props.management.changed()}

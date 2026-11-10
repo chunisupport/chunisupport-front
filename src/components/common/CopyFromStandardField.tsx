@@ -71,7 +71,8 @@ const getCopyFromStandardCopy = (
 
 /**
  * WORLD'S ENDの入力欄に、STANDARD楽曲から値を取り込むボタンを添える。
- * 入力欄を関数で渡した場合はボタンの配置を入力欄側へ委ね、それ以外は入力欄の右に置く。
+ * 入力欄を引数付き関数で渡した場合はボタンの配置を入力欄側へ委ね、それ以外は入力欄の右に置く。
+ * Solid は要素の children を引数なし関数として渡すため、引数の有無で配置用の関数と区別する。
  *
  * @param props - 照合対象の楽曲、曲名・アーティスト名、入力欄、反映ハンドラ。
  * @returns 入力欄と取り込みボタン、取り込み失敗時のエラー表示。
@@ -151,16 +152,33 @@ const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element =
   )
   const children = props.children
 
+  /**
+   * 入力欄を描画する。
+   * 引数付き関数はボタン配置を受け取る render prop、引数なし関数は Solid が包んだ要素。
+   *
+   * @returns 入力欄。要素の場合は取り込みボタンを右に添える。
+   */
+  const renderedChildren = (): JSX.Element => {
+    const value = children as
+      | JSX.Element
+      | ((copyButton: JSX.Element) => JSX.Element)
+      | (() => JSX.Element)
+    if (typeof value === 'function' && value.length > 0) {
+      return (value as (copyButton: JSX.Element) => JSX.Element)(copyButton)
+    }
+
+    const content = typeof value === 'function' ? (value as () => JSX.Element)() : value
+    return (
+      <div class="flex items-end gap-2 [&_input]:h-9.5">
+        <div class="min-w-0 flex-1">{content}</div>
+        {copyButton}
+      </div>
+    )
+  }
+
   return (
     <div class={props.class}>
-      {typeof children === 'function' ? (
-        children(copyButton)
-      ) : (
-        <div class="flex items-end gap-2 [&_input]:h-9.5">
-          <div class="min-w-0 flex-1">{children}</div>
-          {copyButton}
-        </div>
-      )}
+      {renderedChildren()}
       <Show when={errorMessage()}>
         {(message) => (
           <p id={errorId} class="mt-1 text-sm text-danger">
