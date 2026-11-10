@@ -3,7 +3,7 @@ import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import type { GoalAchievementType } from '../../../../../types/api'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
-import { getGoalValueUnit } from '../../../utils/goalValueFormat'
+import { getGoalValueUnit, splitGoalValueDisplay } from '../../../utils/goalValueFormat'
 import { GOAL_GAUGE_START_LABEL, GOAL_NO_TARGET_LABEL } from '../../constants'
 import { GoalValueWithUnit } from '../GoalValueWithUnit'
 import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
@@ -44,6 +44,43 @@ type GoalCardProgressPercentageProps = Pick<
  */
 const INVERT_PROGRESS_LABEL = '残り'
 
+/** カード右端の達成率表示で、数値から分けて小さくする単位。 */
+const ACHIEVEMENT_PERCENT_UNIT = '%'
+
+interface GoalCardSecondaryValueProps {
+  /** 右端に出す数値。達成率の場合は末尾の「%」を含む。 */
+  text: string
+  /** 平均スコア目標の「点」など、数値と別に渡す単位。 */
+  suffixText?: string
+  /** 数値側の文字サイズ。 */
+  numberClass: string
+  /** 単位側の文字サイズ。「点」と同じクラスを使う。 */
+  suffixClass: string
+}
+
+/**
+ * カード右端の達成率、または平均スコア目標の残り点数を表示する。
+ * 達成率の「%」は、平均スコア目標の「点」と同じ文字サイズにする。
+ *
+ * @param props - 表示文字列、別単位、数値と単位の文字サイズ。
+ * @returns 数値と、あれば小さい単位。
+ */
+const GoalCardSecondaryValue: Component<GoalCardSecondaryValueProps> = (props) => {
+  const parts = () =>
+    props.suffixText
+      ? { numberText: props.text, unitText: props.suffixText }
+      : splitGoalValueDisplay(props.text, ACHIEVEMENT_PERCENT_UNIT)
+
+  return (
+    <>
+      <span class={props.numberClass}>{parts().numberText}</span>
+      <Show when={parts().unitText}>
+        {(unitText) => <span class={props.suffixClass}>{unitText()}</span>}
+      </Show>
+    </>
+  )
+}
+
 /**
  * 目標の表示設定を反映した表示用進捗を取得する。
  *
@@ -82,10 +119,12 @@ export const GoalCardProgressPercentage: Component<GoalCardProgressPercentagePro
         <Show when={displayProgress().percentPrefixText}>
           <span class="text-sm">{displayProgress().percentPrefixText}</span>
         </Show>
-        <span class="text-lg">{displayProgress().percentText}</span>
-        <Show when={displayProgress().percentSuffixText}>
-          <span class="text-sm">{displayProgress().percentSuffixText}</span>
-        </Show>
+        <GoalCardSecondaryValue
+          text={displayProgress().percentText}
+          suffixText={displayProgress().percentSuffixText}
+          numberClass="text-lg"
+          suffixClass="text-sm"
+        />
       </span>
     </Show>
   )
@@ -138,10 +177,12 @@ export const GoalCardProgress: Component<GoalCardProgressProps> = (props) => {
                 <Show when={displayProgress().percentPrefixText}>
                   <span class="text-sm leading-none">{displayProgress().percentPrefixText}</span>
                 </Show>
-                <span class="text-lg leading-none">{displayProgress().percentText}</span>
-                <Show when={displayProgress().percentSuffixText}>
-                  <span class="text-sm leading-none">{displayProgress().percentSuffixText}</span>
-                </Show>
+                <GoalCardSecondaryValue
+                  text={displayProgress().percentText}
+                  suffixText={displayProgress().percentSuffixText}
+                  numberClass="text-lg leading-none"
+                  suffixClass="text-sm leading-none"
+                />
               </div>
             </div>
           </div>
