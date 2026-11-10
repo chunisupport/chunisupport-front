@@ -1,8 +1,9 @@
-import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
-import FilterResetDialog from '../../UserRecord/components/filterDialog/dialogs/FilterResetDialog'
+import { AppButton } from '../../../../components/common/AppButton'
+import FilterResetDialog from '../../../../components/common/FilterResetDialog'
+import type { NameFolderDTO } from '../../../../types/api'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 import WorldsendFilterSelectionPanel from './WorldsendFilterSelectionPanel'
@@ -14,12 +15,16 @@ type WorldsendFilterDialogProps = {
   filters: WorldsendFilterState
   onChange: (filters: WorldsendFilterState) => void
   defaultFilter: WorldsendFilterState
+  /** 公開済みバージョンの短縮名。全選択の表示に使う */
+  versionOptions: readonly string[]
+  /** 楽曲名順フォルダ一覧（表示順） */
+  nameFolders?: NameFolderDTO[]
 }
 
 /**
  * WORLD'S END レコード用フィルターダイアログを表示する。
  *
- * @param props - 開閉状態、フィルター状態、適用ハンドラー、初期値。
+ * @param props - 開閉状態、フィルター状態、公開済みバージョン、適用ハンドラー、初期値。
  * @returns WORLD'S END フィルターダイアログの JSX 要素。
  */
 const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => {
@@ -56,7 +61,7 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
       attributes: [...props.defaultFilter.attributes],
       levelStarRange: { ...props.defaultFilter.levelStarRange },
       genres: [...props.defaultFilter.genres],
-      versions: [...props.defaultFilter.versions],
+      versions: props.defaultFilter.versions === null ? null : [...props.defaultFilter.versions],
       combo_lamp: [...props.defaultFilter.combo_lamp],
       chain_lamp: [...props.defaultFilter.chain_lamp],
       hard_lamp: [...props.defaultFilter.hard_lamp],
@@ -91,38 +96,30 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
         <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 select-none flex-col rounded-lg bg-surface p-6 shadow-lg">
           <div class="mb-4 flex shrink-0 items-center justify-between">
             <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-            <FilterResetDialog onReset={handleReset} />
-          </div>
-          <div class="mb-4">
-            <WorldsendSavedFiltersDialog
-              open={props.open}
-              currentFilters={filters()}
-              onApplyFilter={handleApplySavedFilter}
-              onEditFilter={handleEditSavedFilter}
-            />
+            <div class="flex items-center gap-2">
+              <WorldsendSavedFiltersDialog
+                open={props.open}
+                currentFilters={filters()}
+                onApplyFilter={handleApplySavedFilter}
+                onEditFilter={handleEditSavedFilter}
+              />
+              <FilterResetDialog onReset={handleReset} />
+            </div>
           </div>
           <WorldsendFilterSelectionPanel
             open={props.open}
             filters={filters()}
             setFilters={setFilters}
             defaultFilter={props.defaultFilter}
+            versionOptions={props.versionOptions}
+            nameFolders={props.nameFolders}
           />
           <div class="mt-6 flex justify-end">
             <div class="flex gap-2">
-              <Button
-                type="button"
-                class="rounded bg-action-secondary px-4 py-2 text-text-muted hover:bg-action-secondary-hover"
-                onClick={() => props.onOpenChange(false)}
-              >
-                キャンセル
-              </Button>
-              <Button
-                type="button"
-                class="rounded bg-action-primary px-4 py-2 text-text-inverse hover:bg-action-primary-hover"
-                onClick={handleApply}
-              >
+              <AppButton onClick={() => props.onOpenChange(false)}>キャンセル</AppButton>
+              <AppButton variant="primary" onClick={handleApply}>
                 適用
-              </Button>
+              </AppButton>
             </div>
           </div>
         </Dialog.Content>

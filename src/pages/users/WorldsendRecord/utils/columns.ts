@@ -1,25 +1,14 @@
-import {
-  createGridTemplateColumns,
-  getRecordColumnBaseDefinition,
-} from '../../utils/recordColumnDefinitions.ts'
+import type {
+  WorldsendRecordColumnId,
+  WorldsendRecordSortKey,
+} from '../../../../types/worldsendRecord'
+import { getRecordColumnBaseDefinition } from '../../utils/recordColumnDefinitions.ts'
 import {
   getDefaultVisibleColumnIds as getDefaultVisibleColumnIdsFromDefinitions,
   getVisibleColumns as getVisibleColumnsFromDefinitions,
   sanitizeVisibleColumnIds as sanitizeVisibleColumnIdsFromDefinitions,
   sortVisibleColumnIdsByDefinitionOrder as sortVisibleColumnIdsByDefinitionOrderFromDefinitions,
 } from '../../utils/recordTableColumns'
-
-type WorldsendRecordColumnId =
-  | 'title'
-  | 'attribute'
-  | 'level'
-  | 'score'
-  | 'lamp'
-  | 'hardLamp'
-  | 'fullChain'
-  | 'justiceCount'
-  | 'updatedAt'
-type WorldsendRecordSortKey = WorldsendRecordColumnId
 
 type WorldsendRecordColumnDefinition = {
   id: WorldsendRecordColumnId
@@ -80,10 +69,8 @@ export const getVisibleWorldsendColumns = (
 ): WorldsendRecordColumnDefinition[] =>
   getVisibleColumnsFromDefinitions(WORLDSEND_RECORD_COLUMN_DEFINITIONS, visibleColumnIds)
 
-export type { WorldsendRecordColumnDefinition, WorldsendRecordColumnId, WorldsendRecordSortKey }
-
-export { createGridTemplateColumns }
-
-export const worldsendGridColumns = createGridTemplateColumns(
-  WORLDSEND_RECORD_COLUMN_DEFINITIONS.filter((c) => c.defaultVisible)
-)
+export type {
+  WorldsendRecordColumnId,
+  WorldsendRecordSortKey,
+} from '../../../../types/worldsendRecord'
+export type { WorldsendRecordColumnDefinition }

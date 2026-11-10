@@ -1,14 +1,19 @@
 import { LOGIN_PATH } from '../constants/routes'
 import { auth } from '../lib/firebase'
 import { clearAuthenticatedUser } from '../stores/authSession'
+import { markMaintenanceDetected } from '../stores/availability'
 import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
 import { buildLoginRedirectPath } from '../usecases/auth/redirectPath'
 import { buildCurrentPath } from '../utils/currentPath'
+import { isMaintenanceModeError, parseRetryAfterSeconds } from '../utils/maintenanceError'
+import { fetchApi } from './fetchApi'
 
 type FetchWithAuthOptions = RequestInit & {
   requireAuthentication?: boolean
   redirectOnUnauthorized?: boolean
   suppressUnauthorizedRedirectForCodes?: readonly ErrorCode[]
+  /** ログイン中のセッションとは別のアカウントで呼び出す場合のIDトークン */
+  idToken?: string
 }
 
 const AUTH_ERROR_CODES: ErrorCode[] = [
@@ -74,10 +79,11 @@ export const fetchWithAuth = async (
     requireAuthentication = false,
     redirectOnUnauthorized = true,
     suppressUnauthorizedRedirectForCodes = [],
+    idToken,
     ...requestInit
   } = init
 
-  const token = await getFirebaseIdToken()
+  const token = idToken ?? (await getFirebaseIdToken())
   if (requireAuthentication && !token) {
     clearAuthenticatedUser()
     if (redirectOnUnauthorized) {
@@ -100,7 +106,7 @@ export const fetchWithAuth = async (
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(input, {
+  const response = await fetchApi(input, {
     ...requestInit,
     headers,
   })
@@ -112,6 +118,10 @@ export const fetchWithAuth = async (
       error = (await response.json()) as ErrorResponse
     } catch {
       // ignore
+    }
+
+    if (isMaintenanceModeError(response.status, error)) {
+      markMaintenanceDetected(parseRetryAfterSeconds(response.headers.get('Retry-After')))
     }
 
     if (

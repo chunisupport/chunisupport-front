@@ -1,25 +1,23 @@
+import { PLAYER_DATA_DIFFICULTY_ORDER } from '../../../../constants/difficulty'
+import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
+import { getChartLevelSortKey, toChartLevelLabel } from '../../../../utils/chartLevel'
 import type { PlayerRecordWithSongMeta } from '../../../../utils/recordMerger'
+import {
+  compareUpdatedAtWithMissingLast,
+  updatedAtTimestamp,
+} from '../../../../utils/recordUpdatedAt'
+import { compareSongsByReading } from '../../../../utils/songTitleSorting'
+import { normalizeSortConditions } from '../../../../utils/sortConditions'
 import {
   parseSortQuery,
   type SortDirection,
   type SortParamsSource,
-} from '../../recordTable/sortingQuery'
-import {
-  compareMissingJusticeCountRecords,
-  isJusticeCountMissing,
-} from '../../utils/justiceCountSorting'
+} from '../../../../utils/sortingQuery'
+import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
+import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
+import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay.ts'
+import { isJusticeCountMissing } from '../../utils/justiceCountSorting'
 import { compareComboLamp, compareFullChainLamp, compareHardLamp } from '../../utils/lampSorting'
-import type { RecordSortCondition, RecordSortKey } from '../types/types'
-import { formatJusticeCountForAj } from './justiceCountDisplay.ts'
-import { compareUpdatedAtWithMissingLast, updatedAtTimestamp } from './updatedAt.ts'
-
-const DIFFICULTY_ORDER: Record<string, number> = {
-  BASIC: 0,
-  ADVANCED: 1,
-  EXPERT: 2,
-  MASTER: 3,
-  ULTIMA: 4,
-}
 
 const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
   !isPlayed || timestamp === Number.NEGATIVE_INFINITY
@@ -27,6 +25,7 @@ const isUpdatedAtMissing = (isPlayed: boolean, timestamp: number): boolean =>
 const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   title: 'title',
   diff: 'difficulty',
+  level: 'level',
   const: 'const',
   rating: 'rating',
   score: 'score',
@@ -39,7 +38,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   justice_count: 'justiceCount',
 }
 
-/** 通常レコード一覧で常に適用する既定ソート条件。 */
+/** 通常レコード一覧で常に適用する既定ソート条件 */
 export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
   { key: 'rating', direction: 'desc' },
   { key: 'const', direction: 'desc' },
@@ -55,14 +54,7 @@ export const DEFAULT_RECORD_SORT_CONDITIONS: RecordSortCondition[] = [
  */
 export const normalizeRecordSortConditions = (
   sortConditions: RecordSortCondition[]
-): RecordSortCondition[] =>
-  DEFAULT_RECORD_SORT_CONDITIONS.map((defaultSortCondition, index) => {
-    if (index === DEFAULT_RECORD_SORT_CONDITIONS.length - 1) {
-      return defaultSortCondition
-    }
-
-    return sortConditions[index] ?? defaultSortCondition
-  })
+): RecordSortCondition[] => normalizeSortConditions(sortConditions, DEFAULT_RECORD_SORT_CONDITIONS)
 
 export const parseSortParams = (searchParams: SortParamsSource) => {
   const parsed = parseSortQuery(searchParams, RECORD_SORT_COL_MAP, {
@@ -76,68 +68,11 @@ export const parseSortParams = (searchParams: SortParamsSource) => {
   }
 }
 
-/**
- * クエリ文字列から取得した第1ソートと既定の第2〜第4ソートを組み合わせる。
- *
- * @param sortKey - 初期表示で第1ソートにする列キー。
- * @param sortDirection - 初期表示で第1ソートにする方向。
- * @returns 4条件を持つ初期ソート条件。
- */
-export const createInitialRecordSortConditions = (
-  sortKey: RecordSortKey,
-  sortDirection: SortDirection
-): RecordSortCondition[] =>
-  normalizeRecordSortConditions([{ key: sortKey, direction: sortDirection }])
-
-/**
- * 列ヘッダークリック時に第1ソートだけを更新する。
- *
- * @param currentSortCondition - 現在の第1ソート条件。
- * @param nextKey - 次に第1ソート対象にする列キー。
- * @returns 空状態を作らない次の第1ソート条件。
- */
-export const nextPrimaryRecordSortCondition = (
-  currentSortCondition: RecordSortCondition | null,
-  nextKey: RecordSortKey
-): RecordSortCondition => {
-  if (currentSortCondition?.key !== nextKey) {
-    return { key: nextKey, direction: 'asc' }
-  }
-
-  return {
-    key: nextKey,
-    direction: currentSortCondition.direction === 'asc' ? 'desc' : 'asc',
-  }
-}
-
 type SortableRecordEntry = {
   record: PlayerRecordWithSongMeta
   index: number
   updatedAtTs: number
   justiceCountForAj: number | '' | '-'
-}
-
-/**
- * 未プレイのレコードをソート方向に関係なく末尾へ寄せる。
- *
- * @param leftPlayed - 左側レコードがプレイ済みかどうか。
- * @param rightPlayed - 右側レコードがプレイ済みかどうか。
- * @returns 未プレイ判定だけで順序が決まる場合は比較結果、両方プレイ済みの場合はnull。
- */
-const compareUnplayed = (leftPlayed: boolean, rightPlayed: boolean): number | null => {
-  if (!leftPlayed && !rightPlayed) {
-    return 0
-  }
-
-  if (!leftPlayed) {
-    return 1
-  }
-
-  if (!rightPlayed) {
-    return -1
-  }
-
-  return null
 }
 
 /**
@@ -160,43 +95,48 @@ const compareRecordBySortCondition = (
 
   switch (sortCondition.key) {
     case 'title':
-      comparison = left.title.localeCompare(right.title, 'ja')
+      comparison = compareSongsByReading(left, right)
       break
     case 'difficulty':
       comparison =
-        (DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
-        (DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
+        (PLAYER_DATA_DIFFICULTY_ORDER[left.difficulty] ?? Number.MAX_SAFE_INTEGER) -
+        (PLAYER_DATA_DIFFICULTY_ORDER[right.difficulty] ?? Number.MAX_SAFE_INTEGER)
       break
     case 'const':
       comparison = left.const - right.const
       break
-    case 'rating': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.rating - right.rating
+    case 'level':
+      comparison =
+        getChartLevelSortKey(toChartLevelLabel(left.const)) -
+        getChartLevelSortKey(toChartLevelLabel(right.const))
       break
+    case 'rating': {
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.rating },
+        { isPlayed: right.is_played, value: right.rating },
+        direction
+      )
     }
     case 'score': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.score - right.score
-      break
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.score },
+        { isPlayed: right.is_played, value: right.score },
+        direction
+      )
     }
     case 'overpower': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.overpower - right.overpower
-      break
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.overpower },
+        { isPlayed: right.is_played, value: right.overpower },
+        direction
+      )
     }
     case 'overpowerPercent': {
-      const unplayedComparison = compareUnplayed(left.is_played, right.is_played)
-      if (unplayedComparison !== null) return unplayedComparison
-
-      comparison = left.overpower_percent - right.overpower_percent
-      break
+      return compareNumberWithUnplayedLast(
+        { isPlayed: left.is_played, value: left.overpower_percent },
+        { isPlayed: right.is_played, value: right.overpower_percent },
+        direction
+      )
     }
     case 'updatedAt': {
       const leftMissing = isUpdatedAtMissing(left.is_played, a.updatedAtTs)
@@ -221,7 +161,8 @@ const compareRecordBySortCondition = (
       const rightMissing = isJusticeCountMissing(rightJusticeCount)
 
       if (leftMissing && rightMissing) {
-        return compareMissingJusticeCountRecords(left, right)
+        // J数がない同士は順序を決めず、後続のソート条件へ委譲する。
+        return 0
       }
 
       if (leftMissing) {
@@ -268,9 +209,11 @@ const compareRecordBySortCondition = (
 const sortRecordsByResolvedConditions = (
   records: PlayerRecordWithSongMeta[],
   sortConditions: RecordSortCondition[]
-): PlayerRecordWithSongMeta[] => {
-  return records
-    .map((record, index) => ({
+): PlayerRecordWithSongMeta[] =>
+  sortRecordsWithConditions(
+    records,
+    sortConditions,
+    (record, index): SortableRecordEntry => ({
       record,
       index,
       updatedAtTs: updatedAtTimestamp(record.updated_at),
@@ -278,19 +221,9 @@ const sortRecordsByResolvedConditions = (
         comboLamp: record.combo_lamp,
         justiceCount: record.justice_count,
       }),
-    }))
-    .sort((a, b) => {
-      for (const sortCondition of sortConditions) {
-        const comparison = compareRecordBySortCondition(a, b, sortCondition)
-        if (comparison !== 0) {
-          return comparison
-        }
-      }
-
-      return a.index - b.index
-    })
-    .map(({ record }) => record)
-}
+    }),
+    compareRecordBySortCondition
+  )
 
 /**
  * 指定された複数の条件を上から順に使ってレコードをソートする。

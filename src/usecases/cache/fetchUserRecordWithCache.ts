@@ -7,14 +7,14 @@ import type { UserRecordDTO } from '../../types/api'
 import { fetchUserApiCacheTimestamps, isAuthenticatedOwnUser } from './userApiCache'
 
 /**
- * ログインユーザー本人の include_noplay=true レコードを IndexedDB キャッシュ判定付きで取得する。
+ * ログインユーザー本人の全楽曲レコードを IndexedDB キャッシュ判定付きで取得する。
  *
  * @param username - レコード取得対象のユーザー名。
  * @returns キャッシュ、または API から取得したレコードレスポンス。
  */
 export const fetchUserRecordWithCache = async (username: string): Promise<UserRecordDTO> => {
   if (!(await isAuthenticatedOwnUser(username))) {
-    return fetchUserRecord(username, { includeNoPlay: true })
+    return fetchUserRecord(username)
   }
 
   let timestamps: Awaited<ReturnType<typeof fetchUserApiCacheTimestamps>>
@@ -22,7 +22,7 @@ export const fetchUserRecordWithCache = async (username: string): Promise<UserRe
   try {
     timestamps = await fetchUserApiCacheTimestamps(username)
   } catch {
-    return fetchUserRecord(username, { includeNoPlay: true })
+    return fetchUserRecord(username)
   }
 
   try {
@@ -31,10 +31,10 @@ export const fetchUserRecordWithCache = async (username: string): Promise<UserRe
       return cachedRecord
     }
   } catch {
-    return fetchUserRecord(username, { includeNoPlay: true })
+    return fetchUserRecord(username)
   }
 
-  const response = await fetchUserRecord(username, { includeNoPlay: true })
+  const response = await fetchUserRecord(username)
 
   try {
     await saveCachedUserRecord(

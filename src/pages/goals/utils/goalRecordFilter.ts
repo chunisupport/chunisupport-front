@@ -1,46 +1,102 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/chart'
+import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
+import type { FilterState } from '../../../types/recordFilter'
+import {
+  normalizeGoalAttributeIds,
+  normalizeGoalNameFolderCodes,
+} from '../../../utils/goalAttributes'
+import {
+  COMBO_LAMP_UNACHIEVED_FILTERS,
+  FULL_CHAIN_UNACHIEVED_FILTERS,
+  HARD_LAMP_UNACHIEVED_FILTERS,
+  isComboLampGoalValue,
+  isFullChainGoalValue,
+  isHardLampGoalValue,
+} from '../../../utils/goalLamp'
+import { resolveRatingGoalMinimumChartConstant } from '../../../utils/goalRatingCount'
+import { buildGoalVersionNameMap } from '../../../utils/goalVersion'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import { buildDefaultFilter } from '../../users/UserRecord/types/filterDefaults'
-import type {
-  ComboLamp,
-  Difficulty,
-  FilterState,
-  HardLamp,
-} from '../../users/UserRecord/types/types'
-import { isExplicitEmptyAttribute } from './goalForm'
-import { buildGoalVersionNameMap } from './goalVersion'
+import { fromRatingHundredths, toRatingHundredths } from '../../../utils/singleRating'
+
+/** 単曲レート1段階（0.01）に相当する、0.01を1とした整数値 */
+const SINGLE_RATING_STEP_HUNDREDTHS = 1
 
 const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
   'rank_count',
   'score_count',
+  'rating_count',
   'avg_score',
   'hardlamp_count',
   'combolamp_count',
+  'fullchain_count',
+  'rainbow_count',
 ])
 
-const HARD_LAMP_FILTERS: Record<'HRD' | 'BRV' | 'ABS' | 'CTS', HardLamp[]> = {
-  HRD: ['CLEAR', 'FAILED', null],
-  BRV: ['HARD', 'CLEAR', 'FAILED', null],
-  ABS: ['BRAVE', 'HARD', 'CLEAR', 'FAILED', null],
-  CTS: ['ABSOLUTE', 'BRAVE', 'HARD', 'CLEAR', 'FAILED', null],
-}
+/**
+ * 属性ID・コード配列が空選択として保存されているか判定する。
+ *
+ * @param ids - 正規化済みの属性ID・コード配列。
+ * @returns 空配列なら true。
+ */
+const hasNoSelectedAttributeIds = (ids: readonly unknown[] | undefined): boolean =>
+  ids?.length === 0
 
-const COMBO_LAMP_FILTERS: Record<'FC' | 'AJ', ComboLamp[]> = {
-  FC: [null],
-  AJ: ['FULL COMBO', null],
+/**
+ * API由来の成果パラメータからランプ指定値を安全に取り出す。
+ *
+ * @param goal - ランプ指定を持つ可能性がある目標。
+ * @returns ランプ指定値。オブジェクト形式でない場合は undefined。
+ */
+const getGoalLampParam = (goal: GoalDTO): unknown => {
+  const params: unknown = goal.achievement_params
+  return params && typeof params === 'object' && 'lamp' in params
+    ? (params as { lamp?: unknown }).lamp
+    : undefined
 }
 
 /**
- * 単一値または配列で保持された目標属性 ID を配列へ正規化する。
+ * 通常レコード遷移に使えるハードランプ目標か判定する。
  *
- * @param value - 目標属性に保存された ID。
- * @returns 有効な整数 ID の配列。
+ * @param goal - 判定対象の目標。
+ * @returns ランプ指定が現行定義に含まれる場合は true。
  */
-const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
-  if (typeof value === 'number') return [value]
-  return Array.isArray(value) ? value.filter((id) => Number.isInteger(id)) : []
+const isNavigableHardLampGoal = (goal: GoalDTO): boolean => {
+  const lamp = getGoalLampParam(goal)
+  return typeof lamp === 'string' && isHardLampGoalValue(lamp)
 }
+
+/**
+ * 通常レコード遷移に使えるコンボランプ目標か判定する。
+ *
+ * @param goal - 判定対象の目標。
+ * @returns ランプ指定が現行定義に含まれる場合は true。
+ */
+const isNavigableComboLampGoal = (goal: GoalDTO): boolean => {
+  const lamp = getGoalLampParam(goal)
+  return typeof lamp === 'string' && isComboLampGoalValue(lamp)
+}
+
+/**
+ * 通常レコード遷移に使えるFULL CHAIN目標か判定する。
+ *
+ * @param goal - 判定対象の目標。
+ * @returns ランプ指定が現行定義に含まれる場合は true。
+ */
+const isNavigableFullChainGoal = (goal: GoalDTO): boolean => {
+  const lamp = getGoalLampParam(goal)
+  return typeof lamp === 'string' && isFullChainGoalValue(lamp)
+}
+
+/**
+ * 単曲レート目標の未達成一覧に使う上限を0.01単位で求める。
+ *
+ * @param rating - 目標とする単曲レート。
+ * @returns 目標より0.01低い単曲レート。0未満にはしない。
+ */
+const resolveUnachievedRatingMax = (rating: number): number =>
+  fromRatingHundredths(Math.max(0, toRatingHundredths(rating) - SINGLE_RATING_STEP_HUNDREDTHS))
 
 /**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
@@ -60,14 +116,36 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
         score: { min: SCORE_MIN, max: Math.max(SCORE_MIN, params.score - 1) },
       }
     }
+    case 'rating_count': {
+      const params = goal.achievement_params as { rating: number }
+      return {
+        ...filter,
+        rating: { min: null, max: resolveUnachievedRatingMax(params.rating) },
+      }
+    }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as { lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS' }
-      return { ...filter, hard_lamp: [...HARD_LAMP_FILTERS[params.lamp]] }
+      const lamp = getGoalLampParam(goal)
+      if (typeof lamp !== 'string' || !isHardLampGoalValue(lamp)) {
+        return filter
+      }
+      return { ...filter, hard_lamp: [...HARD_LAMP_UNACHIEVED_FILTERS[lamp]] }
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: 'FC' | 'AJ' }
-      return { ...filter, combo_lamp: [...COMBO_LAMP_FILTERS[params.lamp]] }
+      const lamp = getGoalLampParam(goal)
+      if (typeof lamp !== 'string' || !isComboLampGoalValue(lamp)) {
+        return filter
+      }
+      return { ...filter, combo_lamp: [...COMBO_LAMP_UNACHIEVED_FILTERS[lamp]] }
     }
+    case 'fullchain_count': {
+      const lamp = getGoalLampParam(goal)
+      if (typeof lamp !== 'string' || !isFullChainGoalValue(lamp)) {
+        return filter
+      }
+      return { ...filter, chain_lamp: [...FULL_CHAIN_UNACHIEVED_FILTERS[lamp]] }
+    }
+    case 'rainbow_count':
+      return { ...filter, combo_lamp: ['FULL COMBO', null] }
     case 'total_score':
     case 'overpower_value':
     case 'overpower_percent':
@@ -88,35 +166,46 @@ export const buildGoalRecordFilter = (
   masterData: MasterDataDTO,
   versions: VersionDTO[]
 ): FilterState => {
-  const difficultyIds = normalizeAttributeIds(goal.attributes.diff)
-  const genreIds = normalizeAttributeIds(goal.attributes.genre)
-  const versionIds = normalizeAttributeIds(goal.attributes.ver)
+  const difficultyIds = normalizeGoalAttributeIds(goal.attributes.diff)
+  const genreIds = normalizeGoalAttributeIds(goal.attributes.genre)
+  const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
+  const nameFolderCodes = normalizeGoalNameFolderCodes(goal.attributes.name_folder)
   const versionNameMap = buildGoalVersionNameMap(versions)
-  const defaultFilter = buildDefaultFilter(masterData, versions)
+  const defaultFilter = buildDefaultFilter(masterData.genres, versions)
+  const isOpTargetGoal = goal.attributes.chart_target === 'OP_TARGET'
+  const hasNoSelectedCharts =
+    hasNoSelectedAttributeIds(difficultyIds) ||
+    hasNoSelectedAttributeIds(genreIds) ||
+    hasNoSelectedAttributeIds(versionIds) ||
+    hasNoSelectedAttributeIds(nameFolderCodes)
 
   const filter: FilterState = {
     ...defaultFilter,
     title: '',
-    difficulties: masterData.difficulties
-      .filter(
-        (difficulty) =>
-          !isExplicitEmptyAttribute(goal.attributes.diff) &&
-          (difficultyIds.length === 0 || difficultyIds.includes(difficulty.id))
-      )
-      .map((difficulty) => difficulty.name.toUpperCase() as Difficulty),
+    opTargetOnly: isOpTargetGoal,
+    opTargetType: isOpTargetGoal ? 'theoretical' : defaultFilter.opTargetType,
+    difficulties: hasNoSelectedCharts
+      ? []
+      : masterData.difficulties
+          .filter((difficulty) => !difficultyIds || difficultyIds.includes(difficulty.id))
+          .flatMap((difficulty) => {
+            const normalized = normalizePlayerDataDifficulty(difficulty.name)
+            return normalized ? [normalized] : []
+          }),
     genres:
-      genreIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.genre)
+      hasNoSelectedCharts || !genreIds
         ? []
         : masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
             .map((genre) => genre.name),
     versions:
-      versionIds.length === 0 || isExplicitEmptyAttribute(goal.attributes.ver)
+      hasNoSelectedCharts || !versionIds
         ? []
         : versionIds.flatMap((versionId) => {
             const versionName = versionNameMap.get(versionId)
             return versionName ? [versionName] : []
           }),
+    nameFolders: nameFolderCodes ? [...nameFolderCodes] : null,
     const: {
       min: goal.attributes.const?.min ?? CHART_CONST_MIN,
       max: goal.attributes.const?.max ?? CHART_CONST_MAX,
@@ -124,7 +213,15 @@ export const buildGoalRecordFilter = (
     constFilterMode: 'number',
     score: { min: SCORE_MIN, max: MAX_SCORE },
     scoreFilterMode: 'number',
+    rating: { min: null, max: null },
     excludeNoPlay: false,
+  }
+
+  if (goal.achievement_type === 'rating_count' && 'rating' in goal.achievement_params) {
+    filter.const.min = Math.max(
+      filter.const.min,
+      resolveRatingGoalMinimumChartConstant(goal.achievement_params.rating)
+    )
   }
 
   return applyUnachievedCondition(filter, goal)
@@ -137,5 +234,11 @@ export const buildGoalRecordFilter = (
  * @returns 通常レコードへのフィルター付き遷移が可能な場合は true。
  */
 export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
-  goal.attributes.chart_target !== 'OP_TARGET' &&
-  NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type)
+  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.diff)) &&
+  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.genre)) &&
+  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.ver)) &&
+  !hasNoSelectedAttributeIds(normalizeGoalNameFolderCodes(goal.attributes.name_folder)) &&
+  NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type) &&
+  (goal.achievement_type !== 'hardlamp_count' || isNavigableHardLampGoal(goal)) &&
+  (goal.achievement_type !== 'combolamp_count' || isNavigableComboLampGoal(goal)) &&
+  (goal.achievement_type !== 'fullchain_count' || isNavigableFullChainGoal(goal))

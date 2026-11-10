@@ -17,7 +17,7 @@ type WorldsendSortDialogProps = {
   onApply: (sortConditions: WorldsendRecordSortCondition[]) => void
 }
 
-/** WORLD'S END ソート列の選択肢。 */
+/** WORLD'S END ソート列の選択肢 */
 const WORLDSEND_SORT_COLUMN_OPTIONS: SortConditionColumnOption<WorldsendRecordSortKey>[] =
   WORLDSEND_RECORD_COLUMN_DEFINITIONS.map((definition) => ({
     value: definition.sortKey,

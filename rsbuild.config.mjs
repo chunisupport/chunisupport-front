@@ -1,13 +1,21 @@
+import { createHash, randomUUID } from 'node:crypto'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { defineConfig, loadEnv } from '@rsbuild/core'
+import { pluginAssetsRetry } from '@rsbuild/plugin-assets-retry'
 import { pluginBabel } from '@rsbuild/plugin-babel'
 import { pluginSolid } from '@rsbuild/plugin-solid'
+import { APP_ENVIRONMENTS, INVALID_APP_ENVIRONMENT_MESSAGE } from './src/constants/featureFlags.ts'
 
+/** 開発・ビルド時に必須とする公開環境変数。 */
 const REQUIRED_PUBLIC_ENV_KEYS = [
+  'PUBLIC_APP_ENV',
   'PUBLIC_BACKEND_URL',
   'PUBLIC_FRONTEND_URL',
   'PUBLIC_DOCUMENTATION_URL',
   'PUBLIC_BOOKMARKLET_URL',
   'PUBLIC_BOOKMARKLET_ENTRYPOINT',
+  'PUBLIC_CHUNITHM_JACKET_BASE_URL',
   'PUBLIC_FB_API_KEY',
   'PUBLIC_FB_AUTH_DOMAIN',
   'PUBLIC_FB_PROJECT_ID',
@@ -17,6 +25,40 @@ const REQUIRED_PUBLIC_ENV_KEYS = [
 ]
 
 const FRONTEND_BUILD_DATE = new Date().toISOString().slice(0, 10).replaceAll('-', '')
+/** 実行中コードと公開中ファイルを対応付ける、ビルドごとに一意なID。 */
+const FRONTEND_BUILD_ID = randomUUID()
+
+/** ハッシュ生成と出力コピーの対象にする favicon の絶対パス。 */
+const FAVICON_PATH = path.resolve(import.meta.dirname, 'src/assets/favicon.png')
+/** トップページの OGP に使用する画像の絶対パス。 */
+const OGP_IMAGE_PATH = path.resolve(import.meta.dirname, 'src/assets/ogp.png')
+/**
+ * 画面で使う Google Fonts のスタイルシート。
+ *
+ * Noto Sans / Noto Sans JP は可変フォントのため、ウェイトを個別指定すると
+ * 同じ woff2 を指す `@font-face` がウェイトごとに複製され CSS が肥大する。
+ * 範囲指定でも参照する woff2 は変わらない。
+ * Jost のイタリックはレーティング画像の NEW バッジなどで使用している。
+ */
+const GOOGLE_FONTS_STYLESHEET_URL =
+  'https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400..700&family=Noto+Sans+JP:wght@400..800&family=Oswald:wght@200..700&display=swap'
+const ASSET_HASH_LENGTH = 10
+
+/** 静的アセットの読み込み失敗時に再試行する最大回数。 */
+const ASSETS_RETRY_MAX = 3
+/** 静的アセットを再試行するまでの待機時間（ミリ秒）。デプロイ直後の配信反映待ちを兼ねる。 */
+const ASSETS_RETRY_DELAY_MS = 500
+
+/**
+ * ファイル内容からキャッシュバスティング用の短縮ハッシュを生成する。
+ *
+ * @param filePath - ハッシュを生成するファイルの絶対パス。
+ * @returns SHA-256から生成した短縮ハッシュ。
+ */
+const createAssetHash = (filePath) =>
+  createHash('sha256').update(readFileSync(filePath)).digest('hex').slice(0, ASSET_HASH_LENGTH)
+
+const FAVICON_FILE_NAME = `favicon.${createAssetHash(FAVICON_PATH)}.png`
 
 /**
  * CI 環境変数からフロントエンドの短縮コミットハッシュを取得する。
@@ -32,20 +74,51 @@ const resolveFrontendCommitHash = () => {
 
 const FRONTEND_COMMIT_HASH = resolveFrontendCommitHash()
 
+/**
+ * 公開中ビルドのIDを、キャッシュされない静的JSONとして出力する。
+ *
+ * @returns Rsbuildのビルド完了フックを登録するプラグイン。
+ */
+const frontendVersionPlugin = () => ({
+  name: 'frontend-version',
+  setup(api) {
+    api.onAfterBuild(({ environments }) => {
+      for (const environment of Object.values(environments)) {
+        const outputPath = environment.distPath
+        mkdirSync(outputPath, { recursive: true })
+        writeFileSync(
+          path.join(outputPath, 'version.json'),
+          `${JSON.stringify({ buildId: FRONTEND_BUILD_ID })}\n`,
+          'utf8'
+        )
+      }
+    })
+  },
+})
+
 // Docs: https://rsbuild.rs/config/
 export default defineConfig(({ env, envMode }) => {
   const envResult = loadEnv({ mode: envMode, prefixes: ['PUBLIC_'] })
   const missingEnvKeys = REQUIRED_PUBLIC_ENV_KEYS.filter((key) => !envResult.rawPublicVars[key])
+
+  /** 本番環境で明示的に許可された場合に限り検索エンジンのインデックス登録を有効にする。ユーザーページの noindex はクライアント側で別途付与する。 */
+  const enableIndexing = envResult.rawPublicVars.PUBLIC_ENABLE_INDEXING === 'true'
 
   if (missingEnvKeys.length > 0) {
     envResult.cleanup()
     throw new Error(`必須環境変数が設定されていません: ${missingEnvKeys.join(', ')}`)
   }
 
+  if (!APP_ENVIRONMENTS.includes(envResult.rawPublicVars.PUBLIC_APP_ENV)) {
+    envResult.cleanup()
+    throw new Error(INVALID_APP_ENVIRONMENT_MESSAGE)
+  }
+
   const publicEnvDefine = {
     ...envResult.publicVars,
     __FRONTEND_BUILD_DATE__: JSON.stringify(FRONTEND_BUILD_DATE),
     __FRONTEND_COMMIT_HASH__: JSON.stringify(FRONTEND_COMMIT_HASH),
+    __FRONTEND_BUILD_ID__: JSON.stringify(FRONTEND_BUILD_ID),
     'import.meta.env': JSON.stringify({
       ...envResult.rawPublicVars,
       MODE: envMode,
@@ -63,9 +136,18 @@ export default defineConfig(({ env, envMode }) => {
     html: {
       title: 'ChuniSupport',
       meta: {
-        robots: 'noindex',
+        ...(enableIndexing ? {} : { robots: 'noindex' }),
+        'format-detection': 'telephone=no',
       },
       tags: [
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            href: `/${FAVICON_FILE_NAME}`,
+            type: 'image/png',
+          },
+        },
         {
           tag: 'link',
           attrs: {
@@ -85,7 +167,8 @@ export default defineConfig(({ env, envMode }) => {
           tag: 'link',
           attrs: {
             rel: 'stylesheet',
-            href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@200..700&display=swap',
+            href: GOOGLE_FONTS_STYLESHEET_URL,
+            crossorigin: true,
           },
         },
         {
@@ -139,7 +222,30 @@ export default defineConfig(({ env, envMode }) => {
         },
       ],
     },
+    output: {
+      copy: [
+        {
+          from: FAVICON_PATH,
+          to: FAVICON_FILE_NAME,
+        },
+        {
+          from: OGP_IMAGE_PATH,
+          to: 'ogp.png',
+        },
+      ],
+    },
     plugins: [
+      frontendVersionPlugin(),
+      // 存在しないアセットへの SPA フォールバック HTML がキャッシュされても、
+      // 再試行ごとに異なるクエリを付けてキャッシュを経由せず取り直す。
+      pluginAssetsRetry({
+        max: ASSETS_RETRY_MAX,
+        delay: ASSETS_RETRY_DELAY_MS,
+        // 自前のハッシュ付きアセットに限定する。元のクエリを持たないため addQuery で上書きしてよい。
+        test: /\/static\//,
+        // ブラウザへ文字列として埋め込まれるため、関数外の変数を参照しないこと。
+        addQuery: ({ times }) => `?retry=${times}&t=${Date.now()}`,
+      }),
       pluginBabel({
         include: /\.(?:jsx|tsx)$/,
       }),

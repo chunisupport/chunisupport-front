@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 94 46" width="94" height="46" role="img" aria-label="エンブレム台座 EX">
+  <defs>
+    <linearGradient id="b07-chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.48" stop-color="#c8cdd8"/>
+      <stop offset="0.52" stop-color="#686e7c"/>
+      <stop offset="1" stop-color="#dadde6"/>
+    </linearGradient>
+    <!-- WORLD'S END の暗い虹色 -->
+    <linearGradient id="b07-worldsEnd" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#48111d"/><stop offset="0.17" stop-color="#5a3609"/><stop offset="0.33" stop-color="#48520f"/><stop offset="0.5" stop-color="#0f4f32"/><stop offset="0.67" stop-color="#0d4a57"/><stop offset="0.83" stop-color="#1e3473"/><stop offset="1" stop-color="#3f1f61"/></linearGradient>
+    <linearGradient id="b07-rainbow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffadad"/><stop offset="0.17" stop-color="#ffd0a8"/><stop offset="0.33" stop-color="#fff0a8"/><stop offset="0.5" stop-color="#b9eeb7"/><stop offset="0.67" stop-color="#a8d8ff"/><stop offset="0.83" stop-color="#b7bfff"/><stop offset="1" stop-color="#d0b5ff"/></linearGradient>
+    <pattern id="b07-texture" width="1.6" height="1.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="0.8" height="1.6" fill="#ffffff" opacity="0.06"/>
+    </pattern>
+    <clipPath id="b07-panel">
+      <rect x="3.9" y="12.6" width="86.2" height="20.2"/>
+    </clipPath>
+    <!-- 左右の飾り: 端に寄せた斜めの虹色ストライプ -->
+    <g id="b07-deco">
+      <rect x="3.9" y="12.6" width="11.2" height="20.2" fill="#0b0c10" opacity="0.55"/>
+      <g clip-path="url(#b07-panel)" stroke="#14161c" stroke-width="0.35">
+      <polygon points="3.4,32.8 4.5,32.8 7.5,12.6 6.4,12.6" fill="#ff8a9a"/>
+      <polygon points="5.6,32.8 6.7,32.8 9.7,12.6 8.6,12.6" fill="#ffc27a"/>
+      <polygon points="7.8,32.8 8.9,32.8 11.9,12.6 10.8,12.6" fill="#8ef0b0"/>
+      <polygon points="10,32.8 11.1,32.8 14.1,12.6 13,12.6" fill="#9ab8ff"/>
+      </g>
+      <rect x="14.6" y="12.6" width="1.2" height="20.2" fill="url(#b07-chrome)" stroke="#14161c" stroke-width="0.35"/>
+    </g>
+  </defs>
+  <!-- 外枠 -->
+  <rect x="0.6" y="9.2" width="92.8" height="27.8" fill="#24262e" stroke="#000000" stroke-opacity="0.5" stroke-width="0.6"/>
+  <!-- クロームの額縁 -->
+  <rect x="2" y="10.7" width="90" height="24.6" fill="url(#b07-chrome)" stroke="#14161c" stroke-width="0.5"/>
+  <!-- WORLD'S END の暗い虹色の面 -->
+  <rect x="3.9" y="12.6" width="86.2" height="20.2" fill="url(#b07-worldsEnd)"/>
+  <rect x="3.9" y="12.6" width="86.2" height="20.2" fill="url(#b07-texture)"/>
+  <rect x="3.9" y="12.6" width="86.2" height="10.1" fill="#ffffff" opacity="0.08"/>
+  <rect x="3.9" y="12.6" width="86.2" height="0.9" fill="url(#b07-rainbow)" opacity="0.9"/>
+  <rect x="3.9" y="31.9" width="86.2" height="0.9" fill="url(#b07-rainbow)" opacity="0.9"/>
+  <use href="#b07-deco"/>
+  <use href="#b07-deco" transform="translate(94 0) scale(-1 1)"/>
+  <rect x="3.9" y="12.6" width="86.2" height="20.2" fill="none" stroke="#14161c" stroke-width="0.7"/>
+</svg>

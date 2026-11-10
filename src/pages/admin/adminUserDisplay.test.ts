@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import type { AdminUserListResponse } from '../../types/api.ts'
 
 import {
+  canLinkAdminUserProfile,
   formatAccountType,
   formatAdminUserDateTime,
-  formatBooleanFlag,
   formatNullableText,
+  updateAdminUserListRow,
 } from './adminUserDisplay.ts'
 
 test('管理ユーザー日時が null の場合はハイフンを返す', () => {
@@ -22,18 +24,74 @@ test('不正な日時文字列はハイフンを返す', () => {
   assert.equal(formatAdminUserDateTime('not-a-date'), '-')
 })
 
-test('boolean フラグは true/false 文字列に変換する', () => {
-  assert.equal(formatBooleanFlag(true), 'true')
-  assert.equal(formatBooleanFlag(false), 'false')
-})
-
 test('account_type は定義済み値をそのまま表示する', () => {
   assert.equal(formatAccountType('ADMIN'), 'ADMIN')
   assert.equal(formatAccountType('PLAYER'), 'PLAYER')
+  assert.equal(formatAccountType('EDITOR'), 'EDITOR')
+  assert.equal(formatAccountType('EXTDEV'), 'EXTDEV')
 })
 
 test('nullable text は null と空文字でハイフンを返す', () => {
   assert.equal(formatNullableText(null), '-')
   assert.equal(formatNullableText(''), '-')
   assert.equal(formatNullableText('るなぁぁ'), 'るなぁぁ')
+})
+
+test('公開かつプレイヤーデータ連携済みのユーザーはプロフィールへリンクできる', () => {
+  // Given
+  const user = { is_private: false, player_name: 'ALICE' }
+
+  // When
+  const result = canLinkAdminUserProfile(user)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('非公開またはプレイヤーデータ未連携のユーザーはプロフィールへリンクしない', () => {
+  // Given
+  const privateUser = { is_private: true, player_name: 'ALICE' }
+  const unregisteredUser = { is_private: false, player_name: null }
+
+  // When & Then
+  assert.equal(canLinkAdminUserProfile(privateUser), false)
+  assert.equal(canLinkAdminUserProfile(unregisteredUser), false)
+})
+
+test('ユーザー一覧は対象行の指定フィールドだけを更新し、行順と他の行を維持する', () => {
+  // Given
+  const alice: AdminUserListResponse = {
+    username: 'alice',
+    account_type: 'PLAYER',
+    created_at: '2026-09-01T00:00:00Z',
+    updated_at: '2026-09-01T00:00:00Z',
+    player_name: 'ALICE',
+    rating: 16,
+    overpower_value: 100,
+    is_suspicious: false,
+    is_private: false,
+  }
+  const bob: AdminUserListResponse = {
+    ...alice,
+    username: 'bob',
+    player_name: 'BOB',
+  }
+
+  // When
+  const result = updateAdminUserListRow([alice, bob], 'bob', {
+    account_type: 'EDITOR',
+    is_suspicious: true,
+  })
+
+  // Then
+  assert.deepEqual(
+    result.map((user) => user.username),
+    ['alice', 'bob']
+  )
+  assert.equal(result[0], alice)
+  assert.deepEqual(result[1], {
+    ...bob,
+    account_type: 'EDITOR',
+    is_suspicious: true,
+  })
 })

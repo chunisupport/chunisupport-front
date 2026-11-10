@@ -1,0 +1,138 @@
+import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../constants/chart'
+import type { PlayerDataDifficulty } from '../../types/api'
+import {
+  RANDOM_SONG_OP_TARGET_FILTER,
+  type RandomSongDifficultyFilter,
+} from '../../utils/randomSongSelector'
+
+/**
+ * ランダム選曲結果を保存する sessionStorage キー。
+ */
+export const RANDOM_SONG_RESULTS_STORAGE_KEY = 'chunisupport:random-song-selector:results'
+
+/**
+ * ランダム選曲ツールの初期値。
+ */
+export const RANDOM_SONG_SELECTOR_DEFAULTS = {
+  count: '3',
+  minScore: '',
+  maxScore: '',
+  defaultWeight: '1',
+  showRecord: true,
+  favoriteOnly: false,
+} as const
+
+/**
+ * ランダム選曲ツールの初期選択難易度。
+ */
+export const RANDOM_SONG_SELECTOR_DEFAULT_DIFFICULTIES: PlayerDataDifficulty[] = [
+  'MASTER',
+  'ULTIMA',
+]
+
+/**
+ * ランダム選曲ツールの難易度絞り込み表示名。
+ */
+export const RANDOM_SONG_SELECTOR_DIFFICULTY_FILTER_LABELS = {
+  BASIC: 'BASIC',
+  ADVANCED: 'ADVANCED',
+  EXPERT: 'EXPERT',
+  MASTER: 'MASTER',
+  ULTIMA: 'ULTIMA',
+  [RANDOM_SONG_OP_TARGET_FILTER]: THEORETICAL_OVER_POWER_TARGET_LABEL,
+} satisfies Record<RandomSongDifficultyFilter, string>
+
+/**
+ * ランダム選曲ツールで使う短い入力項目ラベル。
+ */
+export const RANDOM_SONG_SELECTOR_FIELD_LABELS = {
+  score: 'スコア',
+  drawRate: '出やすさ',
+} as const
+
+/**
+ * ランダム選曲ツールの表示文言。タイトルと説明文はツール一覧の定義を参照すること。
+ */
+export const RANDOM_SONG_SELECTOR_COPY = {
+  goalFilterLabel: '目標で絞る',
+  goalFilterDialogTitle: '目標で絞る',
+  goalFilterNoneLabel: '絞り込みなし',
+  goalFilterCancelLabel: 'キャンセル',
+  goalFilterApplyLabel: '適用',
+  goalFilterFetchErrorMessage: '目標を取得できませんでした。',
+  goalFilterRecordFetchErrorMessage: '目標の未達成状況を取得できませんでした。',
+  goalFilterEmptyMessage: '絞り込みに利用できる目標がありません。',
+  countLabel: '曲数',
+  difficultyLabel: '難易度',
+  favoriteOnlyLabel: 'お気に入りからランダム',
+  genreLabel: 'ジャンル',
+  versionLabel: 'バージョン',
+  nameFolderLabel: '楽曲名順',
+  advancedSettingsLabel: '高度な設定',
+  recordFilterSettingsLabel: '自分のレコードで絞る',
+  drawRateLabel: RANDOM_SONG_SELECTOR_FIELD_LABELS.drawRate,
+  drawRatePercentLabel: '確率',
+  invalidDrawRatePercentLabel: '-',
+  mixedWeightPlaceholder: '個別設定',
+  difficultyWeightLabel: '難易度別',
+  levelWeightLabel: 'レベル別',
+  constWeightLabel: '定数別',
+  recordVisibleLabel: 'レコードを表示',
+  playStatusLabel: 'プレイ状況',
+  lampLabel: 'ランプ',
+  minScoreLabel: 'スコア 下限',
+  maxScoreLabel: 'スコア 上限',
+  bestFrameLabel: 'ベスト枠',
+  recordFetchErrorMessage: 'レコード情報を取得できませんでした。',
+  favoriteFetchErrorMessage: 'お気に入り楽曲を取得できませんでした。',
+  drawButtonLabel: '選曲',
+  resetButtonLabel: 'クリア',
+  resetConfirmTitle: '条件を初期化しますか？',
+  resetConfirmDescription: '現在の絞り込みと選曲結果を初期状態に戻します。',
+  resetCancelLabel: 'キャンセル',
+  resetConfirmLabel: '初期化',
+  closeButtonLabel: '閉じる',
+  resultLabel: '選曲結果',
+  candidateCountLabel: '候補',
+  noCandidatesMessage: '条件に合う譜面はありません。',
+  noResultsMessage: '選曲すると結果が表示されます。',
+  invalidCountMessage: '曲数は1以上で入力してください。',
+  invalidConstRangeMessage: 'レベル・譜面定数の範囲を確認してください。',
+  invalidScoreRangeMessage: 'スコアの範囲を確認してください。',
+  invalidWeightMessage:
+    '出やすさは0以上の数値で入力してください。倍率の積や重み合計が大きすぎる場合は、倍率を小さくしてください。',
+} as const
+
+/**
+ * プレイ状況フィルターの選択肢。
+ */
+export const RANDOM_SONG_PLAY_STATUS_OPTIONS = [
+  { value: 'all', label: 'すべて' },
+  { value: 'played', label: 'プレイ済み' },
+  { value: 'unplayed', label: '未プレイ' },
+] as const
+
+/**
+ * ベスト枠フィルターの選択肢。
+ */
+export const RANDOM_SONG_BEST_FRAME_OPTIONS = [
+  { value: 'all', label: 'すべて' },
+  { value: 'only', label: 'ベスト枠のみ' },
+  { value: 'exclude', label: 'ベスト枠除外' },
+] as const
+
+/**
+ * ランダム選曲ツールのランプフィルター選択肢。
+ */
+export const RANDOM_SONG_LAMP_OPTIONS = [
+  { value: 'AJC', label: 'AJC' },
+  { value: 'AJ', label: 'AJ' },
+  { value: 'FC', label: 'FC' },
+  { value: 'CATASTROPHY', label: 'CATASTROPHY' },
+  { value: 'ABSOLUTE', label: 'ABSOLUTE' },
+  { value: 'BRAVE', label: 'BRAVE' },
+  { value: 'HARD', label: 'HARD' },
+  { value: 'CLEAR', label: 'CLEAR' },
+  { value: 'FAILED', label: 'FAILED' },
+  { value: 'NONE', label: '未プレイ' },
+] as const

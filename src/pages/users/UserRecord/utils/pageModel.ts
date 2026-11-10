@@ -1,18 +1,21 @@
-import type { Accessor, Setter } from 'solid-js'
+import type { Accessor } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
+import type { FilterState, RecordSortCondition } from '../../../../types/recordFilter'
+import {
+  normalizeVersionFilterSelection,
+  resolveReleasedVersionFilterSelection,
+} from '../../../../utils/filterSelection'
 import {
   attachSongMetaToRecords,
   type PlayerRecordWithSongMeta,
 } from '../../../../utils/recordMerger'
+import { createSearchTextCache } from '../../../../utils/searchHelpers'
+import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../../utils/theoreticalOverPowerTarget'
+import { getReleasedVersionShortNames } from '../../../../utils/versionConverter'
 import { getRecordStats, type RecordStats } from '../../utils/recordStats'
-import type { FilterState, RecordSortCondition, RecordSortKey } from '../types/types'
 import { createRecordTitleMatcher, isRecordMatchedWithTitleMatcher } from './filtering'
-import {
-  nextPrimaryRecordSortCondition,
-  normalizeRecordSortConditions,
-  sortRecordsByConditions,
-} from './sorting'
+import { sortRecordsByConditions } from './sorting'
 
 /** UserRecordページモデルの入力値 */
 type UserRecordPageModelParams = {
@@ -20,11 +23,12 @@ type UserRecordPageModelParams = {
   versions: Accessor<{ versions: VersionDTO[] } | undefined>
   sourceRecords: Accessor<PlayerRecordDTO[]>
   filters: Accessor<FilterState>
+  favoriteSongIds: Accessor<ReadonlySet<string>>
+  lockedSongKeys: Accessor<ReadonlySet<string>>
   sortConditions: Accessor<RecordSortCondition[]>
-  setSortConditions: Setter<RecordSortCondition[]>
 }
 
-/** UserRecordページモデルが画面へ返す導出値と操作 */
+/** UserRecordページモデルが画面へ返す導出値 */
 type UserRecordPageModel = {
   recordsWithSongMeta: Accessor<PlayerRecordWithSongMeta[]>
   filteredRecords: Accessor<PlayerRecordWithSongMeta[]>
@@ -32,13 +36,12 @@ type UserRecordPageModel = {
   totalCount: Accessor<number>
   filteredCount: Accessor<number>
   stats: Accessor<RecordStats>
-  handleSortChange: (nextKey: RecordSortKey) => void
 }
 
 /**
- * UserRecordページで利用するレコード導出値とソート操作をまとめて生成する。
+ * UserRecordページで利用するレコード導出値をまとめて生成する。
  * @param params 楽曲マスタ、レコード、フィルター、ソート状態
- * @returns レコード一覧、件数、統計、ソート変更ハンドラをまとめたページモデル
+ * @returns レコード一覧、件数、統計をまとめたページモデル
  */
 export function useUserRecordPageModel(params: UserRecordPageModelParams): UserRecordPageModel {
   /** 未プレイを含む全曲のレコード */
@@ -49,13 +52,44 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     return attachSongMetaToRecords(songs.songs, params.sourceRecords(), versions.versions)
   })
 
+  /** 曲IDごとの理論値OVER POWER対象難易度 */
+  const theoreticalTargetDifficultyBySongId = createMemo(() =>
+    buildTheoreticalOverPowerTargetDifficultyBySongId(params.songs()?.songs ?? [])
+  )
+
+  /** レコードごとの正規化済み検索用文字列。検索文字列の変更では再正規化しない */
+  const getSearchText = createSearchTextCache<PlayerRecordWithSongMeta>()
+
+  /** 公開済みバージョンの短縮名。全選択を未指定へ揃える */
+  const releasedVersionNames = createMemo(() =>
+    getReleasedVersionShortNames(params.versions()?.versions ?? [])
+  )
+
   /** フィルター適用後のレコード */
   const filteredRecords = createMemo(() => {
     const records = recordsWithSongMeta()
-    const currentFilters = params.filters()
-    const matchTitle = createRecordTitleMatcher(currentFilters.title)
+    const currentFilters = {
+      ...params.filters(),
+      versions: resolveReleasedVersionFilterSelection(
+        params.filters().versions?.length === 0
+          ? null
+          : normalizeVersionFilterSelection(params.filters().versions, releasedVersionNames()),
+        releasedVersionNames()
+      ),
+    }
+    const matchTitle = createRecordTitleMatcher(currentFilters.title, getSearchText)
+    const favoriteSongIds = params.favoriteSongIds()
+    const lockedSongKeys = params.lockedSongKeys()
+    const targetDifficultyBySongId = theoreticalTargetDifficultyBySongId()
     return records.filter((record) =>
-      isRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
+      isRecordMatchedWithTitleMatcher(
+        record,
+        currentFilters,
+        matchTitle,
+        favoriteSongIds,
+        targetDifficultyBySongId,
+        lockedSongKeys
+      )
     )
   })
 
@@ -70,23 +104,6 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
   /** レコード統計の集計結果 */
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
-  /**
-   * 指定された列で第1ソート状態を進める。
-   *
-   * @param nextKey - 次に第1ソート対象にする列ID。
-   * @returns なし。
-   */
-  const handleSortChange = (nextKey: RecordSortKey) => {
-    const nextPrimarySort = nextPrimaryRecordSortCondition(
-      params.sortConditions()[0] ?? null,
-      nextKey
-    )
-
-    params.setSortConditions((currentSortConditions) =>
-      normalizeRecordSortConditions([nextPrimarySort, ...currentSortConditions.slice(1)])
-    )
-  }
-
   return {
     recordsWithSongMeta,
     filteredRecords,
@@ -94,6 +111,5 @@ export function useUserRecordPageModel(params: UserRecordPageModelParams): UserR
     totalCount,
     filteredCount,
     stats,
-    handleSortChange,
   }
 }

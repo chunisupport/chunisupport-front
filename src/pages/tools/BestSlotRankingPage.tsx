@@ -1,0 +1,386 @@
+import { A } from '@solidjs/router'
+import { useInfiniteQuery } from '@tanstack/solid-query'
+import { Trophy } from 'lucide-solid'
+import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import { LoadError, Loading } from '../../components'
+import { AppButton } from '../../components/common/AppButton'
+import { AppSelect } from '../../components/common/AppSelect'
+import { RecordDifficultyBadge } from '../../components/common/record/RecordBadges'
+import { SplitDecimal } from '../../components/common/SplitDecimal'
+import { OwnDataNotice } from '../../components/LoginRequiredState'
+import { BEST_SLOT_RANKING_PATH, buildSongDetailPath } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
+import { createPlayerDataStatus } from '../../hooks/createPlayerDataStatus'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { bestSlotRankingInfiniteQueryOptions } from '../../queries/bestSlotRankings'
+import { fetchRatingBands } from '../../queries/ratingBands'
+import type { BestSlotRankingEntryDTO, PlayerRecordDTO, RatingBandDTO } from '../../types/api'
+import { fetchUserRatingWithCache } from '../../usecases/cache/fetchUserRatingWithCache'
+import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
+import { getConstDisplay } from '../../utils/constDisplay'
+import { formatDecimalParts, formatTruncatedFixed, truncateDecimal } from '../../utils/numberFormat'
+import { getRankingPositionClass } from '../../utils/rankingPosition'
+import { ALL_RATING_BAND_LABEL, resolveInitialBestSlotRatingBand } from '../../utils/ratingBand'
+import {
+  calculateDisplayedScoreDifference,
+  getScoreDifferenceClass,
+} from '../../utils/scoreDifference'
+import {
+  BEST_SLOT_PERCENTAGE_DECIMAL_PLACES,
+  BEST_SLOT_RANKING_COPY,
+  BEST_SLOT_SCORE_DECIMAL_PLACES,
+} from './bestSlotRanking.constants'
+
+type RatingBandOption = {
+  label: string
+  value: string
+}
+
+/**
+ * 楽曲IDと難易度からユーザーレコード参照用の譜面キーを生成する。
+ *
+ * @param songId - 楽曲ID。
+ * @param difficulty - 譜面難易度。
+ * @returns 大文字難易度で正規化した譜面キー。
+ */
+const createChartKey = (songId: string, difficulty: string): string =>
+  `${songId}:${difficulty.toUpperCase()}`
+
+/**
+ * ベスト枠採用率を指定桁数で切り捨てたパーセント表記へ整形する。
+ *
+ * @param percentage - APIが返す0から100までの採用率。
+ * @returns 小数点以下を固定桁数にしたパーセント記号付き表示文字列。
+ */
+const formatPercentage = (percentage: number): string =>
+  `${formatTruncatedFixed(percentage, BEST_SLOT_PERCENTAGE_DECIMAL_PLACES)}%`
+
+/**
+ * ランキングの譜面1件を表形式で表示する。
+ *
+ * @param props.entry - 表示対象のランキング項目。
+ * @param props.isOwnBest - ログインユーザーのベスト枠に含まれる譜面か。
+ * @param props.ownScore - 同じ譜面におけるログインユーザーのスコア。
+ * @param props.showScoreDifference - 自分との差の列を表示するか。
+ * @returns 順位、譜面情報、平均スコア、自分との差、採用率を含む行。
+ */
+const BestSlotRankingRow = (props: {
+  entry: BestSlotRankingEntryDTO
+  isOwnBest: boolean
+  ownScore: number | undefined
+  showScoreDifference: boolean
+}) => {
+  const percentageBarWidth = () => `${Math.min(100, props.entry.best_player_percentage)}%`
+  const constDisplay = () =>
+    getConstDisplay(props.entry.chart.const, props.entry.chart.is_const_unknown)
+  const scoreDifference = () =>
+    calculateDisplayedScoreDifference(
+      props.ownScore,
+      props.entry.average_score,
+      BEST_SLOT_SCORE_DECIMAL_PLACES
+    )
+
+  return (
+    <tr
+      class="border-l-4 border-t border-border"
+      classList={{
+        'border-l-action-primary-hover bg-interactive-row-hover': props.isOwnBest,
+        'border-l-transparent': !props.isOwnBest,
+        'hover:bg-interactive-row-hover': props.isOwnBest,
+        'hover:bg-surface-muted': !props.isOwnBest,
+      }}
+    >
+      <th scope="row" class="w-7 p-0 text-center font-normal">
+        <span
+          class={`ml-3 inline-flex h-7 w-7 items-center justify-center rounded-full font-oswald text-sm font-semibold ${getRankingPositionClass(
+            props.entry.rank,
+            'bg-surface-muted text-text-muted'
+          )}`}
+        >
+          {props.entry.rank}
+        </span>
+      </th>
+      <td class="relative min-w-64 p-0">
+        <A
+          href={buildSongDetailPath(props.entry.song.id, props.entry.chart.difficulty)}
+          class="group absolute inset-0 flex min-w-0 items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-inset"
+        >
+          <RecordDifficultyBadge difficulty={props.entry.chart.difficulty} />
+          <span
+            class="block max-w-48 truncate font-sans font-medium text-text group-hover:underline group-focus-visible:underline sm:max-w-96"
+            title={props.entry.song.title}
+          >
+            {props.entry.song.title}
+          </span>
+          <Show when={props.isOwnBest}>
+            <span class="sr-only">{BEST_SLOT_RANKING_COPY.ownBestLabel}</span>
+          </Show>
+        </A>
+      </td>
+      <td class="w-px px-2 py-2 text-center font-jost text-sm whitespace-nowrap">
+        <span class={`leading-none ${constDisplay().className}`}>
+          {constDisplay().valueText}
+          <Show when={constDisplay().markerText}>
+            {(marker) => <sup class="align-super text-[0.7em]">{marker()}</sup>}
+          </Show>
+        </span>
+      </td>
+      <td class="w-px px-3 py-2 whitespace-nowrap">
+        <div class="text-right font-jost text-sm tabular-nums">
+          <Show when={props.entry.average_score !== null} fallback="-">
+            <SplitDecimal
+              parts={formatDecimalParts(
+                truncateDecimal(props.entry.average_score ?? 0, BEST_SLOT_SCORE_DECIMAL_PLACES),
+                BEST_SLOT_SCORE_DECIMAL_PLACES
+              )}
+            />
+          </Show>
+        </div>
+      </td>
+      <Show when={props.showScoreDifference}>
+        <td class="w-px px-3 py-2 text-right font-jost text-xs whitespace-nowrap tabular-nums">
+          <Show when={scoreDifference() !== undefined} fallback="-">
+            <span class={getScoreDifferenceClass(scoreDifference() ?? 0)}>
+              <SplitDecimal
+                parts={formatDecimalParts(
+                  scoreDifference() ?? 0,
+                  BEST_SLOT_SCORE_DECIMAL_PLACES,
+                  'always'
+                )}
+              />
+            </span>
+          </Show>
+        </td>
+      </Show>
+      <td class="min-w-36 px-3 py-2">
+        <div class="flex items-center gap-3">
+          <div
+            class="h-2 min-w-16 flex-1 overflow-hidden rounded-full bg-surface-muted"
+            aria-hidden="true"
+          >
+            <div
+              class="h-full rounded-full bg-action-primary"
+              style={{ width: percentageBarWidth() }}
+            />
+          </div>
+          <span class="w-16 text-right font-jost text-sm font-semibold whitespace-nowrap">
+            {formatPercentage(props.entry.best_player_percentage)}
+          </span>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+/**
+ * ベスト枠平均レート帯別の譜面採用率ランキングを表示する。
+ *
+ * @returns レート帯選択、集計概要、カーソルページング付きランキング表。
+ */
+const BestSlotRankingPage = () => {
+  const [ratingBandsResource] = createResource(fetchRatingBands)
+  const { status: playerDataStatus, noticeStatus, ownUsername } = createPlayerDataStatus()
+  const [ownRating] = createResource(ownUsername, fetchUserRatingWithCache)
+  const [ownRecords] = createResource(ownUsername, fetchUserRecordWithCache)
+  /** 自分との差の列を表示するか */
+  const showScoreDifference = (): boolean => ownUsername() !== undefined
+  const [selectedRatingBand, setSelectedRatingBand] = createSignal<RatingBandOption | null>(null)
+  const [hasResolvedInitialBand, setHasResolvedInitialBand] = createSignal(false)
+
+  const ratingBands = createMemo<RatingBandDTO[]>(() => ratingBandsResource() ?? [])
+  const ratingBandOptions = createMemo<RatingBandOption[]>(() =>
+    [...ratingBands().filter((band) => band.label !== ALL_RATING_BAND_LABEL)]
+      .sort((left, right) => right.sort_order - left.sort_order)
+      .map((band) => ({ label: band.label, value: band.label }))
+  )
+
+  createEffect(() => {
+    if (hasResolvedInitialBand() || ratingBands().length === 0) return
+    if (playerDataStatus.loading || ownRating.loading) return
+
+    const initialBand = resolveInitialBestSlotRatingBand(
+      ratingBands(),
+      ownUsername() !== undefined && !ownRating.error ? ownRating()?.best_average : null
+    )
+    if (!initialBand) return
+
+    setSelectedRatingBand({ label: initialBand.label, value: initialBand.label })
+    setHasResolvedInitialBand(true)
+  })
+
+  const ranking = useInfiniteQuery(() =>
+    bestSlotRankingInfiniteQueryOptions(selectedRatingBand()?.value ?? null)
+  )
+  const displayedEntries = createMemo(
+    () => ranking.data?.pages.flatMap((page) => page.ranking) ?? []
+  )
+  const ownRecordsByChart = createMemo(
+    () =>
+      new Map<string, PlayerRecordDTO>(
+        (ownRecords()?.standard ?? [])
+          .filter((record) => record.is_played)
+          .map((record) => [createChartKey(record.id, record.difficulty), record])
+      )
+  )
+  /** ログインユーザーのベスト枠に含まれる譜面キー集合 */
+  const ownBestChartKeys = createMemo(
+    () =>
+      new Set(
+        (ownRating()?.best ?? []).map((record) => createChartKey(record.id, record.difficulty))
+      )
+  )
+
+  /**
+   * 選択中レート帯のランキングを次のカーソルから追加取得する。
+   *
+   * @returns 追加取得完了後に解決されるPromise。
+   */
+  const handleLoadMore = async (): Promise<void> => {
+    if (!ranking.hasNextPage || ranking.isFetching) return
+    await ranking.fetchNextPage()
+  }
+
+  const tool = getToolLink(BEST_SLOT_RANKING_PATH)
+  useDocumentTitle(tool.title)
+
+  return (
+    <div class="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <header class="flex items-start gap-3">
+          <span class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-muted">
+            <Trophy class="h-5 w-5 text-action-primary" aria-hidden="true" />
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold">{tool.title}</h1>
+            <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
+          </div>
+        </header>
+        <Show when={selectedRatingBand()}>
+          <AppSelect<RatingBandOption>
+            options={ratingBandOptions()}
+            optionValue="value"
+            optionTextValue="label"
+            value={selectedRatingBand()}
+            onChange={(option) => option && setSelectedRatingBand(option)}
+            label={BEST_SLOT_RANKING_COPY.ratingBandLabel}
+            rootClass="w-full sm:w-52"
+            triggerClass="h-10"
+            formatLabel={(option) => option.label}
+          />
+        </Show>
+      </div>
+
+      <OwnDataNotice status={noticeStatus()} />
+
+      <Show
+        when={!ratingBandsResource.error}
+        fallback={<LoadError error={ratingBandsResource.error} />}
+      >
+        <Show
+          when={selectedRatingBand() && !ranking.isPending}
+          fallback={
+            <div class="h-40">
+              <Loading />
+            </div>
+          }
+        >
+          <Show
+            when={!ranking.isError || ranking.data}
+            fallback={<LoadError error={ranking.error} />}
+          >
+            <Show when={ranking.data}>
+              <Show
+                when={displayedEntries().length > 0}
+                fallback={
+                  <p class="rounded-lg border border-border bg-surface p-6 text-center text-sm text-text-muted">
+                    {BEST_SLOT_RANKING_COPY.empty}
+                  </p>
+                }
+              >
+                <div class="overflow-x-auto rounded-lg border border-border bg-surface">
+                  <table class="w-full border-collapse text-left">
+                    <caption class="sr-only">{BEST_SLOT_RANKING_COPY.tableCaption}</caption>
+                    <colgroup>
+                      <col class="w-7" />
+                    </colgroup>
+                    <thead class="sr-only">
+                      <tr>
+                        <th scope="col" class="px-3 py-2 text-center font-medium">
+                          {BEST_SLOT_RANKING_COPY.rankColumn}
+                        </th>
+                        <th scope="col" class="px-3 py-2 font-medium">
+                          {BEST_SLOT_RANKING_COPY.chartColumn}
+                        </th>
+                        <th scope="col" class="px-2 py-2 text-center font-medium">
+                          {BEST_SLOT_RANKING_COPY.constColumn}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-right font-medium whitespace-nowrap">
+                          {BEST_SLOT_RANKING_COPY.averageScoreColumn}
+                        </th>
+                        <Show when={showScoreDifference()}>
+                          <th
+                            scope="col"
+                            class="px-3 py-2 text-right font-medium whitespace-nowrap"
+                          >
+                            {BEST_SLOT_RANKING_COPY.scoreDifferenceColumn}
+                          </th>
+                        </Show>
+                        <th scope="col" class="px-3 py-2 text-right font-medium">
+                          {BEST_SLOT_RANKING_COPY.percentageColumn}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <For each={displayedEntries()}>
+                        {(entry) => (
+                          <BestSlotRankingRow
+                            entry={entry}
+                            isOwnBest={ownBestChartKeys().has(
+                              createChartKey(entry.song.id, entry.chart.difficulty)
+                            )}
+                            ownScore={
+                              ownRecordsByChart().get(
+                                createChartKey(entry.song.id, entry.chart.difficulty)
+                              )?.score
+                            }
+                            showScoreDifference={showScoreDifference()}
+                          />
+                        )}
+                      </For>
+                    </tbody>
+                  </table>
+                </div>
+              </Show>
+
+              <Show when={ranking.isFetchNextPageError}>
+                <LoadError error={ranking.error} />
+              </Show>
+              <Show
+                when={!ranking.isFetchingNextPage}
+                fallback={
+                  <div class="h-20">
+                    <Loading />
+                  </div>
+                }
+              >
+                <Show when={ranking.hasNextPage}>
+                  <div class="flex justify-center">
+                    <AppButton
+                      variant="surface"
+                      disabled={ranking.isFetching}
+                      onClick={handleLoadMore}
+                    >
+                      {BEST_SLOT_RANKING_COPY.loadMore}
+                    </AppButton>
+                  </div>
+                </Show>
+              </Show>
+            </Show>
+          </Show>
+        </Show>
+      </Show>
+    </div>
+  )
+}
+
+export default BestSlotRankingPage

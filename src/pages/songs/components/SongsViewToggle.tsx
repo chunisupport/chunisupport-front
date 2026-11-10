@@ -1,6 +1,12 @@
 import { A, useLocation } from '@solidjs/router'
 import { createMemo } from 'solid-js'
+import { getAppButtonClass } from '../../../components/common/AppButton'
 
+/**
+ * 通常曲とWORLD'S ENDの楽曲一覧を切り替える。
+ *
+ * @returns 切り替え先を表示する一覧ナビゲーション。
+ */
 const SongsViewToggle = () => {
   const location = useLocation()
   const isWorldsend = () => location.pathname.startsWith('/songs/worldsend')
@@ -21,7 +27,11 @@ const SongsViewToggle = () => {
     <nav aria-label="楽曲一覧切り替え" class="flex items-center">
       <A
         href={nextView().href}
-        class="rounded-md bg-action-primary px-3 py-1.5 text-xs font-medium text-text-inverse transition-colors hover:bg-action-primary-hover"
+        class={getAppButtonClass({
+          variant: 'primary',
+          size: 'md',
+          class: 'h-10 whitespace-nowrap',
+        })}
       >
         {nextView().label}
       </A>

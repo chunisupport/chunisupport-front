@@ -2,24 +2,20 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import type { WorldsendRecordDTO } from '../../../../types/api'
+import { createInitialSortConditions } from '../../../../utils/sortConditions'
 import {
-  createInitialWorldsendRecordSortConditions,
   DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS,
-  nextPrimaryWorldsendRecordSortCondition,
   normalizeWorldsendRecordSortConditions,
+  parseWorldsendSortParams,
   sortWorldsendRecords,
   sortWorldsendRecordsByConditions,
 } from './sorting'
 
 /**
- * Test helper to build a WorldsendRecordDTO with default field values.
+ * 必須フィールドに既定値を入れたテスト用の WORLD'S END レコードを生成する。
  *
- * Creates a complete WorldsendRecordDTO object with sensible defaults for all required fields
- * (is_played, updated_at, id, title, artist, level_star, attribute, notes, score, img, clear_lamp,
- * combo_lamp, full_chain), allowing tests to override specific fields as needed.
- *
- * @param overrides - Optional partial object to override default field values
- * @returns A complete WorldsendRecordDTO test object
+ * @param overrides - 既定値から上書きするフィールド。
+ * @returns テスト用の WORLD'S END レコード。
  */
 const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRecordDTO => ({
   is_played: true,
@@ -39,6 +35,28 @@ const createRecord = (overrides: Partial<WorldsendRecordDTO> = {}): WorldsendRec
   ...overrides,
 })
 
+test("WORLD'S ENDの不正な sortcol はスコア降順に戻し、登録済み列は指定ソートを使う", () => {
+  // Given
+  const invalidSortCols = ['toString', 'constructor', '__proto__', 'not-a-column'] as const
+
+  for (const sortcol of invalidSortCols) {
+    // When: 継承プロパティ、または未登録の列名を指定する
+    const result = parseWorldsendSortParams({ sortcol, sortorder: 'asc' })
+
+    // Then
+    assert.deepEqual(result, {
+      initialSortKey: 'score',
+      initialSortOrder: 'desc',
+    })
+    assert.equal(typeof result.initialSortKey, 'string')
+  }
+
+  assert.deepEqual(parseWorldsendSortParams({ sortcol: 'updated_at', sortorder: 'asc' }), {
+    initialSortKey: 'updatedAt',
+    initialSortOrder: 'asc',
+  })
+})
+
 test("WORLD'S ENDの既定ソートはスコア降順、属性昇順、レベル降順、曲名昇順にする", () => {
   // Given
   const expectedSortConditions = [
@@ -55,19 +73,23 @@ test("WORLD'S ENDの既定ソートはスコア降順、属性昇順、レベル
   assert.deepEqual(result, expectedSortConditions)
 })
 
-test("WORLD'S ENDの初期ソートは第1ソートだけクエリ指定で置き換える", () => {
+test("WORLD'S ENDの初期ソートは第1ソートをクエリ指定にし、重複キーを既定条件で補完する", () => {
   // Given
   const sortKey = 'attribute'
   const sortDirection = 'asc'
   const expectedSortConditions = [
     { key: 'attribute', direction: 'asc' },
-    { key: 'attribute', direction: 'asc' },
+    { key: 'score', direction: 'desc' },
     { key: 'level', direction: 'desc' },
     { key: 'title', direction: 'asc' },
   ]
 
   // When
-  const result = createInitialWorldsendRecordSortConditions(sortKey, sortDirection)
+  const result = createInitialSortConditions(
+    sortKey,
+    sortDirection,
+    DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS
+  )
 
   // Then
   assert.deepEqual(result, expectedSortConditions)
@@ -95,31 +117,6 @@ test("WORLD'S ENDの第4ソートは入力値に関わらず曲名昇順固定�
   assert.deepEqual(result, expectedSortConditions)
 })
 
-test("WORLD'S ENDの列クリックは第1ソートだけを切り替える", () => {
-  // Given
-  const ascendingScoreSort = { key: 'score', direction: 'asc' } as const
-  const descendingScoreSort = { key: 'score', direction: 'desc' } as const
-
-  // When
-  const resultFromAsc = nextPrimaryWorldsendRecordSortCondition(ascendingScoreSort, 'score')
-  const resultFromDesc = nextPrimaryWorldsendRecordSortCondition(descendingScoreSort, 'score')
-  const resultFromEmpty = nextPrimaryWorldsendRecordSortCondition(null, 'title')
-
-  // Then
-  assert.deepEqual(resultFromAsc, {
-    key: 'score',
-    direction: 'desc',
-  })
-  assert.deepEqual(resultFromDesc, {
-    key: 'score',
-    direction: 'asc',
-  })
-  assert.deepEqual(resultFromEmpty, {
-    key: 'title',
-    direction: 'asc',
-  })
-})
-
 test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条件で並べる", () => {
   // Given
   const records = [
@@ -137,6 +134,23 @@ test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条
 
   // Then
   assert.deepEqual(result, ['score-high', 'air', 'fire-high', 'fire-low'])
+})
+
+test("WORLD'S ENDのスコアソートは昇順でも未プレイを末尾に寄せる", () => {
+  const records = [
+    createRecord({ id: 'played-zero', score: 0 }),
+    createRecord({ id: 'unplayed', is_played: false, score: 0 }),
+    createRecord({ id: 'played-high', score: 1010000 }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'score', 'asc').map((record) => record.id),
+    ['played-zero', 'played-high', 'unplayed']
+  )
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'score', 'desc').map((record) => record.id),
+    ['played-high', 'played-zero', 'unplayed']
+  )
 })
 
 test("WORLD'S ENDの第4ソートは曲名指定でも方向を昇順へ固定する", () => {
@@ -161,13 +175,13 @@ test("WORLD'S ENDの第4ソートは曲名指定でも方向を昇順へ固定�
   assert.deepEqual(result, expectedSortConditions)
 })
 
-test("WORLD'S ENDのソート条件は不足分を既定値で補って4条件にする", () => {
+test("WORLD'S ENDのソート条件は重複キーを除いて既定値で4条件に補う", () => {
   // Given
   const sortConditions = [{ key: 'level', direction: 'asc' }] as const
   const expectedSortConditions = [
     { key: 'level', direction: 'asc' },
+    { key: 'score', direction: 'desc' },
     { key: 'attribute', direction: 'asc' },
-    { key: 'level', direction: 'desc' },
     { key: 'title', direction: 'asc' },
   ]
 
@@ -197,23 +211,44 @@ test("WORLD'S ENDのFCHソートはなし、GOLD、PLATINUM、未プレイの順
   )
 })
 
-test("WORLD'S ENDのJ数ソートはJ数なし行をスコア降順で並べ、未プレイを末尾に寄せる", () => {
+test("WORLD'S ENDのランプソートはランプなし、FC、AJ、AJC、未プレイの順で並べる", () => {
+  const records = [
+    createRecord({ id: 'none', combo_lamp: null }),
+    createRecord({ id: 'fc', combo_lamp: 'FULL COMBO' }),
+    createRecord({ id: 'aj', combo_lamp: 'ALL JUSTICE', score: 1009999 }),
+    createRecord({ id: 'ajc', combo_lamp: 'ALL JUSTICE', score: 1010000 }),
+    createRecord({ id: 'unplayed', is_played: false, combo_lamp: null }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'lamp', 'asc').map((record) => record.id),
+    ['none', 'fc', 'aj', 'ajc', 'unplayed']
+  )
+
+  assert.deepEqual(
+    sortWorldsendRecords(records, 'lamp', 'desc').map((record) => record.id),
+    ['ajc', 'aj', 'fc', 'none', 'unplayed']
+  )
+})
+
+test("WORLD'S ENDのJ数ソートは数値順に並べ、J数なし行は後続条件へ委譲する", () => {
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2, score: 1008000 }),
-    createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
     createRecord({ id: 'aj-null', combo_lamp: 'ALL JUSTICE', justice_count: null, score: 1009000 }),
     createRecord({ id: 'none-low', combo_lamp: null, score: 1007000 }),
+    createRecord({ id: 'fc-high', combo_lamp: 'FULL COMBO', score: 1009500 }),
     createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', justice_count: 0, score: 1010000 }),
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, score: 0 }),
   ]
 
+  // Then: J数なしの4件は後続条件がないため、入力順のまま末尾へ残る。
   assert.deepEqual(
     sortWorldsendRecords(records, 'justiceCount', 'asc').map((record) => record.id),
-    ['aj-j0', 'aj-j2', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+    ['aj-j0', 'aj-j2', 'aj-null', 'none-low', 'fc-high', 'unplayed']
   )
 
   assert.deepEqual(
     sortWorldsendRecords(records, 'justiceCount', 'desc').map((record) => record.id),
-    ['aj-j2', 'aj-j0', 'fc-high', 'aj-null', 'none-low', 'unplayed']
+    ['aj-j2', 'aj-j0', 'aj-null', 'none-low', 'fc-high', 'unplayed']
   )
 })

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 94 46" width="94" height="46" role="img" aria-label="クラスエンブレム EX">
+  <defs>
+    <!-- WORLD'S END の暗い虹色 -->
+    <linearGradient id="m07-worldsEnd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#48111d"/><stop offset="0.17" stop-color="#5a3609"/><stop offset="0.33" stop-color="#48520f"/><stop offset="0.5" stop-color="#0f4f32"/><stop offset="0.67" stop-color="#0d4a57"/><stop offset="0.83" stop-color="#1e3473"/><stop offset="1" stop-color="#3f1f61"/></linearGradient>
+    <linearGradient id="m07-rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.14" stop-color="#ffadad"/><stop offset="0.29" stop-color="#ffd0a8"/><stop offset="0.43" stop-color="#fff0a8"/><stop offset="0.57" stop-color="#b9eeb7"/><stop offset="0.71" stop-color="#a8d8ff"/><stop offset="0.86" stop-color="#b7bfff"/><stop offset="1" stop-color="#d0b5ff"/></linearGradient>
+    <linearGradient id="m07-chrome" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#cdd2dc"/>
+      <stop offset="0.55" stop-color="#6b7180"/>
+      <stop offset="1" stop-color="#e6e9ef"/>
+    </linearGradient>
+    <radialGradient id="m07-vignette" cx="0.5" cy="0.45" r="0.6">
+      <stop offset="0.3" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.6"/>
+    </radialGradient>
+    <linearGradient id="m07-letter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.12" stop-color="#ffffff"/><stop offset="0.25" stop-color="#ffadad"/><stop offset="0.38" stop-color="#ffd0a8"/><stop offset="0.5" stop-color="#fff0a8"/><stop offset="0.62" stop-color="#b9eeb7"/><stop offset="0.75" stop-color="#a8d8ff"/><stop offset="0.88" stop-color="#b7bfff"/><stop offset="1" stop-color="#d0b5ff"/></linearGradient>
+    <!-- 八角形の各辺の方向へ伸びるトゲ。色は use 側の fill / stroke で指定する -->
+    <g id="m07-spike" stroke-linejoin="round">
+      <polygon points="42,14.5 47,1.8 47,15.5" stroke="none"/>
+      <polygon points="47,1.8 52,14.5 47,15.5" stroke="none"/>
+      <polygon points="47,1.8 52,14.5 47,15.5" fill="#000000" opacity="0.45" stroke="none"/>
+      <polygon points="42,14.5 47,1.8 52,14.5" fill="none" stroke-width="0.6"/>
+    </g>
+    <!-- 交差する刃（X字）の片側 -->
+    <g id="m07-blade" stroke-linejoin="miter">
+      <polygon points="12,10 48.12,20 47,23" fill="url(#m07-rainbow)"/>
+      <polygon points="12,10 47,23 45.88,26" fill="url(#m07-worldsEnd)"/>
+      <polygon points="82,36 47,23 48.12,20" fill="url(#m07-rainbow)"/>
+      <polygon points="82,36 45.88,26 47,23" fill="url(#m07-worldsEnd)"/>
+      <polygon points="12,10 48.12,20 82,36 45.88,26" fill="none" stroke="#14161c" stroke-width="0.7"/>
+    </g>
+    <!-- セリフ体の EX -->
+    <g id="m07-letters">
+      <polygon points="38.8,16.2 45.6,16.2 45.6,19.4 44.9,19.4 44.3,17.6 42.2,17.6 42.2,21.6 43.7,21.6 44,20.6 44.6,20.6 44.6,24 44,24 43.7,22.9 42.2,22.9 42.2,26.8 44.6,26.8 45.2,24.8 45.9,24.8 45.8,28.2 38.8,28.2 38.8,27.4 40.2,27 40.2,17.4 38.8,17"/>
+      <polygon points="47.6,16.2 50,16.2 54.4,28.2 52,28.2"/>
+      <polygon points="53.4,16.2 54.4,16.2 49,28.2 48,28.2"/>
+      <rect x="46.6" y="16.2" width="4.4" height="0.9"/>
+      <rect x="52.4" y="16.2" width="3" height="0.9"/>
+      <rect x="46.4" y="27.3" width="4" height="0.9"/>
+      <rect x="50.8" y="27.3" width="4.8" height="0.9"/>
+    </g>
+  </defs>
+  <!-- 背面: 八角形の各辺の方向に虹の8色のトゲ -->
+  <use href="#m07-spike" transform="rotate(0 47 23)" fill="#8a1f33" stroke="#ff8a9a"/>
+  <use href="#m07-spike" transform="rotate(45 47 23)" fill="#8a5410" stroke="#ffc27a"/>
+  <use href="#m07-spike" transform="rotate(90 47 23)" fill="#6f7a14" stroke="#f2f07a"/>
+  <use href="#m07-spike" transform="rotate(135 47 23)" fill="#1a7a4c" stroke="#8ef0b0"/>
+  <use href="#m07-spike" transform="rotate(180 47 23)" fill="#157282" stroke="#8ae6f2"/>
+  <use href="#m07-spike" transform="rotate(225 47 23)" fill="#2d4ea8" stroke="#9ab8ff"/>
+  <use href="#m07-spike" transform="rotate(270 47 23)" fill="#5a2f8f" stroke="#c8a2ff"/>
+  <use href="#m07-spike" transform="rotate(315 47 23)" fill="#8a2468" stroke="#ff9ad8"/>
+  <!-- 背面: X字に交差する刃 -->
+  <use href="#m07-blade"/>
+  <use href="#m07-blade" transform="translate(94 0) scale(-1 1)"/>
+  <!-- 中央: 正八角形（クロームの枠） -->
+  <polygon points="61.04,17.18 52.82,8.96 41.18,8.96 32.96,17.18 32.96,28.82 41.18,37.04 52.82,37.04 61.04,28.82" fill="url(#m07-chrome)" stroke="#14161c" stroke-width="0.7" stroke-linejoin="round"/>
+  <polygon points="58.46,18.25 51.75,11.54 42.25,11.54 35.54,18.25 35.54,27.75 42.25,34.46 51.75,34.46 58.46,27.75" fill="url(#m07-worldsEnd)"/>
+  <polygon points="58.46,18.25 51.75,11.54 42.25,11.54 35.54,18.25 35.54,27.75 42.25,34.46 51.75,34.46 58.46,27.75" fill="url(#m07-vignette)"/>
+  <path d="M47 23 L57.72 18.56 M47 23 L51.44 12.28 M47 23 L42.56 12.28 M47 23 L36.28 18.56 M47 23 L36.28 27.44 M47 23 L42.56 33.72 M47 23 L51.44 33.72 M47 23 L57.72 27.44" stroke="#ffffff" stroke-width="0.3" opacity="0.18" fill="none"/>
+  <polygon points="58.46,18.25 51.75,11.54 42.25,11.54 35.54,18.25 35.54,27.75 42.25,34.46 51.75,34.46 58.46,27.75" fill="none" stroke="#14161c" stroke-width="0.6" stroke-linejoin="round"/>
+  <polygon points="57.72,18.56 51.44,12.28 42.56,12.28 36.28,18.56 36.28,27.44 42.56,33.72 51.44,33.72 57.72,27.44" fill="none" stroke="url(#m07-rainbow)" stroke-width="0.4" opacity="0.8"/>
+  <!-- EX の文字: 八角形からはみ出さんばかりの大きさ -->
+  <g transform="translate(47 23) scale(1.4) translate(-47.2 -22.2)">
+    <use href="#m07-letters" fill="#14161c" stroke="#14161c" stroke-width="1.1" stroke-linejoin="round"/>
+    <use href="#m07-letters" fill="url(#m07-letter)"/>
+  </g>
+</svg>

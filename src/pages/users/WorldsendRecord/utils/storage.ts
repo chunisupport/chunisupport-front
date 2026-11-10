@@ -5,12 +5,16 @@ import {
   updateRecordFilter,
 } from '../../../../api/recordFilters'
 import type { RecordFilterDTO, RecordFilterRequest } from '../../../../types/api'
+import { migrateLegacyComboLampFilters } from '../../../../utils/comboLampFilter'
 import type { SavedRecordFilterItem } from '../../components/SavedRecordFiltersDialog'
 import { isValidSavedWorldsendFilter } from '../../components/savedRecordFilters'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 
-export const SAVED_WORLDSEND_FILTER_SCHEMA_VERSION = 2
+export const SAVED_WORLDSEND_FILTER_SCHEMA_VERSION = 5
+const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION = 2
+const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_3 = 3
+const LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_4 = 4
 const WORLDSEND_RECORD_FILTER_TYPE = 'worldsend'
 const INVALID_SCHEMA_MESSAGE = '古い形式のため無効です。'
 const INVALID_FILTER_MESSAGE = '保存値が壊れているため無効です。'
@@ -34,7 +38,11 @@ function isObjectRecord(value: unknown): value is Partial<WorldsendFilterState> 
  * @returns 画面表示用の保存済み WORLD'S END フィルター。
  */
 export function toSavedWorldsendFilter(dto: RecordFilterDTO<unknown>): SavedWorldsendFilter {
-  const validSchema = dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION
+  const validSchema =
+    dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION ||
+    dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION ||
+    dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_3 ||
+    dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_4
   const filter =
     validSchema && isObjectRecord(dto.filter) && isValidSavedWorldsendFilter(dto.filter)
       ? dto.filter
@@ -44,7 +52,16 @@ export function toSavedWorldsendFilter(dto: RecordFilterDTO<unknown>): SavedWorl
     id: dto.id,
     name: dto.name,
     schemaVersion: dto.schema_version,
-    filter: filter ? normalizeWorldsendFilterState(filter) : null,
+    filter: filter
+      ? normalizeWorldsendFilterState({
+          ...filter,
+          combo_lamp:
+            dto.schema_version === SAVED_WORLDSEND_FILTER_SCHEMA_VERSION ||
+            dto.schema_version === LEGACY_WORLDSEND_FILTER_SCHEMA_VERSION_4
+              ? filter.combo_lamp
+              : migrateLegacyComboLampFilters(filter.combo_lamp),
+        })
+      : null,
     isValid: Boolean(filter),
     invalidReason: validSchema
       ? filter

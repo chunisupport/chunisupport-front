@@ -1,0 +1,293 @@
+import { Dialog } from '@kobalte/core/dialog'
+import { TextField } from '@kobalte/core/text-field'
+import type { Component } from 'solid-js'
+import { createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { AppButton } from '../../../components/common/AppButton'
+import { FormSelect } from '../../../components/common/AppSelect'
+import { CheckboxField } from '../../../components/common/CheckboxField'
+import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
+import WikiPageTitleField from '../../../components/common/WikiPageTitleField'
+import type { MasterItemDTO } from '../../../types/api'
+import { toDateInputValue } from '../../../utils/dateOnly'
+import { toInputValue } from '../../../utils/rangeInput'
+import type { StandardSongLookupItem } from '../../../utils/standardSongLookup'
+import {
+  SONG_EDIT_COPY,
+  SONG_EDIT_NUMBER_INPUT_CLASS,
+  SONG_EDIT_TEXT_INPUT_CLASS,
+} from '../songEditConstants'
+import {
+  normalizeNonNegativeIntegerInput,
+  parseSongMetaEditValues,
+  type SongMetaEditValues,
+} from '../utils/songMetaEdit'
+import SongEditSaveButton from './SongEditSaveButton'
+
+type Props = {
+  /** 生成元の曲名 */
+  title: string
+  open: boolean
+  genres: MasterItemDTO[]
+  initialGenre: string | null
+  initialBpm: number | null
+  initialRelease: string | null
+  /** 編集前のWikiページタイトル */
+  initialWikiPageTitle: string | null
+  /** 編集前の要解禁フラグ */
+  initialUnlockRequired: boolean
+  requireGenre: boolean
+  saving: boolean
+  apiErrorMessage: string
+  onOpenChange: (open: boolean) => void
+  onSubmit: (values: SongMetaEditValues) => void
+  /** STANDARD楽曲からBPM・Wikiページタイトルを取り込むボタンを表示するか */
+  enableCopyFromStandard?: boolean
+  /** 取り込みに使うSTANDARD楽曲一覧 */
+  standardSongs?: readonly StandardSongLookupItem[]
+  /** 取り込みに使う曲名 */
+  copyTitle?: string
+  /** 取り込みに使うアーティスト名 */
+  copyArtist?: string
+  /** STANDARD楽曲一覧の読み込み中かどうか */
+  standardSongsLoading?: boolean
+}
+
+type BpmTextFieldProps = {
+  /** 入力中のBPM文字列 */
+  value: string
+  /** 正規化済みの入力値を反映する処理 */
+  onInput: (value: string) => void
+}
+
+/**
+ * 楽曲情報編集ダイアログのBPM入力欄を描画する。
+ *
+ * @param props - 入力値と変更ハンドラ。
+ * @returns BPM用の Kobalte TextField。
+ */
+const BpmTextField: Component<BpmTextFieldProps> = (props) => (
+  <TextField class="min-w-0">
+    <TextField.Label class="mb-1 block text-sm text-text-muted">
+      {SONG_EDIT_COPY.bpmLabel}
+    </TextField.Label>
+    <TextField.Input
+      value={props.value}
+      inputMode="numeric"
+      class={SONG_EDIT_NUMBER_INPUT_CLASS}
+      onInput={(event) => {
+        const next = normalizeNonNegativeIntegerInput(event.currentTarget.value)
+        if (next === null) return
+        props.onInput(next)
+      }}
+    />
+  </TextField>
+)
+
+/**
+ * 楽曲情報（ジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトル）を編集するダイアログを描画する。
+ * WORLD'S ENDでは同じ曲名・アーティスト名のSTANDARD楽曲からBPM・Wikiページタイトルを取り込める。
+ *
+ * @param props - 開閉状態、初期値、ジャンル候補、保存ハンドラ、STANDARD取り込み設定。
+ * @returns 楽曲情報編集ダイアログ。
+ */
+const SongMetaEditDialog: Component<Props> = (props) => {
+  const [genreName, setGenreName] = createSignal<string | null>(null)
+  const [bpm, setBpm] = createSignal('')
+  const [releasedAt, setReleasedAt] = createSignal('')
+  const [unlockRequired, setUnlockRequired] = createSignal(false)
+  const [wikiPageTitle, setWikiPageTitle] = createSignal('')
+  const [validationMessage, setValidationMessage] = createSignal('')
+  const [initialValues, setInitialValues] = createSignal({
+    genreName: null as string | null,
+    bpm: '',
+    releasedAt: '',
+    wikiPageTitle: '',
+    unlockRequired: false,
+  })
+
+  const selectedGenre = createMemo(
+    () => props.genres.find((genre) => genre.name === genreName()) ?? null
+  )
+  const errorMessage = () => validationMessage() || props.apiErrorMessage
+  const changed = createMemo(
+    () =>
+      genreName() !== initialValues().genreName ||
+      bpm() !== initialValues().bpm ||
+      releasedAt() !== initialValues().releasedAt ||
+      wikiPageTitle() !== initialValues().wikiPageTitle ||
+      unlockRequired() !== initialValues().unlockRequired
+  )
+
+  createEffect(() => {
+    if (!props.open) return
+    const values = {
+      genreName: props.initialGenre,
+      bpm: toInputValue(props.initialBpm),
+      releasedAt: toDateInputValue(props.initialRelease),
+      wikiPageTitle: props.initialWikiPageTitle ?? '',
+      unlockRequired: props.initialUnlockRequired,
+    }
+    setInitialValues(values)
+    setGenreName(values.genreName)
+    setBpm(values.bpm)
+    setReleasedAt(values.releasedAt)
+    setWikiPageTitle(values.wikiPageTitle)
+    setUnlockRequired(values.unlockRequired)
+    setValidationMessage('')
+  })
+
+  /**
+   * 楽曲情報編集フォームを検証して送信する。
+   *
+   * @param event - フォーム送信イベント。
+   * @returns なし。
+   */
+  const handleSubmit = (event: SubmitEvent): void => {
+    event.preventDefault()
+    if (!changed() || props.saving) return
+    const parsed = parseSongMetaEditValues(
+      {
+        genreName: genreName(),
+        bpm: bpm(),
+        releasedAt: releasedAt(),
+        wikiPageTitle: wikiPageTitle(),
+        unlockRequired: unlockRequired(),
+      },
+      props.requireGenre
+    )
+    if (!parsed.ok) {
+      setValidationMessage(parsed.message)
+      return
+    }
+
+    setValidationMessage('')
+    props.onSubmit(parsed.value)
+  }
+
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
+      <Dialog.Portal>
+        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
+        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
+          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
+            {SONG_EDIT_COPY.songDialogTitle}
+          </Dialog.Title>
+          <Dialog.Description class="sr-only">
+            {SONG_EDIT_COPY.songFormDescription}
+          </Dialog.Description>
+
+          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
+            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+              <div class="grid grid-cols-2 gap-4">
+                <FormSelect<MasterItemDTO>
+                  rootClass="min-w-0"
+                  label={SONG_EDIT_COPY.genreLabel}
+                  options={props.genres}
+                  optionValue="name"
+                  optionTextValue="name"
+                  value={selectedGenre()}
+                  onChange={(genre: MasterItemDTO | null) => setGenreName(genre?.name ?? null)}
+                  placeholder={SONG_EDIT_COPY.genrePlaceholder}
+                  contentZIndexClass="z-60"
+                  formatLabel={(genre) => genre.name}
+                />
+
+                <Show
+                  when={props.enableCopyFromStandard}
+                  fallback={<BpmTextField value={bpm()} onInput={setBpm} />}
+                >
+                  <CopyFromStandardField
+                    class="min-w-0"
+                    field="bpm"
+                    songs={props.standardSongs ?? []}
+                    title={props.copyTitle ?? ''}
+                    artist={props.copyArtist ?? ''}
+                    songsLoading={props.standardSongsLoading}
+                    onCopied={(nextBpm) => {
+                      setBpm(toInputValue(nextBpm))
+                      setValidationMessage('')
+                    }}
+                  >
+                    <BpmTextField value={bpm()} onInput={setBpm} />
+                  </CopyFromStandardField>
+                </Show>
+
+                <TextField class="min-w-0">
+                  <TextField.Label class="mb-1 block text-sm text-text-muted">
+                    {SONG_EDIT_COPY.releaseLabel}
+                  </TextField.Label>
+                  <TextField.Input
+                    type="date"
+                    value={releasedAt()}
+                    class={SONG_EDIT_TEXT_INPUT_CLASS}
+                    onInput={(event) => setReleasedAt(event.currentTarget.value)}
+                  />
+                </TextField>
+
+                <CheckboxField
+                  checked={unlockRequired()}
+                  label={SONG_EDIT_COPY.unlockRequiredLabel}
+                  onChange={setUnlockRequired}
+                  class="min-w-0 self-end py-2"
+                  controlClass="peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring"
+                  inputClass="peer"
+                />
+              </div>
+
+              <Show
+                when={props.enableCopyFromStandard}
+                fallback={
+                  <WikiPageTitleField
+                    title={props.title}
+                    label={SONG_EDIT_COPY.wikiPageTitleLabel}
+                    value={wikiPageTitle()}
+                    inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
+                    onInput={setWikiPageTitle}
+                  />
+                }
+              >
+                <CopyFromStandardField
+                  field="wikiPageTitle"
+                  songs={props.standardSongs ?? []}
+                  title={props.copyTitle ?? ''}
+                  artist={props.copyArtist ?? ''}
+                  songsLoading={props.standardSongsLoading}
+                  onCopied={(nextWikiPageTitle) => {
+                    setWikiPageTitle(nextWikiPageTitle)
+                    setValidationMessage('')
+                  }}
+                >
+                  {(copyButton) => (
+                    <WikiPageTitleField
+                      title={props.title}
+                      label={SONG_EDIT_COPY.wikiPageTitleLabel}
+                      value={wikiPageTitle()}
+                      inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
+                      onInput={setWikiPageTitle}
+                      leadingAction={copyButton}
+                    />
+                  )}
+                </CopyFromStandardField>
+              </Show>
+
+              <Show when={errorMessage()}>
+                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+                  {errorMessage()}
+                </p>
+              </Show>
+            </div>
+
+            <div class="mt-5 flex shrink-0 justify-end gap-2">
+              <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
+                {SONG_EDIT_COPY.cancelButton}
+              </AppButton>
+              <SongEditSaveButton changed={changed()} saving={props.saving} />
+            </div>
+          </form>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog>
+  )
+}
+
+export default SongMetaEditDialog

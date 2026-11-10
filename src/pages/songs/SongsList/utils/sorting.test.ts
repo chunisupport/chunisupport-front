@@ -7,6 +7,7 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   id: overrides.id ?? 'song',
   title: overrides.title ?? '楽曲',
   reading: overrides.reading ?? null,
+  name_folder_code: 'NUMBER',
   artist: overrides.artist ?? 'アーティスト',
   genre: overrides.genre ?? 'ジャンル',
   bpm: overrides.bpm === undefined ? 120 : overrides.bpm,
@@ -17,6 +18,7 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   is_maxop_unknown: overrides.is_maxop_unknown ?? false,
   op_target_difficulty: overrides.op_target_difficulty ?? null,
   is_new: overrides.is_new ?? false,
+  unlock_required: overrides.unlock_required ?? false,
   charts: overrides.charts ?? {},
 })
 
@@ -30,11 +32,11 @@ test('楽曲一覧のソート状態はascからdesc、最後に解除へ遷移�
   assert.deepEqual(third, { sortKey: null, sortDirection: null })
 })
 
-test('タイトルで日本語順にソートする', () => {
+test('タイトル列は reading の日本語順にソートする', () => {
   const songs = [
-    createSong({ id: 'b', title: 'ウタ' }),
-    createSong({ id: 'a', title: 'アイ' }),
-    createSong({ id: 'c', title: 'オト' }),
+    createSong({ id: 'b', title: '愛', reading: 'ラブ' }),
+    createSong({ id: 'a', title: '空', reading: 'ソラ' }),
+    createSong({ id: 'c', title: '林檎', reading: 'リンゴ' }),
   ]
 
   assert.deepEqual(
@@ -47,11 +49,12 @@ test('タイトルで日本語順にソートする', () => {
   )
 })
 
-test('ジャンルはマスタのsort_order順にソートする', () => {
+test('ジャンルはマスタのsort_order順にソートし、マスタ外は降順でも末尾に固定する', () => {
   const songs = [
     createSong({ id: 'touhou', genre: '東方Project' }),
     createSong({ id: 'pops', genre: 'POPS & ANIME' }),
     createSong({ id: 'niconico', genre: 'niconico' }),
+    createSong({ id: 'variety', genre: 'VARIETY' }),
   ]
   const genres = [
     { id: 1, name: 'POPS & ANIME', sort_order: 10 },
@@ -61,11 +64,11 @@ test('ジャンルはマスタのsort_order順にソートする', () => {
 
   assert.deepEqual(
     sortSongs(songs, 'genre', 'asc', genres).map((song) => song.id),
-    ['pops', 'niconico', 'touhou']
+    ['pops', 'niconico', 'touhou', 'variety']
   )
   assert.deepEqual(
     sortSongs(songs, 'genre', 'desc', genres).map((song) => song.id),
-    ['touhou', 'niconico', 'pops']
+    ['touhou', 'niconico', 'pops', 'variety']
   )
 })
 
@@ -102,4 +105,49 @@ test('BPMと定数の未設定値は末尾に寄せる', () => {
     sortSongs(songs, 'master', 'desc').map((song) => song.id),
     ['hard', 'easy', 'missing-bpm', 'slow', 'missing-chart']
   )
+})
+
+test('ノーツ数モードは定数と独立して並び替え、未設定を末尾に保ち同値の順を維持する', () => {
+  const songs = [
+    createSong({ id: 'missing-chart' }),
+    createSong({
+      id: 'many',
+      charts: { MASTER: { const: 10, is_const_unknown: true, notes: 2000 } },
+    }),
+    createSong({
+      id: 'missing-notes',
+      charts: { MASTER: { const: 11, is_const_unknown: false, notes: null } },
+    }),
+    createSong({
+      id: 'few',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: 900 } },
+    }),
+    createSong({
+      id: 'same',
+      charts: { MASTER: { const: 13, is_const_unknown: false, notes: 900 } },
+    }),
+    createSong({
+      id: 'zero',
+      charts: { MASTER: { const: 12, is_const_unknown: false, notes: 0 } },
+    }),
+  ]
+
+  const ascending = sortSongs(songs, 'master', 'asc', undefined, 'notes')
+  const descending = sortSongs(songs, 'master', 'desc', undefined, 'notes')
+  const constants = sortSongs(songs, 'master', 'asc', undefined, 'const')
+
+  assert.deepEqual(
+    ascending.map((song) => song.id),
+    ['zero', 'few', 'same', 'many', 'missing-chart', 'missing-notes']
+  )
+  assert.deepEqual(
+    descending.map((song) => song.id),
+    ['many', 'few', 'same', 'zero', 'missing-chart', 'missing-notes']
+  )
+  assert.deepEqual(
+    constants.map((song) => song.id),
+    ['many', 'missing-notes', 'zero', 'same', 'few', 'missing-chart']
+  )
+  assert.equal(sortSongs(songs, null, null, undefined, 'notes'), songs)
+  assert.equal(songs[0].id, 'missing-chart')
 })

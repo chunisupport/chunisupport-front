@@ -1,0 +1,358 @@
+import {
+  CHART_LEVEL_10_CONST_MIN,
+  WORLDSEND_LEVEL_STAR_MAX,
+  WORLDSEND_LEVEL_STAR_MIN,
+} from '../../../constants/chart'
+import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
+import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
+import type {
+  PlayerDataDifficulty,
+  SongDTO,
+  UpdateChartRequestDTO,
+  UpdateSongRequestDTO,
+  UpdateWorldsendChartRequestDTO,
+  UpdateWorldsendSongRequestDTO,
+  WorldsendSongDTO,
+} from '../../../types/api'
+import { formatChartConst } from '../../../utils/chartConstFormat'
+import { toDateOnly } from '../../../utils/dateOnly'
+import { toInputValue } from '../../../utils/rangeInput'
+import { SONG_EDIT_COPY } from '../songEditConstants'
+
+const NON_NEGATIVE_INTEGER_PATTERN = /^\d*$/
+
+export type SongMetaEditValues = {
+  genre: string | null
+  bpm: number | null
+  releasedAt: string | null
+  wikiPageTitle: string | null
+  unlockRequired: boolean
+}
+
+export type SongMetaEditFormInput = {
+  genreName: string | null
+  bpm: string
+  releasedAt: string
+  wikiPageTitle: string
+  unlockRequired: boolean
+}
+
+export type ChartMetaEditDraft = {
+  difficulty: PlayerDataDifficulty
+  const: string
+  is_const_unknown: boolean
+  notes: string
+  notes_designer: string
+}
+
+export type WorldsendChartMetaEditFormInput = {
+  attribute: string
+  levelStar: string
+  notes: string
+  notesDesigner: string
+}
+
+export type SongMetaEditParseResult<T> =
+  | {
+      ok: true
+      value: T
+    }
+  | {
+      ok: false
+      message: string
+    }
+
+/**
+ * BASIC / ADVANCED は NOTES DESIGNER が存在しないため、入力対象外とする。
+ *
+ * @param difficulty - 判定対象の難易度名。
+ * @returns NOTES DESIGNER を入力できる場合は true。
+ */
+export const hasNotesDesigner = (difficulty: PlayerDataDifficulty): boolean =>
+  difficulty !== 'BASIC' && difficulty !== 'ADVANCED'
+
+/**
+ * 定数不明フラグを設定できる譜面定数かどうかを判定する。
+ * 定数不明はレベル10以上の譜面だけが対象のため、10未満や未入力では設定できない。
+ *
+ * @param constInput - 譜面定数の入力値。
+ * @returns 定数不明フラグを設定できる場合は true。
+ */
+export const canMarkChartConstUnknown = (constInput: string): boolean =>
+  constInput.trim() !== '' && Number(constInput) >= CHART_LEVEL_10_CONST_MIN
+
+/**
+ * 空文字を null に正規化したトリム済み文字列を返す。
+ *
+ * @param value - 正規化する文字列。
+ * @returns 空白のみの場合は null、それ以外はトリム済み文字列。
+ */
+export const toNullableTrimmedString = (value: string | null | undefined): string | null =>
+  value?.trim() ? value.trim() : null
+
+/**
+ * 非負整数の入力途中文字列だけを残す。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @returns 許可する入力。不正な文字列の場合は null。
+ */
+export const normalizeNonNegativeIntegerInput = (value: string): string | null =>
+  NON_NEGATIVE_INTEGER_PATTERN.test(value) ? value : null
+
+/**
+ * 空欄を許す非負整数入力を数値へ変換する。
+ *
+ * @param value - 入力欄から受け取った文字列。
+ * @returns 空欄は null、不正値は invalid、それ以外は整数。
+ */
+export const parseOptionalNonNegativeInteger = (value: string): number | null | 'invalid' => {
+  const trimmed = value.trim()
+  if (trimmed === '') return null
+  if (!/^\d+$/.test(trimmed)) return 'invalid'
+
+  const parsed = Number(trimmed)
+  if (!Number.isInteger(parsed) || parsed < 0) return 'invalid'
+  return parsed
+}
+
+/**
+ * 楽曲情報編集フォームの入力を更新リクエスト用の値へ正規化する。
+ *
+ * @param input - ジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトルの入力値。
+ * @param requireGenre - ジャンル選択を必須にするか。
+ * @returns 正規化済みの値、またはエラーメッセージ。
+ */
+export const parseSongMetaEditValues = (
+  input: SongMetaEditFormInput,
+  requireGenre: boolean
+): SongMetaEditParseResult<SongMetaEditValues> => {
+  if (requireGenre && !input.genreName) {
+    return { ok: false, message: SONG_EDIT_COPY.genreRequired }
+  }
+
+  const bpm = parseOptionalNonNegativeInteger(input.bpm)
+  if (bpm === 'invalid') {
+    return { ok: false, message: SONG_EDIT_COPY.bpmInvalid }
+  }
+
+  const releasedAt = toDateOnly(input.releasedAt)
+  if (input.releasedAt.trim() && !releasedAt) {
+    return { ok: false, message: SONG_EDIT_COPY.releaseInvalid }
+  }
+
+  const wikiPageTitle = toNullableTrimmedString(input.wikiPageTitle)
+  // APIはUnicodeコードポイント単位で文字数を検証するため、サロゲートペアを1文字として数える
+  if (wikiPageTitle && [...wikiPageTitle].length > SONG_EDIT_INPUT_LIMITS.wikiPageTitle) {
+    return { ok: false, message: SONG_EDIT_COPY.wikiPageTitleTooLong }
+  }
+
+  return {
+    ok: true,
+    value: {
+      genre: input.genreName,
+      bpm,
+      releasedAt,
+      wikiPageTitle,
+      unlockRequired: input.unlockRequired,
+    },
+  }
+}
+
+/**
+ * 通常楽曲の楽曲情報だけを更新する PUT リクエストを組み立てる。
+ *
+ * @param song - 表示中の通常楽曲。
+ * @param values - 編集後のジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトル。
+ * @returns 譜面を変更しない通常楽曲更新リクエスト。
+ */
+export const buildSongMetaUpdateRequest = (
+  song: SongDTO,
+  values: SongMetaEditValues
+): UpdateSongRequestDTO => ({
+  id: song.id,
+  title: song.title,
+  reading: song.reading,
+  artist: song.artist,
+  genre: values.genre,
+  bpm: values.bpm,
+  released_at: values.releasedAt,
+  wiki_page_title: values.wikiPageTitle,
+  unlock_required: values.unlockRequired,
+  jacket: song.jacket,
+  is_new: song.is_new,
+  charts: {},
+})
+
+/**
+ * WORLD'S END 楽曲の楽曲情報だけを更新する PUT リクエストを組み立てる。
+ *
+ * @param song - 表示中の WORLD'S END 楽曲。
+ * @param values - 編集後のジャンル、BPM、リリース日、要解禁フラグ、Wikiページタイトル。
+ * @returns 譜面を変更しない WORLD'S END 楽曲更新リクエスト。
+ */
+export const buildWorldsendSongMetaUpdateRequest = (
+  song: WorldsendSongDTO,
+  values: SongMetaEditValues
+): UpdateWorldsendSongRequestDTO => ({
+  id: song.id,
+  title: song.title,
+  reading: song.reading,
+  artist: song.artist,
+  genre: values.genre,
+  bpm: values.bpm,
+  released_at: values.releasedAt,
+  wiki_page_title: values.wikiPageTitle,
+  unlock_required: values.unlockRequired,
+  jacket: song.jacket,
+  is_new: song.is_new,
+})
+
+/**
+ * 表示中の通常楽曲から譜面編集ドラフトを作成する。
+ *
+ * @param song - 表示中の通常楽曲。
+ * @returns 存在する譜面だけの編集ドラフト。
+ */
+export const buildChartDraftsFromSong = (song: SongDTO): ChartMetaEditDraft[] =>
+  PLAYER_DATA_DIFFICULTIES.flatMap((difficulty) => {
+    const chart = song.charts[difficulty]
+    if (!chart) return []
+
+    return [
+      {
+        difficulty,
+        const: formatChartConst(chart.const),
+        is_const_unknown: chart.is_const_unknown,
+        notes: toInputValue(chart.notes),
+        notes_designer: chart.notes_designer ?? '',
+      },
+    ]
+  })
+
+/**
+ * 譜面編集ドラフトを更新リクエストの譜面マップへ正規化する。
+ *
+ * @param drafts - 編集中の譜面ドラフト。
+ * @returns 正規化済みの譜面マップ、またはエラーメッセージ。
+ */
+export const parseChartMetaDrafts = (
+  drafts: readonly ChartMetaEditDraft[]
+): SongMetaEditParseResult<Record<string, UpdateChartRequestDTO>> => {
+  const charts: Record<string, UpdateChartRequestDTO> = {}
+
+  for (const draft of drafts) {
+    const chartConst = Number(draft.const)
+    if (draft.const.trim() === '' || !Number.isFinite(chartConst) || chartConst < 0) {
+      return { ok: false, message: SONG_EDIT_COPY.constInvalid }
+    }
+
+    const notes = parseOptionalNonNegativeInteger(draft.notes)
+    if (notes === 'invalid') {
+      return { ok: false, message: SONG_EDIT_COPY.notesInvalid }
+    }
+
+    if (draft.notes_designer.length > SONG_EDIT_INPUT_LIMITS.notesDesigner) {
+      return { ok: false, message: SONG_EDIT_COPY.notesDesignerTooLong }
+    }
+
+    charts[draft.difficulty] = {
+      const: chartConst,
+      is_const_unknown: draft.is_const_unknown && canMarkChartConstUnknown(draft.const),
+      notes,
+      notes_designer: toNullableTrimmedString(draft.notes_designer),
+    }
+  }
+
+  return { ok: true, value: charts }
+}
+
+/**
+ * 通常楽曲の譜面情報だけを更新する PUT リクエストを組み立てる。
+ *
+ * @param song - 表示中の通常楽曲。
+ * @param charts - 編集後の譜面マップ。
+ * @returns 楽曲情報を現行値のまま維持する通常楽曲更新リクエスト。
+ */
+export const buildChartMetaUpdateRequest = (
+  song: SongDTO,
+  charts: Record<string, UpdateChartRequestDTO>
+): UpdateSongRequestDTO => ({
+  id: song.id,
+  title: song.title,
+  reading: song.reading,
+  artist: song.artist,
+  genre: song.genre,
+  bpm: song.bpm,
+  released_at: toDateOnly(song.release),
+  jacket: song.jacket,
+  is_new: song.is_new,
+  charts,
+})
+
+/**
+ * WORLD'S END 譜面編集フォームの入力を更新リクエスト用の値へ正規化する。
+ *
+ * @param input - 属性、レベル、ノーツ数、ノーツデザイナーの入力値。
+ * @returns 正規化済みの譜面更新値、またはエラーメッセージ。
+ */
+export const parseWorldsendChartMetaEditValues = (
+  input: WorldsendChartMetaEditFormInput
+): SongMetaEditParseResult<UpdateWorldsendChartRequestDTO> => {
+  const notes = parseOptionalNonNegativeInteger(input.notes)
+  if (notes === 'invalid') {
+    return { ok: false, message: SONG_EDIT_COPY.notesInvalid }
+  }
+
+  if (input.notesDesigner.length > SONG_EDIT_INPUT_LIMITS.notesDesigner) {
+    return { ok: false, message: SONG_EDIT_COPY.notesDesignerTooLong }
+  }
+
+  const trimmedLevel = input.levelStar.trim()
+  let levelStar: number | null = null
+  if (trimmedLevel !== '') {
+    const parsedLevel = Number(trimmedLevel)
+    if (
+      !Number.isInteger(parsedLevel) ||
+      parsedLevel < WORLDSEND_LEVEL_STAR_MIN ||
+      parsedLevel > WORLDSEND_LEVEL_STAR_MAX
+    ) {
+      return { ok: false, message: SONG_EDIT_COPY.levelInvalid }
+    }
+    levelStar = parsedLevel
+  }
+
+  return {
+    ok: true,
+    value: {
+      attribute: toNullableTrimmedString(input.attribute),
+      level_star: levelStar,
+      notes,
+      notes_designer: toNullableTrimmedString(input.notesDesigner),
+    },
+  }
+}
+
+/**
+ * WORLD'S END 楽曲の譜面情報だけを更新する PUT リクエストを組み立てる。
+ *
+ * @param song - 表示中の WORLD'S END 楽曲。
+ * @param chart - 編集後の WORLD'S END 譜面。
+ * @returns 楽曲情報を現行値のまま維持する WORLD'S END 楽曲更新リクエスト。
+ */
+export const buildWorldsendChartMetaUpdateRequest = (
+  song: WorldsendSongDTO,
+  chart: UpdateWorldsendChartRequestDTO
+): UpdateWorldsendSongRequestDTO => ({
+  id: song.id,
+  title: song.title,
+  reading: song.reading,
+  artist: song.artist,
+  genre: song.genre,
+  bpm: song.bpm,
+  released_at: toDateOnly(song.release),
+  jacket: song.jacket,
+  is_new: song.is_new,
+  charts: {
+    WORLDSEND: chart,
+  },
+})

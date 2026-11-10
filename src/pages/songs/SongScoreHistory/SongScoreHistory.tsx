@@ -1,32 +1,39 @@
-import { Button } from '@kobalte/core/button'
-import { A, useParams, useSearchParams } from '@solidjs/router'
-import { createMemo, createResource, For, Show } from 'solid-js'
+import { useLocation, useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { useQuery } from '@tanstack/solid-query'
+import { createMemo, createResource, Show } from 'solid-js'
 import { fetchOwnSongScoreHistory, fetchSongByDisplayId } from '../../../api/songs'
+
 import { LoadError, Loading } from '../../../components'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
+import {
+  buildAdminChartRankingPath,
+  buildSongDetailPath,
+  isChartDetailFromSongDetailState,
+} from '../../../constants/routes'
+import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { songFriendRankingQueryOptions } from '../../../queries/friendRankings'
 import { authSession } from '../../../stores/authSession'
-import {
-  formatScoreHistoryDateTime,
-  parseScoreHistoryDifficulty,
-} from '../../../utils/scoreHistory'
+import { isNotFoundOrInvalidDisplayIdApiError } from '../../../utils/apiError'
+import { parseScoreHistoryDifficulty } from '../../../utils/scoreHistory'
 import NotFoundPage from '../../NotFoundPage'
-import {
-  CURRENT_BEST_LABEL,
-  SCORE_HISTORY_PAGE_TITLE,
-  SCORE_HISTORY_SCORE_LABEL,
-  SCORE_HISTORY_UPDATED_AT_LABEL,
-} from './constants'
+import ChartDetailPage from '../components/chartDetail/ChartDetailPage'
+import { CHART_DETAIL_PAGE_TITLE } from '../components/chartDetail/constants'
 
 /**
- * ログインユーザーの譜面別スコア履歴を表示する。
+ * ログインユーザーの譜面詳細を表示する。
  *
- * @returns 現行ベストと過去のベストを新しい順に表示する画面。
+ * @returns 対象譜面のスコア履歴とフレンドランキングを表示する画面。
  */
 const SongScoreHistory = () => {
   const params = useParams<{ displayid: string }>()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const difficulty = createMemo(() => parseScoreHistoryDifficulty(searchParams.diff))
+  const songDetailPath = createMemo(() =>
+    buildSongDetailPath(params.displayid, difficulty() ?? undefined)
+  )
   const [song] = createResource(() => params.displayid, fetchSongByDisplayId)
   const [history] = createResource(
     () => {
@@ -37,77 +44,66 @@ const SongScoreHistory = () => {
     },
     (source) => fetchOwnSongScoreHistory(source.displayId, source.difficulty, source.username)
   )
+  const friendRanking = useQuery(() =>
+    songFriendRankingQueryOptions(
+      authSession.user?.username ?? null,
+      params.displayid,
+      difficulty()
+    )
+  )
 
   const isValidChart = createMemo(() => {
     const currentSong = song()
     const selectedDifficulty = difficulty()
     return Boolean(currentSong && selectedDifficulty && currentSong.charts[selectedDifficulty])
   })
+  /** 存在しない・形式不正の表示IDは存在しない曲とみなして404表示にする */
+  const isSongNotFound = createMemo(() => isNotFoundOrInvalidDisplayIdApiError(song.error))
 
-  useDocumentTitle(() => `${song()?.title ?? '楽曲'} - ${SCORE_HISTORY_PAGE_TITLE}`)
+  useDocumentTitle(() => joinDocumentTitleParts(song()?.title ?? '楽曲', CHART_DETAIL_PAGE_TITLE))
+
+  /**
+   * 楽曲詳細から入った履歴では詳細URLを積まず、元の詳細履歴へ戻す。
+   *
+   * @returns なし。
+   */
+  const handleSongDetailReturn = (): void => {
+    if (isChartDetailFromSongDetailState(location.state)) {
+      navigate(-1)
+      return
+    }
+
+    navigate(songDetailPath())
+  }
 
   return (
     <Show when={difficulty()} fallback={<NotFoundPage />}>
-      <Show when={!song.error} fallback={<LoadError error={song.error} />}>
+      <Show
+        when={!song.error}
+        fallback={
+          <Show when={isSongNotFound()} fallback={<LoadError error={song.error} />}>
+            <NotFoundPage />
+          </Show>
+        }
+      >
         <Show when={!song.loading} fallback={<Loading />}>
           <Show when={isValidChart()} fallback={<NotFoundPage />}>
-            <main class="mx-auto w-full max-w-4xl space-y-4 p-4">
-              <Button
-                as={A}
-                href={`/songs/${encodeURIComponent(params.displayid)}?diff=${difficulty()?.toLowerCase()}`}
-                class="cursor-pointer border-0 bg-transparent p-0 text-sm text-action-primary hover:underline"
-              >
-                ← 楽曲詳細へ戻る
-              </Button>
-
-              <header class="space-y-2">
-                <h1 class="text-2xl font-semibold">{SCORE_HISTORY_PAGE_TITLE}</h1>
-                <div class="flex items-center gap-3">
-                  <DifficultyBadge difficulty={difficulty() ?? 'MASTER'} />
-                  <span class="font-semibold">{song()?.title}</span>
-                </div>
-              </header>
-
-              <Show when={!history.error} fallback={<LoadError error={history.error} />}>
-                <Show when={!history.loading} fallback={<Loading />}>
-                  <div class="overflow-x-auto rounded-lg border border-border bg-surface">
-                    <table class="w-full min-w-md border-collapse">
-                      <thead class="bg-surface-muted text-left text-sm text-text-muted">
-                        <tr>
-                          <th scope="col" class="px-4 py-3">
-                            {SCORE_HISTORY_UPDATED_AT_LABEL}
-                          </th>
-                          <th scope="col" class="px-4 py-3 text-right">
-                            {SCORE_HISTORY_SCORE_LABEL}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-border">
-                        <For each={history()?.entries ?? []}>
-                          {(entry, index) => (
-                            <tr>
-                              <td class="px-4 py-3 text-sm">
-                                <div class="flex items-center gap-2">
-                                  <span>{formatScoreHistoryDateTime(entry.updated_at)}</span>
-                                  <Show when={index() === 0}>
-                                    <span class="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success-text">
-                                      {CURRENT_BEST_LABEL}
-                                    </span>
-                                  </Show>
-                                </div>
-                              </td>
-                              <td class="px-4 py-3 text-right font-oswald text-lg font-semibold tabular-nums">
-                                {entry.score.toLocaleString('ja-JP')}
-                              </td>
-                            </tr>
-                          )}
-                        </For>
-                      </tbody>
-                    </table>
-                  </div>
-                </Show>
-              </Show>
-            </main>
+            <ChartDetailPage
+              title={song()?.title ?? '-'}
+              artist={song()?.artist || '-'}
+              badge={<DifficultyBadge difficulty={difficulty() ?? 'MASTER'} />}
+              onBack={handleSongDetailReturn}
+              historyEntries={history()?.entries ?? []}
+              isHistoryLoading={history.loading}
+              historyError={history.error}
+              friendRankingEntries={friendRanking.data?.ranking ?? []}
+              isFriendRankingLoading={friendRanking.isLoading}
+              friendRankingError={friendRanking.error}
+              adminRankingHref={buildAdminChartRankingPath(
+                params.displayid,
+                difficulty() ?? 'MASTER'
+              )}
+            />
           </Show>
         </Show>
       </Show>

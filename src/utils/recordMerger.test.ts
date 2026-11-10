@@ -8,6 +8,7 @@ const createSong = (overrides: Partial<SongDTO> = {}): SongDTO => ({
   id: 'song-1',
   title: 'マスタ曲名',
   reading: 'マスタヨミ',
+  name_folder_code: 'NUMBER',
   artist: 'Master Artist',
   genre: 'POPS & ANIME',
   bpm: 180,
@@ -17,6 +18,7 @@ const createSong = (overrides: Partial<SongDTO> = {}): SongDTO => ({
   is_maxop_unknown: false,
   op_target_difficulty: 'MASTER',
   is_new: false,
+  unlock_required: false,
   charts: {
     MASTER: {
       const: 14.5,
@@ -53,6 +55,7 @@ const createRecord = (overrides: Partial<PlayerRecordDTO> = {}): PlayerRecordDTO
 const versions: VersionSummaryDTO[] = [
   {
     name: 'CHUNITHM VERSE',
+    short_name: 'VRS',
     released_at: '2024-01-01',
   },
 ]

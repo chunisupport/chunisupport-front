@@ -1,0 +1,105 @@
+import type { Component } from 'solid-js'
+import { createMemo, For } from 'solid-js'
+import type { PlayerMetricHistoryEntryDTO } from '../../../types/api'
+import { formatFixed } from '../../../utils/numberFormat'
+import {
+  formatPlayerMetricHistoryDateTime,
+  sortPlayerMetricHistoryEntries,
+} from '../../../utils/playerMetricHistory'
+import {
+  PLAYER_METRIC_HISTORY_COPY,
+  PLAYER_METRIC_HISTORY_DECIMAL_PLACES,
+  PLAYER_METRIC_HISTORY_TABLE_FIRST_COLUMN_CLASS,
+  PLAYER_METRIC_HISTORY_TABLE_LAST_COLUMN_CLASS,
+  PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS,
+  PLAYER_METRIC_HISTORY_TABLE_MIN_WIDTH_CLASS,
+} from './constants'
+
+type Props = {
+  /** APIが返した公式指標履歴 */
+  entries: readonly PlayerMetricHistoryEntryDTO[]
+}
+
+/**
+ * 公式RATING・公式OVER POWER・公式OP%の履歴を新しい順の表で表示する。
+ * 全列を中央揃えにしつつ、両端の列を中身の幅まで縮めて表の左右に余白が偏らないようにする。
+ *
+ * @param props - APIが返した公式指標履歴。
+ * @returns グラフと同じデータを確認できるセマンティックな履歴表。
+ */
+export const RatingOpHistoryTable: Component<Props> = (props) => {
+  const entries = createMemo(() => sortPlayerMetricHistoryEntries(props.entries, 'descending'))
+
+  return (
+    <section class="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+      <h2 class="border-b border-border px-4 py-3 text-lg font-semibold text-text">
+        {PLAYER_METRIC_HISTORY_COPY.tableTitle}
+      </h2>
+      <div class="overflow-x-auto">
+        <table class={`w-full ${PLAYER_METRIC_HISTORY_TABLE_MIN_WIDTH_CLASS}`}>
+          <caption class="sr-only">{PLAYER_METRIC_HISTORY_COPY.tableCaption}</caption>
+          <thead class="bg-surface-muted text-xs text-text-muted">
+            <tr>
+              <th
+                scope="col"
+                class={`py-2 text-center font-medium ${PLAYER_METRIC_HISTORY_TABLE_FIRST_COLUMN_CLASS}`}
+              >
+                {PLAYER_METRIC_HISTORY_COPY.collectedAt}
+              </th>
+              <th
+                scope="col"
+                class={`py-2 text-center font-medium ${PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS}`}
+              >
+                {PLAYER_METRIC_HISTORY_COPY.rating}
+              </th>
+              <th
+                scope="col"
+                class={`py-2 text-center font-medium ${PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS}`}
+              >
+                {PLAYER_METRIC_HISTORY_COPY.overPower}
+              </th>
+              <th
+                scope="col"
+                class={`py-2 text-center font-medium ${PLAYER_METRIC_HISTORY_TABLE_LAST_COLUMN_CLASS}`}
+              >
+                {PLAYER_METRIC_HISTORY_COPY.overPowerPercent}
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <For each={entries()}>
+              {(entry) => (
+                <tr>
+                  <td
+                    class={`whitespace-nowrap py-3 text-center font-jost text-sm tabular-nums text-text-muted ${PLAYER_METRIC_HISTORY_TABLE_FIRST_COLUMN_CLASS}`}
+                  >
+                    <time dateTime={entry.data_collected_at}>
+                      {formatPlayerMetricHistoryDateTime(entry.data_collected_at)}
+                    </time>
+                  </td>
+                  <td
+                    class={`whitespace-nowrap py-3 text-center font-jost text-base font-semibold tabular-nums text-text ${PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS}`}
+                  >
+                    {formatFixed(entry.rating, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
+                  </td>
+                  <td
+                    class={`whitespace-nowrap py-3 text-center font-jost text-base font-semibold tabular-nums text-text ${PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS}`}
+                  >
+                    {formatFixed(entry.overpower, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
+                  </td>
+                  <td
+                    class={`whitespace-nowrap py-3 text-center font-jost text-base font-semibold tabular-nums text-text ${PLAYER_METRIC_HISTORY_TABLE_LAST_COLUMN_CLASS}`}
+                  >
+                    {entry.overpower_percent === null
+                      ? PLAYER_METRIC_HISTORY_COPY.missingValue
+                      : `${formatFixed(entry.overpower_percent, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}%`}
+                  </td>
+                </tr>
+              )}
+            </For>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}

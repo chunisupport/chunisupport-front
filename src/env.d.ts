@@ -1,11 +1,17 @@
 /// <reference types="@rsbuild/core/types" />
 
 interface ImportMetaEnv {
+  /** feature-flag の運用環境。Rsbuild 設定で値を検証する。 */
+  readonly PUBLIC_APP_ENV: string
   readonly PUBLIC_BACKEND_URL: string
   readonly PUBLIC_FRONTEND_URL: string
+  readonly PUBLIC_CHART_STATS_BASE_URL?: string
+  readonly PUBLIC_CHART_SCORES_BASE_URL?: string
   readonly PUBLIC_DOCUMENTATION_URL: string
   readonly PUBLIC_BOOKMARKLET_URL: string
   readonly PUBLIC_BOOKMARKLET_ENTRYPOINT: string
+  readonly PUBLIC_CHUNITHM_JACKET_BASE_URL: string
+  readonly PUBLIC_WIKI_BASE_URL?: string
   readonly PUBLIC_FB_API_KEY: string
   readonly PUBLIC_FB_AUTH_DOMAIN: string
   readonly PUBLIC_FB_PROJECT_ID: string
@@ -22,3 +28,4 @@ interface ImportMeta {
 
 declare const __FRONTEND_BUILD_DATE__: string
 declare const __FRONTEND_COMMIT_HASH__: string
+declare const __FRONTEND_BUILD_ID__: string

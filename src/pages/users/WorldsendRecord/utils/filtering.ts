@@ -1,9 +1,16 @@
+import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../../constants/chart'
+import { getComboLampFilterValue } from '../../../../utils/comboLampFilter'
+import { isDateInRange } from '../../../../utils/dateFilter'
 import {
-  matchesNormalizedSearchQuery,
-  normalizeForReadingSearch,
-  normalizeForSearch,
-  normalizeQuery,
-} from '../../../../utils/searchUtils'
+  isNullableSelectionMatched,
+  matchesRecordVersionFilter,
+} from '../../../../utils/filterSelection'
+import {
+  createSearchTextMatcher,
+  type NormalizedSearchText,
+  normalizeSearchText,
+} from '../../../../utils/searchHelpers'
+import { normalizeForSearch } from '../../../../utils/searchUtils'
 import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from '../types/filterTypes'
 import { hasWorldsendJusticeCountFilter } from './filterDialog'
 
@@ -13,30 +20,36 @@ export type WorldsendRecordTitleMatcher = (record: WorldsendRecordWithSongMeta) 
  * WORLD'S END レコード用の曲名検索マッチャーを生成する。
  *
  * @param query - ユーザーが入力した検索文字列。
- * @returns レコードが検索条件に一致するか判定する関数。
+ * @param getSearchText - レコードの正規化済み検索用文字列を返す関数。キャッシュを渡すと入力ごとの再正規化を避けられる。
+ * @returns 読みが未設定または空欄なら曲名を読みとして使うマッチャー。
  */
-export function createWorldsendRecordTitleMatcher(query: string): WorldsendRecordTitleMatcher {
-  const { normalizedQuery, normalizedReadingQuery } = normalizeQuery(query)
-  if (!normalizedQuery) {
+export function createWorldsendRecordTitleMatcher(
+  query: string,
+  getSearchText: (record: WorldsendRecordWithSongMeta) => NormalizedSearchText = normalizeSearchText
+): WorldsendRecordTitleMatcher {
+  if (!normalizeForSearch(query)) {
     return () => true
   }
 
-  return (record) => {
-    const normalizedTitle = normalizeForSearch(record.title)
-    const normalizedArtist = normalizeForSearch(record.artist)
-    const normalizedReading = normalizeForReadingSearch(record.reading ?? record.title)
-    return matchesNormalizedSearchQuery(
-      normalizedTitle,
-      normalizedArtist,
-      normalizedReading,
-      normalizedQuery,
-      normalizedReadingQuery
-    )
-  }
+  const matches = createSearchTextMatcher(query)
+  return (record) => matches(getSearchText(record))
+}
+
+/**
+ * ★レベル範囲が既定の全範囲（★1〜★5）かどうかを判定する。
+ *
+ * @param range - 判定対象の★レベル範囲。
+ * @returns 下限と上限が既定の全範囲と一致する場合は true。
+ */
+function isDefaultWorldsendLevelStarRange(range: WorldsendFilterState['levelStarRange']): boolean {
+  return range.min === WORLDSEND_LEVEL_STAR_MIN && range.max === WORLDSEND_LEVEL_STAR_MAX
 }
 
 /**
  * WORLD'S END レコードがフィルター条件に一致するか判定する。
+ *
+ * ★レベルが未登録（null）の譜面は、★レベル範囲が既定の全範囲のときだけ一致する。
+ * 範囲を絞ったときの未登録譜面の扱いは未決のため、その場合は除外する。
  *
  * @param record - 判定対象の WORLD'S END レコード。
  * @param filters - 適用する WORLD'S END フィルター。
@@ -51,14 +64,17 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
   if (filters.excludeNoPlay && !record.is_played) return false
   if (!matchTitle(record)) return false
   if (!filters.attributes.includes(record.attribute)) return false
-  if (record.level_star === null) return false
-  if (record.level_star < filters.levelStarRange.min) return false
-  if (record.level_star > filters.levelStarRange.max) return false
+  const levelStar = record.level_star
+  if (levelStar === null) {
+    if (!isDefaultWorldsendLevelStarRange(filters.levelStarRange)) return false
+  } else if (levelStar < filters.levelStarRange.min || levelStar > filters.levelStarRange.max) {
+    return false
+  }
   if (filters.genres.length > 0 && !record.genre) return false
   if (record.genre && filters.genres.length > 0 && !filters.genres.includes(record.genre))
     return false
-  if (filters.versions.length > 0 && !filters.versions.includes(record.release_version))
-    return false
+  if (!matchesRecordVersionFilter(record.release_version, filters.versions)) return false
+  if (!isNullableSelectionMatched(record.name_folder_code, filters.nameFolders)) return false
 
   const score = record.is_played ? record.score : 0
   if (score < filters.score.min) return false
@@ -74,16 +90,19 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
     }
   }
 
-  const comboLamp = record.is_played ? (record.combo_lamp ?? null) : null
-  if (!hasWorldsendJusticeCountFilter(filters) && !filters.combo_lamp.includes(comboLamp)) {
-    return false
-  }
+  const comboLamp = record.is_played
+    ? getComboLampFilterValue(record.combo_lamp ?? null, record.score)
+    : null
+  if (!filters.combo_lamp.includes(comboLamp)) return false
 
   const chainLamp = record.is_played ? (record.full_chain ?? null) : null
   if (!filters.chain_lamp.includes(chainLamp)) return false
 
   const hardLamp = record.is_played ? (record.clear_lamp ?? null) : null
   if (!filters.hard_lamp.includes(hardLamp)) return false
+
+  // 最終更新日
+  if (!isDateInRange(record.updated_at, filters.updatedAt)) return false
 
   return true
 }

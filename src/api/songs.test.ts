@@ -1,100 +1,64 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 /**
- * テスト用の環境変数を設定する。
- *
- * @returns なし。
- */
-const setupApiTestEnv = (): void => {
-  process.env.PUBLIC_BACKEND_URL = 'http://localhost:3000'
-  process.env.PUBLIC_FRONTEND_URL = 'http://localhost:3000'
-  process.env.PUBLIC_DOCUMENTATION_URL = 'https://docs.chunisupport.net'
-  process.env.PUBLIC_BOOKMARKLET_URL = 'https://dist.chunisupport.net'
-  process.env.PUBLIC_BOOKMARKLET_ENTRYPOINT = 'main.js'
-  process.env.PUBLIC_FB_API_KEY = 'test-api-key'
-  process.env.PUBLIC_FB_AUTH_DOMAIN = 'test.firebaseapp.com'
-  process.env.PUBLIC_FB_PROJECT_ID = 'test-project'
-  process.env.PUBLIC_FB_STORAGE_BUCKET = 'test.appspot.com'
-  process.env.PUBLIC_FB_MESSAGING_SENDER_ID = '123456789'
-  process.env.PUBLIC_FB_APP_ID = 'test-app-id'
-  process.env.PUBLIC_CF_TURNSTILE_SITE_KEY = '1x00000000000000000000AA'
-}
-
-/**
- * モジュール内キャッシュをテストごとに分離して fetchVersions を読み込む。
- *
- * @returns fetchVersions 関数。
- */
-const loadFetchVersions = async () => {
-  setupApiTestEnv()
-  const cacheKey = `${Date.now()}-${Math.random()}`
-  const { fetchVersions } = await import(`./songs.ts?cache=${cacheKey}`)
-  return fetchVersions
-}
-
-/**
- * モジュール内定数をテストごとに再評価して songs API 関数群を読み込む。
- *
+ * テスト用環境を準備して songs API を読み込む。
  * @returns songs API モジュール。
  */
-const loadSongsApi = async () => {
-  setupApiTestEnv()
-  const cacheKey = `${Date.now()}-${Math.random()}`
-  return import(`./songs.ts?cache=${cacheKey}`)
-}
+const loadSongsApi = () => loadTestModule((cacheKey) => import(`./songs.ts?cache=${cacheKey}`))
 
-test('fetchVersions は一度取得したバージョン一覧をセッション中に再利用する', async () => {
-  const responseBody = {
-    versions: [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }],
-  }
-  let fetchCount = 0
+test('全曲APIは指定されたHTTPキャッシュ設定を利用する', async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { fetchAllSongs } = await loadSongsApi()
 
-  globalThis.fetch = async () => {
-    fetchCount += 1
-    return Response.json(responseBody)
-  }
+  // When
+  await fetchAllSongs({ cache: 'no-store' })
 
-  const fetchVersions = await loadFetchVersions()
-
-  const first = await fetchVersions()
-  const second = await fetchVersions()
-
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-  assert.deepEqual(second, responseBody)
+  // Then
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/songs')
+  assert.equal(calls[0]?.init?.cache, 'no-store')
 })
 
-test('fetchSongsUpdatedAt は一度取得した更新日時をセッション中に再利用する', async () => {
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
-  let fetchCount = 0
+test("WORLD'S END楽曲APIは指定されたHTTPキャッシュ設定を利用する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { fetchWorldsendSongs } = await loadSongsApi()
 
-  globalThis.fetch = async (input) => {
-    if (String(input).endsWith('/internal/songs/updated-at')) {
-      fetchCount += 1
-      return Response.json(responseBody)
-    }
-    throw new Error(`unexpected fetch: ${String(input)}`)
-  }
+  // When
+  await fetchWorldsendSongs({ cache: 'no-store' })
 
-  const { fetchSongsUpdatedAt } = await loadSongsApi()
+  // Then
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.cache, 'no-store')
+})
 
-  const first = await fetchSongsUpdatedAt()
-  const second = await fetchSongsUpdatedAt()
+test('コースマスタAPIはコース一覧を取得する', async () => {
+  // Given
+  const calls = installFetchRecorder(() =>
+    Response.json({
+      courses: [
+        {
+          id: '0123456789abcdef',
+          idx: '50020',
+          name: 'CLASS I COURSE',
+          class: '1',
+        },
+      ],
+    })
+  )
+  const { fetchCourses } = await loadSongsApi()
 
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-  assert.deepEqual(second, responseBody)
+  // When
+  await fetchCourses()
+
+  // Then
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/courses')
 })
 
 test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
-  const calledUrls: string[] = []
-
-  globalThis.fetch = async (input) => {
-    calledUrls.push(String(input))
-    return Response.json({ songs: [] })
-  }
-
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
   const {
     createWorldsendSong,
     deleteWorldsendSongByDisplayId,
@@ -121,81 +85,149 @@ test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", as
   await deleteWorldsendSongByDisplayId('A/B C')
   await restoreWorldsendSongByDisplayId('A/B C')
 
-  assert.deepEqual(calledUrls, [
-    'http://localhost:3000/internal/worldsend-songs',
-    'http://localhost:3000/internal/editor/worldsend-songs',
-    'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
-    'http://localhost:3000/internal/worldsend-songs',
-    'http://localhost:3000/internal/worldsend-songs',
-    'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
-    'http://localhost:3000/internal/worldsend-songs/A%2FB%20C/restore',
-  ])
+  assert.deepEqual(
+    calls.map((call) => String(call.input)),
+    [
+      'http://localhost:3000/internal/worldsend-songs',
+      'http://localhost:3000/internal/editor/worldsend-songs',
+      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+      'http://localhost:3000/internal/worldsend-songs',
+      'http://localhost:3000/internal/worldsend-songs',
+      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C/restore',
+    ]
+  )
 })
 
-test('fetchVersions は同時呼び出しを同じリクエストにまとめる', async () => {
-  const responseBody = {
-    versions: [{ name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' }],
-  }
-  let fetchCount = 0
+test('スコア履歴APIはユーザーレコード配下の新パスを呼び出す', async () => {
+  const calls = installFetchRecorder(() => Response.json({ entries: [] }))
+  const { fetchOwnSongScoreHistory, fetchOwnWorldsendScoreHistory } = await loadSongsApi()
 
-  globalThis.fetch = async () => {
-    fetchCount += 1
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    return Response.json(responseBody)
-  }
+  await fetchOwnSongScoreHistory('A/B C', 'MASTER', 'test_user')
+  await fetchOwnWorldsendScoreHistory('WE/A B', 'test_user')
 
-  const fetchVersions = await loadFetchVersions()
-
-  const [first, second] = await Promise.all([fetchVersions(), fetchVersions()])
-
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-  assert.deepEqual(second, responseBody)
+  assert.deepEqual(
+    calls.map((call) => String(call.input)),
+    [
+      'http://localhost:3000/internal/users/test_user/record/songs/A%2FB%20C/master/history',
+      'http://localhost:3000/internal/users/test_user/record/worldsend-songs/WE%2FA%20B/history',
+    ]
+  )
 })
 
-test('fetchSongsUpdatedAt は同時呼び出しを同じリクエストにまとめる', async () => {
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
-  let fetchCount = 0
+test('フレンドランキングAPIは通常譜面ランキングのパスを呼び出す', async () => {
+  const calls = installFetchRecorder(() => Response.json({ ranking: [], my_rank: null, total: 0 }))
+  const { fetchSongFriendRanking } = await loadSongsApi()
 
-  globalThis.fetch = async (input) => {
-    if (String(input).endsWith('/internal/songs/updated-at')) {
-      fetchCount += 1
-      await new Promise((resolve) => setTimeout(resolve, 10))
-      return Response.json(responseBody)
-    }
-    throw new Error(`unexpected fetch: ${String(input)}`)
-  }
+  await fetchSongFriendRanking('A/B C', 'ULTIMA')
 
-  const { fetchSongsUpdatedAt } = await loadSongsApi()
-
-  const [first, second] = await Promise.all([fetchSongsUpdatedAt(), fetchSongsUpdatedAt()])
-
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-  assert.deepEqual(second, responseBody)
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/friend-rankings/songs/A%2FB%20C/charts/ULTIMA'
+  )
 })
 
-test('fetchSongsUpdatedAt は失敗後に再試行できる', async () => {
-  let fetchCount = 0
+test("フレンドランキングAPIはWORLD'S END譜面ランキングのパスを呼び出す", async () => {
+  const calls = installFetchRecorder(() => Response.json({ ranking: [], my_rank: null, total: 0 }))
+  const { fetchWorldsendFriendRanking } = await loadSongsApi()
 
-  globalThis.fetch = async (input) => {
-    if (!String(input).endsWith('/internal/songs/updated-at')) {
-      throw new Error(`unexpected fetch: ${String(input)}`)
-    }
+  await fetchWorldsendFriendRanking('WE/A B')
 
-    fetchCount += 1
-    if (fetchCount === 1) {
-      throw new Error('network error')
-    }
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/friend-rankings/worldsend-songs/WE%2FA%20B'
+  )
+})
 
-    return Response.json({ updated_at: '2026-06-16T12:00:00Z' })
+test('フレンドランキングAPIはAbortSignalをHTTPリクエストへ引き渡す', async () => {
+  // Given: 通常譜面とWORLD'S END譜面で共通利用するAbortSignal。
+  const controller = new AbortController()
+  const calls = installFetchRecorder(() => Response.json({ ranking: [], my_rank: null, total: 0 }))
+
+  // When: 両方のフレンドランキングを取得する。
+  const { fetchSongFriendRanking, fetchWorldsendFriendRanking } = await loadSongsApi()
+  await fetchSongFriendRanking('song-1', 'MASTER', controller.signal)
+  await fetchWorldsendFriendRanking('worldsend-1', controller.signal)
+
+  // Then: TanStack Queryが中断できるよう、どちらのfetchにも同じシグナルが渡る。
+  assert.deepEqual(
+    calls.map((call) => call.init?.signal),
+    [controller.signal, controller.signal]
+  )
+})
+
+test('requestMasterData は所持状況マスタをID順で受け取る', async () => {
+  // Given: 順不同の所持状況マスタを含むマスターデータ。
+  installFetchRecorder(() =>
+    Response.json({
+      genres: [],
+      difficulties: [],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+      possessions: [
+        { id: 5, name: 'rainbow' },
+        { id: 1, name: 'normal' },
+      ],
+    })
+  )
+
+  // When: マスターデータを取得する。
+  const { requestMasterData } = await loadSongsApi()
+  const result = await requestMasterData()
+
+  // Then: 所持状況がID昇順で受け取れる。
+  assert.equal(result.possessions.length, 2)
+  assert.equal(result.possessions[0]?.name, 'normal')
+  assert.equal(result.possessions[1]?.name, 'rainbow')
+})
+
+test('requestMasterData は所持状況マスタが無い場合に空配列へ正規化する', async () => {
+  // Given: 所持状況を含まない旧マスターデータ。
+  installFetchRecorder(() =>
+    Response.json({
+      genres: [],
+      difficulties: [],
+      versions: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+    })
+  )
+
+  // When: マスターデータを取得する。
+  const { requestMasterData } = await loadSongsApi()
+  const result = await requestMasterData()
+
+  // Then: 呼び出し側が未定義を扱わずに済む。
+  assert.deepEqual(result.possessions, [])
+})
+
+test('楽曲名順フォルダはAPIの表示名を保持してsort_order順に取得する', async () => {
+  // Given
+  const folders = [
+    { code: 'CUSTOM', name: 'APIの分類', sort_order: 20 },
+    { code: 'A', name: 'APIのあ行', sort_order: 10 },
+  ]
+  installFetchRecorder(() => Response.json({ name_folders: folders }))
+  const { requestMasterData } = await loadSongsApi()
+
+  // When
+  const result = await requestMasterData()
+
+  // Then
+  assert.deepEqual(result.name_folders, [folders[1], folders[0]])
+})
+
+test('requestSongsUpdatedAt は不正な updated_at を拒否し、HTTPキャッシュを再検証する', async () => {
+  // Given: 契約に反するレスポンス。
+  const { requestSongsUpdatedAt } = await loadSongsApi()
+  for (const invalid of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
+    const calls = installFetchRecorder(() => Response.json(invalid))
+
+    // When / Then: API層で型を検証し、HTTPキャッシュの再検証を要求する。
+    await assert.rejects(requestSongsUpdatedAt(), TypeError)
+    assert.equal(calls[0]?.init?.cache, 'no-cache')
   }
-
-  const { fetchSongsUpdatedAt } = await loadSongsApi()
-
-  await assert.rejects(() => fetchSongsUpdatedAt(), /network error/)
-  const result = await fetchSongsUpdatedAt()
-
-  assert.equal(fetchCount, 2)
-  assert.equal(result.updated_at, '2026-06-16T12:00:00Z')
 })

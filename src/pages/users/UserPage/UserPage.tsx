@@ -1,20 +1,29 @@
 import { useParams, useSearchParams } from '@solidjs/router'
 import type { Component } from 'solid-js'
-import { createMemo, createResource, createSignal, ErrorBoundary, Show } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  ErrorBoundary,
+  Show,
+} from 'solid-js'
 
 import { fetchUserProfileSummary } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import type { PlayerDTO, UserRatingDTO, UserRecordDTO } from '../../../types/api'
+import type {
+  PlayerDTO,
+  UserCourseRecordsDTO,
+  UserRatingDTO,
+  UserRecordDTO,
+} from '../../../types/api'
+import { fetchUserCourseRecordsWithCache } from '../../../usecases/cache/fetchUserCourseRecordsWithCache'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
+import { resolveOverPowerSubPage, resolveProfilePageQuery } from '../../../utils/userProfileRoute'
 import NotFoundPage from '../../NotFoundPage'
-import {
-  isRecordPageQuery,
-  resolveOverPowerSubPage,
-  resolveProfilePageQuery,
-} from './profilePageQuery'
 import { UserProfileView } from './UserProfileView'
 
 export type UserPageRatingProfile = {
@@ -27,6 +36,14 @@ export type UserPageRecordProfile = {
   username: string
   player: PlayerDTO
   record: UserRecordDTO
+}
+
+/** ユーザー名とコースレコード取得結果を関連付けた表示用データ */
+export type UserPageCourseRecordProfile = {
+  /** 取得対象のユーザー名 */
+  username: string
+  /** コースレコード一覧レスポンス */
+  records: UserCourseRecordsDTO
 }
 
 type UserPageLoadState =
@@ -82,21 +99,67 @@ const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecor
   record: await fetchUserRecordWithCache(username),
 })
 
+/**
+ * ユーザーの未プレイを含むコースレコードを取得する。
+ *
+ * @param username - コースレコード取得対象のユーザー名。
+ * @returns 取得対象ユーザー名付きのコースレコード取得結果。
+ */
+const fetchUserCourseRecordLoadState = async (
+  username: string
+): Promise<UserPageCourseRecordProfile> => ({
+  username,
+  records: await fetchUserCourseRecordsWithCache(username),
+})
+
+/**
+ * プロフィールページのドキュメントタイトルを組み立てる。
+ *
+ * @param playerName - ゲーム内プレイヤー名。未取得の場合は undefined。
+ * @param username - 公開ユーザー名。
+ * @returns `playerName (@username)`。プレイヤー名がない場合はユーザー名のみ。
+ */
+const buildUserPageDocumentTitle = (playerName: string | undefined, username: string): string =>
+  playerName ? `${playerName} (@${username})` : username
+
 const UserPage: Component = () => {
   const params = useParams<{ username: string; page?: string; subPage?: string }>()
   const [searchParams] = useSearchParams()
-  const [shouldFetchRecordProfile, setShouldFetchRecordProfile] = createSignal(false)
+  const [courseRecordProfileUsername, setCourseRecordProfileUsername] = createSignal<string>()
 
-  const [pageState] = createResource(() => params.username, fetchUserPageLoadState)
-  const [recordProfile] = createResource(
-    () =>
-      shouldFetchRecordProfile() ||
-      isRecordPageQuery(params.page, searchParams.page) ||
-      resolveProfilePageQuery(params.page, searchParams.page) === 'overpower'
-        ? params.username
-        : undefined,
-    fetchUserRecordLoadState
+  /** COURSEタブを一度開いたユーザー名を記録し、そのユーザーのページ内でリソースを保持する */
+  createEffect(() => {
+    if (resolveProfilePageQuery(params.page, searchParams.page) === 'record_course') {
+      setCourseRecordProfileUsername(params.username)
+    }
+  })
+
+  const [pageState, { mutate: mutatePageState }] = createResource(
+    () => params.username,
+    fetchUserPageLoadState
   )
+  const [recordProfile] = createResource(() => params.username, fetchUserRecordLoadState)
+  const [courseRecordProfile] = createResource(
+    () => (courseRecordProfileUsername() === params.username ? params.username : undefined),
+    fetchUserCourseRecordLoadState
+  )
+
+  /**
+   * 未解禁曲設定の保存後にプロフィールを再取得し、カードのOP・OP%を更新する。
+   *
+   * @param username - 設定を保存したユーザー名。
+   * @returns プロフィール更新の完了を表すPromise。
+   */
+  const handleLockedSongsSaved = async (username: string): Promise<void> => {
+    const profile = await fetchUserProfileSummary(username)
+    mutatePageState((state) =>
+      state?.type === 'loaded' &&
+      state.profile.username === username &&
+      params.username === username
+        ? { ...state, profile }
+        : state
+    )
+  }
 
   const linkedRatingProfile = createMemo<UserPageRatingProfile | undefined>(() => {
     const state = pageState()
@@ -139,13 +202,31 @@ const UserPage: Component = () => {
     const state = pageState()
     return state?.type === 'loaded' && Boolean(state.profile.player)
   })
+  /**
+   * 初期表示の失敗、またはレコード・OVER POWERタブ表示中のレコード取得失敗を返す。
+   *
+   * @returns 画面全体へ出すエラー。レーティングタブではレコード取得失敗を無視する。
+   */
   const pageLoadError = createMemo(() => {
     const state = pageState()
     if (state?.type === 'error') return state.error
-    return recordProfile.error
+    const selectedPage = resolveProfilePageQuery(params.page, searchParams.page)
+    if (
+      selectedPage === 'record_normal' ||
+      selectedPage === 'record_we' ||
+      selectedPage === 'overpower'
+    ) {
+      return recordProfile.error
+    }
+    return undefined
+  })
+  const documentTitle = createMemo(() => {
+    const state = pageState()
+    const playerName = state?.type === 'loaded' ? state.profile.player?.name : undefined
+    return buildUserPageDocumentTitle(playerName, params.username)
   })
 
-  useDocumentTitle(() => `${params.username}さんのページ`)
+  useDocumentTitle(documentTitle)
 
   return (
     <ErrorBoundary
@@ -174,10 +255,11 @@ const UserPage: Component = () => {
                   <UserProfileView
                     profile={linkedProfile()}
                     recordProfile={linkedRecordProfile}
-                    onShowRecords={() => setShouldFetchRecordProfile(true)}
+                    courseRecordProfile={courseRecordProfile}
                     selectedPage={resolveProfilePageQuery(params.page, searchParams.page)}
                     selectedOverPowerSubPage={resolveOverPowerSubPage(params.subPage)}
                     username={params.username}
+                    onLockedSongsSaved={handleLockedSongsSaved}
                   />
                 )}
               </Show>

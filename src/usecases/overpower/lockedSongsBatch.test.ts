@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { PlayerLockedSongResponseItem } from '../../types/api'
-import { buildLockedSongsBatchPayload, createLockedSongKey } from './lockedSongsBatch'
+import {
+  buildLockedSongsBatchPayload,
+  createLockedSongKey,
+  toLockedSongRequests,
+} from './lockedSongsBatch'
 
 const createItem = (displayId: string, isUltima = false): PlayerLockedSongResponseItem => ({
-  display_id: displayId,
+  id: displayId,
   title: displayId,
   is_ultima: isUltima,
 })
@@ -12,48 +16,48 @@ const createItem = (displayId: string, isUltima = false): PlayerLockedSongRespon
 test('未解禁曲差分: 追加だけを正しく生成する', () => {
   const base = [createItem('a', false)]
   const edited = [
-    { display_id: 'a', is_ultima: false },
-    { display_id: 'b', is_ultima: true },
+    { id: 'a', is_ultima: false },
+    { id: 'b', is_ultima: true },
   ]
 
   const result = buildLockedSongsBatchPayload(base, edited)
 
   assert.deepEqual(result, {
-    add: [{ display_id: 'b', is_ultima: true }],
+    add: [{ id: 'b', is_ultima: true }],
   })
 })
 
 test('未解禁曲差分: 削除だけを正しく生成する', () => {
   const base = [createItem('a', false), createItem('b', true)]
-  const edited = [{ display_id: 'a', is_ultima: false }]
+  const edited = [{ id: 'a', is_ultima: false }]
 
   const result = buildLockedSongsBatchPayload(base, edited)
 
   assert.deepEqual(result, {
-    delete: [{ display_id: 'b', is_ultima: true }],
+    delete: [{ id: 'b', is_ultima: true }],
   })
 })
 
 test('未解禁曲差分: add/deleteの同時差分を生成する', () => {
   const base = [createItem('a', false), createItem('b', true)]
   const edited = [
-    { display_id: 'a', is_ultima: false },
-    { display_id: 'c', is_ultima: false },
+    { id: 'a', is_ultima: false },
+    { id: 'c', is_ultima: false },
   ]
 
   const result = buildLockedSongsBatchPayload(base, edited)
 
   assert.deepEqual(result, {
-    add: [{ display_id: 'c', is_ultima: false }],
-    delete: [{ display_id: 'b', is_ultima: true }],
+    add: [{ id: 'c', is_ultima: false }],
+    delete: [{ id: 'b', is_ultima: true }],
   })
 })
 
 test('未解禁曲差分: 差分なしは空payloadを返す', () => {
   const base = [createItem('a', false), createItem('b', true)]
   const edited = [
-    { display_id: 'a', is_ultima: false },
-    { display_id: 'b', is_ultima: true },
+    { id: 'a', is_ultima: false },
+    { id: 'b', is_ultima: true },
   ]
 
   const result = buildLockedSongsBatchPayload(base, edited)
@@ -64,4 +68,18 @@ test('未解禁曲差分: 差分なしは空payloadを返す', () => {
 test('createLockedSongKey は通常とULTIMAで異なるキーを返す', () => {
   assert.equal(createLockedSongKey('song', false), 'song:normal')
   assert.equal(createLockedSongKey('song', true), 'song:ultima')
+})
+
+test('toLockedSongRequests は選択キーを未解禁payloadへ変換する', () => {
+  // Given
+  const keys = ['song-a:normal', 'song-b:ultima']
+
+  // When
+  const result = toLockedSongRequests(keys)
+
+  // Then
+  assert.deepEqual(result, [
+    { id: 'song-a', is_ultima: false },
+    { id: 'song-b', is_ultima: true },
+  ])
 })

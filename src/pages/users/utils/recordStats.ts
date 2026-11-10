@@ -1,13 +1,14 @@
-import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
-import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
-import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 import {
   COMBO_LAMP_BAR_CLASS,
   HARD_LAMP_BAR_CLASS,
   SCORE_RANK_BAR_CLASS,
-} from '../components/recordStyleClasses'
+} from '../../../components/common/record/recordStyleClasses'
+import type { PlayerRecordDTO, WorldsendRecordDTO } from '../../../types/api'
+import { quantile } from '../../../utils/quantile'
+import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
+import { getScoreRank, MAX_SCORE } from '../../../utils/scoreRank'
 
-/** 未プレイレコードを分布で表す共通カテゴリ名。 */
+/** 未プレイレコードを分布で表す共通カテゴリ名 */
 export const UNPLAYED_DISTRIBUTION_KEY = '未プレイ'
 
 export const rankOrder = [
@@ -88,7 +89,7 @@ function getRank(score: number): string {
   return 'OTHERS'
 }
 
-/** 集計対象として扱うレコードの最小要素。 */
+/** 集計対象として扱うレコードの最小要素 */
 type RecordStatsSource = Pick<
   PlayerRecordWithSongMeta | PlayerRecordDTO | WorldsendRecordDTO,
   'is_played' | 'score' | 'combo_lamp' | 'clear_lamp'
@@ -162,8 +163,8 @@ export function getRecordStats(records: RecordStatsSource[]): RecordStats {
       ? scores[(scores.length - 1) / 2]
       : Math.round((scores[scores.length / 2 - 1] + scores[scores.length / 2]) / 2)
     : 0
-  const q1 = scores.length ? scores[Math.floor((scores.length - 1) * 0.25)] : 0
-  const q3 = scores.length ? scores[Math.floor((scores.length - 1) * 0.75)] : 0
+  const q1 = scores.length ? quantile(scores, 0.25) : 0
+  const q3 = scores.length ? quantile(scores, 0.75) : 0
 
   return {
     rankDist: rankMap,

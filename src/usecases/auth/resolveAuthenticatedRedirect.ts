@@ -1,8 +1,14 @@
-import { REGISTER_SCORE_TEMP_PATH } from '../../constants/routes'
 import type { UserDTO } from '../../types/api.ts'
 
 type FetchUserProfile = (username: string) => Promise<unknown>
 
+/**
+ * 認証済みユーザーのプロフィール存在確認後に遷移先を解決する。
+ *
+ * @param user - 認証済みユーザー。未認証の場合はnull。
+ * @param fetchUserProfile - ユーザープロフィールを取得する処理。
+ * @returns ユーザーページのパス。未認証の場合はnull。
+ */
 export const resolveAuthenticatedRedirect = async (
   user: UserDTO | null,
   fetchUserProfile: FetchUserProfile
@@ -11,15 +17,6 @@ export const resolveAuthenticatedRedirect = async (
     return null
   }
 
-  try {
-    await fetchUserProfile(user.username)
-    return `/users/${encodeURIComponent(user.username)}`
-  } catch (error) {
-    const apiError = error as Error & { code?: string }
-    if (apiError.code === 'user_not_found') {
-      return REGISTER_SCORE_TEMP_PATH
-    }
-
-    throw error
-  }
+  await fetchUserProfile(user.username)
+  return `/users/${encodeURIComponent(user.username)}`
 }

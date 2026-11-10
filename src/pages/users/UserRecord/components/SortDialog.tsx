@@ -1,9 +1,9 @@
 import type { Component } from 'solid-js'
+import type { RecordSortCondition, RecordSortKey } from '../../../../types/recordFilter'
 import {
   type SortConditionColumnOption,
   SortConditionsDialog,
 } from '../../components/SortConditionsDialog'
-import type { RecordSortCondition, RecordSortKey } from '../types/types'
 import { RECORD_COLUMN_DEFINITIONS } from '../utils/columns'
 import { DEFAULT_RECORD_SORT_CONDITIONS, normalizeRecordSortConditions } from '../utils/sorting'
 
@@ -14,7 +14,7 @@ type SortDialogProps = {
   onApply: (sortConditions: RecordSortCondition[]) => void
 }
 
-/** ソート列の選択肢。 */
+/** ソート列の選択肢 */
 const SORT_COLUMN_OPTIONS: SortConditionColumnOption<RecordSortKey>[] =
   RECORD_COLUMN_DEFINITIONS.map((definition) => ({
     value: definition.sortKey,

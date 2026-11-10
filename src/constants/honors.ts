@@ -2,6 +2,9 @@ import type { HonorDTO } from '../types/api'
 
 export type HonorTypeName = HonorDTO['type_name']
 
+/** 称号画像の公式配信ディレクトリ */
+export const HONOR_IMAGE_BASE_URL = 'https://new.chunithm-net.com/chuni-mobile/html/mobile/img/'
+
 /**
  * APIの称号種別を称号背景のCSSクラス名へ変換する。
  */

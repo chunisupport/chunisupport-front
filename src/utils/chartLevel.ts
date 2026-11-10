@@ -1,4 +1,36 @@
+import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
+import type { NumericRangeFilter } from '../types/record'
+
 export type ChartLevelLabel = `${number}` | `${number}+`
+
+/** レベル範囲フィルターで選択できる表示レベル */
+export const CHART_LEVEL_FILTER_OPTIONS: readonly ChartLevelLabel[] = [
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '7+',
+  '8',
+  '8+',
+  '9',
+  '9+',
+  '10',
+  '10+',
+  '11',
+  '11+',
+  '12',
+  '12+',
+  '13',
+  '13+',
+  '14',
+  '14+',
+  '15',
+  '15+',
+  '16',
+]
 
 export const toChartLevelLabel = (chartConst: number): ChartLevelLabel => {
   const integerPart = Math.floor(chartConst)
@@ -14,3 +46,99 @@ export const getChartLevelSortKey = (label: ChartLevelLabel): number => {
 
 export const isLowChartLevel = (label: ChartLevelLabel): boolean =>
   getChartLevelSortKey(label) < getChartLevelSortKey('10')
+
+/**
+ * 表示レベルを対応する譜面定数範囲へ変換する。
+ *
+ * @param label - `14`、`14+`などの表示レベル。
+ * @returns 指定レベルに含まれる譜面定数の最小値と最大値。
+ */
+export const getChartLevelConstRange = (label: ChartLevelLabel): NumericRangeFilter => {
+  const isPlus = label.endsWith('+')
+  const base = Number.parseInt(isPlus ? label.slice(0, -1) : label, 10)
+  const min = isPlus ? base + 0.5 : base
+  const max = isPlus ? base + 0.9 : base + 0.4
+
+  return {
+    min: Math.max(CHART_CONST_MIN, min),
+    max: Math.min(CHART_CONST_MAX, max),
+  }
+}
+
+/**
+ * 譜面定数を範囲フィルターの選択レベルへ変換する。
+ *
+ * @param chartConst - 変換する譜面定数。
+ * @returns 6以下をプラスなしでまとめた表示レベル。
+ */
+export const toChartLevelFilterLabel = (chartConst: number): ChartLevelLabel => {
+  const normalized = Math.max(CHART_CONST_MIN, Math.min(chartConst, CHART_CONST_MAX))
+  return normalized <= 6.9 ? `${Math.floor(normalized)}` : toChartLevelLabel(normalized)
+}
+
+/**
+ * 範囲フィルターの表示レベルを譜面定数の端点へ変換する。
+ *
+ * @param label - 変換する表示レベル。
+ * @param endpoint - 範囲の下限または上限。
+ * @returns 表示レベルに対応する譜面定数の端点。
+ */
+export const getChartLevelFilterBoundary = (
+  label: ChartLevelLabel,
+  endpoint: 'min' | 'max'
+): number => {
+  const base = Number.parseInt(label, 10)
+  if (base <= 6) return endpoint === 'min' ? base : base + 0.9
+  const range = getChartLevelConstRange(label)
+  return range[endpoint]
+}
+
+/**
+ * 譜面定数範囲の両端が、レベル指定で選べる境界と一致するか判定する。
+ *
+ * @param range - 判定する譜面定数範囲。
+ * @returns 下限がいずれかのレベルの下端、上限がいずれかのレベルの上端ならtrue。
+ */
+export const isChartLevelFilterRange = (range: NumericRangeFilter): boolean =>
+  getChartLevelFilterBoundary(toChartLevelFilterLabel(range.min), 'min') === range.min &&
+  getChartLevelFilterBoundary(toChartLevelFilterLabel(range.max), 'max') === range.max
+
+/**
+ * 適用する範囲の端点を昇順に揃え、レベル指定では各レベル全体を含める。
+ *
+ * @param range - 編集中の定数範囲。逆順の端点も受け付ける。
+ * @param mode - レベル指定または数値指定。
+ * @returns 両端の順序とレベル境界を補正した定数範囲。
+ */
+export const normalizeChartConstRange = (
+  range: NumericRangeFilter,
+  mode: 'level' | 'number'
+): NumericRangeFilter => {
+  const min = Math.min(range.min, range.max)
+  const max = Math.max(range.min, range.max)
+  return mode === 'level'
+    ? {
+        min: getChartLevelFilterBoundary(toChartLevelFilterLabel(min), 'min'),
+        max: getChartLevelFilterBoundary(toChartLevelFilterLabel(max), 'max'),
+      }
+    : { min, max }
+}
+
+/**
+ * 譜面定数範囲が全範囲（未指定）から変更されているか判定する。
+ *
+ * @param range - 判定する譜面定数範囲。
+ * @returns 下限または上限が全範囲の端点と異なる場合はtrue。
+ */
+export const isChartConstRangeModified = (range: NumericRangeFilter): boolean =>
+  range.min !== CHART_CONST_MIN || range.max !== CHART_CONST_MAX
+
+/**
+ * 全範囲（未指定）を表す譜面定数範囲を生成する。
+ *
+ * @returns 独立した全範囲の譜面定数範囲。
+ */
+export const createFullChartConstRange = (): NumericRangeFilter => ({
+  min: CHART_CONST_MIN,
+  max: CHART_CONST_MAX,
+})

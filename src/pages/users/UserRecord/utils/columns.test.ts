@@ -5,9 +5,28 @@ import {
   createGridTemplateColumns,
   getDefaultVisibleColumnIds,
   getVisibleColumns,
+  RECORD_COLUMN_DEFINITIONS,
   sanitizeVisibleColumnIds,
   sortVisibleColumnIdsByDefinitionOrder,
 } from './columns.ts'
+
+test('レベル列は難易度と定数の間に配置し、既定では非表示にする', () => {
+  // Given: 通常レコードの列定義。
+  const columnIds = RECORD_COLUMN_DEFINITIONS.map((column) => column.id)
+
+  // When: レベル列の定義と既定表示列を取得する。
+  const levelColumn = RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'level')
+  const defaultColumnIds = getDefaultVisibleColumnIds()
+
+  // Then: レベル列は指定位置とレート列と同じ幅を持ち、既定表示には含まれない。
+  const ratingColumn = RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'rating')
+  const hardLampColumn = RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'hardLamp')
+  assert.equal(columnIds.indexOf('level'), columnIds.indexOf('difficulty') + 1)
+  assert.equal(columnIds.indexOf('const'), columnIds.indexOf('level') + 1)
+  assert.equal(levelColumn?.width, ratingColumn?.width)
+  assert.equal(ratingColumn?.width, hardLampColumn?.width)
+  assert.equal(defaultColumnIds.includes('level'), false)
+})
 
 test('表示カラム未指定時は既定の表示カラムを返す', () => {
   const defaults = getDefaultVisibleColumnIds()
@@ -34,7 +53,7 @@ test('表示カラムの順序を維持してカラム定義を取得できる',
 
 test('表示カラム定義からgrid-template-columns文字列を生成できる', () => {
   const columns = getVisibleColumns(['title', 'score'])
-  assert.equal(createGridTemplateColumns(columns), 'minmax(11.25rem,1fr) 4.4rem')
+  assert.equal(createGridTemplateColumns(columns), 'minmax(11.25rem,1fr) 4.6rem')
 })
 
 test('表示カラムIDを定義順に並び替える', () => {

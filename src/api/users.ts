@@ -1,23 +1,30 @@
 import { API_BASE_URL } from '../config'
 import type {
+  AccountType,
   AdminUserListResponse,
+  AdminUserPermissionsResponse,
+  AdminUserStatisticsResponse,
+  PlayerFavoriteSongRequest,
+  PlayerFavoriteSongsResponse,
   PlayerLockedSongRequest,
   PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
+  PlayerMetricHistoryResponseDTO,
   UpdatedAtResponseDTO,
+  UserCourseRecordsDTO,
   UserDTO,
   UserProfileDTO,
   UserRatingDTO,
   UserRecordDTO,
+  UserStandardSongRecordDTO,
+  UserWorldsendSongRecordDTO,
 } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
 
-type FetchUserRecordOptions = {
-  includeNoPlay?: boolean
-}
-
 type FetchMeOptions = {
   redirectOnUnauthorized?: boolean
+  /** ログイン中のセッションとは別のアカウントについて取得する場合のIDトークン */
+  idToken?: string
 }
 
 export const fetchUserProfileSummary = async (username: string): Promise<UserProfileDTO> => {
@@ -37,42 +44,106 @@ export const fetchUserRating = async (username: string): Promise<UserRatingDTO> 
 }
 
 /**
- * ユーザー系キャッシュの更新判定に使う最新更新日時を取得する。
+ * 指定したユーザーの公式RATING・公式OVER POWER・公式OP%履歴を取得する。
  *
- * @param username - 更新日時を取得するユーザー名。
- * @returns ユーザー更新日時レスポンス。
+ * @param username - 履歴取得対象のユーザー名。
+ * @returns 現在値を先頭に新しい順で並んだ公式指標履歴。
  */
-export const fetchUserUpdatedAt = async (username: string): Promise<UpdatedAtResponseDTO> => {
+export const fetchUserRatingOpHistory = async (
+  username: string
+): Promise<PlayerMetricHistoryResponseDTO> => {
   const response = await fetchWithAuth(
-    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/updated-at`
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/rating-op-history`
   )
 
   return response.json()
 }
 
-export const fetchUserRecord = async (
-  username: string,
-  options: FetchUserRecordOptions = {}
-): Promise<UserRecordDTO> => {
-  const url = new URL(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record`)
-  if (options.includeNoPlay) {
-    url.searchParams.set('include_noplay', 'true')
-  }
-  const response = await fetchWithAuth(url)
+/**
+ * ユーザー系キャッシュの更新判定に使う最新更新日時を取得する。
+ *
+ * @param username - 更新日時を取得するユーザー名。
+ * @returns ユーザー更新日時レスポンス。
+ */
+export const requestUserUpdatedAt = async (username: string): Promise<UpdatedAtResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/updated-at`
+  )
+  return response.json()
+}
 
+/**
+ * 指定したユーザーの全楽曲レコードを取得する。
+ *
+ * @param username - レコード取得対象のユーザー名。
+ * @returns 全楽曲レコードレスポンス。
+ */
+export const fetchUserRecord = async (username: string): Promise<UserRecordDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record`
+  )
+
+  return response.json()
+}
+
+/**
+ * 指定したユーザーのコースレコード一覧を取得する。
+ *
+ * @param username - レコード取得対象のユーザー名。
+ * @returns コースレコード一覧レスポンス。
+ */
+export const fetchUserCourseRecords = async (username: string): Promise<UserCourseRecordsDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/courses`
+  )
+  return response.json()
+}
+
+/**
+ * 指定した通常楽曲1曲分のユーザーレコードを取得する。
+ *
+ * @param username - レコード取得対象のユーザー名。
+ * @param displayId - 取得対象の楽曲表示ID。
+ * @returns 通常楽曲1曲分のレコードレスポンス。
+ */
+export const fetchUserStandardSongRecord = async (
+  username: string,
+  displayId: string
+): Promise<UserStandardSongRecordDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/songs/${encodeURIComponent(displayId)}`
+  )
+  return response.json()
+}
+
+/**
+ * 指定したWORLD'S END楽曲1曲分のユーザーレコードを取得する。
+ *
+ * @param username - レコード取得対象のユーザー名。
+ * @param displayId - 取得対象の楽曲表示ID。
+ * @returns WORLD'S END楽曲1曲分のレコードレスポンス。
+ */
+export const fetchUserWorldsendSongRecord = async (
+  username: string,
+  displayId: string
+): Promise<UserWorldsendSongRecordDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/worldsend-songs/${encodeURIComponent(displayId)}`
+  )
   return response.json()
 }
 
 /**
  * Firebase にログインしている現在のユーザー情報を取得する。
  *
- * @param options - 未認証時のリダイレクト設定。
+ * @param options - 未認証時のリダイレクト設定と、別アカウントで取得する場合のIDトークン。
  * @returns 現在のユーザー情報。
  */
 export const fetchMe = async (options: FetchMeOptions = {}): Promise<UserDTO> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me`, {
     requireAuthentication: true,
     redirectOnUnauthorized: options.redirectOnUnauthorized,
+    idToken: options.idToken,
   })
 
   return response.json()
@@ -107,9 +178,7 @@ export const updateMyLockedSongsBatch = async (
 }
 
 export const deleteMyLockedSong = async (request: PlayerLockedSongRequest): Promise<void> => {
-  const url = new URL(
-    `${API_BASE_URL}/internal/me/locked-songs/${encodeURIComponent(request.display_id)}`
-  )
+  const url = new URL(`${API_BASE_URL}/internal/me/locked-songs/${encodeURIComponent(request.id)}`)
   url.searchParams.set('is_ultima', String(request.is_ultima ?? false))
 
   await fetchWithAuth(url, {
@@ -117,18 +186,71 @@ export const deleteMyLockedSong = async (request: PlayerLockedSongRequest): Prom
   })
 }
 
+/**
+ * 対象ユーザーのお気に入り楽曲一覧を取得する。
+ *
+ * @param username - 取得対象のユーザー名。
+ * @returns お気に入り楽曲一覧。
+ */
+export const fetchUserFavoriteSongs = async (
+  username: string
+): Promise<PlayerFavoriteSongsResponse> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/favorite-songs`
+  )
+
+  return response.json()
+}
+
+/**
+ * 現在のユーザーのお気に入りへ楽曲を追加する。
+ *
+ * @param request - 追加する楽曲ID。
+ * @returns 登録完了時に解決されるPromise。
+ */
+export const addMyFavoriteSong = async (request: PlayerFavoriteSongRequest): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/me/favorite-songs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+}
+
+/**
+ * 現在のユーザーのお気に入りから楽曲を解除する。
+ *
+ * @param displayId - 解除する楽曲ID。
+ * @returns 解除完了時に解決されるPromise。
+ */
+export const deleteMyFavoriteSong = async (displayId: string): Promise<void> => {
+  await fetchWithAuth(
+    `${API_BASE_URL}/internal/me/favorite-songs/${encodeURIComponent(displayId)}`,
+    { method: 'DELETE' }
+  )
+}
+
+/** 管理者向けユーザー一覧APIの1ページあたり件数 */
+export const ADMIN_USER_LIST_PAGE_SIZE = 100
+
+/** 管理者向けユーザー一覧の取得条件 */
 type FetchAdminUsersOptions = {
+  /** ページ番号（1始まり）。省略時は1 */
   page?: number
+  /** ユーザー名またはプレイヤー名の前方一致。空なら指定しない */
   name?: string
 }
 
+/**
+ * 管理者向けユーザー一覧をページ単位で取得する。
+ *
+ * @param options - ページ番号と名前検索。
+ * @returns 指定ページのユーザー一覧。
+ */
 export const fetchAdminUsers = async (
   options: FetchAdminUsersOptions = {}
 ): Promise<AdminUserListResponse[]> => {
   const url = new URL(`${API_BASE_URL}/internal/users/`)
-  if (typeof options.page !== 'undefined') {
-    url.searchParams.set('page', String(options.page))
-  }
+  url.searchParams.set('page', String(options.page ?? 1))
   if (options.name) {
     url.searchParams.set('name', options.name)
   }
@@ -138,6 +260,70 @@ export const fetchAdminUsers = async (
   return response.json()
 }
 
+/**
+ * 管理者向けユーザー集計を取得する。
+ *
+ * @returns 全ユーザー数、プレイヤーデータ連携済み数、直近30日の更新数。
+ */
+export const fetchAdminUserStatistics = async (): Promise<AdminUserStatisticsResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/admin/user-stats`)
+
+  return response.json()
+}
+
+/**
+ * 権限変更時に選択できるアカウント種別を取得する。
+ *
+ * @returns 権限名の一覧。
+ */
+export const fetchAdminUserPermissions = async (): Promise<AdminUserPermissionsResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/internal/master/permissions`)
+
+  return response.json()
+}
+
+/**
+ * 指定したユーザーの権限を変更する。
+ *
+ * @param username - 権限を変更するユーザー名。
+ * @param permission - 設定するアカウント種別。
+ * @returns 変更完了時に解決されるPromise。
+ */
+export const updateUserPermission = async (
+  username: string,
+  permission: AccountType
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/permission`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ permission }),
+  })
+}
+
+/**
+ * 指定したユーザーの不審アカウントフラグを変更する。
+ *
+ * @param username - フラグを変更するユーザー名。
+ * @param isSuspicious - 設定する不審アカウントフラグ。
+ * @returns 変更完了時に解決されるPromise。
+ */
+export const updateUserSuspicious = async (
+  username: string,
+  isSuspicious: boolean
+): Promise<void> => {
+  await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/suspicious`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_suspicious: isSuspicious }),
+  })
+}
+
+/**
+ * 指定したユーザーを物理削除する。
+ *
+ * @param username - 削除対象のユーザー名。
+ * @returns 削除完了時に解決されるPromise。
+ */
 export const deleteUserByUsername = async (username: string): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/users/${encodeURIComponent(username)}`, {
     method: 'DELETE',

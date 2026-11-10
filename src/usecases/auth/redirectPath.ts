@@ -1,4 +1,4 @@
-import { LOGIN_PATH, REGISTER_PATH } from '../../constants/routes.ts'
+import { LOGIN_PATH, REGISTER_PATH, STAFF_LOGIN_PATH } from '../../constants/routes.ts'
 
 const isPathMatch = (safePath: string, basePath: string): boolean => {
   const safePathname = new URL(safePath, 'https://app.local').pathname.replace(/\/$/, '')
@@ -20,13 +20,23 @@ export const sanitizeRedirectPath = (rawPath: string | null | undefined): string
   }
 }
 
+/**
+ * 外部URLと認証画面自身を除外し、ログイン後の安全な遷移先を解決する。
+ *
+ * @param redirectPath - URLから渡された遷移先候補。
+ * @returns 安全なアプリ内パス。認証画面や不正な候補はnull。
+ */
 export const resolvePostLoginRedirectPath = (
   redirectPath: string | null | undefined
 ): string | null => {
   const safePath = sanitizeRedirectPath(redirectPath)
   if (!safePath) return null
 
-  if (isPathMatch(safePath, LOGIN_PATH) || isPathMatch(safePath, REGISTER_PATH)) {
+  if (
+    isPathMatch(safePath, LOGIN_PATH) ||
+    isPathMatch(safePath, REGISTER_PATH) ||
+    isPathMatch(safePath, STAFF_LOGIN_PATH)
+  ) {
     return null
   }
 

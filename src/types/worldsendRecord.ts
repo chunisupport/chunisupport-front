@@ -1,0 +1,54 @@
+import type { WorldsendRecordDTO } from './api'
+import type {
+  ChainLamp,
+  ComboLampFilter,
+  DateRangeFilter,
+  HardLamp,
+  NumericRangeFilter,
+} from './record'
+
+/** WORLD'S END レコードで扱う属性 */
+export type WorldsendAttribute = WorldsendRecordDTO['attribute']
+
+/** WORLD'S END レコードで扱う★レベル */
+export type WorldsendLevelStar = WorldsendRecordDTO['level_star']
+
+/** WORLD'S END レコード一覧で永続化する列ID */
+export type WorldsendRecordColumnId =
+  | 'title'
+  | 'attribute'
+  | 'level'
+  | 'score'
+  | 'lamp'
+  | 'hardLamp'
+  | 'fullChain'
+  | 'justiceCount'
+  | 'updatedAt'
+
+/** WORLD'S END レコード一覧で扱うソートキー */
+export type WorldsendRecordSortKey = WorldsendRecordColumnId
+
+/** WORLD'S END レコードフィルターの状態 */
+export interface WorldsendFilterState {
+  title: string
+  attributes: WorldsendAttribute[]
+  levelStarRange: NumericRangeFilter
+  genres: string[]
+  /**
+   * 対象バージョンの短縮名。
+   * null は全選択（未指定）で、バージョン不明の楽曲も含む。
+   * 空配列もバージョン条件なし。一部選択時はそのバージョンだけが対象で、バージョン不明は含まない。
+   */
+  versions: string[] | null
+  /** 対象とする楽曲名順フォルダのコード。null は全フォルダ対象、空配列は全件不一致を表す */
+  nameFolders: string[] | null
+  score: NumericRangeFilter
+  scoreFilterMode: 'number' | 'rank'
+  justiceCount: NumericRangeFilter<number | null>
+  combo_lamp: ComboLampFilter[]
+  chain_lamp: ChainLamp[]
+  hard_lamp: HardLamp[]
+  excludeNoPlay: boolean
+  /** 最終更新日の範囲フィルター。空文字列は未指定を意味する */
+  updatedAt: DateRangeFilter
+}

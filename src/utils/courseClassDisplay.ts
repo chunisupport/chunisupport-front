@@ -1,0 +1,86 @@
+/** コースクラスとして選択可能な API 値 */
+export const COURSE_CLASS_VALUES = ['1', '2', '3', '4', '5', 'inf', 'extra'] as const
+
+/** コースクラスの API 値 */
+export type CourseClassValue = (typeof COURSE_CLASS_VALUES)[number]
+
+/** コースクラス選択 UI で使う選択肢 */
+export type CourseClassOption = {
+  value: CourseClassValue
+  label: string
+}
+
+/** コースクラスのAPI値と表示値の対応表 */
+const COURSE_CLASS_LABELS: Readonly<Record<CourseClassValue, string>> = {
+  '1': 'Ⅰ',
+  '2': 'Ⅱ',
+  '3': 'Ⅲ',
+  '4': 'Ⅳ',
+  '5': 'Ⅴ',
+  inf: '∞',
+  extra: 'EX',
+}
+
+/** コースクラス選択 UI で使う選択肢一覧 */
+export const COURSE_CLASS_OPTIONS: CourseClassOption[] = COURSE_CLASS_VALUES.map((value) => ({
+  value,
+  label: COURSE_CLASS_LABELS[value],
+}))
+
+/** コースクラス別の背景色Tailwindクラスの対応表 */
+const COURSE_CLASS_BG_CLASS: Readonly<Record<string, string>> = {
+  '1': 'bg-course-class-1-bg',
+  '2': 'bg-course-class-2-bg',
+  '3': 'bg-course-class-3-bg',
+  '4': 'bg-course-class-4-bg',
+  '5': 'bg-course-class-5-bg',
+}
+
+/** EXクラス用のWORLD'S ENDと共通の虹グラデーション背景クラス */
+const COURSE_CLASS_EXTRA_BG_CLASS = 'bg-[image:var(--cs-color-worldsend-label-bg)]'
+
+/** ∞クラス用のAJCと同じ薄い虹グラデーション背景クラス */
+const COURSE_CLASS_INF_BG_CLASS = 'bg-[image:var(--cs-color-course-class-inf-bg)]'
+
+/**
+ * コースクラスのAPI値を短縮表記へ変換する。
+ *
+ * @param courseClass - APIから返却されたコースクラス。
+ * @returns 表示用のコースクラス。未対応値は元の値を返す。
+ */
+export const formatCourseClass = (courseClass: string): string =>
+  COURSE_CLASS_LABELS[courseClass.toLowerCase() as CourseClassValue] ?? courseClass
+
+/**
+ * コースクラスに応じたバッジ用Tailwindクラスを返す。
+ *
+ * @param courseClass - APIから返却されたコースクラス。
+ * @returns 背景色・文字色・文字影のトークンクラス。未対応値はsuccess色を返す。
+ */
+export const courseClassBadgeClass = (courseClass: string): string => {
+  const normalized = courseClass.toLowerCase()
+  if (normalized === 'extra') {
+    return `${COURSE_CLASS_EXTRA_BG_CLASS} text-course-class-text text-shadow-badge`
+  }
+  if (normalized === 'inf') {
+    return `${COURSE_CLASS_INF_BG_CLASS} text-course-class-text text-shadow-badge`
+  }
+  const bgClass = COURSE_CLASS_BG_CLASS[normalized]
+  return bgClass
+    ? `${bgClass} text-course-class-text text-shadow-badge`
+    : 'bg-success-bg text-success text-shadow-badge'
+}
+
+/** エンブレム表示に対応するコースクラス。EXは独自デザインのためバッジ表示のままとする */
+const COURSE_CLASS_EMBLEM_NAMES: readonly string[] = ['1', '2', '3', '4', '5', 'inf']
+
+/**
+ * コースクラスを表示するクラスエンブレムのマスタ名へ変換する。
+ *
+ * @param courseClass - APIから返却されたコースクラス。
+ * @returns エンブレムのマスタ名。EXや未対応値の場合は null。
+ */
+export const resolveCourseClassEmblemName = (courseClass: string): string | null => {
+  const normalized = courseClass.toLowerCase()
+  return COURSE_CLASS_EMBLEM_NAMES.includes(normalized) ? normalized : null
+}

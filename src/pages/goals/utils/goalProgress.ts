@@ -1,5 +1,5 @@
+import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type {
-  GoalAchievementParams,
   GoalAttributes,
   GoalDTO,
   MasterDataDTO,
@@ -7,11 +7,34 @@ import type {
   SongDTO,
   VersionDTO,
 } from '../../../types/api'
-import { buildCurrentOverPowerBySongId } from '../../../usecases/overpower/currentOpTarget'
-import { isExplicitEmptyAttribute } from './goalForm'
-import { resolveGoalVersionValueByReleaseDate } from './goalVersion'
+import type { OverPowerLockedSong } from '../../../usecases/overpower/types'
+import {
+  isGoalNameFolderMatched,
+  normalizeGoalAttributeIds,
+  normalizeGoalNameFolderCodes,
+} from '../../../utils/goalAttributes'
+import {
+  COMBO_LAMP_ORDER,
+  HARD_LAMP_ORDER,
+  isComboLampGoalValue,
+  isFullChainGoalValue,
+  isHardLampGoalValue,
+  resolveFullChainRecordName,
+  resolveHardLampRecordName,
+} from '../../../utils/goalLamp'
+import { filterRatingReachableRecords } from '../../../utils/goalRatingCount'
+import { resolveGoalVersionValueByReleaseDate } from '../../../utils/goalVersion'
+import { MAX_SCORE } from '../../../utils/scoreRank'
+import { isTheoreticalOverPowerTargetDifficulty } from '../../../utils/theoreticalOverPowerTarget'
+import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
+import { calculateGoalOverPowerTotals } from './goalOverPower'
 
+/** 目標の進捗と、実際の集計対象に基づく表示情報。 */
 export interface GoalProgressResult {
+  /** 通常・OP目標では譜面数、虹枠目標では楽曲数。 */
+  targetCount: number
+  /** 平均スコア目標の達成に必要な合計スコアの上積み。 */
+  remainingScore?: number
   current: number
   target: number
   percent: number
@@ -20,45 +43,64 @@ export interface GoalProgressResult {
 }
 
 interface FilterRecordsByAttributesOptions {
-  /** OP対象指定時に、対象曲の全譜面レコードを残すか。OVER POWER集計で曲内最大値を取るために使う。 */
+  /** OP対象指定時に、対象曲の全譜面レコードを残すか。OVER POWER集計で曲内最大値を取るために使う */
   includeAllChartsForOpTarget?: boolean
+  /** 楽曲IDから楽曲マスタを引くMap。複数目標を続けて抽出する場合に再生成を避けるために渡す */
+  songMap?: ReadonlyMap<string, SongDTO>
 }
 
-const HARD_LAMP_ORDER: Record<string, number> = {
-  HARD: 1,
-  BRAVE: 2,
-  ABSOLUTE: 3,
-  CATASTROPHY: 4,
+/** OVER POWER目標の進捗計算に渡す未解禁曲・マスタ情報 */
+export interface GoalOverPowerProgressContext {
+  /** 属性抽出前の全プレイヤーレコード */
+  records: PlayerRecordDTO[]
+  /** バージョン一覧 */
+  versions: VersionDTO[]
+  /** 難易度・ジャンルなどのマスタデータ */
+  masterData: MasterDataDTO
+  /** 未解禁楽曲設定 */
+  lockedSongs: OverPowerLockedSong[]
 }
 
-const COMBO_LAMP_ORDER: Record<string, number> = {
-  'FULL COMBO': 1,
-  'ALL JUSTICE': 2,
+const EMPTY_MASTER_DATA: MasterDataDTO = {
+  genres: [],
+  difficulties: [],
+  versions: [],
+  name_folders: [],
+  account_types: [],
+  rating_bands: [],
+  achievement_types: [],
+  possessions: [],
 }
 
 /**
- * 単一値または配列で保持された目標属性 ID を配列へ正規化する。
+ * API由来の成果パラメータからランプ指定値を安全に取り出す。
  *
- * @param value - 目標属性に保存された ID。
- * @returns 有効な整数 ID の配列。
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @returns ランプ指定値。オブジェクト形式でない場合は undefined。
  */
-const normalizeAttributeIds = (value: number | number[] | undefined): number[] => {
-  if (typeof value === 'number') return [value]
-  if (Array.isArray(value)) {
-    return value.filter((id): id is number => Number.isInteger(id))
-  }
-  return []
+const getGoalLampParam = (params: GoalDTO['achievement_params']): unknown => {
+  const rawParams: unknown = params
+  return rawParams && typeof rawParams === 'object' && 'lamp' in rawParams
+    ? (rawParams as { lamp?: unknown }).lamp
+    : undefined
 }
 
 /**
- * レコードが曲ごとのOVER POWER対象譜面かを判定する。
+ * 件数系目標の対象件数を解決する。
  *
- * @param record - 判定対象のプレイヤーレコード。
- * @param song - レコードに対応する楽曲マスタ。
- * @returns 楽曲のOP対象難易度とレコード難易度が一致する場合はtrue。
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param recordCount - 目標条件に一致した譜面数。
+ * @returns 件数系目標の目標値。
  */
-const isOverPowerTargetRecord = (record: PlayerRecordDTO, song: SongDTO | undefined): boolean =>
-  song?.op_target_difficulty === record.difficulty
+const resolveCountTarget = (params: GoalDTO['achievement_params'], recordCount: number): number =>
+  resolveGoalDynamicTarget(
+    params && typeof params === 'object' ? params : {},
+    recordCount,
+    'count',
+    {
+      rounding: 'ceil',
+    }
+  )
 
 /**
  * 楽曲マスタからOP対象譜面の定数を取得する。
@@ -79,14 +121,16 @@ const getOverPowerTargetChartConst = (song: SongDTO): number | undefined => {
  * @param attributes - 目標に設定された対象条件。
  * @param genreNames - ジャンルIDから解決した対象ジャンル名。
  * @param versionIds - 対象バージョン番号。
+ * @param nameFolderCodes - 対象楽曲名順フォルダのコード。
  * @param versions - version API から返されたバージョン一覧。
- * @returns OP対象譜面の定数、曲ジャンル、曲バージョンが条件に一致する場合はtrue。
+ * @returns OP対象譜面の定数、曲ジャンル、曲バージョン、楽曲名順が条件に一致する場合はtrue。
  */
 const isOverPowerTargetSongMatched = (
   song: SongDTO | undefined,
   attributes: GoalAttributes,
   genreNames: Set<string> | undefined,
-  versionIds: number[],
+  versionIds: number[] | undefined,
+  nameFolderCodes: string[] | undefined,
   versions: VersionDTO[]
 ): song is SongDTO => {
   if (!song?.op_target_difficulty) return false
@@ -99,8 +143,9 @@ const isOverPowerTargetSongMatched = (
   if (typeof constMax === 'number' && targetConst > constMax) return false
 
   if (genreNames && (!song.genre || !genreNames.has(song.genre))) return false
+  if (!isGoalNameFolderMatched(song.name_folder_code, nameFolderCodes)) return false
 
-  if (versionIds.length > 0) {
+  if (versionIds && versionIds.length > 0) {
     const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
     if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
   }
@@ -116,7 +161,7 @@ const isOverPowerTargetSongMatched = (
  * @param masterData - 難易度・ジャンルなどのマスタデータ。
  * @param songs - 楽曲マスタ一覧。
  * @param versions - version API から返されたバージョン一覧。
- * @param options - OP対象のレコード粒度を調整する追加オプション。
+ * @param options - OP対象のレコード粒度と、共有する楽曲Mapを指定する追加オプション。
  * @returns 目標条件に一致したレコード一覧。
  */
 export const filterRecordsByAttributes = (
@@ -127,25 +172,35 @@ export const filterRecordsByAttributes = (
   versions: VersionDTO[],
   options: FilterRecordsByAttributesOptions = {}
 ): PlayerRecordDTO[] => {
-  const songMap = new Map(songs.map((song) => [song.id, song]))
-  const diffIds = normalizeAttributeIds(attributes.diff)
-  const genreIds = normalizeAttributeIds(attributes.genre)
-  const versionIds = normalizeAttributeIds(attributes.ver)
+  const songMap = options.songMap ?? new Map(songs.map((song) => [song.id, song]))
+  const diffIds = normalizeGoalAttributeIds(attributes.diff)
+  const genreIds = normalizeGoalAttributeIds(attributes.genre)
+  const versionIds = normalizeGoalAttributeIds(attributes.ver)
+  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
   const opTargetOnly = attributes.chart_target === 'OP_TARGET'
-  const hasExplicitEmptyDiff = !opTargetOnly && isExplicitEmptyAttribute(attributes.diff)
-  const hasExplicitEmptyGenre = isExplicitEmptyAttribute(attributes.genre)
-  const hasExplicitEmptyVersion = isExplicitEmptyAttribute(attributes.ver)
+
+  if (
+    diffIds?.length === 0 ||
+    genreIds?.length === 0 ||
+    versionIds?.length === 0 ||
+    nameFolderCodes?.length === 0
+  ) {
+    return []
+  }
 
   const diffNames =
-    diffIds.length > 0
+    diffIds && diffIds.length > 0
       ? new Set(
           masterData.difficulties
             .filter((difficulty) => diffIds.includes(difficulty.id))
-            .map((difficulty) => difficulty.name)
+            .flatMap((difficulty) => {
+              const normalized = normalizePlayerDataDifficulty(difficulty.name)
+              return normalized ? [normalized] : []
+            })
         )
       : undefined
   const genreNames =
-    genreIds.length > 0
+    genreIds && genreIds.length > 0
       ? new Set(
           masterData.genres
             .filter((genre) => genreIds.includes(genre.id))
@@ -153,18 +208,26 @@ export const filterRecordsByAttributes = (
         )
       : undefined
 
-  if (hasExplicitEmptyDiff || hasExplicitEmptyGenre || hasExplicitEmptyVersion) {
-    return []
-  }
-
   return records.filter((record) => {
     const song = songMap.get(record.id)
 
     if (opTargetOnly) {
-      if (!isOverPowerTargetSongMatched(song, attributes, genreNames, versionIds, versions)) {
+      if (
+        !isOverPowerTargetSongMatched(
+          song,
+          attributes,
+          genreNames,
+          versionIds,
+          nameFolderCodes,
+          versions
+        )
+      ) {
         return false
       }
-      return options.includeAllChartsForOpTarget || isOverPowerTargetRecord(record, song)
+      return (
+        options.includeAllChartsForOpTarget ||
+        isTheoreticalOverPowerTargetDifficulty(song?.op_target_difficulty, record.difficulty)
+      )
     }
     if (diffNames && !diffNames.has(record.difficulty)) return false
 
@@ -174,8 +237,9 @@ export const filterRecordsByAttributes = (
     if (typeof constMax === 'number' && record.const > constMax) return false
 
     if (genreNames && (!song?.genre || !genreNames.has(song.genre))) return false
+    if (!isGoalNameFolderMatched(song?.name_folder_code, nameFolderCodes)) return false
 
-    if (versionIds.length > 0) {
+    if (versionIds && versionIds.length > 0) {
       if (!song) return false
       const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
       if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
@@ -183,38 +247,6 @@ export const filterRecordsByAttributes = (
 
     return true
   })
-}
-
-const getNumberParam = (
-  params: GoalAchievementParams,
-  key: 'score' | 'count' | 'total' | 'remaining' | 'percent'
-): number => {
-  const value = (params as Record<string, unknown>)[key]
-  return typeof value === 'number' ? value : 0
-}
-
-/**
- * 最大値を基準に相互排他的な目標値指定を実際の目標値へ変換する。
- *
- * @param params - APIから受け取った成果パラメータ。
- * @param maxValue - 対象条件から算出した最大値。
- * @param absoluteKey - 絶対値指定に使うキー。
- * @returns 絶対値、残数、割合、または最大値から解決した目標値。
- */
-const resolveDynamicTarget = (
-  params: GoalAchievementParams,
-  maxValue: number,
-  absoluteKey: 'count' | 'total'
-): number => {
-  const absoluteValue = getNumberParam(params, absoluteKey)
-  if (absoluteValue > 0 || (params as Record<string, unknown>)[absoluteKey] === 0) {
-    return absoluteValue
-  }
-  const remaining = (params as Record<string, unknown>).remaining
-  if (typeof remaining === 'number') return Math.max(maxValue - remaining, 0)
-  const percent = (params as Record<string, unknown>).percent
-  if (typeof percent === 'number') return (maxValue * percent) / 100
-  return maxValue
 }
 
 /**
@@ -225,66 +257,12 @@ const resolveDynamicTarget = (
  * @returns 明示された総スコア、または対象譜面数に基づく理論値。
  */
 const resolveTotalScoreTarget = (
-  params: GoalAchievementParams,
+  params: GoalDTO['achievement_params'],
   filteredRecords: PlayerRecordDTO[]
 ): number => {
-  return resolveDynamicTarget(params, filteredRecords.length * 1010000, 'total')
-}
-
-/**
- * OVER POWER合計目標の動的上限を解決する。
- *
- * @param params - 目標種別ごとの成果パラメータ。
- * @param filteredRecords - 現在の条件に一致した譜面レコード一覧。
- * @param songMap - 楽曲IDから楽曲情報を引くためのマップ。
- * @returns 明示されたOVER POWER合計、または対象譜面の理論値合計。
- */
-const resolveOverPowerValueTarget = (
-  params: GoalAchievementParams,
-  filteredRecords: PlayerRecordDTO[],
-  songMap: Map<string, SongDTO>,
-  useSongMaxOverPower: boolean
-): number => {
-  let maxValue: number
-  if (useSongMaxOverPower) {
-    maxValue = sumUniqueSongMaxOverPower(filteredRecords, songMap)
-  } else {
-    maxValue = filteredRecords.reduce(
-      (acc, record) => acc + (songMap.get(record.id)?.maxop ?? 0),
-      0
-    )
-  }
-  return resolveDynamicTarget(params, maxValue, 'total')
-}
-
-/**
- * 曲ごとの理論OVER POWERを重複なく合計する。
- *
- * @param records - 集計対象曲を含むプレイヤーレコード一覧。
- * @param songMap - 楽曲IDから楽曲情報を引くためのマップ。
- * @returns 曲ごとの最大OVER POWER合計。
- */
-const sumUniqueSongMaxOverPower = (
-  records: PlayerRecordDTO[],
-  songMap: Map<string, SongDTO>
-): number => {
-  const songIds = new Set(records.map((record) => record.id))
-  let total = 0
-  for (const songId of songIds) {
-    total += songMap.get(songId)?.maxop ?? 0
-  }
-  return total
-}
-
-/**
- * 曲ごとの現在OVER POWER対象レコードを合計する。
- *
- * @param records - 集計対象のプレイヤーレコード一覧。
- * @returns 同一曲内では現在OP対象レコードのOVER POWERを1回だけ採用した合計値。
- */
-const sumCurrentOpTargetOverPowerBySong = (records: PlayerRecordDTO[]): number => {
-  const targetOverPowerBySong = buildCurrentOverPowerBySongId(records)
-  return [...targetOverPowerBySong.values()].reduce((acc, overpower) => acc + overpower, 0)
+  return resolveGoalDynamicTarget(params, filteredRecords.length * MAX_SCORE, 'total', {
+    rounding: 'ceil',
+  })
 }
 
 /**
@@ -293,52 +271,54 @@ const sumCurrentOpTargetOverPowerBySong = (records: PlayerRecordDTO[]): number =
  * @param goal - 計算対象の目標。
  * @param filteredRecords - 目標条件に一致したプレイヤーレコード一覧。
  * @param songs - 楽曲マスタ一覧。
- * @returns 目標カード表示に必要な進捗情報。
+ * @param overPowerContext - OVER POWER目標で未解禁曲設定を反映するための追加入力。
+ * @returns 対象件数、平均目標の合計不足点数、現在値・目標値・達成判定を含む進捗情報。
  */
 export const calculateGoalProgress = (
   goal: GoalDTO,
   filteredRecords: PlayerRecordDTO[],
-  songs: SongDTO[]
+  songs: SongDTO[],
+  overPowerContext?: GoalOverPowerProgressContext
 ): GoalProgressResult => {
-  const songMap = new Map(songs.map((song) => [song.id, song]))
-
   let current = 0
   let target = 1
   let hasUnknownMaxOp = false
+  let targetCount = filteredRecords.length
+  let remainingScore: number | undefined
 
   switch (goal.achievement_type) {
     case 'rank_count':
     case 'score_count': {
-      const threshold = getNumberParam(goal.achievement_params, 'score')
-      target = resolveDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
+      const threshold = getNumberGoalTargetParam(goal.achievement_params, 'score')
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
       current = filteredRecords.filter((record) => record.score >= threshold).length
       break
     }
+    case 'rating_count': {
+      const threshold = getNumberGoalTargetParam(goal.achievement_params, 'rating')
+      const reachableRecords = filterRatingReachableRecords(filteredRecords, threshold)
+      target = resolveCountTarget(goal.achievement_params, reachableRecords.length)
+      current = reachableRecords.filter((record) => record.rating >= threshold).length
+      targetCount = reachableRecords.length
+      break
+    }
     case 'avg_score': {
-      target = getNumberParam(goal.achievement_params, 'score')
-      if (filteredRecords.length === 0) {
-        current = 0
-      } else {
-        const sum = filteredRecords.reduce((acc, record) => acc + record.score, 0)
-        current = Math.floor(sum / filteredRecords.length)
-      }
+      target = getNumberGoalTargetParam(goal.achievement_params, 'score')
+      const sum = filteredRecords.reduce((acc, record) => acc + record.score, 0)
+      current = targetCount > 0 ? Math.floor(sum / targetCount) : 0
+      remainingScore = Math.max(0, Math.ceil(target * targetCount - sum))
       break
     }
     case 'hardlamp_count': {
-      const params = goal.achievement_params as {
-        lamp: 'HRD' | 'BRV' | 'ABS' | 'CTS'
-        count?: number
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isHardLampGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
       }
-      const hardLampName =
-        params.lamp === 'HRD'
-          ? 'HARD'
-          : params.lamp === 'BRV'
-            ? 'BRAVE'
-            : params.lamp === 'ABS'
-              ? 'ABSOLUTE'
-              : 'CATASTROPHY'
-      const required = HARD_LAMP_ORDER[hardLampName]
-      target = resolveDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
+      const hardLampName = resolveHardLampRecordName(lamp)
+      const required = HARD_LAMP_ORDER[hardLampName] ?? 0
       current = filteredRecords.filter((record) => {
         const lamp = record.clear_lamp
         if (!lamp) return false
@@ -347,15 +327,32 @@ export const calculateGoalProgress = (
       break
     }
     case 'combolamp_count': {
-      const params = goal.achievement_params as { lamp: 'FC' | 'AJ'; count?: number }
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isComboLampGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
+      }
       const required =
-        params.lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']
-      target = resolveDynamicTarget(goal.achievement_params, filteredRecords.length, 'count')
+        (lamp === 'FC' ? COMBO_LAMP_ORDER['FULL COMBO'] : COMBO_LAMP_ORDER['ALL JUSTICE']) ?? 0
       current = filteredRecords.filter((record) => {
         const lamp = record.combo_lamp
         if (!lamp) return false
         return (COMBO_LAMP_ORDER[lamp] ?? 0) >= required
       }).length
+      break
+    }
+    case 'fullchain_count': {
+      target = resolveCountTarget(goal.achievement_params, filteredRecords.length)
+      const lamp = getGoalLampParam(goal.achievement_params)
+      if (typeof lamp !== 'string' || !isFullChainGoalValue(lamp)) {
+        current = 0
+        target = Math.max(target, 1)
+        break
+      }
+      const fullChainName = resolveFullChainRecordName(lamp)
+      current = filteredRecords.filter((record) => record.full_chain === fullChainName).length
       break
     }
     case 'total_score': {
@@ -364,45 +361,39 @@ export const calculateGoalProgress = (
       break
     }
     case 'overpower_value': {
-      const useSongAggregation = goal.attributes.chart_target === 'OP_TARGET'
-      target = resolveOverPowerValueTarget(
-        goal.achievement_params,
-        filteredRecords,
-        songMap,
-        useSongAggregation
+      const totals = calculateGoalOverPowerTotals({
+        records: overPowerContext?.records ?? filteredRecords,
+        songs,
+        versions: overPowerContext?.versions ?? [],
+        masterData: overPowerContext?.masterData ?? EMPTY_MASTER_DATA,
+        attributes: goal.attributes,
+        lockedSongs: overPowerContext?.lockedSongs ?? [],
+      })
+      target = resolveGoalDynamicTarget(
+        goal.achievement_params && typeof goal.achievement_params === 'object'
+          ? goal.achievement_params
+          : {},
+        totals.max,
+        'total'
       )
-      current = useSongAggregation
-        ? sumCurrentOpTargetOverPowerBySong(filteredRecords)
-        : filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
+      current = totals.current
+      hasUnknownMaxOp = totals.hasUnknownMaxOp
+      targetCount = totals.targetCount
       break
     }
     case 'overpower_percent': {
-      target = getNumberParam(goal.achievement_params, 'total')
-      const useSongAggregation = goal.attributes.chart_target === 'OP_TARGET'
-      const totalOp = useSongAggregation
-        ? sumCurrentOpTargetOverPowerBySong(filteredRecords)
-        : filteredRecords.reduce((acc, record) => acc + record.overpower, 0)
-      const targetSongIds = useSongAggregation
-        ? new Set(filteredRecords.map((record) => record.id))
-        : undefined
-      const totalMaxOp = useSongAggregation
-        ? sumUniqueSongMaxOverPower(filteredRecords, songMap)
-        : filteredRecords.reduce((acc, record) => {
-            const song = songMap.get(record.id)
-            if (song?.is_maxop_unknown) {
-              hasUnknownMaxOp = true
-            }
-            return acc + (song?.maxop ?? 0)
-          }, 0)
-      if (targetSongIds) {
-        for (const songId of targetSongIds) {
-          const song = songMap.get(songId)
-          if (song?.is_maxop_unknown) {
-            hasUnknownMaxOp = true
-          }
-        }
-      }
-      current = totalMaxOp > 0 ? (totalOp / totalMaxOp) * 100 : 0
+      target = getNumberGoalTargetParam(goal.achievement_params, 'total')
+      const totals = calculateGoalOverPowerTotals({
+        records: overPowerContext?.records ?? filteredRecords,
+        songs,
+        versions: overPowerContext?.versions ?? [],
+        masterData: overPowerContext?.masterData ?? EMPTY_MASTER_DATA,
+        attributes: goal.attributes,
+        lockedSongs: overPowerContext?.lockedSongs ?? [],
+      })
+      current = totals.max > 0 ? (totals.current / totals.max) * 100 : 0
+      hasUnknownMaxOp = totals.hasUnknownMaxOp
+      targetCount = totals.targetCount
       break
     }
   }
@@ -415,7 +406,9 @@ export const calculateGoalProgress = (
     current,
     target,
     percent,
-    achieved: current >= target,
+    achieved: targetCount > 0 && current >= target,
+    targetCount,
+    ...(remainingScore !== undefined ? { remainingScore } : {}),
     hasUnknownMaxOp,
   }
 }

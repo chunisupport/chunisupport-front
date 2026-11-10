@@ -1,0 +1,760 @@
+import { Dialog } from '@kobalte/core/dialog'
+import type { Component } from 'solid-js'
+import { createEffect, createMemo, createSignal, on } from 'solid-js'
+import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
+import { createChartConstRangeDraft } from '../../../../../hooks/createChartConstRangeDraft'
+import type {
+  GoalAchievementType,
+  GoalAttributes,
+  GoalCreateRequest,
+  GoalDTO,
+  GoalGroupDTO,
+  GoalUpdateRequest,
+  MasterDataDTO,
+  VersionDTO,
+} from '../../../../../types/api'
+import type { GoalConstSelection } from '../../../../../utils/goalAttributes'
+import type {
+  ComboLampGoalValue,
+  FullChainGoalValue,
+  HardLampGoalValue,
+} from '../../../../../utils/goalLamp'
+import { buildGoalVersionOptions } from '../../../../../utils/goalVersion'
+import { normalizeScoreRangeInput } from '../../../../../utils/rangeInput'
+import { MAX_SCORE } from '../../../../../utils/scoreRank'
+import type { GoalTargetMode } from '../../../utils/goalCountTarget'
+import { resolveGoalAchievementTypeLabel } from '../../../utils/goalForm'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { resolveGoalFormGroupId } from '../../goalGroupsModel'
+import { formatGoalCardValue } from '../card/goalCardProgressModel'
+import { DEFAULT_RATING_GOAL_VALUE } from './constants'
+import { GoalAchievementSection } from './GoalAchievementSection'
+import { GoalFormFooter } from './GoalFormFooter'
+import { GoalGroupSection } from './GoalGroupSection'
+import { GoalPreviewSection } from './GoalPreviewSection'
+import { GoalTargetChartsSection } from './GoalTargetChartsSection'
+import { GoalTitleSection } from './GoalTitleSection'
+import type { GoalSelectOption } from './goalFormFields'
+import {
+  buildAllIdSelections,
+  buildAllVersionSelections,
+  buildDefaultDifficultySelections,
+  buildGoalFormAchievementParams,
+  buildGoalFormAttributes,
+  buildGoalFormGaugeStartParams,
+  canUseDynamicTotalTarget,
+  createDefaultGoalConstSelection,
+  createGoalFormInitialState,
+  DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
+  DEFAULT_GAUGE_START_MODE,
+  DEFAULT_GAUGE_START_VALUE,
+  DEFAULT_GOAL_ACHIEVEMENT_TYPE,
+  DEFAULT_RANK_GOAL,
+  type GoalChartTargetMode,
+  type GoalFormAchievementParamsInput,
+  type GoalGaugeStartMode,
+  getDefaultTotalGoalValue,
+  getRankGoalScore,
+  isCountAchievementType,
+  type RankGoalValue,
+  resolveGoalGaugeStartFromCurrent,
+  toggleSelection,
+} from './goalFormModel'
+import {
+  resolveGoalGaugeStartGroupErrorMessage,
+  validateGoalForm,
+  validateGoalGaugeStart,
+} from './goalFormValidation'
+
+type GoalRequest = GoalCreateRequest | GoalUpdateRequest
+
+interface GoalFormDialogProps {
+  open: boolean
+  mode: 'create' | 'edit'
+  initialGoal?: GoalDTO
+  /** 新規作成時に初期選択するグループID */
+  initialGroupId: number | null
+  /** 所属先として選択できる目標グループ */
+  groups: GoalGroupDTO[]
+  masterData: MasterDataDTO
+  versions: VersionDTO[]
+  isSaving: boolean
+  /** 保存APIから返されたエラーメッセージ */
+  apiErrorMessage: string
+  onOpenChange: (open: boolean) => void
+  onSave: (payload: GoalRequest) => Promise<void>
+  /** 対象条件と目標種別に応じた譜面数または楽曲数を解決する関数 */
+  resolveAllCount: (
+    attributes: GoalAttributes,
+    achievementType?: GoalAchievementType,
+    achievementParams?: GoalCreateRequest['achievement_params']
+  ) => number
+  /** 対象条件に一致する譜面ごとの最大OVER POWER合計を解決する関数 */
+  resolveOverPowerChartMax: (attributes: GoalAttributes) => number
+  /** フォーム入力中の目標内容から実レコードに基づく進捗を解決する関数 */
+  resolveDraftGoalProgress: (goal: GoalCreateRequest) => GoalProgressResult
+}
+
+const GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS = {
+  rank_count: '指定ランク以上を達成した譜面数を目標にします。',
+  score_count: '指定スコア以上を達成した譜面数を目標にします。',
+  rating_count: '指定単曲レートへ理論上到達可能な譜面の達成数を目標にします。',
+  avg_score: '対象譜面の平均スコアを目標にします。',
+  hardlamp_count: '指定ハードランプ以上を達成した譜面数を目標にします。',
+  combolamp_count: 'FULL COMBO / ALL JUSTICE の達成数を目標にします。',
+  fullchain_count: '指定したFULL CHAIN種別と一致する譜面数を目標にします。',
+  rainbow_count: '曲ごとにBASICからMASTER、存在する場合はULTIMAまでのAJ達成を数えます。',
+  total_score: '対象譜面のスコア合計を目標にします。',
+  overpower_value: '対象譜面のOVER POWER合計値を目標にします。',
+  overpower_percent: '対象譜面のOVER POWER達成率を目標にします。',
+} as const satisfies Record<GoalAchievementType, string>
+
+const GOAL_ACHIEVEMENT_TYPES = [
+  'rank_count',
+  'score_count',
+  'rating_count',
+  'avg_score',
+  'hardlamp_count',
+  'combolamp_count',
+  'fullchain_count',
+  'rainbow_count',
+  'total_score',
+  'overpower_value',
+  'overpower_percent',
+] as const satisfies readonly GoalAchievementType[]
+const MAX_OVERPOWER_PERCENT = 100
+
+/**
+ * 文字列が目標種別として扱える値か判定する。
+ *
+ * @param value - APIから受け取った目標種別コード。
+ * @returns 目標種別として定義済みの値ならtrue。
+ */
+const isGoalAchievementType = (value: string): value is GoalAchievementType =>
+  GOAL_ACHIEVEMENT_TYPES.includes(value as GoalAchievementType)
+
+/**
+ * 目標の作成・編集に使う入力ダイアログを表示する。
+ *
+ * @param props - ダイアログの表示状態、初期値、マスタデータ、保存ハンドラ。
+ * @returns 目標フォームダイアログの JSX 要素。
+ */
+const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
+  const [title, setTitle] = createSignal('')
+  const [groupId, setGroupId] = createSignal<number | null>(null)
+  const [achievementType, setAchievementType] = createSignal<GoalAchievementType>(
+    DEFAULT_GOAL_ACHIEVEMENT_TYPE
+  )
+  const [score, setScore] = createSignal(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
+  const [rating, setRating] = createSignal(DEFAULT_RATING_GOAL_VALUE)
+  const [rank, setRank] = createSignal<RankGoalValue>(DEFAULT_RANK_GOAL)
+  const [count, setCount] = createSignal('1')
+  const [countMode, setCountMode] = createSignal<GoalTargetMode>('all')
+  const [total, setTotal] = createSignal(getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE))
+  const [totalMode, setTotalMode] = createSignal<GoalTargetMode>('number')
+  const [hardLamp, setHardLamp] = createSignal<HardLampGoalValue>('HRD')
+  const [comboLamp, setComboLamp] = createSignal<ComboLampGoalValue>('FC')
+  const [fullChain, setFullChain] = createSignal<FullChainGoalValue>('GOLD')
+  const [invertValue, setInvertValue] = createSignal(false)
+  const [invertPercentage, setInvertPercentage] = createSignal(false)
+  const [gaugeStartMode, setGaugeStartMode] =
+    createSignal<GoalGaugeStartMode>(DEFAULT_GAUGE_START_MODE)
+  const [gaugeStart, setGaugeStart] = createSignal(DEFAULT_GAUGE_START_VALUE)
+  const [applyGaugeStartToPercentage, setApplyGaugeStartToPercentage] = createSignal(
+    DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE
+  )
+  const [gaugeStartErrorMessage, setGaugeStartErrorMessage] = createSignal('')
+  let gaugeStartField: HTMLDivElement | undefined
+  let gaugeStartInput: HTMLInputElement | undefined
+
+  const [chartTargetMode, setChartTargetMode] = createSignal<GoalChartTargetMode>('normal')
+  const [diffs, setDiffs] = createSignal<string[]>([])
+  const [constSelection, setConstSelection] = createSignal<GoalConstSelection>(
+    createDefaultGoalConstSelection()
+  )
+  const constRangeDraft = createChartConstRangeDraft({
+    get: constSelection,
+    set: setConstSelection,
+  })
+  const [genres, setGenres] = createSignal<string[]>([])
+  const [versions, setVersions] = createSignal<string[]>([])
+  const [nameFolders, setNameFolders] = createSignal<string[]>([])
+
+  const [errorMessage, setErrorMessage] = createSignal('')
+  const displayErrorMessage = createMemo(() => errorMessage() || props.apiErrorMessage)
+  const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
+  const allDifficultySelections = createMemo(() =>
+    buildAllIdSelections(props.masterData.difficulties)
+  )
+  const defaultDifficultySelections = createMemo(() =>
+    buildDefaultDifficultySelections(props.masterData.difficulties)
+  )
+  const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
+  const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
+  const allNameFolderSelections = createMemo(() =>
+    props.masterData.name_folders.map((nameFolder) => nameFolder.code)
+  )
+  const genreSelectOptions = createMemo(() =>
+    props.masterData.genres.map((genre) => createMultiSelectOption(String(genre.id), genre.name))
+  )
+  const versionSelectOptions = createMemo(() =>
+    versionOptions().map((option) => createMultiSelectOption(option.value, option.label))
+  )
+  const nameFolderSelectOptions = createMemo(() =>
+    props.masterData.name_folders.map((nameFolder) =>
+      createMultiSelectOption(nameFolder.code, nameFolder.name)
+    )
+  )
+  const achievementTypeOptions = createMemo<GoalSelectOption<GoalAchievementType>[]>(() =>
+    props.masterData.achievement_types
+      .filter((item): item is typeof item & { code: GoalAchievementType } =>
+        isGoalAchievementType(item.code)
+      )
+      .map((item) => ({
+        value: item.code,
+        label: resolveGoalAchievementTypeLabel(item.code, {
+          locale: 'ja',
+          fallbackLabel: item.label ?? item.name,
+        }),
+      }))
+  )
+
+  const getTotalScoreMax = (): number =>
+    props.resolveAllCount(getDraftAttributes(), achievementType()) * MAX_SCORE
+
+  /**
+   * 現在の対象条件から譜面別に見た総OVER POWER最大値を取得する。
+   *
+   * @returns 対象譜面ごとの最大OVER POWERを合計した値。
+   */
+  const getOverPowerChartMax = (): number => props.resolveOverPowerChartMax(getDraftAttributes())
+
+  /**
+   * 現在の目標種別で利用できる理論値を取得する。
+   *
+   * @param type - 現在選択中の目標種別。
+   * @returns 対象条件や目標種別から決まる最大目標値。
+   */
+  const getTheoreticalTotal = (type: GoalAchievementType): number =>
+    type === 'total_score'
+      ? getTotalScoreMax()
+      : type === 'overpower_value'
+        ? getOverPowerChartMax()
+        : 0
+
+  /**
+   * スコア入力値を有効なスコア範囲に丸めて保持する。
+   *
+   * @param value - 入力欄から受け取ったスコア文字列。
+   * @returns なし。
+   */
+  const handleScoreChange = (value: string): void => {
+    const normalizedValue = normalizeScoreRangeInput(value)
+    if (normalizedValue === null) return
+    setScore(normalizedValue)
+  }
+
+  // ダイアログを開いたタイミングで作成・編集モードに応じた初期値へ同期するため。
+  createEffect(() => {
+    if (!props.open) return
+    setErrorMessage('')
+    setGaugeStartErrorMessage('')
+
+    const nextState = createGoalFormInitialState(props.initialGoal, {
+      allDifficultySelections: allDifficultySelections(),
+      allGenreSelections: allGenreSelections(),
+      allVersionSelections: allVersionSelections(),
+      allNameFolderSelections: allNameFolderSelections(),
+      defaultDifficultySelections: defaultDifficultySelections(),
+    })
+
+    setTitle(nextState.title)
+    setGroupId(resolveGoalFormGroupId(props.initialGoal, props.initialGroupId))
+    setAchievementType(nextState.achievementType)
+    setScore(nextState.score)
+    setRating(nextState.rating)
+    setRank(nextState.rank)
+    setCount(nextState.count)
+    setCountMode(nextState.countMode)
+    setTotal(nextState.total)
+    setTotalMode(nextState.totalMode)
+    setHardLamp(nextState.hardLamp)
+    setComboLamp(nextState.comboLamp)
+    setFullChain(nextState.fullChain)
+    setInvertValue(nextState.invertValue)
+    setInvertPercentage(nextState.invertPercentage)
+    setGaugeStartMode(nextState.gaugeStartMode)
+    setGaugeStart(nextState.gaugeStart)
+    setApplyGaugeStartToPercentage(nextState.applyGaugeStartToPercentage)
+    setChartTargetMode(nextState.chartTargetMode)
+    setDiffs(nextState.diffs)
+    setConstSelection(nextState.constSelection)
+    constRangeDraft.sync(nextState.constSelection.constRange)
+    setGenres(nextState.genres)
+    setVersions(nextState.versions)
+    setNameFolders(nextState.nameFolders)
+  })
+
+  const getDraftAttributes = (): GoalRequest['attributes'] =>
+    buildGoalFormAttributes({
+      achievementType: achievementType(),
+      chartTargetMode: chartTargetMode(),
+      diffs: diffs(),
+      constSelection: constSelection(),
+      genres: genres(),
+      versions: versions(),
+      nameFolders: nameFolders(),
+      allNameFolders: allNameFolderSelections(),
+    })
+
+  /**
+   * 現在のフォーム入力値から成果パラメータ作成用の入力値を集める。
+   *
+   * @param type - 現在選択中の目標種別。
+   * @returns 成果パラメータ作成関数へ渡すフォーム値。
+   */
+  const getAchievementParamsInput = (
+    type: GoalAchievementType
+  ): GoalFormAchievementParamsInput => ({
+    achievementType: type,
+    score: score(),
+    rating: rating(),
+    rank: rank(),
+    count: count(),
+    countMode: countMode(),
+    total: total(),
+    totalMode: totalMode(),
+    hardLamp: hardLamp(),
+    comboLamp: comboLamp(),
+    fullChain: fullChain(),
+  })
+
+  /**
+   * 現在のフォーム入力値から保存・プレビュー共通の成果パラメータを組み立てる。
+   *
+   * @param type - 現在選択中の目標種別。
+   * @returns API送信値と同じ形の成果パラメータ。
+   */
+  const buildDraftAchievementParams = (type: GoalAchievementType) =>
+    buildGoalFormAchievementParams(getAchievementParamsInput(type))
+
+  /**
+   * 現在の対象条件に一致する譜面数または楽曲数を表示用テキストへ変換する。
+   *
+   * @returns 日本語ロケールで桁区切りした対象数。
+   */
+  const targetCountText = (): string => {
+    const currentType = achievementType()
+    const unit = currentType === 'rainbow_count' ? '曲' : '譜面'
+    return `${props
+      .resolveAllCount(getDraftAttributes(), currentType, buildDraftAchievementParams(currentType))
+      .toLocaleString('ja-JP')} ${unit}`
+  }
+
+  /**
+   * 理論値選択時に表示する目標値を組み立てる。
+   *
+   * @returns 目標種別に応じた総スコアまたはOVER POWERの理論値。
+   */
+  const theoreticalTotalText = (): string => {
+    const currentType = achievementType()
+    return getTheoreticalTotal(currentType).toLocaleString('ja-JP')
+  }
+
+  /**
+   * 現在選択中の目標種別の説明文を取得する。
+   *
+   * @returns 目標種別ごとの説明テキスト。
+   */
+  const selectedAchievementDescription = (): string =>
+    GOAL_ACHIEVEMENT_TYPE_DESCRIPTIONS[achievementType()]
+
+  /**
+   * プレビューカードに表示するタイトルを取得する。
+   *
+   * @returns 入力済みタイトル、未入力の場合は仮タイトル。
+   */
+  const previewTitle = (): string => title().trim() || '新しい目標'
+
+  /**
+   * プレビューカードに渡す進捗値を現在の入力内容から組み立てる。
+   *
+   * @returns 実際の目標カードと同じ表示計算に渡す進捗情報。
+   */
+  const previewProgress = createMemo<GoalProgressResult>(() => {
+    const currentType = achievementType()
+    const attributes = getDraftAttributes()
+    return props.resolveDraftGoalProgress({
+      group_id: groupId(),
+      title: previewTitle(),
+      achievement_type: currentType,
+      achievement_params: buildDraftAchievementParams(currentType),
+      attributes,
+      invert_value: invertValue(),
+      invert_percentage: invertPercentage(),
+      // ゲージ設定は進捗計算に使わず、「現在値から」はこの進捗の現在値に依存するため、固定値で渡す。
+      gauge_start: 0,
+      apply_gauge_start_to_percentage: false,
+    })
+  })
+
+  /**
+   * 現在のフォーム入力値から保存・プレビュー共通のゲージ設定を組み立てる。
+   *
+   * @returns API送信値と同じ形のゲージのスタート位置と達成率への適用指定。
+   */
+  const buildDraftGaugeStartParams = () =>
+    buildGoalFormGaugeStartParams({
+      achievementType: achievementType(),
+      gaugeStartMode: gaugeStartMode(),
+      gaugeStart: gaugeStart(),
+      current: previewProgress().current,
+      applyGaugeStartToPercentage: applyGaugeStartToPercentage(),
+    })
+
+  /**
+   * 「現在値から」を選んだときに保存されるスタート位置を取得する。
+   *
+   * @returns 目標種別の桁数で切り捨てた現在値。
+   */
+  const currentGaugeStart = (): number =>
+    resolveGoalGaugeStartFromCurrent(previewProgress().current, achievementType())
+
+  /**
+   * 「現在値から」を選べるか判定する。
+   *
+   * @returns 対象があり未達成で、現在値が0より大きければtrue。
+   *   達成済みの現在値は目標値以上のため起点にできず、0なら「最初から」と同じになる。
+   */
+  const canUseCurrentGaugeStart = (): boolean =>
+    previewProgress().targetCount > 0 && !previewProgress().achieved && currentGaugeStart() > 0
+
+  /**
+   * 「現在値から」を選んだときに保存されるスタート位置を表示用に整形する。
+   *
+   * @returns 目標種別の桁数で切り捨てた現在値の表示文字列。
+   */
+  const currentGaugeStartText = (): string =>
+    formatGoalCardValue(currentGaugeStart(), achievementType())
+
+  /**
+   * スタート位置の選択欄の下に出すエラーを取得する。
+   * 「現在値から」を選んだ後に対象がなくなった、現在値が0になった、達成済みになった状態を、保存を待たずに示す。
+   *
+   * @returns 「現在値から」を使えない状態で選んでいる場合はエラーメッセージ、それ以外は空文字。
+   */
+  const gaugeStartGroupErrorMessage = (): string => {
+    const progress = previewProgress()
+    return resolveGoalGaugeStartGroupErrorMessage({
+      gaugeStartMode: gaugeStartMode(),
+      currentGaugeStart: currentGaugeStart(),
+      achieved: progress.achieved,
+      targetCount: progress.targetCount,
+    })
+  }
+
+  // 目標値が変わると「任意の数値から」の前回の検証結果が古くなるため、表示中のエラーを消す。
+  createEffect(
+    on(
+      () => previewProgress().target,
+      () => setGaugeStartErrorMessage(''),
+      { defer: true }
+    )
+  )
+
+  /**
+   * ゲージのスタート位置の決め方を更新し、前回の検証エラーを消す。
+   *
+   * @param mode - 選択されたスタート位置の決め方。
+   * @returns なし。
+   */
+  const handleGaugeStartModeChange = (mode: GoalGaugeStartMode): void => {
+    setGaugeStartMode(mode)
+    setGaugeStartErrorMessage('')
+  }
+
+  /**
+   * 「任意の数値から」の入力値を更新し、前回の検証エラーを消す。
+   *
+   * @param value - 入力欄の文字列。
+   * @returns なし。
+   */
+  const handleGaugeStartChange = (value: string): void => {
+    setGaugeStart(value)
+    setGaugeStartErrorMessage('')
+  }
+
+  /**
+   * 件数入力で指定できる上限を表示用に組み立てる。
+   *
+   * @returns 日本語ロケールで桁区切りした件数上限表示。
+   */
+  const countLimitText = (): string =>
+    countMode() === 'percent'
+      ? '100%以内'
+      : `${props
+          .resolveAllCount(
+            getDraftAttributes(),
+            achievementType(),
+            buildDraftAchievementParams(achievementType())
+          )
+          .toLocaleString('ja-JP')}件以内`
+
+  /**
+   * 目標値入力で指定できる上限を表示用に組み立てる。
+   *
+   * @returns 目標種別に応じた上限表示。
+   */
+  const totalLimitText = (): string => {
+    const currentType = achievementType()
+    if (currentType === 'overpower_percent' || totalMode() === 'percent') return '100%以内'
+    return `${getTheoreticalTotal(currentType).toLocaleString('ja-JP')}以内`
+  }
+
+  /**
+   * 目標値入力欄に適用する最大値を取得する。
+   *
+   * @returns OVER POWER達成率では100、それ以外では未指定。
+   */
+  const totalFieldMax = (): number | undefined =>
+    achievementType() === 'overpower_percent' || totalMode() === 'percent'
+      ? MAX_OVERPOWER_PERCENT
+      : undefined
+
+  /**
+   * 目標種別変更時に関連する入力値を既定値へ同期する。
+   *
+   * @param nextType - 変更後の目標種別。
+   * @returns なし。
+   */
+  const handleAchievementTypeChange = (nextType: GoalAchievementType): void => {
+    setAchievementType(nextType)
+    setCountMode(isCountAchievementType(nextType) ? 'all' : 'number')
+    if (!canUseDynamicTotalTarget(nextType)) {
+      setTotalMode('number')
+    } else {
+      setTotalMode('all')
+    }
+    setTotal(getDefaultTotalGoalValue(nextType))
+    // スタート位置は目標種別の現在値と同じ単位のため、種別を変えたら「最初から」に戻す。
+    handleGaugeStartModeChange(DEFAULT_GAUGE_START_MODE)
+    setGaugeStart(DEFAULT_GAUGE_START_VALUE)
+    if (nextType === 'rank_count') {
+      setRank(DEFAULT_RANK_GOAL)
+      setScore(String(getRankGoalScore(DEFAULT_RANK_GOAL)))
+    }
+  }
+
+  /**
+   * ランク目標変更時に保存用スコアも同期する。
+   *
+   * @param nextRank - 変更後のランク目標。
+   * @returns なし。
+   */
+  const handleRankChange = (nextRank: RankGoalValue): void => {
+    setRank(nextRank)
+    setScore(String(getRankGoalScore(nextRank)))
+  }
+
+  /**
+   * 現在の入力値を検証し、保存可能な目標を親へ通知する。
+   *
+   * @returns 保存処理の完了後に解決するPromise。
+   */
+  const handleSave = async (): Promise<void> => {
+    setErrorMessage('')
+    const trimmed = title().trim()
+    const currentType = achievementType()
+    const attributes = getDraftAttributes()
+    const achievementParams = buildDraftAchievementParams(currentType)
+    const allCount = props.resolveAllCount(attributes, currentType, achievementParams)
+    const validationError = validateGoalForm({
+      title: title(),
+      achievementType: currentType,
+      score: score(),
+      rating: rating(),
+      rank: rank(),
+      count: count(),
+      countMode: countMode(),
+      total: total(),
+      totalMode: totalMode(),
+      constRange: constSelection().constRange,
+      allCount,
+      theoreticalTotal: getTheoreticalTotal(currentType),
+    })
+    // スタート位置はその欄の近くに表示するため、全体の検証エラーとは別に保持する。
+    // 「現在値から」のエラーは選択欄の下に常時表示しているため、入力欄のエラーとしては持たない。
+    const gaugeStartError = validateGoalGaugeStart({
+      achievementType: currentType,
+      gaugeStartMode: gaugeStartMode(),
+      gaugeStart: gaugeStart(),
+      current: previewProgress().current,
+      target: previewProgress().target,
+    })
+    setGaugeStartErrorMessage(gaugeStartMode() === 'custom' ? (gaugeStartError ?? '') : '')
+
+    if (validationError) {
+      setErrorMessage(validationError)
+      return
+    }
+    if (gaugeStartError) {
+      // 欄がスクロール領域の外にあると保存ボタンが反応しないように見えるため、エラー箇所へフォーカスを移す。
+      if (gaugeStartMode() === 'custom') {
+        gaugeStartInput?.focus()
+      } else {
+        gaugeStartField?.querySelector<HTMLInputElement>('input[type="radio"]:checked')?.focus()
+      }
+      return
+    }
+
+    const achievement_params = achievementParams
+
+    await props.onSave({
+      group_id: groupId(),
+      title: trimmed,
+      achievement_type: currentType,
+      achievement_params,
+      attributes,
+      invert_value: invertValue(),
+      invert_percentage: invertPercentage(),
+      ...buildDraftGaugeStartParams(),
+    })
+  }
+
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
+      <Dialog.Portal>
+        <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
+        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] select-none flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
+          <Dialog.Title class="shrink-0 text-lg font-bold">
+            {props.mode === 'create' ? '目標を作成' : '目標を編集'}
+          </Dialog.Title>
+
+          <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
+            <GoalTitleSection title={title()} onTitleChange={setTitle} />
+
+            <GoalGroupSection
+              groups={props.groups}
+              groupId={groupId()}
+              onGroupIdChange={setGroupId}
+            />
+
+            <GoalTargetChartsSection
+              difficultyItems={props.masterData.difficulties}
+              isRainbowGoal={achievementType() === 'rainbow_count'}
+              chartTargetMode={chartTargetMode()}
+              diffs={diffs()}
+              constRangeFieldProps={constRangeDraft.fieldProps}
+              genreOptions={genreSelectOptions()}
+              selectedGenres={genres()}
+              versionOptions={versionSelectOptions()}
+              selectedVersions={versions()}
+              nameFolderOptions={nameFolderSelectOptions()}
+              selectedNameFolders={nameFolders()}
+              targetCountText={targetCountText()}
+              onClearDifficulty={() => {
+                setChartTargetMode('normal')
+                setDiffs([])
+              }}
+              onToggleOpTarget={(checked) => {
+                setChartTargetMode(checked ? 'op_target' : 'normal')
+                if (checked) {
+                  setDiffs([])
+                }
+              }}
+              onToggleDifficulty={(id, checked) => {
+                setChartTargetMode('normal')
+                setDiffs((prev) => toggleSelection(prev, String(id), checked))
+              }}
+              onGenresChange={setGenres}
+              onVersionsChange={setVersions}
+              onNameFoldersChange={setNameFolders}
+            />
+
+            <GoalAchievementSection
+              achievementType={achievementType()}
+              achievementTypeOptions={achievementTypeOptions()}
+              achievementDescription={selectedAchievementDescription()}
+              score={score()}
+              rating={rating()}
+              rank={rank()}
+              count={count()}
+              countMode={countMode()}
+              total={total()}
+              totalMode={totalMode()}
+              hardLamp={hardLamp()}
+              comboLamp={comboLamp()}
+              fullChain={fullChain()}
+              invertValue={invertValue()}
+              invertPercentage={invertPercentage()}
+              gaugeStartMode={gaugeStartMode()}
+              gaugeStart={gaugeStart()}
+              applyGaugeStartToPercentage={applyGaugeStartToPercentage()}
+              gaugeStartErrorMessage={gaugeStartErrorMessage()}
+              gaugeStartGroupErrorMessage={gaugeStartGroupErrorMessage()}
+              canUseCurrentGaugeStart={canUseCurrentGaugeStart()}
+              currentGaugeStartText={currentGaugeStartText()}
+              hasGaugeStart={buildDraftGaugeStartParams().gauge_start > 0}
+              countMax={props.resolveAllCount(
+                getDraftAttributes(),
+                achievementType(),
+                buildDraftAchievementParams(achievementType())
+              )}
+              countLimitText={countLimitText()}
+              targetCountText={targetCountText()}
+              theoreticalTotalText={theoreticalTotalText()}
+              totalLimitText={totalLimitText()}
+              totalFieldMax={totalFieldMax()}
+              onAchievementTypeChange={handleAchievementTypeChange}
+              onScoreChange={handleScoreChange}
+              onRatingChange={setRating}
+              onRankChange={handleRankChange}
+              onCountChange={setCount}
+              onCountModeChange={setCountMode}
+              onTotalChange={setTotal}
+              onTotalModeChange={setTotalMode}
+              onHardLampChange={setHardLamp}
+              onComboLampChange={setComboLamp}
+              onFullChainChange={setFullChain}
+              onInvertValueChange={setInvertValue}
+              onInvertPercentageChange={setInvertPercentage}
+              onGaugeStartModeChange={handleGaugeStartModeChange}
+              onGaugeStartChange={handleGaugeStartChange}
+              onApplyGaugeStartToPercentageChange={setApplyGaugeStartToPercentage}
+              gaugeStartFieldRef={(element) => {
+                gaugeStartField = element
+              }}
+              gaugeStartInputRef={(element) => {
+                gaugeStartInput = element
+              }}
+              canUseDynamicTotalTarget={canUseDynamicTotalTarget}
+            />
+
+            <GoalPreviewSection
+              title={previewTitle()}
+              achievementType={achievementType()}
+              invertValue={invertValue()}
+              invertPercentage={invertPercentage()}
+              gaugeStart={buildDraftGaugeStartParams().gauge_start}
+              applyGaugeStartToPercentage={
+                buildDraftGaugeStartParams().apply_gauge_start_to_percentage
+              }
+              progress={previewProgress()}
+            />
+          </div>
+
+          <GoalFormFooter
+            errorMessage={displayErrorMessage()}
+            isSaving={props.isSaving}
+            onCancel={() => props.onOpenChange(false)}
+            onSave={() => {
+              void handleSave()
+            }}
+          />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog>
+  )
+}
+
+export default GoalFormDialog

@@ -1,0 +1,186 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import {
+  CHART_STATS_PATH,
+  FRIEND_VS_PATH,
+  LOCKED_SONG_DISCOVERY_PATH,
+  ONLINE_WEAK_CHART_INSPECTOR_PATH,
+  RANDOM_SONG_SELECTOR_PATH,
+  UNI_FILL_MATRIX_PATH,
+  WEAK_CHART_INSPECTOR_PATH,
+} from './routes'
+import {
+  getToolLink,
+  isPublicToolLink,
+  isToolLinkListed,
+  TOOL_CATEGORIES,
+  TOOL_LINKS,
+  type ToolLink,
+} from './tools'
+
+const publicTool: ToolLink = {
+  title: '公開ツール',
+  href: '/tools/public',
+  icon: 'chart',
+  category: 'analysis',
+  description: '公開ツールの説明',
+}
+
+const adminOnlyTool: ToolLink = {
+  ...publicTool,
+  title: '管理者限定ツール',
+  href: '/tools/admin-only',
+  adminOnly: true,
+}
+
+const disabledTool: ToolLink = {
+  ...publicTool,
+  title: '無効ツール',
+  href: '/tools/disabled',
+  disabled: true,
+}
+
+test('苦手譜面インスペクターは全アカウント種別に表示する公開ツールとして定義されていること', () => {
+  // Given
+  const tool = getToolLink(WEAK_CHART_INSPECTOR_PATH)
+
+  // When / Then
+  assert.equal(isPublicToolLink(tool), true)
+  for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {
+    assert.equal(isToolLinkListed(tool, accountType), true)
+  }
+})
+
+test('isToolLinkListed は通常ツールをアカウント種別に関係なく表示すること', () => {
+  // Given
+  const accountTypes = [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const
+
+  // When & Then
+  for (const accountType of accountTypes) {
+    assert.equal(isToolLinkListed(publicTool, accountType), true)
+  }
+})
+
+test('isToolLinkListed は ADMIN 限定ツールを管理者以外へ表示しないこと', () => {
+  // Given
+  const nonAdminAccountTypes = [undefined, 'PLAYER', 'EDITOR', 'EXTDEV'] as const
+
+  // When & Then
+  for (const accountType of nonAdminAccountTypes) {
+    assert.equal(isToolLinkListed(adminOnlyTool, accountType), false)
+  }
+  assert.equal(isToolLinkListed(adminOnlyTool, 'ADMIN'), true)
+})
+
+test('isPublicToolLink は無効または ADMIN 限定のツールを公開対象外とすること', () => {
+  // Given / When / Then
+  assert.equal(isPublicToolLink(publicTool), true)
+  assert.equal(isPublicToolLink(disabledTool), false)
+  assert.equal(isPublicToolLink(adminOnlyTool), false)
+})
+
+test('未解禁曲ディスカバーは全アカウント種別に表示する公開ツールとして定義されていること', () => {
+  // Given
+  const lockedSongDiscovery = getToolLink(LOCKED_SONG_DISCOVERY_PATH)
+
+  // When / Then
+  assert.equal(lockedSongDiscovery.adminOnly, undefined)
+  assert.equal(isPublicToolLink(lockedSongDiscovery), true)
+  for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {
+    assert.equal(isToolLinkListed(lockedSongDiscovery, accountType), true)
+  }
+})
+
+test('ランダム選曲と未解禁曲ディスカバーは便利ツールに分類されること', () => {
+  // Given
+  const utilityCategory = TOOL_CATEGORIES.find((category) => category.id === 'utility')
+
+  // When / Then
+  assert.equal(utilityCategory?.title, '便利ツール')
+  assert.equal(getToolLink(RANDOM_SONG_SELECTOR_PATH).category, 'utility')
+  assert.equal(getToolLink(LOCKED_SONG_DISCOVERY_PATH).category, 'utility')
+})
+
+test('ウニ埋めマトリックスは通常ユーザーにも表示する公開ツールとして定義されていること', () => {
+  // Given
+  const uniFillMatrix = TOOL_LINKS.find((tool) => tool.href === UNI_FILL_MATRIX_PATH)
+  const publicTools = TOOL_LINKS.filter(isPublicToolLink)
+
+  // When / Then
+  assert.ok(uniFillMatrix)
+  assert.equal(uniFillMatrix.title, 'ウニ埋めマトリックス')
+  assert.equal(publicTools[publicTools.length - 1], uniFillMatrix)
+  assert.equal(uniFillMatrix.adminOnly, undefined)
+  assert.equal(isPublicToolLink(uniFillMatrix), true)
+  for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {
+    assert.equal(isToolLinkListed(uniFillMatrix, accountType), true)
+  }
+})
+
+test('フレンドVSは通常ユーザーにも表示するツールとして定義されていること', () => {
+  // Given
+  const friendVs = getToolLink(FRIEND_VS_PATH)
+
+  // When / Then
+  assert.equal(friendVs.adminOnly, undefined)
+  assert.equal(isPublicToolLink(friendVs), true)
+  assert.equal(isToolLinkListed(friendVs, undefined), true)
+  assert.equal(isToolLinkListed(friendVs, 'PLAYER'), true)
+  assert.equal(isToolLinkListed(friendVs, 'ADMIN'), true)
+})
+
+test('苦手譜面インスペクター Online はログインユーザー向けの公開ツールとして定義されていること', () => {
+  // Given
+  const onlineWeakChartInspector = TOOL_LINKS.find(
+    (tool) => tool.href === ONLINE_WEAK_CHART_INSPECTOR_PATH
+  )
+
+  // When / Then
+  assert.ok(onlineWeakChartInspector)
+  assert.equal(onlineWeakChartInspector.adminOnly, undefined)
+  assert.equal(onlineWeakChartInspector.icon, 'globe')
+  assert.equal(isPublicToolLink(onlineWeakChartInspector), true)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, undefined), true)
+  assert.equal(isToolLinkListed(onlineWeakChartInspector, 'PLAYER'), true)
+})
+
+test('レコード統計は公開ツールとして定義されていること', () => {
+  // Given
+  const chartStats = TOOL_LINKS.find((tool) => tool.href === CHART_STATS_PATH)
+
+  // When / Then
+  assert.ok(chartStats)
+  assert.equal(isPublicToolLink(chartStats), true)
+  assert.equal(isToolLinkListed(chartStats, undefined), true)
+  assert.equal(isToolLinkListed(chartStats, 'PLAYER'), true)
+  assert.equal(isToolLinkListed(chartStats, 'ADMIN'), true)
+  assert.equal(chartStats.icon, 'distribution')
+})
+
+test('getToolLink はパスに対応するツール情報を返すこと', () => {
+  // Given
+  const target = TOOL_LINKS[0]
+  assert.ok(target)
+
+  // When
+  const result = getToolLink(target.href)
+
+  // Then
+  assert.equal(result.title, target.title)
+  assert.equal(result.description, target.description)
+})
+
+test('getToolLink は全ツールパスに対応するツール情報を返すこと', () => {
+  // Given / When / Then
+  for (const tool of TOOL_LINKS) {
+    assert.equal(getToolLink(tool.href), tool)
+  }
+})
+
+test('getToolLink は未知のパスでエラーをスローすること', () => {
+  // Given
+  const unknownPath = '/tools/unknown-tool-for-test'
+
+  // When & Then
+  assert.throws(() => getToolLink(unknownPath), new Error(`Unknown tool link: ${unknownPath}`))
+})

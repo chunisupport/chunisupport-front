@@ -1,47 +1,158 @@
-import { createResource, createRoot, createSignal } from 'solid-js'
+import { createResource, createRoot, createSignal, untrack } from 'solid-js'
+import { invalidateSongsUpdatedAtCache } from '../queries/masterData'
+import { clearCachedSongData } from '../repositories/songCacheRepository'
+import type { SongDTO, WorldsendSongDTO } from '../types/api'
 import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache'
 import { fetchWorldsendSongsWithCache } from '../usecases/cache/fetchWorldsendSongsWithCache'
+import { compareSongsByReading } from '../utils/songTitleSorting'
 
+/**
+ * 楽曲 CRUD 後にメモリと IndexedDB の楽曲キャッシュを無効化する。
+ *
+ * @returns 無効化処理完了後に解決される Promise。
+ */
+const invalidateSongsDataCache = async (): Promise<void> => {
+  invalidateSongsUpdatedAtCache()
+  try {
+    await clearCachedSongData()
+  } catch {
+    // IndexedDB の削除失敗時も、強制再取得と更新日時の再検証を継続する。
+  }
+}
+
+/**
+ * 共有楽曲データの遅延ロード・再取得状態を作成する。
+ *
+ * @returns 通常楽曲と WORLD'S END 楽曲の共有 resource と操作関数。
+ */
 const createSongsStore = () => {
+  let songsRevalidationFailed = false
   const [songsRequested, setSongsRequested] = createSignal(false)
   const [worldsendSongsRequested, setWorldsendSongsRequested] = createSignal(false)
+  const [songsMustRefresh, setSongsMustRefresh] = createSignal(false)
+  const [worldsendSongsMustRefresh, setWorldsendSongsMustRefresh] = createSignal(false)
 
-  const [songsResponse] = createResource(
+  const [songsResponse, { refetch: refetchSongs, mutate: mutateSongs }] = createResource<
+    { songs: SongDTO[] },
+    true
+  >(
     () => (songsRequested() ? true : undefined),
-    fetchAllSongsWithCache
+    async (_requested, info) => {
+      songsRevalidationFailed = false
+      let cachedResponse: { songs: SongDTO[] } | undefined
+      const response = await fetchAllSongsWithCache({
+        forceRefresh: untrack(songsMustRefresh) || Boolean(info.refetching),
+        onCached: (cached) => {
+          cachedResponse = cached
+          mutateSongs(cached)
+        },
+      }).catch((error: unknown) => {
+        // 再検証失敗時も表示中のキャッシュを保つ。メンテナンスは可用性ゲートが処理する。
+        if (cachedResponse) {
+          songsRevalidationFailed = true
+          return cachedResponse
+        }
+        throw error
+      })
+      setSongsMustRefresh(false)
+      return response
+    }
   )
-  const [worldsendSongsResponse] = createResource(
+  const [worldsendSongsResponse, { refetch: refetchWorldsendSongs }] = createResource<
+    { songs: WorldsendSongDTO[] },
+    true
+  >(
     () => (worldsendSongsRequested() ? true : undefined),
-    fetchWorldsendSongsWithCache
+    async (_requested, info) => {
+      const response = await fetchWorldsendSongsWithCache({
+        forceRefresh: untrack(worldsendSongsMustRefresh) || Boolean(info.refetching),
+      })
+      setWorldsendSongsMustRefresh(false)
+      return response
+    }
   )
 
-  const ensureSongsLoaded = () => {
+  /** 通常楽曲の初回ロードを開始し、取得または背景再検証が失敗していれば再試行する */
+  const ensureSongsLoaded = (): void => {
+    if (
+      untrack(() => songsResponse.state) === 'errored' ||
+      (songsRevalidationFailed && !untrack(() => songsResponse.loading))
+    ) {
+      void refetchSongs(false)
+      return
+    }
     setSongsRequested(true)
   }
 
-  const ensureWorldsendSongsLoaded = () => {
+  /** WORLD'S END 楽曲が未要求の場合に初回ロードを開始し、前回の取得が失敗していれば再試行する */
+  const ensureWorldsendSongsLoaded = (): void => {
+    if (untrack(() => worldsendSongsResponse.state) === 'errored') {
+      void refetchWorldsendSongs(false)
+      return
+    }
     setWorldsendSongsRequested(true)
   }
 
-  const isSongsLoading = () => !songsRequested() || songsResponse.loading
-  const isWorldsendSongsLoading = () => !worldsendSongsRequested() || worldsendSongsResponse.loading
+  /** @returns 通常楽曲の表示可能なデータがまだない場合は true */
+  const isSongsLoading = (): boolean =>
+    !songsRequested() || (songsResponse.loading && !songsResponse())
+
+  /** @returns WORLD'S END 楽曲の初回要求前または取得中の場合は true */
+  const isWorldsendSongsLoading = (): boolean =>
+    !worldsendSongsRequested() || worldsendSongsResponse.loading
+
+  /**
+   * 楽曲 CRUD 後に通常楽曲キャッシュを無効化し、利用済みならサーバーから再取得する。
+   *
+   * @returns 再取得または無効化完了後に解決される Promise。
+   */
+  const refreshSongs = async (): Promise<void> => {
+    setSongsMustRefresh(true)
+    await invalidateSongsDataCache()
+
+    if (songsRequested()) {
+      await refetchSongs()
+    }
+  }
+
+  /**
+   * 楽曲 CRUD 後に WORLD'S END 楽曲キャッシュを無効化し、利用済みなら再取得する。
+   *
+   * @returns 再取得または無効化完了後に解決される Promise。
+   */
+  const refreshWorldsendSongs = async (): Promise<void> => {
+    setWorldsendSongsMustRefresh(true)
+    await invalidateSongsDataCache()
+
+    if (worldsendSongsRequested()) {
+      await refetchWorldsendSongs()
+    }
+  }
+
+  /**
+   * 取得済みの有効な通常楽曲数を返す。
+   * @returns 収録曲数。取得前または取得失敗時はundefined。
+   */
+  const songCount = (): number | undefined =>
+    songsResponse.error ? undefined : songsResponse()?.songs.length
 
   return {
+    songCount,
     songsResponse,
     worldsendSongsResponse,
     ensureSongsLoaded,
     ensureWorldsendSongsLoaded,
+    refreshSongs,
+    refreshWorldsendSongs,
     isSongsLoading,
     isWorldsendSongsLoading,
   }
 }
 
-const jaCollator = new Intl.Collator('ja')
-
 /**
  * 楽曲一覧のデフォルト表示用に、楽曲配列をリリース日降順 + official_idx の数値降順でソートする。
  *
- * - リリース日が新しい順（降順）。リリース日が無効/未設定の曲は末尾へ寄せる。
+ * - リリース日が新しい順（降順）。リリース日が無効/未設定の曲は先頭へ寄せる。
  * - 同一リリース日内では official_idx を数値として降順。非数値の idx は数値より後ろ（末尾寄せ）。
  * - 最終タイブレークはタイトルの辞書順（昇順）。
  *
@@ -57,18 +168,20 @@ export const sortSongsByReleaseDescAndIdxDesc = <
     const parsedIdx = song.official_idx?.trim() ? Number(song.official_idx) : NaN
     const parsedRelease = Date.parse(song.release ?? '')
 
-    // 降順ソートのため、無効値は「最小値」相当の sentinel として扱い、末尾へ寄せる
+    // 降順ソートのため、無効な idx は「最小値」相当の sentinel として扱い末尾へ、
+    // 無効なリリース日は「最大値」相当の sentinel として扱い先頭へ寄せる
     return {
       song,
       idx: Number.isFinite(parsedIdx) ? parsedIdx : -1,
-      releaseTime: Number.isFinite(parsedRelease) ? parsedRelease : -1,
+      releaseTime: Number.isFinite(parsedRelease) ? parsedRelease : Number.POSITIVE_INFINITY,
     }
   })
 
   keyed.sort((left, right) => {
     // リリース日 降順（新しい順）
+    // Infinity 同士の減算は NaN になるため、等値判定を先に行う
     if (left.releaseTime !== right.releaseTime) {
-      return right.releaseTime - left.releaseTime
+      return right.releaseTime > left.releaseTime ? 1 : -1
     }
 
     // idx 数値降順（大きい順）。-1（無効）は数値より後ろ
@@ -76,18 +189,22 @@ export const sortSongsByReleaseDescAndIdxDesc = <
       return right.idx - left.idx
     }
 
-    // 最終タイブレーク: タイトル昇順
-    return jaCollator.compare(left.song.title, right.song.title)
+    // 最終タイブレーク: 読み昇順
+    return compareSongsByReading(left.song, right.song)
   })
 
   return keyed.map(({ song }) => song)
 }
 
-export const sortSongsByTitle = <T extends { title: string }>(songs: T[]): T[] => {
-  const keyed = songs.map((song) => ({ song, key: song.title }))
-  keyed.sort((a, b) => jaCollator.compare(a.key, b.key))
-  return keyed.map(({ song }) => song)
-}
+/**
+ * 楽曲を reading の日本語辞書順でソートする。
+ *
+ * @param songs - ソート対象の楽曲配列。
+ * @returns ソート済みの新しい配列。
+ */
+export const sortSongsByTitle = <T extends { title: string; reading?: string | null }>(
+  songs: T[]
+): T[] => [...songs].sort(compareSongsByReading)
 
 let songsStore: ReturnType<typeof createSongsStore> | undefined
 

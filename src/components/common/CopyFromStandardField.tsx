@@ -1,0 +1,175 @@
+import { CornerDownLeft } from 'lucide-solid'
+import type { JSX } from 'solid-js'
+import { createEffect, createSignal, createUniqueId, Show } from 'solid-js'
+import {
+  findStandardSongBpm,
+  findStandardSongReading,
+  findStandardSongWikiPageTitle,
+  type StandardSongLookupItem,
+} from '../../utils/standardSongLookup'
+import { AppTooltipIconButton } from './AppTooltipIconButton'
+import { COPY_FROM_STANDARD_COPY } from './CopyFromStandardField.constants'
+
+type CopyFromStandardFieldBaseProps = {
+  /** グリッド配置などに使う追加クラス */
+  class?: string
+  /** 照合に使うSTANDARD楽曲一覧 */
+  songs: readonly StandardSongLookupItem[]
+  /** WORLD'S END側の曲名 */
+  title: string
+  /** WORLD'S END側のアーティスト名 */
+  artist: string
+  /** STANDARD楽曲一覧の読み込み中かどうか */
+  songsLoading?: boolean
+  /**
+   * 取り込み対象の入力欄。関数を渡した場合は取り込みボタンを受け取り、入力欄側で配置する。
+   */
+  children: JSX.Element | ((copyButton: JSX.Element) => JSX.Element)
+}
+
+type CopyFromStandardFieldProps =
+  | (CopyFromStandardFieldBaseProps & {
+      /** STANDARDから取り込む項目 */
+      field: 'bpm'
+      /** 取得したBPMを入力欄へ反映する処理 */
+      onCopied: (value: number) => void
+    })
+  | (CopyFromStandardFieldBaseProps & {
+      /** STANDARDから取り込む項目 */
+      field: 'reading' | 'wikiPageTitle'
+      /** 取得した読み・Wikiページタイトルを入力欄へ反映する処理 */
+      onCopied: (value: string) => void
+    })
+
+/**
+ * 取り込み対象に応じたボタンラベルと未設定時メッセージを返す。
+ *
+ * @param field - STANDARDから取り込む項目。
+ * @returns アクセシブル名と値が未設定のときの文言。
+ */
+const getCopyFromStandardCopy = (
+  field: CopyFromStandardFieldProps['field']
+): { ariaLabel: string; valueMissingMessage: string } => {
+  switch (field) {
+    case 'bpm':
+      return {
+        ariaLabel: COPY_FROM_STANDARD_COPY.copyBpmFromStandardAriaLabel,
+        valueMissingMessage: COPY_FROM_STANDARD_COPY.copyBpmFromStandardBpmMissing,
+      }
+    case 'reading':
+      return {
+        ariaLabel: COPY_FROM_STANDARD_COPY.copyReadingFromStandardAriaLabel,
+        valueMissingMessage: COPY_FROM_STANDARD_COPY.copyReadingFromStandardMissing,
+      }
+    case 'wikiPageTitle':
+      return {
+        ariaLabel: COPY_FROM_STANDARD_COPY.copyWikiPageTitleFromStandardAriaLabel,
+        valueMissingMessage: COPY_FROM_STANDARD_COPY.copyWikiPageTitleFromStandardMissing,
+      }
+  }
+}
+
+/**
+ * WORLD'S ENDの入力欄に、STANDARD楽曲から値を取り込むボタンを添える。
+ * 入力欄を関数で渡した場合はボタンの配置を入力欄側へ委ね、それ以外は入力欄の右に置く。
+ *
+ * @param props - 照合対象の楽曲、曲名・アーティスト名、入力欄、反映ハンドラ。
+ * @returns 入力欄と取り込みボタン、取り込み失敗時のエラー表示。
+ */
+const CopyFromStandardField = (props: CopyFromStandardFieldProps): JSX.Element => {
+  const errorId = createUniqueId()
+  const [errorMessage, setErrorMessage] = createSignal('')
+  const copy = () => getCopyFromStandardCopy(props.field)
+
+  createEffect((previousLookupKey?: string) => {
+    const lookupKey = `${props.field}\0${props.title}\0${props.artist}`
+    if (previousLookupKey !== lookupKey) {
+      setErrorMessage('')
+    }
+    return lookupKey
+  })
+
+  /**
+   * 曲名・アーティスト名が空、またはSTANDARD楽曲の読み込み中ならボタンを無効化する。
+   *
+   * @returns 無効化する場合は true。
+   */
+  const isCopyDisabled = (): boolean =>
+    Boolean(props.songsLoading) || props.title.trim() === '' || props.artist.trim() === ''
+
+  /**
+   * 同じ曲名・アーティスト名のSTANDARD楽曲から値を入力欄へ取り込む。
+   *
+   * @returns なし。
+   */
+  const handleCopy = (): void => {
+    setErrorMessage('')
+    if (props.field === 'bpm') {
+      const result = findStandardSongBpm(props.songs, props.title, props.artist)
+      if (result.status === 'found') {
+        props.onCopied(result.value)
+        return
+      }
+      setErrorMessage(
+        result.status === 'valueMissing'
+          ? copy().valueMissingMessage
+          : COPY_FROM_STANDARD_COPY.copyFromStandardNotFound
+      )
+      return
+    }
+
+    const findValue =
+      props.field === 'reading' ? findStandardSongReading : findStandardSongWikiPageTitle
+    const result = findValue(props.songs, props.title, props.artist)
+    if (result.status === 'found') {
+      props.onCopied(result.value)
+      return
+    }
+    setErrorMessage(
+      result.status === 'valueMissing'
+        ? copy().valueMissingMessage
+        : COPY_FROM_STANDARD_COPY.copyFromStandardNotFound
+    )
+  }
+
+  const copyButton = (
+    <AppTooltipIconButton
+      class="relative h-9.5 w-9.5 shrink-0 focus-visible:ring-inset"
+      disabled={isCopyDisabled()}
+      label={copy().ariaLabel}
+      aria-describedby={errorMessage() ? errorId : undefined}
+      onClick={handleCopy}
+    >
+      <CornerDownLeft class="h-4 w-4" aria-hidden="true" />
+      <span
+        class="absolute right-0.5 top-0.5 origin-top-right scale-75 bg-inherit px-0.5 py-0.5 font-oswald text-xs font-semibold leading-none [text-box:trim-both_cap_alphabetic]"
+        aria-hidden="true"
+      >
+        {COPY_FROM_STANDARD_COPY.standardBadge}
+      </span>
+    </AppTooltipIconButton>
+  )
+  const children = props.children
+
+  return (
+    <div class={props.class}>
+      {typeof children === 'function' ? (
+        children(copyButton)
+      ) : (
+        <div class="flex items-end gap-2 [&_input]:h-9.5">
+          <div class="min-w-0 flex-1">{children}</div>
+          {copyButton}
+        </div>
+      )}
+      <Show when={errorMessage()}>
+        {(message) => (
+          <p id={errorId} class="mt-1 text-sm text-danger">
+            {message()}
+          </p>
+        )}
+      </Show>
+    </div>
+  )
+}
+
+export default CopyFromStandardField

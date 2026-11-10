@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
+import type { FilterState } from '../../../../../../types/recordFilter'
 import type { EditingFilter } from '../../../../components/SavedRecordFiltersDialog'
 import { SavedRecordFiltersDialog } from '../../../../components/SavedRecordFiltersDialog'
-import type { FilterState } from '../../../types/types'
 import {
   deleteFilter,
   loadSavedFilters,

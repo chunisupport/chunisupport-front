@@ -1,7 +1,7 @@
-import { CLIENT_CACHE_SCHEMA_VERSION, db, type ViewSetting } from '../lib/db/cacheDB'
-import type { FilterState, RecordColumnId } from '../pages/users/UserRecord/types/types'
-import type { WorldsendFilterState } from '../pages/users/WorldsendRecord/types/filterTypes'
-import type { WorldsendRecordColumnId } from '../pages/users/WorldsendRecord/utils/columns'
+import { CLIENT_CACHE_SCHEMA_VERSION, type ViewSetting } from '../lib/db/cacheSchema'
+import { getCacheDB } from '../lib/db/getCacheDB'
+import type { FilterState, RecordColumnId } from '../types/recordFilter'
+import type { WorldsendFilterState, WorldsendRecordColumnId } from '../types/worldsendRecord'
 
 type ViewSettingKey = ViewSetting['key']
 
@@ -12,6 +12,7 @@ type ViewSettingKey = ViewSetting['key']
  * @returns 保存済みデータ。存在しない、またはスキーマが古い場合は null。
  */
 const readViewSetting = async (key: ViewSettingKey): Promise<unknown | null> => {
+  const db = await getCacheDB()
   const setting = await db.viewSettings.get(key)
   if (setting?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION) {
     return null
@@ -29,6 +30,7 @@ const readViewSetting = async (key: ViewSettingKey): Promise<unknown | null> => 
 const saveViewSetting = async (
   setting: Omit<ViewSetting, 'schemaVersion' | 'savedAt'>
 ): Promise<void> => {
+  const db = await getCacheDB()
   await db.viewSettings.put({
     ...setting,
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,

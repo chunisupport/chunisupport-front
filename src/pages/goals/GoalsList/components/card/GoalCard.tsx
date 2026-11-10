@@ -1,0 +1,297 @@
+import { Button } from '@kobalte/core/button'
+import { Collapsible } from '@kobalte/core/collapsible'
+import { createSortable, useDragDropContext } from '@thisbeyond/solid-dnd'
+import { ChevronRight, ExternalLink } from 'lucide-solid'
+import type { Component } from 'solid-js'
+import { createEffect, onCleanup, Show } from 'solid-js'
+
+import { getAppIconButtonClass } from '../../../../../components/common/AppButton'
+import type { GoalDTO } from '../../../../../types/api'
+import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { isGoalRecordNavigationEnabled } from '../../../utils/goalRecordFilter'
+import {
+  buildGoalDisclosureLabel,
+  buildGoalDragLabel,
+  GOAL_DRAG_ACTIVATION_DELAY_MS,
+} from '../../constants'
+import { GoalCardActionMenu } from './GoalCardActionMenu'
+import { GoalCardProgress, GoalCardProgressPercentage } from './GoalCardProgress'
+import { computeDropSlotOffsetY } from './goalCardDropSlot'
+
+interface GoalCardProps {
+  /** 表示する目標 */
+  goal: GoalDTO
+  /** 目標の進捗 */
+  progress: GoalProgressResult
+  /** カードタイトルに使う見出しレベル */
+  headingLevel?: 2 | 3
+  onEdit: (goal: GoalDTO) => void
+  onCopy: (goal: GoalDTO) => void
+  onDelete: (goal: GoalDTO) => void
+  onOpenRecords?: (goal: GoalDTO) => void
+  isReordering: boolean
+  copyDisabled: boolean
+  position: number
+  total: number
+  onKeyboardMove: (goalId: number, offset: -1 | 1) => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+/**
+ * カード内ボタンのポインター操作が並び替え開始処理へ伝播するのを防ぐ。
+ *
+ * @param event - カード内ボタンで発生したポインターイベント。
+ * @returns なし。
+ */
+const stopDragActivation = (event: PointerEvent): void => {
+  event.stopPropagation()
+}
+
+/**
+ * 目標の現在値、目標値、達成率をカード形式で表示する。
+ *
+ * @param props - 目標カードの表示内容と操作ハンドラ。
+ * @returns 目標カードの JSX 要素。
+ */
+const GoalCard: Component<GoalCardProps> = (props) => {
+  const sortable = createSortable(props.goal.id)
+  const dragDropContext = useDragDropContext()
+  let cardElement: HTMLElement | undefined
+
+  /**
+   * ドラッグ中カードの元の位置から、ドロップ後に入る位置までの縦方向のずれを返す。
+   *
+   * @returns ゴーストを描画する縦方向のずれ（px）。移動先がない場合は 0。
+   */
+  const dropSlotOffsetY = (): number => {
+    const dragDropState = dragDropContext?.[0]
+    const source = dragDropState?.droppables[props.goal.id]?.layout
+    const target = dragDropState?.active.droppable?.layout
+    return source && target ? computeDropSlotOffsetY(source, target) : 0
+  }
+
+  createEffect(() => {
+    const activators = sortable.dragActivators
+    if (!cardElement) return
+
+    const entries = Object.entries(activators).map(([handlerName, listener]) => [
+      handlerName.startsWith('on') ? handlerName.slice(2) : handlerName,
+      listener as EventListener,
+    ]) as Array<[string, EventListener]>
+
+    for (const [eventName, listener] of entries) {
+      cardElement.addEventListener(eventName, listener)
+    }
+
+    onCleanup(() => {
+      for (const [eventName, listener] of entries) {
+        cardElement?.removeEventListener(eventName, listener)
+      }
+    })
+  })
+
+  /**
+   * 現在の目標を編集対象として親へ通知する。
+   *
+   * @returns なし。
+   */
+  const handleEdit = (): void => {
+    props.onEdit(props.goal)
+  }
+
+  /**
+   * 現在の目標を複製対象として親へ通知する。
+   *
+   * @returns なし。
+   */
+  const handleCopy = (): void => {
+    props.onCopy(props.goal)
+  }
+
+  /**
+   * 現在の目標を削除対象として親へ通知する。
+   *
+   * @returns なし。
+   */
+  const handleDelete = (): void => {
+    props.onDelete(props.goal)
+  }
+
+  /**
+   * 現在の目標で未達成の通常レコード画面を開く。
+   *
+   * @returns なし。
+   */
+  const handleOpenRecords = (): void => {
+    props.onOpenRecords?.(props.goal)
+  }
+
+  /**
+   * フォーカス中の目標カードを上下矢印キーで移動する。
+   *
+   * @param event - カードで発生したキーボードイベント。
+   * @returns なし。
+   */
+  const handleKeyDown = (event: KeyboardEvent): void => {
+    if (props.isReordering || event.target !== event.currentTarget) return
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      props.onKeyboardMove(props.goal.id, -1)
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      props.onKeyboardMove(props.goal.id, 1)
+    }
+  }
+
+  return (
+    // ドロップ後に入る位置を示すゴーストは固定ヘッダーやグループ見出しより奥に描画するため、
+    // z-index を持たない外側要素に置き、ドラッグ中のカード本体とは重なり順を分ける。
+    <div class="relative">
+      <Show when={sortable.isActiveDraggable}>
+        <div
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 rounded-lg border-2 border-dashed border-border-strong bg-surface-muted/50"
+          style={{ transform: `translate3d(0, ${dropSlotOffsetY()}px, 0)` }}
+        />
+      </Show>
+      {/* solid-dnd は translate 以外の変形を除去せずに実寸を測るため、拡大はカード本体だけに掛ける。 */}
+      {/* ドラッグ中は固定ヘッダーやグループ見出しより手前に描画する。 */}
+      <div
+        ref={sortable.ref}
+        style={{
+          transform: `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`,
+        }}
+        class={sortable.isActiveDraggable ? 'relative z-30' : undefined}
+      >
+        <Collapsible
+          as="article"
+          open={props.open}
+          onOpenChange={props.onOpenChange}
+          disabled={props.isReordering}
+          ref={cardElement}
+          style={{
+            '--goal-card-drag-activation-delay': `${GOAL_DRAG_ACTIVATION_DELAY_MS}ms`,
+          }}
+          tabIndex={props.isReordering ? -1 : 0}
+          aria-label={buildGoalDragLabel(props.goal.title, props.position, props.total)}
+          aria-roledescription="並び替え可能な目標"
+          onKeyDown={handleKeyDown}
+          class={`relative cursor-grab select-none rounded-lg border p-4 shadow-sm transition-[scale] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring motion-reduce:transition-none ${
+            props.progress.achieved
+              ? 'border-action-primary-border bg-action-primary-muted'
+              : 'border-border bg-surface'
+          } ${sortable.isActiveDraggable ? 'scale-102 cursor-grabbing shadow-lg' : ''}`}
+        >
+          <span class="goal-card-drag-ripple" aria-hidden="true" />
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex min-w-0 flex-1 items-start gap-1">
+              <Collapsible.Trigger
+                type="button"
+                aria-label={buildGoalDisclosureLabel(props.goal.title, props.open)}
+                class={getAppIconButtonClass({
+                  tone: 'ghost',
+                  size: 'sm',
+                  class: 'group -ml-1 shrink-0',
+                })}
+                onPointerDown={stopDragActivation}
+              >
+                <ChevronRight
+                  class="transition-transform group-data-expanded:rotate-90"
+                  size={20}
+                  aria-hidden="true"
+                />
+              </Collapsible.Trigger>
+              <Show
+                when={props.headingLevel === 3}
+                fallback={
+                  <h2 class="min-w-0 pt-1 font-sans text-lg font-bold text-text">
+                    {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
+                      <Button
+                        type="button"
+                        disabled={props.isReordering}
+                        class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        onPointerDown={stopDragActivation}
+                        onClick={handleOpenRecords}
+                      >
+                        <span>{props.goal.title}</span>
+                        <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
+                      </Button>
+                    ) : (
+                      props.goal.title
+                    )}
+                  </h2>
+                }
+              >
+                <h3 class="min-w-0 pt-1 font-sans text-lg font-bold text-text">
+                  {isGoalRecordNavigationEnabled(props.goal) && props.onOpenRecords ? (
+                    <Button
+                      type="button"
+                      disabled={props.isReordering}
+                      class="inline-flex cursor-pointer items-center gap-1.5 rounded text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                      onPointerDown={stopDragActivation}
+                      onClick={handleOpenRecords}
+                    >
+                      <span>{props.goal.title}</span>
+                      <ExternalLink class="shrink-0" size={18} aria-hidden="true" />
+                    </Button>
+                  ) : (
+                    props.goal.title
+                  )}
+                </h3>
+              </Show>
+            </div>
+            <Show
+              when={props.open}
+              fallback={
+                <GoalCardProgressPercentage
+                  achievementType={props.goal.achievement_type}
+                  invertValue={props.goal.invert_value}
+                  invertPercentage={props.goal.invert_percentage}
+                  gaugeStart={props.goal.gauge_start}
+                  applyGaugeStartToPercentage={props.goal.apply_gauge_start_to_percentage}
+                  progress={props.progress}
+                />
+              }
+            >
+              <GoalCardActionMenu
+                disabled={props.isReordering}
+                copyDisabled={props.copyDisabled}
+                onEdit={handleEdit}
+                onCopy={handleCopy}
+                onDelete={handleDelete}
+              />
+            </Show>
+          </div>
+
+          <Collapsible.Content>
+            <GoalCardProgress
+              title={props.goal.title}
+              achievementType={props.goal.achievement_type}
+              invertValue={props.goal.invert_value}
+              invertPercentage={props.goal.invert_percentage}
+              gaugeStart={props.goal.gauge_start}
+              applyGaugeStartToPercentage={props.goal.apply_gauge_start_to_percentage}
+              progress={props.progress}
+            />
+          </Collapsible.Content>
+          <Show when={!props.open}>
+            <GoalCardProgress
+              title={props.goal.title}
+              achievementType={props.goal.achievement_type}
+              invertValue={props.goal.invert_value}
+              invertPercentage={props.goal.invert_percentage}
+              gaugeStart={props.goal.gauge_start}
+              applyGaugeStartToPercentage={props.goal.apply_gauge_start_to_percentage}
+              progress={props.progress}
+              showValues={false}
+            />
+          </Show>
+        </Collapsible>
+      </div>
+    </div>
+  )
+}
+
+export default GoalCard

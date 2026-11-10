@@ -1,0 +1,29 @@
+/** ベスト枠・新曲枠理論値チェッカーで使用する文言。タイトルと説明文はツール一覧の定義を参照すること。 */
+export const NEW_SONG_SSS_PLUS_COPY = {
+  summaryAriaLabel: 'レーティング枠理論値',
+  bestLabel: 'ベスト枠',
+  newLabel: '新曲枠',
+  targetRating: '理論値',
+  currentGap: '現在との差',
+  loadingLabel: 'レーティング枠理論値を計算中',
+  noData: '対象譜面がありません',
+  emptyValue: '-',
+  unknownChartConstant: '未確定の譜面定数を含む推定値',
+  unknownMarker: '?',
+  bestDetailsLabel: 'ベスト枠理論値対象譜面',
+  newDetailsLabel: '新曲枠理論値対象譜面',
+  boundaryDetailsLabel: '下限定数の枠外譜面',
+  chartCountSuffix: '譜面',
+  singleRatingLabel: '単曲RATING',
+  chartConstantLabel: '譜面定数',
+  currentScoreLabel: '現在スコア',
+  scoreGapLabel: 'SSS+まで',
+  recordUnavailable: 'スコアなし',
+  sssPlusAchievedLabel: 'SSS+達成済み',
+} as const
+
+/** 理論値チェッカーの表示枠タブ */
+export const RATING_THEORETICAL_TAB_OPTIONS = [
+  { value: 'best', label: NEW_SONG_SSS_PLUS_COPY.bestLabel },
+  { value: 'new', label: NEW_SONG_SSS_PLUS_COPY.newLabel },
+] as const

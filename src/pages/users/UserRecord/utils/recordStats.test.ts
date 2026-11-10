@@ -34,6 +34,7 @@ const createRecord = (
   full_chain: null,
   slot: null,
   genre: 'POPS & ANIME',
+  name_folder_code: 'SA',
   release: '2024-01-01',
   release_version: 'VERSE',
   notes: 2000,
@@ -92,8 +93,8 @@ test('getRecordStats は未プレイを分布に含め、スコア統計から�
     max: 1009000,
     avg: 994500,
     median: 994500,
-    q1: 980000,
-    q3: 980000,
+    q1: 987250,
+    q3: 1001750,
   })
 })
 

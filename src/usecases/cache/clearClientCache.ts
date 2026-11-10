@@ -1,4 +1,4 @@
-import { db } from '../../lib/db/cacheDB'
+import { getCacheDB } from '../../lib/db/getCacheDB'
 
 /**
  * IndexedDB に保存したフロントエンドキャッシュを全削除する。
@@ -6,20 +6,31 @@ import { db } from '../../lib/db/cacheDB'
  * @returns 削除処理完了後に解決される Promise。
  */
 export const clearClientCache = async (): Promise<void> => {
+  const db = await getCacheDB()
   await db.transaction(
     'rw',
-    db.cacheMetadata,
-    db.songs,
-    db.worldsendSongs,
-    db.userApiResponses,
-    db.viewSettings,
+    [
+      db.cacheMetadata,
+      db.songs,
+      db.worldsendSongs,
+      db.courses,
+      db.userSongRecords,
+      db.userCourseRecords,
+      db.userApiResponses,
+      db.viewSettings,
+      db.friendRequestNotificationStates,
+    ],
     async () => {
       await Promise.all([
         db.cacheMetadata.clear(),
         db.songs.clear(),
         db.worldsendSongs.clear(),
+        db.courses.clear(),
+        db.userSongRecords.clear(),
+        db.userCourseRecords.clear(),
         db.userApiResponses.clear(),
         db.viewSettings.clear(),
+        db.friendRequestNotificationStates.clear(),
       ])
     }
   )

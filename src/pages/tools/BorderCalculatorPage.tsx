@@ -1,20 +1,23 @@
 import { Button } from '@kobalte/core/button'
-import { Checkbox } from '@kobalte/core/checkbox'
-import { Select } from '@kobalte/core/select'
 import { TextField } from '@kobalte/core/text-field'
-import { Check, ChevronDown, Target } from 'lucide-solid'
+import { Target } from 'lucide-solid'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createSignal, ErrorBoundary, For, onMount, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
+import { FormSelect } from '../../components/common/AppSelect'
+import { CheckboxField } from '../../components/common/CheckboxField'
+import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
+import { BORDER_CALCULATOR_PATH } from '../../constants/routes'
+import { getToolLink } from '../../constants/tools'
+import { createComposingSearchInput } from '../../hooks/createComposingSearchInput'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/songsData'
 import type { SongDTO } from '../../types/api'
 import { type BorderCalculatorResult, calculateBorder } from '../../utils/borderCalculator'
-import { buildSearchableItems, filterSearchableItems } from '../songs/searchHelpers'
+import { buildSearchableItems, filterSearchableItems } from '../../utils/searchHelpers'
 
+/** ボーダー計算機の表示文言。タイトルと説明文はツール一覧の定義を参照すること。 */
 const BORDER_CALCULATOR_COPY = {
-  title: 'ボーダー計算機',
-  description: '楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。',
   songSearchLabel: '曲名',
   songSearchPlaceholder: '曲名・アーティスト名で検索',
   songCandidatesLabel: '検索候補',
@@ -32,13 +35,11 @@ const BORDER_CALCULATOR_COPY = {
 const DEFAULT_NOTES = '2500'
 const DEFAULT_TARGET_SCORE = '1007500'
 const SONG_CANDIDATE_LIMIT = 8
-const BORDER_CALCULATOR_DIFFICULTIES = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'] as const
+const BORDER_CALCULATOR_DIFFICULTIES = PLAYER_DATA_DIFFICULTIES
 const FIELD_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const COMPACT_FIELD_INPUT_CLASS =
-  'w-full rounded border border-border-strong bg-input-bg px-3 py-2 font-sans text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
-const CHECKBOX_CONTROL_CLASS =
-  'flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong bg-surface-muted data-checked:border-action-primary data-checked:bg-action-primary data-checked:text-text-inverse'
+  'w-full rounded border border-border-strong bg-input-bg px-3 py-2 text-sm text-text hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const SONG_CANDIDATE_BUTTON_CLASS =
   'block w-full border-b border-border px-3 py-2.5 text-left text-sm last:border-b-0 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring'
 const EMPTY_STATE_CLASS =
@@ -73,15 +74,6 @@ const parseOptionalNumber = (value: string): number | undefined => {
  * @returns 桁区切り済みの文字列。
  */
 const formatNumber = (value: number): string => value.toLocaleString('ja-JP')
-
-/**
- * ボーダー計算機で選択可能な譜面か判定する。
- *
- * @param value - 判定対象の難易度文字列。
- * @returns BASIC～ULTIMA の通常譜面であれば true。
- */
-const isBorderCalculatorDifficulty = (value: string): value is BorderCalculatorDifficulty =>
-  BORDER_CALCULATOR_DIFFICULTIES.some((difficulty) => difficulty === value)
 
 /**
  * 選択中の楽曲で利用できる通常譜面の難易度候補を返す。
@@ -143,56 +135,24 @@ const BorderFormField: Component<BorderFormFieldProps> = (props) => (
  * ボーダー計算機で利用する譜面選択欄をコンパクトに表示する。
  *
  * @param props - 選択中の難易度と変更ハンドラ。
- * @returns Kobalte Select を使った譜面選択欄。
+ * @returns 共通 FormSelect を使った譜面選択欄。
  */
 const DifficultySelectField: Component<{
   value: BorderCalculatorDifficulty
   availableDifficulties: BorderCalculatorDifficulty[]
   onChange: (difficulty: BorderCalculatorDifficulty) => void
 }> = (props) => (
-  <Select<BorderCalculatorDifficulty>
-    class="block text-sm"
+  <FormSelect<BorderCalculatorDifficulty>
+    rootClass="block text-sm"
+    label={BORDER_CALCULATOR_COPY.difficultyLabel}
     options={props.availableDifficulties}
     value={props.value}
-    onChange={(difficulty) => {
-      if (difficulty && isBorderCalculatorDifficulty(difficulty)) {
+    onChange={(difficulty: BorderCalculatorDifficulty | null) => {
+      if (difficulty) {
         props.onChange(difficulty)
       }
     }}
-    sameWidth
-    fitViewport
-    gutter={0}
-    itemComponent={(selectProps) => (
-      <Select.Item
-        item={selectProps.item}
-        class="cursor-pointer px-3 py-2 text-text hover:bg-success-bg data-[highlighted]:bg-success-bg data-[selected]:bg-success-bg"
-      >
-        <div class="flex items-center gap-2">
-          <Select.ItemIndicator class="inline-flex h-4 w-4 items-center justify-center text-success">
-            <Check size={14} />
-          </Select.ItemIndicator>
-          <Select.ItemLabel>{selectProps.item.rawValue}</Select.ItemLabel>
-        </div>
-      </Select.Item>
-    )}
-  >
-    <Select.Label class="mb-1 block font-medium text-text-muted">
-      {BORDER_CALCULATOR_COPY.difficultyLabel}
-    </Select.Label>
-    <Select.Trigger class="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded border border-border-strong bg-surface px-3 py-2 text-left text-sm hover:border-input-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring">
-      <Select.Value<BorderCalculatorDifficulty> class="truncate">
-        {(state) => state.selectedOption()}
-      </Select.Value>
-      <Select.Icon class="text-text-subtle">
-        <ChevronDown size={16} />
-      </Select.Icon>
-    </Select.Trigger>
-    <Select.Portal>
-      <Select.Content class="z-50 max-h-64 w-[--kb-select-content-width] overflow-auto rounded border border-border bg-surface shadow-md">
-        <Select.Listbox />
-      </Select.Content>
-    </Select.Portal>
-  </Select>
+  />
 )
 
 /**
@@ -213,7 +173,7 @@ const CompactNotesField: Component<{
     <TextField.Input
       id="notes"
       name="notes"
-      class={`${COMPACT_FIELD_INPUT_CLASS} text-right`}
+      class={`${COMPACT_FIELD_INPUT_CLASS} text-right font-jost tabular-nums`}
       inputMode="numeric"
       pattern="[0-9]*"
       required
@@ -230,6 +190,7 @@ const CompactNotesField: Component<{
 
 /**
  * 楽曲検索入力を選択中の曲名表示欄としても表示する。
+ * IME変換中は未確定の全文を表示し、検索値だけ末尾の全角英字を外す。
  *
  * @param props.query - 検索欄の入力値。
  * @param props.candidates - 検索条件に一致した楽曲候補。
@@ -244,62 +205,75 @@ const SongSearchField: Component<{
   showCandidates: boolean
   onQueryChange: (query: string) => void
   onSelectSong: (song: SongDTO) => void
-}> = (props) => (
-  <div class="relative min-w-0">
-    <TextField class="block text-sm" value={props.query} onChange={props.onQueryChange}>
-      <TextField.Label class="mb-1 block font-medium text-text-muted" for="border-song-search">
-        {BORDER_CALCULATOR_COPY.songSearchLabel}
-      </TextField.Label>
-      <TextField.Input
-        id="border-song-search"
-        name="border-song-search"
-        type="search"
-        class={`${COMPACT_FIELD_INPUT_CLASS} truncate`}
-        placeholder={BORDER_CALCULATOR_COPY.songSearchPlaceholder}
-        autocomplete="off"
-      />
-    </TextField>
+}> = (props) => {
+  const composition = createComposingSearchInput({
+    value: () => props.query,
+    onChange: (value) => props.onQueryChange(value),
+  })
 
-    <Show when={props.showCandidates && props.query.trim() !== ''}>
-      <div class="absolute left-0 right-0 top-full z-20 mt-1">
-        <Show
-          when={props.candidates.length > 0}
-          fallback={
-            <p class={`${EMPTY_STATE_CLASS} shadow-md`}>
-              {BORDER_CALCULATOR_COPY.noSongCandidatesMessage}
-            </p>
-          }
-        >
-          <ul
-            class="m-0 max-h-72 list-none overflow-y-auto rounded border border-border bg-surface p-0 shadow-md"
-            aria-label={BORDER_CALCULATOR_COPY.songCandidatesLabel}
+  return (
+    <div class="relative min-w-0">
+      <TextField
+        class="block text-sm"
+        value={composition.displayedValue()}
+        onChange={composition.handleChange}
+      >
+        <TextField.Label class="mb-1 block font-medium text-text-muted" for="border-song-search">
+          {BORDER_CALCULATOR_COPY.songSearchLabel}
+        </TextField.Label>
+        <TextField.Input
+          id="border-song-search"
+          name="border-song-search"
+          type="search"
+          class={`${COMPACT_FIELD_INPUT_CLASS} truncate font-sans`}
+          placeholder={BORDER_CALCULATOR_COPY.songSearchPlaceholder}
+          autocomplete="off"
+          onCompositionStart={(event) => composition.beginComposition(event.currentTarget.value)}
+          onCompositionEnd={(event) => composition.endComposition(event.currentTarget.value)}
+        />
+      </TextField>
+
+      <Show when={props.showCandidates && props.query.trim() !== ''}>
+        <div class="absolute left-0 right-0 top-full z-20 mt-1">
+          <Show
+            when={props.candidates.length > 0}
+            fallback={
+              <p class={`${EMPTY_STATE_CLASS} shadow-md`}>
+                {BORDER_CALCULATOR_COPY.noSongCandidatesMessage}
+              </p>
+            }
           >
-            <For each={props.candidates}>
-              {(song) => (
-                <li>
-                  <Button
-                    type="button"
-                    class={SONG_CANDIDATE_BUTTON_CLASS}
-                    onClick={() => props.onSelectSong(song)}
-                  >
-                    <span class="min-w-0">
-                      <span class="block truncate font-sans font-medium text-text">
-                        {song.title}
+            <ul
+              class="m-0 max-h-72 list-none overflow-y-auto rounded border border-border bg-surface p-0 shadow-md"
+              aria-label={BORDER_CALCULATOR_COPY.songCandidatesLabel}
+            >
+              <For each={props.candidates}>
+                {(song) => (
+                  <li>
+                    <Button
+                      type="button"
+                      class={SONG_CANDIDATE_BUTTON_CLASS}
+                      onClick={() => props.onSelectSong(song)}
+                    >
+                      <span class="min-w-0">
+                        <span class="block truncate font-sans font-medium text-text">
+                          {song.title}
+                        </span>
+                        <span class="block truncate font-sans text-xs text-text-muted">
+                          {song.artist}
+                        </span>
                       </span>
-                      <span class="block truncate font-sans text-xs text-text-muted">
-                        {song.artist}
-                      </span>
-                    </span>
-                  </Button>
-                </li>
-              )}
-            </For>
-          </ul>
-        </Show>
-      </div>
-    </Show>
-  </div>
-)
+                    </Button>
+                  </li>
+                )}
+              </For>
+            </ul>
+          </Show>
+        </div>
+      </Show>
+    </div>
+  )
+}
 
 /**
  * ボーダー計算の主要入力を横並びまたは折り返しで表示する。
@@ -413,7 +387,8 @@ const BorderCalculatorPage = (): JSX.Element => {
   const [targetJustice, setTargetJustice] = createSignal('50')
   const [fullComboOnly, setFullComboOnly] = createSignal(false)
 
-  useDocumentTitle(BORDER_CALCULATOR_COPY.title)
+  const tool = getToolLink(BORDER_CALCULATOR_PATH)
+  useDocumentTitle(tool.title)
 
   onMount(() => {
     ensureSongsLoaded()
@@ -510,8 +485,8 @@ const BorderCalculatorPage = (): JSX.Element => {
           <Target class="h-5 w-5 text-action-primary" aria-hidden="true" />
         </span>
         <div>
-          <h1 class="text-2xl font-semibold">{BORDER_CALCULATOR_COPY.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{BORDER_CALCULATOR_COPY.description}</p>
+          <h1 class="text-2xl font-semibold">{tool.title}</h1>
+          <p class="mt-1 text-sm text-text-muted">{tool.description}</p>
         </div>
       </header>
 
@@ -555,19 +530,13 @@ const BorderCalculatorPage = (): JSX.Element => {
                     />
                   </div>
 
-                  <Checkbox
+                  <CheckboxField
                     class="relative flex min-h-12 items-center gap-2 text-sm text-text-muted"
                     checked={fullComboOnly()}
                     onChange={setFullComboOnly}
-                  >
-                    <Checkbox.Input style={{ left: '0', top: '0' }} />
-                    <Checkbox.Control class={CHECKBOX_CONTROL_CLASS}>
-                      <Checkbox.Indicator>
-                        <Check class="h-4 w-4" />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>{BORDER_CALCULATOR_COPY.fullComboOnlyLabel}</Checkbox.Label>
-                  </Checkbox>
+                    controlClass="rounded"
+                    label={BORDER_CALCULATOR_COPY.fullComboOnlyLabel}
+                  />
                 </fieldset>
               </form>
             </Show>

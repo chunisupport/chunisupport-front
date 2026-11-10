@@ -113,6 +113,8 @@ const calculateLoss = (justice: number, attack: number, miss: number): number =>
 /**
  * JUSTICE数の下限を基準にMISS数ごとの候補一覧を計算する。
  *
+ * 目標JUSTICE数は下限値そのものを含むため、`justice >= targetJustice` を満たす候補を返す。
+ *
  * @param input - 任意の目標JUSTICE数を含むボーダー計算の入力値。
  * @param lossBudget - 目標スコアに対する許容失点。
  * @returns 候補一覧表示用の結果。
@@ -125,11 +127,11 @@ const calculateCandidateBorders = (
     ? 0
     : Math.min(Math.floor(lossBudget / MISS_LOSS), input.notes)
   const candidates: BorderCalculatorRow[] = []
-  const minJustice = input.targetJustice ?? -1
+  const minJustice = input.targetJustice ?? 0
 
   for (let miss = maxMiss; miss >= 0; miss -= 1) {
     const remaining = lossBudget - MISS_LOSS * miss
-    const maxAttackByJustice = Math.floor((remaining - (minJustice + 1)) / ATTACK_LOSS)
+    const maxAttackByJustice = Math.floor((remaining - minJustice) / ATTACK_LOSS)
     const maxAttackByNotes = input.notes - miss
     const attack = Math.min(maxAttackByJustice, maxAttackByNotes)
     const minAttackByNotes = Math.max(0, ceilDiv(Math.max(0, remaining + miss - input.notes), 50))
@@ -141,7 +143,7 @@ const calculateCandidateBorders = (
     const score = calculateBorderScore(input.notes, justice, attack, miss)
 
     if (
-      justice > minJustice &&
+      justice >= minJustice &&
       loss <= lossBudget &&
       justice + attack + miss <= input.notes &&
       score >= input.targetScore

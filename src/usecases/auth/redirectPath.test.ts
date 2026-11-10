@@ -7,6 +7,13 @@ import {
   sanitizeRedirectPath,
 } from './redirectPath.ts'
 
+test('メールログイン画面自身へのリダイレクトは拒否する', () => {
+  for (const path of ['/staff/login', '/staff/login/', '/staff/login?redirect=/songs']) {
+    assert.equal(resolvePostLoginRedirectPath(path), null)
+  }
+  assert.equal(resolvePostLoginRedirectPath('/songs'), '/songs')
+})
+
 test('sanitizeRedirectPath: 通常の相対パスは許可する', () => {
   const result = sanitizeRedirectPath('/users/user001?page=score#best')
   assert.equal(result, '/users/user001?page=score#best')

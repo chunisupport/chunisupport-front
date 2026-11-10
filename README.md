@@ -5,12 +5,13 @@ Solid.js + Rsbuild をベースに、CHUNITHM プレイデータの閲覧・管�
 
 ## 主な機能
 
-- 認証（ログイン / 新規登録）
+- 認証（Google・X でのログイン / 新規登録。詳細は [ログイン方法](docs/authentication.md)）
 - ユーザページ（プレイヤー情報、リザルト、統計）
 - 楽曲一覧・楽曲詳細（通常 / WORLD'S END）
 - 目標管理
+- ツール一覧（計算機 / 分析・比較 / データ閲覧 / 選曲）
 - 設定画面
-- 管理者画面（ユーザ管理 / 楽曲管理）
+- 管理者画面（ユーザ管理 / 楽曲管理 / コース管理 / メンテナンス管理 / バージョン管理 / バッチ管理）
 
 実際のルーティングは `src/App.tsx` を参照してください。
 
@@ -35,6 +36,14 @@ Solid.js + Rsbuild をベースに、CHUNITHM プレイデータの閲覧・管�
 ```bash
 pnpm install
 ```
+
+`.env.example` を参考に、ローカルの `.env` に公開環境変数を設定してください。既存の `.env` にも次の必須設定を追加してください。
+
+```dotenv
+PUBLIC_APP_ENV=develop
+```
+
+`PUBLIC_APP_ENV` は feature-flag の運用環境で、`develop` / `staging` / `production` のいずれかを指定します。未設定・不正値の場合は `pnpm dev` / `pnpm start` / `pnpm build` が失敗します。配備先ごとに明示設定し、環境別にビルドしてください。ホスティング側の各環境にもマージ前に設定が必要です。詳細は [feature-flag](docs/feature-flag.md) を参照してください。
 
 ## 開発コマンド
 

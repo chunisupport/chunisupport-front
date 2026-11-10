@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_FILTER } from '../UserRecord/types/filterDefaults'
+import { DEFAULT_FILTER } from '../../../utils/recordFilterDefaults'
 import { DEFAULT_WORLDSEND_FILTER } from '../WorldsendRecord/types/filterDefaults'
 import {
   buildUniqueRecordFilterName,
@@ -60,16 +60,64 @@ test('isValidSavedStandardFilter は範囲外の定数を壊れたフィルタ�
   assert.equal(isValidSavedStandardFilter(brokenFilter), false)
 })
 
-test('isValidSavedStandardFilter はOP対象条件の省略を旧保存値として許可すること', () => {
+test('isValidSavedStandardFilter は単曲レート範囲と旧形式の省略を検証すること', () => {
   // Given
-  const { currentOpTargetOnly: _currentOpTargetOnly, ...legacyFilter } = DEFAULT_FILTER
+  const { rating: _rating, ...legacyFilter } = DEFAULT_FILTER
 
   // When & Then
   assert.equal(isValidSavedStandardFilter(legacyFilter), true)
   assert.equal(
-    isValidSavedStandardFilter({ ...DEFAULT_FILTER, currentOpTargetOnly: 'true' }),
+    isValidSavedStandardFilter({ ...DEFAULT_FILTER, rating: { min: 17.45, max: 18 } }),
+    true
+  )
+  assert.equal(
+    isValidSavedStandardFilter({ ...DEFAULT_FILTER, rating: { min: -0.01, max: 18 } }),
     false
   )
+})
+
+test('isValidSavedStandardFilter は現行と旧形式のOP対象条件を検証すること', () => {
+  // Given
+  const {
+    opTargetOnly: _opTargetOnly,
+    opTargetType: _opTargetType,
+    ...legacyFilter
+  } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(isValidSavedStandardFilter({ ...legacyFilter, currentOpTargetOnly: true }), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, opTargetOnly: 'true' }), false)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, opTargetType: 'all' }), false)
+  assert.equal(isValidSavedStandardFilter({ ...legacyFilter, currentOpTargetOnly: 'true' }), false)
+})
+
+test('isValidSavedStandardFilter はお気に入り条件の省略を旧保存値として許可すること', () => {
+  // Given
+  const { favoriteSongsOnly: _favoriteSongsOnly, ...legacyFilter } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, favoriteSongsOnly: 'true' }), false)
+})
+
+test('isValidSavedStandardFilter は未プレイのみの省略を旧保存値として許可すること', () => {
+  // Given
+  const { unplayedOnly: _unplayedOnly, ...legacyFilter } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, unplayedOnly: true }), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, unplayedOnly: 'true' }), false)
+})
+
+test('isValidSavedStandardFilter は未解禁曲除外条件の省略を旧保存値として許可すること', () => {
+  // Given
+  const { excludeLockedSongs: _excludeLockedSongs, ...legacyFilter } = DEFAULT_FILTER
+
+  // When & Then
+  assert.equal(isValidSavedStandardFilter(legacyFilter), true)
+  assert.equal(isValidSavedStandardFilter({ ...DEFAULT_FILTER, excludeLockedSongs: 'true' }), false)
 })
 
 test('isValidSavedWorldsendFilter は型が違う保存値を壊れたフィルターとして拒否すること', () => {

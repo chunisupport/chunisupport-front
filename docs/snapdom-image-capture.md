@@ -1,0 +1,301 @@
+# SnapDOM による DOM 画像化ガイド
+
+このドキュメントは、SnapDOM を使って画面上の DOM を PNG などへ画像化するときの設計・実装方針をまとめたものです。
+
+SnapDOM は DOM を複製し、スタイルやフォントなどを埋め込んだ SVG を生成してからラスタ画像へ変換します。そのため、通常の画面描画では問題にならないサブピクセル単位の差、フォント再描画、Flexbox・Grid の内容依存サイズが、改行・省略・はみ出しとして現れることがあります。
+
+## 基本方針
+
+- 画像化前の DOM レイアウトを安定させる。SnapDOM のオプションだけで不安定なレイアウトを補正しようとしない。
+- 画像の論理幅を先に決め、狭い画面では表示だけを縮小する。
+- 自由入力や曲名など、あらゆる文字を含み得る箇所では、対象文字を収録したフォントを明示する。
+- Flexbox・Grid 内の文字要素へ、文字幅と同じだけの余裕のない幅を割り当てない。
+- ラベルや数値など、意味上分割できない文字列は改行禁止にする。
+- すべての画像化で `reconcile: true` を指定する。
+- すべての画像化で `fast: false` を指定し、画像化中もメインスレッドを長時間占有しない。
+- 高解像度化は Canvas のメモリ使用量を確認してから行う。
+- PC だけでなく、実際のスマートフォンでも画像を確認する。
+
+## 画像の論理サイズと画面表示を分離する
+
+画像として一定のレイアウトを出力したい場合、画像化対象の論理幅を固定します。狭い画面では、固定幅の要素を祖先の `transform: scale(...)` で縮小表示します。
+
+画像化するときは、画面表示用の `transform` を引き継がない固定幅の複製を `document.body` 直下へ作成し、その複製を SnapDOM へ渡します。
+
+寸法取得では、用途を区別します。
+
+- `offsetWidth` / `offsetHeight`: transform 適用前の論理サイズを取得する。
+- `getBoundingClientRect()`: transform 適用後の画面上の実寸を取得する。
+
+画像化用の論理サイズを決める際に `getBoundingClientRect()` を使うと、狭い画面で縮小された幅が画像へ混入する可能性があります。
+
+なお、固定幅の複製を作っても、複製は同じ `document` 内にあります。ビューポート依存のメディアクエリ、ルートフォントサイズ、`text-size-adjust` などは引き続き影響するため、画像化用DOMではこれらに依存しないスタイルを使用します。
+
+## Flexbox・Grid 内の文字幅に余裕を持たせる
+
+### 曲名などの可変長テキスト
+
+Flexbox 内で可変長テキストを1行省略する場合は、文字要素へ残り幅を割り当てます。
+
+```tsx
+<div class="flex min-w-0 items-center gap-2">
+  <span class="w-10 shrink-0">MAS</span>
+  <span class="shrink-0 whitespace-nowrap">14+</span>
+  <h3 class="min-w-0 flex-1 truncate font-sans">楽曲名</h3>
+</div>
+```
+
+`min-w-0 truncate` だけでは不十分です。`flex-grow` がない文字要素は、短い文字列の場合に内容幅とほぼ同じ幅になることがあります。WebKitでは拡大率によって `scrollWidth` が `clientWidth` より1px大きく計測される場合があり、実際には収まる曲名でもSnapDOMの省略処理が実行されます。
+
+`flex-1` などで残り幅を確保します。ただし、WebKitでは幅を広げた要素でも丸め差が発生するため、残り幅の確保だけで画像化時の過剰な省略を防げるとは限りません。
+
+画像化用の複製ルートには `data-image-capture="true"` を付け、`image-capture:` バリアントで画像専用スタイルを指定できます。更新差分の曲名ボタンは画像内では幅100%のblockとし、ボタンに `truncate`、内部の曲名spanに `inline`・`overflow-visible`・`text-clip` を指定します。子要素を含むボタンはSnapDOMの文字列を直接短縮する処理の対象外となり、ブラウザ標準の1行省略を利用できます。内部spanを省略対象の要素に戻さないでください。画面上は曲名直後のコピーアイコンと既存の操作範囲を維持します。
+
+### Grid 内の固定ラベル
+
+Grid の `auto` 列も内容幅とほぼ同じ幅になります。次のような意味上分割できない文字列は、明示的に改行を禁止します。
+
+```tsx
+<span class="whitespace-nowrap">Lv. 252</span>
+```
+
+文字列と要素幅がほぼ同じ場合、わずかな丸め差だけで空白位置から改行されることがあります。`shrink-0` は Flexbox の縮小制御であり、Grid 内部の文字改行を禁止するものではありません。
+
+Grid の可変長列には `minmax(0, 1fr)` を使い、長い文字列側へ省略可能な逃げ先を用意します。
+
+```tsx
+<div class="grid grid-cols-[auto_minmax(0,1fr)]">
+  <span class="whitespace-nowrap">Lv. 252</span>
+  <span class="min-w-0 truncate">プレイヤー名</span>
+</div>
+```
+
+## `text-overflow` は画像化前の幅を正しくする
+
+SnapDOM は `text-overflow: ellipsis` や line clamp の結果を、SVG 内のテキストへ焼き込むことがあります。
+
+そのため、SnapDOM へ渡す時点で文字要素の幅が誤っていると、不必要に短い文字列が SVG へ確定します。後から出力サイズや `dpr` を変更しても、失われた文字列は戻りません。
+
+省略が意図どおりか、画像化前の DOM で次を確認します。
+
+- `clientWidth`: 文字を表示できる幅。
+- `scrollWidth`: 省略がなければ必要になる幅。
+- 算出済みの `flex-grow`、`flex-basis`、`min-width`。
+- `white-space`、`overflow`、`text-overflow`。
+
+`scrollWidth <= clientWidth` なのに画像だけが省略される場合は、内容幅ぴったりの要素、SVG 内の再レイアウト、埋め込みフォントの字幅差を疑います。
+
+## フォントを準備する
+
+画像化前に FontFaceSet の準備完了を待ち、SnapDOM ではフォント埋め込みを有効にします。
+
+```typescript
+await document.fonts.ready
+
+const result = await snapdom(element, {
+  embedFonts: true,
+  reconcile: true,
+})
+```
+
+ただし、`document.fonts.ready` は文書側で必要なフォントの読み込み完了を示すもので、生成した SVG を Canvas が初めて描画するときの準備まで保証するものではありません。
+
+Chrome 系ブラウザで、同じ `CaptureResult` の初回ラスタライズだけ埋め込みフォントが崩れることを確認した場合は、同じ結果を再利用して1回目を破棄します。
+
+```typescript
+const rasterizeOptions = { dpr: 2, type: 'png' as const }
+
+await result.toBlob(rasterizeOptions)
+const blob = await result.toBlob(rasterizeOptions)
+```
+
+このウォームアップは常に必要とは限りません。ブラウザと対象フォントで再現を確認した場合に採用し、理由をコメントへ残します。
+
+自由入力、曲名、アーティスト名などには `font-sans` を使用し、対象文字を含まない欧文フォントだけを指定しないでください。
+
+## `reconcile` の役割と限界
+
+`reconcile: true` は、SnapDOM がスタイル適用済みの複製を画面外へ配置し、元の DOM と寸法が異なる要素へ幅・高さを固定する機能です。文字の再折り返し、固定幅バッジ、table-cell などのレイアウト差を抑えられます。
+
+```typescript
+const result = await snapdom(element, {
+  embedFonts: true,
+  reconcile: true,
+})
+```
+
+注意点は次のとおりです。
+
+- 追加のレイアウト計測が走るため、処理時間が増える。
+- 元の DOM の幅が誤っている場合、その誤った幅を正しい仕様には変えられない。
+- 内容幅ぴったりの文字要素や、改行可能な固定ラベルの安全余白は作らない。
+- `truncate` によりすでに省略された文字列は復元しない。
+- 画像化対象やブラウザによっては、固定された寸法とSVG内の文字寸法が競合する可能性がある。
+
+このプロジェクトでは、SnapDOM を使うすべての画像化で `reconcile: true` を必須とします。`reconcile` を無効にした画像では固定幅の難易度ラベルを含むレイアウト崩れが発生したため、省略しないでください。
+
+ただし、`reconcile` は誤ったCSSを正しいレイアウトへ直す機能ではありません。Flexbox・Grid・改行・省略のCSSを先に安定させてください。
+
+## `fast: false` でメインスレッドを占有しない
+
+SnapDOM の既定（`fast: true`）は複製・スタイル算出を1つの同期タスクで行います。ベスト枠・新曲枠の50カードを持つレーティング画像では、低速端末相当の環境でこのタスクが2〜5秒続き、その間スピナーの更新、タップ、Escape キーなどのイベント処理が止まりました。
+
+`fast: false` を指定すると、SnapDOM はおよそ1フレームごとにイベントループへ処理を返します。`Promise` や `setTimeout` で開始を遅らせるだけでは同期タスクの長さは変わらないため、このオプションで処理自体を分割します。
+
+```typescript
+const result = await snapdom(element, {
+  embedFonts: true,
+  fast: false,
+  reconcile: true,
+})
+```
+
+- 総処理時間は既定より増えることがありますが、SnapDOM v3 では v2 の既定設定と同程度です。
+- 処理を返している間に画像化対象が変更されると、SnapDOM は複製を1タスクでやり直します。画像化対象には、処理中に変更されない一時DOMを渡します。
+- SnapDOM v3 は画像デコード用の非表示 iframe（`aria-hidden="true"`）を `document.body` 直下に保持し、次回の画像化で再利用します。ライブラリ内部のキャッシュであり、画像化ごとに増えるものではありません。
+
+## `dpr`、出力寸法、メモリ
+
+`dpr` と `scale` は出力解像度を増やしますが、Canvas のピクセル数とメモリ使用量も増やします。
+
+概算の生ピクセルメモリは次の式で確認できます。`scale` を指定しない場合は `1` として扱います。
+
+```text
+width × height × (dpr × scale)² × 4 bytes
+```
+
+例えば、論理サイズが `496 × 8,000px`、`dpr: 2` の場合、Canvas は `992 × 16,000px` になり、生ピクセルだけで約64MBを使用します。変換中は SVG、Image、Canvas、Blob が同時に存在する可能性があるため、実際のピークメモリはさらに大きくなります。
+
+- 出力する論理サイズに上限を設ける。
+- 長い要素は上限内へ縮小してから画像化する。
+- 必要以上に高い `dpr` を指定しない。
+- 画像化後は不要なDOMを `finally` で削除する。
+- スマートフォンで複数の高解像度 Blob を同時保持しない。
+
+### ブラウザ上限を超えると自動縮小される
+
+SnapDOM は、生成する SVG の画像デコード上限または Canvas 上限を超えると、処理を失敗させる代わりに出力を自動縮小することがあります。その場合、指定した `dpr` や `scale` は要求値であり、実際の出力ピクセル寸法を保証しません。
+
+現在使用している SnapDOM の実装では、1辺が 16,384 px、または総面積が `16,384 × 16,384` ピクセルを超えた際に縮小されます。ただし、この値や判定方法は SnapDOM・ブラウザの更新で変わり得るため、固定仕様として依存しないでください。
+
+実装時は、次を確認します。
+
+- コンソールに `[snapDOM]` から始まる downscaling 警告が出ていないか。
+- 生成した Canvas の `width` / `height`。
+- デコードした画像の `naturalWidth` / `naturalHeight`。
+- 保存した PNG の実ピクセル寸法。
+
+自動縮小に任せると、文字や罫線の見え方、保存画像の縮尺が意図せず変わります。長い画像は分割する、`dpr` / `scale` を下げる、論理サイズを見直すなどして、上限内に収めることを優先します。
+
+## 更新差分画像のページ分割
+
+更新差分の上部プロフィールには、RATING・OVER POWER・OP%とそれぞれの差分を表示します。楽曲カードではRATING・OP・OP%を画面と画像の両方で非表示にしています。楽曲カードの表示コードと計算処理は保持し、`REGISTER_SCORE_SHOW_SONG_METRICS` と `REGISTER_SCORE_SHOW_SONG_OP_PERCENT` で表示を制御します。
+
+更新差分の曲名右横にはコピーアイコンを表示し、曲名またはアイコンのタップで曲名をコピーできます。コピーアイコンは画像に含めません。
+
+更新差分は固定論理幅の一時DOMで画像除外要素を取り除き、フォントと画像の準備後に高さを測定します。自動分割では、余白とページ番号を含む論理高さの上限は1,800pxです。
+
+- ヘッダー、プロフィール、集計は1枚目だけに含めます。
+- 楽曲カードとコースカードは表示順を維持し、カードの途中では改ページしません。
+- セクション見出しは最初のカードと同じページへ配置します。
+- 自動分割した画像の各ページ下部に現在のページ番号と全ページ数を表示します。
+- 最終ページは内容に合わせた高さとし、短い差分は1枚だけ生成します。
+- 自動分割では、集計または見出し付きカード単体が上限を超える場合は、画像生成エラーとして扱います。
+
+ページごとのDOMを順番に画像化します。プレビューでは全ページを縦に並べ、生成済みの実ファイルすべてを `canShareFiles` へ渡して一括共有の対応可否を確認します。一括共有できない場合は対応環境でページごとの共有を表示し、各ページの保存も提供します。ダイアログを閉じる際に全プレビューのObject URLとファイル参照を破棄します。
+
+ダイアログ上部の「○枚に分割」と「1枚にまとめる」で出力形式を切り替えます。既定値は自動分割です。「○枚」は自動分割時の枚数を表示し、1枚出力を選んでも維持します。切り替え時は旧画像を破棄して再生成し、画像生成中・共有中は切り替えを無効にします。1枚出力はページ番号を省略し、論理高さが8,000pxを超える場合は共通画像化処理で全体を縮小します。
+
+## 画像と外部アセット
+
+SnapDOM は画像、CSS の背景画像、フォントなどを取得して出力へ埋め込みます。外部アセットは通常の画面表示よりもCORS制約の影響を受けやすいため、次を確認します。
+
+- 同一オリジン、または適切なCORSレスポンスヘッダーを持つURLを使用する。
+- 外部フォントやスタイルシートでは、必要に応じて `crossorigin` 属性を設定する。
+- 画像の読み込み完了が画面の状態に影響する場合は、対象画像の `decode()` 完了を待つ。
+- 遅延読み込み画像が実URLへ解決されていることを確認する。
+- CORS対応ができない外部アセットに `useProxy` を使う場合は、プロキシの運用・許可ドメイン・障害時の挙動を先に決める。
+- 画像取得失敗時にプレースホルダーを許容するか、`fallbackURL` を使うかを画面仕様として決める。
+- iframe は同一オリジンを前提とし、外部iframeの内容を画像化できるとは考えない。
+
+外部アセットが欠落した場合に画像生成全体を失敗させるか、プレースホルダーで継続するかは、機能ごとに明示します。
+
+SnapDOM は表示済みの `<img>` も再取得し、3秒で取得できないと灰色の "img" プレースホルダーへ置き換えます。回線が遅いスマートフォンで多数のジャケットを含む画像を作ると発生しやすいため、`src/utils/domImageCapture.ts` の `captureElementAsImage` は SnapDOM へ渡す前に、画像化用DOM内の画像を data URL へ置き換えます。data URL は SnapDOM が再取得しないため、タイムアウトの影響を受けません。
+
+- 画面に表示済みのラスター画像（ジャケットなど）は、ネットワークを使わず表示中の `<img>` を原寸の Canvas へ描画し、PNG の data URL にします。ジャケットは `crossOrigin="anonymous"` で読み込み、配信元が `Access-Control-Allow-Origin` を返すため Canvas は汚染されません。画像化対象に外部オリジンのラスター画像を追加する場合は、表示中の `<img>` に必ず `crossOrigin="anonymous"` を付けてください。Canvas が汚染されると `fetch` による再取得へ切り替わり、この対策が効かなくなります。
+- 画像化のたびに数十枚のジャケットを `fetch` で再取得すると、HTTPキャッシュが使われない環境やレート制限で一部だけ失敗し、生成のたびに異なるジャケットが代替画像になることがありました。表示済み画像の再取得はしないでください。
+- SVG（クラスエンブレムなど）は原寸で Canvas へ描くと拡大時にぼやけるため、表示済みでない画像と同じく HTTPキャッシュ優先で取得し、元のバイト列のまま埋め込みます。
+
+それでも埋め込めなかった画像は、`<img>` の `data-image-capture-fallback-src` に指定した代替画像へ置き換えます。ジャケットでは `JacketImage` の `imageCaptureFallbackSrc` で、楽曲詳細画面などの読み込み中表示と同じ `src/assets/placeholder.webp` を指定しています。代替画像を持たない画像（クラスエンブレムなど）は、SnapDOM の `placeholders: false` により何も描画しません。
+
+## 背景色とテーマ
+
+透明背景を意図しない場合は、画像化対象の算出済み背景色を渡します。
+
+```typescript
+const result = await snapdom(element, {
+  backgroundColor: getComputedStyle(element).backgroundColor,
+  embedFonts: true,
+  reconcile: true,
+})
+```
+
+画像専用テーマを使う場合は、画像化対象のルートへ `data-theme` などを明示し、画面の現在テーマへ不用意に依存させません。
+
+## ウニ埋めマトリックスの画像化
+
+マトリクスは表示中の表の論理幅に左右24pxの余白を加えた一時DOMをbody直下に描画し、共通の `captureElementAsImage` でPNGへ変換します。出力ピクセル比は1とし、長い譜面定数表は共通処理の論理サイズ上限8,000pxへ収まるように縮小します。背景色とフォントは画面のテーマに従います。
+
+画像用DOMは操作ボタンを持たず、縦軸見出しのsticky配置を解除します。セルの件数・残数・%表示・チェックマークは画面表示を維持します。画像ヘッダーのタイトル左端にChuniSupportのロゴを表示し、その下に難易度と「目標: 達成条件」を2行で表示します。「目標」は太字とし、画像右下には「Generated by ChuniSupport」を表示してChuniSupportを太字にします。画像ヘッダーにはチェックが付いたマス数を36px・太字、スラッシュと対象マス数を20px・通常の太さで表示します。合計行・合計列と譜面がないマスは集計から除外します。譜面がないセルは白いハイフンと全件達成時の背景色を維持します。プレビューダイアログを開いた時点の集計と条件で画像化し、処理完了時には一時DOMとSolidの描画ルートを破棄します。プレビュー表示中の画像と保存・共有するファイルは同一で、ダイアログを閉じる際にObject URLを破棄します。
+
+## OVER POWERの画像化
+
+OVER POWER画面のグラフ表示中に、表示中のカード（全体カードと、選択中の表示軸のカード）を横3枚ずつ並べた画像を生成します。テーブル表示中は画像化ボタンを無効にします。
+
+カード1枚の幅は、画面幅430pxで表示したときのカード幅（430pxから左右余白32pxを引いた398px）に固定します。画像はカード3枚・カード間余白・外周余白を合計した論理幅（1,274px）の一時DOMをbody直下に描画し、共通の `captureElementAsImage` でPNGへ変換します。カードは画面と同じ `OverPowerSummaryCard` を `imageMode` で描画し、レコード遷移ボタンを省くとともに、ビューポート幅に依存する文字サイズ指定を固定値へ置き換えます。カード内の小さな文字を読めるよう出力ピクセル比は2とし、長い画像は共通処理の論理サイズ上限8,000pxへ収まるように縮小します。
+
+画像ヘッダーにはChuniSupportのロゴ、「OVER POWER」、プレイヤー名を表示します。画像右下には「Generated by ChuniSupport」を表示します。背景色は画面のテーマに従います。フォントは画面のカードと同じ `font-jost` とし、見出し・プレイヤー名・「Generated by ChuniSupport」は他の画像化と同じ `font-sans` を指定します。
+
+カードの現在値は、達成率70%以上で銀・金・鉑・虹のグラデーション文字（`background-clip: text`）で色分けし、数字の形に沿った影（ホワイト・パステルオレンジではオフセットなしの全方位の影）を `filter: drop-shadow` で付けます。70%未満（白）は通常の文字色のままです。`filter` と `background-clip: text` を同じ要素に付けると Safari や SnapDOM の描画が崩れることがあるため、`OverPowerTierValue` で外側の span に影、内側の span に文字色を分けて付けます。画像化を変更するときは、各段階のカードを iPhone 実機の Safari で確認してください。
+
+## 実装チェックリスト
+
+### レイアウト
+
+- [ ] 画像の論理幅・高さと、狭い画面での表示倍率を分離した。
+- [ ] 表示用transformを画像化対象から切り離した。
+- [ ] Flexbox の可変長文字へ `min-w-0` と残り幅を受け取る指定を付けた。
+- [ ] Grid の可変長列へ `minmax(0, 1fr)` を使った。
+- [ ] ラベル、レベル、日時など分割できない文字列を改行禁止にした。
+- [ ] 固定幅バッジへ明示幅と `shrink-0` を付けた。
+- [ ] `clientWidth` と `scrollWidth` から、省略対象が仕様どおりであることを確認した。
+
+### フォントとSnapDOM
+
+- [ ] `document.fonts.ready` を待った。
+- [ ] `embedFonts: true` を指定した。
+- [ ] 任意文字を含む箇所へ `font-sans` を指定した。
+- [ ] `reconcile: true` を指定した。
+- [ ] `fast: false` を指定した。
+- [ ] 初回ラスタライズだけ崩れる場合、同じ `CaptureResult` の再利用を検証した。
+
+### 出力と検証
+
+- [ ] 背景色と画像用テーマを明示した。
+- [ ] 画像、背景画像、フォントなどの外部アセットとCORSを確認した。
+- [ ] `dpr`・`scale` 適用後のCanvas寸法とメモリ使用量を確認した。
+- [ ] SnapDOM の自動縮小警告と、保存画像の実ピクセル寸法を確認した。
+- [ ] PCと実際のスマートフォンで確認した。
+- [ ] 長い日本語、英数字混在、空白を含むラベル、境界付近の文字列を試した。
+- [ ] 画像化用の一時DOM、Object URL、不要なBlobを破棄した。
+
+## 参考
+
+- [SnapDOM API](https://github.com/zumerlab/snapdom/blob/main/docs/docs/api/index.html)
+- [SnapDOM Options](https://github.com/zumerlab/snapdom/blob/main/docs/docs/options/index.html)
+- [SnapDOM Features](https://github.com/zumerlab/snapdom/blob/main/FEATURES.md)
+- 基準実装（更新差分レポート）
+  - 表示用の縮小枠: [`RegisterScoreReportScaleFrame.tsx`](../src/pages/register-score/RegisterScoreReportScaleFrame.tsx)
+  - 画像化する原寸DOM: [`RegisterScoreReport.tsx`](../src/pages/register-score/RegisterScoreReport.tsx)
+  - 曲名の1行省略: [`RegisterScoreChangeCards.tsx`](../src/pages/register-score/RegisterScoreChangeCards.tsx)
+  - 自動分割と画像化: [`registerScoreImageCapture.ts`](../src/pages/register-score/registerScoreImageCapture.ts)

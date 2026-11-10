@@ -7,12 +7,15 @@ const createSong = (overrides: Partial<WorldsendSongDTO>): WorldsendSongDTO => (
   id: overrides.id ?? 'song',
   title: overrides.title ?? '楽曲',
   reading: overrides.reading ?? null,
+  name_folder_code: 'NUMBER',
   artist: overrides.artist ?? 'アーティスト',
   genre: overrides.genre === undefined ? 'ジャンル' : overrides.genre,
   bpm: overrides.bpm === undefined ? 120 : overrides.bpm,
   release: overrides.release === undefined ? '2024-01-01' : overrides.release,
   official_idx: overrides.official_idx ?? '1',
   jacket: overrides.jacket ?? null,
+  is_new: overrides.is_new ?? false,
+  unlock_required: overrides.unlock_required ?? false,
   charts: overrides.charts ?? {},
 })
 
@@ -26,11 +29,11 @@ test("WORLD'S END楽曲一覧のソート状態はascからdesc、最後に解�
   assert.deepEqual(third, { sortKey: null, sortDirection: null })
 })
 
-test("WORLD'S END楽曲をタイトルで日本語順にソートする", () => {
+test("WORLD'S END楽曲を reading の日本語順にソートする", () => {
   const songs = [
-    createSong({ id: 'b', title: 'ウタ' }),
-    createSong({ id: 'a', title: 'アイ' }),
-    createSong({ id: 'c', title: 'オト' }),
+    createSong({ id: 'b', title: '愛', reading: 'ラブ' }),
+    createSong({ id: 'a', title: '空', reading: 'ソラ' }),
+    createSong({ id: 'c', title: '林檎', reading: 'リンゴ' }),
   ]
 
   assert.deepEqual(
@@ -43,11 +46,12 @@ test("WORLD'S END楽曲をタイトルで日本語順にソートする", () => 
   )
 })
 
-test("WORLD'S END楽曲のジャンルはマスタのsort_order順にソートする", () => {
+test("WORLD'S END楽曲のジャンルはマスタ順にソートし、マスタ外は降順でも末尾に固定する", () => {
   const songs = [
     createSong({ id: 'touhou', genre: '東方Project' }),
     createSong({ id: 'pops', genre: 'POPS & ANIME' }),
     createSong({ id: 'niconico', genre: 'niconico' }),
+    createSong({ id: 'variety', genre: 'VARIETY' }),
   ]
   const genres = [
     { id: 1, name: 'POPS & ANIME', sort_order: 10 },
@@ -57,11 +61,11 @@ test("WORLD'S END楽曲のジャンルはマスタのsort_order順にソート�
 
   assert.deepEqual(
     sortWorldsendSongs(songs, 'genre', 'asc', genres).map((song) => song.id),
-    ['pops', 'niconico', 'touhou']
+    ['pops', 'niconico', 'touhou', 'variety']
   )
   assert.deepEqual(
     sortWorldsendSongs(songs, 'genre', 'desc', genres).map((song) => song.id),
-    ['touhou', 'niconico', 'pops']
+    ['touhou', 'niconico', 'pops', 'variety']
   )
 })
 
@@ -93,5 +97,32 @@ test("WORLD'S END楽曲の属性とレベルの未設定値は末尾に寄せる
   assert.deepEqual(
     sortWorldsendSongs(songs, 'attribute', 'asc').map((song) => song.id),
     ['low', 'high', 'missing-level', 'missing-chart']
+  )
+})
+
+test("WORLD'S END楽曲のノーツ数の未設定値は末尾に寄せる", () => {
+  const songs = [
+    createSong({ id: 'missing-chart' }),
+    createSong({
+      id: 'high',
+      charts: { WORLDSEND: { attribute: '狂', level_star: 5, notes: 1000 } },
+    }),
+    createSong({
+      id: 'low',
+      charts: { WORLDSEND: { attribute: '改', level_star: 2, notes: 900 } },
+    }),
+    createSong({
+      id: 'missing-notes',
+      charts: { WORLDSEND: { attribute: '戻', level_star: 3, notes: null } },
+    }),
+  ]
+
+  assert.deepEqual(
+    sortWorldsendSongs(songs, 'notes', 'asc').map((song) => song.id),
+    ['low', 'high', 'missing-chart', 'missing-notes']
+  )
+  assert.deepEqual(
+    sortWorldsendSongs(songs, 'notes', 'desc').map((song) => song.id),
+    ['high', 'low', 'missing-chart', 'missing-notes']
   )
 })

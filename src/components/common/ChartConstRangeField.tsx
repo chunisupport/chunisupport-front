@@ -1,0 +1,111 @@
+import type { Component } from 'solid-js'
+import { CHART_LEVEL_FILTER_OPTIONS } from '../../utils/chartLevel'
+import { normalizeChartConstRangeInput } from '../../utils/rangeInput'
+import { CheckboxField, type CheckboxFieldTextVariant } from './CheckboxField'
+import { FILTER_DIALOG_FIELD_INPUT_CLASS } from './filterStyles'
+import {
+  RANGE_END_LABEL_SUFFIX,
+  RANGE_START_LABEL_SUFFIX,
+  SelectRangeInput,
+  TextRangeInput,
+} from './RangeInput'
+
+/** レベル範囲セクションの見出し */
+const CONST_LEVEL_RANGE_TITLE = 'レベル'
+
+/** 譜面定数範囲セクションの見出し */
+const CONST_VALUE_RANGE_TITLE = '譜面定数'
+export type ChartConstRangeFieldProps = {
+  /** 入力欄IDの接頭辞 */
+  idPrefix?: string
+  /** 目標条件など別の条件を使用している間は入力を無効化する */
+  disabled?: boolean
+  /** 範囲入力の直下に表示するエラー */
+  errorMessage?: string | null
+  /** 「譜面定数で指定」チェックボックスの文字サイズ。画面内の他のチェックボックスに揃える */
+  checkboxTextVariant?: CheckboxFieldTextVariant
+  constFilterMode: 'level' | 'number'
+  minValue: string
+  maxValue: string
+  constLevelMin: string
+  constLevelMax: string
+  onMinInput: (value: string) => void
+  onMaxInput: (value: string) => void
+  onMinCommit: (value: string) => void
+  onMaxCommit: (value: string) => void
+  onConstFilterModeChange: (mode: 'level' | 'number') => void
+  onConstLevelChange: (type: 'min' | 'max', value: string) => void
+}
+
+/**
+ * レベルまたは譜面定数の範囲条件を表示する。
+ *
+ * @param props - 範囲入力値、入力モード、選択値、各変更ハンドラ。
+ * @returns 定数範囲フィルターセクションの JSX 要素。
+ */
+export const ChartConstRangeField: Component<ChartConstRangeFieldProps> = (props) => (
+  <div>
+    {props.constFilterMode === 'number' ? (
+      <TextRangeInput
+        title={CONST_VALUE_RANGE_TITLE}
+        inputClass={FILTER_DIALOG_FIELD_INPUT_CLASS}
+        errorMessage={props.errorMessage}
+        start={{
+          id: `${props.idPrefix ?? 'filter'}-const-min`,
+          label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          value: props.minValue,
+          disabled: props.disabled,
+          invalid: !!props.errorMessage,
+          inputMode: 'decimal',
+          pattern: '[0-9]*[.]?[0-9]*',
+          normalizeInput: normalizeChartConstRangeInput,
+          onInput: props.onMinInput,
+          onCommit: props.onMinCommit,
+        }}
+        end={{
+          id: `${props.idPrefix ?? 'filter'}-const-max`,
+          label: `${CONST_VALUE_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          value: props.maxValue,
+          disabled: props.disabled,
+          invalid: !!props.errorMessage,
+          inputMode: 'decimal',
+          pattern: '[0-9]*[.]?[0-9]*',
+          normalizeInput: normalizeChartConstRangeInput,
+          onInput: props.onMaxInput,
+          onCommit: props.onMaxCommit,
+        }}
+      />
+    ) : (
+      <SelectRangeInput
+        title={CONST_LEVEL_RANGE_TITLE}
+        options={[...CHART_LEVEL_FILTER_OPTIONS]}
+        disabled={props.disabled}
+        errorMessage={props.errorMessage}
+        placeholder="選択…"
+        start={{
+          value: props.constLevelMin,
+          label: `${CONST_LEVEL_RANGE_TITLE} ${RANGE_START_LABEL_SUFFIX}`,
+          onChange: (value) => props.onConstLevelChange('min', value),
+        }}
+        end={{
+          value: props.constLevelMax,
+          label: `${CONST_LEVEL_RANGE_TITLE} ${RANGE_END_LABEL_SUFFIX}`,
+          onChange: (value) => props.onConstLevelChange('max', value),
+        }}
+      />
+    )}
+    <div class="mt-2">
+      <CheckboxField
+        id={`${props.idPrefix ?? 'filter'}-const-mode`}
+        checked={props.constFilterMode === 'number'}
+        disabled={props.disabled}
+        onChange={(checked) => props.onConstFilterModeChange(checked ? 'number' : 'level')}
+        class="relative flex items-center gap-2"
+        textVariant={props.checkboxTextVariant ?? 'large'}
+        label="譜面定数で指定"
+      />
+    </div>
+  </div>
+)
+
+export default ChartConstRangeField

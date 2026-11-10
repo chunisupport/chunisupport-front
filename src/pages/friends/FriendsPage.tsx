@@ -1,0 +1,980 @@
+import { DropdownMenu } from '@kobalte/core/dropdown-menu'
+import { TextField } from '@kobalte/core/text-field'
+import { A, useNavigate, useParams } from '@solidjs/router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
+import {
+  Check,
+  Copy,
+  EllipsisVertical,
+  Lock,
+  RotateCw,
+  Swords,
+  UserMinus,
+  UserPlus,
+  X,
+} from 'lucide-solid'
+import type { JSX } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  onCleanup,
+  Show,
+} from 'solid-js'
+import {
+  acceptFriendRequest,
+  cancelFriendRequest,
+  createFriendRequest,
+  deleteFriend,
+  rejectFriendRequest,
+} from '../../api/friends'
+import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
+import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../../components/common/AppMenu'
+import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
+import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
+import { Loading } from '../../components/Loading'
+import { getPossessionClassName } from '../../constants/possession'
+import { buildFriendVsPath } from '../../constants/routes'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import {
+  type FriendshipMutationType,
+  friendMutationKeys,
+  friendshipSlotsQueryOptions,
+  friendsQueryOptions,
+  invalidateFriendQueriesAfterMutation,
+  invalidateFriendshipSlotsQuery,
+  receivedFriendRequestsQueryOptions,
+  sentFriendRequestsQueryOptions,
+} from '../../queries/friends'
+import { fetchPossessions } from '../../queries/possessions'
+import { authSession } from '../../stores/authSession'
+import {
+  friendRequestNotification,
+  setActiveFriendRequestNotificationUser,
+  syncFriendRequestNotificationFromReceivedCount,
+} from '../../stores/friendRequestNotification'
+import type { FriendshipUserDTO, MasterItemDTO } from '../../types/api'
+import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
+import { isFriendshipSlotsFull } from '../../utils/friendshipSlots'
+import { resolvePossessionName } from '../../utils/possession'
+import {
+  USERNAME_MIN_LENGTH,
+  USERNAME_PATTERN,
+  type UsernameValidationError,
+  validateUsername,
+} from '../../utils/usernameInput'
+import {
+  buildFriendsTabOptions,
+  buildFriendsTabPath,
+  FRIEND_REQUEST_USERNAME_ERROR_ID,
+  FRIENDS_COPY,
+  FRIENDS_COPY_FEEDBACK_DURATION_MS,
+  FRIENDS_PAGE_TITLE,
+  type FriendsTabValue,
+  resolveFriendsTabValue,
+} from './constants'
+import {
+  buildFriendCardDisplay,
+  type FriendCardDisplay,
+  shouldHideFriendProfile,
+} from './friendshipDisplay'
+
+type FriendshipMutationVariables = {
+  /** 操作を行う認証ユーザー名。 */
+  authenticatedUsername: string
+  /** 操作対象のユーザー名。 */
+  targetUsername: string
+}
+
+type PendingConfirmAction = {
+  /** 確認後に実行する操作種別 */
+  type: 'reject' | 'remove'
+  /** 操作対象ユーザー */
+  user: FriendshipUserDTO
+}
+
+type FriendshipListProps = {
+  /** 一覧の表示種別 */
+  variant: FriendsTabValue
+  /** 表示するユーザー概要の一覧 */
+  items: FriendshipUserDTO[]
+  /** ID順のポゼッションマスタ。未取得時は空配列 */
+  possessions: readonly MasterItemDTO[]
+  /** 空状態で表示する文言 */
+  emptyMessage: string
+  /** 一覧内の操作を無効化するか */
+  actionsDisabled: boolean
+  /** 承認だけを無効化するか。フレンド枠が満杯のときに使う */
+  acceptDisabled?: boolean
+  /** 申請承認時の処理 */
+  onAccept: (user: FriendshipUserDTO) => void
+  /** 申請拒否時の処理 */
+  onReject: (user: FriendshipUserDTO) => void
+  /** フレンド解除時の処理 */
+  onRemove: (user: FriendshipUserDTO) => void
+  /** 送信済み申請取り消し時の処理 */
+  onCancel: (user: FriendshipUserDTO) => void
+}
+
+type FriendMetricsProps = {
+  /** 整形済みのカード表示値 */
+  display: FriendCardDisplay
+}
+
+type FriendConfirmDialogProps = {
+  /** 確認ダイアログを表示する操作 */
+  action: PendingConfirmAction | null
+  /** API 操作中かどうか */
+  busy: boolean
+  /** ダイアログ開閉変更時の通知先 */
+  onOpenChange: (open: boolean) => void
+  /** 確認ボタン押下時の処理 */
+  onConfirm: () => void
+}
+
+/**
+ * フレンド申請失敗時の表示文言を生成する。
+ *
+ * @param error - API操作で発生したエラー。
+ * @returns フレンド申請欄に表示するエラーメッセージ。
+ */
+const formatFriendRequestErrorMessage = (error: unknown): string => {
+  return toUserFriendlyErrorMessage(error, FRIENDS_COPY.requestFailure)
+}
+
+/**
+ * username の検証結果をフレンド申請欄の表示文言へ変換する。
+ *
+ * @param error - username の検証結果。
+ * @returns 入力エラー文言。有効な場合は空文字。
+ */
+const formatUsernameValidationError = (error: UsernameValidationError): string => {
+  if (error === 'required') return FRIENDS_COPY.usernameRequired
+  if (error === 'invalid') return FRIENDS_COPY.usernameInvalid
+  return ''
+}
+
+/**
+ * フレンドカード右上のメニュー操作を表示する。
+ *
+ * @param props - 操作状態とフレンド解除ハンドラー。
+ * @returns フレンドカード用のドロップダウンメニュー。
+ */
+const FriendMenuActions = (props: { busy: boolean; onRemove: () => void }): JSX.Element => (
+  <DropdownMenu gutter={4}>
+    <AppMenuTrigger
+      label={FRIENDS_COPY.openFriendMenu}
+      icon={<EllipsisVertical class="h-5 w-5" aria-hidden="true" />}
+      disabled={props.busy}
+    />
+    <DropdownMenu.Portal>
+      <AppMenuContent variant="compact">
+        <AppMenuItem
+          icon={<UserMinus class="h-4 w-4" aria-hidden="true" />}
+          label={FRIENDS_COPY.remove}
+          tone="danger"
+          disabled={props.busy}
+          onSelect={props.onRemove}
+        />
+      </AppMenuContent>
+    </DropdownMenu.Portal>
+  </DropdownMenu>
+)
+
+/**
+ * フレンドカード下部の操作ボタン群を表示する。
+ *
+ * @param props - 表示種別、フレンドVSへの遷移先、操作状態、イベントハンドラー。
+ * @returns 表示種別に応じたカード下部の操作ボタン。
+ */
+const FriendCardActions = (props: {
+  variant: FriendsTabValue
+  friendVsPath: string
+  busy: boolean
+  /** 承認だけを無効化するか。フレンド枠が満杯のときに使う */
+  acceptDisabled?: boolean
+  onAccept: () => void
+  onReject: () => void
+  onCancel: () => void
+}): JSX.Element => (
+  <div class="flex flex-col gap-2 rounded-b-md border border-t-0 border-border bg-surface px-3 py-2.5">
+    <Show when={props.variant === 'friends'}>
+      <A
+        href={props.friendVsPath}
+        class={getAppButtonClass({ variant: 'surface', size: 'sm', fullWidth: true })}
+      >
+        <Swords class="h-4 w-4" aria-hidden="true" />
+        {FRIENDS_COPY.friendVs}
+      </A>
+    </Show>
+    <Show when={props.variant === 'received'}>
+      <div class="grid grid-cols-2 gap-2">
+        <AppButton
+          variant="primary"
+          size="sm"
+          fullWidth
+          leftIcon={<Check class="h-4 w-4" aria-hidden="true" />}
+          disabled={props.busy || props.acceptDisabled}
+          onClick={props.onAccept}
+        >
+          {FRIENDS_COPY.accept}
+        </AppButton>
+        <AppButton
+          variant="dangerOutline"
+          size="sm"
+          fullWidth
+          leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
+          disabled={props.busy}
+          onClick={props.onReject}
+        >
+          {FRIENDS_COPY.reject}
+        </AppButton>
+      </div>
+    </Show>
+    <Show when={props.variant === 'sent'}>
+      <AppButton
+        variant="dangerOutline"
+        size="sm"
+        fullWidth
+        leftIcon={<X class="h-4 w-4" aria-hidden="true" />}
+        disabled={props.busy}
+        onClick={props.onCancel}
+      >
+        {FRIENDS_COPY.cancelRequest}
+      </AppButton>
+    </Show>
+  </div>
+)
+
+/**
+ * フレンドユーザーのプロフィールURLを生成する。
+ *
+ * @param username - 遷移先ユーザー名。
+ * @returns プロフィール画面のURL。
+ */
+const buildFriendProfilePath = (username: string): string =>
+  `/users/${encodeURIComponent(username)}`
+
+/**
+ * フレンド申請拒否またはフレンド解除の確認ダイアログを表示する。
+ *
+ * @param props - 確認対象の操作、操作状態、イベントハンドラー。
+ * @returns 共通の確認ダイアログ。
+ */
+const FriendConfirmDialog = (props: FriendConfirmDialogProps): JSX.Element => {
+  const isReject = createMemo(() => props.action?.type === 'reject')
+  const title = createMemo(() =>
+    isReject() ? FRIENDS_COPY.confirmRejectTitle : FRIENDS_COPY.confirmRemoveTitle
+  )
+  const description = createMemo(() =>
+    isReject() ? FRIENDS_COPY.confirmRejectDescription : FRIENDS_COPY.confirmRemoveDescription
+  )
+  const confirmLabel = createMemo(() => (isReject() ? FRIENDS_COPY.reject : FRIENDS_COPY.remove))
+  const busyLabel = createMemo(() =>
+    isReject() ? FRIENDS_COPY.confirmingReject : FRIENDS_COPY.confirmingRemove
+  )
+
+  return (
+    <AppConfirmDialog
+      open={props.action !== null}
+      onOpenChange={props.onOpenChange}
+      title={title()}
+      description={description()}
+      cancelLabel={FRIENDS_COPY.confirmCancel}
+      confirmLabel={props.busy ? busyLabel() : confirmLabel()}
+      confirmVariant="danger"
+      pending={props.busy}
+      onConfirm={props.onConfirm}
+    />
+  )
+}
+
+/**
+ * フレンドカードにRATINGとOVER POWERを並べて表示する。
+ *
+ * @param props - 整形済みの表示値。
+ * @returns 指標の定義リスト。
+ */
+const FriendMetrics = (props: FriendMetricsProps): JSX.Element => (
+  <dl class="grid grid-cols-2 gap-x-2">
+    <div class="min-w-0">
+      <dt class="text-xs font-medium leading-tight">{FRIENDS_COPY.ratingLabel}</dt>
+      <dd class="truncate font-jost text-xl font-semibold leading-tight tracking-tight">
+        {props.display.rating}
+      </dd>
+    </div>
+    <div class="min-w-0">
+      <dt class="text-xs font-medium leading-tight">{FRIENDS_COPY.overPowerLabel}</dt>
+      <dd class="truncate font-jost text-xl font-semibold leading-tight tracking-tight">
+        {props.display.overPower}
+      </dd>
+    </div>
+  </dl>
+)
+
+/**
+ * フレンドまたは申請ユーザーの一覧を表示する。
+ *
+ * @param props - 表示種別、ユーザー一覧、空状態文言、操作ハンドラー。
+ * @returns フレンド一覧UI。
+ */
+const FriendshipList = (props: FriendshipListProps): JSX.Element => (
+  <Show
+    when={props.items.length > 0}
+    fallback={
+      <p class="rounded border border-border bg-surface px-4 py-6 text-sm text-text-muted">
+        {props.emptyMessage}
+      </p>
+    }
+  >
+    <ul class="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
+      <For each={props.items}>
+        {(user) => {
+          const hidesProfile = createMemo(() => shouldHideFriendProfile(props.variant, user))
+          const display = createMemo(() => buildFriendCardDisplay(user, hidesProfile()))
+          const possessionClassName = createMemo(() =>
+            hidesProfile()
+              ? ''
+              : getPossessionClassName(
+                  resolvePossessionName(user.possession_id ?? undefined, props.possessions)
+                )
+          )
+          return (
+            <li class="flex flex-col rounded-md shadow-sm">
+              <div
+                class={`friend-card user-nameplate relative flex flex-col rounded-t-md px-3 py-2.5 ${possessionClassName()}`}
+              >
+                <Show when={!hidesProfile()}>
+                  <A
+                    href={buildFriendProfilePath(user.username)}
+                    aria-label={`${display().playerName}${FRIENDS_COPY.profileLinkSuffix}`}
+                    class="absolute inset-0 z-10 rounded-t-md transition-shadow hover:ring-2 hover:ring-inset hover:ring-focus-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+                  />
+                </Show>
+                <Show when={props.variant === 'friends'}>
+                  <div class="absolute right-1 top-1 z-20">
+                    <FriendMenuActions
+                      busy={props.actionsDisabled}
+                      onRemove={() => props.onRemove(user)}
+                    />
+                  </div>
+                </Show>
+                <Show when={hidesProfile()}>
+                  <span
+                    class="absolute right-2 top-2 text-text-muted"
+                    role="img"
+                    aria-label={FRIENDS_COPY.privateAccountLabel}
+                    title={FRIENDS_COPY.privateAccountLabel}
+                  >
+                    <Lock class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </Show>
+                <div
+                  class={`flex min-w-0 items-end gap-2 ${
+                    props.variant === 'friends' || hidesProfile() ? 'pr-7' : ''
+                  }`}
+                >
+                  <span class="shrink-0 text-sm">
+                    {FRIENDS_COPY.levelLabel} {display().level}
+                  </span>
+                  <div class="flex min-w-0 flex-1 justify-center">
+                    <span class="min-w-0 truncate text-center font-sans text-lg font-medium text-inherit">
+                      {display().playerName}
+                    </span>
+                  </div>
+                </div>
+                <span class="user-nameplate-metric-secondary block min-w-0 truncate text-right font-sans text-xs">
+                  @{user.username}
+                </span>
+                <hr class="my-1.5 border-t" />
+                <FriendMetrics display={display()} />
+              </div>
+              <FriendCardActions
+                variant={props.variant}
+                friendVsPath={buildFriendVsPath(user.username)}
+                busy={props.actionsDisabled}
+                acceptDisabled={props.acceptDisabled}
+                onAccept={() => props.onAccept(user)}
+                onReject={() => props.onReject(user)}
+                onCancel={() => props.onCancel(user)}
+              />
+            </li>
+          )
+        }}
+      </For>
+    </ul>
+  </Show>
+)
+
+/**
+ * フレンド機能の画面を表示する。
+ *
+ * @returns フレンド画面。
+ */
+const FriendsPage = () => {
+  useDocumentTitle(FRIENDS_PAGE_TITLE)
+  const params = useParams<{ tab?: string }>()
+  const navigate = useNavigate()
+
+  const queryClient = useQueryClient()
+  const [usernameInput, setUsernameInput] = createSignal('')
+  const [usernameValidationErrorMessage, setUsernameValidationErrorMessage] = createSignal('')
+  const [requestErrorMessage, setRequestErrorMessage] = createSignal('')
+  const [isOwnUsernameCopied, setIsOwnUsernameCopied] = createSignal(false)
+  const [pendingConfirmAction, setPendingConfirmAction] = createSignal<PendingConfirmAction | null>(
+    null
+  )
+  let ownUsernameCopyResetTimer: number | undefined
+  let lastReportedQueryError: unknown
+
+  const ownUsername = createMemo(() => authSession.user?.username ?? '')
+  const friendsQuery = useQuery(() => friendsQueryOptions(ownUsername() || null))
+  const receivedRequestsQuery = useQuery(() =>
+    receivedFriendRequestsQueryOptions(ownUsername() || null)
+  )
+  const sentRequestsQuery = useQuery(() => sentFriendRequestsQueryOptions(ownUsername() || null))
+  /** フレンド枠。表示の補助なので、取得前や取得失敗時は枠表示を出さず申請も止めない */
+  const slotsQuery = useQuery(() => friendshipSlotsQueryOptions(ownUsername() || null))
+  const [possessions] = createResource(fetchPossessions)
+  /** カード背景に使うポゼッションマスタ。装飾用のため取得失敗時は空配列で既定色にする */
+  const possessionMaster = createMemo(() => (possessions.state === 'ready' ? possessions() : []))
+
+  /**
+   * フレンド操作成功を通知し、影響するqueryを無効化する。
+   *
+   * @param authenticatedUsername - 操作を行った認証ユーザー名。
+   * @param completedOperation - 完了したフレンド操作。
+   * @param successMessage - 操作成功時に表示する文言。
+   * @returns 表示中queryの再取得完了時に解決されるPromise。
+   */
+  const completeFriendMutation = async (
+    authenticatedUsername: string,
+    completedOperation: FriendshipMutationType,
+    successMessage: string
+  ): Promise<void> => {
+    showSuccessToast(successMessage)
+    await invalidateFriendQueriesAfterMutation(
+      queryClient,
+      authenticatedUsername,
+      completedOperation
+    )
+  }
+
+  const requestMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'request'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      createFriendRequest({ username: variables.targetUsername }),
+    onSuccess: async (_data, variables) => {
+      setUsernameInput('')
+      await completeFriendMutation(
+        variables.authenticatedUsername,
+        'request',
+        FRIENDS_COPY.requestSuccess
+      )
+    },
+  }))
+  const acceptMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'accept'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      acceptFriendRequest(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'accept', FRIENDS_COPY.acceptSuccess),
+  }))
+  const rejectMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'reject'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      rejectFriendRequest(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'reject', FRIENDS_COPY.rejectSuccess),
+  }))
+  const cancelMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'cancel'),
+    mutationFn: (variables: FriendshipMutationVariables) =>
+      cancelFriendRequest(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'cancel', FRIENDS_COPY.cancelSuccess),
+  }))
+  const removeMutation = useMutation(() => ({
+    mutationKey: friendMutationKeys.operation(ownUsername(), 'remove'),
+    mutationFn: (variables: FriendshipMutationVariables) => deleteFriend(variables.targetUsername),
+    onSuccess: (_data, variables) =>
+      completeFriendMutation(variables.authenticatedUsername, 'remove', FRIENDS_COPY.removeSuccess),
+  }))
+
+  const operation = createMemo<FriendshipMutationType | null>(() => {
+    if (requestMutation.isPending) return 'request'
+    if (acceptMutation.isPending) return 'accept'
+    if (rejectMutation.isPending) return 'reject'
+    if (cancelMutation.isPending) return 'cancel'
+    if (removeMutation.isPending) return 'remove'
+    return null
+  })
+  const currentData = createMemo(() => ({
+    friends: friendsQuery.data ?? [],
+    received: receivedRequestsQuery.data ?? [],
+    sent: sentRequestsQuery.data ?? [],
+  }))
+  const isInitialLoading = createMemo(() =>
+    [friendsQuery, receivedRequestsQuery, sentRequestsQuery].some(
+      (query) => query.isLoading && query.data === undefined
+    )
+  )
+  const hasInitialLoadError = createMemo(() =>
+    [friendsQuery, receivedRequestsQuery, sentRequestsQuery].some(
+      (query) => query.isError && query.data === undefined
+    )
+  )
+  const isRefreshing = createMemo(() =>
+    [friendsQuery, receivedRequestsQuery, sentRequestsQuery, slotsQuery].some(
+      (query) => query.isFetching
+    )
+  )
+  const isRequesting = createMemo(() => operation() === 'request')
+  const isSlotsFull = createMemo(() => isFriendshipSlotsFull(slotsQuery.data))
+  const resolvedActiveTab = createMemo(() => resolveFriendsTabValue(params.tab))
+  const activeTab = createMemo(() => resolvedActiveTab() ?? 'friends')
+  const hasPendingReceivedRequest = createMemo(() =>
+    receivedRequestsQuery.data !== undefined
+      ? receivedRequestsQuery.data.length > 0
+      : friendRequestNotification.hasPendingReceivedRequest
+  )
+  const friendTabOptions = createMemo(() => buildFriendsTabOptions(hasPendingReceivedRequest()))
+  const usernameErrorMessage = createMemo(
+    () => usernameValidationErrorMessage() || requestErrorMessage()
+  )
+  /**
+   * フレンド申請用 username 入力を変換せず更新する。
+   *
+   * @param value - 入力されたユーザー名。
+   * @returns なし。
+   */
+  const updateUsernameInput = (value: string): void => {
+    setUsernameInput(value)
+    setRequestErrorMessage('')
+    if (usernameValidationErrorMessage()) {
+      setUsernameValidationErrorMessage(formatUsernameValidationError(validateUsername(value)))
+    }
+  }
+
+  /**
+   * 現在の username 入力を検証してエラー表示へ反映する。
+   *
+   * @returns 入力が API 仕様を満たす場合は `true`。
+   */
+  const validateUsernameInput = (): boolean => {
+    const validationError = validateUsername(usernameInput())
+    setUsernameValidationErrorMessage(formatUsernameValidationError(validationError))
+    return validationError === null
+  }
+
+  /**
+   * タブ選択をURLへ反映する。
+   *
+   * @param tab - 選択されたフレンド画面タブ。
+   * @returns なし。
+   */
+  const changeActiveTab = (tab: FriendsTabValue): void => {
+    navigate(buildFriendsTabPath(tab))
+  }
+
+  onCleanup(() => {
+    if (ownUsernameCopyResetTimer !== undefined) {
+      window.clearTimeout(ownUsernameCopyResetTimer)
+    }
+  })
+
+  createEffect(() => {
+    if (resolvedActiveTab() === null) {
+      navigate(buildFriendsTabPath('friends'), { replace: true })
+    }
+  })
+
+  createEffect(() => {
+    const error = friendsQuery.error ?? receivedRequestsQuery.error ?? sentRequestsQuery.error
+
+    if (!error) {
+      lastReportedQueryError = undefined
+      return
+    }
+    if (error === lastReportedQueryError) return
+
+    lastReportedQueryError = error
+    showErrorToast(toUserFriendlyErrorMessage(error))
+  })
+
+  createEffect(() => {
+    const receivedRequests = receivedRequestsQuery.data
+    const dataUpdatedAt = receivedRequestsQuery.dataUpdatedAt
+    const username = ownUsername()
+
+    if (receivedRequests && dataUpdatedAt > 0 && username) {
+      setActiveFriendRequestNotificationUser(username)
+      void syncFriendRequestNotificationFromReceivedCount(
+        username,
+        receivedRequests.length,
+        dataUpdatedAt
+      ).catch(() => undefined)
+    }
+  })
+
+  /**
+   * 3種類のフレンド一覧とフレンド枠を再取得する。
+   *
+   * @returns 全queryの再取得完了時に解決されるPromise。
+   */
+  const refresh = async (): Promise<void> => {
+    await Promise.all([
+      friendsQuery.refetch(),
+      receivedRequestsQuery.refetch(),
+      sentRequestsQuery.refetch(),
+      slotsQuery.refetch(),
+    ])
+  }
+
+  /**
+   * ログイン中ユーザーの username をクリップボードへコピーする。
+   *
+   * @returns コピー処理完了時に解決されるPromise。
+   */
+  const copyOwnUsername = async (): Promise<void> => {
+    const username = ownUsername()
+    if (!username) return
+
+    try {
+      await navigator.clipboard.writeText(username)
+      setIsOwnUsernameCopied(true)
+      if (ownUsernameCopyResetTimer !== undefined) {
+        window.clearTimeout(ownUsernameCopyResetTimer)
+      }
+      ownUsernameCopyResetTimer = window.setTimeout(() => {
+        setIsOwnUsernameCopied(false)
+        ownUsernameCopyResetTimer = undefined
+      }, FRIENDS_COPY_FEEDBACK_DURATION_MS)
+    } catch {
+      showErrorToast(FRIENDS_COPY.copyOwnUsernameFailure)
+    }
+  }
+
+  /**
+   * フレンド申請フォームの送信を処理する。
+   *
+   * @param event - フォーム送信イベント。
+   * @returns 送信処理完了時に解決されるPromise。
+   */
+  const handleSubmitRequest = async (event: SubmitEvent): Promise<void> => {
+    event.preventDefault()
+    const authenticatedUsername = ownUsername()
+    if (!authenticatedUsername || !validateUsernameInput() || operation() !== null) return
+
+    setUsernameValidationErrorMessage('')
+    setRequestErrorMessage('')
+
+    try {
+      await requestMutation.mutateAsync({
+        authenticatedUsername,
+        targetUsername: usernameInput(),
+      })
+    } catch (error) {
+      setRequestErrorMessage(formatFriendRequestErrorMessage(error))
+      void invalidateFriendshipSlotsQuery(queryClient, authenticatedUsername)
+    }
+  }
+
+  /**
+   * ユーザー単位のフレンドmutationを実行する。
+   *
+   * @param nextOperation - 実行する操作種別。
+   * @param targetUsername - 操作対象のユーザー名。
+   * @returns mutationと関連queryの更新完了時に解決されるPromise。
+   */
+  const runUserOperation = async (
+    nextOperation: Exclude<FriendshipMutationType, 'request'>,
+    targetUsername: string
+  ): Promise<void> => {
+    const authenticatedUsername = ownUsername()
+    if (!authenticatedUsername || operation() !== null) return
+
+    const variables: FriendshipMutationVariables = {
+      authenticatedUsername,
+      targetUsername,
+    }
+
+    try {
+      switch (nextOperation) {
+        case 'accept':
+          await acceptMutation.mutateAsync(variables)
+          break
+        case 'reject':
+          await rejectMutation.mutateAsync(variables)
+          break
+        case 'cancel':
+          await cancelMutation.mutateAsync(variables)
+          break
+        case 'remove':
+          await removeMutation.mutateAsync(variables)
+          break
+      }
+    } catch (error) {
+      showErrorToast(toUserFriendlyErrorMessage(error, FRIENDS_COPY.operationFailure))
+      void invalidateFriendshipSlotsQuery(queryClient, authenticatedUsername)
+    }
+  }
+
+  /**
+   * フレンド申請を承認する。
+   *
+   * @param user - 申請元ユーザー。
+   * @returns 承認完了時に解決されるPromise。
+   */
+  const handleAccept = (user: FriendshipUserDTO): Promise<void> =>
+    runUserOperation('accept', user.username)
+
+  /**
+   * フレンド申請を拒否する。
+   *
+   * @param user - 申請元ユーザー。
+   * @returns 拒否完了時に解決されるPromise。
+   */
+  const handleReject = (user: FriendshipUserDTO): Promise<void> => {
+    setPendingConfirmAction({ type: 'reject', user })
+    return Promise.resolve()
+  }
+
+  /**
+   * 送信済みフレンド申請を取り消す。
+   *
+   * @param user - 申請先ユーザー。
+   * @returns 取り消し完了時に解決されるPromise。
+   */
+  const handleCancel = (user: FriendshipUserDTO): Promise<void> =>
+    runUserOperation('cancel', user.username)
+
+  /**
+   * フレンド関係を解除する。
+   *
+   * @param user - 解除対象ユーザー。
+   * @returns 解除完了時に解決されるPromise。
+   */
+  const handleRemove = (user: FriendshipUserDTO): Promise<void> => {
+    setPendingConfirmAction({ type: 'remove', user })
+    return Promise.resolve()
+  }
+
+  /**
+   * 確認ダイアログで選択された拒否または解除を実行する。
+   *
+   * @returns 操作完了時に解決されるPromise。
+   */
+  const handleConfirmAction = async (): Promise<void> => {
+    const action = pendingConfirmAction()
+    if (!action) return
+
+    if (action.type === 'reject') {
+      await runUserOperation('reject', action.user.username)
+    } else {
+      await runUserOperation('remove', action.user.username)
+    }
+
+    setPendingConfirmAction(null)
+  }
+
+  return (
+    <div class="mx-auto w-full max-w-5xl p-4">
+      <header class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-semibold">{FRIENDS_PAGE_TITLE}</h1>
+          <Show when={slotsQuery.data}>
+            {(slots) => (
+              <p class="text-sm text-text-muted">
+                <span class="sr-only">{FRIENDS_COPY.slotsLabel}</span>
+                {slots().used} / {slots().limit}
+                {FRIENDS_COPY.slotsUnit}
+              </p>
+            )}
+          </Show>
+        </div>
+        <AppButton
+          variant="surface"
+          size="sm"
+          leftIcon={<RotateCw class="h-4 w-4" aria-hidden="true" />}
+          disabled={isRefreshing() || operation() !== null}
+          onClick={() => void refresh()}
+        >
+          {FRIENDS_COPY.retry}
+        </AppButton>
+      </header>
+
+      <form
+        class="mx-auto mb-6 w-full max-w-[350px] rounded-lg border border-border bg-surface p-4"
+        onSubmit={(event) => void handleSubmitRequest(event)}
+      >
+        <h2 class="sr-only">{FRIENDS_COPY.requestFormTitle}</h2>
+        <Show when={ownUsername()}>
+          {(username) => (
+            <AppButton
+              variant="ghost"
+              size="sm"
+              fullWidth
+              class={`mb-2 justify-between text-left transition-colors ${
+                isOwnUsernameCopied()
+                  ? 'bg-action-primary-muted text-action-primary'
+                  : 'text-text-muted'
+              }`}
+              aria-label={FRIENDS_COPY.copyOwnUsername}
+              onClick={() => void copyOwnUsername()}
+            >
+              <span class="min-w-0 truncate">
+                {FRIENDS_COPY.ownUsernameLabel}:{' '}
+                <span
+                  class={`font-medium transition-colors ${
+                    isOwnUsernameCopied() ? 'text-action-primary' : 'text-text'
+                  }`}
+                >
+                  @{username()}
+                </span>
+              </span>
+              <span class="shrink-0 text-action-primary" aria-hidden="true">
+                <Show
+                  when={isOwnUsernameCopied()}
+                  fallback={<Copy class="h-4 w-4" aria-hidden="true" />}
+                >
+                  <Check class="h-4 w-4" aria-hidden="true" />
+                </Show>
+              </span>
+              <span class="sr-only" aria-live="polite">
+                {isOwnUsernameCopied() ? FRIENDS_COPY.copyOwnUsernameSuccess : ''}
+              </span>
+            </AppButton>
+          )}
+        </Show>
+        <div class="flex flex-col gap-2">
+          <TextField
+            class="min-w-0"
+            value={usernameInput()}
+            onChange={updateUsernameInput}
+            validationState={usernameErrorMessage() ? 'invalid' : undefined}
+          >
+            <TextField.Label class="mb-1 flex items-center justify-between gap-2 text-sm font-medium text-text-muted">
+              <span>{FRIENDS_COPY.usernameLabel}</span>
+              <span
+                id={FRIEND_REQUEST_USERNAME_ERROR_ID}
+                class="text-xs font-normal text-danger"
+                aria-live="polite"
+              >
+                {usernameErrorMessage()}
+              </span>
+            </TextField.Label>
+            <div class="flex min-h-10 items-center rounded border border-input-border bg-input-bg transition-colors hover:border-input-border-hover focus-within:ring-2 focus-within:ring-focus-ring">
+              <span
+                class="shrink-0 pl-3 pr-1 text-sm font-medium text-text-muted"
+                aria-hidden="true"
+              >
+                @
+              </span>
+              <TextField.Input
+                class="min-w-0 flex-1 bg-transparent px-2 py-2 font-sans text-sm outline-none"
+                placeholder={FRIENDS_COPY.usernamePlaceholder}
+                autocomplete="off"
+                aria-errormessage={FRIEND_REQUEST_USERNAME_ERROR_ID}
+                aria-invalid={usernameErrorMessage() ? 'true' : undefined}
+                required
+                minlength={USERNAME_MIN_LENGTH}
+                pattern={USERNAME_PATTERN.source}
+                onBlur={validateUsernameInput}
+                onInvalid={(event) => {
+                  event.preventDefault()
+                  validateUsernameInput()
+                }}
+              />
+            </div>
+          </TextField>
+          <AppButton
+            type="submit"
+            variant="primary"
+            fullWidth
+            leftIcon={<UserPlus class="h-4 w-4" aria-hidden="true" />}
+            disabled={operation() !== null || isSlotsFull()}
+          >
+            {isRequesting() ? FRIENDS_COPY.submittingRequest : FRIENDS_COPY.submitRequest}
+          </AppButton>
+        </div>
+      </form>
+
+      <UnderlineTabs
+        options={friendTabOptions()}
+        value={activeTab()}
+        onChange={changeActiveTab}
+        class="space-y-4"
+      >
+        <Show
+          when={!isInitialLoading()}
+          fallback={
+            <div class="h-48">
+              <span class="sr-only">{FRIENDS_COPY.loadingLabel}</span>
+              <Loading />
+            </div>
+          }
+        >
+          <Show when={!hasInitialLoadError()}>
+            <AppTabContent value="friends">
+              <FriendshipList
+                variant="friends"
+                items={currentData().friends}
+                possessions={possessionMaster()}
+                emptyMessage={FRIENDS_COPY.emptyFriends}
+                actionsDisabled={operation() !== null}
+                onAccept={handleAccept}
+                onReject={handleReject}
+                onRemove={handleRemove}
+                onCancel={handleCancel}
+              />
+            </AppTabContent>
+            <AppTabContent value="received">
+              <FriendshipList
+                variant="received"
+                items={currentData().received}
+                possessions={possessionMaster()}
+                emptyMessage={FRIENDS_COPY.emptyReceived}
+                actionsDisabled={operation() !== null}
+                acceptDisabled={isSlotsFull()}
+                onAccept={handleAccept}
+                onReject={handleReject}
+                onRemove={handleRemove}
+                onCancel={handleCancel}
+              />
+            </AppTabContent>
+            <AppTabContent value="sent">
+              <FriendshipList
+                variant="sent"
+                items={currentData().sent}
+                possessions={possessionMaster()}
+                emptyMessage={FRIENDS_COPY.emptySent}
+                actionsDisabled={operation() !== null}
+                onAccept={handleAccept}
+                onReject={handleReject}
+                onRemove={handleRemove}
+                onCancel={handleCancel}
+              />
+            </AppTabContent>
+          </Show>
+        </Show>
+      </UnderlineTabs>
+
+      <FriendConfirmDialog
+        action={pendingConfirmAction()}
+        busy={operation() === 'reject' || operation() === 'remove'}
+        onOpenChange={(open) => {
+          if (!open && operation() === null) {
+            setPendingConfirmAction(null)
+          }
+        }}
+        onConfirm={() => void handleConfirmAction()}
+      />
+    </div>
+  )
+}
+
+export default FriendsPage

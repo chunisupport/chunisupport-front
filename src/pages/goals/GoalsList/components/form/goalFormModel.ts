@@ -1,0 +1,621 @@
+import { GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES, SCORE_MIN } from '../../../../../constants/chart'
+import { normalizePlayerDataDifficulty } from '../../../../../constants/difficulty'
+import type {
+  GoalAchievementParams,
+  GoalAchievementType,
+  GoalAttributes,
+  GoalCreateRequest,
+  GoalDTO,
+} from '../../../../../types/api'
+import { createFullChartConstRange } from '../../../../../utils/chartLevel'
+import {
+  type GoalConstSelection,
+  normalizeGoalNameFolderCodes,
+  resolveGoalConstSelection,
+} from '../../../../../utils/goalAttributes'
+import {
+  type ComboLampGoalValue,
+  type FullChainGoalValue,
+  type HardLampGoalValue,
+  isComboLampGoalValue,
+  isFullChainGoalValue,
+  isHardLampGoalValue,
+} from '../../../../../utils/goalLamp'
+import { truncateDecimal } from '../../../../../utils/numberFormat'
+import {
+  getScoreRank,
+  MAX_SCORE,
+  SCORE_RANK_MIN_SCORES,
+  type ScoreRank,
+} from '../../../../../utils/scoreRank'
+import { buildGoalTargetParam, type GoalTargetMode } from '../../../utils/goalCountTarget'
+import { isOverPowerAchievementType } from '../../goalsListProgress'
+import { DEFAULT_RATING_GOAL_VALUE, OVERPOWER_TARGET_DECIMAL_PLACES } from './constants'
+
+export type RankGoalValue = ScoreRank | 'THEORETICAL'
+export type GoalChartTargetMode = 'normal' | 'op_target'
+/**
+ * ゲージのスタート位置の決め方。
+ * `zero` は0から、`current` は保存時点の現在値から、`custom` は入力した数値から描く。
+ */
+export type GoalGaugeStartMode = 'zero' | 'current' | 'custom'
+
+export interface GoalFormState {
+  title: string
+  achievementType: GoalAchievementType
+  score: string
+  rating: string
+  rank: RankGoalValue
+  count: string
+  countMode: GoalTargetMode
+  total: string
+  totalMode: GoalTargetMode
+  hardLamp: HardLampGoalValue
+  comboLamp: ComboLampGoalValue
+  fullChain: FullChainGoalValue
+  invertValue: boolean
+  invertPercentage: boolean
+  /** ゲージのスタート位置の決め方 */
+  gaugeStartMode: GoalGaugeStartMode
+  /** 「任意の数値から」で使うスタート位置の入力値 */
+  gaugeStart: string
+  /** 達成率表示もゲージのスタート位置から計算するか */
+  applyGaugeStartToPercentage: boolean
+  chartTargetMode: GoalChartTargetMode
+  diffs: string[]
+  /** 譜面定数範囲と入力方法 */
+  constSelection: GoalConstSelection
+  genres: string[]
+  versions: string[]
+  /** 選択中の楽曲名順フォルダのコード */
+  nameFolders: string[]
+}
+
+/** ゲージのスタート位置を数値に解決するためのフォーム入力値 */
+export interface GoalFormGaugeStartValueInput {
+  /** スタート位置の単位と許可する小数桁数を決める目標種別 */
+  achievementType: GoalAchievementType
+  /** ゲージのスタート位置の決め方 */
+  gaugeStartMode: GoalGaugeStartMode
+  /** 「任意の数値から」で使うスタート位置の入力値 */
+  gaugeStart: string
+  /** プレビューで算出した現在値。「現在値から」で使う */
+  current: number
+}
+
+/** ゲージのスタート位置に関するフォーム入力値 */
+export interface GoalFormGaugeStartInput extends GoalFormGaugeStartValueInput {
+  /** 達成率表示もゲージのスタート位置から計算するか */
+  applyGaugeStartToPercentage: boolean
+}
+
+interface GoalFormSelectionFallbacks {
+  allDifficultySelections: string[]
+  allGenreSelections: string[]
+  allVersionSelections: string[]
+  /** マスタの表示順に並べた全楽曲名順フォルダのコード */
+  allNameFolderSelections: string[]
+  /** 作成フォームで初期選択する難易度ID */
+  defaultDifficultySelections: string[]
+}
+
+export interface GoalFormAttributesInput {
+  achievementType: GoalAchievementType
+  chartTargetMode: GoalChartTargetMode
+  diffs: string[]
+  /** 譜面定数範囲と入力方法 */
+  constSelection: GoalConstSelection
+  genres: string[]
+  versions: string[]
+  /** 選択中の楽曲名順フォルダのコード */
+  nameFolders: string[]
+  /** マスタの表示順に並べた全楽曲名順フォルダのコード */
+  allNameFolders: readonly string[]
+}
+
+export interface GoalFormAchievementParamsInput {
+  achievementType: GoalAchievementType
+  score: string
+  rating?: string
+  rank: RankGoalValue
+  count: string
+  countMode: GoalTargetMode
+  total: string
+  totalMode: GoalTargetMode
+  hardLamp: HardLampGoalValue
+  comboLamp: ComboLampGoalValue
+  fullChain: FullChainGoalValue
+}
+
+export const DEFAULT_GOAL_ACHIEVEMENT_TYPE = 'rank_count' satisfies GoalAchievementType
+export const DEFAULT_TOTAL_GOAL_VALUE = '10'
+export const DEFAULT_TOTAL_SCORE_GOAL_VALUE = '1000000'
+export const DEFAULT_OVERPOWER_VALUE_GOAL_VALUE = '10'
+export const DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE = '90'
+export const DEFAULT_RANK_GOAL = 'S' satisfies RankGoalValue
+export const THEORETICAL_RANK_GOAL = 'THEORETICAL' satisfies RankGoalValue
+/** ゲージのスタート位置の決め方の初期値。従来どおり0から描く */
+export const DEFAULT_GAUGE_START_MODE = 'zero' satisfies GoalGaugeStartMode
+/** 「任意の数値から」の入力欄の初期値 */
+export const DEFAULT_GAUGE_START_VALUE = ''
+/** スタート位置を指定したとき、ゲージと達成率表示をそろえるのを標準にする */
+export const DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE = true
+
+/**
+ * 目標種別のスタート位置で許可する小数桁数を取得する。
+ * スタート位置は現在値と同じ単位のため、小数を持つのはOVER POWER系だけ。
+ *
+ * @param type - 目標種別。
+ * @returns 許可する小数桁数。
+ */
+export const getGoalGaugeStartDecimalPlaces = (type: GoalAchievementType): number =>
+  isOverPowerAchievementType(type) ? OVERPOWER_TARGET_DECIMAL_PLACES : 0
+
+/**
+ * 目標種別が達成率をパーセンテージで表示し、スタート位置の適用を選べるか判定する。
+ *
+ * @param type - 目標種別。
+ * @returns 平均スコア目標以外ならtrue。平均スコア目標は割合の代わりに残り点数を表示する。
+ */
+export const canApplyGaugeStartToPercentage = (type: GoalAchievementType): boolean =>
+  type !== 'avg_score'
+
+/**
+ * 「任意の数値から」の入力値を数値へ変換する。
+ *
+ * @param value - 入力欄の文字列。
+ * @returns 入力された数値。空欄や数値として解釈できない場合は NaN。
+ */
+const parseGoalGaugeStart = (value: string): number =>
+  value.trim() === '' ? Number.NaN : Number(value)
+
+/**
+ * 現在値を、目標種別で保存できる桁数のスタート位置へ変換する。
+ *
+ * @param current - 進捗の現在値。
+ * @param type - 目標種別。
+ * @returns 目標種別で許可する桁数に切り捨てたスタート位置。
+ */
+export const resolveGoalGaugeStartFromCurrent = (
+  current: number,
+  type: GoalAchievementType
+): number => truncateDecimal(current, getGoalGaugeStartDecimalPlaces(type))
+
+/**
+ * フォームの決め方に応じてゲージのスタート位置を数値へ解決する。
+ *
+ * @param input - 目標種別、決め方、任意の入力値、現在値。
+ * @returns ゲージのスタート位置。「任意の数値から」で入力が不正な場合は NaN。
+ */
+export const resolveGoalFormGaugeStart = (input: GoalFormGaugeStartValueInput): number => {
+  switch (input.gaugeStartMode) {
+    case 'zero':
+      return 0
+    case 'current':
+      return resolveGoalGaugeStartFromCurrent(input.current, input.achievementType)
+    case 'custom':
+      return parseGoalGaugeStart(input.gaugeStart)
+  }
+}
+
+/**
+ * 保存済みのスタート位置から、編集フォームで選択する決め方を復元する。
+ * 「現在値から」は保存時点の値として記録されるため、0より大きい値は「任意の数値から」に戻す。
+ *
+ * @param gaugeStart - 保存済みのスタート位置。
+ * @returns 編集フォームで選択するスタート位置の決め方。
+ */
+const resolveGoalGaugeStartMode = (gaugeStart: number): GoalGaugeStartMode =>
+  gaugeStart > 0 ? 'custom' : DEFAULT_GAUGE_START_MODE
+
+/**
+ * フォーム入力値から保存・プレビュー共通のゲージ設定を組み立てる。
+ *
+ * @param input - 目標種別、スタート位置の決め方と入力値、現在値、達成率への適用指定。
+ * @returns API送信値と同じ形のゲージ設定。スタート位置が0または割合を表示しない種別では適用指定をfalseにする。
+ */
+export const buildGoalFormGaugeStartParams = (
+  input: GoalFormGaugeStartInput
+): Pick<GoalCreateRequest, 'gauge_start' | 'apply_gauge_start_to_percentage'> => {
+  const gaugeStart = resolveGoalFormGaugeStart(input)
+  return {
+    gauge_start: gaugeStart,
+    apply_gauge_start_to_percentage:
+      input.applyGaugeStartToPercentage &&
+      gaugeStart > 0 &&
+      canApplyGaugeStartToPercentage(input.achievementType),
+  }
+}
+
+/**
+ * ランク目標の選択値を保存用スコアへ変換する。
+ *
+ * @param value - ランク目標の選択値。
+ * @returns APIへ送信するスコア目標値。
+ */
+export const getRankGoalScore = (value: RankGoalValue): number =>
+  value === THEORETICAL_RANK_GOAL ? MAX_SCORE : SCORE_RANK_MIN_SCORES[value]
+
+/**
+ * 保存済みスコアからランク目標の選択値を復元する。
+ *
+ * @param score - APIから返されたスコア目標値。
+ * @returns ダイアログで選択するランク目標値。
+ */
+export const getRankGoalValue = (score: number): RankGoalValue =>
+  score >= MAX_SCORE ? THEORETICAL_RANK_GOAL : getScoreRank(score)
+
+/**
+ * 成果種別が件数目標として扱われるか判定する。
+ *
+ * @param type - 判定対象の成果種別。
+ * @returns 件数目標ならtrue。
+ */
+export const isCountAchievementType = (type: GoalAchievementType): boolean =>
+  type === 'score_count' ||
+  type === 'rank_count' ||
+  type === 'rating_count' ||
+  type === 'hardlamp_count' ||
+  type === 'combolamp_count' ||
+  type === 'fullchain_count' ||
+  type === 'rainbow_count'
+
+/**
+ * 成果パラメータから有効な数値を取り出す。
+ *
+ * @param params - 目標種別ごとの成果パラメータ。
+ * @param key - 取り出すパラメータ名。
+ * @returns 数値が設定されていればその値、未指定ならundefined。
+ */
+export const getOptionalNumberParam = (
+  params: GoalDTO['achievement_params'],
+  key: 'count' | 'total' | 'remaining' | 'percent'
+): number | undefined => {
+  const value = (params as Record<string, unknown>)[key]
+  return typeof value === 'number' ? value : undefined
+}
+
+/**
+ * 保存済み成果パラメータからフォームの目標値指定方法を解決する。
+ *
+ * @param params - APIから取得した成果パラメータ。
+ * @param absoluteKey - 絶対値指定に使うキー。
+ * @returns 保存済みキーに対応する指定方法。
+ */
+export const resolveGoalTargetMode = (
+  params: GoalDTO['achievement_params'],
+  absoluteKey: 'count' | 'total'
+): GoalTargetMode => {
+  if (getOptionalNumberParam(params, 'remaining') !== undefined) return 'remaining'
+  if (getOptionalNumberParam(params, 'percent') !== undefined) return 'percent'
+  if (getOptionalNumberParam(params, absoluteKey) !== undefined) return 'number'
+  return 'all'
+}
+
+/**
+ * 成果種別が動的な合計上限を利用できるか判定する。
+ *
+ * @param type - 判定対象の成果種別。
+ * @returns 動的上限を選択できる成果種別ならtrue。
+ */
+export const canUseDynamicTotalTarget = (type: GoalAchievementType): boolean =>
+  type === 'total_score' || type === 'overpower_value'
+
+/**
+ * 目標種別ごとの目標値入力の初期値を取得する。
+ *
+ * @param type - 選択された目標種別。
+ * @returns 目標値欄に設定する初期値文字列。
+ */
+export const getDefaultTotalGoalValue = (type: GoalAchievementType): string =>
+  type === 'total_score'
+    ? DEFAULT_TOTAL_SCORE_GOAL_VALUE
+    : type === 'overpower_value'
+      ? DEFAULT_OVERPOWER_VALUE_GOAL_VALUE
+      : type === 'overpower_percent'
+        ? DEFAULT_OVERPOWER_PERCENT_GOAL_VALUE
+        : DEFAULT_TOTAL_GOAL_VALUE
+
+/**
+ * API属性に保存された単一IDまたはID配列をフォーム用の文字列配列へ変換する。
+ *
+ * @param value - API属性に保存されたID指定。
+ * @returns フォームのチェック状態として扱う文字列ID配列。
+ */
+export const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
+  if (typeof value === 'number') return [String(value)]
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is number => Number.isInteger(item))
+      .map((item) => String(item))
+  }
+  return []
+}
+
+/**
+ * フォームの選択値をAPI属性で使う単一IDまたはID配列へ変換する。
+ *
+ * @param selectedValues - フォーム上で選択されている文字列ID配列。
+ * @returns 選択値が1件なら単一数値、それ以外は数値配列。
+ */
+export const parseAttributeSelection = (selectedValues: string[]): number | number[] => {
+  const normalized = Array.from(new Set(selectedValues))
+    .map((value) => Number(value))
+    .filter((value) => Number.isInteger(value))
+
+  if (normalized.length === 1) return normalized[0]
+  return normalized
+}
+
+/**
+ * フォームで選択された楽曲名順フォルダをAPI属性で使うコード指定へ変換する。
+ *
+ * @param selectedCodes - フォーム上で選択されている楽曲名順フォルダのコード。
+ * @param allCodes - マスタの表示順に並べた全楽曲名順フォルダのコード。
+ * @returns 全選択なら条件なしとしてundefined、1件なら単一コード、それ以外は表示順のコード配列。
+ */
+export const parseNameFolderSelection = (
+  selectedCodes: string[],
+  allCodes: readonly string[]
+): string | string[] | undefined => {
+  const selected = new Set(selectedCodes)
+  const normalized = allCodes.filter((code) => selected.has(code))
+  if (normalized.length === allCodes.length) return undefined
+  if (normalized.length === 1) return normalized[0]
+  return normalized
+}
+
+/**
+ * マスタデータのID一覧をフォーム用の全選択値へ変換する。
+ *
+ * @param items - IDを持つマスタデータ一覧。
+ * @returns 全項目を選択済みにする文字列ID配列。
+ */
+export const buildAllIdSelections = (items: readonly { id: number }[]): string[] =>
+  items.map((item) => String(item.id))
+
+/**
+ * 目標作成フォームで初期選択する難易度（MASTER・ULTIMA）のID配列を作成する。
+ *
+ * @param items - 難易度マスタデータ一覧。
+ * @returns MASTERとULTIMAの文字列ID配列。
+ */
+export const buildDefaultDifficultySelections = (
+  items: readonly { id: number; name: string }[]
+): string[] =>
+  items
+    .filter((item) => {
+      const difficulty = normalizePlayerDataDifficulty(item.name)
+      return GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES.some((target) => target === difficulty)
+    })
+    .map((item) => String(item.id))
+
+/**
+ * 保存済み属性が未指定の場合だけ、現在の全選択値で補完する。
+ *
+ * @param value - API属性に保存されたID指定。
+ * @param fallbackValues - 属性未指定時に使う全選択値。
+ * @returns 編集フォームへ反映する選択値。
+ */
+export const resolveInitialAttributeSelection = (
+  value: number | number[] | undefined,
+  fallbackValues: string[]
+): string[] => (value === undefined ? fallbackValues : normalizeAttributeSelection(value))
+
+/**
+ * バージョン選択肢をフォーム用の全選択値へ変換する。
+ *
+ * @param options - 目標フォームで表示するバージョン選択肢。
+ * @returns 全バージョンを選択済みにする値配列。
+ */
+export const buildAllVersionSelections = (options: readonly { value: string }[]): string[] =>
+  options.map((option) => option.value)
+
+/**
+ * チェックボックスの選択状態を更新する。
+ *
+ * @param current - 現在の選択値一覧。
+ * @param value - 操作対象の選択値。
+ * @param checked - チェック後の状態。
+ * @returns 更新後の選択値一覧。
+ */
+export const toggleSelection = (current: string[], value: string, checked: boolean): string[] => {
+  if (checked) {
+    return current.includes(value) ? current : [...current, value]
+  }
+  return current.filter((item) => item !== value)
+}
+
+/**
+ * 新規作成時の譜面定数範囲を作成する。新規目標はレベル指定を既定とする。
+ *
+ * @returns 全範囲をレベル指定で表す範囲条件。
+ */
+export const createDefaultGoalConstSelection = (): GoalConstSelection => ({
+  constFilterMode: 'level',
+  constRange: createFullChartConstRange(),
+})
+
+/**
+ * 作成フォームで使う初期状態を作成する。
+ *
+ * @param fallbacks - マスタデータ由来の全選択値と、作成時の難易度初期選択値。
+ * @returns 作成フォームの初期状態。
+ */
+export const createDefaultGoalFormState = (
+  fallbacks: GoalFormSelectionFallbacks
+): GoalFormState => ({
+  title: '',
+  achievementType: DEFAULT_GOAL_ACHIEVEMENT_TYPE,
+  score: String(getRankGoalScore(DEFAULT_RANK_GOAL)),
+  rating: DEFAULT_RATING_GOAL_VALUE,
+  rank: DEFAULT_RANK_GOAL,
+  count: '1',
+  countMode: 'all',
+  total: getDefaultTotalGoalValue(DEFAULT_GOAL_ACHIEVEMENT_TYPE),
+  totalMode: 'number',
+  hardLamp: 'HRD',
+  comboLamp: 'FC',
+  fullChain: 'GOLD',
+  invertValue: false,
+  invertPercentage: false,
+  gaugeStartMode: DEFAULT_GAUGE_START_MODE,
+  gaugeStart: DEFAULT_GAUGE_START_VALUE,
+  applyGaugeStartToPercentage: DEFAULT_APPLY_GAUGE_START_TO_PERCENTAGE,
+  chartTargetMode: 'normal',
+  diffs: fallbacks.defaultDifficultySelections,
+  constSelection: createDefaultGoalConstSelection(),
+  genres: fallbacks.allGenreSelections,
+  versions: fallbacks.allVersionSelections,
+  nameFolders: fallbacks.allNameFolderSelections,
+})
+
+/**
+ * 作成・編集モードに応じたフォーム初期状態を作成する。
+ *
+ * @param goal - 編集対象の保存済み目標。未指定なら作成用初期状態を返す。
+ * @param fallbacks - マスタデータ由来の全選択値。
+ * @returns ダイアログを開いた直後にSignalへ反映するフォーム状態。
+ */
+export const createGoalFormInitialState = (
+  goal: GoalDTO | undefined,
+  fallbacks: GoalFormSelectionFallbacks
+): GoalFormState => {
+  const defaultState = createDefaultGoalFormState(fallbacks)
+  if (!goal) return defaultState
+
+  const rawCount = getOptionalNumberParam(goal.achievement_params, 'count')
+  const rawRemaining = getOptionalNumberParam(goal.achievement_params, 'remaining')
+  const rawPercent = getOptionalNumberParam(goal.achievement_params, 'percent')
+  const rawTotal = getOptionalNumberParam(goal.achievement_params, 'total')
+  const countTargetValue = rawCount ?? rawRemaining ?? rawPercent
+  const totalTargetValue = rawTotal ?? rawRemaining ?? rawPercent
+  const scoreValue = 'score' in goal.achievement_params ? goal.achievement_params.score : undefined
+  const ratingValue =
+    'rating' in goal.achievement_params ? goal.achievement_params.rating : undefined
+  const lampValue = 'lamp' in goal.achievement_params ? goal.achievement_params.lamp : undefined
+  const hardLampValue =
+    typeof lampValue === 'string' && isHardLampGoalValue(lampValue) ? lampValue : undefined
+  const comboLampValue =
+    typeof lampValue === 'string' && isComboLampGoalValue(lampValue) ? lampValue : undefined
+  const fullChainValue =
+    typeof lampValue === 'string' && isFullChainGoalValue(lampValue) ? lampValue : undefined
+
+  return {
+    ...defaultState,
+    title: goal.title,
+    achievementType: goal.achievement_type,
+    score: typeof scoreValue === 'number' ? String(scoreValue) : defaultState.score,
+    rating: typeof ratingValue === 'number' ? String(ratingValue) : defaultState.rating,
+    rank:
+      typeof scoreValue === 'number' && goal.achievement_type === 'rank_count'
+        ? getRankGoalValue(scoreValue)
+        : defaultState.rank,
+    count: typeof countTargetValue === 'number' ? String(countTargetValue) : defaultState.count,
+    countMode: isCountAchievementType(goal.achievement_type)
+      ? resolveGoalTargetMode(goal.achievement_params, 'count')
+      : 'number',
+    total: typeof totalTargetValue === 'number' ? String(totalTargetValue) : defaultState.total,
+    totalMode: canUseDynamicTotalTarget(goal.achievement_type)
+      ? resolveGoalTargetMode(goal.achievement_params, 'total')
+      : 'number',
+    hardLamp: hardLampValue ?? defaultState.hardLamp,
+    comboLamp: comboLampValue ?? defaultState.comboLamp,
+    fullChain: fullChainValue ?? defaultState.fullChain,
+    invertValue: goal.invert_value,
+    invertPercentage: goal.invert_percentage,
+    gaugeStartMode: resolveGoalGaugeStartMode(goal.gauge_start),
+    gaugeStart: goal.gauge_start > 0 ? String(goal.gauge_start) : defaultState.gaugeStart,
+    // スタート位置が未設定の目標では適用指定が保存されていないため、作成時と同じ既定値を使う。
+    applyGaugeStartToPercentage:
+      goal.gauge_start > 0 && canApplyGaugeStartToPercentage(goal.achievement_type)
+        ? goal.apply_gauge_start_to_percentage
+        : defaultState.applyGaugeStartToPercentage,
+    chartTargetMode: goal.attributes.chart_target === 'OP_TARGET' ? 'op_target' : 'normal',
+    diffs: resolveInitialAttributeSelection(
+      goal.attributes.diff,
+      fallbacks.allDifficultySelections
+    ),
+    constSelection: resolveGoalConstSelection(goal.attributes),
+    genres: resolveInitialAttributeSelection(goal.attributes.genre, fallbacks.allGenreSelections),
+    versions: resolveInitialAttributeSelection(goal.attributes.ver, fallbacks.allVersionSelections),
+    nameFolders:
+      normalizeGoalNameFolderCodes(goal.attributes.name_folder) ??
+      fallbacks.allNameFolderSelections,
+  }
+}
+
+/**
+ * 現在のフォーム選択値からAPI送信用の対象属性を作成する。
+ *
+ * @param input - 対象譜面セクションのフォーム値。
+ * @returns API送信値と同じ形の対象属性。
+ */
+export const buildGoalFormAttributes = (input: GoalFormAttributesInput): GoalAttributes => {
+  const nameFolder = parseNameFolderSelection(input.nameFolders, input.allNameFolders)
+  return {
+    ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'op_target'
+      ? { chart_target: 'OP_TARGET' as const }
+      : {}),
+    ...(input.achievementType !== 'rainbow_count' && input.chartTargetMode === 'normal'
+      ? { diff: parseAttributeSelection(input.diffs) }
+      : {}),
+    ...(input.achievementType !== 'rainbow_count'
+      ? {
+          const: { ...input.constSelection.constRange },
+          const_filter_mode: input.constSelection.constFilterMode,
+        }
+      : {}),
+    genre: parseAttributeSelection(input.genres),
+    ver: parseAttributeSelection(input.versions),
+    ...(nameFolder === undefined ? {} : { name_folder: nameFolder }),
+  }
+}
+
+/**
+ * 現在のフォーム入力値から保存・プレビュー共通の成果パラメータを組み立てる。
+ *
+ * @param input - 達成条件セクションのフォーム値。
+ * @returns API送信値と同じ形の成果パラメータ。
+ */
+export const buildGoalFormAchievementParams = (
+  input: GoalFormAchievementParamsInput
+): GoalAchievementParams => {
+  const parsedScore =
+    input.achievementType === 'rank_count' ? getRankGoalScore(input.rank) : Number(input.score)
+  const targetCountParam = buildGoalTargetParam(input.countMode, input.count, 'count')
+  const targetTotalParam = buildGoalTargetParam(input.totalMode, input.total, 'total')
+
+  return input.achievementType === 'score_count' || input.achievementType === 'rank_count'
+    ? {
+        score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : SCORE_MIN),
+        ...targetCountParam,
+      }
+    : input.achievementType === 'rating_count'
+      ? {
+          rating: Number.isFinite(Number(input.rating)) ? Number(input.rating) : 0,
+          ...targetCountParam,
+        }
+      : input.achievementType === 'avg_score'
+        ? { score: Math.floor(Number.isFinite(parsedScore) ? parsedScore : SCORE_MIN) }
+        : input.achievementType === 'hardlamp_count'
+          ? {
+              lamp: input.hardLamp,
+              ...targetCountParam,
+            }
+          : input.achievementType === 'combolamp_count'
+            ? {
+                lamp: input.comboLamp,
+                ...targetCountParam,
+              }
+            : input.achievementType === 'fullchain_count'
+              ? {
+                  lamp: input.fullChain,
+                  ...targetCountParam,
+                }
+              : input.achievementType === 'rainbow_count'
+                ? targetCountParam
+                : canUseDynamicTotalTarget(input.achievementType)
+                  ? targetTotalParam
+                  : { total: Number.isFinite(Number(input.total)) ? Number(input.total) : 0 }
+}

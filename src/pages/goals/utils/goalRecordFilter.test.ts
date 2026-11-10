@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
+import { buildDefaultFilter } from '../../../utils/recordFilterDefaults'
 import type { PlayerRecordWithSongMeta } from '../../../utils/recordMerger'
 import { isRecordMatched } from '../../users/UserRecord/utils/filtering'
 import { buildGoalRecordFilter, isGoalRecordNavigationEnabled } from './goalRecordFilter'
@@ -13,18 +14,20 @@ const MASTER_DATA: MasterDataDTO = {
     { id: 4, name: 'ULTIMA' },
   ],
   genres: [
-    { id: 10, name: 'POPS & ANIME' },
-    { id: 11, name: 'niconico' },
+    { id: 10, name: 'POPS & ANIME', short_name: 'P&A' },
+    { id: 11, name: 'niconico', short_name: 'nico' },
   ],
   versions: [],
+  name_folders: [],
   account_types: [],
   rating_bands: [],
   achievement_types: [],
+  possessions: [],
 }
 
 const VERSIONS: VersionDTO[] = [
-  { id: 100, name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' },
-  { id: 101, name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+  { id: 100, name: 'CHUNITHM LUMINOUS', short_name: 'LMN', released_at: '2023-12-14' },
+  { id: 101, name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
 ]
 
 /**
@@ -35,11 +38,16 @@ const VERSIONS: VersionDTO[] = [
  */
 const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
   id: 1,
+  group_id: null,
   title: 'SSを目指す',
   achievement_type: 'score_count',
   achievement_params: { score: 1000000, count: 1 },
   attributes: {},
-  invert: false,
+  invert_value: false,
+  invert_percentage: false,
+  gauge_start: 0,
+  apply_gauge_start_to_percentage: false,
+  sort_order: 1,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 })
@@ -74,6 +82,7 @@ const createRecord = (
   full_chain: null,
   slot: null,
   genre: 'POPS & ANIME',
+  name_folder_code: 'SA',
   release: '2024-12-12',
   release_version: 'VERSE',
   notes: 1000,
@@ -110,9 +119,10 @@ test('属性未指定時は全難易度・全定数・全ジャンル・全バ�
   assert.deepEqual(filter.const, { min: 1, max: 16 })
   assert.deepEqual(filter.genres, [])
   assert.deepEqual(filter.versions, [])
+  assert.equal(filter.nameFolders, null)
 })
 
-test('属性が明示的な空配列の場合はフィルターも空選択にする', () => {
+test('属性が空配列の場合はレコード遷移を無効にし、どの譜面にも一致しない条件にする', () => {
   // Given
   const goal = createGoal({
     attributes: { diff: [], genre: [], ver: [] },
@@ -125,6 +135,7 @@ test('属性が明示的な空配列の場合はフィルターも空選択に�
   assert.deepEqual(filter.difficulties, [])
   assert.deepEqual(filter.genres, [])
   assert.deepEqual(filter.versions, [])
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
 })
 
 test('スコア件数目標では目標スコア未満の譜面だけに一致する', () => {
@@ -147,6 +158,41 @@ test('平均スコア目標では目標平均値未満の個別譜面だけに�
   // When & Then
   assert.equal(isRecordMatched(createRecord({ score: 1004999 }), filter), true)
   assert.equal(isRecordMatched(createRecord({ score: 1005000 }), filter), false)
+})
+
+test('単曲レート目標17.45では17.44を未達成に含め17.45は含めない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 17.45, count: 1 },
+  })
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // When & Then
+  assert.equal(filter.rating.max, 17.44)
+  assert.equal(
+    isRecordMatched(createRecord({ const: 15.4, score: 1007900, rating: 17.44 }), filter),
+    true
+  )
+  assert.equal(
+    isRecordMatched(createRecord({ const: 15.4, score: 1007900, rating: 17.45 }), filter),
+    false
+  )
+})
+
+test('単曲レート目標では理論上到達可能かつ目標未満の譜面だけに一致する', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 18, count: 1 },
+  })
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // When & Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ const: 15.8, rating: 17.9 }), filter), false)
+  assert.equal(isRecordMatched(createRecord({ const: 15.9, rating: 17.99 }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ const: 15.9, rating: 18 }), filter), false)
 })
 
 test('ハードランプ目標では要求ランプ未満の譜面だけに一致する', () => {
@@ -175,6 +221,85 @@ test('コンボランプ目標では要求ランプ未満の譜面だけに一�
   assert.equal(isRecordMatched(createRecord({ combo_lamp: 'ALL JUSTICE' }), filter), false)
 })
 
+test('FULL CHAIN目標では指定種別以外の譜面だけに一致する', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'GOLD', count: 1 },
+  })
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // When & Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ full_chain: 'FULL CHAIN GOLD' }), filter), false)
+  assert.equal(isRecordMatched(createRecord({ full_chain: 'FULL CHAIN PLATINUM' }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ full_chain: null }), filter), true)
+})
+
+test('不正なFULL CHAIN値ではレコード遷移を無効にする', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'SILVER', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.chain_lamp, defaultFilter.chain_lamp)
+})
+
+test('不正なハードランプ値ではレコード遷移を無効にし、フィルター変換で例外を投げない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.hard_lamp, defaultFilter.hard_lamp)
+})
+
+test('不正なコンボランプ値ではレコード遷移を無効にし、フィルター変換で例外を投げない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'OLD', count: 1 } as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.combo_lamp, defaultFilter.combo_lamp)
+})
+
+test('ランプ目標の成果パラメータ形式が不正でもフィルター変換で例外を投げない', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: null as unknown as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+  const defaultFilter = buildDefaultFilter(MASTER_DATA.genres, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.hard_lamp, defaultFilter.hard_lamp)
+})
+
 test('未プレイ譜面を未達成としてフィルターに含める', () => {
   // Given
   const filter = buildGoalRecordFilter(createGoal(), MASTER_DATA, VERSIONS)
@@ -190,6 +315,24 @@ test('未プレイ譜面を未達成としてフィルターに含める', () =>
   assert.equal(matched, true)
 })
 
+test('虹枠目標ではAJ以外の通常譜面を未達成として表示する', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'rainbow_count',
+    achievement_params: {},
+    attributes: { genre: 10, ver: 2 },
+  })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: null }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: 'FULL COMBO' }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ combo_lamp: 'ALL JUSTICE' }), filter), false)
+})
+
 test('集計系目標ではレコード遷移を無効にする', () => {
   // Given
   const goals = ['total_score', 'overpower_value', 'overpower_percent'].map((achievementType) =>
@@ -203,12 +346,71 @@ test('集計系目標ではレコード遷移を無効にする', () => {
   assert.equal(isGoalRecordNavigationEnabled(createGoal()), true)
 })
 
-test('OP対象目標では通常レコードへのフィルター付き遷移を無効にする', () => {
+test('楽曲名順を指定した目標は楽曲名順フィルター付きでレコード遷移できる', () => {
+  // Given
+  const goal = createGoal({ attributes: { name_folder: ['A', 'SA'] } })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.deepEqual(filter.nameFolders, ['A', 'SA'])
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ name_folder_code: 'KA' }), filter), false)
+})
+
+test('楽曲名順が単一コードの目標は1件の楽曲名順フィルターへ変換する', () => {
+  // Given
+  const goal = createGoal({ attributes: { name_folder: 'KA' } })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.deepEqual(filter.nameFolders, ['KA'])
+})
+
+test('楽曲名順が空配列の目標ではレコード遷移を無効にする', () => {
+  // Given
+  const goal = createGoal({ attributes: { name_folder: [] } })
+
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.deepEqual(filter.difficulties, [])
+  assert.deepEqual(filter.nameFolders, [])
+})
+
+test('OP対象目標ではOP理論値対象を固定した通常レコードフィルターへ遷移できる', () => {
   // Given
   const goal = createGoal({
     attributes: { chart_target: 'OP_TARGET' },
   })
 
-  // When & Then
-  assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  // When
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(filter.opTargetOnly, true)
+  assert.equal(filter.opTargetType, 'theoretical')
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'song-1', difficulty: 'MASTER', is_op_target: false }),
+      filter,
+      new Map([['song-1', 'MASTER']])
+    ),
+    true
+  )
+  assert.equal(
+    isRecordMatched(
+      createRecord({ id: 'song-1', difficulty: 'ULTIMA', is_op_target: true }),
+      filter,
+      new Map([['song-1', 'MASTER']])
+    ),
+    false
+  )
 })

@@ -6,32 +6,35 @@ import {
   OVER_POWER_MAX,
   OVER_POWER_MIN,
   SCORE_MIN,
+  SINGLE_RATING_MAX,
+  SINGLE_RATING_MIN,
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
 } from '../../../constants/chart'
-import { MAX_SCORE } from '../../../utils/scoreRank'
+import { PLAYER_DATA_DIFFICULTIES } from '../../../constants/difficulty'
 import {
   RECORD_CHAIN_LAMP_OPTIONS,
   RECORD_COMBO_LAMP_OPTIONS,
   RECORD_HARD_LAMP_OPTIONS,
-} from '../constants/recordFilterOptions'
+} from '../../../constants/recordFilterOptions'
 import type {
   ChainLamp,
-  ComboLamp,
+  ComboLampFilter,
+  DateRangeFilter,
   Difficulty,
-  FilterState,
   HardLamp,
   NumericRangeFilter,
-} from '../UserRecord/types/types'
-import type { WorldsendFilterState } from '../WorldsendRecord/types/filterTypes'
+} from '../../../types/record'
+import type { FilterState } from '../../../types/recordFilter'
+import type { WorldsendFilterState } from '../../../types/worldsendRecord'
+import { MAX_SCORE } from '../../../utils/scoreRank'
 
-/** API と同じ保存済みフィルター名の最大文字数。 */
+/** API と同じ保存済みフィルター名の最大文字数 */
 export const RECORD_FILTER_NAME_MAX_LENGTH = 30
 
-/** API と同じ保存済みフィルターペイロードの最大バイト数。 */
+/** API と同じ保存済みフィルターペイロードの最大バイト数 */
 export const RECORD_FILTER_MAX_PAYLOAD_BYTES = 8 * 1024
 
-const DIFFICULTY_OPTIONS: Difficulty[] = ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA']
 /**
  * 文字列を Unicode コードポイント単位で指定文字数へ丸める。
  *
@@ -131,6 +134,15 @@ const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
 
 /**
+ * 文字列配列、または全選択を表す null かを判定する。
+ *
+ * @param value - 判定対象の値。
+ * @returns null、またはすべての要素が文字列の配列の場合は true。
+ */
+const isNullableStringArray = (value: unknown): value is string[] | null =>
+  value === null || isStringArray(value)
+
+/**
  * 数値範囲オブジェクトかを判定する。
  *
  * @param value - 判定対象の値。
@@ -194,6 +206,17 @@ const isArrayOfOptions = <T>(value: unknown, options: readonly T[]): value is T[
   Array.isArray(value) && value.every((item) => options.includes(item as T))
 
 /**
+ * 日付範囲オブジェクト (min/max が空文字列を許す文字列) かを判定する。
+ *
+ * @param value - 判定対象の値。
+ * @returns 有効な日付範囲オブジェクトの場合は true。
+ */
+const isDateRangeFilter = (value: unknown): value is DateRangeFilter => {
+  if (!isObjectRecord(value)) return false
+  return typeof value.min === 'string' && typeof value.max === 'string'
+}
+
+/**
  * 保存済み通常レコードフィルターが現行スキーマとして読み込めるか判定する。
  *
  * @param value - API から受け取った filter 値。
@@ -203,22 +226,37 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
   if (!isObjectRecord(value)) return false
   return (
     typeof value.title === 'string' &&
-    isArrayOfOptions(value.difficulties, DIFFICULTY_OPTIONS) &&
+    isArrayOfOptions<Difficulty>(value.difficulties, PLAYER_DATA_DIFFICULTIES) &&
+    (value.opTargetOnly === undefined || typeof value.opTargetOnly === 'boolean') &&
+    (value.opTargetType === undefined ||
+      value.opTargetType === 'current' ||
+      value.opTargetType === 'theoretical') &&
     (value.currentOpTargetOnly === undefined || typeof value.currentOpTargetOnly === 'boolean') &&
+    (value.favoriteSongsOnly === undefined || typeof value.favoriteSongsOnly === 'boolean') &&
+    (value.excludeLockedSongs === undefined || typeof value.excludeLockedSongs === 'boolean') &&
     isStringArray(value.genres) &&
-    isStringArray(value.versions) &&
+    isNullableStringArray(value.versions) &&
+    (value.nameFolders === undefined ||
+      value.nameFolders === null ||
+      isStringArray(value.nameFolders)) &&
     isRequiredNumberRange(value.const, CHART_CONST_MIN, CHART_CONST_MAX) &&
     (value.constFilterMode === 'level' || value.constFilterMode === 'number') &&
     isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
+    (value.rating === undefined ||
+      isOptionalNumberRange(value.rating, SINGLE_RATING_MIN, SINGLE_RATING_MAX)) &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
     isOptionalNumberRange(value.overPower, OVER_POWER_MIN, OVER_POWER_MAX) &&
-    isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
+    isArrayOfOptions<ComboLampFilter>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
     isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
-    typeof value.excludeNoPlay === 'boolean'
+    typeof value.excludeNoPlay === 'boolean' &&
+    (value.unplayedOnly === undefined || typeof value.unplayedOnly === 'boolean') &&
+    (value.updatedAt === undefined || isDateRangeFilter(value.updatedAt))
   )
 }
+
+/**
 
 /**
  * 保存済み WORLD'S END フィルターが現行スキーマとして読み込めるか判定する。
@@ -240,13 +278,17 @@ export const isValidSavedWorldsendFilter = (value: unknown): value is WorldsendF
       true
     ) &&
     isStringArray(value.genres) &&
-    isStringArray(value.versions) &&
+    isNullableStringArray(value.versions) &&
+    (value.nameFolders === undefined ||
+      value.nameFolders === null ||
+      isStringArray(value.nameFolders)) &&
     isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
-    isArrayOfOptions<ComboLamp>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
+    isArrayOfOptions<ComboLampFilter>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&
     isArrayOfOptions<HardLamp>(value.hard_lamp, RECORD_HARD_LAMP_OPTIONS) &&
-    typeof value.excludeNoPlay === 'boolean'
+    typeof value.excludeNoPlay === 'boolean' &&
+    (value.updatedAt === undefined || isDateRangeFilter(value.updatedAt))
   )
 }

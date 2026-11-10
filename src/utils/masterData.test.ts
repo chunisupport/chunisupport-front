@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import type { MasterItemDTO } from '../types/api.ts'
 import {
   compareMasterItemNames,
+  compareMasterItemNamesKeepingUnknownLast,
   createMasterItemOrderMap,
   sortMasterItemsBySortOrder,
 } from './masterData.ts'
@@ -27,4 +28,18 @@ test('マスタ順序にない名称は末尾で日本語順に並べる', () =>
   )
 
   assert.deepEqual(sorted, ['POPS & ANIME', '東方Project', 'VARIETY'])
+})
+
+test('マスタにない項目は昇順・降順とも末尾へ固定する', () => {
+  const orderMap = createMasterItemOrderMap(genres)
+
+  const ascending = ['VARIETY', '東方Project', 'POPS & ANIME'].sort((left, right) =>
+    compareMasterItemNamesKeepingUnknownLast(left, right, orderMap, 'asc')
+  )
+  const descending = ['VARIETY', '東方Project', 'POPS & ANIME'].sort((left, right) =>
+    compareMasterItemNamesKeepingUnknownLast(left, right, orderMap, 'desc')
+  )
+
+  assert.deepEqual(ascending, ['POPS & ANIME', '東方Project', 'VARIETY'])
+  assert.deepEqual(descending, ['東方Project', 'POPS & ANIME', 'VARIETY'])
 })

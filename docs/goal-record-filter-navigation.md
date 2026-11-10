@@ -41,6 +41,7 @@
 | `difficulties` | 指定された難易度。未指定時は全難易度 |
 | `genres` | 指定されたジャンル。未指定時は `[]`（全ジャンル） |
 | `versions` | 指定されたバージョン。未指定時は `[]`（全バージョン） |
+| `nameFolders` | 指定された楽曲名順フォルダのコード。未指定時は `null`（全フォルダ） |
 | `const.min` | 指定値。未指定時は `CONST_MIN` |
 | `const.max` | 指定値。未指定時は `CONST_MAX` |
 | `constFilterMode` | `'number'` |
@@ -58,9 +59,11 @@
 | `diff` | `difficulties` | マスターデータの ID から難易度名へ変換し、大文字に統一する |
 | `genre` | `genres` | マスターデータの ID からジャンル名へ変換する |
 | `ver` | `versions` | リリース日順の 1 始まり番号として解釈し、`buildGoalVersionNameMap` で短縮バージョン名へ変換する |
+| `name_folder` | `nameFolders` | 楽曲名順フォルダのコードをそのまま使用する |
 | `const.min` / `const.max` | `const.min` / `const.max` | 指定値をそのまま使用する |
+| `const_filter_mode` | なし | 使用しない。目標作成時の入力方法の復元用であり、単曲レート目標では下限を引き上げてレベル境界と一致しなくなるため、遷移先は常に数値指定（`constFilterMode: 'number'`）にする |
 
-`diff`、`genre`、`ver` は単一値と配列の両方を受け付け、有効な整数 ID の配列へ正規化します。難易度は `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA` のような大文字のドメイン値として扱います。
+`diff`、`genre`、`ver` は単一値と配列の両方を受け付け、有効な整数 ID の配列へ正規化します。`name_folder` も単一コードと配列の両方を受け付け、コード配列へ正規化します。`diff`、`genre`、`ver`、`name_folder` のいずれかが空配列の目標は対象譜面がないため、タイトルを操作できないテキストとして表示します。難易度は `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA` のような大文字のドメイン値として扱います。
 
 ## 目標種別ごとの未達成条件
 
@@ -97,6 +100,10 @@ score.max = max(0, achievement_params.score - 1)
 | `FC` | `null` |
 | `AJ` | `FULL COMBO`, `null` |
 
+### `rainbow_count`
+
+虹枠目標で許可される`genre`と`ver`を反映し、通常難易度はすべて対象にします。`combo_lamp`には`FULL COMBO`と`null`を設定し、対象楽曲のうちALL JUSTICEではない譜面を表示します。未プレイ譜面も`null`として表示対象に含めます。
+
 ## 補足ルール
 
 - 未プレイ譜面は未達成候補に含めます。
@@ -110,9 +117,10 @@ score.max = max(0, achievement_params.score - 1)
 | --- | --- |
 | `src/pages/goals/utils/goalRecordFilter.ts` | 目標からフィルターへの変換と遷移可否判定 |
 | `src/pages/goals/utils/goalRecordFilter.test.ts` | 属性変換、未達成条件、遷移可否の単体テスト |
-| `src/pages/goals/GoalsList/components/GoalCard.tsx` | 操作可能な目標タイトルの表示 |
-| `src/pages/goals/GoalsList/GoalsList.tsx` | フィルター保存と通常レコードへの遷移 |
+| `src/pages/goals/GoalsList/components/card/GoalCard.tsx` | 操作可能な目標タイトルの表示 |
+| `src/pages/goals/GoalsList/GoalsList.tsx` | 通常レコードへの遷移 |
+| `src/pages/goals/GoalsList/goalsListNavigation.ts` | フィルター保存と遷移先パスの生成 |
 | `src/repositories/viewSettingsRepository.ts` | 通常レコードフィルターの IndexedDB 保存 |
-| `src/pages/users/UserPage/profilePageQuery.ts` | 通常レコード画面のパス生成 |
+| `src/utils/userProfileRoute.ts` | 通常レコード画面のパス生成 |
 
 通常レコードの `FilterState` と IndexedDB 永続化の詳細は [レコードフィルター・列表示設定](./record-filter-and-columns.md) を参照してください。

@@ -1,0 +1,131 @@
+import type { PlayerMetricHistoryMetric } from '../../../utils/playerMetricHistory'
+
+/** 公式指標履歴ページで表示する文言 */
+export const PLAYER_METRIC_HISTORY_COPY = {
+  pageTitle: 'レーティング・OVER POWER履歴',
+  documentTitle: 'レーティング・OVER POWER履歴',
+  backToProfile: 'プロフィールへ戻る',
+  emptyHistory: '履歴がありません',
+  tableTitle: '履歴一覧',
+  tableCaption: '公式RATING・公式OVER POWER・公式OP%の履歴',
+  collectedAt: '取得日時',
+  rating: 'RATING',
+  overPower: 'OVER POWER',
+  overPowerPercent: 'OP%',
+  missingValue: '-',
+  ratingChartAriaLabel: '公式RATING履歴の折れ線グラフ',
+  overPowerChartAriaLabel: '公式OVER POWER履歴の折れ線グラフ',
+  overPowerPercentChartAriaLabel: '公式OP%履歴の折れ線グラフ',
+} as const
+
+/** 公式指標履歴グラフの縦軸下限 */
+export const PLAYER_METRIC_HISTORY_AXIS_FLOOR = 0
+
+/** 公式RATING履歴グラフの縦軸上限 */
+export const PLAYER_METRIC_HISTORY_RATING_AXIS_CEILING = 18
+
+/** 公式OP%履歴グラフの縦軸上限 */
+export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_CEILING = 100
+
+/** データ範囲に対して上下へ確保する余白の割合 */
+export const PLAYER_METRIC_HISTORY_AXIS_PADDING_RATIO = 0.1
+
+/** 公式RATING履歴グラフでデータ範囲が狭いときに確保する最小余白 */
+export const PLAYER_METRIC_HISTORY_RATING_AXIS_MIN_PADDING = 0.01
+
+/** 公式OVER POWER履歴グラフでデータ範囲が狭いときに確保する最小余白 */
+export const PLAYER_METRIC_HISTORY_OVERPOWER_AXIS_MIN_PADDING = 1
+
+/** 公式OP%履歴グラフでデータ範囲が狭いときに確保する最小余白 */
+export const PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MIN_PADDING = 0.01
+
+/** 履歴グラフ1枚分の表示定義 */
+export type PlayerMetricHistoryChartDefinition = {
+  metric: PlayerMetricHistoryMetric
+  title: string
+  ariaLabel: string
+  colorVariable: string
+  decimalPlaces: number
+  suffix: string
+  /** 縦軸の値域下限。未指定なら下限を設けない */
+  axisFloor?: number
+  /** 縦軸の値域上限。未指定なら上限を設けない */
+  axisCeiling?: number
+  /** データ範囲が狭いときに確保する縦軸の最小余白 */
+  axisMinPadding: number
+}
+
+/** RATING・OVER POWER・OP%を別々の折れ線グラフとして表示する定義 */
+export const PLAYER_METRIC_HISTORY_CHART_DEFINITIONS = [
+  {
+    metric: 'rating',
+    title: PLAYER_METRIC_HISTORY_COPY.rating,
+    ariaLabel: PLAYER_METRIC_HISTORY_COPY.ratingChartAriaLabel,
+    colorVariable: '--cs-color-action-primary',
+    decimalPlaces: 2,
+    suffix: '',
+    axisFloor: PLAYER_METRIC_HISTORY_AXIS_FLOOR,
+    axisCeiling: PLAYER_METRIC_HISTORY_RATING_AXIS_CEILING,
+    axisMinPadding: PLAYER_METRIC_HISTORY_RATING_AXIS_MIN_PADDING,
+  },
+  {
+    metric: 'overpower',
+    title: PLAYER_METRIC_HISTORY_COPY.overPower,
+    ariaLabel: PLAYER_METRIC_HISTORY_COPY.overPowerChartAriaLabel,
+    colorVariable: '--cs-color-info',
+    decimalPlaces: 2,
+    suffix: '',
+    axisFloor: PLAYER_METRIC_HISTORY_AXIS_FLOOR,
+    axisMinPadding: PLAYER_METRIC_HISTORY_OVERPOWER_AXIS_MIN_PADDING,
+  },
+  {
+    metric: 'overpower_percent',
+    title: PLAYER_METRIC_HISTORY_COPY.overPowerPercent,
+    ariaLabel: PLAYER_METRIC_HISTORY_COPY.overPowerPercentChartAriaLabel,
+    colorVariable: '--cs-color-success',
+    decimalPlaces: 2,
+    suffix: '%',
+    axisFloor: PLAYER_METRIC_HISTORY_AXIS_FLOOR,
+    axisCeiling: PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_CEILING,
+    axisMinPadding: PLAYER_METRIC_HISTORY_OVERPOWER_PERCENT_AXIS_MIN_PADDING,
+  },
+] as const satisfies readonly PlayerMetricHistoryChartDefinition[]
+
+/** Chart.jsで使うテーマ連動の文字色CSS変数 */
+export const PLAYER_METRIC_HISTORY_TEXT_COLOR_VARIABLE = '--cs-color-text-muted'
+/** Chart.jsで使うテーマ連動の罫線色CSS変数 */
+export const PLAYER_METRIC_HISTORY_GRID_COLOR_VARIABLE = '--cs-color-border'
+/** Chart.jsで使う数値フォントCSS変数 */
+export const PLAYER_METRIC_HISTORY_FONT_FAMILY_VARIABLE = '--font-jost'
+/** 数値フォントを解決できない場合の代替フォント */
+export const PLAYER_METRIC_HISTORY_FONT_FAMILY_FALLBACK = 'sans-serif'
+/** 履歴グラフのレスポンシブな固定高さ */
+export const PLAYER_METRIC_HISTORY_CHART_HEIGHT_CLASS = 'h-72 sm:h-80'
+/** 履歴一覧が狭い画面で列幅を維持するための最小幅 */
+export const PLAYER_METRIC_HISTORY_TABLE_MIN_WIDTH_CLASS = 'min-w-[24rem]'
+/**
+ * 履歴一覧の左端列（取得日時）の幅と余白。
+ * 列幅を中身に合わせて縮め、外側の余白は見出しと揃え、内側の余白は列間が均等になるよう画面幅に応じて広げる。
+ */
+export const PLAYER_METRIC_HISTORY_TABLE_FIRST_COLUMN_CLASS =
+  'w-px pl-4 pr-1 sm:pr-12 md:pr-20 lg:pr-24'
+/**
+ * 履歴一覧の右端列（OP%）の幅と余白。
+ * 左端列と左右対称にし、列幅を中身に合わせて縮める。
+ */
+export const PLAYER_METRIC_HISTORY_TABLE_LAST_COLUMN_CLASS =
+  'w-px pr-4 pl-1 sm:pl-12 md:pl-20 lg:pl-24'
+/** 履歴一覧の中央2列（RATING・OVER POWER）で残りの幅を等分する列幅 */
+export const PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS = 'w-1/2 px-1'
+/** 公式指標を画面に表示する小数点以下桁数 */
+export const PLAYER_METRIC_HISTORY_DECIMAL_PLACES = 2
+/** 折れ線グラフの通常時の点半径 */
+export const PLAYER_METRIC_HISTORY_POINT_RADIUS = 3
+/** 折れ線グラフのホバー時の点半径 */
+export const PLAYER_METRIC_HISTORY_POINT_HOVER_RADIUS = 5
+/** タッチやポインターで点を選択できる追加範囲 */
+export const PLAYER_METRIC_HISTORY_POINT_HIT_RADIUS = 12
+/** 折れ線グラフの線幅 */
+export const PLAYER_METRIC_HISTORY_BORDER_WIDTH = 2
+/** 折れ線グラフの曲線補間量。時系列で線が過去側へ戻らないよう直線 (0) にする */
+export const PLAYER_METRIC_HISTORY_LINE_TENSION = 0

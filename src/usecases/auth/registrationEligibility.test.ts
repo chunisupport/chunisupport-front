@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { resolveGoogleRegistrationEligibility } from './registrationEligibility.ts'
+import { resolveRegistrationEligibility } from './registrationEligibility.ts'
 
-test('バックエンドユーザーが存在するGoogleアカウントは登録済みとして判定する', async () => {
+test('バックエンドユーザーが存在するFirebaseアカウントは登録済みとして判定する', async () => {
   // Given
   const fetchCurrentUser = async () => ({ username: 'alice' })
 
   // When
-  const result = await resolveGoogleRegistrationEligibility(fetchCurrentUser)
+  const result = await resolveRegistrationEligibility(fetchCurrentUser)
 
   // Then
   assert.equal(result, 'registered')
@@ -23,7 +23,7 @@ test('user_not_foundの場合は新規登録可能として判定する', async 
   }
 
   // When
-  const result = await resolveGoogleRegistrationEligibility(fetchCurrentUser)
+  const result = await resolveRegistrationEligibility(fetchCurrentUser)
 
   // Then
   assert.equal(result, 'available')
@@ -38,7 +38,7 @@ test('invalid_tokenの場合は新規登録可能として判定する', async (
   }
 
   // When
-  const result = await resolveGoogleRegistrationEligibility(fetchCurrentUser)
+  const result = await resolveRegistrationEligibility(fetchCurrentUser)
 
   // Then
   assert.equal(result, 'available')
@@ -52,5 +52,5 @@ test('未登録由来以外のエラーはそのまま送出する', async () =>
   }
 
   // When & Then
-  await assert.rejects(() => resolveGoogleRegistrationEligibility(fetchCurrentUser), expectedError)
+  await assert.rejects(() => resolveRegistrationEligibility(fetchCurrentUser), expectedError)
 })

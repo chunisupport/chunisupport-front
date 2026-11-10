@@ -1,4 +1,4 @@
-/** トップページフッターに表示するライセンス表記。 */
+/** トップページフッターに表示するライセンス表記 */
 export const FOOTER_COPYRIGHT_TEXT = '©2026 ChuniSupport / Released under the MIT License.'
 export const FOOTER_COPYRIGHT_TEXT_2 =
   'サイト上のコンテンツの著作権は、原則として各コンテンツの著作権保持者に帰属します。'

@@ -10,58 +10,102 @@ import {
   Show,
   Suspense,
 } from 'solid-js'
-import { fetchMasterData, fetchVersions } from '../../../api/songs'
+import {
+  addMyFavoriteSong,
+  deleteMyFavoriteSong,
+  fetchUserFavoriteSongs,
+  fetchUserLockedSongs,
+} from '../../../api/users'
 import { LoadError, Loading } from '../../../components'
-import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { createRecordViewState } from '../../../hooks/createRecordViewState'
+import { fetchMasterData, fetchVersions } from '../../../queries/masterData'
+import { fetchNameFolders } from '../../../queries/nameFolders'
 import {
   readStandardRecordColumnsSetting,
   readStandardRecordFilterSetting,
   saveStandardRecordColumnsSetting,
   saveStandardRecordFilterSetting,
 } from '../../../repositories/viewSettingsRepository'
+import { authSession } from '../../../stores/authSession'
 import { useSongsData } from '../../../stores/songsData'
+import {
+  consumeStandardRecordFilter,
+  pendingStandardRecordFilter,
+} from '../../../stores/standardRecordNavigation'
 import type { MasterDataDTO, UserRecordDTO, VersionSummaryDTO } from '../../../types/api'
+import type { FilterState, RecordColumnId, RecordSortKey } from '../../../types/recordFilter'
+import { createLockedSongKey } from '../../../usecases/overpower/lockedSongsBatch'
+import { normalizeVersionFilterSelection } from '../../../utils/filterSelection'
+import {
+  buildDefaultFilter,
+  DEFAULT_FILTER,
+  normalizeFilterState,
+} from '../../../utils/recordFilterDefaults'
+import { getReleasedVersionShortNames } from '../../../utils/versionConverter'
 import FilterStats from '../components/FilterStats'
+import FilterToolbar from '../components/FilterToolbar'
+import RecordDataTable from '../components/RecordDataTable'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
-import { sanitizeSortQuery } from '../recordTable/sortingQuery'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
+import FavoriteSongsDialog from './components/FavoriteSongsDialog'
 import FilterDialog from './components/FilterDialog'
-import FilterToolbar from './components/FilterToolbar'
-import RecordTable from './components/RecordTable'
 import SortDialog from './components/SortDialog'
-import { buildDefaultFilter, DEFAULT_FILTER, normalizeFilterState } from './types/filterDefaults'
-import type { FilterState, RecordColumnId, RecordSortCondition } from './types/types'
-import { getDefaultVisibleColumnIds, sanitizeVisibleColumnIds } from './utils/columns'
+import { getRecordColumnRenderer } from './utils/columnRenderers'
+import {
+  getDefaultVisibleColumnIds,
+  getVisibleColumns,
+  sanitizeVisibleColumnIds,
+} from './utils/columns'
 import {
   isRecordDifficultyFilterOnlyChanged,
   isRecordFilterOptionsChanged,
 } from './utils/filterDialog'
 import { useUserRecordPageModel } from './utils/pageModel'
-import { createInitialRecordSortConditions, parseSortParams } from './utils/sorting'
+import { DEFAULT_RECORD_SORT_CONDITIONS, parseSortParams } from './utils/sorting'
 
 type Props = {
   username: string
   record: UserRecordDTO
+  active: boolean
+  onReadyChange: (ready: boolean) => void
 }
+
+/** 通常レコードフィルターの復元に必要なデータ */
+type StandardFilterRestoreSource = {
+  masterData: MasterDataDTO
+  versions: VersionSummaryDTO[]
+}
+
+const useStandardRecordViewState = createRecordViewState<
+  FilterState,
+  RecordColumnId,
+  RecordSortKey,
+  StandardFilterRestoreSource
+>()
 
 /**
  * 通常レコードの初期フィルターを保存済み設定、または既定値から決定する。
  *
  * @param masterData - フィルター既定値の構築に使うマスターデータ。
  * @param versions - フィルター既定値の構築に使うバージョン一覧。
- * @returns 初回表示に適用するフィルター状態。
+ * @returns 初回表示に適用するフィルター状態。保存済みの全バージョン選択は未指定へ揃える。
  */
 const restoreInitialStandardRecordFilter = async (
   masterData: MasterDataDTO,
   versions: VersionSummaryDTO[]
 ): Promise<FilterState> => {
-  const defaultFilter = buildDefaultFilter(masterData, versions)
+  const defaultFilter = buildDefaultFilter(masterData.genres, versions)
+  const releasedVersionNames = getReleasedVersionShortNames(versions)
 
   try {
     const savedFilter = await readStandardRecordFilterSetting()
-    return isValidSavedStandardFilter(savedFilter)
+    const restored = isValidSavedStandardFilter(savedFilter)
       ? normalizeFilterState(savedFilter)
       : defaultFilter
+    return {
+      ...restored,
+      versions: normalizeVersionFilterSelection(restored.versions, releasedVersionNames),
+    }
   } catch {
     return defaultFilter
   }
@@ -77,37 +121,101 @@ const UserRecord: Component<Props> = (props) => {
   const { songsResponse: allSongs, ensureSongsLoaded, isSongsLoading } = useSongsData()
   const [masterData] = createResource(fetchMasterData)
   const [versionData] = createResource(fetchVersions)
-
-  // フィルターの状態
-  const [filters, setFilters] = createSignal<FilterState>({
-    // createEffect内で初期化されるので、ここでは仮の値をセット
-    ...DEFAULT_FILTER,
-  })
-  const [filterReady, setFilterReady] = createSignal(false)
+  const [nameFolders] = createResource(fetchNameFolders)
 
   // フィルターダイアログの開閉状態
   const [filterOpen, setFilterOpen] = createSignal(false)
-  const [filterStatsOpen, setFilterStatsOpen] = createSignal(false)
   const [sortSettingsOpen, setSortSettingsOpen] = createSignal(false)
   const [columnSettingsOpen, setColumnSettingsOpen] = createSignal(false)
+  const [favoriteSongsOpen, setFavoriteSongsOpen] = createSignal(false)
+  const [favoriteSongsUnavailable, setFavoriteSongsUnavailable] = createSignal(false)
+  const [lockedSongsUnavailable, setLockedSongsUnavailable] = createSignal(false)
+  const canManageFavoriteSongs = createMemo(
+    () => authSession.status === 'authenticated' && authSession.user?.username === props.username
+  )
+  const [favoriteSongs, { refetch: refetchFavoriteSongs }] = createResource(
+    () => props.username,
+    async (username) => {
+      try {
+        const response = await fetchUserFavoriteSongs(username)
+        setFavoriteSongsUnavailable(false)
+        return response
+      } catch {
+        setFavoriteSongsUnavailable(true)
+        return { items: [] }
+      }
+    }
+  )
+  const [lockedSongs] = createResource(
+    () => props.username,
+    async (username) => {
+      try {
+        const response = await fetchUserLockedSongs(username)
+        setLockedSongsUnavailable(false)
+        return response
+      } catch {
+        setLockedSongsUnavailable(true)
+        return { items: [] }
+      }
+    }
+  )
 
-  // クエリパラメータ ?sortcol=<col>&sortorder=asc|desc から初期ソートを取得
   const [searchParams, setSearchParams] = useSearchParams()
-  const { initialSortKey, initialSortOrder } = parseSortParams(searchParams)
-
-  const [sortConditions, setSortConditions] = createSignal<RecordSortCondition[]>(
-    createInitialRecordSortConditions(initialSortKey, initialSortOrder)
-  )
-  const primarySort = () => sortConditions()[0] ?? null
-  const [visibleColumnIds, setVisibleColumnIds] = createSignal<RecordColumnId[]>(
-    sanitizeVisibleColumnIds(getDefaultVisibleColumnIds())
-  )
 
   const defaultFilter = createMemo(() => {
     const md = masterData()
     const vs = versionData()?.versions
-    return md && vs ? buildDefaultFilter(md, vs) : DEFAULT_FILTER
+    return md && vs ? buildDefaultFilter(md.genres, vs) : DEFAULT_FILTER
   })
+
+  const {
+    filters,
+    setFilters,
+    applyFilters,
+    overrideFilter,
+    visibleColumnIds,
+    applyVisibleColumns,
+    sortConditions,
+    setSortConditions,
+    primarySort,
+    handleSortChange,
+    resetFiltersAndSort,
+    filterStatsOpen,
+    setFilterStatsOpen,
+    ready,
+  } = useStandardRecordViewState({
+    key: () => props.username,
+    initialFilter: { ...DEFAULT_FILTER },
+    filterRestoreSource: () => {
+      const md = masterData()
+      const versions = versionData()
+      return md && versions ? { masterData: md, versions: versions.versions } : undefined
+    },
+    restoreFilter: ({ masterData: md, versions }) =>
+      restoreInitialStandardRecordFilter(md, versions),
+    defaultFilter,
+    saveFilter: saveStandardRecordFilterSetting,
+    defaultColumnIds: getDefaultVisibleColumnIds(),
+    sanitizeColumnIds: sanitizeVisibleColumnIds,
+    readColumns: readStandardRecordColumnsSetting,
+    saveColumns: saveStandardRecordColumnsSetting,
+    defaultSortConditions: DEFAULT_RECORD_SORT_CONDITIONS,
+    parseSortParams,
+    searchParams,
+    setSearchParams,
+  })
+
+  const visibleColumns = createMemo(() => getVisibleColumns(visibleColumnIds()))
+  const favoriteSongIds = createMemo<ReadonlySet<string>>(
+    () => new Set(favoriteSongs()?.items.map((item) => item.id) ?? [])
+  )
+  const lockedSongKeys = createMemo<ReadonlySet<string>>(
+    () =>
+      new Set(
+        lockedSongs()?.items.map((item) => createLockedSongKey(item.id, item.is_ultima)) ?? []
+      )
+  )
+
   const hasTitleFilterChanges = createMemo(() => filters().title !== defaultFilter().title)
   const hasFilterOptionChanges = createMemo(() =>
     isRecordFilterOptionsChanged(filters(), defaultFilter())
@@ -116,69 +224,63 @@ const UserRecord: Component<Props> = (props) => {
     isRecordDifficultyFilterOnlyChanged(filters(), defaultFilter()) ? 'difficulty-only' : undefined
   )
 
-  // クエリパラメータが存在した場合にURLをクリーン化（ソート自体は維持）
-  onMount(() => sanitizeSortQuery(searchParams, setSearchParams))
   onMount(() => {
     ensureSongsLoaded()
   })
 
-  let filterRestored = false
-
-  // マスタデータ取得後に保存済みフィルター、またはデフォルトフィルターを反映する。
+  // forceMount済みの通常レコードへOVER POWER画面から渡されたフィルターを反映する。
   createEffect(() => {
-    const md = masterData()
-    const versions = versionData()
-    if (filterRestored || !md || !versions) return
-    filterRestored = true
-    void restoreInitialStandardRecordFilter(md, versions.versions)
-      .then(setFilters)
-      .finally(() => setFilterReady(true))
+    const pendingFilter = pendingStandardRecordFilter()
+    if (!pendingFilter || pendingFilter.username !== props.username) return
+
+    overrideFilter(normalizeFilterState(pendingFilter.filter))
+    consumeStandardRecordFilter(pendingFilter)
   })
 
-  onMount(() => {
-    void readStandardRecordColumnsSetting()
-      .then((savedColumnIds) => {
-        if (Array.isArray(savedColumnIds)) {
-          setVisibleColumnIds(sanitizeVisibleColumnIds(savedColumnIds as RecordColumnId[]))
-        }
-      })
-      .catch(() => undefined)
+  createEffect(() => {
+    if (!favoriteSongsUnavailable() || !filters().favoriteSongsOnly) return
+    setFilters((current) => ({ ...current, favoriteSongsOnly: false }))
+  })
+
+  createEffect(() => {
+    if (!lockedSongsUnavailable() || !filters().excludeLockedSongs) return
+    setFilters((current) => ({ ...current, excludeLockedSongs: false }))
+  })
+
+  const { sortedRecords, totalCount, filteredCount, stats } = useUserRecordPageModel({
+    songs: allSongs,
+    versions: versionData,
+    sourceRecords: () => props.record.standard,
+    filters,
+    favoriteSongIds,
+    lockedSongKeys,
+    sortConditions,
   })
 
   /**
-   * 通常レコードの現在フィルターを画面へ反映し、保存可能な場合は IndexedDB へ保存する。
+   * お気に入り楽曲の差分を解除、追加の順に保存する。
    *
-   * @param nextFilters - 次に適用するフィルター状態。
-   * @returns なし。
+   * @param nextDisplayIds - 保存後のお気に入り楽曲ID。
+   * @returns 保存と再取得の完了時に解決されるPromise。
    */
-  const applyFilters = (nextFilters: FilterState) => {
-    setFilters(nextFilters)
-    void saveStandardRecordFilterSetting(nextFilters).catch(() => undefined)
+  const handleSaveFavoriteSongs = async (nextDisplayIds: string[]): Promise<void> => {
+    const currentItems = favoriteSongs()?.items
+    if (!currentItems) {
+      throw new Error('お気に入り楽曲の読み込みが完了していません。')
+    }
+
+    const currentIds = new Set(currentItems.map((item) => item.id))
+    const nextIds = new Set(nextDisplayIds)
+    const deletedIds = [...currentIds].filter((id) => !nextIds.has(id))
+    const addedIds = [...nextIds].filter((id) => !currentIds.has(id))
+
+    try {
+      await Promise.all(deletedIds.map(deleteMyFavoriteSong))
+      await Promise.all(addedIds.map((id) => addMyFavoriteSong({ id })))
+    } finally {
+      await Promise.resolve(refetchFavoriteSongs()).catch(() => undefined)
+    }
   }
-
-  /**
-   * 通常レコードの表示列設定を画面へ反映し、IndexedDB へ保存する。
-   *
-   * @param nextVisibleColumnIds - 次に表示する列 ID 配列。
-   * @returns なし。
-   */
-  const applyVisibleColumns = (nextVisibleColumnIds: RecordColumnId[]) => {
-    const sanitizedColumnIds = sanitizeVisibleColumnIds(nextVisibleColumnIds)
-    setVisibleColumnIds(sanitizedColumnIds)
-    void saveStandardRecordColumnsSetting(sanitizedColumnIds).catch(() => undefined)
-  }
-
-  const { sortedRecords, totalCount, filteredCount, stats, handleSortChange } =
-    useUserRecordPageModel({
-      songs: allSongs,
-      versions: versionData,
-      sourceRecords: () => props.record.standard,
-      filters,
-      sortConditions,
-      setSortConditions,
-    })
-
-  useDocumentTitle(() => `${props.username}さんのレコード`)
 
   return (
     <Suspense fallback={<Loading />}>
@@ -188,7 +290,14 @@ const UserRecord: Component<Props> = (props) => {
           fallback={<LoadError error={allSongs.error ?? masterData.error ?? versionData.error} />}
         >
           <Show
-            when={!isSongsLoading() && masterData() && versionData() && filterReady()}
+            when={
+              !isSongsLoading() &&
+              masterData() &&
+              versionData() &&
+              ready() &&
+              (!filters().favoriteSongsOnly || (!favoriteSongs.loading && favoriteSongs())) &&
+              (!filters().excludeLockedSongs || (!lockedSongs.loading && lockedSongs()))
+            }
             fallback={<Loading />}
           >
             <div class="mx-2 text-sm">
@@ -197,6 +306,7 @@ const UserRecord: Component<Props> = (props) => {
                 title={filters().title}
                 onTitleChange={(value) => applyFilters({ ...filters(), title: value })}
                 onOpenFilter={() => setFilterOpen(true)}
+                onResetFilter={resetFiltersAndSort}
                 onOpenSortSettings={() => setSortSettingsOpen(true)}
                 onOpenColumnSettings={() => setColumnSettingsOpen(true)}
                 titleActive={hasTitleFilterChanges()}
@@ -218,12 +328,16 @@ const UserRecord: Component<Props> = (props) => {
               </p>
 
               {/* レコード一覧 */}
-              <RecordTable
+              <RecordDataTable
                 records={sortedRecords()}
-                statsOpen={filterStatsOpen()}
+                active={props.active}
+                onReadyChange={props.onReadyChange}
+                columns={visibleColumns()}
                 sortKey={primarySort()?.key ?? null}
                 sortDirection={primarySort()?.direction ?? null}
-                visibleColumnIds={visibleColumnIds()}
+                emptyMessage="データがありません"
+                resetDeps={filterStatsOpen()}
+                getColumnRenderer={getRecordColumnRenderer}
                 onSortChange={handleSortChange}
               />
 
@@ -235,7 +349,13 @@ const UserRecord: Component<Props> = (props) => {
                 onChange={applyFilters}
                 masterData={masterData()}
                 versions={versionData()?.versions}
+                nameFolders={nameFolders()}
                 defaultFilter={defaultFilter()}
+                onOpenFavoriteSongs={() => setFavoriteSongsOpen(true)}
+                favoriteSongsDisabled={
+                  !canManageFavoriteSongs() || favoriteSongs.loading || favoriteSongsUnavailable()
+                }
+                lockedSongsDisabled={lockedSongs.loading || lockedSongsUnavailable()}
               />
 
               <SortDialog
@@ -251,6 +371,19 @@ const UserRecord: Component<Props> = (props) => {
                 visibleColumnIds={visibleColumnIds()}
                 onApply={applyVisibleColumns}
               />
+
+              <Show when={canManageFavoriteSongs() && allSongs() && favoriteSongs()}>
+                <FavoriteSongsDialog
+                  open={favoriteSongsOpen()}
+                  songs={allSongs()?.songs ?? []}
+                  genres={masterData()?.genres ?? []}
+                  versions={versionData()?.versions ?? []}
+                  nameFolders={nameFolders() ?? []}
+                  favoriteSongs={favoriteSongs()?.items ?? []}
+                  onOpenChange={setFavoriteSongsOpen}
+                  onSave={handleSaveFavoriteSongs}
+                />
+              </Show>
             </div>
           </Show>
         </Show>
