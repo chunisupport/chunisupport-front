@@ -60,7 +60,8 @@ interface GoalCardSecondaryValueProps {
 
 /**
  * カード右端の達成率、または平均スコア目標の残り点数を表示する。
- * 達成率の「%」は、平均スコア目標の「点」と同じ文字サイズにする。
+ * 小数部は他の目標値と同じく整数部より小さくする。
+ * 達成率の「%」は、平均スコア目標の「点」と同じ文字サイズのままにする。
  *
  * @param props - 表示文字列、別単位、数値と単位の文字サイズ。
  * @returns 数値と、あれば小さい単位。
@@ -73,7 +74,9 @@ const GoalCardSecondaryValue: Component<GoalCardSecondaryValueProps> = (props) =
 
   return (
     <>
-      <span class={props.numberClass}>{parts().numberText}</span>
+      <span class={props.numberClass}>
+        <GoalValueWithUnit text={parts().numberText} unit="" />
+      </span>
       <Show when={parts().unitText}>
         {(unitText) => <span class={props.suffixClass}>{unitText()}</span>}
       </Show>
