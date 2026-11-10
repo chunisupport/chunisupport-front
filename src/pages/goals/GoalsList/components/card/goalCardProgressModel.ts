@@ -1,8 +1,8 @@
 import type { GoalAchievementType } from '../../../../../types/api'
-import { formatTruncatedFixed, truncateDecimal } from '../../../../../utils/numberFormat'
-import { formatOverPowerPercent } from '../../../../../utils/overPowerFormat'
+import { formatTruncatedFixed } from '../../../../../utils/numberFormat'
 import { calculateGoalGaugePercent, resolveGoalGaugeStart } from '../../../utils/goalGauge'
 import type { GoalProgressResult } from '../../../utils/goalProgress'
+import { formatGoalValue } from '../../../utils/goalValueFormat'
 import { GOAL_SCORE_UNIT } from '../../constants'
 
 export interface GoalCardDisplayProgress {
@@ -26,36 +26,19 @@ export interface GoalGaugeStartSettings {
   applyToPercentage: boolean
 }
 
-/**
- * 総OVER POWERの表示で固定する小数点以下桁数。
- */
-const OVER_POWER_VALUE_DECIMAL_PLACES = 3
-const OVER_POWER_PERCENT_DECIMAL_PLACES = 3
 const REMAINING_PERCENTAGE_PREFIX = 'あと'
 /** スタート位置を指定しない場合の設定。従来どおり0からゲージを描き、達成率も現在値÷目標値にする。 */
 const NO_GAUGE_START: GoalGaugeStartSettings = { value: 0, applyToPercentage: false }
 
 /**
  * 目標進捗の数値を目標種別に合わせて表示用に整形する。
+ * OP%だけ末尾に「%」を付ける。
  *
  * @param value - 整形対象の数値。
  * @param type - 目標種別。
  * @returns 画面表示用の数値文字列。
  */
-export const formatGoalCardValue = (value: number, type: GoalAchievementType): string => {
-  if (type === 'overpower_value') {
-    return truncateDecimal(value, OVER_POWER_VALUE_DECIMAL_PLACES).toLocaleString('ja-JP', {
-      minimumFractionDigits: OVER_POWER_VALUE_DECIMAL_PLACES,
-      maximumFractionDigits: OVER_POWER_VALUE_DECIMAL_PLACES,
-    })
-  }
-
-  if (type === 'overpower_percent') {
-    return formatOverPowerPercent(value, OVER_POWER_PERCENT_DECIMAL_PLACES)
-  }
-
-  return Math.floor(value).toLocaleString('ja-JP')
-}
+export const formatGoalCardValue = formatGoalValue
 
 /**
  * 目標カードの進捗値とゲージ値を実表示用に変換する。

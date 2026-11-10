@@ -13,6 +13,7 @@ import {
 } from '../../../../../utils/goalLamp'
 import { MAX_SCORE, SCORE_RANK_MIN_SCORES, SCORE_RANKS_ASC } from '../../../../../utils/scoreRank'
 import type { GoalTargetMode } from '../../../utils/goalCountTarget'
+import { getGoalValueUnit } from '../../../utils/goalValueFormat'
 import { GOAL_GAUGE_START_LABEL } from '../../constants'
 import {
   LABEL_APPLY_GAUGE_START_TO_PERCENTAGE,
@@ -312,6 +313,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
                   min={0}
                   max={props.totalFieldMax}
                   step={10 ** -OVERPOWER_TARGET_DECIMAL_PLACES}
+                  unit={getGoalValueUnit(props.achievementType)}
                   onChange={props.onTotalChange}
                 />
               }
@@ -390,6 +392,7 @@ export const GoalAchievementSection: Component<GoalAchievementSectionProps> = (p
                   value={props.gaugeStart}
                   min={0}
                   step={10 ** -getGoalGaugeStartDecimalPlaces(props.achievementType)}
+                  unit={getGoalValueUnit(props.achievementType)}
                   errorMessage={props.gaugeStartErrorMessage}
                   inputRef={props.gaugeStartInputRef}
                   onChange={props.onGaugeStartChange}
