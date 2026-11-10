@@ -220,6 +220,8 @@ export type ErrorCode =
   | 'username_taken'
   | 'comment_too_long'
   | 'comment_invalid_char'
+  | 'comment_inappropriate'
+  | 'comment_moderation_unavailable'
   | 'password_too_short'
   | 'password_too_long'
   | 'invalid_password'
@@ -328,6 +330,9 @@ export const errorMessages: Record<ErrorCode, string> = {
   username_taken: 'このユーザーネームはすでに使用されています',
   comment_too_long: 'コメントは100文字以内である必要があります',
   comment_invalid_char: 'コメントに改行などの使用できない文字が含まれています',
+  comment_inappropriate: 'コメントに不適切な表現が含まれている可能性があるため保存できません',
+  comment_moderation_unavailable:
+    'コメントの内容を確認できなかったため保存できませんでした。時間をおいて再度お試しください',
   password_too_short: 'パスワードは8文字以上である必要があります',
   password_too_long: 'パスワードは128文字以内である必要があります',
   invalid_password: 'パスワードが無効です',
