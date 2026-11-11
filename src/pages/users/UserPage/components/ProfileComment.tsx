@@ -1,4 +1,3 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
 import MessageSquarePlus from 'lucide-solid/icons/message-square-plus'
@@ -7,7 +6,7 @@ import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { updateMyComment } from '../../../../api/userComment'
 import { AppButton } from '../../../../components/common/AppButton'
-import { AppDialogHeader } from '../../../../components/common/AppDialogHeader'
+import { AppDialog } from '../../../../components/common/AppDialog'
 import { showSuccessToast } from '../../../../components/common/AppToast'
 import { AppTooltipIconButton } from '../../../../components/common/AppTooltipIconButton'
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../../../components/common/filterStyles'
@@ -158,59 +157,55 @@ export const ProfileComment: Component<ProfileCommentProps> = (props) => {
           </Show>
         </div>
       </Show>
-      <Dialog open={dialogOpen()} onOpenChange={handleDialogOpenChange}>
-        <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-          <Dialog.Content class="fixed left-1/2 top-1/2 z-60 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-            <AppDialogHeader
-              title={PROFILE_COMMENT_COPY.dialogTitle}
-              closeLabel={PROFILE_COMMENT_COPY.close}
-              closeDisabled={saveMutation.isPending}
+      <AppDialog
+        open={dialogOpen()}
+        onOpenChange={handleDialogOpenChange}
+        pending={saveMutation.isPending}
+        layer="raised"
+        size="sm"
+        title={PROFILE_COMMENT_COPY.dialogTitle}
+        closeLabel={PROFILE_COMMENT_COPY.close}
+      >
+        <form class="mt-4" onSubmit={handleSubmit}>
+          <TextField
+            value={draft()}
+            validationState={isTooLong() ? 'invalid' : 'valid'}
+            onChange={(value) => setDraft(removeUserCommentLineBreaks(value))}
+          >
+            <TextField.TextArea
+              rows={PROFILE_COMMENT_INPUT_ROWS}
+              aria-label={PROFILE_COMMENT_COPY.dialogTitle}
+              class={`block w-full resize-none rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover ${FILTER_DIALOG_FIELD_FOCUS_CLASS}`}
+              onKeyDown={handleKeyDown}
             />
-            <form class="mt-4" onSubmit={handleSubmit}>
-              <TextField
-                value={draft()}
-                validationState={isTooLong() ? 'invalid' : 'valid'}
-                onChange={(value) => setDraft(removeUserCommentLineBreaks(value))}
-              >
-                <TextField.TextArea
-                  rows={PROFILE_COMMENT_INPUT_ROWS}
-                  aria-label={PROFILE_COMMENT_COPY.dialogTitle}
-                  class={`block w-full resize-none rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm hover:border-input-border-hover ${FILTER_DIALOG_FIELD_FOCUS_CLASS}`}
-                  onKeyDown={handleKeyDown}
-                />
-              </TextField>
-              <p
-                class={`mt-1 text-right text-xs ${isTooLong() ? 'text-danger' : 'text-text-muted'}`}
-              >
-                {draftLength()}/{USER_COMMENT_MAX_LENGTH}
+          </TextField>
+          <p class={`mt-1 text-right text-xs ${isTooLong() ? 'text-danger' : 'text-text-muted'}`}>
+            {draftLength()}/{USER_COMMENT_MAX_LENGTH}
+          </p>
+          <Show when={saveMutation.error}>
+            {(error) => (
+              <p class="mt-2 text-sm text-danger" role="alert">
+                {toUserFriendlyErrorMessage(error(), PROFILE_COMMENT_COPY.failure)}
               </p>
-              <Show when={saveMutation.error}>
-                {(error) => (
-                  <p class="mt-2 text-sm text-danger" role="alert">
-                    {toUserFriendlyErrorMessage(error(), PROFILE_COMMENT_COPY.failure)}
-                  </p>
-                )}
-              </Show>
-              <div class="mt-5 flex justify-end gap-2">
-                <AppButton
-                  disabled={saveMutation.isPending}
-                  onClick={() => handleDialogOpenChange(false)}
-                >
-                  {PROFILE_COMMENT_COPY.cancel}
-                </AppButton>
-                <AppButton
-                  type="submit"
-                  variant="primary"
-                  disabled={isTooLong() || saveMutation.isPending}
-                >
-                  {saveMutation.isPending ? PROFILE_COMMENT_COPY.saving : PROFILE_COMMENT_COPY.save}
-                </AppButton>
-              </div>
-            </form>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
+            )}
+          </Show>
+          <div class="mt-5 flex justify-end gap-2">
+            <AppButton
+              disabled={saveMutation.isPending}
+              onClick={() => handleDialogOpenChange(false)}
+            >
+              {PROFILE_COMMENT_COPY.cancel}
+            </AppButton>
+            <AppButton
+              type="submit"
+              variant="primary"
+              disabled={isTooLong() || saveMutation.isPending}
+            >
+              {saveMutation.isPending ? PROFILE_COMMENT_COPY.saving : PROFILE_COMMENT_COPY.save}
+            </AppButton>
+          </div>
+        </form>
+      </AppDialog>
     </>
   )
 }

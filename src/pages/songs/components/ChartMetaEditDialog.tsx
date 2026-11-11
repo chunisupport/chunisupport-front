@@ -1,8 +1,8 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, Index, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { DifficultyBadge } from '../../../components/common/DifficultyBadge'
 import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
@@ -99,121 +99,116 @@ const ChartMetaEditDialog: Component<Props> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex h-[90dvh] max-h-[90dvh] w-[90vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-            {SONG_EDIT_COPY.chartDialogTitle}
-          </Dialog.Title>
-          <Dialog.Description class="sr-only">
-            {SONG_EDIT_COPY.chartFormDescription}
-          </Dialog.Description>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.saving}
+      size="2xl"
+      height="fill90"
+      overflowHidden
+      title={SONG_EDIT_COPY.chartDialogTitle}
+      description={SONG_EDIT_COPY.chartFormDescription}
+      descriptionVisibility="srOnly"
+    >
+      <form class="mt-5 flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+        <div class="min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Index each={drafts()}>
+              {(draft) => (
+                <section class="space-y-3 rounded-md border border-border p-3">
+                  <DifficultyBadge difficulty={draft().difficulty} />
 
-          <form class="mt-5 flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
-            <div class="min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Index each={drafts()}>
-                  {(draft) => (
-                    <section class="space-y-3 rounded-md border border-border p-3">
-                      <DifficultyBadge difficulty={draft().difficulty} />
+                  <div class="grid grid-cols-2 gap-3">
+                    <TextField>
+                      <TextField.Label class="mb-1 block text-sm text-text-muted">
+                        {SONG_EDIT_COPY.constLabel}
+                      </TextField.Label>
+                      <TextField.Input
+                        value={draft().const}
+                        inputMode="decimal"
+                        class={SONG_EDIT_NUMBER_INPUT_CLASS}
+                        onInput={(event) => {
+                          const next = normalizeChartConstRangeInput(event.currentTarget.value)
+                          if (next === null) return
+                          setDrafts((current) =>
+                            patchChartDraft(current, draft().difficulty, { const: next })
+                          )
+                        }}
+                      />
+                    </TextField>
 
-                      <div class="grid grid-cols-2 gap-3">
-                        <TextField>
-                          <TextField.Label class="mb-1 block text-sm text-text-muted">
-                            {SONG_EDIT_COPY.constLabel}
-                          </TextField.Label>
-                          <TextField.Input
-                            value={draft().const}
-                            inputMode="decimal"
-                            class={SONG_EDIT_NUMBER_INPUT_CLASS}
-                            onInput={(event) => {
-                              const next = normalizeChartConstRangeInput(event.currentTarget.value)
-                              if (next === null) return
-                              setDrafts((current) =>
-                                patchChartDraft(current, draft().difficulty, { const: next })
-                              )
-                            }}
-                          />
-                        </TextField>
+                    <TextField>
+                      <TextField.Label class="mb-1 block text-sm text-text-muted">
+                        {SONG_EDIT_COPY.notesLabel}
+                      </TextField.Label>
+                      <TextField.Input
+                        value={draft().notes}
+                        inputMode="numeric"
+                        class={SONG_EDIT_NUMBER_INPUT_CLASS}
+                        onInput={(event) => {
+                          const next = normalizeNonNegativeIntegerInput(event.currentTarget.value)
+                          if (next === null) return
+                          setDrafts((current) =>
+                            patchChartDraft(current, draft().difficulty, { notes: next })
+                          )
+                        }}
+                      />
+                    </TextField>
+                  </div>
 
-                        <TextField>
-                          <TextField.Label class="mb-1 block text-sm text-text-muted">
-                            {SONG_EDIT_COPY.notesLabel}
-                          </TextField.Label>
-                          <TextField.Input
-                            value={draft().notes}
-                            inputMode="numeric"
-                            class={SONG_EDIT_NUMBER_INPUT_CLASS}
-                            onInput={(event) => {
-                              const next = normalizeNonNegativeIntegerInput(
-                                event.currentTarget.value
-                              )
-                              if (next === null) return
-                              setDrafts((current) =>
-                                patchChartDraft(current, draft().difficulty, { notes: next })
-                              )
-                            }}
-                          />
-                        </TextField>
-                      </div>
+                  <CheckboxField
+                    checked={draft().is_const_unknown && canMarkChartConstUnknown(draft().const)}
+                    disabled={!canMarkChartConstUnknown(draft().const)}
+                    label={SONG_EDIT_COPY.constUnknownLabel}
+                    onChange={(checked) =>
+                      setDrafts((current) =>
+                        patchChartDraft(current, draft().difficulty, {
+                          is_const_unknown: checked,
+                        })
+                      )
+                    }
+                  />
 
-                      <CheckboxField
-                        checked={
-                          draft().is_const_unknown && canMarkChartConstUnknown(draft().const)
-                        }
-                        disabled={!canMarkChartConstUnknown(draft().const)}
-                        label={SONG_EDIT_COPY.constUnknownLabel}
-                        onChange={(checked) =>
+                  <Show when={hasNotesDesigner(draft().difficulty)}>
+                    <TextField>
+                      <TextField.Label class="mb-1 block text-sm text-text-muted">
+                        {SONG_EDIT_COPY.notesDesignerLabel}
+                      </TextField.Label>
+                      <TextField.Input
+                        value={draft().notes_designer}
+                        maxLength={SONG_EDIT_INPUT_LIMITS.notesDesigner}
+                        class={SONG_EDIT_TEXT_INPUT_CLASS}
+                        onInput={(event) =>
                           setDrafts((current) =>
                             patchChartDraft(current, draft().difficulty, {
-                              is_const_unknown: checked,
+                              notes_designer: event.currentTarget.value,
                             })
                           )
                         }
                       />
+                    </TextField>
+                  </Show>
+                </section>
+              )}
+            </Index>
+          </div>
 
-                      <Show when={hasNotesDesigner(draft().difficulty)}>
-                        <TextField>
-                          <TextField.Label class="mb-1 block text-sm text-text-muted">
-                            {SONG_EDIT_COPY.notesDesignerLabel}
-                          </TextField.Label>
-                          <TextField.Input
-                            value={draft().notes_designer}
-                            maxLength={SONG_EDIT_INPUT_LIMITS.notesDesigner}
-                            class={SONG_EDIT_TEXT_INPUT_CLASS}
-                            onInput={(event) =>
-                              setDrafts((current) =>
-                                patchChartDraft(current, draft().difficulty, {
-                                  notes_designer: event.currentTarget.value,
-                                })
-                              )
-                            }
-                          />
-                        </TextField>
-                      </Show>
-                    </section>
-                  )}
-                </Index>
-              </div>
+          <Show when={errorMessage()}>
+            <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+              {errorMessage()}
+            </p>
+          </Show>
+        </div>
 
-              <Show when={errorMessage()}>
-                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-                  {errorMessage()}
-                </p>
-              </Show>
-            </div>
-
-            <div class="mt-5 flex shrink-0 justify-end gap-2">
-              <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
-                {SONG_EDIT_COPY.cancelButton}
-              </AppButton>
-              <SongEditSaveButton changed={changed()} saving={props.saving} />
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+        <div class="mt-5 flex shrink-0 justify-end gap-2">
+          <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
+            {SONG_EDIT_COPY.cancelButton}
+          </AppButton>
+          <SongEditSaveButton changed={changed()} saving={props.saving} />
+        </div>
+      </form>
+    </AppDialog>
   )
 }
 

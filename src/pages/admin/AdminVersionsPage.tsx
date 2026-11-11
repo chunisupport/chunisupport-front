@@ -1,4 +1,3 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import Pencil from 'lucide-solid/icons/pencil'
 import Plus from 'lucide-solid/icons/plus'
@@ -9,6 +8,7 @@ import { fetchAdminVersions } from '../../api/versions'
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
+import { AppDialog } from '../../components/common/AppDialog'
 import { showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { createVersion, deleteVersion, renameVersion } from '../../queries/versions'
@@ -121,97 +121,98 @@ const VersionFormDialog: Component<VersionFormDialogProps> = (props): JSX.Elemen
     (props.mode === 'create' && formValue().released_at.length === 0)
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-            {props.mode === 'create'
-              ? ADMIN_VERSIONS_COPY.createDialogTitle
-              : ADMIN_VERSIONS_COPY.editDialogTitle}
-          </Dialog.Title>
-          <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
-            {props.mode === 'create'
-              ? ADMIN_VERSIONS_COPY.createDialogDescription
-              : ADMIN_VERSIONS_COPY.editDialogDescription}
-          </Dialog.Description>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.saving}
+      size="lg"
+      height="max90"
+      title={
+        props.mode === 'create'
+          ? ADMIN_VERSIONS_COPY.createDialogTitle
+          : ADMIN_VERSIONS_COPY.editDialogTitle
+      }
+      description={
+        props.mode === 'create'
+          ? ADMIN_VERSIONS_COPY.createDialogDescription
+          : ADMIN_VERSIONS_COPY.editDialogDescription
+      }
+    >
+      <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit} aria-busy={props.saving}>
+        <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+          <TextField required>
+            <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
+              {ADMIN_VERSIONS_COPY.nameLabel}
+            </TextField.Label>
+            <TextField.Input
+              name="version-name"
+              value={formValue().name}
+              maxLength={VERSION_INPUT_CONSTRAINTS.nameMaxLength}
+              pattern={VERSION_INPUT_CONSTRAINTS.namePattern}
+              required
+              disabled={props.saving}
+              onInput={(event) => updateField('name', event.currentTarget.value)}
+              class={VERSION_INPUT_CLASS}
+            />
+          </TextField>
 
-          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit} aria-busy={props.saving}>
-            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <TextField required>
-                <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
-                  {ADMIN_VERSIONS_COPY.nameLabel}
-                </TextField.Label>
-                <TextField.Input
-                  name="version-name"
-                  value={formValue().name}
-                  maxLength={VERSION_INPUT_CONSTRAINTS.nameMaxLength}
-                  pattern={VERSION_INPUT_CONSTRAINTS.namePattern}
-                  required
-                  disabled={props.saving}
-                  onInput={(event) => updateField('name', event.currentTarget.value)}
-                  class={VERSION_INPUT_CLASS}
-                />
-              </TextField>
+          <TextField required>
+            <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
+              {ADMIN_VERSIONS_COPY.shortNameLabel}
+            </TextField.Label>
+            <TextField.Input
+              name="version-short-name"
+              value={formValue().short_name}
+              maxLength={VERSION_INPUT_CONSTRAINTS.shortNameMaxLength}
+              required
+              disabled={props.saving}
+              onInput={(event) => updateField('short_name', event.currentTarget.value)}
+              class={VERSION_INPUT_CLASS}
+            />
+          </TextField>
 
-              <TextField required>
-                <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
-                  {ADMIN_VERSIONS_COPY.shortNameLabel}
-                </TextField.Label>
-                <TextField.Input
-                  name="version-short-name"
-                  value={formValue().short_name}
-                  maxLength={VERSION_INPUT_CONSTRAINTS.shortNameMaxLength}
-                  required
-                  disabled={props.saving}
-                  onInput={(event) => updateField('short_name', event.currentTarget.value)}
-                  class={VERSION_INPUT_CLASS}
-                />
-              </TextField>
+          <Show when={props.mode === 'create'}>
+            <TextField required>
+              <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
+                {ADMIN_VERSIONS_COPY.releasedAtLabel}
+              </TextField.Label>
+              <TextField.Input
+                name="released-at"
+                type="date"
+                value={formValue().released_at}
+                required
+                disabled={props.saving}
+                onInput={(event) => updateField('released_at', event.currentTarget.value)}
+                class={VERSION_INPUT_CLASS}
+              />
+            </TextField>
+          </Show>
 
-              <Show when={props.mode === 'create'}>
-                <TextField required>
-                  <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
-                    {ADMIN_VERSIONS_COPY.releasedAtLabel}
-                  </TextField.Label>
-                  <TextField.Input
-                    name="released-at"
-                    type="date"
-                    value={formValue().released_at}
-                    required
-                    disabled={props.saving}
-                    onInput={(event) => updateField('released_at', event.currentTarget.value)}
-                    class={VERSION_INPUT_CLASS}
-                  />
-                </TextField>
-              </Show>
+          <Show when={props.errorMessage}>
+            <p
+              class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger"
+              role="alert"
+            >
+              {props.errorMessage}
+            </p>
+          </Show>
+        </div>
 
-              <Show when={props.errorMessage}>
-                <p
-                  class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger"
-                  role="alert"
-                >
-                  {props.errorMessage}
-                </p>
-              </Show>
-            </div>
-
-            <div class="mt-5 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <AppButton disabled={props.saving} onClick={() => props.onOpenChange(false)}>
-                {ADMIN_VERSIONS_COPY.cancelButton}
-              </AppButton>
-              <AppButton type="submit" variant="primary" disabled={isSubmitDisabled()}>
-                {props.saving
-                  ? ADMIN_VERSIONS_COPY.saving
-                  : props.mode === 'create'
-                    ? ADMIN_VERSIONS_COPY.createSubmit
-                    : ADMIN_VERSIONS_COPY.saveSubmit}
-              </AppButton>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+        <div class="mt-5 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <AppButton disabled={props.saving} onClick={() => props.onOpenChange(false)}>
+            {ADMIN_VERSIONS_COPY.cancelButton}
+          </AppButton>
+          <AppButton type="submit" variant="primary" disabled={isSubmitDisabled()}>
+            {props.saving
+              ? ADMIN_VERSIONS_COPY.saving
+              : props.mode === 'create'
+                ? ADMIN_VERSIONS_COPY.createSubmit
+                : ADMIN_VERSIONS_COPY.saveSubmit}
+          </AppButton>
+        </div>
+      </form>
+    </AppDialog>
   )
 }
 

@@ -1,8 +1,8 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { WORLDSEND_LEVEL_STAR_MAX, WORLDSEND_LEVEL_STAR_MIN } from '../../../constants/chart'
 import { SONG_EDIT_INPUT_LIMITS } from '../../../constants/songMaster'
 import type { UpdateWorldsendChartRequestDTO, WorldsendSongDTO } from '../../../types/api'
@@ -96,93 +96,91 @@ const WorldsendChartMetaEditDialog: Component<Props> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-            {SONG_EDIT_COPY.chartDialogTitle}
-          </Dialog.Title>
-          <Dialog.Description class="sr-only">
-            {SONG_EDIT_COPY.worldsendChartFormDescription}
-          </Dialog.Description>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.saving}
+      size="lg"
+      height="max90"
+      title={SONG_EDIT_COPY.chartDialogTitle}
+      description={SONG_EDIT_COPY.worldsendChartFormDescription}
+      descriptionVisibility="srOnly"
+    >
+      <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
+        <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+          <TextField>
+            <TextField.Label class="mb-1 block text-sm text-text-muted">
+              {SONG_EDIT_COPY.attributeLabel}
+            </TextField.Label>
+            <TextField.Input
+              value={attribute()}
+              class={SONG_EDIT_TEXT_INPUT_CLASS}
+              onInput={(event) => setAttribute(event.currentTarget.value)}
+            />
+          </TextField>
 
-          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
-            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <TextField>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {SONG_EDIT_COPY.attributeLabel}
-                </TextField.Label>
-                <TextField.Input
-                  value={attribute()}
-                  class={SONG_EDIT_TEXT_INPUT_CLASS}
-                  onInput={(event) => setAttribute(event.currentTarget.value)}
-                />
-              </TextField>
+          <TextField>
+            <TextField.Label class="mb-1 block text-sm text-text-muted">
+              {SONG_EDIT_COPY.levelLabel}
+            </TextField.Label>
+            <TextField.Input
+              value={levelStar()}
+              inputMode="numeric"
+              min={String(WORLDSEND_LEVEL_STAR_MIN)}
+              max={String(WORLDSEND_LEVEL_STAR_MAX)}
+              class={SONG_EDIT_NUMBER_INPUT_CLASS}
+              onInput={(event) => {
+                const next = normalizeNonNegativeIntegerInput(event.currentTarget.value)
+                if (next === null) return
+                setLevelStar(next)
+              }}
+            />
+          </TextField>
 
-              <TextField>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {SONG_EDIT_COPY.levelLabel}
-                </TextField.Label>
-                <TextField.Input
-                  value={levelStar()}
-                  inputMode="numeric"
-                  min={String(WORLDSEND_LEVEL_STAR_MIN)}
-                  max={String(WORLDSEND_LEVEL_STAR_MAX)}
-                  class={SONG_EDIT_NUMBER_INPUT_CLASS}
-                  onInput={(event) => {
-                    const next = normalizeNonNegativeIntegerInput(event.currentTarget.value)
-                    if (next === null) return
-                    setLevelStar(next)
-                  }}
-                />
-              </TextField>
+          <TextField>
+            <TextField.Label class="mb-1 block text-sm text-text-muted">
+              {SONG_EDIT_COPY.notesLabel}
+            </TextField.Label>
+            <TextField.Input
+              value={notes()}
+              inputMode="numeric"
+              class={SONG_EDIT_NUMBER_INPUT_CLASS}
+              onInput={(event) => {
+                const next = normalizeNonNegativeIntegerInput(event.currentTarget.value)
+                if (next === null) return
+                setNotes(next)
+              }}
+            />
+          </TextField>
 
-              <TextField>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {SONG_EDIT_COPY.notesLabel}
-                </TextField.Label>
-                <TextField.Input
-                  value={notes()}
-                  inputMode="numeric"
-                  class={SONG_EDIT_NUMBER_INPUT_CLASS}
-                  onInput={(event) => {
-                    const next = normalizeNonNegativeIntegerInput(event.currentTarget.value)
-                    if (next === null) return
-                    setNotes(next)
-                  }}
-                />
-              </TextField>
+          <TextField>
+            <TextField.Label class="mb-1 block text-sm text-text-muted">
+              {SONG_EDIT_COPY.notesDesignerLabel}
+            </TextField.Label>
+            <TextField.Input
+              value={notesDesigner()}
+              maxLength={SONG_EDIT_INPUT_LIMITS.notesDesigner}
+              class={SONG_EDIT_TEXT_INPUT_CLASS}
+              onInput={(event) => setNotesDesigner(event.currentTarget.value)}
+            />
+          </TextField>
 
-              <TextField>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {SONG_EDIT_COPY.notesDesignerLabel}
-                </TextField.Label>
-                <TextField.Input
-                  value={notesDesigner()}
-                  maxLength={SONG_EDIT_INPUT_LIMITS.notesDesigner}
-                  class={SONG_EDIT_TEXT_INPUT_CLASS}
-                  onInput={(event) => setNotesDesigner(event.currentTarget.value)}
-                />
-              </TextField>
+          <Show when={errorMessage()}>
+            <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+              {errorMessage()}
+            </p>
+          </Show>
+        </div>
 
-              <Show when={errorMessage()}>
-                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-                  {errorMessage()}
-                </p>
-              </Show>
-            </div>
-
-            <div class="mt-5 flex shrink-0 justify-end gap-2">
-              <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
-                {SONG_EDIT_COPY.cancelButton}
-              </AppButton>
-              <SongEditSaveButton changed={changed()} saving={props.saving} />
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+        <div class="mt-5 flex shrink-0 justify-end gap-2">
+          <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
+            {SONG_EDIT_COPY.cancelButton}
+          </AppButton>
+          <SongEditSaveButton changed={changed()} saving={props.saving} />
+        </div>
+      </form>
+    </AppDialog>
   )
 }
 

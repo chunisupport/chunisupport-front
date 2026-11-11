@@ -1,6 +1,6 @@
-import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, on } from 'solid-js'
+import { AppDialog } from '../../../../../components/common/AppDialog'
 import { createMultiSelectOption } from '../../../../../components/common/DomainMultiSelect'
 import { createChartConstRangeDraft } from '../../../../../hooks/createChartConstRangeDraft'
 import type {
@@ -622,138 +622,135 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] select-none flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <Dialog.Title class="shrink-0 text-lg font-bold">
-            {props.mode === 'create' ? '目標を作成' : '目標を編集'}
-          </Dialog.Title>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.isSaving}
+      placement="viewport"
+      size="lg"
+      height="viewportFill"
+      selectNone
+      overflowHidden
+      title={props.mode === 'create' ? '目標を作成' : '目標を編集'}
+      scroll="fill"
+      bodyClass="scrollbar-none mt-4 space-y-4 pr-1"
+      footer={
+        <GoalFormFooter
+          errorMessage={displayErrorMessage()}
+          isSaving={props.isSaving}
+          onCancel={() => props.onOpenChange(false)}
+          onSave={() => {
+            void handleSave()
+          }}
+        />
+      }
+    >
+      <GoalTitleSection title={title()} onTitleChange={setTitle} />
 
-          <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 space-y-4 overflow-y-auto pr-1">
-            <GoalTitleSection title={title()} onTitleChange={setTitle} />
+      <GoalGroupSection groups={props.groups} groupId={groupId()} onGroupIdChange={setGroupId} />
 
-            <GoalGroupSection
-              groups={props.groups}
-              groupId={groupId()}
-              onGroupIdChange={setGroupId}
-            />
+      <GoalTargetChartsSection
+        difficultyItems={props.masterData.difficulties}
+        isRainbowGoal={achievementType() === 'rainbow_count'}
+        chartTargetMode={chartTargetMode()}
+        diffs={diffs()}
+        constRangeFieldProps={constRangeDraft.fieldProps}
+        genreOptions={genreSelectOptions()}
+        selectedGenres={genres()}
+        versionOptions={versionSelectOptions()}
+        selectedVersions={versions()}
+        nameFolderOptions={nameFolderSelectOptions()}
+        selectedNameFolders={nameFolders()}
+        targetCountText={targetCountText()}
+        onClearDifficulty={() => {
+          setChartTargetMode('normal')
+          setDiffs([])
+        }}
+        onToggleOpTarget={(checked) => {
+          setChartTargetMode(checked ? 'op_target' : 'normal')
+          if (checked) {
+            setDiffs([])
+          }
+        }}
+        onToggleDifficulty={(id, checked) => {
+          setChartTargetMode('normal')
+          setDiffs((prev) => toggleSelection(prev, String(id), checked))
+        }}
+        onGenresChange={setGenres}
+        onVersionsChange={setVersions}
+        onNameFoldersChange={setNameFolders}
+      />
 
-            <GoalTargetChartsSection
-              difficultyItems={props.masterData.difficulties}
-              isRainbowGoal={achievementType() === 'rainbow_count'}
-              chartTargetMode={chartTargetMode()}
-              diffs={diffs()}
-              constRangeFieldProps={constRangeDraft.fieldProps}
-              genreOptions={genreSelectOptions()}
-              selectedGenres={genres()}
-              versionOptions={versionSelectOptions()}
-              selectedVersions={versions()}
-              nameFolderOptions={nameFolderSelectOptions()}
-              selectedNameFolders={nameFolders()}
-              targetCountText={targetCountText()}
-              onClearDifficulty={() => {
-                setChartTargetMode('normal')
-                setDiffs([])
-              }}
-              onToggleOpTarget={(checked) => {
-                setChartTargetMode(checked ? 'op_target' : 'normal')
-                if (checked) {
-                  setDiffs([])
-                }
-              }}
-              onToggleDifficulty={(id, checked) => {
-                setChartTargetMode('normal')
-                setDiffs((prev) => toggleSelection(prev, String(id), checked))
-              }}
-              onGenresChange={setGenres}
-              onVersionsChange={setVersions}
-              onNameFoldersChange={setNameFolders}
-            />
+      <GoalAchievementSection
+        achievementType={achievementType()}
+        achievementTypeOptions={achievementTypeOptions()}
+        achievementDescription={selectedAchievementDescription()}
+        score={score()}
+        rating={rating()}
+        rank={rank()}
+        count={count()}
+        countMode={countMode()}
+        total={total()}
+        totalMode={totalMode()}
+        hardLamp={hardLamp()}
+        comboLamp={comboLamp()}
+        fullChain={fullChain()}
+        invertValue={invertValue()}
+        invertPercentage={invertPercentage()}
+        gaugeStartMode={gaugeStartMode()}
+        gaugeStart={gaugeStart()}
+        applyGaugeStartToPercentage={applyGaugeStartToPercentage()}
+        gaugeStartErrorMessage={gaugeStartErrorMessage()}
+        gaugeStartGroupErrorMessage={gaugeStartGroupErrorMessage()}
+        canUseCurrentGaugeStart={canUseCurrentGaugeStart()}
+        currentGaugeStartText={currentGaugeStartText()}
+        hasGaugeStart={buildDraftGaugeStartParams().gauge_start > 0}
+        countMax={props.resolveAllCount(
+          getDraftAttributes(),
+          achievementType(),
+          buildDraftAchievementParams(achievementType())
+        )}
+        countLimitText={countLimitText()}
+        targetCountText={targetCountText()}
+        theoreticalTotalText={theoreticalTotalText()}
+        totalLimitText={totalLimitText()}
+        totalFieldMax={totalFieldMax()}
+        onAchievementTypeChange={handleAchievementTypeChange}
+        onScoreChange={handleScoreChange}
+        onRatingChange={setRating}
+        onRankChange={handleRankChange}
+        onCountChange={setCount}
+        onCountModeChange={setCountMode}
+        onTotalChange={setTotal}
+        onTotalModeChange={setTotalMode}
+        onHardLampChange={setHardLamp}
+        onComboLampChange={setComboLamp}
+        onFullChainChange={setFullChain}
+        onInvertValueChange={setInvertValue}
+        onInvertPercentageChange={setInvertPercentage}
+        onGaugeStartModeChange={handleGaugeStartModeChange}
+        onGaugeStartChange={handleGaugeStartChange}
+        onApplyGaugeStartToPercentageChange={setApplyGaugeStartToPercentage}
+        gaugeStartFieldRef={(element) => {
+          gaugeStartField = element
+        }}
+        gaugeStartInputRef={(element) => {
+          gaugeStartInput = element
+        }}
+        canUseDynamicTotalTarget={canUseDynamicTotalTarget}
+      />
 
-            <GoalAchievementSection
-              achievementType={achievementType()}
-              achievementTypeOptions={achievementTypeOptions()}
-              achievementDescription={selectedAchievementDescription()}
-              score={score()}
-              rating={rating()}
-              rank={rank()}
-              count={count()}
-              countMode={countMode()}
-              total={total()}
-              totalMode={totalMode()}
-              hardLamp={hardLamp()}
-              comboLamp={comboLamp()}
-              fullChain={fullChain()}
-              invertValue={invertValue()}
-              invertPercentage={invertPercentage()}
-              gaugeStartMode={gaugeStartMode()}
-              gaugeStart={gaugeStart()}
-              applyGaugeStartToPercentage={applyGaugeStartToPercentage()}
-              gaugeStartErrorMessage={gaugeStartErrorMessage()}
-              gaugeStartGroupErrorMessage={gaugeStartGroupErrorMessage()}
-              canUseCurrentGaugeStart={canUseCurrentGaugeStart()}
-              currentGaugeStartText={currentGaugeStartText()}
-              hasGaugeStart={buildDraftGaugeStartParams().gauge_start > 0}
-              countMax={props.resolveAllCount(
-                getDraftAttributes(),
-                achievementType(),
-                buildDraftAchievementParams(achievementType())
-              )}
-              countLimitText={countLimitText()}
-              targetCountText={targetCountText()}
-              theoreticalTotalText={theoreticalTotalText()}
-              totalLimitText={totalLimitText()}
-              totalFieldMax={totalFieldMax()}
-              onAchievementTypeChange={handleAchievementTypeChange}
-              onScoreChange={handleScoreChange}
-              onRatingChange={setRating}
-              onRankChange={handleRankChange}
-              onCountChange={setCount}
-              onCountModeChange={setCountMode}
-              onTotalChange={setTotal}
-              onTotalModeChange={setTotalMode}
-              onHardLampChange={setHardLamp}
-              onComboLampChange={setComboLamp}
-              onFullChainChange={setFullChain}
-              onInvertValueChange={setInvertValue}
-              onInvertPercentageChange={setInvertPercentage}
-              onGaugeStartModeChange={handleGaugeStartModeChange}
-              onGaugeStartChange={handleGaugeStartChange}
-              onApplyGaugeStartToPercentageChange={setApplyGaugeStartToPercentage}
-              gaugeStartFieldRef={(element) => {
-                gaugeStartField = element
-              }}
-              gaugeStartInputRef={(element) => {
-                gaugeStartInput = element
-              }}
-              canUseDynamicTotalTarget={canUseDynamicTotalTarget}
-            />
-
-            <GoalPreviewSection
-              title={previewTitle()}
-              achievementType={achievementType()}
-              invertValue={invertValue()}
-              invertPercentage={invertPercentage()}
-              gaugeStart={buildDraftGaugeStartParams().gauge_start}
-              applyGaugeStartToPercentage={
-                buildDraftGaugeStartParams().apply_gauge_start_to_percentage
-              }
-              progress={previewProgress()}
-            />
-          </div>
-
-          <GoalFormFooter
-            errorMessage={displayErrorMessage()}
-            isSaving={props.isSaving}
-            onCancel={() => props.onOpenChange(false)}
-            onSave={() => {
-              void handleSave()
-            }}
-          />
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+      <GoalPreviewSection
+        title={previewTitle()}
+        achievementType={achievementType()}
+        invertValue={invertValue()}
+        invertPercentage={invertPercentage()}
+        gaugeStart={buildDraftGaugeStartParams().gauge_start}
+        applyGaugeStartToPercentage={buildDraftGaugeStartParams().apply_gauge_start_to_percentage}
+        progress={previewProgress()}
+      />
+    </AppDialog>
   )
 }
 

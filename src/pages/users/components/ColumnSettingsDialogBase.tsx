@@ -1,6 +1,6 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { createEffect, createMemo, createSignal } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import {
   AppMultiSelect,
   type AppMultiSelectOption,
@@ -81,34 +81,36 @@ const ColumnSettingsDialogBase = <TColumnId extends string, TSortKey extends str
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 max-h-[90vh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="mb-4 text-lg font-bold">{COLUMN_SETTINGS_TITLE}</Dialog.Title>
-          <p class="mb-3 text-xs text-text-subtle">{COLUMN_SETTINGS_DESCRIPTION}</p>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      size="md"
+      height="max90"
+      title={COLUMN_SETTINGS_TITLE}
+      titleSpacing="bottom"
+    >
+      <p class="mb-3 text-xs text-text-subtle">{COLUMN_SETTINGS_DESCRIPTION}</p>
 
-          <AppMultiSelect<TColumnId>
-            options={columnOptions()}
-            selected={selectedColumnIds()}
-            onChange={handleChange}
-            placeholder={COLUMN_SETTINGS_PLACEHOLDER}
-            contentZIndexClass="z-50"
-          />
+      <AppMultiSelect<TColumnId>
+        options={columnOptions()}
+        selected={selectedColumnIds()}
+        onChange={handleChange}
+        placeholder={COLUMN_SETTINGS_PLACEHOLDER}
+        contentZIndexClass="z-50"
+      />
 
-          <div class="mt-6 flex justify-end gap-2">
-            <AppButton onClick={() => props.onOpenChange(false)}>{CANCEL_LABEL}</AppButton>
-            <AppButton
-              variant="primary"
-              onClick={handleApply}
-              disabled={selectedColumnIds().length === 0}
-            >
-              {APPLY_LABEL}
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+      <div class="mt-6 flex justify-end gap-2">
+        <AppButton onClick={() => props.onOpenChange(false)}>{CANCEL_LABEL}</AppButton>
+        <AppButton
+          variant="primary"
+          onClick={handleApply}
+          disabled={selectedColumnIds().length === 0}
+        >
+          {APPLY_LABEL}
+        </AppButton>
+      </div>
+    </AppDialog>
   )
 }
 

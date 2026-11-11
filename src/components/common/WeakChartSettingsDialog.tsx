@@ -1,4 +1,3 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import RotateCcw from 'lucide-solid/icons/rotate-ccw'
 import { createEffect, createSignal, For, type JSX, on } from 'solid-js'
@@ -17,7 +16,9 @@ import {
 } from '../../utils/onlineWeakChartInspector'
 import { getShortVersionName } from '../../utils/versionConverter'
 import { AppButton, AppIconButton } from './AppButton'
+import { AppDialog } from './AppDialog'
 import { toMultiSelectOptions } from './AppMultiSelect'
+import { focusDialogContentOnOpen } from './appDialog'
 import ChartConstRangeField from './ChartConstRangeField'
 import { CheckboxField } from './CheckboxField'
 import {
@@ -113,7 +114,7 @@ export const WeakChartSettingsDialog = (props: WeakChartSettingsDialogProps): JS
   const [genres, setGenres] = createSignal<string[] | null>(null)
   const [versions, setVersions] = createSignal<string[] | null>(null)
   const [nameFolders, setNameFolders] = createSignal<string[] | null>(null)
-  let contentRef!: HTMLDivElement
+  let contentRef: HTMLElement | undefined
 
   /**
    * 条件を編集欄へ読み込む。
@@ -178,91 +179,93 @@ export const WeakChartSettingsDialog = (props: WeakChartSettingsDialogProps): JS
    * @returns なし。
    */
   const handleOpenAutoFocus = (event: Event): void => {
-    event.preventDefault()
-    contentRef.focus()
+    focusDialogContentOnOpen(event, contentRef)
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content
-          ref={contentRef}
-          onOpenAutoFocus={handleOpenAutoFocus}
-          class="fixed left-1/2 top-1/2 z-50 flex h-5/6 max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg"
-        >
-          <div class="mb-4 flex shrink-0 items-center justify-between">
-            <Dialog.Title class="text-lg font-bold">{COPY.title}</Dialog.Title>
-            <AppIconButton tone="danger" aria-label={COPY.reset} onClick={reset}>
-              <RotateCcw class="h-5 w-5" aria-hidden="true" />
-            </AppIconButton>
-          </div>
-          <div class="scrollbar-none min-h-0 min-w-0 flex-1 basis-0 space-y-5 overflow-y-auto">
-            <fieldset>
-              <legend class="mb-2 text-sm font-semibold">{COPY.difficulty}</legend>
-              <div class="flex flex-col items-start gap-1">
-                <For each={WEAK_CHART_SETTINGS_DIFFICULTY_OPTIONS}>
-                  {(option) => (
-                    <CheckboxField
-                      id={`${props.idPrefix}-${option.value}`}
-                      checked={difficulties().includes(option.value)}
-                      disabled={
-                        difficulties().includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER) &&
-                        option.value !== ONLINE_WEAK_CHART_OP_TARGET_FILTER
-                      }
-                      onChange={() =>
-                        setDifficulties((current) =>
-                          toggleOnlineWeakChartDifficulty(current, option.value)
-                        )
-                      }
-                      label={option.label}
-                      textVariant="large"
-                      class="relative flex items-center gap-2"
-                    />
-                  )}
-                </For>
-              </div>
-            </fieldset>
-            <GenreMultiSelect
-              options={toMultiSelectOptions([...props.genreOptions])}
-              selected={genres() ?? [...props.genreOptions]}
-              onChange={(value) =>
-                setGenres(
-                  value.length > 0 && value.length === props.genreOptions.length ? null : [...value]
-                )
-              }
-              placeholder={COPY.filterUnselected}
-              disabled={!props.attributesReady}
-            />
-            <VersionMultiSelect
-              options={toMultiSelectOptions([...props.versionNames], getShortVersionName)}
-              selected={versions() ?? [...props.versionNames]}
-              onChange={(value) =>
-                setVersions(
-                  value.length > 0 && value.length === props.versionNames.length ? null : [...value]
-                )
-              }
-              placeholder={COPY.filterUnselected}
-              disabled={!props.attributesReady}
-            />
-            <NameFolderFilterMultiSelect
-              nameFolders={[...props.nameFolders]}
-              selected={nameFolders()}
-              onChange={setNameFolders}
-              placeholder={COPY.filterUnselected}
-              disabled={!props.attributesReady}
-            />
-            {props.children}
-            <ChartConstRangeField idPrefix={props.idPrefix} {...constRangeDraft.fieldProps} />
-          </div>
-          <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <AppButton onClick={() => props.onOpenChange(false)}>{COPY.cancel}</AppButton>
-            <AppButton variant="primary" onClick={apply}>
-              {COPY.apply}
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      size="md"
+      height="tall"
+      contentRef={(element) => {
+        contentRef = element
+      }}
+      onOpenAutoFocus={handleOpenAutoFocus}
+      title={COPY.title}
+      headerActions={
+        <AppIconButton tone="danger" aria-label={COPY.reset} onClick={reset}>
+          <RotateCcw class="h-5 w-5" aria-hidden="true" />
+        </AppIconButton>
+      }
+      scroll="fill"
+      bodyClass="scrollbar-none min-w-0 space-y-5"
+      footer={
+        <div class="mt-6 flex justify-end gap-2">
+          <AppButton onClick={() => props.onOpenChange(false)}>{COPY.cancel}</AppButton>
+          <AppButton variant="primary" onClick={apply}>
+            {COPY.apply}
+          </AppButton>
+        </div>
+      }
+    >
+      <fieldset>
+        <legend class="mb-2 text-sm font-semibold">{COPY.difficulty}</legend>
+        <div class="flex flex-col items-start gap-1">
+          <For each={WEAK_CHART_SETTINGS_DIFFICULTY_OPTIONS}>
+            {(option) => (
+              <CheckboxField
+                id={`${props.idPrefix}-${option.value}`}
+                checked={difficulties().includes(option.value)}
+                disabled={
+                  difficulties().includes(ONLINE_WEAK_CHART_OP_TARGET_FILTER) &&
+                  option.value !== ONLINE_WEAK_CHART_OP_TARGET_FILTER
+                }
+                onChange={() =>
+                  setDifficulties((current) =>
+                    toggleOnlineWeakChartDifficulty(current, option.value)
+                  )
+                }
+                label={option.label}
+                textVariant="large"
+                class="relative flex items-center gap-2"
+              />
+            )}
+          </For>
+        </div>
+      </fieldset>
+      <GenreMultiSelect
+        options={toMultiSelectOptions([...props.genreOptions])}
+        selected={genres() ?? [...props.genreOptions]}
+        onChange={(value) =>
+          setGenres(
+            value.length > 0 && value.length === props.genreOptions.length ? null : [...value]
+          )
+        }
+        placeholder={COPY.filterUnselected}
+        disabled={!props.attributesReady}
+      />
+      <VersionMultiSelect
+        options={toMultiSelectOptions([...props.versionNames], getShortVersionName)}
+        selected={versions() ?? [...props.versionNames]}
+        onChange={(value) =>
+          setVersions(
+            value.length > 0 && value.length === props.versionNames.length ? null : [...value]
+          )
+        }
+        placeholder={COPY.filterUnselected}
+        disabled={!props.attributesReady}
+      />
+      <NameFolderFilterMultiSelect
+        nameFolders={[...props.nameFolders]}
+        selected={nameFolders()}
+        onChange={setNameFolders}
+        placeholder={COPY.filterUnselected}
+        disabled={!props.attributesReady}
+      />
+      {props.children}
+      <ChartConstRangeField idPrefix={props.idPrefix} {...constRangeDraft.fieldProps} />
+    </AppDialog>
   )
 }
