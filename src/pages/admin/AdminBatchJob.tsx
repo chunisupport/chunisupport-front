@@ -1,14 +1,12 @@
 import type { UseQueryResult } from '@tanstack/solid-query'
-import {
-  CircleCheck,
-  CircleSlash,
-  CircleX,
-  LoaderCircle,
-  Play,
-  Terminal,
-  TriangleAlert,
-  UserRound,
-} from 'lucide-solid'
+import CircleCheck from 'lucide-solid/icons/circle-check'
+import CircleSlash from 'lucide-solid/icons/circle-slash'
+import CircleX from 'lucide-solid/icons/circle-x'
+import LoaderCircle from 'lucide-solid/icons/loader-circle'
+import Play from 'lucide-solid/icons/play'
+import Terminal from 'lucide-solid/icons/terminal'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
+import UserRound from 'lucide-solid/icons/user-round'
 import type { JSX } from 'solid-js'
 import { createMemo, For, Match, Show, Switch } from 'solid-js'
 import { Loading } from '../../components'

@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/solid-query'
+import { fetchUserComment } from '../api/userComment'
 import { requestUserUpdatedAt } from '../api/users'
 import { appQueryClient } from '../lib/queryClient'
 
@@ -10,7 +11,27 @@ export const userQueryKeys = {
    * @returns ユーザー別の更新日時キー。
    */
   updatedAt: (username: string) => ['users', username, 'updated-at'] as const,
+  /**
+   * ユーザー別のプロフィールコメントキーを生成する。
+   * @param username - 対象ユーザー名。
+   * @returns ユーザー別のプロフィールコメントキー。
+   */
+  comment: (username: string) => ['users', username, 'comment'] as const,
 }
+
+/**
+ * プロフィールコメントのquery optionsを生成する。
+ * `enabled` が false のときは query を無効にし、取得関数を呼ばない。
+ * @param username - 対象ユーザー名。
+ * @param enabled - コメント取得を行うか。feature-flag が無効な画面では false を渡す。
+ * @returns コメントを取得するquery options。未設定の場合のデータは null。
+ */
+export const userCommentQueryOptions = (username: string, enabled: boolean) =>
+  queryOptions({
+    queryKey: userQueryKeys.comment(username),
+    queryFn: ({ signal }) => fetchUserComment(username, signal),
+    enabled,
+  })
 
 /**
  * ユーザー更新日時のquery optionsを生成する。

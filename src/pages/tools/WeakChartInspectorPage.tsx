@@ -1,4 +1,4 @@
-import { ScanSearch } from 'lucide-solid'
+import ScanSearch from 'lucide-solid/icons/scan-search'
 import { type Component, createSignal, ErrorBoundary, type JSX, Show } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { LoadError } from '../../components'

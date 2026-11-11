@@ -1,5 +1,7 @@
 import { Button } from '@kobalte/core/button'
-import { ArrowUpDown, Columns3, Funnel } from 'lucide-solid'
+import ArrowUpDown from 'lucide-solid/icons/arrow-up-down'
+import Columns3 from 'lucide-solid/icons/columns-3'
+import Funnel from 'lucide-solid/icons/funnel'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { AppIconButton } from '../../../components/common/AppButton'

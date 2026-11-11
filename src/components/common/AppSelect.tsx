@@ -1,6 +1,7 @@
 import type { SelectRootItemComponentProps, SelectRootProps } from '@kobalte/core/select'
 import { Select } from '@kobalte/core/select'
-import { Check, ChevronDown } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import ChevronDown from 'lucide-solid/icons/chevron-down'
 import type { JSX } from 'solid-js'
 import { createSignal, Show, splitProps } from 'solid-js'
 

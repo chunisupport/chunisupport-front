@@ -1,7 +1,12 @@
 import { Toast, toaster } from '@kobalte/core/toast'
-import { CheckCircle, CircleAlert, Info, X } from 'lucide-solid'
+import CircleAlert from 'lucide-solid/icons/circle-alert'
+import CheckCircle from 'lucide-solid/icons/circle-check-big'
+import Info from 'lucide-solid/icons/info'
+import X from 'lucide-solid/icons/x'
 import type { JSX } from 'solid-js'
 import { Portal } from 'solid-js/web'
+import { navBarSide, navRailSide } from '../../stores/navPlacementPreferences'
+import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
 
 type AppToastTone = 'success' | 'error' | 'info'
 
@@ -15,6 +20,18 @@ type AppToastOptions = {
 const APP_TOAST_DURATION_MS = 3000
 const APP_TOAST_REGION_LABEL = '通知'
 const APP_TOAST_CLOSE_LABEL = '通知を閉じる'
+
+/** 狭い画面で、上側の横バーにトーストが重ならないよう上端からの距離を決めるクラス */
+const APP_TOAST_BAR_OFFSET_CLASS: Record<NavBarSide, string> = {
+  bottom: 'top-4',
+  top: 'top-20 md:top-4',
+}
+
+/** 広い画面で、右側の縦レールにトーストが重ならないよう右端からの距離を決めるクラス */
+const APP_TOAST_RAIL_OFFSET_CLASS: Record<NavRailSide, string> = {
+  left: 'right-4',
+  right: 'right-4 md:right-28',
+}
 
 const APP_TOAST_TONE_CLASS: Record<AppToastTone, string> = {
   success: 'border-success-border bg-surface-raised text-success',
@@ -54,7 +71,7 @@ export const AppToastRegion = (): JSX.Element => (
       pauseOnPageIdle
       swipeDirection="right"
       topLayer
-      class="fixed right-4 top-4 z-100 w-[min(24rem,calc(100vw-2rem))] outline-none"
+      class={`fixed z-100 w-[min(24rem,calc(100vw-2rem))] outline-none ${APP_TOAST_BAR_OFFSET_CLASS[navBarSide()]} ${APP_TOAST_RAIL_OFFSET_CLASS[navRailSide()]}`}
     >
       <Toast.List class="flex flex-col gap-3 outline-none" />
     </Toast.Region>

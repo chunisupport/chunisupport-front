@@ -1,13 +1,14 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { ExternalLink } from 'lucide-solid'
+import ExternalLink from 'lucide-solid/icons/external-link'
 import type { Component } from 'solid-js'
 import { createSignal, For, onCleanup, Show } from 'solid-js'
 import { deleteApiToken, fetchApiTokens, issueApiToken, renameApiToken } from '../../api/settings'
 import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
+import { AppDialog } from '../../components/common/AppDialog'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { API_DOCUMENTATION_URL } from '../../config'
 import { DEVELOPER_API_COPY } from '../../constants/developerApi'
@@ -190,96 +191,98 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
           </span>
         </div>
 
-        <Dialog open={settings.issueFormOpen()} onOpenChange={settings.setIssueFormOpen}>
-          <Dialog.Trigger
-            as="button"
-            type="button"
-            class={getAppButtonClass({ variant: 'primary', class: 'mt-4 w-fit' })}
-            disabled={settings.isIssueDisabled()}
+        <AppDialog
+          open={settings.issueFormOpen()}
+          onOpenChange={settings.setIssueFormOpen}
+          pending={settings.issuing()}
+          placement="sheet"
+          size="lg"
+          height="maxScreen"
+          layer="raised"
+          title={API_TOKEN_SETTINGS_COPY.issueDialogTitle}
+          description={
+            settings.canIssueReadWrite()
+              ? API_TOKEN_SETTINGS_COPY.issueDialogDescription
+              : API_TOKEN_SETTINGS_COPY.issueReadOnlyDialogDescription
+          }
+          trigger={
+            <Dialog.Trigger
+              as="button"
+              type="button"
+              class={getAppButtonClass({ variant: 'primary', class: 'mt-4 w-fit' })}
+              disabled={settings.isIssueDisabled()}
+            >
+              {API_TOKEN_SETTINGS_COPY.startIssueButton}
+            </Dialog.Trigger>
+          }
+        >
+          <form
+            class="mt-5 flex min-h-0 flex-col"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void settings.issue()
+            }}
           >
-            {API_TOKEN_SETTINGS_COPY.startIssueButton}
-          </Dialog.Trigger>
-          <Dialog.Portal>
-            <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-            <Dialog.Content class="fixed inset-x-4 top-1/2 z-60 flex max-h-[calc(100dvh-2rem)] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-lg sm:-translate-x-1/2 sm:p-6">
-              <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-                {API_TOKEN_SETTINGS_COPY.issueDialogTitle}
-              </Dialog.Title>
-              <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
-                {settings.canIssueReadWrite()
-                  ? API_TOKEN_SETTINGS_COPY.issueDialogDescription
-                  : API_TOKEN_SETTINGS_COPY.issueReadOnlyDialogDescription}
-              </Dialog.Description>
-
-              <form
-                class="mt-5 flex min-h-0 flex-col"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  void settings.issue()
-                }}
+            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+              <ApiTokenNameField
+                label={API_TOKEN_SETTINGS_COPY.issueLabel}
+                value={settings.issueName()}
+                placeholder={API_TOKEN_SETTINGS_COPY.issuePlaceholder}
+                disabled={settings.issuing()}
+                error={settings.issueNameError()}
+                onChange={settings.setIssueName}
+              />
+              <Show when={settings.canIssueReadWrite()}>
+                <RadioGroup
+                  name="api-token-permission"
+                  value={settings.issuePermission()}
+                  onChange={(value) => settings.setIssuePermission(value as ApiTokenPermission)}
+                  disabled={settings.issuing()}
+                  class="grid gap-2"
+                >
+                  <RadioGroup.Label class="text-sm font-medium text-text-muted">
+                    {API_TOKEN_SETTINGS_COPY.permissionLabel}
+                  </RadioGroup.Label>
+                  <div class="grid gap-2 sm:grid-cols-2">
+                    <For each={API_TOKEN_PERMISSION_OPTIONS}>
+                      {(option) => (
+                        <SelectableCardItem
+                          value={option.value}
+                          title={option.label}
+                          description={option.description}
+                          ariaLabel={option.label}
+                          selected={settings.issuePermission() === option.value}
+                          disabled={settings.issuing()}
+                          density="compact"
+                          class="rounded-md"
+                        />
+                      )}
+                    </For>
+                  </div>
+                </RadioGroup>
+              </Show>
+              <p class="text-sm text-danger empty:hidden" role="alert">
+                {settings.issueActionError()}
+              </p>
+            </div>
+            <div class="mt-5 flex shrink-0 justify-end gap-2">
+              <Dialog.CloseButton
+                class={getAppButtonClass({ variant: 'secondary' })}
+                disabled={settings.issuing()}
               >
-                <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-                  <ApiTokenNameField
-                    label={API_TOKEN_SETTINGS_COPY.issueLabel}
-                    value={settings.issueName()}
-                    placeholder={API_TOKEN_SETTINGS_COPY.issuePlaceholder}
-                    disabled={settings.issuing()}
-                    error={settings.issueNameError()}
-                    onChange={settings.setIssueName}
-                  />
-                  <Show when={settings.canIssueReadWrite()}>
-                    <RadioGroup
-                      name="api-token-permission"
-                      value={settings.issuePermission()}
-                      onChange={(value) => settings.setIssuePermission(value as ApiTokenPermission)}
-                      disabled={settings.issuing()}
-                      class="grid gap-2"
-                    >
-                      <RadioGroup.Label class="text-sm font-medium text-text-muted">
-                        {API_TOKEN_SETTINGS_COPY.permissionLabel}
-                      </RadioGroup.Label>
-                      <div class="grid gap-2 sm:grid-cols-2">
-                        <For each={API_TOKEN_PERMISSION_OPTIONS}>
-                          {(option) => (
-                            <SelectableCardItem
-                              value={option.value}
-                              title={option.label}
-                              description={option.description}
-                              ariaLabel={option.label}
-                              selected={settings.issuePermission() === option.value}
-                              disabled={settings.issuing()}
-                              density="compact"
-                              class="rounded-md"
-                            />
-                          )}
-                        </For>
-                      </div>
-                    </RadioGroup>
-                  </Show>
-                  <p class="text-sm text-danger empty:hidden" role="alert">
-                    {settings.issueActionError()}
-                  </p>
-                </div>
-                <div class="mt-5 flex shrink-0 justify-end gap-2">
-                  <Dialog.CloseButton
-                    class={getAppButtonClass({ variant: 'secondary' })}
-                    disabled={settings.issuing()}
-                  >
-                    {API_TOKEN_SETTINGS_COPY.cancelIssueButton}
-                  </Dialog.CloseButton>
-                  <AppButton
-                    variant="primary"
-                    type="submit"
-                    disabled={settings.issuing()}
-                    aria-busy={settings.issuing()}
-                  >
-                    {API_TOKEN_SETTINGS_COPY.issueButton}
-                  </AppButton>
-                </div>
-              </form>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog>
+                {API_TOKEN_SETTINGS_COPY.cancelIssueButton}
+              </Dialog.CloseButton>
+              <AppButton
+                variant="primary"
+                type="submit"
+                disabled={settings.issuing()}
+                aria-busy={settings.issuing()}
+              >
+                {API_TOKEN_SETTINGS_COPY.issueButton}
+              </AppButton>
+            </div>
+          </form>
+        </AppDialog>
       </div>
 
       <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">

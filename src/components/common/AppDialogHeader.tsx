@@ -1,14 +1,14 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { X } from 'lucide-solid'
-import type { Component } from 'solid-js'
+import X from 'lucide-solid/icons/x'
+import type { Component, JSX } from 'solid-js'
 import { Show } from 'solid-js'
 import { getAppIconButtonClass } from './AppButton'
 
 type AppDialogHeaderProps = {
   /** ダイアログのタイトル */
-  title: string
+  title: JSX.Element
   /** タイトル下の補足 */
-  description?: string
+  description?: JSX.Element
   /** 閉じるボタンのアクセシブルな名前 */
   closeLabel: string
   /** 閉じるボタンを無効にするか */
@@ -17,7 +17,7 @@ type AppDialogHeaderProps = {
 
 /**
  * タイトルと右上の閉じるボタンを並べたダイアログヘッダーを表示する。
- * Kobalte Dialog の Dialog.Content 内で使う。
+ * Kobalte Dialog の Dialog.Content、または AppDialog の中で使う。
  *
  * @param props - タイトル、補足、閉じるボタンの名前と無効状態。
  * @returns ダイアログヘッダー。

@@ -1,6 +1,8 @@
 import { Collapsible } from '@kobalte/core/collapsible'
 import { FileField, type Details as FileFieldDetails } from '@kobalte/core/file-field'
-import { Download, FileUp, X } from 'lucide-solid'
+import Download from 'lucide-solid/icons/download'
+import FileUp from 'lucide-solid/icons/file-up'
+import X from 'lucide-solid/icons/x'
 import type { Component } from 'solid-js'
 import { createSignal, For, Show } from 'solid-js'
 import {

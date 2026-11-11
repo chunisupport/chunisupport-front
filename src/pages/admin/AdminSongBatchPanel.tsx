@@ -1,6 +1,6 @@
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
-import { Wrench } from 'lucide-solid'
+import Wrench from 'lucide-solid/icons/wrench'
 import type { JSX } from 'solid-js'
 import {
   createEffect,

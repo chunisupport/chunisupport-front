@@ -1,5 +1,5 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { Info } from 'lucide-solid'
+import Info from 'lucide-solid/icons/info'
 import type { Accessor, Component } from 'solid-js'
 import { Show } from 'solid-js'
 import {

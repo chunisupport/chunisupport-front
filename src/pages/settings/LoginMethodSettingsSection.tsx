@@ -1,5 +1,6 @@
 import { linkWithPopup, reauthenticateWithPopup, type User, unlink } from 'firebase/auth'
-import { KeyRound, RefreshCw } from 'lucide-solid'
+import KeyRound from 'lucide-solid/icons/key-round'
+import RefreshCw from 'lucide-solid/icons/refresh-cw'
 import { createResource, createSignal, For, Show } from 'solid-js'
 
 import { fetchXAccount } from '../../api/xAccount'

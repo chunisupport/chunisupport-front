@@ -1,25 +1,11 @@
-import { JST_TIME_ZONE } from '../constants/dateTime'
 import type { VersionDTO, VersionSummaryDTO } from '../types/api'
+import { getTodayChunithmDate } from './chunithmDate'
+
+export { getTodayChunithmDate }
 
 type VersionLike = Pick<VersionDTO, 'name' | 'released_at'> | VersionSummaryDTO
 
 const ORIGINAL_VERSION_NAMES = new Set(['CHUNITHM', 'CHUNITHM PLUS'])
-
-/** YYYY-MM-DD形式で日付を得るためのロケール */
-const DATE_ONLY_LOCALE = 'sv-SE'
-/** CHUNITHM稼働地域の現在日を生成するフォーマッター */
-const CHUNITHM_DATE_FORMATTER = new Intl.DateTimeFormat(DATE_ONLY_LOCALE, {
-  timeZone: JST_TIME_ZONE,
-})
-
-/**
- * CHUNITHMの稼働地域を基準にした今日の日付を返す。
- *
- * @returns YYYY-MM-DD形式のJST現在日。
- */
-export function getTodayChunithmDate(): string {
-  return CHUNITHM_DATE_FORMATTER.format(new Date())
-}
 
 /**
  * 稼働開始日が基準日以前のバージョンだけに絞る。
@@ -28,7 +14,7 @@ export function getTodayChunithmDate(): string {
  * 全件で行い、未来曲が未来名になることで既定フィルターから外れる。
  *
  * @param versions - APIから返されたバージョン一覧。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns 基準日以前に稼働開始したバージョン一覧。順序は変えない。
  */
 export function filterReleasedVersions<T extends VersionLike>(
@@ -58,7 +44,7 @@ export function getShortVersionName(versionName: string): string {
  * フィルター選択肢と、全選択を未指定へ揃える判定に使う。
  *
  * @param versions - APIから返されたバージョン一覧。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns 基準日以前に稼働開始したバージョンの短縮名。順序は変えない。
  */
 export function getReleasedVersionShortNames(

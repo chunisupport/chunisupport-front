@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { SongDTO } from '../types/api.ts'
 import { calculateCandidateScoreDifference } from './candidateScoreDifference.ts'
+import { getTodayChunithmDate } from './chunithmDate.ts'
 import {
   calculateBestTheoreticalRating,
   calculateNewSongTheoreticalRating,
@@ -144,6 +145,39 @@ test('定数15.0が29曲と定数14.9が1曲のベスト枠理論値は小数第
   // Then: 単曲理論値 17.15×29 + 17.05 = 514.40 を30で割り、小数第4位で切り捨てた17.1466になる。
   assert.equal(result?.rating, 17.1466)
   assert.equal(result?.entries.length, 30)
+})
+
+test('新バージョン稼働日のJST 07:00から新曲枠へ切り替わること', () => {
+  // Given: 旧曲と、稼働日が2026-09-03の新バージョン楽曲。
+  // 太平洋夏時間ではどちらの時刻も2026-09-02の午後になる。
+  const versions = [{ released_at: '2026-06-18' }, { released_at: '2026-09-03' }]
+  const songs = [
+    createSong('old', '2026-06-17', [{ value: 14 }]),
+    createSong('new-version', '2026-09-03', [{ value: 16 }]),
+  ]
+  const beforeDayStart = getTodayChunithmDate(new Date('2026-09-02T21:59:59Z'))
+  const atDayStart = getTodayChunithmDate(new Date('2026-09-02T22:00:00Z'))
+
+  // When: 稼働開始の直前と開始時刻で両枠を算出する。
+  const bestBefore = calculateBestTheoreticalRating(songs, versions, beforeDayStart, 30)
+  const newBefore = calculateNewSongTheoreticalRating(songs, versions, beforeDayStart, 20)
+  const bestAtStart = calculateBestTheoreticalRating(songs, versions, atDayStart, 30)
+  const newAtStart = calculateNewSongTheoreticalRating(songs, versions, atDayStart, 20)
+
+  // Then: 06:59:59は旧バージョンのベスト枠のみ、07:00:00から新曲枠に入る。
+  assert.deepEqual(
+    bestBefore?.entries.map((entry) => entry.songId),
+    ['old']
+  )
+  assert.equal(newBefore, undefined)
+  assert.deepEqual(
+    bestAtStart?.entries.map((entry) => entry.songId),
+    ['old']
+  )
+  assert.deepEqual(
+    newAtStart?.entries.map((entry) => entry.songId),
+    ['new-version']
+  )
 })
 
 test('is_newではなく現行バージョン開始日でベスト枠を判定すること', () => {

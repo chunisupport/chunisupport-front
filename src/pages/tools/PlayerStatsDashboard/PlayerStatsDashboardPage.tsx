@@ -1,15 +1,13 @@
 import { A } from '@solidjs/router'
-import {
-  Award,
-  BadgeCheck,
-  ChartNoAxesCombined,
-  Funnel,
-  Gauge,
-  Grid3X3,
-  Sigma,
-  Target,
-  Trophy,
-} from 'lucide-solid'
+import Award from 'lucide-solid/icons/award'
+import BadgeCheck from 'lucide-solid/icons/badge-check'
+import ChartNoAxesCombined from 'lucide-solid/icons/chart-no-axes-combined'
+import Funnel from 'lucide-solid/icons/funnel'
+import Gauge from 'lucide-solid/icons/gauge'
+import Grid3X3 from 'lucide-solid/icons/grid-3x3'
+import Sigma from 'lucide-solid/icons/sigma'
+import Target from 'lucide-solid/icons/target'
+import Trophy from 'lucide-solid/icons/trophy'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, ErrorBoundary, For, Show } from 'solid-js'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'

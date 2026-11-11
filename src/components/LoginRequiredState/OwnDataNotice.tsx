@@ -1,4 +1,5 @@
-import { ExternalLink, Info } from 'lucide-solid'
+import ExternalLink from 'lucide-solid/icons/external-link'
+import Info from 'lucide-solid/icons/info'
 import type { Component } from 'solid-js'
 import { Match, Show, Switch } from 'solid-js'
 import type { PlayerDataStatus } from '../../usecases/auth/resolvePlayerDataStatus'

@@ -83,6 +83,7 @@
 ### ライブラリの利用規約
 - **UIコンポーネント**: **Kobalte** を利用してください。`button` などの基本的なHTMLタグに存在するものであっても、Kobalteのコンポーネントが存在する場合は、アクセシビリティ担保のために必ずKobalteのコンポーネントを優先利用してください。
 - **アイコン**: **Lucide** を利用してください。利用できないと判断した場合は、必ず理由を説明して人間の判断を仰いでください。
+  - アイコンは `import Check from 'lucide-solid/icons/check'` のように個別ファイルから default import してください。`'lucide-solid'` からの値 import は全アイコンがビルド対象になるため禁止です（Biome の `noRestrictedImports` で検出します）。型（`LucideIcon` / `LucideProps`）のみ `import type` で `'lucide-solid'` から参照できます。
 
 ### Kobalte Checkbox とスクロールコンテナ
 - スクロール可能なダイアログやパネル内で Kobalte Checkbox を使う場合、`Checkbox.Control` が内部の visually hidden な `Checkbox.Input` へフォーカスするため、hidden input の絶対配置が不安定だとクリック時にスクロールコンテナが意図せず末尾へ移動することがあります。

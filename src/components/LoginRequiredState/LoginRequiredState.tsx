@@ -1,4 +1,4 @@
-import { LogIn } from 'lucide-solid'
+import LogIn from 'lucide-solid/icons/log-in'
 import type { Component } from 'solid-js'
 import { LOGIN_REQUIRED_STATE_TEXT } from './constants'
 import LoginActionLinks from './LoginActionLinks'

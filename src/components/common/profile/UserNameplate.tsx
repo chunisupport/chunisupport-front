@@ -1,7 +1,7 @@
 import { Button } from '@kobalte/core/button'
 import { Tooltip } from '@kobalte/core/tooltip'
 import { A } from '@solidjs/router'
-import { ChartColumnIncreasing } from 'lucide-solid'
+import ChartColumnIncreasing from 'lucide-solid/icons/chart-column-increasing'
 import {
   type Component,
   createEffect,

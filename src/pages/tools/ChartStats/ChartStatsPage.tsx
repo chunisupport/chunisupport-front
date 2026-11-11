@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/solid-query'
-import { ChartColumnStacked } from 'lucide-solid'
+import ChartColumnStacked from 'lucide-solid/icons/chart-column-stacked'
 import { createMemo, createResource, createSignal, Match, onMount, Show, Switch } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import {

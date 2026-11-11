@@ -1,7 +1,8 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Funnel } from 'lucide-solid'
+import Funnel from 'lucide-solid/icons/funnel'
 import { createSignal, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import ChartConstRangeField from '../../../components/common/ChartConstRangeField'
 import {
@@ -95,106 +96,107 @@ export const ChartStatsFilterPanel = (props: ChartStatsFilterPanelProps) => {
   const versionNames = () => props.versions.map((version) => version.name)
 
   return (
-    <Dialog open={open()} onOpenChange={handleOpenChange}>
-      <div class="-ml-px relative shrink-0">
-        <Show when={filterResetLongPress.hintVisible()}>
-          <FilterResetHoldIndicator
-            progress={filterResetLongPress.progress()}
-            ready={filterResetLongPress.ready()}
-            holdingLabel={CHART_STATS_COPY.filterHoldReset}
-          />
-        </Show>
-        <AppIconButton
-          ref={(element: HTMLButtonElement) => {
-            triggerButton = element
+    <AppDialog
+      open={open()}
+      onOpenChange={handleOpenChange}
+      size="md"
+      height="tall"
+      contentId={`${props.idPrefix}-filter-dialog`}
+      onCloseAutoFocus={(event) => {
+        event.preventDefault()
+        triggerButton?.focus()
+      }}
+      title={CHART_STATS_COPY.filterTitle}
+      headerActions={
+        <FilterResetDialog
+          onReset={() => {
+            const defaultFilter = createDefaultChartStatsAttributeFilter()
+            setDraft(defaultFilter)
+            constRangeDraft.sync(defaultFilter.constRange)
           }}
-          tone={filterResetLongPress.hintVisible() ? 'danger' : active() ? 'primary' : 'surface'}
-          class="h-9.5 w-9.5 touch-none rounded-l-none rounded-r focus-visible:z-10"
-          onClick={filterResetLongPress.handleClick}
-          onPointerDown={filterResetLongPress.handlePointerDown}
-          onPointerUp={filterResetLongPress.handlePointerUp}
-          onPointerCancel={filterResetLongPress.stopPress}
-          aria-label={active() ? CHART_STATS_COPY.filterActive : CHART_STATS_COPY.filterTitle}
-          aria-pressed={active()}
-          aria-haspopup="dialog"
-          aria-expanded={open()}
-          aria-controls={`${props.idPrefix}-filter-dialog`}
-          title={active() ? CHART_STATS_COPY.filterActive : CHART_STATS_COPY.filterTitle}
-          disabled={props.disabled}
-        >
-          <Funnel size={24} aria-hidden="true" />
-        </AppIconButton>
-      </div>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content
-          id={`${props.idPrefix}-filter-dialog`}
-          class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-5/6 max-h-11/12 w-[90vw] max-w-md flex-col rounded-lg bg-surface p-6 shadow-lg"
-          onCloseAutoFocus={(event) => {
-            event.preventDefault()
-            triggerButton?.focus()
-          }}
-        >
-          <div class="mb-4 flex shrink-0 items-center justify-between gap-2">
-            <Dialog.Title class="text-lg font-bold">{CHART_STATS_COPY.filterTitle}</Dialog.Title>
-            <FilterResetDialog
-              onReset={() => {
-                const defaultFilter = createDefaultChartStatsAttributeFilter()
-                setDraft(defaultFilter)
-                constRangeDraft.sync(defaultFilter.constRange)
-              }}
-              showShortcutHint={false}
+          showShortcutHint={false}
+        />
+      }
+      scroll="fill"
+      trigger={
+        <div class="-ml-px relative shrink-0">
+          <Show when={filterResetLongPress.hintVisible()}>
+            <FilterResetHoldIndicator
+              progress={filterResetLongPress.progress()}
+              ready={filterResetLongPress.ready()}
+              holdingLabel={CHART_STATS_COPY.filterHoldReset}
             />
-          </div>
-          <div class="min-h-0 flex-1 basis-0 overflow-y-auto">
-            <div class="space-y-4">
-              <Show when={props.showConstFilter}>
-                <ChartConstRangeField idPrefix={props.idPrefix} {...constRangeDraft.fieldProps} />
-              </Show>
-              <GenreMultiSelect
-                options={toMultiSelectOptions(props.genres)}
-                selected={draft().genres ?? [...props.genres]}
-                onChange={(value) =>
-                  update(
-                    'genres',
-                    value.length > 0 && value.length === props.genres.length ? null : [...value]
-                  )
-                }
-                placeholder={CHART_STATS_COPY.filterUnselected}
-              />
-              <VersionMultiSelect
-                options={toMultiSelectOptions(versionNames(), getShortVersionName)}
-                selected={draft().versions ?? versionNames()}
-                onChange={(value) =>
-                  update(
-                    'versions',
-                    value.length > 0 && value.length === versionNames().length ? null : [...value]
-                  )
-                }
-                placeholder={CHART_STATS_COPY.filterUnselected}
-              />
-              <NameFolderFilterMultiSelect
-                nameFolders={props.nameFolders}
-                selected={draft().nameFolders}
-                onChange={(value) => update('nameFolders', value)}
-                placeholder={CHART_STATS_COPY.filterUnselected}
-              />
-            </div>
-          </div>
-          <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <Dialog.CloseButton as={AppButton}>{CHART_STATS_COPY.filterCancel}</Dialog.CloseButton>
-            <AppButton
-              variant="primary"
-              onClick={() => {
-                props.onChange(draft())
-                setOpen(false)
-              }}
-            >
-              {CHART_STATS_COPY.filterApply}
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+          </Show>
+          <AppIconButton
+            ref={(element: HTMLButtonElement) => {
+              triggerButton = element
+            }}
+            tone={filterResetLongPress.hintVisible() ? 'danger' : active() ? 'primary' : 'surface'}
+            class="h-9.5 w-9.5 touch-none rounded-l-none rounded-r focus-visible:z-10"
+            onClick={filterResetLongPress.handleClick}
+            onPointerDown={filterResetLongPress.handlePointerDown}
+            onPointerUp={filterResetLongPress.handlePointerUp}
+            onPointerCancel={filterResetLongPress.stopPress}
+            aria-label={active() ? CHART_STATS_COPY.filterActive : CHART_STATS_COPY.filterTitle}
+            aria-pressed={active()}
+            aria-haspopup="dialog"
+            aria-expanded={open()}
+            aria-controls={`${props.idPrefix}-filter-dialog`}
+            title={active() ? CHART_STATS_COPY.filterActive : CHART_STATS_COPY.filterTitle}
+            disabled={props.disabled}
+          >
+            <Funnel size={24} aria-hidden="true" />
+          </AppIconButton>
+        </div>
+      }
+      footer={
+        <div class="mt-6 flex justify-end gap-2">
+          <Dialog.CloseButton as={AppButton}>{CHART_STATS_COPY.filterCancel}</Dialog.CloseButton>
+          <AppButton
+            variant="primary"
+            onClick={() => {
+              props.onChange(draft())
+              setOpen(false)
+            }}
+          >
+            {CHART_STATS_COPY.filterApply}
+          </AppButton>
+        </div>
+      }
+    >
+      <div class="space-y-4">
+        <Show when={props.showConstFilter}>
+          <ChartConstRangeField idPrefix={props.idPrefix} {...constRangeDraft.fieldProps} />
+        </Show>
+        <GenreMultiSelect
+          options={toMultiSelectOptions(props.genres)}
+          selected={draft().genres ?? [...props.genres]}
+          onChange={(value) =>
+            update(
+              'genres',
+              value.length > 0 && value.length === props.genres.length ? null : [...value]
+            )
+          }
+          placeholder={CHART_STATS_COPY.filterUnselected}
+        />
+        <VersionMultiSelect
+          options={toMultiSelectOptions(versionNames(), getShortVersionName)}
+          selected={draft().versions ?? versionNames()}
+          onChange={(value) =>
+            update(
+              'versions',
+              value.length > 0 && value.length === versionNames().length ? null : [...value]
+            )
+          }
+          placeholder={CHART_STATS_COPY.filterUnselected}
+        />
+        <NameFolderFilterMultiSelect
+          nameFolders={props.nameFolders}
+          selected={draft().nameFolders}
+          onChange={(value) => update('nameFolders', value)}
+          placeholder={CHART_STATS_COPY.filterUnselected}
+        />
+      </div>
+    </AppDialog>
   )
 }

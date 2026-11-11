@@ -1,6 +1,6 @@
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
-import { Calculator } from 'lucide-solid'
+import Calculator from 'lucide-solid/icons/calculator'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createSignal, For, Show } from 'solid-js'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'

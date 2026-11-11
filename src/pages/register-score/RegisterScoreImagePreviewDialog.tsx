@@ -1,4 +1,5 @@
-import { Download, Share2 } from 'lucide-solid'
+import Download from 'lucide-solid/icons/download'
+import Share2 from 'lucide-solid/icons/share-2'
 import type { Component } from 'solid-js'
 import { batch, createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../components'

@@ -1,5 +1,8 @@
 import { DropdownMenu } from '@kobalte/core/dropdown-menu'
-import { Copy, EllipsisVertical, Pencil, Trash2 } from 'lucide-solid'
+import Copy from 'lucide-solid/icons/copy'
+import EllipsisVertical from 'lucide-solid/icons/ellipsis-vertical'
+import Pencil from 'lucide-solid/icons/pencil'
+import Trash2 from 'lucide-solid/icons/trash-2'
 import type { Component } from 'solid-js'
 import {
   AppMenuContent,

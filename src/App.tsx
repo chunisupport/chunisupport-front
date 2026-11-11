@@ -1,20 +1,18 @@
 import { A, Navigate, Route, Router, useLocation, usePreloadRoute } from '@solidjs/router'
-import {
-  Calculator,
-  ChartColumnStacked,
-  ChartNoAxesCombined,
-  Dices,
-  Gauge,
-  Globe,
-  Grid3X3,
-  ListOrdered,
-  Lock,
-  Percent,
-  ScanSearch,
-  Swords,
-  Target,
-  Trophy,
-} from 'lucide-solid'
+import Calculator from 'lucide-solid/icons/calculator'
+import ChartColumnStacked from 'lucide-solid/icons/chart-column-stacked'
+import ChartNoAxesCombined from 'lucide-solid/icons/chart-no-axes-combined'
+import Dices from 'lucide-solid/icons/dices'
+import Gauge from 'lucide-solid/icons/gauge'
+import Globe from 'lucide-solid/icons/globe'
+import Grid3X3 from 'lucide-solid/icons/grid-3x3'
+import ListOrdered from 'lucide-solid/icons/list-ordered'
+import Lock from 'lucide-solid/icons/lock'
+import Percent from 'lucide-solid/icons/percent'
+import ScanSearch from 'lucide-solid/icons/scan-search'
+import Swords from 'lucide-solid/icons/swords'
+import Target from 'lucide-solid/icons/target'
+import Trophy from 'lucide-solid/icons/trophy'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, ErrorBoundary, For, lazy, Show } from 'solid-js'
 
@@ -40,6 +38,7 @@ import {
   FOOTER_COPYRIGHT_TEXT_2,
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
+import { LANDING_GUEST_HERO_SECTION_CLASS } from './constants/landingPage'
 import {
   ADMIN_BATCH_PATH,
   ADMIN_CHART_RANKING_PATH,
@@ -283,6 +282,7 @@ const LandingFooter = () => {
 
 /**
  * トップページを表示する。
+ * 未ログイン時は導入カード、お知らせ、Xタイムラインの高さを先に確保する。
  *
  * @returns ランディングページ。
  */
@@ -307,11 +307,18 @@ const LandingPage = () => {
   return (
     <div class="flex min-h-dvh flex-col">
       <main class="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8">
-        <Show when={homeView().type !== 'loading'} fallback={<Loading />}>
+        <Show
+          when={homeView().type !== 'loading'}
+          fallback={
+            <section class={`${LANDING_GUEST_HERO_SECTION_CLASS} flex items-center justify-center`}>
+              <Loading />
+            </section>
+          }
+        >
           <Show
             when={authenticatedUsername()}
             fallback={
-              <section class="rounded-lg border border-border bg-surface p-6">
+              <section class={LANDING_GUEST_HERO_SECTION_CLASS}>
                 <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
                 <p class="mb-4 text-sm text-text-muted">
                   ログインまたは新規登録して、プレイデータを管理しましょう。

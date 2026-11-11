@@ -1,6 +1,7 @@
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, type Plugin, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { SearchX, Settings } from 'lucide-solid'
+import SearchX from 'lucide-solid/icons/search-x'
+import Settings from 'lucide-solid/icons/settings'
 import {
   createEffect,
   createMemo,

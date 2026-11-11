@@ -1,4 +1,4 @@
-import { WifiOff } from 'lucide-solid'
+import WifiOff from 'lucide-solid/icons/wifi-off'
 import { onMount } from 'solid-js'
 import { AppButton } from '../../components/common/AppButton'
 import {

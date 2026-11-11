@@ -1,6 +1,6 @@
 import { Button } from '@kobalte/core/button'
 import { A } from '@solidjs/router'
-import { Trophy } from 'lucide-solid'
+import Trophy from 'lucide-solid/icons/trophy'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../../components'

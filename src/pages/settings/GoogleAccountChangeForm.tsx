@@ -1,20 +1,18 @@
 import { Button } from '@kobalte/core/button'
 import { Dialog } from '@kobalte/core/dialog'
 import { useNavigate } from '@solidjs/router'
-import {
-  ArrowDown,
-  ArrowRightLeft,
-  Check,
-  CircleCheck,
-  Plus,
-  RefreshCw,
-  ShieldCheck,
-  TriangleAlert,
-} from 'lucide-solid'
+import ArrowDown from 'lucide-solid/icons/arrow-down'
+import ArrowRightLeft from 'lucide-solid/icons/arrow-right-left'
+import Check from 'lucide-solid/icons/check'
+import CircleCheck from 'lucide-solid/icons/circle-check'
+import Plus from 'lucide-solid/icons/plus'
+import RefreshCw from 'lucide-solid/icons/refresh-cw'
+import ShieldCheck from 'lucide-solid/icons/shield-check'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
 import type { Component } from 'solid-js'
 import { createEffect, For, on, onMount, Show } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
-import { AppDialogHeader } from '../../components/common/AppDialogHeader'
+import { AppDialog } from '../../components/common/AppDialog'
 import { LOGIN_PATH } from '../../constants/routes'
 import { getAccountChangeAuth } from '../../lib/firebase'
 import {
@@ -142,175 +140,173 @@ export const GoogleAccountChangeForm: Component<{
         </div>
       </dl>
 
-      <Dialog open={wizard.isOpen()} onOpenChange={wizard.setOpen}>
-        <Dialog.Trigger
-          as="button"
-          type="button"
-          class={getAppButtonClass({ variant: 'secondary', class: 'mt-4 w-fit' })}
-        >
-          {GOOGLE_ACCOUNT_CHANGE_COPY.open}
-        </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-          {/* Googleのポップアップとの行き来で誤って閉じないよう、外側の操作では閉じない。 */}
-          <Dialog.Content
-            class="fixed inset-x-4 top-1/2 z-60 flex max-h-[calc(100dvh-2rem)] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6"
-            onInteractOutside={(event) => event.preventDefault()}
+      <AppDialog
+        open={wizard.isOpen()}
+        onOpenChange={wizard.setOpen}
+        pending={wizard.isBusy()}
+        placement="sheet"
+        size="md"
+        height="maxScreen"
+        layer="raised"
+        title={GOOGLE_ACCOUNT_CHANGE_COPY.title}
+        closeLabel={GOOGLE_ACCOUNT_CHANGE_COPY.close}
+        // Googleのポップアップとの行き来で誤って閉じないよう、外側の操作では閉じない。
+        onInteractOutside={(event) => event.preventDefault()}
+        trigger={
+          <Dialog.Trigger
+            as="button"
+            type="button"
+            class={getAppButtonClass({ variant: 'secondary', class: 'mt-4 w-fit' })}
           >
-            <AppDialogHeader
-              title={GOOGLE_ACCOUNT_CHANGE_COPY.title}
-              closeLabel={GOOGLE_ACCOUNT_CHANGE_COPY.close}
-              closeDisabled={wizard.isBusy()}
-            />
-            <WizardStepIndicator current={wizard.step()} />
+            {GOOGLE_ACCOUNT_CHANGE_COPY.open}
+          </Dialog.Trigger>
+        }
+      >
+        <WizardStepIndicator current={wizard.step()} />
 
-            <div class="min-h-0 overflow-y-auto">
-              {/* ライブ領域は内容が入る前から DOM に置いておかないと読み上げられないため、ステップの外に常設する。 */}
-              <p class="text-sm" role="status">
-                <Show when={wizard.step() === 'done'}>
-                  <span class="mt-4 flex items-center justify-center gap-2 font-medium text-action-primary">
-                    <CircleCheck aria-hidden="true" class="h-5 w-5" />
-                    {GOOGLE_ACCOUNT_CHANGE_COPY.success}
+        <div class="min-h-0 overflow-y-auto">
+          {/* ライブ領域は内容が入る前から DOM に置いておかないと読み上げられないため、ステップの外に常設する。 */}
+          <p class="text-sm" role="status">
+            <Show when={wizard.step() === 'done'}>
+              <span class="mt-4 flex items-center justify-center gap-2 font-medium text-action-primary">
+                <CircleCheck aria-hidden="true" class="h-5 w-5" />
+                {GOOGLE_ACCOUNT_CHANGE_COPY.success}
+              </span>
+            </Show>
+          </p>
+
+          <fieldset
+            ref={stepPanel}
+            aria-label={GOOGLE_ACCOUNT_CHANGE_COPY.steps[wizard.step()]}
+            tabIndex={-1}
+            class="focus:outline-none"
+          >
+            <Show
+              when={wizard.step() !== 'done'}
+              fallback={
+                <p class="mt-2 break-all text-center font-sans text-sm text-text">
+                  {wizard.currentEmail()}
+                </p>
+              }
+            >
+              <div class="mt-4 flex flex-col items-stretch gap-2 rounded-lg border border-border p-4 text-center text-sm">
+                <p class="break-all font-sans font-medium text-text">
+                  {/* ラベルは見た目では省き、読み上げでは現在のアカウントだと分かるようにする。 */}
+                  <span class="sr-only">{GOOGLE_ACCOUNT_CHANGE_COPY.currentLabel}</span>
+                  {wizard.currentEmail()}
+                </p>
+                {/* 変更でXでのログインが使えなくなることを、変更前の操作の場で示す。 */}
+                <Show when={props.xLinked}>
+                  <span class="inline-flex items-center gap-1 self-center rounded-full border border-warning-border bg-warning-bg px-2 py-0.5 text-xs text-warning">
+                    <TriangleAlert aria-hidden="true" class="h-3.5 w-3.5 shrink-0" />
+                    {GOOGLE_ACCOUNT_CHANGE_COPY.xLinkRemoved}
                   </span>
                 </Show>
-              </p>
-
-              <fieldset
-                ref={stepPanel}
-                aria-label={GOOGLE_ACCOUNT_CHANGE_COPY.steps[wizard.step()]}
-                tabIndex={-1}
-                class="focus:outline-none"
-              >
-                <Show
-                  when={wizard.step() !== 'done'}
-                  fallback={
-                    <p class="mt-2 break-all text-center font-sans text-sm text-text">
-                      {wizard.currentEmail()}
-                    </p>
-                  }
-                >
-                  <div class="mt-4 flex flex-col items-stretch gap-2 rounded-lg border border-border p-4 text-center text-sm">
-                    <p class="break-all font-sans font-medium text-text">
-                      {/* ラベルは見た目では省き、読み上げでは現在のアカウントだと分かるようにする。 */}
-                      <span class="sr-only">{GOOGLE_ACCOUNT_CHANGE_COPY.currentLabel}</span>
-                      {wizard.currentEmail()}
-                    </p>
-                    {/* 変更でXでのログインが使えなくなることを、変更前の操作の場で示す。 */}
-                    <Show when={props.xLinked}>
-                      <span class="inline-flex items-center gap-1 self-center rounded-full border border-warning-border bg-warning-bg px-2 py-0.5 text-xs text-warning">
-                        <TriangleAlert aria-hidden="true" class="h-3.5 w-3.5 shrink-0" />
-                        {GOOGLE_ACCOUNT_CHANGE_COPY.xLinkRemoved}
-                      </span>
-                    </Show>
-                    <ArrowDown aria-hidden="true" class="h-5 w-5 self-center text-text-muted" />
-                    {/* 変更先の枠そのものを押してアカウント選択を開く。選択済みなら選び直しになる。 */}
-                    <Button
-                      class="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-md border-2 px-3 py-3 text-center transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-                      classList={{
-                        'border-dashed border-border-strong text-text-muted': !wizard.target(),
-                        'border-action-primary text-text': Boolean(wizard.target()),
-                      }}
-                      disabled={wizard.isBusy()}
-                      onClick={() => void wizard.select()}
-                    >
-                      <Show
-                        when={wizard.target()}
-                        fallback={
-                          <>
-                            <Plus aria-hidden="true" class="h-4 w-4 shrink-0" />
-                            {wizard.isSelecting()
-                              ? GOOGLE_ACCOUNT_CHANGE_COPY.selecting
-                              : GOOGLE_ACCOUNT_CHANGE_COPY.select}
-                          </>
-                        }
-                      >
-                        {(selectedTarget) => (
-                          <>
-                            <span class="min-w-0 break-all font-sans font-medium">
-                              {selectedTarget().email}
-                            </span>
-                            <span class="inline-flex shrink-0 items-center gap-1 text-xs text-text-muted">
-                              <RefreshCw aria-hidden="true" class="h-3.5 w-3.5" />
-                              {wizard.isSelecting()
-                                ? GOOGLE_ACCOUNT_CHANGE_COPY.selecting
-                                : GOOGLE_ACCOUNT_CHANGE_COPY.reselect}
-                            </span>
-                          </>
-                        )}
-                      </Show>
-                    </Button>
-                  </div>
-                </Show>
-              </fieldset>
-              <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                {wizard.error()}
-              </p>
-            </div>
-
-            <Show when={wizard.step() === 'confirm'}>
-              <div class={DIALOG_FOOTER_CLASS}>
-                <AppButton
-                  variant="primary"
-                  leftIcon={<ShieldCheck aria-hidden="true" class="h-4 w-4" />}
-                  disabled={wizard.isBusy()}
-                  onClick={wizard.proceed}
-                >
-                  {GOOGLE_ACCOUNT_CHANGE_COPY.proceed}
-                </AppButton>
-              </div>
-            </Show>
-            <Show when={wizard.step() === 'done'}>
-              <div class={DIALOG_FOOTER_CLASS}>
-                <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
-                  {GOOGLE_ACCOUNT_CHANGE_COPY.close}
-                </Dialog.CloseButton>
-              </div>
-            </Show>
-
-            {/* 本人確認に使うアカウントを示してから再認証のポップアップを開く。 */}
-            <Dialog open={wizard.isReauthOpen()} onOpenChange={wizard.setReauthOpen}>
-              <Dialog.Portal>
-                <Dialog.Overlay class="fixed inset-0 z-70 bg-overlay" />
-                <Dialog.Content
-                  class="fixed inset-x-4 top-1/2 z-80 flex max-h-[calc(100dvh-2rem)] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-sm sm:-translate-x-1/2 sm:p-6"
-                  onInteractOutside={(event) => event.preventDefault()}
-                  onCloseAutoFocus={(event) => {
-                    // 本人確認へ進むボタンは完了時に消えるため、ウィザード本体へフォーカスを戻す。
-                    event.preventDefault()
-                    stepPanel?.focus()
+                <ArrowDown aria-hidden="true" class="h-5 w-5 self-center text-text-muted" />
+                {/* 変更先の枠そのものを押してアカウント選択を開く。選択済みなら選び直しになる。 */}
+                <Button
+                  class="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-md border-2 px-3 py-3 text-center transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+                  classList={{
+                    'border-dashed border-border-strong text-text-muted': !wizard.target(),
+                    'border-action-primary text-text': Boolean(wizard.target()),
                   }}
+                  disabled={wizard.isBusy()}
+                  onClick={() => void wizard.select()}
                 >
-                  <AppDialogHeader
-                    title={GOOGLE_ACCOUNT_CHANGE_COPY.reauthTitle}
-                    closeLabel={GOOGLE_ACCOUNT_CHANGE_COPY.close}
-                    closeDisabled={wizard.isSubmitting()}
-                  />
-                  <div class="mt-4 flex flex-col items-center gap-2 rounded-lg border-2 border-action-primary p-4 text-center">
-                    <ShieldCheck aria-hidden="true" class="h-6 w-6 text-action-primary" />
-                    <p class="break-all font-sans text-base font-semibold text-text">
-                      {wizard.currentEmail()}
-                    </p>
-                  </div>
-                  <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                    {wizard.reauthError()}
-                  </p>
-                  <AppButton
-                    variant="primary"
-                    fullWidth
-                    class="mt-5 shrink-0"
-                    disabled={wizard.isSubmitting()}
-                    onClick={() => void wizard.submit()}
+                  <Show
+                    when={wizard.target()}
+                    fallback={
+                      <>
+                        <Plus aria-hidden="true" class="h-4 w-4 shrink-0" />
+                        {wizard.isSelecting()
+                          ? GOOGLE_ACCOUNT_CHANGE_COPY.selecting
+                          : GOOGLE_ACCOUNT_CHANGE_COPY.select}
+                      </>
+                    }
                   >
-                    {wizard.isSubmitting()
-                      ? GOOGLE_ACCOUNT_CHANGE_COPY.submitting
-                      : GOOGLE_ACCOUNT_CHANGE_COPY.reauthSubmit}
-                  </AppButton>
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
+                    {(selectedTarget) => (
+                      <>
+                        <span class="min-w-0 break-all font-sans font-medium">
+                          {selectedTarget().email}
+                        </span>
+                        <span class="inline-flex shrink-0 items-center gap-1 text-xs text-text-muted">
+                          <RefreshCw aria-hidden="true" class="h-3.5 w-3.5" />
+                          {wizard.isSelecting()
+                            ? GOOGLE_ACCOUNT_CHANGE_COPY.selecting
+                            : GOOGLE_ACCOUNT_CHANGE_COPY.reselect}
+                        </span>
+                      </>
+                    )}
+                  </Show>
+                </Button>
+              </div>
+            </Show>
+          </fieldset>
+          <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+            {wizard.error()}
+          </p>
+        </div>
+
+        <Show when={wizard.step() === 'confirm'}>
+          <div class={DIALOG_FOOTER_CLASS}>
+            <AppButton
+              variant="primary"
+              leftIcon={<ShieldCheck aria-hidden="true" class="h-4 w-4" />}
+              disabled={wizard.isBusy()}
+              onClick={wizard.proceed}
+            >
+              {GOOGLE_ACCOUNT_CHANGE_COPY.proceed}
+            </AppButton>
+          </div>
+        </Show>
+        <Show when={wizard.step() === 'done'}>
+          <div class={DIALOG_FOOTER_CLASS}>
+            <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
+              {GOOGLE_ACCOUNT_CHANGE_COPY.close}
+            </Dialog.CloseButton>
+          </div>
+        </Show>
+
+        {/* 本人確認に使うアカウントを示してから再認証のポップアップを開く。 */}
+        <AppDialog
+          open={wizard.isReauthOpen()}
+          onOpenChange={wizard.setReauthOpen}
+          pending={wizard.isSubmitting()}
+          placement="sheet"
+          size="sm"
+          height="maxScreen"
+          layer="modal"
+          title={GOOGLE_ACCOUNT_CHANGE_COPY.reauthTitle}
+          closeLabel={GOOGLE_ACCOUNT_CHANGE_COPY.close}
+          onInteractOutside={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => {
+            // 本人確認へ進むボタンは完了時に消えるため、ウィザード本体へフォーカスを戻す。
+            event.preventDefault()
+            stepPanel?.focus()
+          }}
+        >
+          <div class="mt-4 flex flex-col items-center gap-2 rounded-lg border-2 border-action-primary p-4 text-center">
+            <ShieldCheck aria-hidden="true" class="h-6 w-6 text-action-primary" />
+            <p class="break-all font-sans text-base font-semibold text-text">
+              {wizard.currentEmail()}
+            </p>
+          </div>
+          <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+            {wizard.reauthError()}
+          </p>
+          <AppButton
+            variant="primary"
+            fullWidth
+            class="mt-5 shrink-0"
+            disabled={wizard.isSubmitting()}
+            onClick={() => void wizard.submit()}
+          >
+            {wizard.isSubmitting()
+              ? GOOGLE_ACCOUNT_CHANGE_COPY.submitting
+              : GOOGLE_ACCOUNT_CHANGE_COPY.reauthSubmit}
+          </AppButton>
+        </AppDialog>
+      </AppDialog>
     </section>
   )
 }

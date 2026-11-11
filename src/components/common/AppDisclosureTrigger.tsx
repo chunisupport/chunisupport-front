@@ -1,5 +1,5 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { ChevronRight } from 'lucide-solid'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
 import type { Component, JSX } from 'solid-js'
 import { Show } from 'solid-js'
 

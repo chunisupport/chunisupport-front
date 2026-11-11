@@ -1,8 +1,9 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Funnel } from 'lucide-solid'
+import Funnel from 'lucide-solid/icons/funnel'
 import { createMemo, createSignal, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import {
   GenreMultiSelect,
@@ -77,152 +78,150 @@ export default function SongFilterPanel(props: Props) {
   const update = <K extends keyof SongFilters>(key: K, value: SongFilters[K]) =>
     setDraft((current) => ({ ...current, [key]: value }))
   return (
-    <Dialog open={open()} onOpenChange={handleOpenChange}>
-      <div class="-ml-px relative shrink-0">
-        <Show when={filterResetLongPress.hintVisible()}>
-          <FilterResetHoldIndicator
-            progress={filterResetLongPress.progress()}
-            ready={filterResetLongPress.ready()}
-            holdingLabel={LABELS.holdReset}
-          />
-        </Show>
-        <AppIconButton
-          ref={(element: HTMLButtonElement) => {
-            triggerButton = element
-          }}
-          tone={filterResetLongPress.hintVisible() ? 'danger' : active() ? 'primary' : 'surface'}
-          class="h-9.5 w-9.5 touch-none rounded-l-none rounded-r focus-visible:z-10"
-          onClick={filterResetLongPress.handleClick}
-          onPointerDown={filterResetLongPress.handlePointerDown}
-          onPointerUp={filterResetLongPress.handlePointerUp}
-          onPointerCancel={filterResetLongPress.stopPress}
-          aria-label={active() ? LABELS.active : LABELS.title}
-          aria-pressed={active()}
-          aria-haspopup="dialog"
-          aria-expanded={open()}
-          aria-controls={`${props.idPrefix}-filter-dialog`}
-          title={active() ? LABELS.active : LABELS.title}
-        >
-          <Funnel size={24} aria-hidden="true" />
-        </AppIconButton>
-      </div>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content
-          id={`${props.idPrefix}-filter-dialog`}
-          class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-5/6 max-h-11/12 w-[90vw] max-w-md flex-col rounded-lg bg-surface p-6 shadow-lg"
-          onCloseAutoFocus={(event) => {
-            event.preventDefault()
-            triggerButton?.focus()
-          }}
-        >
-          <div class="mb-4 flex shrink-0 items-center justify-between gap-2">
-            <Dialog.Title class="text-lg font-bold">{LABELS.title}</Dialog.Title>
-            <FilterResetDialog
-              onReset={() => setDraft(createSongFilters())}
-              showShortcutHint={false}
+    <AppDialog
+      open={open()}
+      onOpenChange={handleOpenChange}
+      size="md"
+      height="tall"
+      contentId={`${props.idPrefix}-filter-dialog`}
+      onCloseAutoFocus={(event) => {
+        event.preventDefault()
+        triggerButton?.focus()
+      }}
+      title={LABELS.title}
+      headerActions={
+        <FilterResetDialog onReset={() => setDraft(createSongFilters())} showShortcutHint={false} />
+      }
+      scroll="fill"
+      trigger={
+        <div class="-ml-px relative shrink-0">
+          <Show when={filterResetLongPress.hintVisible()}>
+            <FilterResetHoldIndicator
+              progress={filterResetLongPress.progress()}
+              ready={filterResetLongPress.ready()}
+              holdingLabel={LABELS.holdReset}
             />
-          </div>
-          <div class="min-h-0 flex-1 basis-0 overflow-y-auto">
-            <div class="space-y-4">
-              <GenreMultiSelect
-                options={toMultiSelectOptions(props.genres)}
-                selected={draft().genres ?? props.genres}
-                onChange={(value) =>
-                  update(
-                    'genres',
-                    value.length > 0 && value.length === props.genres.length ? null : value
-                  )
-                }
-                placeholder={LABELS.unselected}
+          </Show>
+          <AppIconButton
+            ref={(element: HTMLButtonElement) => {
+              triggerButton = element
+            }}
+            tone={filterResetLongPress.hintVisible() ? 'danger' : active() ? 'primary' : 'surface'}
+            class="h-9.5 w-9.5 touch-none rounded-l-none rounded-r focus-visible:z-10"
+            onClick={filterResetLongPress.handleClick}
+            onPointerDown={filterResetLongPress.handlePointerDown}
+            onPointerUp={filterResetLongPress.handlePointerUp}
+            onPointerCancel={filterResetLongPress.stopPress}
+            aria-label={active() ? LABELS.active : LABELS.title}
+            aria-pressed={active()}
+            aria-haspopup="dialog"
+            aria-expanded={open()}
+            aria-controls={`${props.idPrefix}-filter-dialog`}
+            title={active() ? LABELS.active : LABELS.title}
+          >
+            <Funnel size={24} aria-hidden="true" />
+          </AppIconButton>
+        </div>
+      }
+      footer={
+        <div class="mt-6 flex justify-end gap-2">
+          <Dialog.CloseButton as={AppButton}>{LABELS.cancel}</Dialog.CloseButton>
+          <AppButton
+            variant="primary"
+            disabled={bpmInvalid() || dateInvalid()}
+            onClick={() => {
+              props.onChange(draft())
+              setOpen(false)
+            }}
+          >
+            {LABELS.apply}
+          </AppButton>
+        </div>
+      }
+    >
+      <div class="space-y-4">
+        <GenreMultiSelect
+          options={toMultiSelectOptions(props.genres)}
+          selected={draft().genres ?? props.genres}
+          onChange={(value) =>
+            update(
+              'genres',
+              value.length > 0 && value.length === props.genres.length ? null : value
+            )
+          }
+          placeholder={LABELS.unselected}
+        />
+        <VersionMultiSelect
+          options={toMultiSelectOptions(
+            props.versions.map((version) => version.name),
+            getShortVersionName
+          )}
+          selected={draft().versions ?? props.versions.map((version) => version.name)}
+          onChange={(value) =>
+            update(
+              'versions',
+              value.length > 0 && value.length === props.versions.length ? null : value
+            )
+          }
+          placeholder={LABELS.unselected}
+        />
+        <NameFolderFilterMultiSelect
+          nameFolders={props.nameFolders}
+          selected={draft().nameFolders}
+          onChange={(value) => update('nameFolders', value)}
+          placeholder={LABELS.unselected}
+        />
+        <TextRangeInput
+          title={LABELS.bpm}
+          inputClass={SONG_FILTER_INPUT_CLASS}
+          errorMessage={bpmInvalid() ? LABELS.rangeError : undefined}
+          start={{
+            id: 'song-filter-bpm-min',
+            label: LABELS.bpmMin,
+            value: draft().bpmMin,
+            inputMode: 'decimal',
+            invalid: bpmInvalid(),
+            normalizeInput: normalizeBpmInput,
+            onChange: (value) => update('bpmMin', value),
+          }}
+          end={{
+            id: 'song-filter-bpm-max',
+            label: LABELS.bpmMax,
+            value: draft().bpmMax,
+            inputMode: 'decimal',
+            invalid: bpmInvalid(),
+            normalizeInput: normalizeBpmInput,
+            onChange: (value) => update('bpmMax', value),
+          }}
+        />
+        <fieldset class="min-w-0">
+          <legend class="mb-1 text-sm font-medium">{LABELS.release}</legend>
+          <RangeControlRow
+            start={
+              <DateEndpoint
+                label={LABELS.releaseMin}
+                value={draft().releaseMin}
+                invalid={dateInvalid()}
+                onChange={(value) => update('releaseMin', value)}
               />
-              <VersionMultiSelect
-                options={toMultiSelectOptions(
-                  props.versions.map((version) => version.name),
-                  getShortVersionName
-                )}
-                selected={draft().versions ?? props.versions.map((version) => version.name)}
-                onChange={(value) =>
-                  update(
-                    'versions',
-                    value.length > 0 && value.length === props.versions.length ? null : value
-                  )
-                }
-                placeholder={LABELS.unselected}
+            }
+            end={
+              <DateEndpoint
+                label={LABELS.releaseMax}
+                value={draft().releaseMax}
+                invalid={dateInvalid()}
+                onChange={(value) => update('releaseMax', value)}
               />
-              <NameFolderFilterMultiSelect
-                nameFolders={props.nameFolders}
-                selected={draft().nameFolders}
-                onChange={(value) => update('nameFolders', value)}
-                placeholder={LABELS.unselected}
-              />
-              <TextRangeInput
-                title={LABELS.bpm}
-                inputClass={SONG_FILTER_INPUT_CLASS}
-                errorMessage={bpmInvalid() ? LABELS.rangeError : undefined}
-                start={{
-                  id: 'song-filter-bpm-min',
-                  label: LABELS.bpmMin,
-                  value: draft().bpmMin,
-                  inputMode: 'decimal',
-                  invalid: bpmInvalid(),
-                  normalizeInput: normalizeBpmInput,
-                  onChange: (value) => update('bpmMin', value),
-                }}
-                end={{
-                  id: 'song-filter-bpm-max',
-                  label: LABELS.bpmMax,
-                  value: draft().bpmMax,
-                  inputMode: 'decimal',
-                  invalid: bpmInvalid(),
-                  normalizeInput: normalizeBpmInput,
-                  onChange: (value) => update('bpmMax', value),
-                }}
-              />
-              <fieldset class="min-w-0">
-                <legend class="mb-1 text-sm font-medium">{LABELS.release}</legend>
-                <RangeControlRow
-                  start={
-                    <DateEndpoint
-                      label={LABELS.releaseMin}
-                      value={draft().releaseMin}
-                      invalid={dateInvalid()}
-                      onChange={(value) => update('releaseMin', value)}
-                    />
-                  }
-                  end={
-                    <DateEndpoint
-                      label={LABELS.releaseMax}
-                      value={draft().releaseMax}
-                      invalid={dateInvalid()}
-                      onChange={(value) => update('releaseMax', value)}
-                    />
-                  }
-                />
-                <Show when={dateInvalid()}>
-                  <p class="mt-1 text-xs text-danger" role="alert">
-                    {LABELS.rangeError}
-                  </p>
-                </Show>
-              </fieldset>
-            </div>
-          </div>
-          <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <Dialog.CloseButton as={AppButton}>{LABELS.cancel}</Dialog.CloseButton>
-            <AppButton
-              variant="primary"
-              disabled={bpmInvalid() || dateInvalid()}
-              onClick={() => {
-                props.onChange(draft())
-                setOpen(false)
-              }}
-            >
-              {LABELS.apply}
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+            }
+          />
+          <Show when={dateInvalid()}>
+            <p class="mt-1 text-xs text-danger" role="alert">
+              {LABELS.rangeError}
+            </p>
+          </Show>
+        </fieldset>
+      </div>
+    </AppDialog>
   )
 }
 

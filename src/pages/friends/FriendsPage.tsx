@@ -2,17 +2,15 @@ import { DropdownMenu } from '@kobalte/core/dropdown-menu'
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/solid-query'
-import {
-  Check,
-  Copy,
-  EllipsisVertical,
-  Lock,
-  RotateCw,
-  Swords,
-  UserMinus,
-  UserPlus,
-  X,
-} from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
+import Copy from 'lucide-solid/icons/copy'
+import EllipsisVertical from 'lucide-solid/icons/ellipsis-vertical'
+import Lock from 'lucide-solid/icons/lock'
+import RotateCw from 'lucide-solid/icons/rotate-cw'
+import Swords from 'lucide-solid/icons/swords'
+import UserMinus from 'lucide-solid/icons/user-minus'
+import UserPlus from 'lucide-solid/icons/user-plus'
+import X from 'lucide-solid/icons/x'
 import type { JSX } from 'solid-js'
 import {
   createEffect,

@@ -1,5 +1,8 @@
 import { useNavigate } from '@solidjs/router'
-import { ArrowLeftRight, ArrowUpDown, Grid3X3, Share2 } from 'lucide-solid'
+import ArrowLeftRight from 'lucide-solid/icons/arrow-left-right'
+import ArrowUpDown from 'lucide-solid/icons/arrow-up-down'
+import Grid3X3 from 'lucide-solid/icons/grid-3x3'
+import Share2 from 'lucide-solid/icons/share-2'
 import type { Accessor, Component, JSX, Setter } from 'solid-js'
 import {
   batch,

@@ -1,5 +1,5 @@
 import { A, useParams } from '@solidjs/router'
-import { ArrowLeft } from 'lucide-solid'
+import ArrowLeft from 'lucide-solid/icons/arrow-left'
 import type { Component } from 'solid-js'
 import { createMemo, createResource, ErrorBoundary, Show } from 'solid-js'
 import { fetchUserProfileSummary, fetchUserRatingOpHistory } from '../../../api/users'

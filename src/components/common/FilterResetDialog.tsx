@@ -1,5 +1,6 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Funnel, RotateCcw } from 'lucide-solid'
+import Funnel from 'lucide-solid/icons/funnel'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
 import { AppButton, getAppButtonClass, getAppIconButtonClass } from './AppButton'

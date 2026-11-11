@@ -1,9 +1,10 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { RadioGroup } from '@kobalte/core/radio-group'
-import { Target } from 'lucide-solid'
+import Target from 'lucide-solid/icons/target'
 import { createSignal, For, type JSX, Show } from 'solid-js'
 import { Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
+import { AppDialog } from '../../components/common/AppDialog'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import type { GoalDTO } from '../../types/api'
 import { RANDOM_SONG_SELECTOR_COPY } from './randomSongSelector.constants'
@@ -50,85 +51,89 @@ export const RandomSongGoalDialog = (props: RandomSongGoalDialogProps): JSX.Elem
     setOpen(false)
   }
   return (
-    <Dialog open={open()} onOpenChange={handleOpenChange}>
-      <Dialog.Trigger
-        as="button"
-        type="button"
-        class={getAppButtonClass({
-          variant: props.selectedGoalId === null ? 'surface' : 'primary',
-          class: 'min-h-10 rounded-md',
-        })}
-        aria-pressed={props.selectedGoalId !== null}
-        disabled={props.disabled}
-      >
-        <Target size={16} aria-hidden="true" />
-        {RANDOM_SONG_SELECTOR_COPY.goalFilterLabel}
-        <Show when={props.goals.find((goal) => goal.id === props.selectedGoalId)}>
-          {(goal) => <span class="max-w-48 truncate font-sans">{goal().title}</span>}
+    <AppDialog
+      open={open()}
+      onOpenChange={handleOpenChange}
+      placement="viewport"
+      size="2xl"
+      height="viewport80"
+      layer="raised"
+      scroll="fill"
+      bodyClass="mt-4 pr-1"
+      title={RANDOM_SONG_SELECTOR_COPY.goalFilterDialogTitle}
+      footer={
+        <div class="mt-4 flex justify-end gap-2">
+          <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
+            {RANDOM_SONG_SELECTOR_COPY.goalFilterCancelLabel}
+          </Dialog.CloseButton>
+          <AppButton variant="primary" disabled={!canApply()} onClick={handleApply}>
+            {RANDOM_SONG_SELECTOR_COPY.goalFilterApplyLabel}
+          </AppButton>
+        </div>
+      }
+      trigger={
+        <Dialog.Trigger
+          as="button"
+          type="button"
+          class={getAppButtonClass({
+            variant: props.selectedGoalId === null ? 'surface' : 'primary',
+            class: 'min-h-10 rounded-md',
+          })}
+          aria-pressed={props.selectedGoalId !== null}
+          disabled={props.disabled}
+        >
+          <Target size={16} aria-hidden="true" />
+          {RANDOM_SONG_SELECTOR_COPY.goalFilterLabel}
+          <Show when={props.goals.find((goal) => goal.id === props.selectedGoalId)}>
+            {(goal) => <span class="max-w-48 truncate font-sans">{goal().title}</span>}
+          </Show>
+        </Dialog.Trigger>
+      }
+    >
+      <Show when={!props.loading} fallback={<Loading />}>
+        <Show when={props.error}>
+          {(error) => (
+            <p role="status" class="mb-3 text-sm text-danger">
+              {error()}
+            </p>
+          )}
         </Show>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-60 flex flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[80dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <Dialog.Title class="shrink-0 text-lg font-bold">
-            {RANDOM_SONG_SELECTOR_COPY.goalFilterDialogTitle}
-          </Dialog.Title>
-          <div class="mt-4 min-h-0 flex-1 basis-0 overflow-y-auto pr-1">
-            <Show when={!props.loading} fallback={<Loading />}>
-              <Show when={props.error}>
-                {(error) => (
-                  <p role="status" class="mb-3 text-sm text-danger">
-                    {error()}
-                  </p>
-                )}
-              </Show>
-              <Show when={!props.error && props.goals.length === 0}>
-                <p class="mb-3 text-sm text-text-muted">
-                  {RANDOM_SONG_SELECTOR_COPY.goalFilterEmptyMessage}
-                </p>
-              </Show>
-              <RadioGroup
-                name="random-song-goal-filter"
-                value={draftGoalId() === null ? NO_GOAL_VALUE : String(draftGoalId())}
-                onChange={(value) => setDraftGoalId(value === NO_GOAL_VALUE ? null : Number(value))}
-                aria-label={RANDOM_SONG_SELECTOR_COPY.goalFilterDialogTitle}
-                class="grid gap-2"
-              >
+        <Show when={!props.error && props.goals.length === 0}>
+          <p class="mb-3 text-sm text-text-muted">
+            {RANDOM_SONG_SELECTOR_COPY.goalFilterEmptyMessage}
+          </p>
+        </Show>
+        <RadioGroup
+          name="random-song-goal-filter"
+          value={draftGoalId() === null ? NO_GOAL_VALUE : String(draftGoalId())}
+          onChange={(value) => setDraftGoalId(value === NO_GOAL_VALUE ? null : Number(value))}
+          aria-label={RANDOM_SONG_SELECTOR_COPY.goalFilterDialogTitle}
+          class="grid gap-2"
+        >
+          <SelectableCardItem
+            value={NO_GOAL_VALUE}
+            title={RANDOM_SONG_SELECTOR_COPY.goalFilterNoneLabel}
+            ariaLabel={RANDOM_SONG_SELECTOR_COPY.goalFilterNoneLabel}
+            density="compact"
+            class="rounded-md"
+            titleClass="font-sans"
+          />
+          <Show when={!props.error}>
+            <For each={props.goals}>
+              {(goal) => (
                 <SelectableCardItem
-                  value={NO_GOAL_VALUE}
-                  title={RANDOM_SONG_SELECTOR_COPY.goalFilterNoneLabel}
-                  ariaLabel={RANDOM_SONG_SELECTOR_COPY.goalFilterNoneLabel}
+                  value={String(goal.id)}
+                  title={goal.title}
+                  ariaLabel={goal.title}
                   density="compact"
                   class="rounded-md"
                   titleClass="font-sans"
                 />
-                <Show when={!props.error}>
-                  <For each={props.goals}>
-                    {(goal) => (
-                      <SelectableCardItem
-                        value={String(goal.id)}
-                        title={goal.title}
-                        ariaLabel={goal.title}
-                        density="compact"
-                        class="rounded-md"
-                        titleClass="font-sans"
-                      />
-                    )}
-                  </For>
-                </Show>
-              </RadioGroup>
-            </Show>
-          </div>
-          <div class="mt-4 flex shrink-0 justify-end gap-2">
-            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
-              {RANDOM_SONG_SELECTOR_COPY.goalFilterCancelLabel}
-            </Dialog.CloseButton>
-            <AppButton variant="primary" disabled={!canApply()} onClick={handleApply}>
-              {RANDOM_SONG_SELECTOR_COPY.goalFilterApplyLabel}
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+              )}
+            </For>
+          </Show>
+        </RadioGroup>
+      </Show>
+    </AppDialog>
   )
 }

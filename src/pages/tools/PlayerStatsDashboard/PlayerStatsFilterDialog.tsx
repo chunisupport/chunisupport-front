@@ -1,7 +1,7 @@
-import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import { AppSelect } from '../../../components/common/AppSelect'
 import ChartConstRangeField from '../../../components/common/ChartConstRangeField'
@@ -88,72 +88,73 @@ export const PlayerStatsFilterDialog: Component<PlayerStatsFilterDialogProps> = 
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex h-160 max-h-[calc(100dvh-2rem)] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-            {PLAYER_STATS_COPY.filterTitle}
-          </Dialog.Title>
-          <div class="mt-4 min-h-0 flex-1 basis-0 space-y-5 overflow-y-auto">
-            <AppSelect<PlayerStatsDifficultyOption>
-              options={PLAYER_STATS_DIFFICULTY_OPTIONS}
-              optionValue="value"
-              optionTextValue="label"
-              value={selectedDifficultyOption()}
-              onChange={(option) =>
-                option && setDraft((current) => ({ ...current, difficulty: option.value }))
-              }
-              label={PLAYER_STATS_COPY.difficultyLabel}
-              formatLabel={(option) => option.label}
-              contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-            />
-            <ChartConstRangeField
-              idPrefix={PLAYER_STATS_FILTER_ID_PREFIX}
-              {...constRangeDraft.fieldProps}
-            />
-            <GenreMultiSelect
-              labelClass="text-text"
-              options={toMultiSelectOptions(props.genreOptions)}
-              selected={toNullableAllDisplaySelection(draft().genres, props.genreOptions)}
-              contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-              onChange={(selected) =>
-                setDraft((current) => ({
-                  ...current,
-                  genres: toNullableAllFilterSelection(selected, props.genreOptions),
-                }))
-              }
-            />
-            <VersionMultiSelect
-              labelClass="text-text"
-              options={toMultiSelectOptions(props.versionOptions)}
-              selected={toNullableAllDisplaySelection(draft().versions, props.versionOptions)}
-              contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-              onChange={(selected) =>
-                setDraft((current) => ({
-                  ...current,
-                  versions: toNullableAllFilterSelection(selected, props.versionOptions),
-                }))
-              }
-            />
-            <NameFolderFilterMultiSelect
-              labelClass="text-text"
-              nameFolders={props.nameFolders}
-              selected={draft().nameFolders}
-              contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-              onChange={(nameFolders) => setDraft((current) => ({ ...current, nameFolders }))}
-            />
-          </div>
-          <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <AppButton onClick={() => props.onOpenChange(false)}>
-              {PLAYER_STATS_COPY.cancel}
-            </AppButton>
-            <AppButton variant="primary" onClick={handleApply}>
-              {PLAYER_STATS_COPY.apply}
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      size="md"
+      height="fixed160"
+      title={PLAYER_STATS_COPY.filterTitle}
+      scroll="fill"
+      bodyClass="mt-4 space-y-5"
+      footer={
+        <div class="mt-6 flex justify-end gap-2">
+          <AppButton onClick={() => props.onOpenChange(false)}>
+            {PLAYER_STATS_COPY.cancel}
+          </AppButton>
+          <AppButton variant="primary" onClick={handleApply}>
+            {PLAYER_STATS_COPY.apply}
+          </AppButton>
+        </div>
+      }
+    >
+      <AppSelect<PlayerStatsDifficultyOption>
+        options={PLAYER_STATS_DIFFICULTY_OPTIONS}
+        optionValue="value"
+        optionTextValue="label"
+        value={selectedDifficultyOption()}
+        onChange={(option) =>
+          option && setDraft((current) => ({ ...current, difficulty: option.value }))
+        }
+        label={PLAYER_STATS_COPY.difficultyLabel}
+        formatLabel={(option) => option.label}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+      />
+      <ChartConstRangeField
+        idPrefix={PLAYER_STATS_FILTER_ID_PREFIX}
+        {...constRangeDraft.fieldProps}
+      />
+      <GenreMultiSelect
+        labelClass="text-text"
+        options={toMultiSelectOptions(props.genreOptions)}
+        selected={toNullableAllDisplaySelection(draft().genres, props.genreOptions)}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onChange={(selected) =>
+          setDraft((current) => ({
+            ...current,
+            genres: toNullableAllFilterSelection(selected, props.genreOptions),
+          }))
+        }
+      />
+      <VersionMultiSelect
+        labelClass="text-text"
+        options={toMultiSelectOptions(props.versionOptions)}
+        selected={toNullableAllDisplaySelection(draft().versions, props.versionOptions)}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onChange={(selected) =>
+          setDraft((current) => ({
+            ...current,
+            versions: toNullableAllFilterSelection(selected, props.versionOptions),
+          }))
+        }
+      />
+      <NameFolderFilterMultiSelect
+        labelClass="text-text"
+        nameFolders={props.nameFolders}
+        selected={draft().nameFolders}
+        contentZIndexClass={FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+        onChange={(nameFolders) => setDraft((current) => ({ ...current, nameFolders }))}
+      />
+    </AppDialog>
   )
 }

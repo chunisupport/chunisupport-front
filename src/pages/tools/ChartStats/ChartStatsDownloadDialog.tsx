@@ -1,9 +1,9 @@
 import { Dialog } from '@kobalte/core/dialog'
-import { Download } from 'lucide-solid'
+import Download from 'lucide-solid/icons/download'
 import { createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton } from '../../../components/common/AppButton'
-import { AppDialogHeader } from '../../../components/common/AppDialogHeader'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { SegmentedToggleGroup } from '../../../components/common/AppTabs'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import { fetchChartStatsList } from '../../../queries/chartStats'
@@ -94,87 +94,87 @@ export const ChartStatsDownloadDialog = (props: ChartStatsDownloadDialogProps) =
   }
 
   return (
-    <Dialog open={open()} onOpenChange={handleOpenChange}>
-      <Dialog.Trigger
-        as={AppButton}
-        variant="surface"
-        size="sm"
-        class="shrink-0"
-        leftIcon={<Download size={16} aria-hidden="true" />}
-      >
-        {CHART_STATS_COPY.download}
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-11/12 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <AppDialogHeader
-            title={CHART_STATS_COPY.download}
-            closeLabel={CHART_STATS_COPY.downloadClose}
-            closeDisabled={downloading()}
-          />
-          <div class="mt-4 min-h-0 space-y-5 overflow-y-auto">
-            <fieldset>
-              <legend class="mb-2 text-sm font-semibold">
-                {CHART_STATS_COPY.downloadDifficulty}
-              </legend>
-              <div class="flex flex-col items-start gap-1">
-                <For each={CHART_STATS_DIFFICULTY_OPTIONS}>
-                  {(option) => (
-                    <CheckboxField
-                      id={`chart-stats-download-${option.value}`}
-                      checked={difficulties().includes(option.value)}
-                      onChange={(checked) =>
-                        setDifficulties((current) =>
-                          toggleChartStatsExportDifficulty(current, option.value, checked)
-                        )
-                      }
-                      label={option.label}
-                      textVariant="large"
-                    />
-                  )}
-                </For>
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend class="mb-2 text-sm font-semibold">{CHART_STATS_COPY.downloadFormat}</legend>
-              <SegmentedToggleGroup
-                options={CHART_STATS_EXPORT_OPTIONS}
-                value={format()}
-                onChange={setFormat}
-                ariaLabel={CHART_STATS_COPY.downloadFormat}
-                itemClass="font-sans focus-visible:ring-inset"
+    <AppDialog
+      open={open()}
+      onOpenChange={handleOpenChange}
+      pending={downloading()}
+      size="sm"
+      height="cap"
+      title={CHART_STATS_COPY.download}
+      closeLabel={CHART_STATS_COPY.downloadClose}
+      scroll="cap"
+      bodyClass="mt-4 space-y-5"
+      footer={
+        <div class="mt-6 flex flex-col items-end gap-2">
+          <Show when={failed()}>
+            <p class="text-sm text-danger" role="alert">
+              {CHART_STATS_COPY.downloadFailed}
+            </p>
+          </Show>
+          <AppButton
+            variant="primary"
+            disabled={difficulties().length === 0 || busy()}
+            aria-busy={busy()}
+            leftIcon={
+              <Show when={busy()} fallback={<Download size={16} aria-hidden="true" />}>
+                <Loading size="inline" ariaLabel={CHART_STATS_COPY.downloading} />
+              </Show>
+            }
+            onClick={download}
+          >
+            {CHART_STATS_COPY.download}
+          </AppButton>
+        </div>
+      }
+      trigger={
+        <Dialog.Trigger
+          as={AppButton}
+          variant="surface"
+          size="sm"
+          class="shrink-0"
+          leftIcon={<Download size={16} aria-hidden="true" />}
+        >
+          {CHART_STATS_COPY.download}
+        </Dialog.Trigger>
+      }
+    >
+      <fieldset>
+        <legend class="mb-2 text-sm font-semibold">{CHART_STATS_COPY.downloadDifficulty}</legend>
+        <div class="flex flex-col items-start gap-1">
+          <For each={CHART_STATS_DIFFICULTY_OPTIONS}>
+            {(option) => (
+              <CheckboxField
+                id={`chart-stats-download-${option.value}`}
+                checked={difficulties().includes(option.value)}
+                onChange={(checked) =>
+                  setDifficulties((current) =>
+                    toggleChartStatsExportDifficulty(current, option.value, checked)
+                  )
+                }
+                label={option.label}
+                textVariant="large"
               />
-            </fieldset>
-            <CheckboxField
-              id="chart-stats-download-apply-filter"
-              checked={applyFilter()}
-              onChange={setApplyFilter}
-              label={CHART_STATS_COPY.downloadApplyFilter}
-              textVariant="large"
-            />
-          </div>
-          <div class="mt-6 flex shrink-0 flex-col items-end gap-2">
-            <Show when={failed()}>
-              <p class="text-sm text-danger" role="alert">
-                {CHART_STATS_COPY.downloadFailed}
-              </p>
-            </Show>
-            <AppButton
-              variant="primary"
-              disabled={difficulties().length === 0 || busy()}
-              aria-busy={busy()}
-              leftIcon={
-                <Show when={busy()} fallback={<Download size={16} aria-hidden="true" />}>
-                  <Loading size="inline" ariaLabel={CHART_STATS_COPY.downloading} />
-                </Show>
-              }
-              onClick={download}
-            >
-              {CHART_STATS_COPY.download}
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+            )}
+          </For>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend class="mb-2 text-sm font-semibold">{CHART_STATS_COPY.downloadFormat}</legend>
+        <SegmentedToggleGroup
+          options={CHART_STATS_EXPORT_OPTIONS}
+          value={format()}
+          onChange={setFormat}
+          ariaLabel={CHART_STATS_COPY.downloadFormat}
+          itemClass="font-sans focus-visible:ring-inset"
+        />
+      </fieldset>
+      <CheckboxField
+        id="chart-stats-download-apply-filter"
+        checked={applyFilter()}
+        onChange={setApplyFilter}
+        label={CHART_STATS_COPY.downloadApplyFilter}
+        textVariant="large"
+      />
+    </AppDialog>
   )
 }

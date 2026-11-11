@@ -1,6 +1,6 @@
 import { A } from '@solidjs/router'
 import { useInfiniteQuery } from '@tanstack/solid-query'
-import { Trophy } from 'lucide-solid'
+import Trophy from 'lucide-solid/icons/trophy'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import { LoadError, Loading } from '../../components'
 import { AppButton } from '../../components/common/AppButton'

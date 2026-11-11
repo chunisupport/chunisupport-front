@@ -40,6 +40,8 @@ interface GoalNumberFieldProps {
   disabled?: boolean
   /** 入力欄の下に表示する検証エラー。指定時は入力欄を不正状態にする */
   errorMessage?: string
+  /** 入力欄の後ろに表示する単位。入力値や保存値には含めない */
+  unit?: string
   /** 表示ラベルを省略した場合に入力欄へ付ける読み上げ名 */
   ariaLabel?: string
   /** 入力要素を受け取る。検証エラー時にフォーカスを移すために使う */
@@ -118,7 +120,7 @@ export const GoalTextField: Component<GoalTextFieldProps> = (props) => (
 /**
  * 目標設定ダイアログで使う数値入力欄を描画する。
  *
- * @param props - 表示ラベル、入力値、補足説明、数値制約、無効状態、検証エラー、読み上げ名、入力要素の参照、変更ハンドラ。
+ * @param props - 表示ラベル、入力値、補足説明、数値制約、無効状態、検証エラー、表示単位、読み上げ名、入力要素の参照、変更ハンドラ。
  * @returns Kobalte NumberField を使った入力欄。
  */
 export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
@@ -132,15 +134,33 @@ export const GoalNumberField: Component<GoalNumberFieldProps> = (props) => (
     allowedInput={/[0-9.]/}
     step={props.step ?? 1}
   >
-    <NumberField.Label class="mb-1 block text-text-muted">{props.label}</NumberField.Label>
-    <NumberField.Input
-      ref={props.inputRef}
-      class={`${GOAL_FIELD_INPUT_CLASS} data-invalid:border-danger-border disabled:cursor-not-allowed disabled:opacity-60`}
-      aria-label={props.ariaLabel}
-      min={props.min}
-      max={props.max}
-      step={props.step ?? 1}
-    />
+    <NumberField.Label class="mb-1 block text-text-muted">
+      {props.label}
+      <Show when={props.label && props.unit}>
+        <span class="sr-only">（{props.unit}）</span>
+      </Show>
+    </NumberField.Label>
+    <div class={props.unit ? 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2' : undefined}>
+      <NumberField.Input
+        ref={props.inputRef}
+        class={`${GOAL_FIELD_INPUT_CLASS} data-invalid:border-danger-border disabled:cursor-not-allowed disabled:opacity-60`}
+        aria-label={
+          props.ariaLabel
+            ? props.unit
+              ? `${props.ariaLabel}（${props.unit}）`
+              : props.ariaLabel
+            : undefined
+        }
+        min={props.min}
+        max={props.max}
+        step={props.step ?? 1}
+      />
+      <Show when={props.unit}>
+        <span aria-hidden="true" class="font-sans text-sm text-text-muted">
+          {props.unit}
+        </span>
+      </Show>
+    </div>
     <Show when={props.description}>
       <NumberField.Description class="mt-1 text-xs text-text-muted">
         {props.description}

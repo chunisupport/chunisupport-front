@@ -1,5 +1,5 @@
 import { TextField } from '@kobalte/core/text-field'
-import { UserRoundPen } from 'lucide-solid'
+import UserRoundPen from 'lucide-solid/icons/user-round-pen'
 import type { Component } from 'solid-js'
 import { reauthenticateAndGetToken } from '../../api/reauthenticate'
 import { updateUsername } from '../../api/settings'

@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from '@solidjs/router'
-import { ImageOff } from 'lucide-solid'
+import ImageOff from 'lucide-solid/icons/image-off'
 import type { Accessor, Component, Resource } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
@@ -12,6 +12,7 @@ import {
   createAppMainScrollOffsetRestoreEffect,
   useAppMainScrollRestoration,
 } from '../../../hooks/useAppMainScrollRestoration'
+import { isFeatureEnabled } from '../../../lib/featureFlags'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   getAppMainScrollTop,
@@ -29,6 +30,7 @@ import {
   type ProfilePageQuery,
 } from '../../../utils/userProfileRoute'
 import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
+import { ProfileComment } from './components/ProfileComment'
 import { ProfileFriendAction } from './components/ProfileFriendAction'
 import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
 import { UserRecordPlaceholderCard } from './components/UserRecordPlaceholderCard'
@@ -361,6 +363,9 @@ export const UserProfileView: Component<Props> = (props) => {
           historyHref={buildUserStatsPagePath(props.username)}
           records={recordProfile()?.record.standard}
         />
+        <Show when={isFeatureEnabled('profile_comment')}>
+          <ProfileComment username={props.username} />
+        </Show>
         <ProfileFriendAction username={props.username} playerName={playerInfo().name} />
       </div>
 

@@ -1,4 +1,4 @@
-import { Swords } from 'lucide-solid'
+import Swords from 'lucide-solid/icons/swords'
 import type { JSX } from 'solid-js'
 import { createMemo, For, Show } from 'solid-js'
 import { DifficultyBadge } from '../../components/common/DifficultyBadge'

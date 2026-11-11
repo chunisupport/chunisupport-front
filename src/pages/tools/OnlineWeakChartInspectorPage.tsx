@@ -1,6 +1,9 @@
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import { Globe, Minus, Plus, Settings } from 'lucide-solid'
+import Globe from 'lucide-solid/icons/globe'
+import Minus from 'lucide-solid/icons/minus'
+import Plus from 'lucide-solid/icons/plus'
+import Settings from 'lucide-solid/icons/settings'
 import type { JSX } from 'solid-js'
 import {
   createEffect,

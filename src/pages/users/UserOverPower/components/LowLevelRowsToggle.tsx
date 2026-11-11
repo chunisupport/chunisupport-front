@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-solid'
+import ChevronRight from 'lucide-solid/icons/chevron-right'
 import type { Component } from 'solid-js'
 import { AppButton } from '../../../../components/common/AppButton'
 import { LOW_LEVEL_SUMMARY_LABEL } from '../constants'

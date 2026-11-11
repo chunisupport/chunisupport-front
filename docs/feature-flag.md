@@ -1,6 +1,6 @@
 # フロントエンド feature-flag
 
-運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは、X でのログインを切り替える `x_login`（[ログイン方法](authentication.md)）だけです。
+運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは、X でのログインを切り替える `x_login`（[ログイン方法](authentication.md)）と、プロフィールコメントを切り替える `profile_comment` です。
 
 API からのフラグ取得、ユーザー単位・割合での公開、実行中の切り替え、緊急停止スイッチは扱いません。無効な機能のコードをバンドルから除去する仕組みでもないため、隠したい情報は含めないでください。
 
@@ -53,6 +53,23 @@ export const FEATURE_FLAG_DEFINITIONS = {
 画面からは `src/lib/featureFlags.ts` の `APP_ENVIRONMENT` / `isFeatureEnabled` を利用します。環境は実行中に変わらないため、Signal や Primitive / store は使いません。
 
 `src/lib/featureFlags.ts` はブラウザ側からのみ import してください。constants / utils / scripts からは import せず、`src/config.ts` にも追加しません。constants / utils は環境変数なしで Node.js から利用でき、単体テストも環境変数の設定を必要としません。
+
+## 登録フラグ
+
+フラグごとの環境変数はありません。有効かどうかは、次の定義とビルド時の `PUBLIC_APP_ENV` の組み合わせで決まります。`true` の環境だけが有効です。
+
+| 名前 | develop | staging | production | 無効なとき |
+| --- | --- | --- | --- | --- |
+| `x_login` | 有効 | 有効 | 無効 | X でのログイン導線と @ID の取得を出さない。詳細は [ログイン方法](authentication.md)。 |
+| `profile_comment` | 有効 | 有効 | 無効（`false`） | プロフィールのコメント表示と編集 UI を出さない。コメントの取得（`GET /internal/users/:username/comment`）と保存（`PUT /internal/me/comment`）も呼ばない。 |
+
+`profile_comment` は、API の `feature-flag.yml` に同じ機能を足すときの snake_case 名に揃えています。フロントは API からフラグ一覧を受け取らず、この定義だけで判定します。
+
+`profile_comment` が有効になるビルドは、`PUBLIC_APP_ENV=develop` と `PUBLIC_APP_ENV=staging` です。
+
+- ローカルは `.env` の `PUBLIC_APP_ENV=develop`（`.env.example` と同じ）で有効です。
+- develop プレビューは配備先の `PUBLIC_APP_ENV=develop`、ステージングは `PUBLIC_APP_ENV=staging` で有効です。
+- 本番（`main` / chunisupport.net）は `PUBLIC_APP_ENV=production` でビルドします。定義の `production` は `false` です。判定は明示的な `true` だけを有効にするため、本番ビルドではオフになります。
 
 ## 利用ルール
 

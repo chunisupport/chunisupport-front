@@ -1,11 +1,15 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import { A } from '@solidjs/router'
-import { Bookmark, Check, Pencil, SavePlus, Trash2 } from 'lucide-solid'
+import Bookmark from 'lucide-solid/icons/bookmark'
+import Check from 'lucide-solid/icons/check'
+import Pencil from 'lucide-solid/icons/pencil'
+import SavePlus from 'lucide-solid/icons/save-plus'
+import Trash2 from 'lucide-solid/icons/trash-2'
 import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { Loading } from '../../../components'
 import { AppButton, AppIconButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { LOGIN_PATH } from '../../../constants/routes'
 import { authSession } from '../../../stores/authSession'
 import { buildLoginRedirectPath } from '../../../usecases/auth/redirectPath'
@@ -340,124 +344,127 @@ export function SavedRecordFiltersDialog<TFilter>(props: SavedRecordFiltersDialo
         )}
       </Show>
 
-      <Dialog
+      <AppDialog
         open={saveNameDialogOpen()}
         onOpenChange={setSaveNameDialogOpen}
         preventScroll={false}
+        size="sm"
+        layer="stacked"
+        bordered
+        title={SAVED_RECORD_FILTER_DIALOG_TEXT.saveNameTitle}
+        titleSpacing="bottom"
       >
-        <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
-            <Dialog.Title class="mb-4 text-lg font-bold">
-              {SAVED_RECORD_FILTER_DIALOG_TEXT.saveNameTitle}
-            </Dialog.Title>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault()
-                void handleSaveNewFilter()
-              }}
-            >
-              <TextField class="mb-4">
-                <TextField.Input
-                  class={SAVED_RECORD_FILTER_DIALOG_CLASS.nameInput}
-                  maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
-                  value={saveName()}
-                  onInput={(event) => setSaveName(limitNameInput(event.currentTarget.value))}
-                />
-              </TextField>
-              <Show when={errorMessage()}>
-                {(message) => (
-                  <div class="mb-3 text-xs text-danger" role="alert">
-                    {message()}
-                  </div>
-                )}
-              </Show>
-              <div class="flex justify-end gap-2">
-                <AppButton onClick={() => setSaveNameDialogOpen(false)}>
-                  {SAVED_RECORD_FILTER_DIALOG_TEXT.cancel}
-                </AppButton>
-                <AppButton type="submit" variant="primary" disabled={!canSubmitName()}>
-                  {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
-                </AppButton>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleSaveNewFilter()
+          }}
+        >
+          <TextField class="mb-4">
+            <TextField.Input
+              class={SAVED_RECORD_FILTER_DIALOG_CLASS.nameInput}
+              maxLength={RECORD_FILTER_NAME_MAX_LENGTH}
+              value={saveName()}
+              onInput={(event) => setSaveName(limitNameInput(event.currentTarget.value))}
+            />
+          </TextField>
+          <Show when={errorMessage()}>
+            {(message) => (
+              <div class="mb-3 text-xs text-danger" role="alert">
+                {message()}
               </div>
-            </form>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
+            )}
+          </Show>
+          <div class="flex justify-end gap-2">
+            <AppButton onClick={() => setSaveNameDialogOpen(false)}>
+              {SAVED_RECORD_FILTER_DIALOG_TEXT.cancel}
+            </AppButton>
+            <AppButton type="submit" variant="primary" disabled={!canSubmitName()}>
+              {SAVED_RECORD_FILTER_DIALOG_TEXT.save}
+            </AppButton>
+          </div>
+        </form>
+      </AppDialog>
 
-      <Dialog open={listDialogOpen()} onOpenChange={setListDialogOpen} preventScroll={false}>
-        <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed left-1/2 top-1/2 z-70 flex h-160 max-h-[calc(100vh-2rem)] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border-strong bg-surface p-6 shadow-lg">
-            <Dialog.Title class="mb-4 shrink-0 text-lg font-bold">
-              {SAVED_RECORD_FILTER_DIALOG_TEXT.listTitle}
-            </Dialog.Title>
-            <div class="min-h-0 flex-1 basis-0 overflow-y-auto pr-1">
-              <Show
-                when={!loading()}
-                fallback={
-                  <div class="h-48">
-                    <span class="sr-only">{SAVED_RECORD_FILTER_DIALOG_TEXT.loadingLabel}</span>
-                    <Loading />
-                  </div>
-                }
-              >
-                <For each={filtersList()}>
-                  {(item) => (
-                    <div class="mb-2 grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded border border-border-strong bg-surface-muted p-3">
-                      <div class="min-w-0 truncate font-semibold leading-5">{item.name}</div>
-                      <div class="flex shrink-0 gap-1">
-                        <AppIconButton
-                          disabled={!item.filter || pendingAction() !== null}
-                          aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
-                          title={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
-                          onClick={() => handleApplySavedFilter(item)}
-                        >
-                          <Check class="h-4 w-4" aria-hidden="true" />
-                        </AppIconButton>
-                        <AppIconButton
-                          disabled={!item.filter || pendingAction() !== null}
-                          aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
-                          title={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
-                          onClick={() => handleEditSavedFilter(item)}
-                        >
-                          <Pencil class="h-4 w-4" aria-hidden="true" />
-                        </AppIconButton>
-                        <AppIconButton
-                          tone="danger"
-                          disabled={pendingAction() !== null}
-                          aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
-                          title={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
-                          onClick={() => setDeleteTarget(item)}
-                        >
-                          <Trash2 class="h-4 w-4" aria-hidden="true" />
-                        </AppIconButton>
-                      </div>
-                    </div>
-                  )}
-                </For>
-                {filtersList().length === 0 && (
-                  <div class="mt-2 w-full text-center text-xs text-text-subtle">
-                    {SAVED_RECORD_FILTER_DIALOG_TEXT.empty}
-                  </div>
-                )}
-              </Show>
-            </div>
+      <AppDialog
+        open={listDialogOpen()}
+        onOpenChange={setListDialogOpen}
+        preventScroll={false}
+        size="lg"
+        height="fixed160"
+        layer="stacked"
+        bordered
+        title={SAVED_RECORD_FILTER_DIALOG_TEXT.listTitle}
+        titleSpacing="bottom"
+        scroll="fill"
+        bodyClass="pr-1"
+        footer={
+          <>
             <Show when={errorMessage()}>
               {(message) => (
-                <div class="mt-3 shrink-0 text-xs text-danger" role="alert">
+                <div class="mt-3 text-xs text-danger" role="alert">
                   {message()}
                 </div>
               )}
             </Show>
-            <div class="mt-4 flex shrink-0 justify-end">
+            <div class="mt-4 flex justify-end">
               <AppButton onClick={() => setListDialogOpen(false)}>
                 {SAVED_RECORD_FILTER_DIALOG_TEXT.close}
               </AppButton>
             </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
+          </>
+        }
+      >
+        <Show
+          when={!loading()}
+          fallback={
+            <div class="h-48">
+              <span class="sr-only">{SAVED_RECORD_FILTER_DIALOG_TEXT.loadingLabel}</span>
+              <Loading />
+            </div>
+          }
+        >
+          <For each={filtersList()}>
+            {(item) => (
+              <div class="mb-2 grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded border border-border-strong bg-surface-muted p-3">
+                <div class="min-w-0 truncate font-semibold leading-5">{item.name}</div>
+                <div class="flex shrink-0 gap-1">
+                  <AppIconButton
+                    disabled={!item.filter || pendingAction() !== null}
+                    aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
+                    title={SAVED_RECORD_FILTER_DIALOG_TEXT.apply}
+                    onClick={() => handleApplySavedFilter(item)}
+                  >
+                    <Check class="h-4 w-4" aria-hidden="true" />
+                  </AppIconButton>
+                  <AppIconButton
+                    disabled={!item.filter || pendingAction() !== null}
+                    aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
+                    title={SAVED_RECORD_FILTER_DIALOG_TEXT.edit}
+                    onClick={() => handleEditSavedFilter(item)}
+                  >
+                    <Pencil class="h-4 w-4" aria-hidden="true" />
+                  </AppIconButton>
+                  <AppIconButton
+                    tone="danger"
+                    disabled={pendingAction() !== null}
+                    aria-label={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
+                    title={SAVED_RECORD_FILTER_DIALOG_TEXT.delete}
+                    onClick={() => setDeleteTarget(item)}
+                  >
+                    <Trash2 class="h-4 w-4" aria-hidden="true" />
+                  </AppIconButton>
+                </div>
+              </div>
+            )}
+          </For>
+          {filtersList().length === 0 && (
+            <div class="mt-2 w-full text-center text-xs text-text-subtle">
+              {SAVED_RECORD_FILTER_DIALOG_TEXT.empty}
+            </div>
+          )}
+        </Show>
+      </AppDialog>
 
       <AlertDialog
         open={deleteTarget() !== null}

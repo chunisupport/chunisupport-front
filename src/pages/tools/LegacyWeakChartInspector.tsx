@@ -1,15 +1,12 @@
 import { Collapsible } from '@kobalte/core/collapsible'
-import { Dialog } from '@kobalte/core/dialog'
 import { NumberField } from '@kobalte/core/number-field'
 import { A } from '@solidjs/router'
 import { Chart, LinearScale, PointElement, ScatterController, Tooltip } from 'chart.js'
-import {
-  ChartNoAxesCombined,
-  CircleCheckBig,
-  RotateCcw,
-  Settings,
-  TriangleAlert,
-} from 'lucide-solid'
+import ChartNoAxesCombined from 'lucide-solid/icons/chart-no-axes-combined'
+import CircleCheckBig from 'lucide-solid/icons/circle-check-big'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
+import Settings from 'lucide-solid/icons/settings'
+import TriangleAlert from 'lucide-solid/icons/triangle-alert'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -23,7 +20,9 @@ import {
 import { fetchMe } from '../../api/users'
 import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppDialog } from '../../components/common/AppDialog'
 import { AppDisclosureTrigger } from '../../components/common/AppDisclosureTrigger'
+import { focusDialogContentOnOpen } from '../../components/common/appDialogUtils'
 import { ChartCanvasFrame } from '../../components/common/ChartCanvasFrame'
 import ChartConstRangeField from '../../components/common/ChartConstRangeField'
 import { CheckboxField } from '../../components/common/CheckboxField'
@@ -472,7 +471,7 @@ const LegacyWeakChartInspector = (): JSX.Element => {
     ...WEAK_CHART_AXIS_SETTINGS_DEFAULT,
   })
   const [settingsOpen, setSettingsOpen] = createSignal(false)
-  let settingsContentRef!: HTMLDivElement
+  let settingsContentRef: HTMLElement | undefined
 
   // 表示の絞り込み 編集中
   const [editYMin, setEditYMin] = createSignal('')
@@ -620,8 +619,7 @@ const LegacyWeakChartInspector = (): JSX.Element => {
    * @returns なし。
    */
   const handleSettingsOpenAutoFocus = (event: Event): void => {
-    event.preventDefault()
-    settingsContentRef.focus()
+    focusDialogContentOnOpen(event, settingsContentRef)
   }
 
   return (
@@ -668,65 +666,106 @@ const LegacyWeakChartInspector = (): JSX.Element => {
           />
 
           {/* グラフ設定ダイアログ */}
-          <Dialog
+          <AppDialog
             open={settingsOpen()}
             onOpenChange={handleSettingsOpenChange}
             preventScroll={false}
-          >
-            <Dialog.Portal>
-              <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-              <Dialog.Content
-                ref={settingsContentRef}
-                onOpenAutoFocus={handleSettingsOpenAutoFocus}
-                class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md flex flex-col select-none"
+            size="md"
+            selectNone
+            contentRef={(element) => {
+              settingsContentRef = element
+            }}
+            onOpenAutoFocus={handleSettingsOpenAutoFocus}
+            title={WEAK_CHART_SETTINGS_COPY.title}
+            headerActions={
+              <AppIconButton
+                tone="danger"
+                aria-label={WEAK_CHART_SETTINGS_COPY.reset}
+                onClick={resetSettings}
               >
-                <div class="flex items-center justify-between mb-4 shrink-0">
-                  <Dialog.Title class="text-lg font-bold">
-                    {WEAK_CHART_SETTINGS_COPY.title}
-                  </Dialog.Title>
-                  <AppIconButton
-                    tone="danger"
-                    aria-label={WEAK_CHART_SETTINGS_COPY.reset}
-                    onClick={resetSettings}
-                  >
-                    <RotateCcw class="h-5 w-5" aria-hidden="true" />
-                  </AppIconButton>
-                </div>
-
-                <div class="flex flex-col gap-5">
-                  {/* 集計対象の絞り込み */}
-                  <fieldset>
-                    <legend class="mb-2 text-sm font-semibold text-text">
-                      {WEAK_CHART_SETTINGS_COPY.aggregationSection}
-                    </legend>
-                    <div class="space-y-3">
-                      {/* 難易度 */}
-                      <div>
-                        <span class="mb-1 block text-sm font-medium text-text-muted">難易度</span>
-                        <div class="flex flex-col items-start gap-1">
-                          <For each={WEAK_CHART_AGGREGATION_DIFFICULTY_OPTIONS}>
-                            {(option) => (
-                              <CheckboxField
-                                id={`agg-difficulty-${option.value}`}
-                                checked={editAggDifficulties().includes(option.value)}
-                                disabled={
-                                  editAggDifficulties().includes(WEAK_CHART_OP_TARGET_FILTER) &&
-                                  option.value !== WEAK_CHART_OP_TARGET_FILTER
-                                }
-                                onChange={() => {
-                                  setEditAggDifficulties((prev) =>
-                                    toggleWeakChartAggregationDifficulty(prev, option.value)
-                                  )
-                                }}
-                                class="relative flex items-center gap-2"
-                                textVariant="large"
-                                labelClass="leading-5"
-                                label={option.label}
-                              />
-                            )}
-                          </For>
-                        </div>
+                <RotateCcw class="h-5 w-5" aria-hidden="true" />
+              </AppIconButton>
+            }
+          >
+            <div class="flex flex-col gap-5">
+              {/* 集計対象の絞り込み */}
+              <fieldset>
+                <legend class="mb-2 text-sm font-semibold text-text">
+                  {WEAK_CHART_SETTINGS_COPY.aggregationSection}
+                </legend>
+                <div class="space-y-3">
+                  {/* 難易度 */}
+                  <div>
+                    <span class="mb-1 block text-sm font-medium text-text-muted">難易度</span>
+                    <div class="flex flex-col items-start gap-1">
+                      <For each={WEAK_CHART_AGGREGATION_DIFFICULTY_OPTIONS}>
+                        {(option) => (
+                          <CheckboxField
+                            id={`agg-difficulty-${option.value}`}
+                            checked={editAggDifficulties().includes(option.value)}
+                            disabled={
+                              editAggDifficulties().includes(WEAK_CHART_OP_TARGET_FILTER) &&
+                              option.value !== WEAK_CHART_OP_TARGET_FILTER
+                            }
+                            onChange={() => {
+                              setEditAggDifficulties((prev) =>
+                                toggleWeakChartAggregationDifficulty(prev, option.value)
+                              )
+                            }}
+                            class="relative flex items-center gap-2"
+                            textVariant="large"
+                            labelClass="leading-5"
+                            label={option.label}
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                  {/* スコア範囲 */}
+                  <div class="space-y-1">
+                    <span class="block text-sm text-text-muted">
+                      {WEAK_CHART_SETTINGS_COPY.scoreRangeLabel}
+                    </span>
+                    <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
+                      <SettingsNumberField
+                        value={editAggScoreMin()}
+                        min={SCORE_MIN}
+                        max={SCORE_THEORETICAL_MAX}
+                        step={1}
+                        label="集計対象 スコア 最小"
+                        onChange={setEditAggScoreMin}
+                      />
+                      <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
+                        <span aria-hidden="true">～</span>
                       </div>
+                      <SettingsNumberField
+                        value={editAggScoreMax()}
+                        min={SCORE_MIN}
+                        max={SCORE_THEORETICAL_MAX}
+                        step={1}
+                        label="集計対象 スコア 最大"
+                        onChange={setEditAggScoreMax}
+                      />
+                    </div>
+                  </div>
+                  <ChartConstRangeField
+                    idPrefix="weak-chart-aggregation"
+                    {...aggConstDraft.fieldProps}
+                  />
+                </div>
+              </fieldset>
+
+              {/* 表示の絞り込み */}
+              <Collapsible defaultOpen={false}>
+                <AppDisclosureTrigger
+                  variant="compact"
+                  label={WEAK_CHART_SETTINGS_COPY.displaySection}
+                  labelClass="flex-none"
+                />
+                <Collapsible.Content>
+                  <fieldset class="mt-3">
+                    <legend class="sr-only">{WEAK_CHART_SETTINGS_COPY.displaySection}</legend>
+                    <div class="space-y-3">
                       {/* スコア範囲 */}
                       <div class="space-y-1">
                         <span class="block text-sm text-text-muted">
@@ -734,94 +773,45 @@ const LegacyWeakChartInspector = (): JSX.Element => {
                         </span>
                         <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
                           <SettingsNumberField
-                            value={editAggScoreMin()}
+                            value={editYMin()}
                             min={SCORE_MIN}
                             max={SCORE_THEORETICAL_MAX}
                             step={1}
-                            label="集計対象 スコア 最小"
-                            onChange={setEditAggScoreMin}
+                            label="表示の絞り込み スコア 最小"
+                            onChange={setEditYMin}
                           />
                           <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
                             <span aria-hidden="true">～</span>
                           </div>
                           <SettingsNumberField
-                            value={editAggScoreMax()}
+                            value={editYMax()}
                             min={SCORE_MIN}
                             max={SCORE_THEORETICAL_MAX}
                             step={1}
-                            label="集計対象 スコア 最大"
-                            onChange={setEditAggScoreMax}
+                            label="表示の絞り込み スコア 最大"
+                            onChange={setEditYMax}
                           />
                         </div>
                       </div>
                       <ChartConstRangeField
-                        idPrefix="weak-chart-aggregation"
-                        {...aggConstDraft.fieldProps}
+                        idPrefix="weak-chart-display"
+                        {...axisConstDraft.fieldProps}
                       />
                     </div>
                   </fieldset>
+                </Collapsible.Content>
+              </Collapsible>
+            </div>
 
-                  {/* 表示の絞り込み */}
-                  <Collapsible defaultOpen={false}>
-                    <AppDisclosureTrigger
-                      variant="compact"
-                      label={WEAK_CHART_SETTINGS_COPY.displaySection}
-                      labelClass="flex-none"
-                    />
-                    <Collapsible.Content>
-                      <fieldset class="mt-3">
-                        <legend class="sr-only">{WEAK_CHART_SETTINGS_COPY.displaySection}</legend>
-                        <div class="space-y-3">
-                          {/* スコア範囲 */}
-                          <div class="space-y-1">
-                            <span class="block text-sm text-text-muted">
-                              {WEAK_CHART_SETTINGS_COPY.scoreRangeLabel}
-                            </span>
-                            <div class="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] items-end gap-2">
-                              <SettingsNumberField
-                                value={editYMin()}
-                                min={SCORE_MIN}
-                                max={SCORE_THEORETICAL_MAX}
-                                step={1}
-                                label="表示の絞り込み スコア 最小"
-                                onChange={setEditYMin}
-                              />
-                              <div class="flex h-10 items-center justify-center text-lg font-medium leading-none text-text-muted">
-                                <span aria-hidden="true">～</span>
-                              </div>
-                              <SettingsNumberField
-                                value={editYMax()}
-                                min={SCORE_MIN}
-                                max={SCORE_THEORETICAL_MAX}
-                                step={1}
-                                label="表示の絞り込み スコア 最大"
-                                onChange={setEditYMax}
-                              />
-                            </div>
-                          </div>
-                          <ChartConstRangeField
-                            idPrefix="weak-chart-display"
-                            {...axisConstDraft.fieldProps}
-                          />
-                        </div>
-                      </fieldset>
-                    </Collapsible.Content>
-                  </Collapsible>
-                </div>
-
-                <div class="flex justify-end mt-6">
-                  <div class="flex gap-2">
-                    <AppButton onClick={cancelSettings}>
-                      {WEAK_CHART_SETTINGS_COPY.cancel}
-                    </AppButton>
-                    <AppButton variant="primary" onClick={applySettings}>
-                      {WEAK_CHART_SETTINGS_COPY.apply}
-                    </AppButton>
-                  </div>
-                </div>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog>
+            <div class="flex justify-end mt-6">
+              <div class="flex gap-2">
+                <AppButton onClick={cancelSettings}>{WEAK_CHART_SETTINGS_COPY.cancel}</AppButton>
+                <AppButton variant="primary" onClick={applySettings}>
+                  {WEAK_CHART_SETTINGS_COPY.apply}
+                </AppButton>
+              </div>
+            </div>
+          </AppDialog>
         </Show>
       </Show>
     </>

@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import { Star } from 'lucide-solid'
+import Star from 'lucide-solid/icons/star'
 import type { Component, JSX } from 'solid-js'
 import { createMemo } from 'solid-js'
 import type {

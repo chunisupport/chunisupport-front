@@ -1,5 +1,5 @@
 import { Tooltip } from '@kobalte/core/tooltip'
-import { Lock } from 'lucide-solid'
+import Lock from 'lucide-solid/icons/lock'
 import { SONG_EDIT_COPY } from '../songEditConstants'
 
 type SongUnlockRequiredIconProps = {

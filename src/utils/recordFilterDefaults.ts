@@ -61,7 +61,7 @@ export const DEFAULT_FILTER: FilterState = {
  *
  * @param genres - ジャンル一覧。表示順に並べた全ジャンル名を初期値にする。
  * @param versions - バージョン一覧。公開済みの全選択は未指定（null）にする。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns マスタデータから作成したジャンルとバージョンの初期値。バージョンの全選択は null。
  */
 export const getMasterDataDefaults = (
@@ -81,7 +81,7 @@ export const getMasterDataDefaults = (
  *
  * @param genres - ジャンル一覧。表示順に並べた全ジャンル名を初期値にする。
  * @param versions - バージョン一覧。公開済みの全選択は未指定（null）にする。
- * @param referenceDate - 公開済み判定に使うYYYY-MM-DD形式の基準日。既定はJST今日。
+ * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns 配列と範囲条件を複製したレコードフィルターの初期状態。
  */
 export const buildDefaultFilter = (

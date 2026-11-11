@@ -1,3 +1,4 @@
+import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
 import type { AccentPreference, ThemePreference } from '../../utils/themePreference'
 
 /** 外観設定で選択できる背景テーマ */
@@ -24,10 +25,23 @@ export const ACCENT_OPTIONS = [
   swatchClass: string
 }[]
 
+/** ナビゲーション配置設定に表示する文言 */
+export const NAV_PLACEMENT_SETTINGS_COPY = {
+  label: 'ナビゲーション',
+  railAriaLabel: '幅の広い画面でのナビゲーション位置',
+  barAriaLabel: '幅の狭い画面でのナビゲーション位置',
+  sideLabels: { left: '左', right: '右', bottom: '下', top: '上' },
+} as const satisfies {
+  label: string
+  railAriaLabel: string
+  barAriaLabel: string
+  sideLabels: Record<NavRailSide | NavBarSide, string>
+}
+
 /** 外観設定に表示する文言 */
 export const APPEARANCE_SETTINGS_COPY = {
   sectionTitle: '外観',
-  dialogDescription: '背景とアクセントを選択します。',
+  dialogDescription: '背景、アクセント、ナビゲーションの位置を選択します。',
   themeLabel: '背景',
   accentLabel: 'アクセント',
 } as const

@@ -11,6 +11,7 @@ import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
 import { AppSwitch } from '../../components/common/AppSwitch'
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../components/common/filterStyles'
+import NavPlacementSettings from '../../components/common/NavPlacementSettings'
 import { LOGIN_PATH } from '../../constants/routes'
 import { createLinkedAuthAccounts } from '../../hooks/createLinkedAuthAccounts'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -159,7 +160,10 @@ const Settings = () => {
               <h2 id="appearance-title" class="mb-5 text-xl font-semibold text-text">
                 {APPEARANCE_SETTINGS_COPY.sectionTitle}
               </h2>
-              <AppearanceSettings />
+              <div class="grid gap-6">
+                <AppearanceSettings />
+                <NavPlacementSettings />
+              </div>
             </section>
           </Show>
 

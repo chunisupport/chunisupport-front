@@ -1,4 +1,4 @@
-import { ArrowUpDown } from 'lucide-solid'
+import ArrowUpDown from 'lucide-solid/icons/arrow-up-down'
 import { createMemo, createSignal, ErrorBoundary, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { AppIconButton } from '../../../components/common/AppButton'

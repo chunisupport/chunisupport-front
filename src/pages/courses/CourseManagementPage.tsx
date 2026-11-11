@@ -1,6 +1,9 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
-import { Pencil, Plus, RotateCcw, Search, Trash2 } from 'lucide-solid'
+import Pencil from 'lucide-solid/icons/pencil'
+import Plus from 'lucide-solid/icons/plus'
+import RotateCcw from 'lucide-solid/icons/rotate-ccw'
+import Search from 'lucide-solid/icons/search'
+import Trash2 from 'lucide-solid/icons/trash-2'
 import type { Component, JSX } from 'solid-js'
 import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import {
@@ -13,6 +16,7 @@ import {
 import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
+import { AppDialog } from '../../components/common/AppDialog'
 import { FormSelect } from '../../components/common/AppSelect'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
 import { ClassEmblem } from '../../components/common/profile/ClassEmblem'
@@ -173,106 +177,107 @@ const CourseFormDialog: Component<CourseFormDialogProps> = (props): JSX.Element 
     (props.mode === 'create' && formValue().idx.trim().length === 0)
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-            {props.mode === 'create'
-              ? COURSE_MANAGEMENT_COPY.createDialogTitle
-              : COURSE_MANAGEMENT_COPY.editDialogTitle}
-          </Dialog.Title>
-          <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
-            {props.mode === 'create'
-              ? COURSE_MANAGEMENT_COPY.createDialogDescription
-              : COURSE_MANAGEMENT_COPY.editDialogDescription}
-          </Dialog.Description>
-
-          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit} aria-busy={props.saving}>
-            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <Show when={props.mode === 'edit'}>
-                <TextField disabled>
-                  <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
-                    {COURSE_MANAGEMENT_COPY.displayIdLabel}
-                  </TextField.Label>
-                  <TextField.Input
-                    value={props.course?.id ?? ''}
-                    class={`${COURSE_INPUT_CLASS} font-mono text-sm`}
-                  />
-                </TextField>
-              </Show>
-
-              <TextField required={props.mode === 'create'} disabled={props.mode === 'edit'}>
-                <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
-                  {COURSE_MANAGEMENT_COPY.idxLabel}
-                </TextField.Label>
-                <TextField.Input
-                  name="course-idx"
-                  value={formValue().idx}
-                  maxLength={COURSE_INPUT_LIMITS.idx}
-                  required={props.mode === 'create'}
-                  disabled={props.saving || props.mode === 'edit'}
-                  onInput={(event) => updateField('idx', event.currentTarget.value)}
-                  class={`${COURSE_INPUT_CLASS} font-mono text-sm`}
-                />
-              </TextField>
-
-              <TextField required>
-                <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
-                  {COURSE_MANAGEMENT_COPY.nameLabel}
-                </TextField.Label>
-                <TextField.Input
-                  name="course-name"
-                  value={formValue().name}
-                  maxLength={COURSE_INPUT_LIMITS.name}
-                  required
-                  disabled={props.saving}
-                  onInput={(event) => updateField('name', event.currentTarget.value)}
-                  class={`${COURSE_INPUT_CLASS} font-sans`}
-                />
-              </TextField>
-
-              <FormSelect<CourseClassOption>
-                label={COURSE_MANAGEMENT_COPY.classLabel}
-                options={COURSE_CLASS_OPTIONS}
-                optionValue="value"
-                optionTextValue="label"
-                value={selectedClass()}
-                onChange={(option: CourseClassOption | null) =>
-                  updateField('class', option?.value ?? '')
-                }
-                placeholder={COURSE_MANAGEMENT_COPY.classPlaceholder}
-                contentZIndexClass="z-60"
-                formatLabel={(option) => <CourseClassDisplay courseClass={option.value} />}
-                disabled={props.saving}
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.saving}
+      size="lg"
+      height="max90"
+      title={
+        props.mode === 'create'
+          ? COURSE_MANAGEMENT_COPY.createDialogTitle
+          : COURSE_MANAGEMENT_COPY.editDialogTitle
+      }
+      description={
+        props.mode === 'create'
+          ? COURSE_MANAGEMENT_COPY.createDialogDescription
+          : COURSE_MANAGEMENT_COPY.editDialogDescription
+      }
+    >
+      <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit} aria-busy={props.saving}>
+        <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+          <Show when={props.mode === 'edit'}>
+            <TextField disabled>
+              <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
+                {COURSE_MANAGEMENT_COPY.displayIdLabel}
+              </TextField.Label>
+              <TextField.Input
+                value={props.course?.id ?? ''}
+                class={`${COURSE_INPUT_CLASS} font-mono text-sm`}
               />
+            </TextField>
+          </Show>
 
-              <Show when={props.errorMessage}>
-                <p
-                  class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger"
-                  role="alert"
-                >
-                  {props.errorMessage}
-                </p>
-              </Show>
-            </div>
+          <TextField required={props.mode === 'create'} disabled={props.mode === 'edit'}>
+            <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
+              {COURSE_MANAGEMENT_COPY.idxLabel}
+            </TextField.Label>
+            <TextField.Input
+              name="course-idx"
+              value={formValue().idx}
+              maxLength={COURSE_INPUT_LIMITS.idx}
+              required={props.mode === 'create'}
+              disabled={props.saving || props.mode === 'edit'}
+              onInput={(event) => updateField('idx', event.currentTarget.value)}
+              class={`${COURSE_INPUT_CLASS} font-mono text-sm`}
+            />
+          </TextField>
 
-            <div class="mt-5 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <AppButton disabled={props.saving} onClick={() => props.onOpenChange(false)}>
-                {COURSE_MANAGEMENT_COPY.cancelButton}
-              </AppButton>
-              <AppButton type="submit" variant="primary" disabled={isSubmitDisabled()}>
-                {props.saving
-                  ? COURSE_MANAGEMENT_COPY.saving
-                  : props.mode === 'create'
-                    ? COURSE_MANAGEMENT_COPY.createSubmit
-                    : COURSE_MANAGEMENT_COPY.saveSubmit}
-              </AppButton>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+          <TextField required>
+            <TextField.Label class="mb-1 block text-sm font-medium text-text-muted">
+              {COURSE_MANAGEMENT_COPY.nameLabel}
+            </TextField.Label>
+            <TextField.Input
+              name="course-name"
+              value={formValue().name}
+              maxLength={COURSE_INPUT_LIMITS.name}
+              required
+              disabled={props.saving}
+              onInput={(event) => updateField('name', event.currentTarget.value)}
+              class={`${COURSE_INPUT_CLASS} font-sans`}
+            />
+          </TextField>
+
+          <FormSelect<CourseClassOption>
+            label={COURSE_MANAGEMENT_COPY.classLabel}
+            options={COURSE_CLASS_OPTIONS}
+            optionValue="value"
+            optionTextValue="label"
+            value={selectedClass()}
+            onChange={(option: CourseClassOption | null) =>
+              updateField('class', option?.value ?? '')
+            }
+            placeholder={COURSE_MANAGEMENT_COPY.classPlaceholder}
+            contentZIndexClass="z-60"
+            formatLabel={(option) => <CourseClassDisplay courseClass={option.value} />}
+            disabled={props.saving}
+          />
+
+          <Show when={props.errorMessage}>
+            <p
+              class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger"
+              role="alert"
+            >
+              {props.errorMessage}
+            </p>
+          </Show>
+        </div>
+
+        <div class="mt-5 flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <AppButton disabled={props.saving} onClick={() => props.onOpenChange(false)}>
+            {COURSE_MANAGEMENT_COPY.cancelButton}
+          </AppButton>
+          <AppButton type="submit" variant="primary" disabled={isSubmitDisabled()}>
+            {props.saving
+              ? COURSE_MANAGEMENT_COPY.saving
+              : props.mode === 'create'
+                ? COURSE_MANAGEMENT_COPY.createSubmit
+                : COURSE_MANAGEMENT_COPY.saveSubmit}
+          </AppButton>
+        </div>
+      </form>
+    </AppDialog>
   )
 }
 

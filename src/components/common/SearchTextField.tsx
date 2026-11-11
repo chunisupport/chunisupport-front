@@ -1,5 +1,5 @@
 import { TextField } from '@kobalte/core/text-field'
-import { Search } from 'lucide-solid'
+import Search from 'lucide-solid/icons/search'
 import type { Component } from 'solid-js'
 import { Show } from 'solid-js'
 import { createComposingSearchInput } from '../../hooks/createComposingSearchInput'

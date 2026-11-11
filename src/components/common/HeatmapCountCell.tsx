@@ -1,5 +1,5 @@
 import { Button } from '@kobalte/core/button'
-import { Check } from 'lucide-solid'
+import Check from 'lucide-solid/icons/check'
 import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 import { getHeatmapBackground } from '../../utils/heatmapColor'

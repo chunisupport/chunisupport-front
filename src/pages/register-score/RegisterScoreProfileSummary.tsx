@@ -1,4 +1,5 @@
-import { Eye, EyeOff } from 'lucide-solid'
+import Eye from 'lucide-solid/icons/eye'
+import EyeOff from 'lucide-solid/icons/eye-off'
 import { createMemo, createSignal, Show } from 'solid-js'
 import { AppIconButton } from '../../components/common/AppButton'
 import { ClassEmblem } from '../../components/common/profile/ClassEmblem'
