@@ -1,7 +1,7 @@
-import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { AppButton } from '../../../../components/common/AppButton'
+import { AppDialog } from '../../../../components/common/AppDialog'
 import FilterResetDialog from '../../../../components/common/FilterResetDialog'
 import type { NameFolderDTO } from '../../../../types/api'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
@@ -90,41 +90,45 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-11/12 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 select-none flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <div class="mb-4 flex shrink-0 items-center justify-between">
-            <Dialog.Title class="text-lg font-bold">フィルター</Dialog.Title>
-            <div class="flex items-center gap-2">
-              <WorldsendSavedFiltersDialog
-                open={props.open}
-                currentFilters={filters()}
-                onApplyFilter={handleApplySavedFilter}
-                onEditFilter={handleEditSavedFilter}
-              />
-              <FilterResetDialog onReset={handleReset} />
-            </div>
-          </div>
-          <WorldsendFilterSelectionPanel
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      size="md"
+      height="cap"
+      selectNone
+      title="フィルター"
+      headerActions={
+        <div class="flex items-center gap-2">
+          <WorldsendSavedFiltersDialog
             open={props.open}
-            filters={filters()}
-            setFilters={setFilters}
-            defaultFilter={props.defaultFilter}
-            versionOptions={props.versionOptions}
-            nameFolders={props.nameFolders}
+            currentFilters={filters()}
+            onApplyFilter={handleApplySavedFilter}
+            onEditFilter={handleEditSavedFilter}
           />
-          <div class="mt-6 flex justify-end">
-            <div class="flex gap-2">
-              <AppButton onClick={() => props.onOpenChange(false)}>キャンセル</AppButton>
-              <AppButton variant="primary" onClick={handleApply}>
-                適用
-              </AppButton>
-            </div>
+          <FilterResetDialog onReset={handleReset} />
+        </div>
+      }
+      footer={
+        <div class="mt-6 flex justify-end">
+          <div class="flex gap-2">
+            <AppButton onClick={() => props.onOpenChange(false)}>キャンセル</AppButton>
+            <AppButton variant="primary" onClick={handleApply}>
+              適用
+            </AppButton>
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+        </div>
+      }
+    >
+      <WorldsendFilterSelectionPanel
+        open={props.open}
+        filters={filters()}
+        setFilters={setFilters}
+        defaultFilter={props.defaultFilter}
+        versionOptions={props.versionOptions}
+        nameFolders={props.nameFolders}
+      />
+    </AppDialog>
   )
 }
 

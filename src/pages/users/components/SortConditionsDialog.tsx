@@ -1,6 +1,7 @@
 import { Dialog } from '@kobalte/core/dialog'
 import { createEffect, createMemo, createSignal, For } from 'solid-js'
 import { AppButton, getAppButtonClass } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { AppSelect } from '../../../components/common/AppSelect'
 import { AppTabContent, SegmentedTabs } from '../../../components/common/AppTabs'
 import FilterResetDialog from '../../../components/common/FilterResetDialog'
@@ -239,45 +240,45 @@ export function SortConditionsDialog<TSortKey extends string>(
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[80dvh] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <div class="mb-4 flex shrink-0 items-center justify-between">
-            <Dialog.Title class="text-lg font-bold">ソート</Dialog.Title>
-            <FilterResetDialog
-              triggerLabel="ソートをリセット"
-              title="ソートをリセットしますか？"
-              onReset={resetSortConditions}
-            />
-          </div>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      size="md"
+      height="max80"
+      title="ソート"
+      headerActions={
+        <FilterResetDialog
+          triggerLabel="ソートをリセット"
+          title="ソートをリセットしますか？"
+          onReset={resetSortConditions}
+        />
+      }
+    >
+      <SegmentedTabs
+        value={viewMode()}
+        onChange={handleViewModeChange}
+        options={SORT_VIEW_TAB_OPTIONS}
+        listClass="mb-4"
+      >
+        <div class="min-h-0 flex-1 overflow-y-auto pr-1 text-sm">
+          <AppTabContent value="standard">{renderSortConditionRow(0, false)}</AppTabContent>
+          <AppTabContent value="detail" class="space-y-3">
+            <For each={sortConditionIndices()}>
+              {(rowIndex) => renderSortConditionRow(rowIndex, true)}
+            </For>
+          </AppTabContent>
+        </div>
+      </SegmentedTabs>
 
-          <SegmentedTabs
-            value={viewMode()}
-            onChange={handleViewModeChange}
-            options={SORT_VIEW_TAB_OPTIONS}
-            listClass="mb-4"
-          >
-            <div class="min-h-0 flex-1 overflow-y-auto pr-1 text-sm">
-              <AppTabContent value="standard">{renderSortConditionRow(0, false)}</AppTabContent>
-              <AppTabContent value="detail" class="space-y-3">
-                <For each={sortConditionIndices()}>
-                  {(rowIndex) => renderSortConditionRow(rowIndex, true)}
-                </For>
-              </AppTabContent>
-            </div>
-          </SegmentedTabs>
-
-          <div class="mt-6 flex shrink-0 justify-end gap-2">
-            <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
-              閉じる
-            </Dialog.CloseButton>
-            <AppButton variant="primary" onClick={applySortConditions}>
-              適用
-            </AppButton>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+      <div class="mt-6 flex shrink-0 justify-end gap-2">
+        <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
+          閉じる
+        </Dialog.CloseButton>
+        <AppButton variant="primary" onClick={applySortConditions}>
+          適用
+        </AppButton>
+      </div>
+    </AppDialog>
   )
 }

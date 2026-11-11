@@ -12,6 +12,7 @@ import {
   type AppButtonSize,
   getAppButtonClass,
 } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
 import {
   GenreMultiSelect,
@@ -153,180 +154,183 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
   let listScrollElement: HTMLDivElement | undefined
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[90dvh] sm:max-h-[90dvh] sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6">
-          <div class="mb-4 shrink-0">
-            <Dialog.Title class="text-lg font-bold">{props.title}</Dialog.Title>
-            <Dialog.Description class="mt-1 text-sm text-text-muted">
-              {props.description}
-            </Dialog.Description>
-            {props.headerExtra}
-          </div>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.isSaving()}
+      placement="viewport"
+      size="2xl"
+      height="viewportFill"
+      header={
+        <div class="mb-4 shrink-0">
+          <Dialog.Title class="text-lg font-bold text-text">{props.title}</Dialog.Title>
+          <Dialog.Description class="mt-1 text-sm text-text-muted">
+            {props.description}
+          </Dialog.Description>
+          {props.headerExtra}
+        </div>
+      }
+    >
+      <div class="mb-3 flex min-w-0 shrink-0 items-center">
+        <SearchTextField
+          class="min-w-0 flex-1"
+          frameClass="rounded-l"
+          value={props.query()}
+          active={props.query().trim().length > 0}
+          onChange={props.setQuery}
+          ariaLabel={props.searchAriaLabel}
+          placeholder="曲名・アーティストで検索..."
+        />
+        <Button
+          type="button"
+          class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
+            props.filterChanged()
+              ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
+              : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
+          }`}
+          aria-label={filterButtonLabel()}
+          aria-pressed={props.filterChanged()}
+          title={filterButtonLabel()}
+          onClick={() => props.setFilterDialogOpen(true)}
+        >
+          <Funnel size={20} aria-hidden="true" />
+        </Button>
+        <Button
+          type="button"
+          class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
+            props.showSelectedOnly()
+              ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
+              : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
+          }`}
+          aria-label={SELECTED_ONLY_LABEL}
+          aria-pressed={props.showSelectedOnly()}
+          title={SELECTED_ONLY_LABEL}
+          onClick={() => props.setShowSelectedOnly((value) => !value)}
+        >
+          <ListChecks size={24} aria-hidden="true" />
+        </Button>
+        {props.searchToolbarExtra}
+      </div>
 
-          <div class="mb-3 flex min-w-0 shrink-0 items-center">
-            <SearchTextField
-              class="min-w-0 flex-1"
-              frameClass="rounded-l"
-              value={props.query()}
-              active={props.query().trim().length > 0}
-              onChange={props.setQuery}
-              ariaLabel={props.searchAriaLabel}
-              placeholder="曲名・アーティストで検索..."
+      <div
+        class="mb-2 shrink-0 text-xs text-text-subtle"
+        aria-live={props.announceSelectionSummary ? 'polite' : undefined}
+      >
+        {props.selectionSummary()}
+      </div>
+
+      <div
+        ref={listScrollElement}
+        class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface"
+      >
+        <Show
+          when={props.isListReady()}
+          fallback={
+            <div
+              class="flex h-full min-h-32 items-center justify-center"
+              role="status"
+              aria-label="読み込み中"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <Loading />
+            </div>
+          }
+        >
+          <Show
+            when={props.items().length > 0}
+            fallback={
+              <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-text-subtle">
+                <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
+                <p>{EMPTY_MESSAGE}</p>
+              </div>
+            }
+          >
+            <SongSelectionVirtualList
+              items={props.items()}
+              getScrollElement={() => listScrollElement}
+              renderItem={props.renderItem}
             />
-            <Button
-              type="button"
-              class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
-                props.filterChanged()
-                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
-                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
-              }`}
-              aria-label={filterButtonLabel()}
-              aria-pressed={props.filterChanged()}
-              title={filterButtonLabel()}
-              onClick={() => props.setFilterDialogOpen(true)}
-            >
-              <Funnel size={20} aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
-                props.showSelectedOnly()
-                  ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
-                  : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
-              }`}
-              aria-label={SELECTED_ONLY_LABEL}
-              aria-pressed={props.showSelectedOnly()}
-              title={SELECTED_ONLY_LABEL}
-              onClick={() => props.setShowSelectedOnly((value) => !value)}
-            >
-              <ListChecks size={24} aria-hidden="true" />
-            </Button>
-            {props.searchToolbarExtra}
-          </div>
-
-          <div
-            class="mb-2 shrink-0 text-xs text-text-subtle"
-            aria-live={props.announceSelectionSummary ? 'polite' : undefined}
-          >
-            {props.selectionSummary()}
-          </div>
-
-          <div
-            ref={listScrollElement}
-            class="min-h-0 flex-1 basis-0 overflow-y-auto rounded border border-border bg-surface"
-          >
-            <Show
-              when={props.isListReady()}
-              fallback={
-                <div
-                  class="flex h-full min-h-32 items-center justify-center"
-                  role="status"
-                  aria-label="読み込み中"
-                  aria-live="polite"
-                  aria-busy="true"
-                >
-                  <Loading />
-                </div>
-              }
-            >
-              <Show
-                when={props.items().length > 0}
-                fallback={
-                  <div class="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-text-subtle">
-                    <CircleSlash2 class="h-6 w-6" aria-hidden="true" />
-                    <p>{EMPTY_MESSAGE}</p>
-                  </div>
-                }
-              >
-                <SongSelectionVirtualList
-                  items={props.items()}
-                  getScrollElement={() => listScrollElement}
-                  renderItem={props.renderItem}
-                />
-              </Show>
-            </Show>
-          </div>
-
-          <Show when={props.saveError()}>
-            {(message) => <p class="mt-3 shrink-0 text-sm text-danger">{message()}</p>}
           </Show>
+        </Show>
+      </div>
 
-          <Dialog
-            open={props.filterDialogOpen()}
-            onOpenChange={props.setFilterDialogOpen}
-            preventScroll={false}
-          >
-            <Dialog.Portal>
-              <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-              <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex max-h-[80dvh] -translate-y-1/2 flex-col rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
-                <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
-                  <Dialog.Title class="text-lg font-bold">{FILTER_LABEL}</Dialog.Title>
-                  <AppButton onClick={props.resetFilters}>{FILTER_RESET_LABEL}</AppButton>
-                </div>
-                <div class="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
-                  <GenreMultiSelect
-                    options={toMultiSelectOptions(props.genres())}
-                    selected={props.selectedGenres(props.filters())}
-                    labelClass="text-text"
-                    contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                    onChange={props.setGenres}
-                  />
-                  <VersionMultiSelect
-                    options={toMultiSelectOptions(props.versions())}
-                    selected={props.selectedVersions(props.filters())}
-                    labelClass="text-text"
-                    contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                    onChange={props.setVersions}
-                  />
-                  <NameFolderFilterMultiSelect
-                    nameFolders={props.nameFolders()}
-                    selected={props.selectedNameFolders(props.filters())}
-                    labelClass="text-text"
-                    contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
-                    onChange={props.setNameFolders}
-                  />
-                  {props.renderFilterExtras?.()}
-                </div>
-                <div class="mt-6 flex justify-end">
-                  <div class="flex gap-2">
-                    <Show when={props.showFilterCloseButton}>
-                      <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
-                        閉じる
-                      </Dialog.CloseButton>
-                    </Show>
-                    <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
-                      適用
-                    </Dialog.CloseButton>
-                  </div>
-                </div>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog>
+      <Show when={props.saveError()}>
+        {(message) => <p class="mt-3 shrink-0 text-sm text-danger">{message()}</p>}
+      </Show>
 
-          <div class="mt-4 flex shrink-0 justify-end gap-2">
-            <AppButton
-              size={props.actionButtonSize}
-              onClick={() => props.onOpenChange(false)}
-              disabled={props.isSaving()}
-            >
-              キャンセル
-            </AppButton>
-            <AppButton
-              variant="primary"
-              size={props.actionButtonSize}
-              onClick={props.onSave}
-              disabled={!props.hasChanges() || props.isSaving()}
-            >
-              <Show when={props.isSaving()}>
-                <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
+      <AppDialog
+        open={props.filterDialogOpen()}
+        onOpenChange={props.setFilterDialogOpen}
+        preventScroll={false}
+        placement="sheet"
+        size="md"
+        height="max80"
+        layer="stacked"
+        title={FILTER_LABEL}
+        headerActions={<AppButton onClick={props.resetFilters}>{FILTER_RESET_LABEL}</AppButton>}
+        scroll="grow"
+        bodyClass="space-y-5 pr-1 text-sm"
+        footer={
+          <div class="mt-6 flex justify-end">
+            <div class="flex gap-2">
+              <Show when={props.showFilterCloseButton}>
+                <Dialog.CloseButton class={getAppButtonClass({ variant: 'secondary' })}>
+                  閉じる
+                </Dialog.CloseButton>
               </Show>
-              保存
-            </AppButton>
+              <Dialog.CloseButton class={getAppButtonClass({ variant: 'primary' })}>
+                適用
+              </Dialog.CloseButton>
+            </div>
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+        }
+      >
+        <GenreMultiSelect
+          options={toMultiSelectOptions(props.genres())}
+          selected={props.selectedGenres(props.filters())}
+          labelClass="text-text"
+          contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+          onChange={props.setGenres}
+        />
+        <VersionMultiSelect
+          options={toMultiSelectOptions(props.versions())}
+          selected={props.selectedVersions(props.filters())}
+          labelClass="text-text"
+          contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+          onChange={props.setVersions}
+        />
+        <NameFolderFilterMultiSelect
+          nameFolders={props.nameFolders()}
+          selected={props.selectedNameFolders(props.filters())}
+          labelClass="text-text"
+          contentZIndexClass={SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS}
+          onChange={props.setNameFolders}
+        />
+        {props.renderFilterExtras?.()}
+      </AppDialog>
+
+      <div class="mt-4 flex shrink-0 justify-end gap-2">
+        <AppButton
+          size={props.actionButtonSize}
+          onClick={() => props.onOpenChange(false)}
+          disabled={props.isSaving()}
+        >
+          キャンセル
+        </AppButton>
+        <AppButton
+          variant="primary"
+          size={props.actionButtonSize}
+          onClick={props.onSave}
+          disabled={!props.hasChanges() || props.isSaving()}
+        >
+          <Show when={props.isSaving()}>
+            <LoaderCircle class="h-4 w-4 animate-spin" aria-hidden="true" />
+          </Show>
+          保存
+        </AppButton>
+      </div>
+    </AppDialog>
   )
 }

@@ -1,7 +1,7 @@
-import { Dialog } from '@kobalte/core/dialog'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal } from 'solid-js'
 import { AppButton } from '../../../../components/common/AppButton'
+import { AppDialog } from '../../../../components/common/AppDialog'
 import FilterResetDialog from '../../../../components/common/FilterResetDialog'
 import type { MasterDataDTO, NameFolderDTO, VersionSummaryDTO } from '../../../../types/api'
 import type { FilterState } from '../../../../types/recordFilter'
@@ -118,55 +118,58 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={handleOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 bg-overlay z-40" />
-        <Dialog.Content class="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md max-h-11/12 flex flex-col select-none">
-          <div class="flex items-center justify-between mb-4 shrink-0">
-            <Dialog.Title class="text-lg font-bold">{FILTER_DIALOG_TEXT.title}</Dialog.Title>
-            <div class="flex items-center gap-2">
-              <SavedFiltersDialog
-                open={props.open}
-                currentFilters={filters()}
-                onApplyFilter={handleApplySavedFilter}
-                onEditFilter={handleEditSavedFilter}
-                onEditingChange={handleEditingChange}
-                editedFilterName={editingFilter()?.name}
-              />
-              <FilterResetDialog onReset={handleReset} />
-            </div>
-          </div>
-          {/* メインのフィルター選択部分 */}
-          <FilterSelectionPanel
+    <AppDialog
+      open={props.open}
+      onOpenChange={handleOpenChange}
+      preventScroll={false}
+      size="md"
+      height="cap"
+      selectNone
+      title={FILTER_DIALOG_TEXT.title}
+      headerActions={
+        <div class="flex items-center gap-2">
+          <SavedFiltersDialog
             open={props.open}
-            filters={filters()}
-            setFilters={setFilters}
-            masterData={props.masterData}
-            versions={props.versions}
-            nameFolders={props.nameFolders}
-            defaultFilter={props.defaultFilter}
-            resetKey={resetKey()}
-            editingFilterName={editingFilter()?.name ?? null}
-            onEditingFilterNameChange={(name) =>
-              setEditingFilter((prev) => (prev ? { ...prev, name } : null))
-            }
-            onOpenFavoriteSongs={props.onOpenFavoriteSongs}
-            favoriteSongsDisabled={props.favoriteSongsDisabled}
-            lockedSongsDisabled={props.lockedSongsDisabled}
+            currentFilters={filters()}
+            onApplyFilter={handleApplySavedFilter}
+            onEditFilter={handleEditSavedFilter}
+            onEditingChange={handleEditingChange}
+            editedFilterName={editingFilter()?.name}
           />
-          <div class="flex justify-end mt-6">
-            <div class="flex gap-2">
-              <AppButton onClick={() => props.onOpenChange(false)}>
-                {FILTER_DIALOG_TEXT.cancel}
-              </AppButton>
-              <AppButton variant="primary" onClick={handleApply}>
-                {FILTER_DIALOG_TEXT.apply}
-              </AppButton>
-            </div>
+          <FilterResetDialog onReset={handleReset} />
+        </div>
+      }
+      footer={
+        <div class="mt-6 flex justify-end">
+          <div class="flex gap-2">
+            <AppButton onClick={() => props.onOpenChange(false)}>
+              {FILTER_DIALOG_TEXT.cancel}
+            </AppButton>
+            <AppButton variant="primary" onClick={handleApply}>
+              {FILTER_DIALOG_TEXT.apply}
+            </AppButton>
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+        </div>
+      }
+    >
+      <FilterSelectionPanel
+        open={props.open}
+        filters={filters()}
+        setFilters={setFilters}
+        masterData={props.masterData}
+        versions={props.versions}
+        nameFolders={props.nameFolders}
+        defaultFilter={props.defaultFilter}
+        resetKey={resetKey()}
+        editingFilterName={editingFilter()?.name ?? null}
+        onEditingFilterNameChange={(name) =>
+          setEditingFilter((prev) => (prev ? { ...prev, name } : null))
+        }
+        onOpenFavoriteSongs={props.onOpenFavoriteSongs}
+        favoriteSongsDisabled={props.favoriteSongsDisabled}
+        lockedSongsDisabled={props.lockedSongsDisabled}
+      />
+    </AppDialog>
   )
 }
 

@@ -1,4 +1,3 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { Link } from '@kobalte/core/link'
 import { TextField } from '@kobalte/core/text-field'
 import ExternalLink from 'lucide-solid/icons/external-link'
@@ -9,6 +8,7 @@ import { createEffect, createMemo, createResource, createSignal, For, Show } fro
 import { createHonor, fetchAdminHonors, fetchHonorTypes, updateHonor } from '../../api/honors'
 import { Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
+import { AppDialog } from '../../components/common/AppDialog'
 import { AppSelect, FormSelect } from '../../components/common/AppSelect'
 import { showSuccessToast } from '../../components/common/AppToast'
 import { SearchTextField } from '../../components/common/SearchTextField'
@@ -112,87 +112,86 @@ const HonorFormDialog: Component<HonorFormDialogProps> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-            {props.mode === 'create'
-              ? ADMIN_HONORS_COPY.createDialogTitle
-              : ADMIN_HONORS_COPY.editDialogTitle}
-          </Dialog.Title>
-          <Dialog.Description class="mt-1 shrink-0 text-sm text-text-muted">
-            {ADMIN_HONORS_COPY.formDescription}
-          </Dialog.Description>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.saving}
+      size="lg"
+      height="max90"
+      title={
+        props.mode === 'create'
+          ? ADMIN_HONORS_COPY.createDialogTitle
+          : ADMIN_HONORS_COPY.editDialogTitle
+      }
+      description={ADMIN_HONORS_COPY.formDescription}
+    >
+      <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
+        <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+          <TextField>
+            <TextField.Label class="mb-1 block text-sm text-text-muted">
+              {ADMIN_HONORS_COPY.honorLabel}
+            </TextField.Label>
+            <TextField.Input
+              value={request().name}
+              maxLength={HONOR_INPUT_LIMITS.name}
+              required
+              onInput={(event) => updateRequestField('name', event.currentTarget.value)}
+              class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-sans`}
+            />
+          </TextField>
 
-          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
-            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <TextField>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {ADMIN_HONORS_COPY.honorLabel}
-                </TextField.Label>
-                <TextField.Input
-                  value={request().name}
-                  maxLength={HONOR_INPUT_LIMITS.name}
-                  required
-                  onInput={(event) => updateRequestField('name', event.currentTarget.value)}
-                  class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-sans`}
-                />
-              </TextField>
+          <FormSelect<MasterItemDTO>
+            label={ADMIN_HONORS_COPY.typeLabel}
+            options={props.honorTypes}
+            optionValue="name"
+            optionTextValue="name"
+            value={selectedHonorType()}
+            onChange={(type: MasterItemDTO | null) =>
+              updateRequestField('type_name', type?.name ?? '')
+            }
+            placeholder={ADMIN_HONORS_COPY.selectPlaceholder}
+            contentZIndexClass="z-60"
+            formatLabel={(type) => type.name}
+          />
 
-              <FormSelect<MasterItemDTO>
-                label={ADMIN_HONORS_COPY.typeLabel}
-                options={props.honorTypes}
-                optionValue="name"
-                optionTextValue="name"
-                value={selectedHonorType()}
-                onChange={(type: MasterItemDTO | null) =>
-                  updateRequestField('type_name', type?.name ?? '')
-                }
-                placeholder={ADMIN_HONORS_COPY.selectPlaceholder}
-                contentZIndexClass="z-60"
-                formatLabel={(type) => type.name}
-              />
+          <TextField>
+            <TextField.Label class="mb-1 block text-sm text-text-muted">
+              {ADMIN_HONORS_COPY.imageUrlLabel}
+            </TextField.Label>
+            <TextField.Input
+              value={request().image_url}
+              maxLength={HONOR_INPUT_LIMITS.imageUrl}
+              onInput={(event) => updateRequestField('image_url', event.currentTarget.value)}
+              class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-mono text-xs`}
+            />
+          </TextField>
 
-              <TextField>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {ADMIN_HONORS_COPY.imageUrlLabel}
-                </TextField.Label>
-                <TextField.Input
-                  value={request().image_url}
-                  maxLength={HONOR_INPUT_LIMITS.imageUrl}
-                  onInput={(event) => updateRequestField('image_url', event.currentTarget.value)}
-                  class={`${HONOR_EDIT_TEXT_INPUT_CLASS} font-mono text-xs`}
-                />
-              </TextField>
+          <Show when={props.apiErrorMessage}>
+            <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+              {props.apiErrorMessage}
+            </p>
+          </Show>
+        </div>
 
-              <Show when={props.apiErrorMessage}>
-                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-                  {props.apiErrorMessage}
-                </p>
-              </Show>
-            </div>
-
-            <div class="mt-5 flex shrink-0 justify-end gap-2">
-              <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
-                {ADMIN_HONORS_COPY.cancelButton}
-              </AppButton>
-              <AppButton
-                type="submit"
-                variant="primary"
-                disabled={props.saving || !request().name.trim() || !request().type_name.trim()}
-              >
-                {props.saving
-                  ? ADMIN_HONORS_COPY.savingButton
-                  : props.mode === 'create'
-                    ? ADMIN_HONORS_COPY.createButtonLabel
-                    : ADMIN_HONORS_COPY.saveButton}
-              </AppButton>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+        <div class="mt-5 flex shrink-0 justify-end gap-2">
+          <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
+            {ADMIN_HONORS_COPY.cancelButton}
+          </AppButton>
+          <AppButton
+            type="submit"
+            variant="primary"
+            disabled={props.saving || !request().name.trim() || !request().type_name.trim()}
+          >
+            {props.saving
+              ? ADMIN_HONORS_COPY.savingButton
+              : props.mode === 'create'
+                ? ADMIN_HONORS_COPY.createButtonLabel
+                : ADMIN_HONORS_COPY.saveButton}
+          </AppButton>
+        </div>
+      </form>
+    </AppDialog>
   )
 }
 

@@ -1,5 +1,4 @@
 import { AlertDialog } from '@kobalte/core/alert-dialog'
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import {
   closestCenter,
@@ -18,6 +17,7 @@ import X from 'lucide-solid/icons/x'
 import type { Component } from 'solid-js'
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js'
 import { AppButton, AppIconButton } from '../../../../../components/common/AppButton'
+import { AppDialog } from '../../../../../components/common/AppDialog'
 import type { GoalGroupDTO } from '../../../../../types/api'
 import {
   buildGoalGroupDeleteDescription,
@@ -283,119 +283,112 @@ export const GoalGroupsManageDialog: Component<GoalGroupsManageDialogProps> = (p
 
   return (
     <>
-      <Dialog
+      <AppDialog
         open={props.open}
-        onOpenChange={(open) => {
-          if (!open && props.isMutating) return
-          props.onOpenChange(open)
-        }}
+        onOpenChange={props.onOpenChange}
         preventScroll={false}
+        pending={props.isMutating}
+        placement="sheet"
+        size="md"
+        height="manage"
+        layer="stacked"
+        overflowHidden
+        title={GOAL_GROUP_COPY.manageDialogTitle}
       >
-        <Dialog.Portal>
-          <Dialog.Overlay class="fixed inset-0 z-60 bg-overlay" />
-          <Dialog.Content class="fixed inset-x-4 top-1/2 z-70 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:h-128 sm:w-[90vw] sm:max-w-md sm:-translate-x-1/2 sm:p-6">
-            <Dialog.Title class="shrink-0 text-lg font-bold">
-              {GOAL_GROUP_COPY.manageDialogTitle}
-            </Dialog.Title>
-
-            <div class="mt-4 shrink-0">
-              <TextField value={newName()} onChange={setNewName}>
-                <TextField.Label class="mb-1 block text-sm text-text-muted">
-                  {GOAL_GROUP_COPY.newNameLabel}
-                </TextField.Label>
-                <div class="flex gap-2">
-                  <TextField.Input
-                    maxLength={GOAL_GROUP_NAME_MAX_LENGTH}
-                    class="min-w-0 flex-1 rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
-                  />
-                  <AppButton
-                    variant="primary"
-                    leftIcon={<Plus size={17} aria-hidden="true" />}
-                    disabled={props.isMutating || props.groups.length >= GOAL_GROUPS_LIMIT}
-                    onClick={() => void handleCreate()}
-                  >
-                    {GOAL_GROUP_COPY.addAction}
-                  </AppButton>
-                </div>
-              </TextField>
-              <Show when={props.groups.length >= GOAL_GROUPS_LIMIT}>
-                <p class="mt-1 text-xs text-warning">
-                  {buildGoalGroupLimitMessage(GOAL_GROUPS_LIMIT)}
-                </p>
-              </Show>
-              <Show when={!editingGroupId() && (validationError() || props.errorMessage)}>
-                <p class="mt-2 text-sm text-danger" role="alert">
-                  {validationError() || props.errorMessage}
-                </p>
-              </Show>
-            </div>
-
-            <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 overflow-y-auto pr-1">
-              <Show
-                when={props.groups.length > 0}
-                fallback={
-                  <p class="rounded border border-border p-4 text-sm text-text-muted">
-                    {GOAL_GROUP_COPY.emptyMessage}
-                  </p>
-                }
+        <div class="mt-4 shrink-0">
+          <TextField value={newName()} onChange={setNewName}>
+            <TextField.Label class="mb-1 block text-sm text-text-muted">
+              {GOAL_GROUP_COPY.newNameLabel}
+            </TextField.Label>
+            <div class="flex gap-2">
+              <TextField.Input
+                maxLength={GOAL_GROUP_NAME_MAX_LENGTH}
+                class="min-w-0 flex-1 rounded border border-border-strong bg-surface px-3 py-2 font-sans text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+              />
+              <AppButton
+                variant="primary"
+                leftIcon={<Plus size={17} aria-hidden="true" />}
+                disabled={props.isMutating || props.groups.length >= GOAL_GROUPS_LIMIT}
+                onClick={() => void handleCreate()}
               >
-                <DragDropProvider collisionDetector={closestCenter} onDragEnd={handleDragEnd}>
-                  <DragDropSensors>
-                    <VerticalAxisConstraint />
-                    <SortableProvider ids={props.groups.map(({ id }) => id)}>
-                      <div class="space-y-2">
-                        <For each={props.groups}>
-                          {(group, index) => (
-                            <SortableGroupRow
-                              group={group}
-                              position={index() + 1}
-                              total={props.groups.length}
-                              editing={editingGroupId() === group.id}
-                              editingName={editingName()}
-                              editingError={
-                                editingGroupId() === group.id
-                                  ? validationError() || props.errorMessage
-                                  : ''
-                              }
-                              isMutating={props.isMutating}
-                              onEditingNameChange={setEditingName}
-                              onEdit={() => {
-                                setValidationError('')
-                                setEditingGroupId(group.id)
-                                setEditingName(group.name)
-                              }}
-                              onCancelEdit={() => {
-                                setValidationError('')
-                                setEditingGroupId(undefined)
-                              }}
-                              onSaveEdit={() => void handleUpdate()}
-                              onDelete={() => setDeletingGroup(group)}
-                              onKeyboardMove={(offset) => {
-                                const destination = props.groups[index() + offset]
-                                if (destination) handleReorder(group.id, destination.id)
-                              }}
-                            />
-                          )}
-                        </For>
-                      </div>
-                    </SortableProvider>
-                  </DragDropSensors>
-                </DragDropProvider>
-              </Show>
-            </div>
-
-            <p class="sr-only" role="status" aria-live="polite">
-              {reorderAnnouncement()}
-            </p>
-
-            <div class="mt-5 flex shrink-0 justify-end">
-              <AppButton disabled={props.isMutating} onClick={() => props.onOpenChange(false)}>
-                {GOAL_GROUP_COPY.closeAction}
+                {GOAL_GROUP_COPY.addAction}
               </AppButton>
             </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
+          </TextField>
+          <Show when={props.groups.length >= GOAL_GROUPS_LIMIT}>
+            <p class="mt-1 text-xs text-warning">{buildGoalGroupLimitMessage(GOAL_GROUPS_LIMIT)}</p>
+          </Show>
+          <Show when={!editingGroupId() && (validationError() || props.errorMessage)}>
+            <p class="mt-2 text-sm text-danger" role="alert">
+              {validationError() || props.errorMessage}
+            </p>
+          </Show>
+        </div>
+
+        <div class="scrollbar-none mt-4 min-h-0 flex-1 basis-0 overflow-y-auto pr-1">
+          <Show
+            when={props.groups.length > 0}
+            fallback={
+              <p class="rounded border border-border p-4 text-sm text-text-muted">
+                {GOAL_GROUP_COPY.emptyMessage}
+              </p>
+            }
+          >
+            <DragDropProvider collisionDetector={closestCenter} onDragEnd={handleDragEnd}>
+              <DragDropSensors>
+                <VerticalAxisConstraint />
+                <SortableProvider ids={props.groups.map(({ id }) => id)}>
+                  <div class="space-y-2">
+                    <For each={props.groups}>
+                      {(group, index) => (
+                        <SortableGroupRow
+                          group={group}
+                          position={index() + 1}
+                          total={props.groups.length}
+                          editing={editingGroupId() === group.id}
+                          editingName={editingName()}
+                          editingError={
+                            editingGroupId() === group.id
+                              ? validationError() || props.errorMessage
+                              : ''
+                          }
+                          isMutating={props.isMutating}
+                          onEditingNameChange={setEditingName}
+                          onEdit={() => {
+                            setValidationError('')
+                            setEditingGroupId(group.id)
+                            setEditingName(group.name)
+                          }}
+                          onCancelEdit={() => {
+                            setValidationError('')
+                            setEditingGroupId(undefined)
+                          }}
+                          onSaveEdit={() => void handleUpdate()}
+                          onDelete={() => setDeletingGroup(group)}
+                          onKeyboardMove={(offset) => {
+                            const destination = props.groups[index() + offset]
+                            if (destination) handleReorder(group.id, destination.id)
+                          }}
+                        />
+                      )}
+                    </For>
+                  </div>
+                </SortableProvider>
+              </DragDropSensors>
+            </DragDropProvider>
+          </Show>
+        </div>
+
+        <p class="sr-only" role="status" aria-live="polite">
+          {reorderAnnouncement()}
+        </p>
+
+        <div class="mt-5 flex shrink-0 justify-end">
+          <AppButton disabled={props.isMutating} onClick={() => props.onOpenChange(false)}>
+            {GOAL_GROUP_COPY.closeAction}
+          </AppButton>
+        </div>
+      </AppDialog>
 
       <AlertDialog
         open={deletingGroup() !== undefined}

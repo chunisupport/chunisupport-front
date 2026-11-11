@@ -48,6 +48,7 @@ import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import MaintenanceStatusLabel from '../availability/MaintenanceStatusLabel'
 import { AppButton } from '../common/AppButton'
+import { AppDialog } from '../common/AppDialog'
 import AppearanceSettings from '../common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../common/AppearanceSettings.constants'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../common/AppMenu'
@@ -484,20 +485,20 @@ const NavBar = (props: NavBarProps) => {
           </AlertDialog.Portal>
         </AlertDialog>
 
-        <Dialog open={showThemeDialog()} onOpenChange={setShowThemeDialog} preventScroll={false}>
-          <Dialog.Portal>
-            <Dialog.Overlay class="fixed inset-0 bg-overlay z-50" />
-            <Dialog.Content class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface p-6 shadow-lg">
-              <Dialog.Title class="text-lg font-bold text-text">表示テーマ</Dialog.Title>
-              <Dialog.Description class="mt-2 text-sm text-text-muted">
-                {APPEARANCE_SETTINGS_COPY.dialogDescription}
-              </Dialog.Description>
-              <div class="mt-4">
-                <AppearanceSettings />
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog>
+        <AppDialog
+          open={showThemeDialog()}
+          onOpenChange={setShowThemeDialog}
+          preventScroll={false}
+          layer="nav"
+          size="md"
+          title="表示テーマ"
+          description={APPEARANCE_SETTINGS_COPY.dialogDescription}
+          descriptionSpacing="regular"
+        >
+          <div class="mt-4">
+            <AppearanceSettings />
+          </div>
+        </AppDialog>
       </div>
     </div>
   )

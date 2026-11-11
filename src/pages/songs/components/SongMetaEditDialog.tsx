@@ -1,8 +1,8 @@
-import { Dialog } from '@kobalte/core/dialog'
 import { TextField } from '@kobalte/core/text-field'
 import type { Component } from 'solid-js'
 import { createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AppButton } from '../../../components/common/AppButton'
+import { AppDialog } from '../../../components/common/AppDialog'
 import { FormSelect } from '../../../components/common/AppSelect'
 import { CheckboxField } from '../../../components/common/CheckboxField'
 import CopyFromStandardField from '../../../components/common/CopyFromStandardField'
@@ -165,128 +165,126 @@ const SongMetaEditDialog: Component<Props> = (props) => {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange} preventScroll={false}>
-      <Dialog.Portal>
-        <Dialog.Overlay class="fixed inset-0 z-40 bg-overlay" />
-        <Dialog.Content class="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface p-6 shadow-lg">
-          <Dialog.Title class="shrink-0 text-lg font-bold text-text">
-            {SONG_EDIT_COPY.songDialogTitle}
-          </Dialog.Title>
-          <Dialog.Description class="sr-only">
-            {SONG_EDIT_COPY.songFormDescription}
-          </Dialog.Description>
+    <AppDialog
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      preventScroll={false}
+      pending={props.saving}
+      size="lg"
+      height="max90"
+      title={SONG_EDIT_COPY.songDialogTitle}
+      description={SONG_EDIT_COPY.songFormDescription}
+      descriptionVisibility="srOnly"
+    >
+      <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
+        <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+          <div class="grid grid-cols-2 gap-4">
+            <FormSelect<MasterItemDTO>
+              rootClass="min-w-0"
+              label={SONG_EDIT_COPY.genreLabel}
+              options={props.genres}
+              optionValue="name"
+              optionTextValue="name"
+              value={selectedGenre()}
+              onChange={(genre: MasterItemDTO | null) => setGenreName(genre?.name ?? null)}
+              placeholder={SONG_EDIT_COPY.genrePlaceholder}
+              contentZIndexClass="z-60"
+              formatLabel={(genre) => genre.name}
+            />
 
-          <form class="mt-5 flex min-h-0 flex-col" onSubmit={handleSubmit}>
-            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <div class="grid grid-cols-2 gap-4">
-                <FormSelect<MasterItemDTO>
-                  rootClass="min-w-0"
-                  label={SONG_EDIT_COPY.genreLabel}
-                  options={props.genres}
-                  optionValue="name"
-                  optionTextValue="name"
-                  value={selectedGenre()}
-                  onChange={(genre: MasterItemDTO | null) => setGenreName(genre?.name ?? null)}
-                  placeholder={SONG_EDIT_COPY.genrePlaceholder}
-                  contentZIndexClass="z-60"
-                  formatLabel={(genre) => genre.name}
-                />
-
-                <Show
-                  when={props.enableCopyFromStandard}
-                  fallback={<BpmTextField value={bpm()} onInput={setBpm} />}
-                >
-                  <CopyFromStandardField
-                    class="min-w-0"
-                    field="bpm"
-                    songs={props.standardSongs ?? []}
-                    title={props.copyTitle ?? ''}
-                    artist={props.copyArtist ?? ''}
-                    songsLoading={props.standardSongsLoading}
-                    onCopied={(nextBpm) => {
-                      setBpm(toInputValue(nextBpm))
-                      setValidationMessage('')
-                    }}
-                  >
-                    <BpmTextField value={bpm()} onInput={setBpm} />
-                  </CopyFromStandardField>
-                </Show>
-
-                <TextField class="min-w-0">
-                  <TextField.Label class="mb-1 block text-sm text-text-muted">
-                    {SONG_EDIT_COPY.releaseLabel}
-                  </TextField.Label>
-                  <TextField.Input
-                    type="date"
-                    value={releasedAt()}
-                    class={SONG_EDIT_TEXT_INPUT_CLASS}
-                    onInput={(event) => setReleasedAt(event.currentTarget.value)}
-                  />
-                </TextField>
-
-                <CheckboxField
-                  checked={unlockRequired()}
-                  label={SONG_EDIT_COPY.unlockRequiredLabel}
-                  onChange={setUnlockRequired}
-                  class="min-w-0 self-end py-2"
-                  controlClass="peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring"
-                  inputClass="peer"
-                />
-              </div>
-
-              <Show
-                when={props.enableCopyFromStandard}
-                fallback={
-                  <WikiPageTitleField
-                    title={props.title}
-                    label={SONG_EDIT_COPY.wikiPageTitleLabel}
-                    value={wikiPageTitle()}
-                    inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
-                    onInput={setWikiPageTitle}
-                  />
-                }
+            <Show
+              when={props.enableCopyFromStandard}
+              fallback={<BpmTextField value={bpm()} onInput={setBpm} />}
+            >
+              <CopyFromStandardField
+                class="min-w-0"
+                field="bpm"
+                songs={props.standardSongs ?? []}
+                title={props.copyTitle ?? ''}
+                artist={props.copyArtist ?? ''}
+                songsLoading={props.standardSongsLoading}
+                onCopied={(nextBpm) => {
+                  setBpm(toInputValue(nextBpm))
+                  setValidationMessage('')
+                }}
               >
-                <CopyFromStandardField
-                  field="wikiPageTitle"
-                  songs={props.standardSongs ?? []}
-                  title={props.copyTitle ?? ''}
-                  artist={props.copyArtist ?? ''}
-                  songsLoading={props.standardSongsLoading}
-                  onCopied={(nextWikiPageTitle) => {
-                    setWikiPageTitle(nextWikiPageTitle)
-                    setValidationMessage('')
-                  }}
-                >
-                  {(copyButton) => (
-                    <WikiPageTitleField
-                      title={props.title}
-                      label={SONG_EDIT_COPY.wikiPageTitleLabel}
-                      value={wikiPageTitle()}
-                      inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
-                      onInput={setWikiPageTitle}
-                      leadingAction={copyButton}
-                    />
-                  )}
-                </CopyFromStandardField>
-              </Show>
+                <BpmTextField value={bpm()} onInput={setBpm} />
+              </CopyFromStandardField>
+            </Show>
 
-              <Show when={errorMessage()}>
-                <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
-                  {errorMessage()}
-                </p>
-              </Show>
-            </div>
+            <TextField class="min-w-0">
+              <TextField.Label class="mb-1 block text-sm text-text-muted">
+                {SONG_EDIT_COPY.releaseLabel}
+              </TextField.Label>
+              <TextField.Input
+                type="date"
+                value={releasedAt()}
+                class={SONG_EDIT_TEXT_INPUT_CLASS}
+                onInput={(event) => setReleasedAt(event.currentTarget.value)}
+              />
+            </TextField>
 
-            <div class="mt-5 flex shrink-0 justify-end gap-2">
-              <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
-                {SONG_EDIT_COPY.cancelButton}
-              </AppButton>
-              <SongEditSaveButton changed={changed()} saving={props.saving} />
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog>
+            <CheckboxField
+              checked={unlockRequired()}
+              label={SONG_EDIT_COPY.unlockRequiredLabel}
+              onChange={setUnlockRequired}
+              class="min-w-0 self-end py-2"
+              controlClass="peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring"
+              inputClass="peer"
+            />
+          </div>
+
+          <Show
+            when={props.enableCopyFromStandard}
+            fallback={
+              <WikiPageTitleField
+                title={props.title}
+                label={SONG_EDIT_COPY.wikiPageTitleLabel}
+                value={wikiPageTitle()}
+                inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
+                onInput={setWikiPageTitle}
+              />
+            }
+          >
+            <CopyFromStandardField
+              field="wikiPageTitle"
+              songs={props.standardSongs ?? []}
+              title={props.copyTitle ?? ''}
+              artist={props.copyArtist ?? ''}
+              songsLoading={props.standardSongsLoading}
+              onCopied={(nextWikiPageTitle) => {
+                setWikiPageTitle(nextWikiPageTitle)
+                setValidationMessage('')
+              }}
+            >
+              {(copyButton) => (
+                <WikiPageTitleField
+                  title={props.title}
+                  label={SONG_EDIT_COPY.wikiPageTitleLabel}
+                  value={wikiPageTitle()}
+                  inputClass={SONG_EDIT_TEXT_INPUT_CLASS}
+                  onInput={setWikiPageTitle}
+                  leadingAction={copyButton}
+                />
+              )}
+            </CopyFromStandardField>
+          </Show>
+
+          <Show when={errorMessage()}>
+            <p class="rounded border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+              {errorMessage()}
+            </p>
+          </Show>
+        </div>
+
+        <div class="mt-5 flex shrink-0 justify-end gap-2">
+          <AppButton onClick={() => props.onOpenChange(false)} disabled={props.saving}>
+            {SONG_EDIT_COPY.cancelButton}
+          </AppButton>
+          <SongEditSaveButton changed={changed()} saving={props.saving} />
+        </div>
+      </form>
+    </AppDialog>
   )
 }
 
