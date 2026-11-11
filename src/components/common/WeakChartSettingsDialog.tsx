@@ -18,7 +18,7 @@ import { getShortVersionName } from '../../utils/versionConverter'
 import { AppButton, AppIconButton } from './AppButton'
 import { AppDialog } from './AppDialog'
 import { toMultiSelectOptions } from './AppMultiSelect'
-import { focusDialogContentOnOpen } from './appDialog'
+import { focusDialogContentOnOpen } from './appDialogUtils'
 import ChartConstRangeField from './ChartConstRangeField'
 import { CheckboxField } from './CheckboxField'
 import {

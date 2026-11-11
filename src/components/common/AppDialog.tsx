@@ -12,7 +12,7 @@ import {
   appDialogContentClass,
   appDialogOverlayClass,
   guardDialogOpenChange,
-} from './appDialog'
+} from './appDialogUtils'
 
 export type AppDialogProps = {
   /** ダイアログを開いている場合は true */

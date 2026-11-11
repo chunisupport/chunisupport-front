@@ -6,7 +6,7 @@ import {
   appDialogOverlayClass,
   focusDialogContentOnOpen,
   guardDialogOpenChange,
-} from './appDialog'
+} from './appDialogUtils'
 
 test('送信中の閉鎖要求は通知せず、開く要求と送信完了後の閉鎖は通知する', () => {
   // Given: 送信中
