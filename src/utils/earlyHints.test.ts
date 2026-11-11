@@ -22,11 +22,14 @@ const INDEX_HTML = `<!doctype html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost" crossorigin>
   <link href="/static/css/index.cccccccccc.css" rel="stylesheet">
+  <link rel="preload" href="/static/css/fonts.dddddddddd.css" as="style">
+  <link rel="stylesheet" href="/static/css/fonts.dddddddddd.css">
   <script src="https://static.cloudflareinsights.com/beacon.min.js"></script>
 </head></html>`
 
 test('初期HTMLの /static/ CSS と JS だけを preload の Link にすること', () => {
-  // Given: JS が先、CSS が後。フォント・アイコン・外部スクリプト・コメント内の参照を含む
+  // Given: JS が先、CSS が後。外部フォント・アイコン・外部スクリプト・コメント内の参照を含む。
+  // フォント CSS の preload タグは stylesheet と重複させない
   const html = INDEX_HTML
 
   // When
@@ -35,6 +38,7 @@ test('初期HTMLの /static/ CSS と JS だけを preload の Link にするこ�
   // Then: レンダリングをブロックする CSS を先にし、スクリプトは出現順。重複は1つ
   assert.deepEqual(linkValues, [
     '</static/css/index.cccccccccc.css>; rel=preload; as=style',
+    '</static/css/fonts.dddddddddd.css>; rel=preload; as=style',
     '</static/js/1482.aaaaaaaaaa.js>; rel=preload; as=script',
     '</static/js/index.bbbbbbbbbb.js>; rel=preload; as=script',
   ])
@@ -142,6 +146,7 @@ test('Early Hints の規則は HTML へ複数の Link を書き、非HTMLでは 
     lines.filter((line) => line.startsWith('  Link:')),
     [
       '  Link: </static/css/index.cccccccccc.css>; rel=preload; as=style',
+      '  Link: </static/css/fonts.dddddddddd.css>; rel=preload; as=style',
       '  Link: </static/js/1482.aaaaaaaaaa.js>; rel=preload; as=script',
       '  Link: </static/js/index.bbbbbbbbbb.js>; rel=preload; as=script',
       '  Link: <https://api.chunisupport.net>; rel=preconnect; crossorigin',

@@ -115,7 +115,8 @@ const formatPreloadLinkValue = (asset: StaticAsset): string => {
 /**
  * `dist/index.html` から、初期表示で読み込む `/static/` 配下の CSS と JS の Link 値を抽出する。
  *
- * `script src` と `link rel=stylesheet` だけを対象にする。フォントやアイコン、外部 URL は含めない。
+ * `script src` と `link rel=stylesheet` だけを対象にする。外部のフォント配信元、アイコン、外部 URL は含めない。
+ * `/static/` へ切り出したフォント CSS は初期スタイルシートとして含め、HTML より先に preload する。
  * レンダリングをブロックする CSS を先に、スクリプトは HTML 上の順で続ける。
  *
  * @param html - ビルド済みの初期 HTML。

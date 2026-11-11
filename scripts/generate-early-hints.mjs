@@ -31,6 +31,7 @@ const readDistRelativePaths = async () => {
  * ビルド済み HTML が初期表示で読む CSS / JS と、API オリジンへの preconnect を
  * Cloudflare Pages の `dist/_headers` に追記する。
  *
+ * `/static/` のフォント CSS も初期スタイルシートとして preload する。外部の Google Fonts へは出さない。
  * ハッシュ付きファイル名はビルドごとに変わるため、静的な `public/_headers` には書かない。
  * 既存の Cache-Control とセキュリティヘッダーは別規則のまま残し、非 HTML から Link だけを外す。
  *
