@@ -79,7 +79,7 @@ test('OVER POWER達成率は小数点以下3桁で切り捨て表示される', 
   const result = formatGoalCardValue(roundedUpByToLocaleString, 'overpower_percent')
 
   // Then
-  assert.equal(result, '97.536')
+  assert.equal(result, '97.536%')
 })
 
 test('スタート位置を達成率へ適用する場合はゲージと割合表示がそろうこと', () => {
@@ -114,7 +114,9 @@ test('スタート位置を達成率へ適用する場合はゲージと割合�
   assert.equal(normal.progressValue, 50)
   assert.equal(normal.percentText, '50.00%')
   assert.equal(normal.ariaValueText, '達成率 50.00%')
-  assert.equal(normal.gaugeStartText, '99.600')
+  assert.equal(normal.currentText, '99.700%')
+  assert.equal(normal.targetText, '99.800%')
+  assert.equal(normal.gaugeStartText, '99.600%')
   assert.deepEqual([inverted.percentPrefixText, inverted.percentText], ['あと', '50.00%'])
 })
 
@@ -151,6 +153,25 @@ test('スタート位置を達成率へ適用しない場合はゲージだけ�
   assert.equal(normal.percentText, '99.89%')
   assert.equal(normal.ariaValueText, '達成率 99.89%')
   assert.deepEqual([inverted.percentPrefixText, inverted.percentText], ['あと', '0.10%'])
+})
+
+test('OVER POWER達成率の反転表示は残量の後ろに%を付ける', () => {
+  // Given
+  const progress = {
+    current: 10,
+    target: 20,
+    percent: 50,
+    achieved: false,
+    targetCount: 10,
+    hasUnknownMaxOp: false,
+  }
+
+  // When
+  const result = resolveGoalCardDisplayProgress(progress, 'overpower_percent', true, false)
+
+  // Then
+  assert.equal(result.currentText, '10.000%')
+  assert.equal(result.targetText, '20.000%')
 })
 
 test('実数値の反転表示はスタート位置に関係なく目標値までの残りを表示すること', () => {
