@@ -7,7 +7,21 @@ import { SYSTEM_STATUS_LABELS } from '../../constants/maintenance'
 import { ADMIN_MAINTENANCE_PATH } from '../../constants/routes'
 import { authSession } from '../../stores/authSession'
 import { availability } from '../../stores/availability'
+import { navBarSide, navRailSide } from '../../stores/navPlacementPreferences'
 import { isMaintenanceStaff } from '../../utils/maintenanceRole'
+import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
+
+/** 狭い画面で、下側の横バーにラベルが重ならないよう下端からの距離を決めるクラス */
+const MAINTENANCE_STATUS_BAR_OFFSET_CLASS: Record<NavBarSide, string> = {
+  bottom: 'bottom-16',
+  top: 'bottom-4',
+}
+
+/** 広い画面で、左側の縦レールにラベルが重ならないよう左端からの距離を決めるクラス */
+const MAINTENANCE_STATUS_RAIL_OFFSET_CLASS: Record<NavRailSide, string> = {
+  left: 'md:left-28',
+  right: 'md:left-4',
+}
 
 const MAINTENANCE_STATUS_LABEL_CLASS =
   'animate-maintenance-status inline-flex items-center gap-1.5 rounded-full border border-action-primary-border bg-action-primary px-3 py-1 text-sm font-semibold text-text-inverse shadow-sm'
@@ -38,7 +52,9 @@ const MaintenanceStatusLabel = (): JSX.Element => {
 
   return (
     <Show when={isMaintenance() && isMaintenanceStaffUser()}>
-      <div class="pointer-events-none fixed bottom-16 left-4 z-30 md:bottom-4 md:left-28">
+      <div
+        class={`pointer-events-none fixed left-4 z-30 md:bottom-4 ${MAINTENANCE_STATUS_BAR_OFFSET_CLASS[navBarSide()]} ${MAINTENANCE_STATUS_RAIL_OFFSET_CLASS[navRailSide()]}`}
+      >
         <Show
           when={isAdmin()}
           fallback={

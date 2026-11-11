@@ -44,14 +44,47 @@ import {
   refreshFriendRequestNotificationIfStale,
   setActiveFriendRequestNotificationUser,
 } from '../../stores/friendRequestNotification'
+import { navBarSide, navRailSide } from '../../stores/navPlacementPreferences'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
+import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
 import MaintenanceStatusLabel from '../availability/MaintenanceStatusLabel'
 import { AppButton } from '../common/AppButton'
 import { AppDialog } from '../common/AppDialog'
 import AppearanceSettings from '../common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../common/AppearanceSettings.constants'
 import { AppMenuContent, AppMenuItem, AppMenuTrigger } from '../common/AppMenu'
+import NavPlacementSettings from '../common/NavPlacementSettings'
+
+/** 縦レールを配置側へ寄せ、画面領域との境界線を引くクラス */
+const NAV_RAIL_SIDE_CLASS: Record<NavRailSide, string> = {
+  left: 'md:border-r',
+  right: 'md:order-last md:border-l',
+}
+
+/** 縦レールの「その他」メニューを、トリガーのどちらの端へ揃えて開くか */
+const NAV_RAIL_MENU_PLACEMENT = {
+  left: 'bottom-start',
+  right: 'bottom-end',
+} as const satisfies Record<NavRailSide, string>
+
+/** 縦レールの「その他」メニューを、レールの画面領域側へずらすクラス */
+const NAV_RAIL_MENU_CONTENT_CLASS: Record<NavRailSide, string> = {
+  left: 'absolute left-16 -top-12 ml-2',
+  right: 'absolute right-16 -top-12 mr-2',
+}
+
+/** 横バーを配置側へ寄せ、画面領域との境界線を引くクラス */
+const NAV_BAR_SIDE_CLASS: Record<NavBarSide, string> = {
+  bottom: 'border-t',
+  top: 'order-first border-b',
+}
+
+/** 横バーの「その他」メニューを、バーから画面領域側へ離して開くクラス */
+const NAV_BAR_MENU_CONTENT_CLASS: Record<NavBarSide, string> = {
+  bottom: 'absolute bottom-full left-1/2 mb-2 -translate-x-1/2',
+  top: 'mt-2',
+}
 
 /**
  * その他メニューに表示する項目を表す。
@@ -65,7 +98,7 @@ type DropdownItem = {
   label: string
   icon: () => JSX.Element
   path?: string
-  action?: 'theme' | 'logout'
+  action?: 'appearance' | 'logout'
   hasNotificationDot?: boolean
 }
 
@@ -88,7 +121,7 @@ type NavItem = {
 const NavBar = (props: NavBarProps) => {
   const [showLoginDialog, setShowLoginDialog] = createSignal(false)
   const [showLogoutDialog, setShowLogoutDialog] = createSignal(false)
-  const [showThemeDialog, setShowThemeDialog] = createSignal(false)
+  const [showAppearanceDialog, setShowAppearanceDialog] = createSignal(false)
   const queryClient = useQueryClient()
 
   const username = () => authSession.user?.username ?? null
@@ -146,9 +179,9 @@ const NavBar = (props: NavBarProps) => {
           ]
         : []),
       {
-        label: '表示テーマ',
+        label: APPEARANCE_SETTINGS_COPY.sectionTitle,
         icon: () => <Palette class="h-4 w-4" aria-hidden="true" />,
-        action: 'theme' as const,
+        action: 'appearance' as const,
       },
       {
         label: 'ヘルプ',
@@ -262,11 +295,11 @@ const NavBar = (props: NavBarProps) => {
    * @returns なし
    */
   const handleDropdownSelect = (item: DropdownItem) => {
-    if (item.action === 'theme') {
+    if (item.action === 'appearance') {
       // モバイル環境では、DropdownMenu のクローズ時フォーカス復元と Dialog オープン時フォーカス奪取が
       // 同一タップ内で競合し、ダイアログが開いてすぐ閉じることがあるため、次のイベントループで開く。
       window.setTimeout(() => {
-        setShowThemeDialog(true)
+        setShowAppearanceDialog(true)
       }, 0)
       return
     }
@@ -337,12 +370,17 @@ const NavBar = (props: NavBarProps) => {
   return (
     <div class="h-dvh overflow-hidden flex md:flex-row flex-col">
       {/* PC用nav-bar 768px以上 */}
-      <aside class="hidden md:flex md:w-24 md:flex-col md:border-r md:border-border md:bg-surface">
+      <aside
+        class={`hidden md:flex md:w-24 md:flex-col md:border-border md:bg-surface ${NAV_RAIL_SIDE_CLASS[navRailSide()]}`}
+      >
         <nav class="flex flex-1 flex-col px-2 py-6">
           <For each={getNavItems()}>
             {(item) =>
               item.dropdown ? (
-                <DropdownMenu onOpenChange={handleOthersMenuOpenChange}>
+                <DropdownMenu
+                  placement={NAV_RAIL_MENU_PLACEMENT[navRailSide()]}
+                  onOpenChange={handleOthersMenuOpenChange}
+                >
                   <AppMenuTrigger
                     variant="navRail"
                     label={item.label}
@@ -350,7 +388,7 @@ const NavBar = (props: NavBarProps) => {
                     hasNotificationDot={friendRequestNotification.hasPendingReceivedRequest}
                   />
                   <DropdownMenu.Portal>
-                    <AppMenuContent class="absolute left-16 -top-12 ml-2">
+                    <AppMenuContent class={NAV_RAIL_MENU_CONTENT_CLASS[navRailSide()]}>
                       <For each={item.dropdown}>
                         {(dropdownItem) => renderDropdownItem(dropdownItem)}
                       </For>
@@ -393,7 +431,9 @@ const NavBar = (props: NavBarProps) => {
         </main>
 
         {/* スマホ用nav-bar 768px未満 */}
-        <nav class="md:hidden z-40 flex items-center justify-between border-t border-border bg-surface p-2 shadow-sm">
+        <nav
+          class={`md:hidden z-40 flex items-center justify-between border-border bg-surface p-2 shadow-sm ${NAV_BAR_SIDE_CLASS[navBarSide()]}`}
+        >
           <For each={getNavItems()}>
             {(item) =>
               item.dropdown ? (
@@ -405,7 +445,7 @@ const NavBar = (props: NavBarProps) => {
                     hasNotificationDot={friendRequestNotification.hasPendingReceivedRequest}
                   />
                   <DropdownMenu.Portal>
-                    <AppMenuContent class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2">
+                    <AppMenuContent class={NAV_BAR_MENU_CONTENT_CLASS[navBarSide()]}>
                       <For each={item.dropdown}>
                         {(dropdownItem) => renderDropdownItem(dropdownItem)}
                       </For>
@@ -486,17 +526,18 @@ const NavBar = (props: NavBarProps) => {
         </AlertDialog>
 
         <AppDialog
-          open={showThemeDialog()}
-          onOpenChange={setShowThemeDialog}
+          open={showAppearanceDialog()}
+          onOpenChange={setShowAppearanceDialog}
           preventScroll={false}
           layer="nav"
           size="md"
-          title="表示テーマ"
+          title={APPEARANCE_SETTINGS_COPY.sectionTitle}
           description={APPEARANCE_SETTINGS_COPY.dialogDescription}
           descriptionSpacing="regular"
         >
-          <div class="mt-4">
+          <div class="mt-4 grid gap-6">
             <AppearanceSettings />
+            <NavPlacementSettings scope="current" />
           </div>
         </AppDialog>
       </div>
