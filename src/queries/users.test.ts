@@ -95,6 +95,29 @@ test('更新日時はユーザーごとに異なるqueryとして同時取得す
   assert.deepEqual(userQueryKeys.updatedAt('alice'), ['users', 'alice', 'updated-at'])
 })
 
+test('プロフィールコメントqueryは enabled が false のとき取得しない設定になること', async () => {
+  // Given: コメント機能を無効にした query options。
+  const { userCommentQueryOptions, userQueryKeys } = await loadUsersApi()
+
+  // When: 対象ユーザーのコメント query を作る。
+  const options = userCommentQueryOptions('alice', false)
+
+  // Then: 取得は無効で、キャッシュキーはユーザーのコメントを指す。
+  assert.equal(options.enabled, false)
+  assert.deepEqual(options.queryKey, userQueryKeys.comment('alice'))
+})
+
+test('プロフィールコメントqueryは enabled が true のとき取得する設定になること', async () => {
+  // Given: コメント機能を有効にした query options。
+  const { userCommentQueryOptions } = await loadUsersApi()
+
+  // When: 対象ユーザーのコメント query を作る。
+  const options = userCommentQueryOptions('alice', true)
+
+  // Then: 取得は有効。
+  assert.equal(options.enabled, true)
+})
+
 test('fetchUserUpdatedAtはオフライン時も一時停止せず、通信失敗を呼び出し元へ返すこと', async (t) => {
   // Given: ブラウザーがオフラインで、通信が失敗する。
   onlineManager.setOnline(false)

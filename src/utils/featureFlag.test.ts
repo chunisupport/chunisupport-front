@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { APP_ENVIRONMENTS, type FeatureFlagDefinition } from '../constants/featureFlags'
+import {
+  APP_ENVIRONMENTS,
+  FEATURE_FLAG_DEFINITIONS,
+  type FeatureFlagDefinition,
+} from '../constants/featureFlags'
 import { isAppEnvironment, resolveEnabledFeatures } from './featureFlag'
 
 /** 環境ごとの有効化と、省略・false による無効化を検証するための定義。 */
@@ -39,6 +43,24 @@ for (const environment of APP_ENVIRONMENTS) {
     assert.deepEqual(enabledFeatures, new Set())
   })
 }
+
+test('profile_comment は develop と staging で有効、production では無効', () => {
+  // Given: 登録済みのプロフィールコメントフラグ。production は false。
+  const definition = FEATURE_FLAG_DEFINITIONS.profile_comment
+
+  // When: 各運用環境で有効な機能を解決する。
+  const develop = resolveEnabledFeatures(FEATURE_FLAG_DEFINITIONS, 'develop')
+  const staging = resolveEnabledFeatures(FEATURE_FLAG_DEFINITIONS, 'staging')
+  const production = resolveEnabledFeatures(FEATURE_FLAG_DEFINITIONS, 'production')
+
+  // Then: dev / stg だけ有効で、本番の集合には入らない。
+  assert.equal(definition.develop, true)
+  assert.equal(definition.staging, true)
+  assert.equal(definition.production, false)
+  assert.equal(develop.has('profile_comment'), true)
+  assert.equal(staging.has('profile_comment'), true)
+  assert.equal(production.has('profile_comment'), false)
+})
 
 test('isAppEnvironment は3種類の運用環境名を受け付ける', () => {
   // Given: 運用で利用する3種類の環境名。

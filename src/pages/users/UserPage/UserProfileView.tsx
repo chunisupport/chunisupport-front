@@ -12,6 +12,7 @@ import {
   createAppMainScrollOffsetRestoreEffect,
   useAppMainScrollRestoration,
 } from '../../../hooks/useAppMainScrollRestoration'
+import { isFeatureEnabled } from '../../../lib/featureFlags'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   getAppMainScrollTop,
@@ -362,7 +363,9 @@ export const UserProfileView: Component<Props> = (props) => {
           historyHref={buildUserStatsPagePath(props.username)}
           records={recordProfile()?.record.standard}
         />
-        <ProfileComment username={props.username} />
+        <Show when={isFeatureEnabled('profile_comment')}>
+          <ProfileComment username={props.username} />
+        </Show>
         <ProfileFriendAction username={props.username} playerName={playerInfo().name} />
       </div>
 
