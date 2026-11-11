@@ -1,8 +1,11 @@
 import { createResource, For, Show } from 'solid-js'
 import { fetchAnnouncements } from '../../api/announcements'
 import {
+  ANNOUNCEMENT_CARD_FRAME_CLASS,
+  ANNOUNCEMENT_CARD_MIN_HEIGHT_CLASS,
   ANNOUNCEMENT_CATEGORY_CLASSES,
   ANNOUNCEMENT_CATEGORY_LABELS,
+  ANNOUNCEMENTS_DISPLAY_LIMIT,
   ANNOUNCEMENTS_EMPTY_MESSAGE,
   ANNOUNCEMENTS_HEADING,
   ANNOUNCEMENTS_LIST_LINK_TEXT,
@@ -13,8 +16,15 @@ import { formatAnnouncementDate } from '../../utils/announcementFeed'
 import LoadError from '../LoadError/LoadError'
 import Loading from '../Loading/Loading'
 
+/** 読込中に高さを確保するスケルトンの件数。表示上限と同じ。 */
+const ANNOUNCEMENT_SKELETON_IDS = Array.from(
+  { length: ANNOUNCEMENTS_DISPLAY_LIMIT },
+  (_, index) => index
+)
+
 /**
  * ドキュメントサイトから取得した最新のお知らせを表示する。
+ * 読込中は表示件数分のスケルトンで高さを確保する。
  *
  * @returns 読み込み状態を含むトップページのお知らせ欄。
  */
@@ -36,8 +46,19 @@ const Announcements = () => {
       <Show
         when={!announcements.loading}
         fallback={
-          <div class="h-24">
-            <Loading ariaLabel={ANNOUNCEMENTS_LOADING_LABEL} />
+          <div class="relative">
+            <div class="space-y-2" aria-hidden="true">
+              <For each={ANNOUNCEMENT_SKELETON_IDS}>
+                {() => (
+                  <div
+                    class={`${ANNOUNCEMENT_CARD_FRAME_CLASS} ${ANNOUNCEMENT_CARD_MIN_HEIGHT_CLASS} animate-pulse bg-surface-muted motion-reduce:animate-none`}
+                  />
+                )}
+              </For>
+            </div>
+            <div class="absolute inset-0">
+              <Loading ariaLabel={ANNOUNCEMENTS_LOADING_LABEL} />
+            </div>
           </div>
         }
       >
@@ -52,7 +73,7 @@ const Announcements = () => {
                   <li>
                     <a
                       href={announcement.url}
-                      class="block rounded-md border border-border p-3 hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+                      class={`block ${ANNOUNCEMENT_CARD_FRAME_CLASS} ${ANNOUNCEMENT_CARD_MIN_HEIGHT_CLASS} hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring`}
                     >
                       <div class="mb-2 flex flex-wrap items-center gap-2 text-xs text-text-muted">
                         <span
