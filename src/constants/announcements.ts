@@ -22,6 +22,13 @@ export const ANNOUNCEMENT_CARD_FRAME_CLASS = 'rounded-md border border-border p-
  */
 export const ANNOUNCEMENT_CARD_MIN_HEIGHT_CLASS = 'min-h-[8.75rem]'
 
+/**
+ * 表示上限件数分のカードと間隔を含む一覧の最小高さ。
+ * 8.75rem のカード3件と、その間の 0.5rem 間隔2つで 27.25rem。
+ * 0〜2件や取得失敗でも読込中のスケルトンから縮めず、下のX欄を動かさない。
+ */
+export const ANNOUNCEMENT_LIST_MIN_HEIGHT_CLASS = 'min-h-[27.25rem]'
+
 export const ANNOUNCEMENT_CATEGORY_LABELS: Record<AnnouncementCategory, string> = {
   important: '重要',
   update: 'アップデート',
