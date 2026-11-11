@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { brotliCompressSync, gzipSync } from 'node:zlib'
+import { SELF_HOSTED_FONT_LICENSES } from '../src/assets/fonts/licenses/fontLicenses.ts'
 import {
   collectGoogleFontFileUrls,
   createFontFileName,
@@ -14,6 +15,7 @@ const DIST_DIRECTORY = path.resolve(import.meta.dirname, '../dist')
 const INDEX_HTML_PATH = path.join(DIST_DIRECTORY, 'index.html')
 const FONT_DIRECTORY = path.join(DIST_DIRECTORY, 'static/fonts')
 const STYLESHEET_DIRECTORY = path.join(DIST_DIRECTORY, 'static/css')
+const FONT_LICENSE_ROOT = path.resolve(import.meta.dirname, '../src/assets/fonts/licenses')
 
 /**
  * woff2 だけを返すよう、最近の Chrome としてスタイルシートを要求する。
@@ -84,6 +86,31 @@ const mapPool = async (items, limit, worker) => {
   }
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => run()))
   return results
+}
+
+/**
+ * リポジトリに同梱した OFL.txt を、woff2 と同じ `/static/fonts/` へコピーする。
+ *
+ * フォントファイルの取得や CSS の書き換えはしない。
+ *
+ * @returns コピーの完了を表す Promise。
+ */
+const copyFontLicenses = async () => {
+  await Promise.all(
+    SELF_HOSTED_FONT_LICENSES.map(async ({ id, copyright }) => {
+      const license = await readFile(path.join(FONT_LICENSE_ROOT, id, 'OFL.txt'))
+      const firstLine = license.toString('utf8').split('\n', 1)[0]
+      if (firstLine !== copyright) {
+        throw new Error(`フォントの著作権表示が一致しません: ${id}`)
+      }
+      if (!license.includes('SIL Open Font License, Version 1.1')) {
+        throw new Error(`OFL 本文がありません: ${id}`)
+      }
+      const targetDirectory = path.join(FONT_DIRECTORY, id)
+      await mkdir(targetDirectory, { recursive: true })
+      await writeFile(path.join(targetDirectory, 'OFL.txt'), license)
+    })
+  )
 }
 
 /**
@@ -175,6 +202,7 @@ const selfHostGoogleFonts = async () => {
   )
   await writeFile(path.join(STYLESHEET_DIRECTORY, stylesheetName), rewrittenCss, 'utf8')
   await writeFile(INDEX_HTML_PATH, nextHtml, 'utf8')
+  await copyFontLicenses()
 
   logSize('index.html before', html)
   logSize('index.html after', nextHtml)
