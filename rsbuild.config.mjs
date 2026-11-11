@@ -39,6 +39,11 @@ const OGP_IMAGE_PATH = path.resolve(import.meta.dirname, 'src/assets/ogp.png')
  * 同じ woff2 を指す `@font-face` がウェイトごとに複製され CSS が肥大する。
  * 範囲指定でも参照する woff2 は変わらない。
  * Jost のイタリックはレーティング画像の NEW バッジなどで使用している。
+ *
+ * 開発サーバーではこの URL をそのまま読む。本番ビルドの `scripts/self-host-google-fonts.mjs` が
+ * 同じ CSS と woff2 を取得し、`/static/` のハッシュ付きファイルへ置き換えてからこの link を消す。
+ * HTML に `fonts.googleapis.com` を残すと、Cloudflare Fonts が `@font-face` を応答へインラインし、
+ * キャッシュされない HTML が訪問のたびにその CSS を再ダウンロードする。
  */
 const GOOGLE_FONTS_STYLESHEET_URL =
   'https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Noto+Sans:wght@400..700&family=Noto+Sans+JP:wght@400..800&family=Oswald:wght@200..700&display=swap'

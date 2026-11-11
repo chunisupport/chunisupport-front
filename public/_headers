@@ -5,7 +5,9 @@
   Cache-Control: no-store
 
 # ファイル名にコンテンツハッシュを含むビルド成果物。
-# dist/static 配下の js / css / svg / image / *.js.LICENSE.txt が対象。
+# dist/static 配下の js / css / woff2 / svg / image / *.js.LICENSE.txt が対象。
+# フォント CSS と woff2 もこの規則に載せ、HTML へインラインしない。
+# /static/fonts/<family>/OFL.txt も同じ規則に含まれる。キャッシュ規則自体は変えない。
 /static/*
   Cache-Control: public, max-age=31536000, immutable
 
