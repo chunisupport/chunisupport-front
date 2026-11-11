@@ -32,6 +32,7 @@ const scheduleXTimelineLoad = (load: () => void): (() => void) => {
 /**
  * ChuniSupport公式Xアカウントのタイムラインを表示する。
  * 予約領域がビューポートへ十分入っているとき、またはスクロールで近づいたときにだけ widgets.js を読む。
+ * ウィンドウ高さの変化でも表示割合を見直す。
  * 読み込み前と失敗時は公式アカウントへのリンクを残す。
  *
  * @returns 高さを確保したXタイムライン。
@@ -73,6 +74,7 @@ export const XTimeline: Component = () => {
       loadRequested = true
       observer?.disconnect()
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
       startLoad()
     }
 
@@ -81,7 +83,16 @@ export const XTimeline: Component = () => {
       tryLoad()
     }
 
+    /**
+     * スクロールせずにビューポートが広がったときも、実表示割合で読み込みを判定する。
+     * rootMargin 付きの Observer は、しきい値を跨がない高さ変更を通知しない。
+     */
+    const onResize = (): void => {
+      tryLoad()
+    }
+
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
 
     let observer: IntersectionObserver | undefined
     if (typeof IntersectionObserver === 'function') {
@@ -98,6 +109,7 @@ export const XTimeline: Component = () => {
       disposed = true
       observer?.disconnect()
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
       cancelScheduledLoad?.()
     })
   })
