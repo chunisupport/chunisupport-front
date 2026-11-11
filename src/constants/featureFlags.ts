@@ -17,6 +17,11 @@ export const INVALID_APP_ENVIRONMENT_MESSAGE = `PUBLIC_APP_ENV は ${APP_ENVIRON
 export const FEATURE_FLAG_DEFINITIONS = {
   /** X でのログイン・新規登録・ログイン方法の連携。本番の Firebase で X を有効にするまで無効にする。 */
   x_login: { develop: true, staging: true, production: false },
+  /**
+   * プロフィールコメントの表示・編集と、コメント API の呼び出し。
+   * develop と staging で有効。production は false とし、本番ビルドでは無効。
+   */
+  profile_comment: { develop: true, staging: true, production: false },
 } as const satisfies Record<string, FeatureFlagDefinition>
 
 /** 登録済みの機能名。定義が0件の場合は never。 */

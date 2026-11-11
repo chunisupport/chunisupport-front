@@ -13,6 +13,7 @@ import { AppTooltipIconButton } from '../../../../components/common/AppTooltipIc
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../../../components/common/filterStyles'
 import { USER_NAMEPLATE_WIDTH_CLASS } from '../../../../components/common/profile/UserNameplate.constants'
 import { USER_COMMENT_MAX_LENGTH } from '../../../../constants/userComment'
+import { isFeatureEnabled } from '../../../../lib/featureFlags'
 import { userCommentQueryOptions, userQueryKeys } from '../../../../queries/users'
 import { authSession } from '../../../../stores/authSession'
 import { toUserFriendlyErrorMessage } from '../../../../utils/errorMessage'
@@ -31,13 +32,20 @@ type ProfileCommentProps = {
 /**
  * プロフィールカードの下に、カードと同じ幅でプロフィールコメントを表示する。
  * 自分のプロフィールでは編集ダイアログを開く操作を添える。
+ * `profile_comment` が無効な環境では何も出さず、コメントの取得も保存もしない。
  *
  * @param props - 表示中ユーザーのユーザー名。
- * @returns コメントと編集操作。コメント未設定の他人のプロフィールや取得前・取得失敗時は何も表示しない。
+ * @returns コメントと編集操作。フラグ無効時、コメント未設定の他人のプロフィール、取得前・取得失敗時は何も表示しない。
  */
 export const ProfileComment: Component<ProfileCommentProps> = (props) => {
+  // フラグはビルド時に確定し、実行中には変わらない。無効なときは query も mutation も作らない。
+  const profileCommentEnabled = isFeatureEnabled('profile_comment')
+  if (!profileCommentEnabled) return null
+
   const queryClient = useQueryClient()
-  const commentQuery = useQuery(() => userCommentQueryOptions(props.username))
+  const commentQuery = useQuery(() =>
+    userCommentQueryOptions(props.username, profileCommentEnabled)
+  )
   /** 取得済みのコメント。取得前・取得失敗時は undefined、未設定は null。取得中に data を読んで Suspense を起こさないよう成功時のみ参照する */
   const comment = createMemo(() => (commentQuery.isSuccess ? commentQuery.data : undefined))
   const isOwnProfile = createMemo(
