@@ -38,6 +38,7 @@ import {
   FOOTER_COPYRIGHT_TEXT_2,
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
+import { LANDING_GUEST_HERO_SECTION_CLASS } from './constants/landingPage'
 import {
   ADMIN_BATCH_PATH,
   ADMIN_CHART_RANKING_PATH,
@@ -281,6 +282,7 @@ const LandingFooter = () => {
 
 /**
  * トップページを表示する。
+ * 未ログイン時は導入カード、お知らせ、Xタイムラインの高さを先に確保する。
  *
  * @returns ランディングページ。
  */
@@ -305,11 +307,18 @@ const LandingPage = () => {
   return (
     <div class="flex min-h-dvh flex-col">
       <main class="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8">
-        <Show when={homeView().type !== 'loading'} fallback={<Loading />}>
+        <Show
+          when={homeView().type !== 'loading'}
+          fallback={
+            <section class={`${LANDING_GUEST_HERO_SECTION_CLASS} flex items-center justify-center`}>
+              <Loading />
+            </section>
+          }
+        >
           <Show
             when={authenticatedUsername()}
             fallback={
-              <section class="rounded-lg border border-border bg-surface p-6">
+              <section class={LANDING_GUEST_HERO_SECTION_CLASS}>
                 <h1 class="mb-2 text-2xl font-semibold">ChuniSupport</h1>
                 <p class="mb-4 text-sm text-text-muted">
                   ログインまたは新規登録して、プレイデータを管理しましょう。
