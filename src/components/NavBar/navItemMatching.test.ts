@@ -116,3 +116,16 @@ test('パーセントを含むユーザー名は1回だけデコードして比�
   assert.deepEqual(activeItemIds('/users/100%', authUsername), [])
   assert.deepEqual(activeItemIds('/users/%2525', '%25'), ['home'])
 })
+
+test('完全一致の項目はパスが一致するときだけアクティブになる', () => {
+  // Given: 前方一致や正規表現を持たない項目
+  const item: NavItemActiveTarget = { id: 'about', path: '/about' }
+
+  // When: 一致するパスと一致しないパスで判定する
+  const activeOnExact = isNavItemActive(item, '/about', null)
+  const activeOnOther = isNavItemActive(item, '/contact', null)
+
+  // Then: 完全一致のときだけアクティブになる
+  assert.equal(activeOnExact, true)
+  assert.equal(activeOnOther, false)
+})

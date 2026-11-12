@@ -179,3 +179,106 @@ test('Ver.1でジャケット非表示なら待ち件数は0であること', ()
   // Then: 待たない。
   assert.equal(count, 0)
 })
+
+test('サンプルの2件目は英語の長い曲名であること', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 2件目だけ英語の長い曲名になる。
+  assert.equal(
+    sample.rating.best[1]?.title,
+    'A Very Long English Title That Should Truncate In The Rating Card'
+  )
+  assert.equal(
+    sample.rating.new[1]?.title,
+    'A Very Long English Title That Should Truncate In The Rating Card'
+  )
+})
+
+test('サンプルの3件目は空白を含む曲名で4件目は定型曲名であること', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 3件目は空白を含む曲名、4件目は定型曲名になる。
+  assert.equal(sample.rating.best[2]?.title, '空白 を 含む 曲名')
+  assert.equal(sample.rating.new[2]?.title, '空白 を 含む 曲名')
+  assert.equal(sample.rating.best[3]?.title, 'best 4')
+  assert.equal(sample.rating.new[3]?.title, 'new 4')
+})
+
+test('サンプルのスコアは4件目だけ理論値であること', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 4件目だけ理論値で他は順に下がる。
+  assert.equal(sample.rating.best[0]?.score, 1009000)
+  assert.equal(sample.rating.best[1]?.score, 1008900)
+  assert.equal(sample.rating.best[2]?.score, 1008800)
+  assert.equal(sample.rating.best[3]?.score, 1010000)
+  assert.equal(sample.rating.best[4]?.score, 1008600)
+})
+
+test('サンプルのクリアランプは指定の5パターンであること', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 2件目・4件目・5件目だけ特別なランプになる。
+  assert.equal(sample.rating.best[0]?.clear_lamp, 'CLEAR')
+  assert.equal(sample.rating.best[1]?.clear_lamp, 'ABSOLUTE')
+  assert.equal(sample.rating.best[2]?.clear_lamp, 'CLEAR')
+  assert.equal(sample.rating.best[3]?.clear_lamp, 'CATASTROPHY')
+  assert.equal(sample.rating.best[4]?.clear_lamp, 'HARD')
+})
+
+test('サンプルのコンボランプは4件目と5件目だけ付くこと', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 4件目と5件目だけ特別なコンボランプになる。
+  assert.equal(sample.rating.best[0]?.combo_lamp, null)
+  assert.equal(sample.rating.best[1]?.combo_lamp, null)
+  assert.equal(sample.rating.best[2]?.combo_lamp, null)
+  assert.equal(sample.rating.best[3]?.combo_lamp, 'ALL JUSTICE')
+  assert.equal(sample.rating.best[4]?.combo_lamp, 'FULL COMBO')
+})
+
+test('サンプルのフルチェーンは4件目と5件目だけ付くこと', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 4件目と5件目だけ特別なフルチェーンになる。
+  assert.equal(sample.rating.best[0]?.full_chain, null)
+  assert.equal(sample.rating.best[1]?.full_chain, null)
+  assert.equal(sample.rating.best[2]?.full_chain, null)
+  assert.equal(sample.rating.best[3]?.full_chain, 'FULL CHAIN PLATINUM')
+  assert.equal(sample.rating.best[4]?.full_chain, 'FULL CHAIN GOLD')
+})
+
+test('サンプルのジャスティス数は4件目だけ0であること', () => {
+  // Given: 画像化前DOM確認用サンプルを組み立てる前提。
+  // When: サンプルデータを生成する。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // Then: 4件目だけ0で他はnullになる。
+  assert.equal(sample.rating.best[0]?.justice_count, null)
+  assert.equal(sample.rating.best[2]?.justice_count, null)
+  assert.equal(sample.rating.best[3]?.justice_count, 0)
+  assert.equal(sample.rating.best[4]?.justice_count, null)
+})
+
+test('Ver.1でジャケット表示でも画像が空なら待ち件数は0であること', () => {
+  // Given: 画像が空のサンプルのベスト枠・新曲枠。
+  const sample = buildRatingImageDomPreviewSample()
+
+  // When: Ver.1かつジャケット表示の待ち件数を数える。
+  const count = countRatingImagePreviewJackets(sample.rating, 'v1', true)
+
+  // Then: 待たない。
+  assert.equal(count, 0)
+})

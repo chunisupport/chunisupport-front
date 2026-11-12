@@ -544,6 +544,75 @@ test('未登録譜面の既定順は曲名ではなく読みベースで並ぶ�
   )
 })
 
+test('未判明譜面の難易度ソートは同難易度内でレベル順に並ぶこと', () => {
+  // Given: 同一難易度でレベル順と曲名順が逆になる未判明譜面。
+  const charts = [
+    createUnknownChart('2', '楽曲あ', 'MASTER', '13+'),
+    createUnknownChart('1', '楽曲い', 'MASTER', '13'),
+  ]
+
+  // When: 難易度で昇順に並べ替える。
+  const result = sortUnknownCharts(charts, 'difficulty', 'asc')
+
+  // Then: 難易度が同じためレベル順に並ぶこと。
+  assert.deepEqual(
+    result.map((chart) => chart.songId),
+    ['1', '2']
+  )
+})
+
+test('未判明譜面のレベルソートは同レベル内で難易度順に並ぶこと', () => {
+  // Given: 同一レベルで難易度順と曲名順が逆になる未判明譜面。
+  const charts = [
+    createUnknownChart('2', '楽曲あ', 'MASTER', '13+'),
+    createUnknownChart('1', '楽曲い', 'EXPERT', '13+'),
+  ]
+
+  // When: レベルで昇順に並べ替える。
+  const result = sortUnknownCharts(charts, 'level', 'asc')
+
+  // Then: レベルが同じため難易度順に並ぶこと。
+  assert.deepEqual(
+    result.map((chart) => chart.songId),
+    ['1', '2']
+  )
+})
+
+test('未判明譜面の曲名ソートは同名内で難易度順に並ぶこと', () => {
+  // Given: 同一曲名で難易度順とレベル順が逆になる未判明譜面。
+  const charts = [
+    createUnknownChart('2', '楽曲あ', 'MASTER', '13'),
+    createUnknownChart('1', '楽曲あ', 'EXPERT', '14+'),
+  ]
+
+  // When: 曲名で昇順に並べ替える。
+  const result = sortUnknownCharts(charts, 'songTitle', 'asc')
+
+  // Then: 曲名が同じため難易度順に並ぶこと。
+  assert.deepEqual(
+    result.map((chart) => chart.songId),
+    ['1', '2']
+  )
+})
+
+test('未判明譜面はソート方向未指定時に既定順を維持すること', () => {
+  // Given: 曲名の昇順とは異なる既定順の未判明譜面。
+  const charts = [
+    createUnknownChart('2', '楽曲い', 'MASTER', '13+'),
+    createUnknownChart('1', '楽曲あ', 'EXPERT', '13'),
+  ]
+
+  // When: ソート方向を指定しない。
+  const result = sortUnknownCharts(charts, 'songTitle', null)
+
+  // Then: 並べ替えず既定順のまま新しい配列で返ること。
+  assert.deepEqual(
+    result.map((chart) => chart.songTitle),
+    ['楽曲い', '楽曲あ']
+  )
+  assert.notEqual(result, charts)
+})
+
 test('未登録譜面の曲名ソートは読みベースで並ぶこと', () => {
   // Given: 曲名順と読み順が異なる未登録譜面。
   const charts = [

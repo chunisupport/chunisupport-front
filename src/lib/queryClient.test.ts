@@ -25,6 +25,33 @@ test('shouldRetryQuery: 一時エラーは最大1回だけ再試行する', () =
   assert.equal(shouldRetryQuery(1, error), false)
 })
 
+test('shouldRetryQuery: 500番台の一時エラーは初回だけ再試行する', () => {
+  // Given: 503以外のサーバーエラー
+  const serverError = Object.assign(new Error('server error'), { status: 500 })
+
+  // When: 初回失敗後と2回目失敗後の再試行可否を判定する
+  const retryFirst = shouldRetryQuery(0, serverError)
+  const retrySecond = shouldRetryQuery(1, serverError)
+
+  // Then: 初回だけ再試行する
+  assert.equal(retryFirst, true)
+  assert.equal(retrySecond, false)
+})
+
+test('shouldRetryQuery: エラーがnullやundefinedでも再試行可否を判定できる', () => {
+  // Given: statusを持たないnullとundefinedのエラー
+  const nullError = null
+  const undefinedError = undefined
+
+  // When: 初回失敗後の再試行可否を判定する
+  const retryNull = shouldRetryQuery(0, nullError)
+  const retryUndefined = shouldRetryQuery(0, undefinedError)
+
+  // Then: どちらも初回は再試行する
+  assert.equal(retryNull, true)
+  assert.equal(retryUndefined, true)
+})
+
 test('createAppQueryClient: mutationを自動再試行しない', () => {
   // Given & When: アプリケーション用QueryClientを生成する。
   const queryClient = createAppQueryClient()

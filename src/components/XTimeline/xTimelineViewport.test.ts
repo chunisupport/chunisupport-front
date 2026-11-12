@@ -112,3 +112,32 @@ test('高さが0の領域は見えていないものとして扱う', () => {
   assert.equal(measurement.viewportVisibleRatio, 0)
   assert.equal(shouldRequestXTimeline(measurement, false), false)
 })
+
+test('予約領域の下端がビューポート上端ちょうどのときは上にあるものとして扱う', () => {
+  // Given: 下端が0ちょうどで上端がビューポートより上にある境界。
+  const measurement = measureXTimelineViewport({ top: -600, bottom: 0, height: 600 }, 800)
+
+  // When: スクロール済みでも判定する。
+  const shouldLoad = shouldRequestXTimeline(measurement, true)
+
+  // Then: 上にあるので表示割合は0で読み込まない。
+  assert.equal(measurement.isAboveViewport, true)
+  assert.equal(measurement.viewportVisibleRatio, 0)
+  assert.equal(shouldLoad, false)
+})
+
+test('ビューポート下端から240pxちょうどでもスクロール後に読み込む', () => {
+  // Given: 予約領域の上端が接近余白ちょうどの境界。
+  const measurement = measureXTimelineViewport({ top: 1040, bottom: 1640, height: 600 }, 800)
+
+  // When: スクロールの有無で判定する。
+  const beforeScroll = shouldRequestXTimeline(measurement, false)
+  const afterScroll = shouldRequestXTimeline(measurement, true)
+
+  // Then: 境界上はまだ範囲内なのでスクロール後に読み込む。
+  assert.equal(measurement.distanceFromViewportBottomPx, 240)
+  assert.equal(measurement.viewportVisibleRatio, 0)
+  assert.equal(measurement.isAboveViewport, false)
+  assert.equal(beforeScroll, false)
+  assert.equal(afterScroll, true)
+})
