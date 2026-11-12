@@ -336,10 +336,12 @@ export const buildCreateSongRequest = (
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.bpmInvalid }
   }
 
-  const invalidChart = draft.charts.find(
-    (chart) =>
-      chart.enabled && (parseFloat(chart.const) < 0 || (chart.notes !== null && chart.notes < 0))
-  )
+  // 定数は自由入力のため、数値として読めない値も負数と同様に弾く（NaN は送信時に null になる）。
+  const invalidChart = draft.charts.find((chart) => {
+    if (!chart.enabled) return false
+    const chartConst = parseFloat(chart.const)
+    return Number.isNaN(chartConst) || chartConst < 0 || (chart.notes !== null && chart.notes < 0)
+  })
   if (invalidChart) {
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.createChartInvalid }
   }

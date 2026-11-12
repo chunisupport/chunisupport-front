@@ -298,6 +298,42 @@ test('追加リクエストは有効な譜面の定数が負なら譜面エラ�
   })
 })
 
+for (const { label, value } of [
+  { label: '数字でない文字列', value: 'abc' },
+  { label: '空文字', value: '' },
+]) {
+  test(`追加リクエストは有効な譜面の定数が${label}なら譜面エラーを返すこと`, () => {
+    // Given: 数値として読めない定数を持つ有効な譜面。
+    const draft = validCreateDraft()
+    const invalidMaster = draft.charts.map((chart) =>
+      chart.difficulty_name === 'MASTER' ? { ...chart, const: value } : chart
+    )
+
+    // When: 追加リクエストを組み立てる。
+    const result = buildCreateSongRequest({ ...draft, charts: invalidMaster }, genres)
+
+    // Then: 定数が null のリクエストを作らず、譜面エラーを返す。
+    assert.deepEqual(result, {
+      ok: false,
+      message: '追加する譜面の定数・ノーツは0以上で入力してください。',
+    })
+  })
+}
+
+test('追加リクエストは無効にした譜面の定数が数値でなくても検証対象にしないこと', () => {
+  // Given: 追加対象から外した譜面にだけ、数値として読めない定数がある。
+  const draft = validCreateDraft()
+  const charts = draft.charts.map((chart) =>
+    chart.difficulty_name === 'BASIC' ? { ...chart, enabled: false, const: 'abc' } : chart
+  )
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest({ ...draft, charts }, genres)
+
+  // Then: 譜面エラーにはならず、リクエストを組み立てる。
+  assert.equal(result.ok, true)
+})
+
 test('追加リクエストはリリース日が不正なら日付エラーを返すこと', () => {
   // Given: 検証対象の不正な入力。
   const draft = validCreateDraft()
