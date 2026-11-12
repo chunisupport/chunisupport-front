@@ -83,3 +83,38 @@ test('指定したフォールバック秒数を利用すること', () => {
   // Then
   assert.equal(result, fallbackSeconds)
 })
+
+test('小数のフォールバック秒数は既定秒数へフォールバックすること', () => {
+  // Given
+  const value = 'invalid'
+  const fallbackSeconds = 1.5
+
+  // When
+  const result = parseRetryAfterSeconds(value, fallbackSeconds)
+
+  // Then
+  assert.equal(result, 60)
+})
+
+test('ゼロ秒のフォールバック秒数は既定秒数へフォールバックすること', () => {
+  // Given
+  const value = 'invalid'
+  const fallbackSeconds = 0
+
+  // When
+  const result = parseRetryAfterSeconds(value, fallbackSeconds)
+
+  // Then
+  assert.equal(result, 60)
+})
+
+test('16進数表記のRetry-Afterは既定秒数へフォールバックすること', () => {
+  // Given
+  const value = '0x10'
+
+  // When
+  const result = parseRetryAfterSeconds(value)
+
+  // Then
+  assert.equal(result, 60)
+})

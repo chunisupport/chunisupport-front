@@ -89,3 +89,46 @@ test('旧ソートクエリをreplaceで除去する', () => {
     { params: { sortcol: undefined, sortorder: undefined }, options: { replace: true } },
   ])
 })
+
+test('sortcolだけが残っていても旧クエリを除去する', () => {
+  // Given: sortcolだけが残ったURL。
+  const calls: unknown[] = []
+
+  // When: 旧ソートクエリを除去する。
+  sanitizeSortQuery({ sortcol: 'score' }, (params, options) => {
+    calls.push({ params, options })
+  })
+
+  // Then: 片方だけでもreplaceで除去を1回要求する。
+  assert.deepEqual(calls, [
+    { params: { sortcol: undefined, sortorder: undefined }, options: { replace: true } },
+  ])
+})
+
+test('sortorderだけが残っていても旧クエリを除去する', () => {
+  // Given: sortorderだけが残ったURL。
+  const calls: unknown[] = []
+
+  // When: 旧ソートクエリを除去する。
+  sanitizeSortQuery({ sortorder: 'desc' }, (params, options) => {
+    calls.push({ params, options })
+  })
+
+  // Then: 片方だけでもreplaceで除去を1回要求する。
+  assert.deepEqual(calls, [
+    { params: { sortcol: undefined, sortorder: undefined }, options: { replace: true } },
+  ])
+})
+
+test('旧ソートクエリがなければ何もしないこと', () => {
+  // Given: 旧クエリのないURL。
+  const calls: unknown[] = []
+
+  // When: 除去を試みる。
+  sanitizeSortQuery({}, (params, options) => {
+    calls.push({ params, options })
+  })
+
+  // Then: 更新を要求しない。
+  assert.deepEqual(calls, [])
+})

@@ -117,3 +117,14 @@ test('5xxステータスはHTTPステータステキストを表示せずサー�
   // Then
   assert.equal(result, 'サービスが一時的に利用できません')
 })
+
+test('コードを持つ関数値はオブジェクト以外としてfallback文言を返すこと', () => {
+  // Given: エラーコードを持つ関数値。
+  const error = Object.assign(() => {}, { code: 'player_not_found' })
+
+  // When
+  const result = toUserFriendlyErrorMessage(error, '保存に失敗しました。')
+
+  // Then: typeofがobjectではないためfallbackを返す。
+  assert.equal(result, '保存に失敗しました。')
+})

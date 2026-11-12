@@ -152,3 +152,14 @@ test('固定ページとして扱えないパスを拒否すること', () => {
     )
   }
 })
+
+test('ドットで始まるファイル名のパスをdistの外側として拒否すること', () => {
+  // Given
+  const distDirectory = path.resolve('app', 'dist')
+
+  // When & Then
+  assert.throws(
+    () => resolveStaticPageOutputPath(distDirectory, '/..evil'),
+    new Error('固定ページの出力先が dist の外側です: /..evil')
+  )
+})

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { reloadWhenNewFrontendIsAvailable } from './frontendVersion.ts'
+import { checkForFrontendUpdate, reloadWhenNewFrontendIsAvailable } from './frontendVersion.ts'
 
 test('公開中のビルドIDが実行中と異なる場合は一度だけ再読み込みする', async () => {
   // Given: 新しいビルドが公開され、まだ自動再読み込みしていない。
@@ -70,6 +70,56 @@ test('公開中のビルドIDが実行中と同じ場合は再読み込みしな
 
   // Then: 再読み込みしない。
   assert.equal(reloadCount, 0)
+})
+
+test('windowがない環境ではバージョン確認を何もせず解決すること', async () => {
+  // Given: windowが存在しないNode環境。
+  const originalWindow = globalThis.window
+  Object.assign(globalThis, { window: undefined })
+
+  try {
+    // When: フロントエンド更新を確認する。
+    const result = await checkForFrontendUpdate()
+
+    // Then: 何もせず解決する。
+    assert.equal(result, undefined)
+  } finally {
+    Object.assign(globalThis, { window: originalWindow })
+  }
+})
+
+test('公開中バージョンのbuildIdが文字列なら再読み込みに使うこと', async () => {
+  // Given: 公開中のversion.jsonが文字列のbuildIdを返す。
+  const originalFetch = globalThis.fetch
+  const originalWindow = globalThis.window
+  let reloadCount = 0
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ buildId: 'new-build' }), { status: 200 })
+  Object.assign(globalThis, {
+    __FRONTEND_BUILD_ID__: 'current-build',
+    window: {
+      location: {
+        reload: () => {
+          reloadCount += 1
+        },
+      },
+      sessionStorage: {
+        getItem: () => null,
+        setItem: () => undefined,
+      },
+    },
+  })
+
+  try {
+    // When: フロントエンド更新を確認する。
+    await checkForFrontendUpdate()
+
+    // Then: 文字列のbuildIdを正しい形式として再読み込みする。
+    assert.equal(reloadCount, 1)
+  } finally {
+    globalThis.fetch = originalFetch
+    Object.assign(globalThis, { window: originalWindow })
+  }
 })
 
 test('バージョン情報を取得できない場合は既存エラー処理へフォールバックする', async () => {

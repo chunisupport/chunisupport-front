@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   calculateImageCaptureScale,
   canCopyImageToClipboard,
+  canShareFiles,
   copyImageToClipboard,
 } from './domImageCapture.ts'
 
@@ -49,4 +50,142 @@ test('画像クリップボードが使えない環境でコピーするとエ�
     () => copyImageToClipboard(image),
     new Error('Image clipboard is unavailable')
   )
+})
+
+test('Web Share APIに対応している場合は共有可能と判定すること', () => {
+  // Given: ファイル共有に対応したnavigator。
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+  try {
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {
+        canShare: () => true,
+        share: () => Promise.resolve(),
+      },
+    })
+
+    // When: 空のファイル一覧の共有可否を確認する。
+    const result = canShareFiles([])
+
+    // Then: 共有可能と判定する。
+    assert.equal(result, true)
+  } finally {
+    if (previousNavigator) {
+      Object.defineProperty(globalThis, 'navigator', previousNavigator)
+    } else {
+      Reflect.deleteProperty(globalThis, 'navigator')
+    }
+  }
+})
+
+test('クリップボードPNG書き込みに対応している場合はコピー可能と判定すること', () => {
+  // Given: PNG書き込みに対応したClipboard API。
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+  const previousClipboardItem = Object.getOwnPropertyDescriptor(globalThis, 'ClipboardItem')
+  try {
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {
+        clipboard: {
+          write: () => Promise.resolve(),
+        },
+      },
+    })
+    Object.defineProperty(globalThis, 'ClipboardItem', {
+      configurable: true,
+      value: {
+        supports: () => true,
+      },
+    })
+
+    // When: 画像クリップボードの対応可否を確認する。
+    const result = canCopyImageToClipboard()
+
+    // Then: 対応と判定する。
+    assert.equal(result, true)
+  } finally {
+    if (previousNavigator) {
+      Object.defineProperty(globalThis, 'navigator', previousNavigator)
+    } else {
+      Reflect.deleteProperty(globalThis, 'navigator')
+    }
+    if (previousClipboardItem) {
+      Object.defineProperty(globalThis, 'ClipboardItem', previousClipboardItem)
+    } else {
+      Reflect.deleteProperty(globalThis, 'ClipboardItem')
+    }
+  }
+})
+
+test('ClipboardItemのPNG対応確認が未対応を返す場合はコピー不可と判定すること', () => {
+  // Given: PNG未対応を返すClipboardItem。
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+  const previousClipboardItem = Object.getOwnPropertyDescriptor(globalThis, 'ClipboardItem')
+  try {
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {
+        clipboard: {
+          write: () => Promise.resolve(),
+        },
+      },
+    })
+    Object.defineProperty(globalThis, 'ClipboardItem', {
+      configurable: true,
+      value: {
+        supports: () => false,
+      },
+    })
+
+    // When: 画像クリップボードの対応可否を確認する。
+    const result = canCopyImageToClipboard()
+
+    // Then: 非対応と判定する。
+    assert.equal(result, false)
+  } finally {
+    if (previousNavigator) {
+      Object.defineProperty(globalThis, 'navigator', previousNavigator)
+    } else {
+      Reflect.deleteProperty(globalThis, 'navigator')
+    }
+    if (previousClipboardItem) {
+      Object.defineProperty(globalThis, 'ClipboardItem', previousClipboardItem)
+    } else {
+      Reflect.deleteProperty(globalThis, 'ClipboardItem')
+    }
+  }
+})
+
+test('ClipboardItemがない環境では書き込み手段があってもコピー不可と判定すること', () => {
+  // Given: clipboard.writeはあるがClipboardItemがない環境。
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+  const previousClipboardItem = Object.getOwnPropertyDescriptor(globalThis, 'ClipboardItem')
+  try {
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {
+        clipboard: {
+          write: () => Promise.resolve(),
+        },
+      },
+    })
+    Reflect.deleteProperty(globalThis, 'ClipboardItem')
+
+    // When: 画像クリップボードの対応可否を確認する。
+    const result = canCopyImageToClipboard()
+
+    // Then: 非対応と判定する。
+    assert.equal(result, false)
+  } finally {
+    if (previousNavigator) {
+      Object.defineProperty(globalThis, 'navigator', previousNavigator)
+    } else {
+      Reflect.deleteProperty(globalThis, 'navigator')
+    }
+    if (previousClipboardItem) {
+      Object.defineProperty(globalThis, 'ClipboardItem', previousClipboardItem)
+    } else {
+      Reflect.deleteProperty(globalThis, 'ClipboardItem')
+    }
+  }
 })

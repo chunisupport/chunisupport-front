@@ -621,3 +621,31 @@ test('枠外譜面がない場合は並べ替えずにそのまま返すこと',
   assert.deepEqual(prioritized.entries, theoretical.entries)
   assert.deepEqual(prioritized.boundaryEntries, [])
 })
+
+test('バージョン稼働日当日は現行バージョンとして新曲枠に含めること', () => {
+  // Given: 稼働日と同日のバージョンと、同日リリースの新曲。
+  const versions = [{ released_at: '2026-07-02' }]
+  const songs = [createMasterSong('new', '2026-07-02', 15)]
+
+  // When: 稼働日当日を基準日に新曲枠理論値を算出する。
+  const result = calculateNewSongTheoreticalRating(songs, versions, '2026-07-02', 20)
+
+  // Then: 当日バージョンを除外せず、1譜面の理論値を返す。
+  assert.equal(result?.entries.length, 1)
+  assert.equal(result?.rating, 17.15)
+})
+
+test('楽曲IDと難易度が両方一致する場合だけレコードを解決すること', () => {
+  // Given: 同じ楽曲の別難易度と、別楽曲の同難易度のレコード。
+  const entry = { songId: 'song', difficulty: 'MASTER' } as const
+  const currentRecords = [{ id: 'song', difficulty: 'ULTIMA', score: 1005000 }] as const
+  const candidateRecords = [{ id: 'other', difficulty: 'MASTER', score: 1004000 }] as const
+
+  // When: 現在枠と候補枠の進捗をそれぞれ解決する。
+  const currentResult = resolveRatingTheoreticalProgress(entry, currentRecords, [])
+  const candidateResult = resolveRatingTheoreticalProgress(entry, [], candidateRecords)
+
+  // Then: 片方だけ一致するレコードは未プレイとして扱う。
+  assert.deepEqual(currentResult, { slot: null, currentScore: null, scoreGap: null })
+  assert.deepEqual(candidateResult, { slot: null, currentScore: null, scoreGap: null })
+})

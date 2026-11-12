@@ -696,6 +696,100 @@ test('マップにない譜面は不明扱いで判定すること', () => {
   assert.equal(withGenre.length, 0)
 })
 
+test('通常譜面とWORLD’S END譜面が混在しても通常譜面を先に並べること', () => {
+  // Given: WORLD'S ENDを先頭に置いた混在の一覧
+  const charts = [
+    createSortableWorldsendChart('worldsend', 5, 'カ'),
+    createSortableChart({ title: 'normal' }),
+  ]
+
+  // When: 昇順と降順で定数・星数列を並べ替える
+  const ascending = sortChartStats(charts, 'level', 'asc', 'rank')
+  const descending = sortChartStats(charts, 'level', 'desc', 'rank')
+
+  // Then: 方向に関わらず通常譜面が先になる
+  assert.deepEqual(
+    ascending.map(({ title }) => title),
+    ['normal', 'worldsend']
+  )
+  assert.deepEqual(
+    descending.map(({ title }) => title),
+    ['normal', 'worldsend']
+  )
+})
+
+test('星数欠損と星数ありでは属性順が逆でも欠損を末尾に置くこと', () => {
+  // Given: 属性だけを見ると欠損側が先になる組み合わせ
+  const charts = [
+    createSortableWorldsendChart('null-a', null, 'ア'),
+    createSortableWorldsendChart('star5-ka', 5, 'カ'),
+  ]
+
+  // When: 星数列の昇順に並べ替える
+  const ascending = sortChartStats(charts, 'level', 'asc', 'rank')
+
+  // Then: 星数がある譜面が先になる
+  assert.deepEqual(
+    ascending.map(({ title }) => title),
+    ['star5-ka', 'null-a']
+  )
+})
+
+test('属性欠損と属性ありでは表題順に関わらず欠損を末尾に置くこと', () => {
+  // Given: 表題順では欠損側が先になる組み合わせ
+  const charts = [
+    createSortableWorldsendChart('B song', 5, 'カ'),
+    createSortableWorldsendChart('A song', 5, null),
+  ]
+
+  // When: 星数が同順の状態で属性列の昇順に並べ替える
+  const ascending = sortChartStats(charts, 'level', 'asc', 'rank')
+
+  // Then: 属性がある譜面が先になる
+  assert.deepEqual(
+    ascending.map(({ title }) => title),
+    ['B song', 'A song']
+  )
+})
+
+test('バージョンだけを指定した場合は不一致の譜面を除外すること', () => {
+  // Given: ジャンル未指定でバージョンだけが不一致の譜面
+  const charts = [createSortableChart({ title: 'song-1', song_id: 'song-1' })]
+  const attributes = new Map([
+    ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM LUMINOUS', nameFolder: 'A' }],
+  ])
+
+  // When: バージョン条件だけで絞り込む
+  const filtered = filterChartStats(charts, '', attributes, {
+    ...createDefaultChartStatsAttributeFilter(),
+    versions: ['CHUNITHM VERSE'],
+  })
+
+  // Then: バージョンが一致しないため残らない
+  assert.deepEqual(
+    filtered.map(({ song_id }) => song_id),
+    []
+  )
+})
+
+test('ソート方向だけが未指定の場合は元の順序を保つこと', () => {
+  // Given: 表題の昇順に並んだ一覧
+  const charts = [
+    createSortableChart({ title: 'A song' }),
+    createSortableChart({ title: 'B song' }),
+  ]
+
+  // When: 方向を指定せずに表題列で並べ替える
+  const sorted = sortChartStats(charts, 'title', null, 'rank')
+
+  // Then: 元の順序のまま複製される
+  assert.deepEqual(
+    sorted.map(({ title }) => title),
+    ['A song', 'B song']
+  )
+  assert.notEqual(sorted, charts)
+})
+
 test('楽曲名順で絞り込み、不明な楽曲は選択時に除外すること', () => {
   // Given
   const charts = [

@@ -206,3 +206,75 @@ test('_headers の規則数はパス行だけを数えること', () => {
   // Then
   assert.equal(count, 2)
 })
+
+test('src属性を持つlinkタグは初期アセットの抽出対象外であること', () => {
+  // Given: scriptではないタグが/static/のsrcを持つ。
+  const html = '<link src="/static/js/evil.js">'
+
+  // When
+  const linkValues = collectInitialStaticAssetLinkValues(html)
+
+  // Then: scriptタグではないためpreloadを作らない。
+  assert.deepEqual(linkValues, [])
+})
+
+test('ワイルドカードが空文字の完全一致は既存パターンに含めること', () => {
+  // Given: faviconパターンの*が空文字になるファイル名。
+  const relativePaths = ['favicon..png']
+
+  // When
+  const headerPaths = collectNonHtmlHeaderPaths(relativePaths)
+
+  // Then: 既存パターンと一致するため追加しない。
+  assert.deepEqual(headerPaths, ['/static/*', '/version.json', '/favicon.*.png'])
+})
+
+test('static直下の基準パスはLinkの除外対象に含めないこと', () => {
+  // Given: dist直下のstatic基準パス。
+  const relativePaths = ['static']
+
+  // When
+  const headerPaths = collectNonHtmlHeaderPaths(relativePaths)
+
+  // Then: 個別列挙せず既存パターンのみになる。
+  assert.deepEqual(headerPaths, ['/static/*', '/version.json', '/favicon.*.png'])
+})
+
+test('_headers の規則数は空行だけのファイルでは0になること', () => {
+  // Given: パス行がなく空行だけのファイル。
+  const headersFile = ''
+
+  // When
+  const count = countCloudflareHeaderRules(headersFile)
+
+  // Then
+  assert.equal(count, 0)
+})
+
+test('_headers の規則数は空行なしの単一パス行を1と数えること', () => {
+  // Given: 末尾改行のない単一のパス行。
+  const headersFile = '/*'
+
+  // When
+  const count = countCloudflareHeaderRules(headersFile)
+
+  // Then
+  assert.equal(count, 1)
+})
+
+test('HTML応答のパスをLink除外に指定すると失敗すること', () => {
+  // Given: HTML応答のパスを除外に指定する。
+  const html =
+    '<link rel="stylesheet" href="/static/css/a.css"><script src="/static/js/b.js"></script>'
+
+  // When / Then
+  assert.throws(
+    () =>
+      createEarlyHintsHeaderRules({
+        html,
+        backendUrl: undefined,
+        nonHtmlPaths: ['/*'],
+      }),
+    /HTML 応答のパスから Link は外せません/
+  )
+})

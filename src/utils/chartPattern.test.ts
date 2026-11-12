@@ -84,6 +84,58 @@ for (const { period, expectedSpacing } of [
   })
 }
 
+test('斜線の末端が描画幅と一致する場合は幅の手前で止める', () => {
+  // Given
+  const previousDocument = globalThis.document
+  const strokes: number[] = []
+  const lineStarts: [number, number][] = []
+  const lineEnds: [number, number][] = []
+  const patternContext = {
+    fillStyle: '',
+    strokeStyle: '',
+    lineWidth: 0,
+    fillRect: (_x: number, _y: number, _width: number, _height: number) => undefined,
+    beginPath: () => undefined,
+    moveTo: (x: number, y: number) => lineStarts.push([x, y]),
+    lineTo: (x: number, y: number) => lineEnds.push([x, y]),
+    stroke: () => strokes.push(1),
+  }
+  const patternCanvas = {
+    width: 0,
+    height: 0,
+    getContext: () => patternContext,
+  }
+  const targetContext = {
+    createPattern: () => ({ kind: 'pattern' }),
+  }
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { createElement: () => patternCanvas },
+  })
+
+  try {
+    // When
+    createChartStripePattern(targetContext as unknown as CanvasRenderingContext2D, 120, 80, {
+      baseColor: 'rgb(251, 44, 54)',
+      stripeColor: 'rgba(255, 255, 255, 0.25)',
+      stripeWidth: 3,
+      period: 7.071067811865475,
+    })
+
+    // Then
+    assert.equal(strokes.length, 20)
+    assert.deepEqual(lineStarts[0], [-80, 0])
+    assert.deepEqual(lineEnds[0], [0, 80])
+    assert.deepEqual(lineStarts[19], [110, 0])
+    assert.deepEqual(lineEnds[19], [190, 80])
+  } finally {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: previousDocument,
+    })
+  }
+})
+
 test('CanvasPatternを生成できない場合は下地色を返す', () => {
   // Given
   const previousDocument = globalThis.document

@@ -23,6 +23,17 @@ test('toRecordDateString', async (t) => {
     assert.equal(toRecordDateString('2026-02-30'), null)
   })
 
+  await t.test('月が範囲外でも日だけが一致する場合は null を返す', () => {
+    // Given: 日だけが繰り上がり後の日付と一致する存在しない年月日
+    const invalidMonth = '2026-13-01'
+
+    // When: 日付文字列へ変換する
+    const result = toRecordDateString(invalidMonth)
+
+    // Then: カレンダー上に存在しないため null になる
+    assert.equal(result, null)
+  })
+
   await t.test('null の場合は null を返す', () => {
     assert.equal(toRecordDateString(null), null)
   })

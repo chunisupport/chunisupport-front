@@ -493,6 +493,86 @@ test('ソート未指定の場合は判定の優先順位を保つ', () => {
   assert.deepEqual(sorted, entries)
 })
 
+test('得意度がちょうど30の譜面は苦手になること', () => {
+  // Given: 普段は平均の半分の失点で、平均50落ちの譜面を22落ちまで詰める。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 0.5),
+    { id: 'target', loss: 22, averageLoss: 50 },
+  ])
+
+  // When: 統合分析を実行する。
+  const target = findEntry(inspect(records, averages), 'target')
+
+  // Then: 得意度30は苦手になる。
+  assert.equal(target.aptitude, 30)
+  assert.equal(target.category, 'weakness')
+})
+
+test('得意度がちょうど40の譜面はやや苦手になること', () => {
+  // Given: 普段は平均の半分の失点で、平均50落ちの譜面を10落ちまで詰める。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 0.5),
+    { id: 'target', loss: 10, averageLoss: 50 },
+  ])
+
+  // When: 統合分析を実行する。
+  const target = findEntry(inspect(records, averages), 'target')
+
+  // Then: 得意度40はやや苦手になる。
+  assert.equal(target.aptitude, 40)
+  assert.equal(target.category, 'mildWeakness')
+})
+
+test('得意度がちょうど60の譜面は得意になること', () => {
+  // Given: 普段は平均どおりの失点で、平均どおりの譜面を9000落ちまで伸ばす。
+  const { records, averages } = createCharts([
+    ...createSteadyCharts('steady', 14, 1),
+    { id: 'target', loss: 9000 },
+  ])
+
+  // When: 統合分析を実行する。
+  const target = findEntry(inspect(records, averages), 'target')
+
+  // Then: 得意度60は得意になる。
+  assert.equal(target.aptitude, 60)
+  assert.equal(target.category, 'strength')
+})
+
+test('譜面定数の近い譜面がちょうど5件の場合は近い譜面だけで普段の失点比を求めること', () => {
+  // Given: 定数14に普段の4譜面と対象1譜面、定数12に普段と異なる5譜面がある。
+  const { records, averages } = createCharts([
+    ...[0, 1, 2, 3].map((index) => ({ id: `near-${index}`, chartConst: 14, loss: 5000 })),
+    ...[0, 1, 2, 3, 4].map((index) => ({ id: `far-${index}`, chartConst: 12, loss: 20000 })),
+    { id: 'target', chartConst: 14, loss: 10000 },
+  ])
+
+  // When: 統合分析を実行する。
+  const target = findEntry(inspect(records, averages), 'target')
+
+  // Then: 近い5譜面の普段と比べて苦手になる。
+  assert.equal(target.aptitude, 20)
+  assert.equal(target.category, 'weakness')
+})
+
+test('ソート方向が未指定の場合はソートキーにかかわらず入力順を維持すること', () => {
+  // Given: スコア順に並んでいない結果がある。
+  const entries: UnifiedWeakChartEntry[] = [
+    { record: createRecord('low', 900000), deviation: 0, aptitude: 50, category: 'normal' },
+    { record: createRecord('high', 1000000), deviation: 0, aptitude: 50, category: 'normal' },
+    { record: createRecord('middle', 950000), deviation: 0, aptitude: 50, category: 'normal' },
+  ]
+
+  // When: ソートキーのみを指定してソートする。
+  const sorted = sortUnifiedWeakChartEntries(entries, 'score', null)
+
+  // Then: 入力と同じ順序の新しい配列を返す。
+  assert.deepEqual(
+    sorted.map(({ record }) => record.id),
+    ['low', 'high', 'middle']
+  )
+  assert.notEqual(sorted, entries)
+})
+
 test('得意度でソートすると、平均がない譜面は方向にかかわらず末尾に置く', () => {
   // Given: 得意度の異なる譜面と、平均がない譜面がある。
   const { records, averages } = createCharts([

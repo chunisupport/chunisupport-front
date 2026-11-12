@@ -82,3 +82,50 @@ test('対応範囲外のスコアはエラーになること', () => {
     new Error('スコアは975,000〜1,010,000の整数で入力してください。')
   )
 })
+
+test('下限スコア975000でも譜面定数を逆算できること', () => {
+  // Given
+  const input = { score: 975000, overPower: 75, lamp: 'NONE' as const }
+
+  // When
+  const result = calculateChartConstant(input)
+
+  // Then
+  assert.equal(result.rawChartConstant, 15)
+  assert.equal(result.estimatedChartConstant, 15)
+})
+
+test('上限スコア1010000でも譜面定数を逆算できること', () => {
+  // Given
+  const input = { score: 1010000, overPower: 92, lamp: 'ALL_JUSTICE_CRITICAL' as const }
+
+  // When
+  const result = calculateChartConstant(input)
+
+  // Then
+  assert.equal(result.rawChartConstant, 15.4)
+  assert.equal(result.estimatedChartConstant, 15.4)
+})
+
+test('OVER POWERが0でも譜面定数を逆算できること', () => {
+  // Given
+  const input = { score: 975000, overPower: 0, lamp: 'NONE' as const }
+
+  // When
+  const result = calculateChartConstant(input)
+
+  // Then
+  assert.equal(result.rawChartConstant, 0)
+  assert.equal(result.estimatedChartConstant, 0)
+})
+
+test('負のOVER POWERはエラーになること', () => {
+  // Given
+  const input = { score: 1000000, overPower: -1, lamp: 'NONE' as const }
+
+  // When & Then
+  assert.throws(
+    () => calculateChartConstant(input),
+    new Error('OVER POWERは0以上の数値で入力してください。')
+  )
+})

@@ -63,6 +63,14 @@ test('RFC3339ではないupdated_atを拒否すること', () => {
   assert.throws(() => parseSystemStatusDTO(response), INVALID_RESPONSE_ERROR)
 })
 
+test('日付のみで時刻を含まないupdated_atを拒否すること', () => {
+  // Given: Dateとしては解析できるがRFC3339日時ではないupdated_at
+  const response = { ...validStatus, updated_at: '2026-07-26' }
+
+  // When & Then: 形式エラーとして例外になる
+  assert.throws(() => parseSystemStatusDTO(response), INVALID_RESPONSE_ERROR)
+})
+
 for (const [label, response] of [
   ['null', null],
   ['文字列', 'maintenance'],

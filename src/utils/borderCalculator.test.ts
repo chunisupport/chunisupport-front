@@ -118,3 +118,79 @@ test('目標スコアが理論値を超える場合は到達不能になるこ�
   // Then
   assert.equal(result.reachable, false)
 })
+
+test('ノーツ数が0の場合はエラーを投げること', () => {
+  // Given
+  const input = { notes: 0, targetScore: 1007500 }
+
+  // When & Then
+  assert.throws(
+    () => calculateBorder(input),
+    new Error('ノーツ数は1以上の整数で入力してください。')
+  )
+})
+
+test('目標スコアが負の数の場合はエラーを投げること', () => {
+  // Given
+  const input = { notes: 100, targetScore: -1 }
+
+  // When & Then
+  assert.throws(
+    () => calculateBorder(input),
+    new Error('目標スコアは0以上の整数で入力してください。')
+  )
+})
+
+test('目標スコアが0の場合は到達可能な候補を返すこと', () => {
+  // Given
+  const input = { notes: 100, targetScore: 0 }
+
+  // When
+  const result = calculateBorder(input)
+
+  // Then
+  assert.equal(result.reachable, true)
+  assert.equal(result.mode, 'candidates')
+  assert.deepEqual(result.candidates, [{ justice: 0, attack: 0, miss: 100, loss: 10100, score: 0 }])
+})
+
+test('目標JUSTICE数が負の数の場合はエラーを投げること', () => {
+  // Given
+  const input = { notes: 100, targetScore: 1000000, targetJustice: -1 }
+
+  // When & Then
+  assert.throws(
+    () => calculateBorder(input),
+    new Error('目標JUSTICE数は0以上の整数で入力してください。')
+  )
+})
+
+test('目標JUSTICE数がノーツ数と等しい場合は候補を返すこと', () => {
+  // Given
+  const input = { notes: 100, targetScore: 1000000, targetJustice: 100 }
+
+  // When
+  const result = calculateBorder(input)
+
+  // Then
+  assert.equal(result.reachable, true)
+  assert.equal(result.mode, 'candidates')
+  assert.deepEqual(result.candidates, [
+    { justice: 100, attack: 0, miss: 0, loss: 100, score: 1000000 },
+  ])
+})
+
+test('判定数の合計がノーツ数と一致する候補を除外しないこと', () => {
+  // Given
+  const input = { notes: 10, targetScore: 1000000 }
+
+  // When
+  const result = calculateBorder(input)
+
+  // Then: JUSTICE 10 + ATTACK 0 + MISS 0 = 10 でノーツ数と一致する候補を含む。
+  assert.equal(result.reachable, true)
+  assert.equal(result.mode, 'candidates')
+  assert.deepEqual(result.candidates, [
+    { justice: 10, attack: 0, miss: 0, loss: 10, score: 1000000 },
+  ])
+})

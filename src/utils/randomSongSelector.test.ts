@@ -890,3 +890,102 @@ test('公開済みの全バージョン選択では未公開バージョンを�
     ['NEW', '不明']
   )
 })
+
+test('選曲数は1を有効として受け付けること', () => {
+  // Given: 最小の有効な選曲数がある。
+  const value = '1'
+
+  // When: 選曲数へ変換する。
+  const result = parseRandomSongDrawCount(value)
+
+  // Then: 1が有効な選曲数として返る。
+  assert.equal(result, 1)
+})
+
+test('倍率0は有効な重みとして受け付けること', () => {
+  // Given: 倍率0の入力値がある。
+  const values = { MASTER: '0' }
+
+  // When: 倍率入力を数値へ変換する。
+  const result = parseRandomSongWeightValues(values)
+
+  // Then: 0が有効な倍率として残る。
+  assert.deepEqual(result, { MASTER: 0 })
+})
+
+test('すべての倍率が有効なら無効値なしと判定すること', () => {
+  // Given: 有効な倍率だけの入力値がある。
+  const values = { MASTER: '1', ULTIMA: '2' }
+
+  // When: 無効値の有無を判定する。
+  const result = hasInvalidRandomSongWeightValue(values)
+
+  // Then: 無効値なしになる。
+  assert.equal(result, false)
+})
+
+test('選択済みの通常難易度を外すときは残りの選択を維持すること', () => {
+  // Given: 通常難易度が複数選択されている。
+  const current: ('MASTER' | 'EXPERT')[] = ['MASTER', 'EXPERT']
+
+  // When: 選択済みのMASTERを切り替える。
+  const result = toggleRandomSongDifficultyFilter(current, 'MASTER')
+
+  // Then: MASTERだけが外れてEXPERTが残る。
+  assert.deepEqual(result, ['EXPERT'])
+})
+
+test('スコア下限と同点のレコードを除外しないこと', () => {
+  // Given: 下限と同点のプレイ済み候補がある。
+  const candidates = [createCandidate({ song: createSong({ id: 'song-a' }) })]
+  const records = createRandomSongRecordMap([createRecord({ id: 'song-a', score: 1000000 })])
+
+  // When: 下限1000000で絞り込む。
+  const filtered = filterRandomSongCandidatesByRecord(candidates, records, new Set(), {
+    playStatus: 'all',
+    bestFrame: 'all',
+    minScore: 1000000,
+    maxScore: null,
+    lamps: allLampFilters,
+  })
+
+  // Then: 同点の候補が残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
+
+test('重み0の候補があっても抽選数を水増ししないこと', () => {
+  // Given: 有効1件と重み0が1件の候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a' }), difficulty: 'MASTER' }),
+    createCandidate({ song: createSong({ id: 'song-b' }), difficulty: 'EXPERT' }),
+  ]
+
+  // When: 2件抽選する。
+  const selected = drawRandomSongs(candidates, 2, { difficultyWeights: { EXPERT: 0 } }, () => 0)
+
+  // Then: 有効候補だけが選ばれる。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
+
+test('乱数が上限でも末尾候補を選んで抽選できること', () => {
+  // Given: 候補が2件ある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a' }) }),
+    createCandidate({ song: createSong({ id: 'song-b' }) }),
+  ]
+
+  // When: 上限の乱数で1件抽選する。
+  const selected = drawRandomSongs(candidates, 1, {}, () => 1)
+
+  // Then: 末尾候補が選ばれる。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['song-b']
+  )
+})

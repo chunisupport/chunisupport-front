@@ -259,6 +259,25 @@ test('楽曲名は表記ではなく読みで昇順・降順に並べ、読み�
   }
 })
 
+test('ソート列または方向の片方だけがない場合はAPI順を保つこと', () => {
+  // Given: タイトル順やスコア差順に並べると順序が変わる比較行。
+  const items = [item('alpha', 300, true, true), item('beta', 100, true, true)]
+
+  // When: 列だけ・方向だけを指定して並び替える。
+  const withoutDirection = sortFriendVsItems(items, 'title', null)
+  const withoutKey = sortFriendVsItems(items, null, 'asc')
+
+  // Then: どちらか片方だけでは並び替えず入力順を保つ。
+  assert.deepEqual(
+    withoutDirection.map((row) => row.song.id),
+    ['alpha', 'beta']
+  )
+  assert.deepEqual(
+    withoutKey.map((row) => row.song.id),
+    ['alpha', 'beta']
+  )
+})
+
 test("WORLD'S ENDの星数・属性と楽曲リンクを使い、星数順に並べる", () => {
   // Given: 星数と属性が設定済み・未設定の比較行。
   const missing: WorldsendFriendScoreComparisonItemDTO = {

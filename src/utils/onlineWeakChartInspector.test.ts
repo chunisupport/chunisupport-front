@@ -502,3 +502,89 @@ test('難易度の選択判定は、理論値OP対象では楽曲マスタの対
   assert.deepEqual(opTarget, [false, true, true])
   assert.equal(masterOnly, true)
 })
+
+test('通常難易度の選択解除は選んだ難易度だけを外すこと', () => {
+  // Given: MASTERとEXPERTを選択中。
+  const current = ['MASTER', 'EXPERT'] as const
+
+  // When: MASTERの選択を外す。
+  const result = toggleOnlineWeakChartDifficulty(current, 'MASTER')
+
+  // Then: EXPERTだけが残る。
+  assert.deepEqual(result, ['EXPERT'])
+})
+
+test('ジャンル条件だけがある場合は属性で絞り込むこと', () => {
+  // Given: ジャンルが一致する譜面と一致しない譜面。
+  const entries = [
+    { record: record({ id: 'song-p', const: 14 }), averageScore: 1000000, difference: 0 },
+    { record: record({ id: 'genre-mismatch', const: 14 }), averageScore: 1000000, difference: 0 },
+  ]
+  const attributesBySongId = new Map([
+    ['song-p', { genre: 'POPS & ANIME', version: 'CHUNITHM', nameFolder: 'A' }],
+    ['genre-mismatch', { genre: 'niconico', version: 'CHUNITHM', nameFolder: 'A' }],
+  ])
+
+  // When: ジャンルだけを指定して表示対象を絞る。
+  const result = filterOnlineWeakChartEntries(
+    entries,
+    {
+      difficulties: ['MASTER'],
+      constMin: 1,
+      constMax: 16,
+      genres: ['POPS & ANIME'],
+      versions: null,
+      nameFolders: null,
+    },
+    attributesBySongId
+  )
+
+  // Then: ジャンルが一致する譜面だけが残る。
+  assert.deepEqual(result, [entries[0]])
+})
+
+test('バージョン条件だけがある場合は属性で絞り込むこと', () => {
+  // Given: バージョンが一致する譜面と一致しない譜面。
+  const entries = [
+    { record: record({ id: 'song-p', const: 14 }), averageScore: 1000000, difference: 0 },
+    { record: record({ id: 'version-mismatch', const: 14 }), averageScore: 1000000, difference: 0 },
+  ]
+  const attributesBySongId = new Map([
+    ['song-p', { genre: 'POPS & ANIME', version: 'CHUNITHM', nameFolder: 'A' }],
+    ['version-mismatch', { genre: 'POPS & ANIME', version: 'CHUNITHM PLUS', nameFolder: 'A' }],
+  ])
+
+  // When: バージョンだけを指定して表示対象を絞る。
+  const result = filterOnlineWeakChartEntries(
+    entries,
+    {
+      difficulties: ['MASTER'],
+      constMin: 1,
+      constMax: 16,
+      genres: null,
+      versions: ['CHUNITHM'],
+      nameFolders: null,
+    },
+    attributesBySongId
+  )
+
+  // Then: バージョンが一致する譜面だけが残る。
+  assert.deepEqual(result, [entries[0]])
+})
+
+test('ソート方向が未指定の場合は入力順を保つこと', () => {
+  // Given: スコア昇順の比較結果。
+  const entries = [
+    { record: record({ id: 'low', score: 1004000 }), averageScore: 1005000, difference: -1000 },
+    { record: record({ id: 'high', score: 1007000 }), averageScore: 1005000, difference: 2000 },
+  ]
+
+  // When: ソート列だけを指定して並べ替える。
+  const result = sortOnlineWeakChartEntries(entries, 'score', null)
+
+  // Then: 入力順を維持する。
+  assert.deepEqual(
+    result.map(({ record: currentRecord }) => currentRecord.id),
+    ['low', 'high']
+  )
+})

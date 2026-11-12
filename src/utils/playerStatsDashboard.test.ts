@@ -706,3 +706,55 @@ test('候補譜面は選出後に難易度とレベルが低い順で返す', ()
     ['expert-13', 'expert-13-plus', 'master-14']
   )
 })
+
+test('MAX候補はノーツ数不明より算出可能な譜面を優先すること', () => {
+  // Given: スコアは高いがノーツ数不明の譜面とスコアは低いが算出可能な譜面。
+  const records = [
+    createRecord({ id: 'without-notes', score: 1_009_000 }),
+    createRecord({ id: 'with-notes', score: 1_008_000 }),
+  ]
+  const notesBySongId = new Map([['with-notes', { MASTER: 1000 }]])
+
+  // When: 上限1件でMAX候補を選出する。
+  const candidates = findPlayerStatsCandidates(records, 'max', 1, notesBySongId)
+
+  // Then: 失点を算出できる譜面が選ばれる。
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['with-notes']
+  )
+})
+
+test('候補譜面は表示レベルが同じなら譜面定数の低い順で返す', () => {
+  // Given: 同じ表示レベルで定数が異なりスコア順が定数順と逆の譜面。
+  const records = [
+    createRecord({ id: 'high-const', title: 'zzz', const: 14.4, score: 1_008_900 }),
+    createRecord({ id: 'low-const', title: 'aaa', const: 14.2, score: 1_008_500 }),
+  ]
+
+  // When: SSS+候補を選出する。
+  const candidates = findPlayerStatsCandidates(records, 'sssPlus', 2)
+
+  // Then: 定数の低い順に並び替わる。
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['low-const', 'high-const']
+  )
+})
+
+test('候補譜面は譜面定数が同じなら曲名順で返す', () => {
+  // Given: 定数が同じで曲名順とスコア順が逆の譜面。
+  const records = [
+    createRecord({ id: 'second', title: 'zzz', const: 14.2, score: 1_008_900 }),
+    createRecord({ id: 'first', title: 'aaa', const: 14.2, score: 1_008_500 }),
+  ]
+
+  // When: SSS+候補を選出する。
+  const candidates = findPlayerStatsCandidates(records, 'sssPlus', 2)
+
+  // Then: 曲名順に並び替わる。
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['first', 'second']
+  )
+})

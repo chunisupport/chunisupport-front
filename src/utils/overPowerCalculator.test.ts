@@ -10,9 +10,11 @@ import {
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
+  formatSignedOverPowerValue,
   interpolatePlayedAverageScoreByConst,
   normalizeOverPowerCalculatorInput,
   parseOverPowerInput,
+  reconcileOverPowerCalculatorValue,
 } from './overPowerCalculator'
 
 test('calculateOverPowerPercent は現在値と理論値から達成率を計算すること', () => {
@@ -562,4 +564,114 @@ test('達成率由来の小数第10位の目標OPも達成済みに丸めない'
 
   // Then
   assert.equal(count, 1)
+})
+
+test('同一曲でOPが並んだ場合は先頭のレコードを対象にすること', () => {
+  // Given
+  const records = [
+    { id: 'song-1', is_op_target: false, is_played: true, score: 1000000, overpower: 80 },
+    { id: 'song-1', is_op_target: false, is_played: true, score: 990000, overpower: 80 },
+  ]
+
+  // When
+  const result = calculatePlayedAverageScore(records)
+
+  // Then
+  assert.equal(result, 1000000)
+})
+
+test('理論値が0の場合は達成率を0とすること', () => {
+  // Given
+  const current = 5
+  const max = 0
+
+  // When
+  const result = calculateOverPowerPercent(current, max)
+
+  // Then
+  assert.equal(result, 0)
+})
+
+test('スコアが非有限値の場合はOVER POWERを0とすること', () => {
+  // Given
+  const score = NaN
+  const chartConst = 14
+
+  // When
+  const result = calculateOverPowerForScore(score, chartConst)
+
+  // Then
+  assert.equal(result, 0)
+})
+
+test('譜面定数が非有限値の場合はOVER POWERを0とすること', () => {
+  // Given
+  const score = 1007500
+  const chartConst = NaN
+
+  // When
+  const result = calculateOverPowerForScore(score, chartConst)
+
+  // Then
+  assert.equal(result, 0)
+})
+
+test('下限スコアちょうどの場合はOVER POWERを0にしないこと', () => {
+  // Given
+  const score = 975000
+  const chartConst = 14
+
+  // When
+  const result = calculateOverPowerForScore(score, chartConst)
+
+  // Then
+  assert.equal(result, 70)
+})
+
+test('無限大の入力はOVER POWER計算の数値にしないこと', () => {
+  // Given
+  const value = 'Infinity'
+
+  // When
+  const result = parseOverPowerInput(value)
+
+  // Then
+  assert.equal(result, null)
+})
+
+test('差分が0の場合は符号を付けずに表示すること', () => {
+  // Given
+  const value = 0
+
+  // When
+  const result = formatSignedOverPowerValue(value)
+
+  // Then
+  assert.equal(result, '0.000')
+})
+
+test('集計対象が変わらなければ編集済みの入力を維持すること', () => {
+  // Given
+  const value = '5.000'
+  const previousBase = 10
+  const nextBase = 20
+
+  // When
+  const result = reconcileOverPowerCalculatorValue(value, previousBase, nextBase, true, false)
+
+  // Then
+  assert.equal(result, '5.000')
+})
+
+test('集計対象の変更時は前回との差分を編集済みの入力へ反映すること', () => {
+  // Given
+  const value = '5.000'
+  const previousBase = 10
+  const nextBase = 20
+
+  // When
+  const result = reconcileOverPowerCalculatorValue(value, previousBase, nextBase, true, true)
+
+  // Then
+  assert.equal(result, '15.000')
 })

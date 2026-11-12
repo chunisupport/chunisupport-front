@@ -574,3 +574,97 @@ test('バージョンが異なる候補曲も同じ範囲へまとめ、入力�
     ['song-1', 'song-2']
   )
 })
+
+test('OP%が上限ちょうどでは上限以下として受け付けること', () => {
+  // Given
+  const value = '100'
+
+  // When
+  const result = parseDisplayedHundredths(value, 'OP%', 100)
+
+  // Then
+  assert.deepEqual(result, { ok: true, scaledValue: 10000 })
+})
+
+test('内部OPが筐体表示区間の下端ちょうどでは一致と判定すること', () => {
+  // Given
+  const actualMilli = 90005
+  const theoreticalMilli = 1000000
+  const observedOverPowerMilli = 90005
+  const observedPercentBasisPoints = 900
+
+  // When
+  const result = matchesLockedSongObservation(
+    actualMilli,
+    theoreticalMilli,
+    observedOverPowerMilli,
+    observedPercentBasisPoints
+  )
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('内部OPが筐体表示区間の上端ちょうどでは不一致と判定すること', () => {
+  // Given
+  const actualMilli = 90010
+  const theoreticalMilli = 1000000
+  const observedOverPowerMilli = 90000
+  const observedPercentBasisPoints = 900
+
+  // When
+  const result = matchesLockedSongObservation(
+    actualMilli,
+    theoreticalMilli,
+    observedOverPowerMilli,
+    observedPercentBasisPoints
+  )
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('OP%が表示区間の下端ちょうどでは一致と判定すること', () => {
+  // Given
+  const actualMilli = 90000
+  const theoreticalMilli = 100000
+  const observedOverPowerMilli = 89995
+  const observedPercentBasisPoints = 9000
+
+  // When
+  const result = matchesLockedSongObservation(
+    actualMilli,
+    theoreticalMilli,
+    observedOverPowerMilli,
+    observedPercentBasisPoints
+  )
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('OPだけ不正な入力はinvalidとしてOP側のエラーを返すこと', () => {
+  // Given
+  const observation = { overPower: 'abc', percent: '90.00' }
+
+  // When
+  const result = compareLockedSongObservation(SUMMARY_ROW, observation)
+
+  // Then
+  assert.equal(result.status, 'invalid')
+  assert.equal(result.overPowerError, 'OPは0以上、小数第2位までで入力してください。')
+  assert.equal(result.percentError, '')
+})
+
+test('OP%だけ不正な入力はinvalidとしてOP%側のエラーを返すこと', () => {
+  // Given
+  const observation = { overPower: '90.00', percent: 'abc' }
+
+  // When
+  const result = compareLockedSongObservation(SUMMARY_ROW, observation)
+
+  // Then
+  assert.equal(result.status, 'invalid')
+  assert.equal(result.overPowerError, '')
+  assert.equal(result.percentError, 'OP%は0以上、小数第2位までで入力してください。')
+})

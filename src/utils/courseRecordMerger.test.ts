@@ -93,3 +93,15 @@ test('更新日時は文字列順ではなくタイムゾーンを考慮して�
   // Then: UTCで新しい左の日時を返す。
   assert.equal(result, '2026-07-15T02:00:00Z')
 })
+
+test('同時刻の更新日時は左側を返すこと', () => {
+  // Given: 表記は異なるが実時刻が同じ更新日時。
+  const left = '2026-07-15T02:00:00Z'
+  const right = '2026-07-15T11:00:00+09:00'
+
+  // When: 更新日時を比較する。
+  const result = newerCourseUpdatedAt(left, right)
+
+  // Then: 同時刻のため左側を返す。
+  assert.equal(result, '2026-07-15T02:00:00Z')
+})

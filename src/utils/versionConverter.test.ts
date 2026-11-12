@@ -124,3 +124,31 @@ test('未来バージョンがあっても過去曲の解決結果は変わら�
   // Then: 未来の影響を受けず過去バージョンになる。
   assert.equal(result, 'CHUNITHM VERSE')
 })
+
+test('明示した基準日が当日の運用日と異なっても指定日で絞り込むこと', () => {
+  // Given: 過去に稼働した2バージョンがある。
+  const versions = [
+    { name: 'CHUNITHM', released_at: '2015-07-16' },
+    { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+  ]
+
+  // When: 最初の稼働日の前日を基準日に指定する。
+  const result = getReleasedVersionShortNames(versions, '2015-07-15')
+
+  // Then: 当日の運用日ではなく指定日で絞られるため空になる。
+  assert.deepEqual(result, [])
+})
+
+test('リリース日と稼働日が同じ日はそのバージョンを返すこと', () => {
+  // Given: 稼働日が異なる2バージョンがある。
+  const versions = [
+    { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+    { name: 'CHUNITHM XCROSS', released_at: '2026-09-03' },
+  ]
+
+  // When: 新バージョンの稼働日当日で解決する。
+  const result = resolveVersionNameByReleaseDate('2026-09-03', versions)
+
+  // Then: 当日を含むため新バージョンになる。
+  assert.equal(result, 'CHUNITHM XCROSS')
+})

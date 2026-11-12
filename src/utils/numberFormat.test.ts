@@ -119,3 +119,25 @@ test('小数点以下桁数が0の場合は小数部が空文字になること'
   // Then
   assert.deepEqual(result, { integerPart: '1,234', fractionPart: '' })
 })
+
+test('ゼロの切り捨ては正のゼロを返すこと', () => {
+  // Given
+  const zero = 0
+
+  // When
+  const result = truncateDecimal(zero, 2)
+
+  // Then
+  assert.equal(result, 0)
+})
+
+test('負のゼロの切り捨ては負のゼロを返すこと', () => {
+  // Given
+  const negativeZero = -0
+
+  // When
+  const result = truncateDecimal(negativeZero, 2)
+
+  // Then
+  assert.equal(result, -0)
+})

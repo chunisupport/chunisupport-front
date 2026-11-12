@@ -40,6 +40,29 @@ test('見出しと最初のカードのまとまりが入らなければ集計�
   assert.deepEqual(pages, [[], [800]])
 })
 
+test('集計の高さが上限と等しい場合は先頭ページを生成できること', () => {
+  // Given: 空ページの高さが上限と等しい。
+  const exactHeight = (): number => 1200
+
+  // When
+  const pages = paginateImageBlocks([], 1200, exactHeight)
+
+  // Then: 等しい場合も上限内として扱う。
+  assert.deepEqual(pages, [[]])
+})
+
+test('高さが上限と等しいカードは同じページに含めること', () => {
+  // Given: 合計が上限と等しくなるカード。
+  const totalHeight = (blocks: readonly number[]): number =>
+    blocks.reduce((sum, height) => sum + height, 0)
+
+  // When
+  const pages = paginateImageBlocks([60, 40], 100, totalHeight)
+
+  // Then: 等しい場合も上限内として同じページに残る。
+  assert.deepEqual(pages, [[60, 40]])
+})
+
 test('カードがなくても集計のページを1枚生成する', () => {
   // Given: 画像に含めるカードがない。
   // When: ページ分割する。

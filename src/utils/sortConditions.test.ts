@@ -109,3 +109,25 @@ test('nextPrimarySortCondition は降順の列から別の列へ変更すると�
   // Then
   assert.deepEqual(result, { key: 'title', direction: 'asc' })
 })
+
+test('normalizeSortConditions は既定より多い指定があっても既定の長さを超えないこと', () => {
+  // Given: 既定2件に対して3件の異なるキーを指定する。
+  const defaults: SortCondition<TestSortKey>[] = [
+    { key: 'score', direction: 'desc' },
+    { key: 'level', direction: 'desc' },
+  ]
+  const sortConditions: SortCondition<TestSortKey>[] = [
+    { key: 'title', direction: 'desc' },
+    { key: 'score', direction: 'asc' },
+    { key: 'level', direction: 'asc' },
+  ]
+
+  // When: 正規化する。
+  const result = normalizeSortConditions(sortConditions, defaults)
+
+  // Then: 3件目の指定は無視し、既定と同じ2件になる。
+  assert.deepEqual(result, [
+    { key: 'title', direction: 'desc' },
+    { key: 'level', direction: 'desc' },
+  ])
+})

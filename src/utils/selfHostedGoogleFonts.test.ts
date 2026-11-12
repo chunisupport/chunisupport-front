@@ -206,6 +206,22 @@ test('HTML の Google Fonts link を同一オリジンの preload とスタイ�
   )
 })
 
+test('クエリ付きの woff2 URL は拒否すること', () => {
+  // Given: 拡張子は woff2 だがクエリが付いた URL。
+  const css = FONT_CSS.replace(OSWALD, `${OSWALD}?v=123`)
+
+  // When / Then: クエリだけでも拒否する。
+  assert.throws(() => collectGoogleFontFileUrls(css), /woff2 ではありません/)
+})
+
+test('単一ウェイトの font-weight は拒否すること', () => {
+  // Given: 可変範囲ではなく単一ウェイトの @font-face。
+  const css = FONT_CSS.replace('font-weight: 100 900;', 'font-weight: 400;')
+
+  // When / Then: ウェイトの記述があれば範囲外として拒否する。
+  assert.throws(() => collectGoogleFontFileUrls(css), /可変ウェイトではありません/)
+})
+
 test('Google Fonts のスタイルシートが無い、または置換後も URL が残る場合は失敗すること', () => {
   // Given
   const withoutStylesheet = '<link rel="stylesheet" href="/static/css/index.css">'

@@ -154,3 +154,17 @@ test('一致するSTANDARD楽曲のWikiページタイトルが未設定ならva
   // Then
   assert.deepEqual(result, { status: 'valueMissing' })
 })
+
+test('曲名またはアーティスト名の片方だけが空でも一致する楽曲があればnotFoundになること', () => {
+  // Given
+  const emptyTitleSongs = [createSong({ title: '', artist: 'Team Grimoire vs Laur', bpm: 160 })]
+  const emptyArtistSongs = [createSong({ title: 'Grievous Lady', artist: '   ', bpm: 170 })]
+
+  // When
+  const emptyTitle = findStandardSongBpm(emptyTitleSongs, '   ', 'Team Grimoire vs Laur')
+  const emptyArtist = findStandardSongBpm(emptyArtistSongs, 'Grievous Lady', '')
+
+  // Then
+  assert.deepEqual(emptyTitle, { status: 'notFound' })
+  assert.deepEqual(emptyArtist, { status: 'notFound' })
+})

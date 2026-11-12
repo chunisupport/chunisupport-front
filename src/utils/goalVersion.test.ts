@@ -35,6 +35,17 @@ test('曲のリリース日は直近のバージョンのリリース日順番�
   assert.equal(resolveGoalVersionValueByReleaseDate('invalid', versions), undefined)
 })
 
+test('バージョンのリリース日当日はそのバージョン番号へ解決される', () => {
+  // Given: SUNのリリース日当日の楽曲。
+  const releaseDate = '2022-10-13'
+
+  // When
+  const result = resolveGoalVersionValueByReleaseDate(releaseDate, versions)
+
+  // Then: 当日のバージョン番号になる。
+  assert.equal(result, 2)
+})
+
 test('未来バージョンは選択肢から除外され、公開済みの番号は変わらない', () => {
   // Given: 未来バージョンを含む一覧がある。
   const withFuture: VersionDTO[] = [

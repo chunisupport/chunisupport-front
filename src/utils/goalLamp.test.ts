@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, PlayerRecordDTO, SongDTO } from '../types/api'
-import { isComboLampGoalValue, isHardLampGoalValue, resolveHardLampRecordName } from './goalLamp'
+import {
+  isComboLampGoalValue,
+  isHardLampGoalValue,
+  resolveFullChainRecordName,
+  resolveHardLampRecordName,
+} from './goalLamp'
 import { filterRandomSongCandidatesByGoal } from './randomSongGoalFilter'
 import { createRandomSongRecordMap, type RandomSongCandidate } from './randomSongSelector'
 
@@ -14,6 +19,20 @@ test('ハードランプ目標値はレコード上のランプ名へ変換さ�
 
   // Then
   assert.equal(result, 'ABSOLUTE')
+})
+
+test('FULL CHAIN目標値はレコード上のFULL CHAIN名へ変換される', () => {
+  // Given: FULL CHAINの目標値。
+  const gold = 'GOLD'
+  const platinum = 'PLATINUM'
+
+  // When
+  const goldName = resolveFullChainRecordName(gold)
+  const platinumName = resolveFullChainRecordName(platinum)
+
+  // Then: 目標値と同じ金属名へ変換される。
+  assert.equal(goldName, 'FULL CHAIN GOLD')
+  assert.equal(platinumName, 'FULL CHAIN PLATINUM')
 })
 
 test('ランプ目標値の型ガードは定義済みの値だけを許可する', () => {
