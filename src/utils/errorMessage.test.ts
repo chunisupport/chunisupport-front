@@ -1,14 +1,21 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-test('メール認証のアカウント有無とパスワード不一致は同じ案内で内部情報を隠す', () => {
-  const codes = ['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password']
-  const messages = codes.map((code) => toUserFriendlyErrorMessage({ code, message: 'secret' }))
-  assert.equal(new Set(messages).size, 1)
-  assert.ok(messages.every((message) => !message.includes('secret')))
-})
-
 import { isAuthPopupClosedError, toUserFriendlyErrorMessage } from './errorMessage'
+
+for (const code of ['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password']) {
+  test(`メール認証の${code}は共通の認証失敗案内で内部情報を隠す`, () => {
+    // Given
+    const error = { code, message: 'secret' }
+
+    // When
+    const message = toUserFriendlyErrorMessage(error)
+
+    // Then
+    assert.equal(message, '認証情報が無効です。もう一度ログインしてください。')
+    assert.doesNotMatch(message, /secret/)
+  })
+}
 
 test('認証ポップアップを閉じたエラーは中断として判定されること', () => {
   // Given
@@ -109,4 +116,15 @@ test('5xxステータスはHTTPステータステキストを表示せずサー�
 
   // Then
   assert.equal(result, 'サービスが一時的に利用できません')
+})
+
+test('コードを持つ関数値はオブジェクト以外としてfallback文言を返すこと', () => {
+  // Given: エラーコードを持つ関数値。
+  const error = Object.assign(() => {}, { code: 'player_not_found' })
+
+  // When
+  const result = toUserFriendlyErrorMessage(error, '保存に失敗しました。')
+
+  // Then: typeofがobjectではないためfallbackを返す。
+  assert.equal(result, '保存に失敗しました。')
 })

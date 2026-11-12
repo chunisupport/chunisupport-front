@@ -21,8 +21,6 @@ import {
   parseRandomSongDrawCount,
   parseRandomSongWeightValues,
   RANDOM_SONG_OP_TARGET_FILTER,
-  RANDOM_SONG_SELECTOR_DIFFICULTIES,
-  RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
   resolveRandomSongLevelWeightEnabledState,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
@@ -160,33 +158,36 @@ test('楽曲一覧から譜面単位のランダム選曲候補を生成する�
   )
 })
 
-test('ランダム選曲の通常譜面難易度を共有定義で扱うこと', () => {
-  // Given: ランダム選曲で扱う難易度定義がある。
-  const difficulties = RANDOM_SONG_SELECTOR_DIFFICULTIES
+/** 5難易度を持つ楽曲から各通常譜面の候補が過不足なく生成されることを検証する。 */
+test('5難易度を持つ楽曲から通常譜面だけを1件ずつ候補にすること', () => {
+  // Given: 通常譜面が5難易度すべて揃った楽曲がある。
+  const song = createSong({
+    charts: {
+      BASIC: { const: 3, is_const_unknown: false, notes: 300 },
+      ADVANCED: { const: 6, is_const_unknown: false, notes: 500 },
+      EXPERT: { const: 10, is_const_unknown: false, notes: 800 },
+      MASTER: { const: 13.7, is_const_unknown: false, notes: 1200 },
+      ULTIMA: { const: 14.5, is_const_unknown: false, notes: 1400 },
+    },
+  })
 
-  // When: 楽曲候補生成とUIが参照する難易度を確認する。
-  const difficultyLabels = difficulties.map((difficulty) => difficulty)
+  // When: 楽曲から譜面単位の候補を生成する。
+  const candidates = buildRandomSongCandidates([song], versions)
 
-  // Then: 通常譜面の5難易度が大文字のドメイン値で定義されている。
-  assert.deepEqual(difficultyLabels, ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'])
-})
-
-test('ランダム選曲の難易度絞り込みはOP対象を選択肢に含めること', () => {
-  // Given: ランダム選曲で表示する難易度絞り込み定義がある。
-  const difficultyFilters = RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS
-
-  // When: 画面の選択肢として扱う値を確認する。
-  const filterValues = difficultyFilters.map((difficulty) => difficulty)
-
-  // Then: 通常5難易度に加えてOP対象専用の絞り込み値が定義されている。
-  assert.deepEqual(filterValues, [
-    'BASIC',
-    'ADVANCED',
-    'EXPERT',
-    'MASTER',
-    'ULTIMA',
-    RANDOM_SONG_OP_TARGET_FILTER,
-  ])
+  // Then: 通常5難易度の譜面だけが、それぞれの定数で1件ずつ候補になる。
+  assert.deepEqual(
+    candidates.map((candidate) => ({
+      difficulty: candidate.difficulty,
+      chartConst: candidate.chartConst,
+    })),
+    [
+      { difficulty: 'BASIC', chartConst: 3 },
+      { difficulty: 'ADVANCED', chartConst: 6 },
+      { difficulty: 'EXPERT', chartConst: 10 },
+      { difficulty: 'MASTER', chartConst: 13.7 },
+      { difficulty: 'ULTIMA', chartConst: 14.5 },
+    ]
+  )
 })
 
 test('難易度・ジャンル・バージョン・譜面定数で候補を絞り込むこと', () => {
@@ -198,12 +199,22 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
       version: 'NEW',
       chartConst: 13.7,
     }),
-    createCandidate({ difficulty: 'EXPERT', genre: 'niconico', version: 'NEW', chartConst: 11.2 }),
+    createCandidate({
+      difficulty: 'EXPERT',
+      genre: 'POPS & ANIME',
+      version: 'NEW',
+      chartConst: 13.7,
+    }),
+    createCandidate({ genre: 'niconico', version: 'NEW', chartConst: 13.7 }),
+    createCandidate({ chartConst: 12.9 }),
+    createCandidate({ chartConst: 13 }),
+    createCandidate({ chartConst: 14 }),
+    createCandidate({ chartConst: 14.1 }),
     createCandidate({
       difficulty: 'ULTIMA',
       genre: 'POPS & ANIME',
       version: 'VERSE',
-      chartConst: 14.5,
+      chartConst: 13.7,
     }),
   ]
 
@@ -219,8 +230,15 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
 
   // Then: すべての条件に一致した候補だけが残る。
   assert.deepEqual(
-    filtered.map((candidate) => candidate.difficulty),
-    ['MASTER']
+    filtered.map((candidate) => ({
+      difficulty: candidate.difficulty,
+      chartConst: candidate.chartConst,
+    })),
+    [
+      { difficulty: 'MASTER', chartConst: 13.7 },
+      { difficulty: 'MASTER', chartConst: 13 },
+      { difficulty: 'MASTER', chartConst: 14 },
+    ]
   )
 })
 
@@ -439,7 +457,7 @@ test('重み付き抽選は重み0の候補を除外し重複なしで選ぶこ�
   )
 })
 
-test('定数別の倍率は難易度倍率と掛け合わせて抽選対象を制御すること', () => {
+test('定数別の倍率0は小数点以下1桁で判定して抽選対象から除外すること', () => {
   // Given: 同じ難易度で譜面定数だけが異なる候補がある。
   const candidates = [
     createCandidate({
@@ -461,6 +479,36 @@ test('定数別の倍率は難易度倍率と掛け合わせて抽選対象を�
   assert.deepEqual(
     selected.map((candidate) => candidate.song.id),
     ['song-b']
+  )
+})
+
+/** 各倍率の積でのみ区間が決まる固定乱数で抽選を検証する。 */
+test('難易度倍率と定数倍率の積によって当選先が変わること', () => {
+  // Given: 積では重み6対1、片方だけなら2対1または3対1となる候補。
+  const candidates = [
+    createCandidate({
+      song: createSong({ id: 'weighted' }),
+      difficulty: 'MASTER',
+      chartConst: 13.7,
+    }),
+    createCandidate({ song: createSong({ id: 'ordinary' }), difficulty: 'ULTIMA', chartConst: 14 }),
+  ]
+
+  // When: 積の抽選区間内だが、片方だけの区間外となる乱数で抽選する。
+  const selected = drawRandomSongs(
+    candidates,
+    1,
+    {
+      difficultyWeights: { MASTER: 2 },
+      constWeights: { '13.7': 3 },
+    },
+    () => 0.8
+  )
+
+  // Then: 両倍率を掛けた候補が当選する（加算の重み5対2でも当選しない）。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['weighted']
   )
 })
 
@@ -840,5 +888,104 @@ test('公開済みの全バージョン選択では未公開バージョンを�
   assert.deepEqual(
     filtered.map((candidate) => candidate.version),
     ['NEW', '不明']
+  )
+})
+
+test('選曲数は1を有効として受け付けること', () => {
+  // Given: 最小の有効な選曲数がある。
+  const value = '1'
+
+  // When: 選曲数へ変換する。
+  const result = parseRandomSongDrawCount(value)
+
+  // Then: 1が有効な選曲数として返る。
+  assert.equal(result, 1)
+})
+
+test('倍率0は有効な重みとして受け付けること', () => {
+  // Given: 倍率0の入力値がある。
+  const values = { MASTER: '0' }
+
+  // When: 倍率入力を数値へ変換する。
+  const result = parseRandomSongWeightValues(values)
+
+  // Then: 0が有効な倍率として残る。
+  assert.deepEqual(result, { MASTER: 0 })
+})
+
+test('すべての倍率が有効なら無効値なしと判定すること', () => {
+  // Given: 有効な倍率だけの入力値がある。
+  const values = { MASTER: '1', ULTIMA: '2' }
+
+  // When: 無効値の有無を判定する。
+  const result = hasInvalidRandomSongWeightValue(values)
+
+  // Then: 無効値なしになる。
+  assert.equal(result, false)
+})
+
+test('選択済みの通常難易度を外すときは残りの選択を維持すること', () => {
+  // Given: 通常難易度が複数選択されている。
+  const current: ('MASTER' | 'EXPERT')[] = ['MASTER', 'EXPERT']
+
+  // When: 選択済みのMASTERを切り替える。
+  const result = toggleRandomSongDifficultyFilter(current, 'MASTER')
+
+  // Then: MASTERだけが外れてEXPERTが残る。
+  assert.deepEqual(result, ['EXPERT'])
+})
+
+test('スコア下限と同点のレコードを除外しないこと', () => {
+  // Given: 下限と同点のプレイ済み候補がある。
+  const candidates = [createCandidate({ song: createSong({ id: 'song-a' }) })]
+  const records = createRandomSongRecordMap([createRecord({ id: 'song-a', score: 1000000 })])
+
+  // When: 下限1000000で絞り込む。
+  const filtered = filterRandomSongCandidatesByRecord(candidates, records, new Set(), {
+    playStatus: 'all',
+    bestFrame: 'all',
+    minScore: 1000000,
+    maxScore: null,
+    lamps: allLampFilters,
+  })
+
+  // Then: 同点の候補が残る。
+  assert.deepEqual(
+    filtered.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
+
+test('重み0の候補があっても抽選数を水増ししないこと', () => {
+  // Given: 有効1件と重み0が1件の候補がある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a' }), difficulty: 'MASTER' }),
+    createCandidate({ song: createSong({ id: 'song-b' }), difficulty: 'EXPERT' }),
+  ]
+
+  // When: 2件抽選する。
+  const selected = drawRandomSongs(candidates, 2, { difficultyWeights: { EXPERT: 0 } }, () => 0)
+
+  // Then: 有効候補だけが選ばれる。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
+
+test('乱数が上限でも末尾候補を選んで抽選できること', () => {
+  // Given: 候補が2件ある。
+  const candidates = [
+    createCandidate({ song: createSong({ id: 'song-a' }) }),
+    createCandidate({ song: createSong({ id: 'song-b' }) }),
+  ]
+
+  // When: 上限の乱数で1件抽選する。
+  const selected = drawRandomSongs(candidates, 1, {}, () => 1)
+
+  // Then: 末尾候補が選ばれる。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['song-b']
   )
 })

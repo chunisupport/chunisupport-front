@@ -2,12 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { MAX_SCORE } from '../../../utils/scoreRank'
-import {
-  ALL_JUSTICE_CRITICAL_BADGE_CLASS,
-  COMBO_LAMP_BADGE_BACKGROUND_CLASS,
-  COMBO_LAMP_BADGE_TEXT_CLASS,
-  getComboLampBadgeClass,
-} from './recordStyleClasses'
+import { ALL_JUSTICE_CRITICAL_BADGE_CLASS, getComboLampBadgeClass } from './recordStyleClasses'
 
 test('AJCのコンボランプバッジは虹色クラスを返すこと', () => {
   // Given: ALL JUSTICEかつ理論値のレコード
@@ -30,8 +25,5 @@ test('通常AJのコンボランプバッジはAJ用トークン色を返すこ�
   const result = getComboLampBadgeClass(lamp, score)
 
   // Then: 通常AJ用の背景色と文字色が返る
-  assert.equal(
-    result,
-    `${COMBO_LAMP_BADGE_BACKGROUND_CLASS[lamp]} ${COMBO_LAMP_BADGE_TEXT_CLASS[lamp]}`
-  )
+  assert.equal(result, 'bg-lamp-all-justice-bg text-lamp-all-justice-text')
 })

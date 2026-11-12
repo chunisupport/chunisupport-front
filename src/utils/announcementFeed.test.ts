@@ -76,6 +76,41 @@ test('許可されたドキュメント配下ではないURLを拒否する', ()
   )
 })
 
+test('解析できないURLを含むお知らせフィードを拒否する', () => {
+  // Given: 解析できないURLを含むフィード
+  const feed = structuredClone(VALID_FEED)
+  feed.announcements[0].url = 'https://'
+
+  // When & Then: 不正な外部JSONとして拒否する
+  assert.throws(
+    () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+    new Error('お知らせの形式が不正です')
+  )
+})
+
+test('nullのフィードを拒否する', () => {
+  // Given: nullの外部JSON
+  const feed = null
+
+  // When & Then: 不正な外部JSONとして拒否する
+  assert.throws(
+    () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+    new Error('お知らせの形式が不正です')
+  )
+})
+
+test('存在しない月を含む公開日を拒否する', () => {
+  // Given: 13月を含むフィード
+  const feed = structuredClone(VALID_FEED)
+  feed.announcements[0].publishedAt = '2026-13-01'
+
+  // When & Then: 不正な外部JSONとして拒否する
+  assert.throws(
+    () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+    new Error('お知らせの形式が不正です')
+  )
+})
+
 test('公開日を日本語表記へ整形する', () => {
   // Given: YYYY-MM-DD形式の公開日。
   const publishedAt = '2026-08-11'

@@ -1,25 +1,54 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import test from 'node:test'
-import { formatFileTimestamp } from '../../utils/localDateTime'
-import {
-  createRegisterScoreImageFiles,
-  formatRegisterScoreImageFilename,
-} from './registerScoreImageFiles'
+import { createRegisterScoreImageFiles } from './registerScoreImageFiles'
 
-test('更新日時をローカル日時へ変換して画像のファイル名を作る', () => {
-  // Given: APIが返すISO形式の更新日時。
-  const importedAt = '2026-11-07T03:04:05Z'
+for (const { timezone, importedAt, expected } of [
+  {
+    timezone: 'UTC',
+    importedAt: '2026-11-07T03:04:05Z',
+    expected: 'chunisupport-score-update-20261107-030405.jpg',
+  },
+  {
+    timezone: 'Asia/Tokyo',
+    importedAt: '2026-11-07T03:04:05Z',
+    expected: 'chunisupport-score-update-20261107-120405.jpg',
+  },
+  {
+    timezone: 'UTC',
+    importedAt: '2026-11-07T18:04:05Z',
+    expected: 'chunisupport-score-update-20261107-180405.jpg',
+  },
+  {
+    timezone: 'Asia/Tokyo',
+    importedAt: '2026-11-07T18:04:05Z',
+    expected: 'chunisupport-score-update-20261108-030405.jpg',
+  },
+]) {
+  test(`更新日時${importedAt}を${timezone}のローカル日時へ変換してファイル名を作る`, () => {
+    // Given: タイムゾーンを固定した子プロセスとAPIの更新日時
+    const moduleUrl = new URL('./registerScoreImageFiles.ts', import.meta.url).href
 
-  // When
-  const result = formatRegisterScoreImageFilename(importedAt)
+    // When: 子プロセス内でローカル日時のファイル名を生成する
+    const result = spawnSync(
+      process.execPath,
+      [
+        '--import',
+        './scripts/register-ts-extension-loader.mjs',
+        '--disable-warning=ExperimentalWarning',
+        '--input-type=module',
+        '--eval',
+        `import { formatRegisterScoreImageFilename } from ${JSON.stringify(moduleUrl)}; process.stdout.write(formatRegisterScoreImageFilename(${JSON.stringify(importedAt)}))`,
+      ],
+      { env: { ...process.env, TZ: timezone }, encoding: 'utf8' }
+    )
 
-  // Then: 接頭辞とローカル日時のタイムスタンプを持つJPEGファイル名になる。
-  assert.equal(
-    result,
-    `chunisupport-score-update-${formatFileTimestamp(new Date(importedAt), '-')}.jpg`
-  )
-  assert.match(result, /^chunisupport-score-update-\d{8}-\d{6}\.jpg$/)
-})
+    // Then: ヘルパーに依存しない固定の日時・ファイル名になる
+    assert.equal(result.status, 0, result.stderr)
+    assert.equal(result.stdout, expected)
+    assert.match(result.stdout, /^chunisupport-score-update-\d{8}-\d{6}\.jpg$/)
+  })
+}
 
 test('1枚の画像は従来のファイル名とJPEGの内容を維持する', async () => {
   // Given: 単一のJPEG画像。

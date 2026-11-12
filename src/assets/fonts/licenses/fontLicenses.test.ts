@@ -11,7 +11,7 @@ import {
 
 const LICENSES_DIRECTORY = import.meta.dirname
 
-test('各ファミリーの OFL.txt が公式の著作権表示と OFL 1.1 全文を含むこと', () => {
+test('各ファミリーの OFL.txt は定義済みの著作権表示と OFL 1.1 の見出し・主要節名・末尾を含むこと', () => {
   // Given
   const licenses = SELF_HOSTED_FONT_LICENSES
 

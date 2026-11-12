@@ -109,6 +109,42 @@ test('見出しをクリックすると列の初期方向を選び、同じ列�
   assert.equal(nextAdminHonorSort('name-asc', 'id'), 'id-desc')
 })
 
+test('クラスが同じ称号はID降順で並べ替えられる', () => {
+  // Given: クラスが同じ3件の称号
+  const sameTypeHonors: AdminHonorDTO[] = [
+    { id: 2, name: '東方の称号', type_name: 'gold', image_url: '', created_at: null },
+    { id: 5, name: '東方達人', type_name: 'gold', image_url: '', created_at: null },
+    { id: 3, name: '別の称号', type_name: 'gold', image_url: '', created_at: null },
+  ]
+
+  // When: クラス昇順で並べ替える
+  const result = filterAndSortAdminHonors(sameTypeHonors, '', null, 'type-asc')
+
+  // Then: ID降順になる
+  assert.deepEqual(
+    result.map((honor) => honor.id),
+    [5, 3, 2]
+  )
+})
+
+test('画像URLが同じ称号はID降順で並べ替えられる', () => {
+  // Given: 画像URLが同じ3件の称号
+  const sameImageHonors: AdminHonorDTO[] = [
+    { id: 2, name: '東方の称号', type_name: 'gold', image_url: 'same.png', created_at: null },
+    { id: 5, name: '東方達人', type_name: 'normal', image_url: 'same.png', created_at: null },
+    { id: 3, name: '別の称号', type_name: 'silver', image_url: 'same.png', created_at: null },
+  ]
+
+  // When: 画像URL昇順で並べ替える
+  const result = filterAndSortAdminHonors(sameImageHonors, '', null, 'image-url-asc')
+
+  // Then: ID降順になる
+  assert.deepEqual(
+    result.map((honor) => honor.id),
+    [5, 3, 2]
+  )
+})
+
 test('クラスと画像URLでも昇順・降順に並べ替えられる', () => {
   const values: AdminHonorDTO[] = [
     { ...honors[0], type_name: 'silver', image_url: 'z.png' },

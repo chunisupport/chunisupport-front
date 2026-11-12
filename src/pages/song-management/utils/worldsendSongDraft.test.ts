@@ -141,30 +141,81 @@ test('追加リクエストは譜面項目が1つでもあれば譜面を送る�
   })
 })
 
-test('追加リクエストの検証エラーを既存の順序で返すこと', () => {
-  // Given
-  const draft = validCreateDraft()
-  const messageOf = (value: CreateWorldsendDraft) => {
-    const result = buildCreateWorldsendSongRequest(value, genres)
-    return result.ok ? null : result.message
-  }
+const REQUIRED_MESSAGE = '公式ID・タイトル・アーティストは必須です。'
+const OFFICIAL_IDX_MESSAGE = '公式IDは10文字以内で入力してください。'
+const GENRE_MESSAGE = 'ジャンルを選択してください。'
+const BPM_MESSAGE = 'BPMは0以上で入力してください。'
+const LEVEL_MESSAGE = "WORLD'S ENDレベルは1〜5で入力してください。"
+const NOTES_MESSAGE = 'ノーツは0以上で入力してください。'
+const RELEASE_MESSAGE = 'リリース日の形式が不正です。日付を入力し直してください。'
 
-  // When / Then
-  assert.equal(messageOf({ ...draft, artist: '' }), SONG_MANAGEMENT_MESSAGES.requiredFieldsMissing)
-  assert.equal(
-    messageOf({ ...draft, official_idx: '12345678901' }),
-    SONG_MANAGEMENT_MESSAGES.officialIdxTooLong
-  )
-  assert.equal(messageOf({ ...draft, genre_id: 99 }), SONG_MANAGEMENT_MESSAGES.genreRequired)
-  assert.equal(messageOf({ ...draft, bpm: -1 }), SONG_MANAGEMENT_MESSAGES.bpmInvalid)
-  assert.equal(messageOf({ ...draft, level_star: 0 }), SONG_MANAGEMENT_MESSAGES.levelInvalid)
-  assert.equal(messageOf({ ...draft, level_star: 6 }), SONG_MANAGEMENT_MESSAGES.levelInvalid)
-  assert.equal(messageOf({ ...draft, notes: -1 }), SONG_MANAGEMENT_MESSAGES.notesInvalid)
-  assert.equal(
-    messageOf({ ...draft, released_at: 'invalid' }),
-    SONG_MANAGEMENT_MESSAGES.releaseInvalid
-  )
-})
+for (const { name, overrides, message } of [
+  { name: 'アーティストが空なら必須エラー', overrides: { artist: '' }, message: REQUIRED_MESSAGE },
+  {
+    name: '公式IDが11文字なら長さエラー',
+    overrides: { official_idx: '12345678901' },
+    message: OFFICIAL_IDX_MESSAGE,
+  },
+  { name: '存在しないジャンルなら選択エラー', overrides: { genre_id: 99 }, message: GENRE_MESSAGE },
+  { name: 'BPMが負ならBPMエラー', overrides: { bpm: -1 }, message: BPM_MESSAGE },
+  {
+    name: '星数が下限未満の0ならレベルエラー',
+    overrides: { level_star: 0 },
+    message: LEVEL_MESSAGE,
+  },
+  {
+    name: '星数が上限超過の6ならレベルエラー',
+    overrides: { level_star: 6 },
+    message: LEVEL_MESSAGE,
+  },
+  { name: 'ノーツ数が負ならノーツエラー', overrides: { notes: -1 }, message: NOTES_MESSAGE },
+  {
+    name: 'リリース日が不正なら日付エラー',
+    overrides: { released_at: 'invalid' },
+    message: RELEASE_MESSAGE,
+  },
+  {
+    name: '必須欠落とID長超過では必須エラー',
+    overrides: { artist: '', official_idx: '12345678901' },
+    message: REQUIRED_MESSAGE,
+  },
+  {
+    name: 'ID長超過とジャンル不正ではID長エラー',
+    overrides: { official_idx: '12345678901', genre_id: 99 },
+    message: OFFICIAL_IDX_MESSAGE,
+  },
+  {
+    name: 'ジャンル不正とBPM負値ではジャンルエラー',
+    overrides: { genre_id: 99, bpm: -1 },
+    message: GENRE_MESSAGE,
+  },
+  {
+    name: 'BPM負値と星数範囲外ではBPMエラー',
+    overrides: { bpm: -1, level_star: 6 },
+    message: BPM_MESSAGE,
+  },
+  {
+    name: '星数範囲外とノーツ数負値ではレベルエラー',
+    overrides: { level_star: 0, notes: -1 },
+    message: LEVEL_MESSAGE,
+  },
+  {
+    name: 'ノーツ数負値とリリース日不正ではノーツエラー',
+    overrides: { notes: -1, released_at: 'invalid' },
+    message: NOTES_MESSAGE,
+  },
+] satisfies { name: string; overrides: Partial<CreateWorldsendDraft>; message: string }[]) {
+  test(`追加リクエストは${name}を返すこと`, () => {
+    // Given: 不正な項目を含む追加ドラフト。
+    const draft = { ...validCreateDraft(), ...overrides }
+
+    // When: 追加リクエストを組み立てる。
+    const result = buildCreateWorldsendSongRequest(draft, genres)
+
+    // Then: 対応する検証エラーを返す。
+    assert.deepEqual(result, { ok: false, message })
+  })
+}
 
 test('保存したドラフトを管理用楽曲へ反映し、譜面の更新日時は維持すること', () => {
   // Given
@@ -208,4 +259,80 @@ test('追加リクエストは要解禁フラグを送ること', () => {
   assert.equal(result.ok, true)
   if (!result.ok) return
   assert.equal(result.request.unlock_required, true)
+})
+
+test('追加リクエストは公式IDだけが空でも必須エラーを返すこと', () => {
+  // Given: 公式IDだけが未入力の追加ドラフト。
+  const draft = { ...validCreateDraft(), official_idx: '' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: 必須エラーを返す。
+  assert.deepEqual(result, { ok: false, message: '公式ID・タイトル・アーティストは必須です。' })
+})
+
+test('追加リクエストは公式IDが10文字なら受け付けること', () => {
+  // Given: 公式IDが上限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), official_idx: '1234567890' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: 長さエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.official_idx, '1234567890')
+})
+
+test('追加リクエストはBPMが0なら受け付けること', () => {
+  // Given: BPMが下限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), bpm: 0 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: BPMエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.bpm, 0)
+})
+
+test('追加リクエストは星数が下限の1なら受け付けること', () => {
+  // Given: 星数が下限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), level_star: 1 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: レベルエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.chart?.level_star, 1)
+})
+
+test('追加リクエストは星数が上限の5なら受け付けること', () => {
+  // Given: 星数が上限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), level_star: 5 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: レベルエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.chart?.level_star, 5)
+})
+
+test('追加リクエストはノーツが0なら受け付けること', () => {
+  // Given: ノーツが下限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), notes: 0 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: ノーツエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.chart?.notes, 0)
 })

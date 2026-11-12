@@ -64,28 +64,21 @@ test('認証直後に得たXの@IDがあれば@IDで表示すること', () => {
   assert.deepEqual(result, { kind: 'x', label: 'X', name: '@alice_x' })
 })
 
-test('Google優先で表示する場合はXの@IDを使わないこと', () => {
-  // Given: Google と X を連携しており、X の @ID も得ている
-  const accounts = [xAccount, googleAccount]
-  const xUsername = 'alice_x'
+for (const { caseName, xUsername } of [
+  { caseName: 'Xの@IDがある場合', xUsername: 'alice_x' },
+  { caseName: 'Xの@IDがない場合', xUsername: undefined },
+]) {
+  test(`GoogleとXの両方を連携しているとき、${caseName}もGoogleのメールアドレスを表示すること`, () => {
+    // Given: Xを先に連携しており、Googleも連携している。
+    const accounts = [xAccount, googleAccount]
 
-  // When
-  const result = resolveAuthAccountSummary(accounts, xUsername)
+    // When
+    const result = resolveAuthAccountSummary(accounts, xUsername)
 
-  // Then
-  assert.deepEqual(result, { kind: 'google', label: 'Google', name: 'alice@example.com' })
-})
-
-test('GoogleとXの両方を連携している場合はGoogleを代表とすること', () => {
-  // Given
-  const accounts = [xAccount, googleAccount]
-
-  // When
-  const result = resolveAuthAccountSummary(accounts)
-
-  // Then
-  assert.equal(result?.kind, 'google')
-})
+    // Then: 代表プロバイダと表示内容の両方がGoogleになる。
+    assert.deepEqual(result, { kind: 'google', label: 'Google', name: 'alice@example.com' })
+  })
+}
 
 test('対応するプロバイダが連携されていない場合はアカウント概要がないこと', () => {
   // Given

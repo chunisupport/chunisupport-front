@@ -349,16 +349,36 @@ test('MASTER以外の難易度も分布と外れ値の計算に含めること',
 
 test('譜面定数ごとに独立した分布を昇順で生成すること', () => {
   // Given
-  const records = [createRecord(1000000, 14.5), createRecord(990000, 13.0)]
+  const records = [
+    createRecord(1000000, 14.5),
+    createRecord(990000, 13.0),
+    createRecord(1002000, 14.5),
+  ]
 
   // When
   const result = inspectWeakCharts(records)
 
-  // Then
-  assert.deepEqual(
-    result.distributions.map((distribution) => distribution.chartConst),
-    [13.0, 14.5]
-  )
+  // Then: 入力と逆の定数順で、それぞれのスコアだけを集計する。
+  assert.deepEqual(result.distributions, [
+    {
+      chartConst: 13.0,
+      count: 1,
+      lowerWhisker: 990000,
+      firstQuartile: 990000,
+      median: 990000,
+      thirdQuartile: 990000,
+      upperWhisker: 990000,
+    },
+    {
+      chartConst: 14.5,
+      count: 2,
+      lowerWhisker: 1000000,
+      firstQuartile: 1000500,
+      median: 1001000,
+      thirdQuartile: 1001500,
+      upperWhisker: 1002000,
+    },
+  ])
 })
 
 test('譜面定数の集計キーは小数点以下1桁で切り捨てること', () => {
@@ -395,5 +415,81 @@ test('苦手譜面一覧を指定列と方向でソートできること', () =>
   assert.deepEqual(
     descending.map(({ record }) => record.const),
     [14.0, 13.0]
+  )
+})
+
+test('選択中の通常難易度を1件だけ解除できること', () => {
+  // Given: MASTERとULTIMAを選択中。
+  const selected = ['MASTER', 'ULTIMA'] as const
+
+  // When: MASTERを解除する。
+  const result = toggleWeakChartAggregationDifficulty(selected, 'MASTER')
+
+  // Then: MASTERだけが外れてULTIMAが残る。
+  assert.deepEqual(result, ['ULTIMA'])
+})
+
+test('外れ値はひげの範囲に含めないこと', () => {
+  // Given: 下側と上側に外れ値を1件ずつ含む分布。
+  const lowerRecords = [975000, 1000000, 1001000, 1002000, 1003000].map((score) =>
+    createRecord(score)
+  )
+  const upperRecords = [1000000, 1001000, 1002000, 1003000, 1010000].map((score) =>
+    createRecord(score)
+  )
+
+  // When: 苦手譜面を分析する。
+  const lowerResult = inspectWeakCharts(lowerRecords)
+  const upperResult = inspectWeakCharts(upperRecords)
+
+  // Then: ひげは外れ値を除いた範囲になる。
+  assert.equal(lowerResult.distributions[0].lowerWhisker, 1000000)
+  assert.equal(lowerResult.distributions[0].upperWhisker, 1003000)
+  assert.equal(upperResult.distributions[0].lowerWhisker, 1000000)
+  assert.equal(upperResult.distributions[0].upperWhisker, 1003000)
+})
+
+test('下側フェンスと一致するスコアを苦手譜面にしないこと', () => {
+  // Given: 最小値1000000が下側フェンスと一致する分布。
+  const records = [1000000, 1002000, 1002500, 1003000, 1003500].map((score) => createRecord(score))
+
+  // When: 苦手譜面を分析する。
+  const result = inspectWeakCharts(records)
+
+  // Then: 境界値を含めて外れ値なしになる。
+  assert.equal(result.outliers.length, 0)
+})
+
+test('上側フェンスと一致するスコアを得意譜面にしないこと', () => {
+  // Given: 最大値1004500が上側フェンスと一致する分布。
+  const records = [1000000, 1000500, 1001000, 1003000, 1004500].map((score) => createRecord(score))
+
+  // When: 苦手譜面を分析する。
+  const result = inspectWeakCharts(records)
+
+  // Then: 境界値を含めて外れ値なしになる。
+  assert.equal(result.outliers.length, 0)
+})
+
+test('ソートキーまたは方向の片方だけ未指定なら元の並びを返すこと', () => {
+  // Given: スコア昇順の外れ値2件。
+  const lowerScore = { record: createRecord(980000, 14.0), direction: 'LOW' as const, distance: 1 }
+  const higherScore = {
+    record: createRecord(1000000, 13.0),
+    direction: 'LOW' as const,
+    distance: 2,
+  }
+  const outliers = [lowerScore, higherScore]
+
+  // When: キーまたは方向の片方だけ未指定でソートする。
+  const keyMissing = sortWeakChartOutliers(outliers, null, 'asc')
+  const directionMissing = sortWeakChartOutliers(outliers, 'score', null)
+
+  // Then: どちらも元の配列をそのまま返す。
+  assert.strictEqual(keyMissing, outliers)
+  assert.strictEqual(directionMissing, outliers)
+  assert.deepEqual(
+    directionMissing.map(({ record }) => record.score),
+    [980000, 1000000]
   )
 })

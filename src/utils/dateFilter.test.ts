@@ -23,6 +23,17 @@ test('toRecordDateString', async (t) => {
     assert.equal(toRecordDateString('2026-02-30'), null)
   })
 
+  await t.test('月が範囲外でも日だけが一致する場合は null を返す', () => {
+    // Given: 日だけが繰り上がり後の日付と一致する存在しない年月日
+    const invalidMonth = '2026-13-01'
+
+    // When: 日付文字列へ変換する
+    const result = toRecordDateString(invalidMonth)
+
+    // Then: カレンダー上に存在しないため null になる
+    assert.equal(result, null)
+  })
+
   await t.test('null の場合は null を返す', () => {
     assert.equal(toRecordDateString(null), null)
   })
@@ -54,14 +65,19 @@ test('isDateInRange', async (t) => {
     assert.equal(isDateInRange('2026-05-31T15:00:00Z', { min: '2026-06-01', max: '' }), true)
   })
 
-  await t.test('max のみ指定した場合は上限以下を許可する', () => {
-    assert.equal(isDateInRange('2026-06-01T12:00:00Z', { min: '', max: '2026-06-01' }), true)
-    assert.equal(isDateInRange('2026-05-31T00:00:00Z', { min: '', max: '2026-06-01' }), true)
-    assert.equal(isDateInRange('2026-06-02T00:00:00Z', { min: '', max: '2026-06-01' }), false)
-  })
+  await t.test('max のみ指定した場合は当日の ISO 日時を含めて上限以下を許可する', () => {
+    // Given: 上限日だけを指定する。
+    const range = { min: '', max: '2026-06-01' }
 
-  await t.test('max 当日の ISO 日時は一致すること（バグ検出: 文字列比較の問題）', () => {
-    assert.equal(isDateInRange('2026-06-01T12:00:00Z', { min: '', max: '2026-06-01' }), true)
+    // When: 上限当日・前日・翌日の ISO 日時を判定する。
+    const sameDay = isDateInRange('2026-06-01T12:00:00Z', range)
+    const previousDay = isDateInRange('2026-05-31T00:00:00Z', range)
+    const nextDay = isDateInRange('2026-06-02T00:00:00Z', range)
+
+    // Then: 日時文字列を日付文字列と直接比較して当日を除外しない。
+    assert.equal(sameDay, true)
+    assert.equal(previousDay, true)
+    assert.equal(nextDay, false)
   })
 
   await t.test('min〜max の範囲内の日時は一致する', () => {
@@ -84,12 +100,14 @@ test('isDateInRange', async (t) => {
 })
 
 test('findLatestRecordDate', async (t) => {
-  await t.test('時刻を比較せず最新の更新日を返す', () => {
+  await t.test('最新日が先頭にあっても時刻を除いた最新の更新日を返す', () => {
     // Given
     const records = [
-      { updated_at: '2026-06-01T23:59:59+09:00' },
-      { updated_at: '2026-06-02T00:00:00+09:00' },
       { updated_at: '2026-06-02T12:34:56+09:00' },
+      { updated_at: '2026-06-02T00:00:00+09:00' },
+      { updated_at: '2026-06-01T23:59:59+09:00' },
+      { updated_at: 'invalid' },
+      { updated_at: null },
     ]
 
     // When
@@ -99,12 +117,14 @@ test('findLatestRecordDate', async (t) => {
     assert.equal(result, '2026-06-02')
   })
 
-  await t.test('UTCの日付をまたぐ更新日時も日本時間の日付で返す', () => {
+  await t.test('最新日が中間にありUTCの日付をまたぐ場合も日本時間の最新日を返す', () => {
     // Given
     const records = [
       { updated_at: '2026-05-31T14:59:59Z' },
-      { updated_at: '2026-06-01T14:59:59Z' },
       { updated_at: '2026-06-01T15:00:00Z' },
+      { updated_at: '2026-06-01T14:59:59Z' },
+      { updated_at: 'invalid' },
+      { updated_at: null },
     ]
 
     // When

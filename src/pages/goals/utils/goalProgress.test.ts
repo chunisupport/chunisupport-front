@@ -788,3 +788,318 @@ test('未解禁曲設定はOVER POWER達成率の分母から差し引く', () =
   assert.equal(progress.target, 100)
   assert.equal(progress.targetCount, 1)
 })
+
+test('OP対象の譜面定数が下限と等しい場合は除外しない', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', difficulty: 'MASTER' })]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+  const masterData = {
+    genres: [],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+
+  // When
+  const filtered = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET', const: { min: 14 } },
+    masterData,
+    songs,
+    []
+  )
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['song-1']
+  )
+})
+
+test('OP対象の譜面定数が上限と等しい場合は除外しない', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', difficulty: 'MASTER' })]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+  const masterData = {
+    genres: [],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+
+  // When
+  const filtered = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET', const: { max: 14 } },
+    masterData,
+    songs,
+    []
+  )
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['song-1']
+  )
+})
+
+test('OP対象でジャンルが対象外の楽曲は除外する', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', difficulty: 'MASTER' })]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      genre: 'ANIME',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+  const masterData = {
+    genres: [{ id: 1, name: 'POPS', short_name: 'POPS' }],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+
+  // When
+  const filtered = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET', genre: [1] },
+    masterData,
+    songs,
+    []
+  )
+
+  // Then
+  assert.deepEqual(filtered, [])
+})
+
+test('OP対象でバージョンが対象外の楽曲は除外する', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', difficulty: 'MASTER' })]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      release: '2024-06-01',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+  const masterData = {
+    genres: [],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+  const versions = [
+    { id: 1, name: 'v1', short_name: 'v1', released_at: '2024-01-01T00:00:00Z' },
+    { id: 2, name: 'v2', short_name: 'v2', released_at: '2025-01-01T00:00:00Z' },
+  ]
+
+  // When
+  const filtered = filterRecordsByAttributes(
+    records,
+    { chart_target: 'OP_TARGET', ver: [2] },
+    masterData,
+    songs,
+    versions
+  )
+
+  // Then
+  assert.deepEqual(filtered, [])
+})
+
+test('譜面定数が下限と等しいレコードは除外しない', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', const: 14 })]
+  const masterData = {
+    genres: [],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+
+  // When
+  const filtered = filterRecordsByAttributes(records, { const: { min: 14 } }, masterData, [], [])
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['song-1']
+  )
+})
+
+test('譜面定数が上限と等しいレコードは除外しない', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', const: 14 })]
+  const masterData = {
+    genres: [],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+
+  // When
+  const filtered = filterRecordsByAttributes(records, { const: { max: 14 } }, masterData, [], [])
+
+  // Then
+  assert.deepEqual(
+    filtered.map((record) => record.id),
+    ['song-1']
+  )
+})
+
+test('譜面定数が上限を超えるレコードは除外する', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', const: 15 })]
+  const masterData = {
+    genres: [],
+    difficulties: [],
+    versions: [],
+    name_folders: [],
+    account_types: [],
+    rating_bands: [],
+    achievement_types: [],
+    possessions: [],
+  }
+
+  // When
+  const filtered = filterRecordsByAttributes(records, { const: { max: 14 } }, masterData, [], [])
+
+  // Then
+  assert.deepEqual(filtered, [])
+})
+
+test('コンボランプが目標と等しい譜面を達成として数える', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', combo_lamp: 'FULL COMBO' })]
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'FC' },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 1)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, true)
+})
+
+test('FULL CHAIN目標は指定種別と一致する1件を数える', () => {
+  // Given
+  const records = [createRecord({ id: 'song-1', full_chain: 'FULL CHAIN GOLD' })]
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'GOLD', count: 1 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, [])
+
+  // Then
+  assert.equal(progress.current, 1)
+  assert.equal(progress.target, 1)
+  assert.equal(progress.achieved, true)
+})
+
+test('OVER POWER合計目標の成果パラメータがnullでも理論値を目標値にする', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'overpower_value',
+    achievement_params: null as unknown as GoalDTO['achievement_params'],
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, [], [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 0)
+  assert.equal(progress.targetCount, 0)
+})
+
+test('OVER POWER達成率は理論値が0の場合は現在値を0にする', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'overpower_percent',
+    achievement_params: { total: 50 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, [], [])
+
+  // Then
+  assert.equal(progress.current, 0)
+  assert.equal(progress.target, 50)
+  assert.equal(progress.targetCount, 0)
+})
+
+test('OVER POWER達成率が目標0で微小な現在値の場合は割合で百分率にする', () => {
+  // Given: 2譜面で理論値合計170、現在値合計1のため現在値は約0.59%
+  const records = [
+    createRecord({ id: 'song-1', difficulty: 'MASTER', overpower: 1 }),
+    createRecord({ id: 'song-2', difficulty: 'MASTER', overpower: 0 }),
+  ]
+  const songs = [
+    createSong({
+      id: 'song-1',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+    createSong({
+      id: 'song-2',
+      op_target_difficulty: 'MASTER',
+      charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
+    }),
+  ]
+  const goal = createGoal({
+    achievement_type: 'overpower_percent',
+    achievement_params: { total: 0 },
+  })
+
+  // When
+  const progress = calculateGoalProgress(goal, records, songs)
+
+  // Then
+  assert.equal(progress.current, 0.5882352941176471)
+  assert.equal(progress.target, 0)
+  assert.equal(progress.percent, 58.82352941176471)
+})

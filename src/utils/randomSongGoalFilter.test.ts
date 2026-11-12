@@ -114,11 +114,16 @@ const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
 })
 
 test('保存済み目標の属性と未達成スコアで候補を絞り込むこと', () => {
-  // Given: 目標対象内の未達成・達成済み譜面と、対象外難易度の譜面がある。
+  // Given: 未達成・達成済み譜面と、各属性だけが不一致の未達成譜面がある。
   const candidates = [
     createCandidate({ song: createSong({ id: 'song-a' }) }),
     createCandidate({ song: createSong({ id: 'song-b' }) }),
     createCandidate({ song: createSong({ id: 'song-c' }), difficulty: 'BASIC', chartConst: 3 }),
+    createCandidate({ song: createSong({ id: 'difficulty-only' }), difficulty: 'BASIC' }),
+    createCandidate({ song: createSong({ id: 'below-min' }), chartConst: 12.9 }),
+    createCandidate({ song: createSong({ id: 'above-max' }), chartConst: 14.1 }),
+    createCandidate({ song: createSong({ id: 'genre-only' }), genre: 'ORIGINAL' }),
+    createCandidate({ song: createSong({ id: 'version-only' }), version: 'ORI' }),
   ]
   const records = createRandomSongRecordMap([
     createRecord({ id: 'song-a', score: 999999 }),
@@ -208,23 +213,6 @@ test('楽曲名順を指定した目標は対象フォルダの候補だけに�
     filtered.map((candidate) => candidate.song.id),
     ['song-b']
   )
-})
-
-test('目標属性のいずれかが空選択なら候補を返さないこと', () => {
-  // Given: 難易度が明示的な空配列で保存された目標がある。
-  const goal = createGoal({ attributes: { diff: [] } })
-
-  // When: 目標を候補へ適用する。
-  const filtered = filterRandomSongCandidatesByGoal(
-    [createCandidate({})],
-    new Map(),
-    goal,
-    masterData,
-    versions
-  )
-
-  // Then: 対象譜面なしとして空配列を返す。
-  assert.deepEqual(filtered, [])
 })
 
 test('集計系目標は譜面単位の絞り込み対象にしないこと', () => {
@@ -396,6 +384,131 @@ test('壊れた成果条件を持つ目標は選択できない', () => {
   }
 })
 
+test('成果条件がnullのランプ目標は選択できない', () => {
+  // Given: 成果条件がnullのハードランプ目標がある。
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: null as unknown as GoalDTO['achievement_params'],
+  })
+
+  // When & Then: ランプ指定を取得できず利用できない目標と判定される。
+  assert.equal(isRandomSongGoalFilterAvailable(goal), false)
+  assert.deepEqual(
+    filterRandomSongCandidatesByGoal([createCandidate({})], new Map(), goal, masterData, versions),
+    []
+  )
+})
+
+test('単曲レートが無限大の目標は選択できない', () => {
+  // Given: 単曲レートにInfinityを指定した目標がある。
+  const goal = createGoal({
+    achievement_type: 'rating_count',
+    achievement_params: { rating: Infinity, count: 1 },
+  })
+
+  // When & Then: 有限値ではないため利用できない目標と判定される。
+  assert.equal(isRandomSongGoalFilterAvailable(goal), false)
+  assert.deepEqual(
+    filterRandomSongCandidatesByGoal([createCandidate({})], new Map(), goal, masterData, versions),
+    []
+  )
+})
+
+test('FULL CHAIN目標にコンボランプ値を指定した場合は選択できない', () => {
+  // Given: FULL CHAINの値域外であるFCを指定した目標がある。
+  const goal = createGoal({
+    achievement_type: 'fullchain_count',
+    achievement_params: { lamp: 'FC', count: 1 },
+  })
+
+  // When & Then: FULL CHAIN値ではないため利用できない目標と判定される。
+  assert.equal(isRandomSongGoalFilterAvailable(goal), false)
+  assert.deepEqual(
+    filterRandomSongCandidatesByGoal([createCandidate({})], new Map(), goal, masterData, versions),
+    []
+  )
+})
+
+test('コンボランプ目標にFULL CHAIN値を指定した場合は選択できない', () => {
+  // Given: コンボランプの値域外であるGOLDを指定した目標がある。
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'GOLD', count: 1 },
+  })
+
+  // When & Then: コンボランプ値ではないため利用できない目標と判定される。
+  assert.equal(isRandomSongGoalFilterAvailable(goal), false)
+  assert.deepEqual(
+    filterRandomSongCandidatesByGoal([createCandidate({})], new Map(), goal, masterData, versions),
+    []
+  )
+})
+
+test('譜面定数の下限と等しい候補を除外しない', () => {
+  // Given: 下限13.7の目標と定数13.7の未プレイ候補がある。
+  const goal = createGoal({ attributes: { const: { min: 13.7 } } })
+
+  // When: 保存済み目標を候補へ適用する。
+  const result = filterRandomSongCandidatesByGoal(
+    [createCandidate({})],
+    new Map(),
+    goal,
+    masterData,
+    versions
+  )
+
+  // Then: 下限と等しい譜面が残る。
+  assert.deepEqual(
+    result.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
+
+test('譜面定数の上限と等しい候補を除外しない', () => {
+  // Given: 上限13.7の目標と定数13.7の未プレイ候補がある。
+  const goal = createGoal({ attributes: { const: { max: 13.7 } } })
+
+  // When: 保存済み目標を候補へ適用する。
+  const result = filterRandomSongCandidatesByGoal(
+    [createCandidate({})],
+    new Map(),
+    goal,
+    masterData,
+    versions
+  )
+
+  // Then: 上限と等しい譜面が残る。
+  assert.deepEqual(
+    result.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
+
+test('スコア目標では成果条件のレート値で到達可否を絞り込まない', () => {
+  // Given: スコア未達成で定数13.7の候補と、余分なレート値を持つスコア目標がある。
+  const goal = createGoal({
+    achievement_params: {
+      score: 1000000,
+      count: 1,
+      rating: 16,
+    } as unknown as GoalDTO['achievement_params'],
+  })
+
+  // When: 保存済み目標を候補へ適用する。
+  const result = filterRandomSongCandidatesByGoal(
+    [createCandidate({})],
+    new Map(),
+    goal,
+    masterData,
+    versions
+  )
+
+  // Then: レート到達条件を使わず候補が残る。
+  assert.deepEqual(
+    result.map((candidate) => candidate.song.id),
+    ['song-a']
+  )
+})
 test('虹枠目標は通常譜面が揃った楽曲の未AJ譜面を抽出し、難易度・定数指定を使わない', () => {
   // Given: BASIC〜MASTERとULTIMAがある楽曲、および通常譜面が欠けた楽曲。
   const song = createSong({

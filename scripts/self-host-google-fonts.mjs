@@ -33,6 +33,11 @@ const FETCH_ATTEMPTS = 3
 const FETCH_TIMEOUT_MS = 30_000
 /** 再試行前に待つ時間の基準（ミリ秒）。試行回数を掛ける。 */
 const FETCH_RETRY_DELAY_MS = 500
+/**
+ * スタイルシートを取り直す回数の上限。
+ * Google Fonts はまれに、woff2 の固定 URL ではなく動的生成の URL (`/l/font?kit=...`) を返す。
+ */
+const STYLESHEET_ATTEMPTS = 5
 /** woff2 ファイルの先頭シグネチャ。 */
 const WOFF2_SIGNATURE = 'wOF2'
 
@@ -127,6 +132,48 @@ const logSize = (label, content) => {
 }
 
 /**
+ * Google Fonts のスタイルシートを取得し、取り込む woff2 の URL を取り出す。
+ *
+ * 同じ URL でも応答の内容が揺れ、検証を通らない CSS が返ることがある。
+ * 検証は緩めず、通る CSS が返るまで上限回数まで取り直す。
+ *
+ * @param stylesheetUrl - Google Fonts のスタイルシート URL。
+ * @returns 検証を通った CSS と、その中の woff2 の URL。
+ */
+const fetchGoogleFontsStylesheet = async (stylesheetUrl) => {
+  let lastError = new Error('unknown')
+  for (let attempt = 1; attempt <= STYLESHEET_ATTEMPTS; attempt += 1) {
+    const cssResponse = await fetchOrThrow(stylesheetUrl, {
+      headers: {
+        accept: 'text/css,*/*;q=0.1',
+        'user-agent': GOOGLE_FONTS_USER_AGENT,
+      },
+    })
+    if (new URL(cssResponse.url).origin !== 'https://fonts.googleapis.com') {
+      throw new Error(`スタイルシートの最終 URL が Google Fonts ではありません: ${cssResponse.url}`)
+    }
+    const cssContentType = cssResponse.headers.get('content-type') ?? ''
+    if (!cssContentType.includes('text/css')) {
+      throw new Error(`スタイルシートの Content-Type が text/css ではありません: ${cssContentType}`)
+    }
+
+    const css = await cssResponse.text()
+    try {
+      return { css, sourceUrls: collectGoogleFontFileUrls(css) }
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      console.warn(
+        `Google Fonts の CSS が検証を通りませんでした (${attempt}/${STYLESHEET_ATTEMPTS}): ${lastError.message}`
+      )
+      if (attempt < STYLESHEET_ATTEMPTS) {
+        await new Promise((resolve) => setTimeout(resolve, FETCH_RETRY_DELAY_MS * attempt))
+      }
+    }
+  }
+  throw lastError
+}
+
+/**
  * Rsbuild が残した Google Fonts の link を、ハッシュ付きの同一オリジン CSS へ置き換える。
  *
  * Cloudflare Fonts はエッジで HTML を書き換え、この link をインライン CSS にする。
@@ -139,22 +186,7 @@ const logSize = (label, content) => {
 const selfHostGoogleFonts = async () => {
   const html = await readFile(INDEX_HTML_PATH, 'utf8')
   const stylesheetUrl = extractGoogleFontsStylesheetUrl(html)
-  const cssResponse = await fetchOrThrow(stylesheetUrl, {
-    headers: {
-      accept: 'text/css,*/*;q=0.1',
-      'user-agent': GOOGLE_FONTS_USER_AGENT,
-    },
-  })
-  if (new URL(cssResponse.url).origin !== 'https://fonts.googleapis.com') {
-    throw new Error(`スタイルシートの最終 URL が Google Fonts ではありません: ${cssResponse.url}`)
-  }
-  const cssContentType = cssResponse.headers.get('content-type') ?? ''
-  if (!cssContentType.includes('text/css')) {
-    throw new Error(`スタイルシートの Content-Type が text/css ではありません: ${cssContentType}`)
-  }
-
-  const css = await cssResponse.text()
-  const sourceUrls = collectGoogleFontFileUrls(css)
+  const { css, sourceUrls } = await fetchGoogleFontsStylesheet(stylesheetUrl)
   const downloaded = await mapPool(sourceUrls, DOWNLOAD_CONCURRENCY, async (sourceUrl) => {
     const response = await fetchOrThrow(sourceUrl, {
       headers: { 'user-agent': GOOGLE_FONTS_USER_AGENT },

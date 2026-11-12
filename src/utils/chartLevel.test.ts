@@ -5,6 +5,7 @@ import {
   getChartLevelConstRange,
   getChartLevelFilterBoundary,
   getChartLevelSortKey,
+  isChartConstRangeModified,
   isChartLevelFilterRange,
   isLowChartLevel,
   normalizeChartConstRange,
@@ -100,4 +101,37 @@ test('レベル境界と一致しない譜面定数範囲はレベル範囲と�
   assert.equal(isChartLevelFilterRange({ min: 14, max: 14.2 }), false)
   // 6以下は「6 = 6.0〜6.9」にまとめるため、6.5は下端にならない
   assert.equal(isChartLevelFilterRange({ min: 6.5, max: 6.9 }), false)
+})
+
+test('全範囲の定数範囲は未変更と判定すること', () => {
+  // Given
+  const range = { min: 1, max: 16 }
+
+  // When
+  const result = isChartConstRangeModified(range)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('下限だけが全範囲と異なる定数範囲は変更ありと判定すること', () => {
+  // Given
+  const range = { min: 2, max: 16 }
+
+  // When
+  const result = isChartConstRangeModified(range)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('上限だけが全範囲と異なる定数範囲は変更ありと判定すること', () => {
+  // Given
+  const range = { min: 1, max: 15 }
+
+  // When
+  const result = isChartConstRangeModified(range)
+
+  // Then
+  assert.equal(result, true)
 })

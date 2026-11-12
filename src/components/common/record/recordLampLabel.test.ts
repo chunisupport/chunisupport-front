@@ -56,6 +56,18 @@ test('理論値AJの読み上げラベルはALL JUSTICE CRITICALになる', () =
   assert.equal(result, 'ALL JUSTICE CRITICAL')
 })
 
+test('理論値ではないAJの読み上げラベルはALL JUSTICEになる', () => {
+  // Given: ALL JUSTICEだが理論値ではないレコード
+  const lamp = 'ALL JUSTICE'
+  const score = 1000000
+
+  // When: 読み上げラベルを取得する
+  const result = getDefaultRecordLampAccessibleLabel(lamp, score)
+
+  // Then: 通常AJの名称を返す
+  assert.equal(result, 'ALL JUSTICE')
+})
+
 test('未設定のコンボランプは読み上げ時になしと伝える', () => {
   // Given: コンボランプが未設定のレコード
   const lamp = null

@@ -131,3 +131,127 @@ test('isValidSavedWorldsendFilter は型が違う保存値を壊れたフィル�
   assert.equal(isValidSavedWorldsendFilter(DEFAULT_WORLDSEND_FILTER), true)
   assert.equal(isValidSavedWorldsendFilter(brokenFilter), false)
 })
+
+test('isRecordFilterPayloadWithinLimit は上限ちょうどを制限内として許可すること', () => {
+  // Given
+  const boundaryFilter = { ...DEFAULT_FILTER, title: 'x'.repeat(7470) }
+  const overFilter = { ...DEFAULT_FILTER, title: 'x'.repeat(7471) }
+
+  // When
+  const boundaryResult = isRecordFilterPayloadWithinLimit(3, boundaryFilter)
+  const overResult = isRecordFilterPayloadWithinLimit(3, overFilter)
+
+  // Then
+  assert.equal(boundaryResult, true)
+  assert.equal(overResult, false)
+})
+
+test('isValidSavedStandardFilter はnullを壊れたフィルターとして拒否すること', () => {
+  // Given
+  const value: unknown = null
+
+  // When
+  const result = isValidSavedStandardFilter(value)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('isValidSavedWorldsendFilter はnullを壊れたフィルターとして拒否すること', () => {
+  // Given
+  const value: unknown = null
+
+  // When
+  const result = isValidSavedWorldsendFilter(value)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('isValidSavedStandardFilter は任意範囲の上限ちょうどを許可すること', () => {
+  // Given
+  const filter = { ...DEFAULT_FILTER, overPower: { min: 0, max: 95 } }
+
+  // When
+  const result = isValidSavedStandardFilter(filter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isValidSavedStandardFilter は許可外の難易度を含む配列を拒否すること', () => {
+  // Given
+  const filter = { ...DEFAULT_FILTER, difficulties: ['MASTER', 'INVALID'] }
+
+  // When
+  const result = isValidSavedStandardFilter(filter)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('isValidSavedStandardFilter は日付範囲の片方だけが文字列の場合を拒否すること', () => {
+  // Given
+  const filter = { ...DEFAULT_FILTER, updatedAt: { min: '', max: 123 } }
+
+  // When
+  const result = isValidSavedStandardFilter(filter)
+
+  // Then
+  assert.equal(result, false)
+})
+
+test('isValidSavedStandardFilter は定数モードnumberを有効として許可すること', () => {
+  // Given
+  const filter = { ...DEFAULT_FILTER, constFilterMode: 'number' }
+
+  // When
+  const result = isValidSavedStandardFilter(filter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isValidSavedWorldsendFilter はnullを含む属性配列を有効として許可すること', () => {
+  // Given
+  const filter = { ...DEFAULT_WORLDSEND_FILTER, attributes: [null] }
+
+  // When
+  const result = isValidSavedWorldsendFilter(filter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isValidSavedWorldsendFilter はnameFolders省略を旧保存値として許可すること', () => {
+  // Given
+  const { nameFolders: _nameFolders, ...legacyFilter } = DEFAULT_WORLDSEND_FILTER
+
+  // When
+  const result = isValidSavedWorldsendFilter(legacyFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isValidSavedWorldsendFilter はスコアモードnumberを有効として許可すること', () => {
+  // Given
+  const filter = { ...DEFAULT_WORLDSEND_FILTER, scoreFilterMode: 'number' }
+
+  // When
+  const result = isValidSavedWorldsendFilter(filter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isValidSavedWorldsendFilter はupdatedAt省略を旧保存値として許可すること', () => {
+  // Given
+  const { updatedAt: _updatedAt, ...legacyFilter } = DEFAULT_WORLDSEND_FILTER
+
+  // When
+  const result = isValidSavedWorldsendFilter(legacyFilter)
+
+  // Then
+  assert.equal(result, true)
+})

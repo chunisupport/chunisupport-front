@@ -331,28 +331,6 @@ test('「現在値から」は現在値が正から0になると保存前検証�
   assert.equal(truncatedToZero, '現在値が0のため、現在値からは始められません。')
 })
 
-test('「現在値から」は現在値が正から達成済みになると保存前検証でエラーになる', () => {
-  // Given
-  const selectable = validateGoalGaugeStart({
-    ...gaugeStartInput,
-    gaugeStartMode: 'current',
-    current: 12,
-    target: 30,
-  })
-
-  // When: 目標値を下げて、切り捨て後の現在値が目標値に達する
-  const achieved = validateGoalGaugeStart({
-    ...gaugeStartInput,
-    gaugeStartMode: 'current',
-    current: 30,
-    target: 30,
-  })
-
-  // Then
-  assert.equal(selectable, undefined)
-  assert.equal(achieved, '現在値が目標値に達しているため、現在値からは始められません。')
-})
-
 test('「現在値から」は対象が0件になると保存前検証と選択欄の両方でエラーになる', () => {
   // Given: 対象があるあいだは保存でき、選択欄にもエラーを出さない
   const selectable = validateGoalGaugeStart({
@@ -438,4 +416,274 @@ test('「現在値から」は切り捨て後の現在値が目標値に届く�
   // Then
   assert.equal(reached, '現在値が目標値に達しているため、現在値からは始められません。')
   assert.equal(below, undefined)
+})
+
+test('ランク目標ではスコア文字列が範囲外でも保存前検証を通過する', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'rank_count' as const,
+    score: '9999999',
+    rank: 'S' as const,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('単曲レートが下限ちょうどの場合は保存前検証を通過する', () => {
+  // Given
+  const input = {
+    title: '単曲レート目標',
+    achievementType: 'rating_count' as const,
+    score: '0',
+    rating: '0.01',
+    rank: 'S' as const,
+    count: '1',
+    countMode: 'all' as const,
+    total: '0',
+    totalMode: 'number' as const,
+    constRange: { min: 1, max: 16 },
+    allCount: 1,
+    theoreticalTotal: 0,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('定数範囲の最小値が最大値を超える場合は保存前検証でエラーになる', () => {
+  // Given
+  const input = { ...validInput, constRange: { min: 15, max: 13 } }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '定数の最小値は最大値以下にしてください。')
+})
+
+test('定数範囲の最小値と最大値が等しい場合は保存前検証を通過する', () => {
+  // Given
+  const input = { ...validInput, constRange: { min: 13, max: 13 } }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('単曲レート目標ではスコア文字列が範囲外でもスコアエラーにならない', () => {
+  // Given
+  const input = {
+    title: '単曲レート目標',
+    achievementType: 'rating_count' as const,
+    score: '9999999',
+    rating: '18.00',
+    rank: 'S' as const,
+    count: '1',
+    countMode: 'all' as const,
+    total: '0',
+    totalMode: 'number' as const,
+    constRange: { min: 1, max: 16 },
+    allCount: 1,
+    theoreticalTotal: 0,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('平均スコア目標で範囲外のスコアは保存前検証でエラーになる', () => {
+  // Given
+  const input = { ...validInput, achievementType: 'avg_score' as const, score: '9999999' }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, 'スコアは 0 ～ 1,010,000 の範囲で入力してください。')
+})
+
+test('スコアが0の場合は保存前検証を通過する', () => {
+  // Given
+  const input = { ...validInput, score: '0' }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('スコアが1010000の場合は保存前検証を通過する', () => {
+  // Given
+  const input = { ...validInput, score: '1010000' }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('件数指定で小数を含む場合は保存前検証でエラーになる', () => {
+  // Given
+  const input = { ...validInput, count: '1.5' }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '件数は1以上の整数で入力してください。')
+})
+
+test('割合指定で負の値の場合は割合のエラーメッセージになる', () => {
+  // Given
+  const input = { ...validInput, countMode: 'percent' as const, count: '-1' }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '割合は0以上の数値で入力してください。')
+})
+
+test('件数が対象譜面数ちょうどの場合は保存前検証を通過する', () => {
+  // Given
+  const input = { ...validInput, count: '20' }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('OVER POWER達成率が負の場合は保存前検証でエラーになる', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'overpower_percent' as const,
+    total: '-1',
+    totalMode: 'number' as const,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '合計/割合の目標値は0以上で入力してください。')
+})
+
+test('総スコア目標で数値指定の負値は保存前検証でエラーになる', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'total_score' as const,
+    total: '-1',
+    totalMode: 'number' as const,
+    theoreticalTotal: 100,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '合計/割合の目標値は0以上で入力してください。')
+})
+
+test('総スコア目標で数値指定の小数は保存前検証でエラーになる', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'total_score' as const,
+    total: '10.5',
+    totalMode: 'number' as const,
+    theoreticalTotal: 100,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '総スコアの目標値と残数は整数で入力してください。')
+})
+
+test('総スコア目標で残数指定の小数は保存前検証でエラーになる', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'total_score' as const,
+    total: '10.5',
+    totalMode: 'remaining' as const,
+    theoreticalTotal: 100,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '総スコアの目標値と残数は整数で入力してください。')
+})
+
+test('OVER POWER合計が上限を超える場合は保存前検証でエラーになる', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'overpower_value' as const,
+    total: '101',
+    totalMode: 'number' as const,
+    theoreticalTotal: 100,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, 'OVER POWER合計目標は最大 100 以下で入力してください。')
+})
+
+test('総スコア目標が上限を超える場合は保存前検証でエラーになる', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'total_score' as const,
+    total: '101',
+    totalMode: 'number' as const,
+    theoreticalTotal: 100,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, '総スコア目標は最大 100 以下で入力してください。')
+})
+
+test('OVER POWER合計が上限以内の場合は保存前検証を通過する', () => {
+  // Given
+  const input = {
+    ...validInput,
+    achievementType: 'overpower_value' as const,
+    total: '50',
+    totalMode: 'number' as const,
+    theoreticalTotal: 100,
+  }
+
+  // When
+  const result = validateGoalForm(input)
+
+  // Then
+  assert.equal(result, undefined)
 })

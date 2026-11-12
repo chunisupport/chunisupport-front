@@ -247,16 +247,33 @@ test('JSONは難易度ごとの静的統計JSONをstats配列に並べること'
   assert.deepEqual(JSON.parse(content), { stats: statsList })
 })
 
-test('CSVとTSVはUTF-8 BOMで始まり、ヘッダーと全難易度の譜面数分の行を持つこと', () => {
-  // Given
-  const statsList = [createResponse('EXPERT'), createResponse('MASTER')]
+for (const format of ['csv', 'tsv'] as const) {
+  test(`${format}はUTF-8 BOMとヘッダーを持ち、全難易度の各譜面を指定順で連結すること`, () => {
+    // Given
+    const statsList = [createResponse('EXPERT'), createResponse('MASTER')]
 
-  // When
-  const csv = formatChartStatsExportContent(statsList, 'csv')
-  const tsv = formatChartStatsExportContent(statsList, 'tsv')
+    // When
+    const content = formatChartStatsExportContent(statsList, format)
 
-  // Then
-  assert.ok(csv.startsWith(`${BOM}difficulty,song_id,title,`))
-  assert.ok(tsv.startsWith(`${BOM}difficulty\tsong_id\ttitle\t`))
-  assert.equal(csv.trimEnd().split('\r\n').length, 5)
-})
+    // Then
+    const lines = content.trimEnd().split('\r\n')
+    assert.equal(lines.length, 5)
+    if (format === 'csv') {
+      assert.ok(content.startsWith(`${BOM}difficulty,song_id,title,`))
+      assert.deepEqual(lines.slice(1), [
+        'EXPERT,id-A,A,14.5,false,100,1,2,3,4,5,6,7,72,1,2,3,4,50,40,1,9,20,70',
+        'EXPERT,id-B,B,14.5,false,100,1,2,3,4,5,6,7,72,1,2,3,4,50,40,1,9,20,70',
+        'MASTER,id-A,A,14.5,false,100,1,2,3,4,5,6,7,72,1,2,3,4,50,40,1,9,20,70',
+        'MASTER,id-B,B,14.5,false,100,1,2,3,4,5,6,7,72,1,2,3,4,50,40,1,9,20,70',
+      ])
+    } else {
+      assert.ok(content.startsWith(`${BOM}difficulty\tsong_id\ttitle\t`))
+      assert.deepEqual(lines.slice(1), [
+        'EXPERT\tid-A\tA\t14.5\tfalse\t100\t1\t2\t3\t4\t5\t6\t7\t72\t1\t2\t3\t4\t50\t40\t1\t9\t20\t70',
+        'EXPERT\tid-B\tB\t14.5\tfalse\t100\t1\t2\t3\t4\t5\t6\t7\t72\t1\t2\t3\t4\t50\t40\t1\t9\t20\t70',
+        'MASTER\tid-A\tA\t14.5\tfalse\t100\t1\t2\t3\t4\t5\t6\t7\t72\t1\t2\t3\t4\t50\t40\t1\t9\t20\t70',
+        'MASTER\tid-B\tB\t14.5\tfalse\t100\t1\t2\t3\t4\t5\t6\t7\t72\t1\t2\t3\t4\t50\t40\t1\t9\t20\t70',
+      ])
+    }
+  })
+}

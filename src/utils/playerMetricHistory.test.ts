@@ -212,3 +212,58 @@ test('公式指標履歴なしのAPIエラーだけを識別する', () => {
   assert.equal(isPlayerMetricHistoryNotFoundError(userNotFound), false)
   assert.equal(isPlayerMetricHistoryNotFoundError(null), false)
 })
+
+test('コードを持つ関数を履歴なしエラーと判定しないこと', () => {
+  // Given: エラーコードを持つ関数。
+  const error = Object.assign(() => {}, { code: 'player_metric_history_not_found' })
+
+  // When: 履歴なしエラーか判定する。
+  const result = isPlayerMetricHistoryNotFoundError(error)
+
+  // Then: オブジェクトではないため履歴なし扱いにならない。
+  assert.equal(result, false)
+})
+
+test('履歴グラフの縦軸は数値でない値を無視すること', () => {
+  // Given: NaNと無限大だけの履歴。
+  const values = [Number.NaN, Number.POSITIVE_INFINITY]
+
+  // When: 縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange(values, {
+    minPadding: 5,
+    paddingRatio: 1,
+  })
+
+  // Then: 有効な値がないため範囲を返さない。
+  assert.equal(result, undefined)
+})
+
+test('履歴グラフの縦軸は下限だけでは異常範囲を確定しないこと', () => {
+  // Given: 下限がデータより上で上限がない履歴。
+  const values = [10]
+
+  // When: 縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange(values, {
+    floor: 15,
+    minPadding: 5,
+    paddingRatio: 1,
+  })
+
+  // Then: データを基準にした最小余白の範囲に戻る。
+  assert.deepEqual(result, { min: 5, max: 15 })
+})
+
+test('履歴グラフの縦軸は上限だけでは異常範囲を確定しないこと', () => {
+  // Given: 上限がデータより下で下限がない履歴。
+  const values = [10]
+
+  // When: 縦軸範囲を算出する。
+  const result = buildPlayerMetricHistoryAxisRange(values, {
+    ceiling: 5,
+    minPadding: 5,
+    paddingRatio: 1,
+  })
+
+  // Then: データを基準にした最小余白の範囲に戻る。
+  assert.deepEqual(result, { min: 5, max: 15 })
+})

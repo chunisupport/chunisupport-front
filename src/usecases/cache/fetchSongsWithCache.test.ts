@@ -285,17 +285,19 @@ const revalidationTargets = [
  * @param songsPath - 楽曲一覧 API のパス。
  * @param getUpdatedAt - 呼び出し時点でサーバーが返す楽曲更新日時。
  * @param songs - 楽曲一覧 API が返す楽曲。
- * @returns 楽曲一覧 API の呼び出し回数を返す関数。
+ * @returns 楽曲一覧 API と楽曲更新日時 API の呼び出し回数を返す関数。
  */
 const installSongsApi = (
   songsPath: string,
   getUpdatedAt: () => string,
   songs: unknown[]
-): (() => number) => {
+): { getSongsFetchCount: () => number; getUpdatedAtFetchCount: () => number } => {
   let songsFetchCount = 0
+  let updatedAtFetchCount = 0
   globalThis.fetch = async (input) => {
     const url = String(input)
     if (url.endsWith('/internal/songs/updated-at')) {
+      updatedAtFetchCount += 1
       return Response.json({ updated_at: getUpdatedAt() })
     }
     if (url.endsWith(songsPath)) {
@@ -304,7 +306,10 @@ const installSongsApi = (
     }
     throw new Error(`unexpected fetch: ${url}`)
   }
-  return () => songsFetchCount
+  return {
+    getSongsFetchCount: () => songsFetchCount,
+    getUpdatedAtFetchCount: () => updatedAtFetchCount,
+  }
 }
 
 for (const target of revalidationTargets) {
@@ -313,7 +318,7 @@ for (const target of revalidationTargets) {
     t.mock.timers.enable({ apis: ['Date'], now: 0 })
     await target.replaceCache(SONGS_UPDATED_AT)
     let serverUpdatedAt = SONGS_UPDATED_AT
-    const getSongsFetchCount = installSongsApi(target.songsPath, () => serverUpdatedAt, [
+    const { getSongsFetchCount } = installSongsApi(target.songsPath, () => serverUpdatedAt, [
       target.fetchedSong,
     ])
     const beforeUpdate = await target.fetchWithCache()
@@ -329,21 +334,32 @@ for (const target of revalidationTargets) {
     assert.equal(getSongsFetchCount(), 1)
   })
 
-  test(`${target.label}はTTL経過後も更新日時が同じならIndexedDBキャッシュを再利用すること`, async (t) => {
+  test(`${target.label}はTTL直前まで更新日時を再取得せず、ちょうどTTLで再取得してもIndexedDBキャッシュを再利用すること`, async (t) => {
     // Given: 更新日時 T1 で楽曲キャッシュとメモリ上の更新日時が揃っている。
     t.mock.timers.enable({ apis: ['Date'], now: 0 })
     await target.replaceCache(SONGS_UPDATED_AT)
-    const getSongsFetchCount = installSongsApi(target.songsPath, () => SONGS_UPDATED_AT, [
-      target.fetchedSong,
-    ])
+    const { getSongsFetchCount, getUpdatedAtFetchCount } = installSongsApi(
+      target.songsPath,
+      () => SONGS_UPDATED_AT,
+      [target.fetchedSong]
+    )
     await target.fetchWithCache()
 
-    // When: サーバー側の更新がないまま TTL 経過後に再度取得する。
-    t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
-    const response = await target.fetchWithCache()
+    // When: サーバー側の更新がないまま TTL の 1ms 前に再度取得する。
+    t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS - 1)
+    const beforeTtl = await target.fetchWithCache()
 
-    // Then: 楽曲一覧 API は呼ばず、IndexedDB キャッシュを返す。
-    assert.deepEqual(response.songs, [target.cachedSong])
+    // Then: 更新日時 API は初回の 1 回だけで、IndexedDB キャッシュを返す。
+    assert.deepEqual(beforeTtl.songs, [target.cachedSong])
+    assert.equal(getUpdatedAtFetchCount(), 1)
+
+    // When: ちょうど TTL に達した時点で再度取得する。
+    t.mock.timers.tick(1)
+    const atTtl = await target.fetchWithCache()
+
+    // Then: 更新日時 API だけを再取得し、楽曲一覧 API は呼ばず IndexedDB キャッシュを返す。
+    assert.deepEqual(atTtl.songs, [target.cachedSong])
+    assert.equal(getUpdatedAtFetchCount(), 2)
     assert.equal(getSongsFetchCount(), 0)
   })
 }

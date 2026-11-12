@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
-import { test } from 'node:test'
+import { execFile } from 'node:child_process'
+import test from 'node:test'
+import { promisify } from 'node:util'
+import { setupTestEnvironment } from '../test/setupTestEnvironment'
 
 /**
  * テスト用のAPI環境変数を設定して、ソート関数を遅延読み込みする。
@@ -22,6 +25,33 @@ const loadSortSongsByReleaseDescAndIdxDesc = async () => {
 
   const { sortSongsByReleaseDescAndIdxDesc } = await import('./songsData.ts')
   return sortSongsByReleaseDescAndIdxDesc
+}
+
+/**
+ * ブラウザ向け Solid の実行条件で共有楽曲storeの初期状態を検証する。
+ *
+ * @param script - `store` を使う検証コード。
+ * @returns 検証終了時に解決する Promise。
+ */
+const runBrowserAssertion = async (script: string): Promise<void> => {
+  setupTestEnvironment()
+  const execFileAsync = promisify(execFile)
+  const { stderr } = await execFileAsync(process.execPath, [
+    '--conditions=browser',
+    '--import',
+    './scripts/register-ts-extension-loader.mjs',
+    '--disable-warning=ExperimentalWarning',
+    '--input-type=module',
+    '--eval',
+    `
+import assert from 'node:assert/strict'
+const { useSongsData } = await import('./src/stores/songsData.ts')
+const store = useSongsData()
+${script}
+`,
+  ])
+
+  assert.equal(stderr, '')
 }
 
 test('リリース日を優先し（降順）、同日内はofficial_idxを数値降順でソートする', async () => {
@@ -74,4 +104,18 @@ test('releaseが不正または未設定の曲は先頭へ寄せる', async () =
     sorted.map((song) => song.title),
     ['不正日付', '日付なし', '日付あり']
   )
+})
+
+test('通常楽曲は初回要求前は読み込み中になる', async () => {
+  // Given: 一度も要求していない共有store（別プロセスの初期状態で検証する）
+  // When: 通常楽曲の表示可否を確認する
+  // Then: 未要求のため読み込み中になる
+  await runBrowserAssertion('assert.equal(store.isSongsLoading(), true)')
+})
+
+test("WORLD'S END楽曲は初回要求前は読み込み中になる", async () => {
+  // Given: 一度も要求していない共有store（別プロセスの初期状態で検証する）
+  // When: WORLD'S END楽曲の表示可否を確認する
+  // Then: 未要求のため読み込み中になる
+  await runBrowserAssertion('assert.equal(store.isWorldsendSongsLoading(), true)')
 })

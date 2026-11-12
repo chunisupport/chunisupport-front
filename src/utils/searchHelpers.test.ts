@@ -74,20 +74,26 @@ test('検索用文字列キャッシュは同じ要素を再正規化せず、�
   assert.equal(replaced.normalizedTitle, 'xyz')
 })
 
-test('正規化済み文字列のマッチャーは曲名・アーティスト・読みのいずれかに一致すること', () => {
-  // Given
-  const getSearchText = createSearchTextCache<{
-    title: string
-    artist: string
-    reading: string | null
-  }>()
-  const song = getSearchText({ title: '楽曲', artist: 'ABC', reading: 'がっきょく' })
+for (const { name, query, expected } of [
+  { name: '曲名だけに一致する', query: '楽曲', expected: true },
+  { name: 'アーティストだけに一致する', query: 'abc', expected: true },
+  { name: '読みだけに一致する', query: 'カッキョク', expected: true },
+  { name: 'どの項目にも一致しない', query: '別曲', expected: false },
+  { name: '空の検索語は一致する', query: '', expected: true },
+]) {
+  test(`正規化済み文字列のマッチャーは${name}こと`, () => {
+    // Given: 曲名・アーティスト・読みが異なる楽曲。
+    const getSearchText = createSearchTextCache<{
+      title: string
+      artist: string
+      reading: string | null
+    }>()
+    const song = getSearchText({ title: '楽曲', artist: 'ABC', reading: 'がっきょく' })
 
-  // When
-  const results = ['abc', 'カッキョク', '別曲', ''].map((query) =>
-    createSearchTextMatcher(query)(song)
-  )
+    // When: ケースの検索語で照合する。
+    const result = createSearchTextMatcher(query)(song)
 
-  // Then
-  assert.deepEqual(results, [true, true, false, true])
-})
+    // Then: 一致経路または不一致・空文字の契約を満たす。
+    assert.equal(result, expected)
+  })
+}

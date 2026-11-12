@@ -39,14 +39,14 @@ test('短いタイトルにはコピー表記を追加する', () => {
 
 test('長いタイトルは末尾を削ってコピー表記を含む上限内に収める', () => {
   // Given: タイトル上限いっぱいの文字列。
-  const title = '目'.repeat(GOAL_TITLE_MAX_LENGTH)
+  const title = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234'
 
   // When: 複製後のタイトルを作る。
   const result = buildCopiedGoalTitle(title)
 
-  // Then: 上限を超えず、コピー表記で終わる。
-  assert.equal(Array.from(result).length, GOAL_TITLE_MAX_LENGTH)
-  assert.equal(result.endsWith(GOAL_COPY_TITLE_SUFFIX), true)
+  // Then: 上限30文字に収まり、先頭25文字だけを維持してコピー表記が付く。
+  assert.equal(result, 'ABCDEFGHIJKLMNOPQRSTUVWXY（コピー）')
+  assert.equal(Array.from(result).length, 30)
 })
 
 test('絵文字をUnicodeコードポイント単位で数えて必要な末尾だけを削る', () => {

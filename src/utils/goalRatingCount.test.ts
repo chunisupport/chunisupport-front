@@ -54,6 +54,20 @@ test('単曲レート18は理論値で到達できる定数15.9以上だけを�
   )
 })
 
+test('理論値が目標と等しい譜面は到達可能に含めること', () => {
+  // Given: 理論値が18.05と等しくなる定数15.9のレコード。
+  const records = [createRecord({ id: 'boundary', const: 15.9 })]
+
+  // When
+  const result = filterRatingReachableRecords(records, 18.05)
+
+  // Then: 等しい場合も到達可能として残る。
+  assert.deepEqual(
+    result.map((record) => record.id),
+    ['boundary']
+  )
+})
+
 test('単曲レート目標から0.1刻みの到達可能定数下限を解決する', () => {
   // Given / When / Then
   assert.equal(resolveRatingGoalMinimumChartConstant(18), 15.9)

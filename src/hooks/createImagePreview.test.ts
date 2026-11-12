@@ -235,3 +235,94 @@ assert.equal(other.preview.isCapturing(), false)
 other.dispose()
 `)
 })
+
+test('中断以外のDOMExceptionでは共有エラーになること', async () => {
+  await runBrowserTest(`
+// Given: プレビュー画像がある
+const { preview, dispose } = setup()
+preview.handleOpenChange(true)
+await flush()
+await resolveCapture(0)
+const files = [preview.previews()[0].file]
+
+// When: 中断以外のDOMExceptionで共有に失敗する
+setShareError(new DOMException('denied', 'NotAllowedError'))
+await preview.share(files)
+
+// Then: 共有エラーになる
+assert.equal(preview.shareError(), 'share error')
+dispose()
+`)
+})
+
+test('画像生成中は実行中として扱うこと', async () => {
+  await runBrowserTest(`
+// Given: ダイアログを開く
+const { preview, dispose } = setup()
+
+// When: 画像生成を開始する
+preview.handleOpenChange(true)
+await flush()
+
+// Then: 生成だけでも実行中になる
+assert.equal(preview.isCapturing(), true)
+assert.equal(preview.isSharing(), false)
+assert.equal(preview.isBusy(), true)
+dispose()
+`)
+})
+
+test('閉じた状態で再試行しても画像生成を開始しないこと', async () => {
+  await runBrowserTest(`
+// Given: ダイアログを閉じた状態
+const { preview, dispose } = setup()
+
+// When: 再試行する
+preview.retryCapture()
+await flush()
+
+// Then: 生成を開始しない
+assert.equal(pending.length, 0)
+assert.equal(preview.isCapturing(), false)
+dispose()
+`)
+})
+
+test('生成中に再試行しても二重に画像生成を開始しないこと', async () => {
+  await runBrowserTest(`
+// Given: 画像生成中
+const { preview, dispose } = setup()
+preview.handleOpenChange(true)
+await flush()
+assert.equal(pending.length, 1)
+
+// When: 生成中に再試行する
+preview.retryCapture()
+await flush()
+
+// Then: 二重に開始しない
+assert.equal(pending.length, 1)
+assert.equal(preview.isCapturing(), true)
+dispose()
+`)
+})
+
+test('生成条件が揃わない状態で再試行しても画像生成を開始しないこと', async () => {
+  await runBrowserTest(`
+// Given: 生成条件が揃わない状態で開く
+const [ready, setReady] = createSignal(false)
+const { preview, dispose } = setup({ canCapture: ready })
+preview.handleOpenChange(true)
+await flush()
+assert.equal(pending.length, 0)
+
+// When: 条件が揃わないまま再試行する
+preview.retryCapture()
+await flush()
+
+// Then: 生成を開始しない
+assert.equal(pending.length, 0)
+assert.equal(preview.isCapturing(), false)
+dispose()
+`)
+})

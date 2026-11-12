@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatPlayerLevelLabel, HIDDEN_PLAYER_LEVEL_LABEL } from './playerLevel'
+import { formatPlayerLevelLabel } from './playerLevel'
 
 test('プレイヤーレベルを通常表示すること', () => {
   // Given: 表示するプレイヤーレベル。
@@ -21,6 +21,5 @@ test('プレイヤーレベルを非表示にする場合はマスク表示す�
   const result = formatPlayerLevelLabel(level, true)
 
   // Then: 実数値の代わりにマスクになる。
-  assert.equal(result, HIDDEN_PLAYER_LEVEL_LABEL)
   assert.equal(result, 'Lv. ＊＊＊')
 })

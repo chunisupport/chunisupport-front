@@ -25,6 +25,17 @@ test('理論値ではないALL JUSTICEは従来どおりALL JUSTICEとしてフ�
   assert.equal(result, 'ALL JUSTICE')
 })
 
+test('移行済みの条件にALL JUSTICE CRITICALを重複追加しないこと', () => {
+  // Given: ALL JUSTICEとALL JUSTICE CRITICALの両方を含む条件
+  const comboLamps = ['ALL JUSTICE', 'ALL JUSTICE CRITICAL'] as const
+
+  // When: 保存済み条件を移行する
+  const result = migrateLegacyComboLampFilters(comboLamps)
+
+  // Then: 重複せずにそのまま複製される
+  assert.deepEqual(result, ['ALL JUSTICE', 'ALL JUSTICE CRITICAL'])
+})
+
 test('旧形式のALL JUSTICE選択をALL JUSTICE CRITICALを含む条件へ移行できる', () => {
   // Given: AJC の選択肢がなかった旧形式の ALL JUSTICE 条件。
   const comboLamps = ['ALL JUSTICE', 'FULL COMBO', null] as const

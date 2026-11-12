@@ -46,3 +46,51 @@ test('X以外での認証結果からは@IDを読み取らないこと', async (
   // Then
   assert.equal(username, undefined)
 })
+
+test('Xでの認証結果を保持し、同じユーザーの取り出しで返すこと', async () => {
+  // Given: X で認証した結果を保持した状態
+  const { holdXAuthResultForSignup, takeHeldXAuthResult } = await loadSyncXAccountModule()
+  const held = {
+    providerId: 'twitter.com',
+    user: { uid: 'uid-1' },
+  } as unknown as UserCredential
+  holdXAuthResultForSignup(held)
+
+  // When
+  const result = takeHeldXAuthResult('uid-1')
+
+  // Then
+  assert.equal(result, held)
+})
+
+test('別のユーザーの取り出しでは保持したXの認証結果を使わないこと', async () => {
+  // Given: X で認証した結果を保持した状態
+  const { holdXAuthResultForSignup, takeHeldXAuthResult } = await loadSyncXAccountModule()
+  const held = {
+    providerId: 'twitter.com',
+    user: { uid: 'uid-1' },
+  } as unknown as UserCredential
+  holdXAuthResultForSignup(held)
+
+  // When
+  const result = takeHeldXAuthResult('uid-2')
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('X以外での認証結果は保持せず、取り出しでも使わないこと', async () => {
+  // Given: Google で認証した結果を保持しようとした状態
+  const { holdXAuthResultForSignup, takeHeldXAuthResult } = await loadSyncXAccountModule()
+  const googleResult = {
+    providerId: 'google.com',
+    user: { uid: 'uid-1' },
+  } as unknown as UserCredential
+  holdXAuthResultForSignup(googleResult)
+
+  // When
+  const result = takeHeldXAuthResult('uid-1')
+
+  // Then
+  assert.equal(result, undefined)
+})

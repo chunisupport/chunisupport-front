@@ -49,26 +49,64 @@ test('タイトル列は reading の日本語順にソートする', () => {
   )
 })
 
+test('ソートキーまたは方向の片方だけ未設定なら元の順序を保つこと', () => {
+  // Given: タイトル順に並んでいない2曲。
+  const songs = [
+    createSong({ id: 'b', title: '愛', reading: 'ラブ' }),
+    createSong({ id: 'a', title: '空', reading: 'ソラ' }),
+  ]
+
+  // When: キーのみ・方向のみを指定してソートする。
+  const keyOnly = sortSongs(songs, 'title', null)
+  const directionOnly = sortSongs(songs, null, 'asc')
+
+  // Then: いずれも元の配列をそのまま返す。
+  assert.equal(keyOnly, songs)
+  assert.equal(directionOnly, songs)
+})
+
+test('追加日降順は新しい順にソートすること', () => {
+  // Given: 追加日が異なる3曲を古い順に並べた一覧。
+  const songs = [
+    createSong({ id: 'old', release: '2023-01-01' }),
+    createSong({ id: 'new', release: '2024-06-01' }),
+    createSong({ id: 'mid', release: '2023-12-01' }),
+  ]
+
+  // When: 追加日で降順ソートする。
+  const result = sortSongs(songs, 'release', 'desc')
+
+  // Then: 新しい順に並ぶ。
+  assert.deepEqual(
+    result.map((song) => song.id),
+    ['new', 'mid', 'old']
+  )
+})
+
 test('ジャンルはマスタのsort_order順にソートし、マスタ外は降順でも末尾に固定する', () => {
+  // Given: マスタにある3ジャンルとマスタ外のVARIETYを、期待順と異なる順に並べた楽曲
   const songs = [
     createSong({ id: 'touhou', genre: '東方Project' }),
     createSong({ id: 'pops', genre: 'POPS & ANIME' }),
     createSong({ id: 'niconico', genre: 'niconico' }),
     createSong({ id: 'variety', genre: 'VARIETY' }),
   ]
+  // マスタの配列順 (POPS, niconico, 東方)、ID順 (POPS, 東方, niconico)、名前順 (niconico, POPS, 東方) は
+  // いずれもsort_order順 (東方, niconico, POPS) と食い違う
   const genres = [
-    { id: 1, name: 'POPS & ANIME', sort_order: 10 },
-    { id: 2, name: 'niconico', sort_order: 20 },
-    { id: 3, name: '東方Project', sort_order: 30 },
+    { id: 1, name: 'POPS & ANIME', sort_order: 30 },
+    { id: 3, name: 'niconico', sort_order: 20 },
+    { id: 2, name: '東方Project', sort_order: 10 },
   ]
 
+  // When & Then: 昇順・降順ともsort_order順に並び、マスタ外は末尾に残る
   assert.deepEqual(
     sortSongs(songs, 'genre', 'asc', genres).map((song) => song.id),
-    ['pops', 'niconico', 'touhou', 'variety']
+    ['touhou', 'niconico', 'pops', 'variety']
   )
   assert.deepEqual(
     sortSongs(songs, 'genre', 'desc', genres).map((song) => song.id),
-    ['touhou', 'niconico', 'pops', 'variety']
+    ['pops', 'niconico', 'touhou', 'variety']
   )
 })
 

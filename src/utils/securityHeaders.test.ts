@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
 import test from 'node:test'
 import {
   buildReportOnlyContentSecurityPolicy,
@@ -40,8 +39,7 @@ test('複数HTMLのインラインscriptのみをsha256ハッシュに変換し�
   const hashes = collectInlineScriptHashes([html, `<script>${inline}</script>`])
 
   // Then
-  const expected = `'sha256-${createHash('sha256').update(inline).digest('base64')}'`
-  assert.deepEqual(hashes, [expected])
+  assert.deepEqual(hashes, ["'sha256-CihokcEcBW4atb/CW/XWsvWwbTjqwQlE9nj9ii5ww5M='"])
 })
 
 test('環境ごとのURLはオリジンとして各ディレクティブに含まれること', () => {

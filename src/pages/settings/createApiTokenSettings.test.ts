@@ -198,7 +198,28 @@ dispose()
 `)
 })
 
-test('一覧の取得前と上限到達時は発行できないこと', async () => {
+test('一覧の取得前は有効な名前で直接発行してもAPIを呼ばないこと', async () => {
+  await runApiTokenSettingsTest(`
+// Given: 一覧の取得を保留したまま有効な名前を入力する
+const pending = Promise.withResolvers()
+const { settings, calls, dispose } = await setup({
+  fetchTokens: async () => pending.promise,
+})
+settings.setIssueName('Bot')
+
+// When: 一覧取得前に直接発行する
+await settings.issue()
+
+// Then: 発行不可のままでAPIも呼ばない
+assert.equal(settings.isIssueDisabled(), true)
+assert.equal(calls.issue.length, 0)
+pending.resolve({ tokens: [] })
+await settle()
+dispose()
+`)
+})
+
+test('一覧が上限の10件に到達している場合は発行できないこと', async () => {
   await runApiTokenSettingsTest(`
 // Given: 取得を待たせる一覧API
 const pending = Promise.withResolvers()

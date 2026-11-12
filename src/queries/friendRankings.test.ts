@@ -15,11 +15,13 @@ test('フレンドランキングquery keyは認証ユーザーと譜面種別�
   // When: 各query keyを生成する。
   const aliceSong = friendRankingQueryKeys.song('alice', 'song-1', 'MASTER')
   const bobSong = friendRankingQueryKeys.song('bob', 'song-1', 'MASTER')
-  const worldsend = friendRankingQueryKeys.worldsend('alice', 'we-1')
+  const worldsend = friendRankingQueryKeys.worldsend('alice', 'song-1')
 
   // Then: ユーザーと譜面種別ごとに異なるkeyになる。
   assert.notDeepEqual(aliceSong, bobSong)
   assert.notDeepEqual(aliceSong, worldsend)
+  assert.deepEqual(aliceSong, ['friend-rankings', 'alice', 'song', 'song-1', 'MASTER'])
+  assert.deepEqual(worldsend, ['friend-rankings', 'alice', 'worldsend', 'song-1'])
 })
 
 test('通常譜面ランキングquery optionsは難易度を大文字でkeyへ格納する', async () => {

@@ -552,7 +552,7 @@ test('次のマイルストーンは端数の全譜面数を達成可能な上�
   })
 })
 
-test('候補譜面は目標未達のプレイ済み譜面を現在記録に近い順で返す', () => {
+test('SSS+候補は目標未達のプレイ済み譜面と目標までのスコア差を返す', () => {
   // Given
   const records = [
     createRecord({ id: 'near', score: 1_008_900 }),
@@ -574,7 +574,7 @@ test('候補譜面は目標未達のプレイ済み譜面を現在記録に近�
   )
 })
 
-test('SSS候補はSSS未達のプレイ済み譜面を目標までのスコア差順で返す', () => {
+test('SSS候補は目標未達のプレイ済み譜面と目標までのスコア差を返す', () => {
   // Given
   const records = [
     createRecord({ id: 'low', score: 990_000 }),
@@ -595,6 +595,28 @@ test('SSS候補はSSS未達のプレイ済み譜面を目標までのスコア�
     ]
   )
 })
+
+for (const { target, farScore, nearScore, expectedGap } of [
+  { target: 'sssPlus', farScore: 1_005_000, nearScore: 1_008_900, expectedGap: 100 },
+  { target: 'sss', farScore: 990_000, nearScore: 999_500, expectedGap: 8_000 },
+] as const) {
+  test(`${target === 'sssPlus' ? 'SSS+' : 'SSS'}候補は上限1件なら目標に近い譜面を優先して選出する`, () => {
+    // Given: 入力順と表示順では遠い譜面が先になる。
+    const records = [
+      createRecord({ id: 'far', difficulty: 'EXPERT', const: 13, score: farScore }),
+      createRecord({ id: 'near', difficulty: 'MASTER', const: 14, score: nearScore }),
+    ]
+
+    // When
+    const candidates = findPlayerStatsCandidates(records, target, 1)
+
+    // Then
+    assert.deepEqual(
+      candidates.map(({ record, scoreGap }) => ({ id: record.id, scoreGap })),
+      [{ id: 'near', scoreGap: expectedGap }]
+    )
+  })
+}
 
 test('AJ候補はFULL COMBO済みを優先しスコア差を返さない', () => {
   // Given
@@ -682,5 +704,57 @@ test('候補譜面は選出後に難易度とレベルが低い順で返す', ()
   assert.deepEqual(
     candidates.map(({ record }) => record.id),
     ['expert-13', 'expert-13-plus', 'master-14']
+  )
+})
+
+test('MAX候補はノーツ数不明より算出可能な譜面を優先すること', () => {
+  // Given: スコアは高いがノーツ数不明の譜面とスコアは低いが算出可能な譜面。
+  const records = [
+    createRecord({ id: 'without-notes', score: 1_009_000 }),
+    createRecord({ id: 'with-notes', score: 1_008_000 }),
+  ]
+  const notesBySongId = new Map([['with-notes', { MASTER: 1000 }]])
+
+  // When: 上限1件でMAX候補を選出する。
+  const candidates = findPlayerStatsCandidates(records, 'max', 1, notesBySongId)
+
+  // Then: 失点を算出できる譜面が選ばれる。
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['with-notes']
+  )
+})
+
+test('候補譜面は表示レベルが同じなら譜面定数の低い順で返す', () => {
+  // Given: 同じ表示レベルで定数が異なりスコア順が定数順と逆の譜面。
+  const records = [
+    createRecord({ id: 'high-const', title: 'zzz', const: 14.4, score: 1_008_900 }),
+    createRecord({ id: 'low-const', title: 'aaa', const: 14.2, score: 1_008_500 }),
+  ]
+
+  // When: SSS+候補を選出する。
+  const candidates = findPlayerStatsCandidates(records, 'sssPlus', 2)
+
+  // Then: 定数の低い順に並び替わる。
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['low-const', 'high-const']
+  )
+})
+
+test('候補譜面は譜面定数が同じなら曲名順で返す', () => {
+  // Given: 定数が同じで曲名順とスコア順が逆の譜面。
+  const records = [
+    createRecord({ id: 'second', title: 'zzz', const: 14.2, score: 1_008_900 }),
+    createRecord({ id: 'first', title: 'aaa', const: 14.2, score: 1_008_500 }),
+  ]
+
+  // When: SSS+候補を選出する。
+  const candidates = findPlayerStatsCandidates(records, 'sssPlus', 2)
+
+  // Then: 曲名順に並び替わる。
+  assert.deepEqual(
+    candidates.map(({ record }) => record.id),
+    ['first', 'second']
   )
 })

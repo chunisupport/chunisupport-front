@@ -232,33 +232,190 @@ test('追加リクエストは有効な譜面だけを送り、文字列を正�
   ])
 })
 
-test('追加リクエストの検証エラーを既存の順序で返すこと', () => {
-  // Given
+test('追加リクエストはタイトルが空白なら必須エラーを返すこと', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, title: ' ' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: '公式ID・タイトル・アーティストは必須です。' })
+})
+
+test('追加リクエストは公式IDが11文字なら長さエラーを返すこと', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, official_idx: '12345678901' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: '公式IDは10文字以内で入力してください。' })
+})
+
+test('追加リクエストはジャンルがnullなら選択エラーを返すこと', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, genre_id: null }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: 'ジャンルを選択してください。' })
+})
+
+test('追加リクエストはBPMが負ならBPMエラーを返すこと', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, bpm: -1 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: 'BPMは0以上で入力してください。' })
+})
+
+test('追加リクエストは有効な譜面の定数が負なら譜面エラーを返すこと', () => {
+  // Given: 検証対象の不正な入力。
   const draft = validCreateDraft()
   const invalidMaster = draft.charts.map((chart) =>
     chart.difficulty_name === 'MASTER' ? { ...chart, const: '-1' } : chart
   )
+  const input = { ...draft, charts: invalidMaster }
 
-  // When / Then
-  const messageOf = (value: CreateSongDraft) => {
-    const result = buildCreateSongRequest(value, genres)
-    return result.ok ? null : result.message
-  }
-  assert.equal(messageOf({ ...draft, title: ' ' }), SONG_MANAGEMENT_MESSAGES.requiredFieldsMissing)
-  assert.equal(
-    messageOf({ ...draft, official_idx: '12345678901' }),
-    SONG_MANAGEMENT_MESSAGES.officialIdxTooLong
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, {
+    ok: false,
+    message: '追加する譜面の定数・ノーツは0以上で入力してください。',
+  })
+})
+
+for (const { label, value } of [
+  { label: '数字でない文字列', value: 'abc' },
+  { label: '空文字', value: '' },
+]) {
+  test(`追加リクエストは有効な譜面の定数が${label}なら譜面エラーを返すこと`, () => {
+    // Given: 数値として読めない定数を持つ有効な譜面。
+    const draft = validCreateDraft()
+    const invalidMaster = draft.charts.map((chart) =>
+      chart.difficulty_name === 'MASTER' ? { ...chart, const: value } : chart
+    )
+
+    // When: 追加リクエストを組み立てる。
+    const result = buildCreateSongRequest({ ...draft, charts: invalidMaster }, genres)
+
+    // Then: 定数が null のリクエストを作らず、譜面エラーを返す。
+    assert.deepEqual(result, {
+      ok: false,
+      message: '追加する譜面の定数・ノーツは0以上で入力してください。',
+    })
+  })
+}
+
+test('追加リクエストは無効にした譜面の定数が数値でなくても検証対象にしないこと', () => {
+  // Given: 追加対象から外した譜面にだけ、数値として読めない定数がある。
+  const draft = validCreateDraft()
+  const charts = draft.charts.map((chart) =>
+    chart.difficulty_name === 'BASIC' ? { ...chart, enabled: false, const: 'abc' } : chart
   )
-  assert.equal(messageOf({ ...draft, genre_id: null }), SONG_MANAGEMENT_MESSAGES.genreRequired)
-  assert.equal(messageOf({ ...draft, bpm: -1 }), SONG_MANAGEMENT_MESSAGES.bpmInvalid)
-  assert.equal(
-    messageOf({ ...draft, charts: invalidMaster }),
-    SONG_MANAGEMENT_MESSAGES.createChartInvalid
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest({ ...draft, charts }, genres)
+
+  // Then: 譜面エラーにはならず、リクエストを組み立てる。
+  assert.equal(result.ok, true)
+})
+
+test('追加リクエストはリリース日が不正なら日付エラーを返すこと', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, released_at: 'invalid' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, {
+    ok: false,
+    message: 'リリース日の形式が不正です。日付を入力し直してください。',
+  })
+})
+
+test('追加リクエストは必須欠落をID長超過より優先すること', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, title: ' ', official_idx: '12345678901' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: '公式ID・タイトル・アーティストは必須です。' })
+})
+
+test('追加リクエストはID長超過をジャンル未選択より優先すること', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, official_idx: '12345678901', genre_id: null }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: '公式IDは10文字以内で入力してください。' })
+})
+
+test('追加リクエストはジャンル未選択をBPM不正より優先すること', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const input = { ...draft, genre_id: null, bpm: -1 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: 'ジャンルを選択してください。' })
+})
+
+test('追加リクエストはBPM不正を譜面不正より優先すること', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const invalidMaster = draft.charts.map((chart) =>
+    chart.difficulty_name === 'MASTER' ? { ...chart, const: '-1' } : chart
   )
-  assert.equal(
-    messageOf({ ...draft, released_at: 'invalid' }),
-    SONG_MANAGEMENT_MESSAGES.releaseInvalid
+  const input = { ...draft, bpm: -1, charts: invalidMaster }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, { ok: false, message: 'BPMは0以上で入力してください。' })
+})
+
+test('追加リクエストは譜面不正をリリース日不正より優先すること', () => {
+  // Given: 検証対象の不正な入力。
+  const draft = validCreateDraft()
+  const invalidMaster = draft.charts.map((chart) =>
+    chart.difficulty_name === 'MASTER' ? { ...chart, const: '-1' } : chart
   )
+  const input = { ...draft, charts: invalidMaster, released_at: 'invalid' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, {
+    ok: false,
+    message: '追加する譜面の定数・ノーツは0以上で入力してください。',
+  })
 })
 
 test('追加対象外の譜面は定数が不正でも検証しないこと', () => {
@@ -324,4 +481,96 @@ test('追加リクエストは要解禁フラグを送ること', () => {
   assert.equal(result.ok, true)
   if (!result.ok) return
   assert.equal(result.request.unlock_required, true)
+})
+
+test('譜面定数が0の編集ドラフトは有効と判定すること', () => {
+  // Given: 定数が0の編集譜面。
+  const [chart] = toSongDraft(managedSong, genres, difficulties).charts
+
+  // When: 編集譜面の不正を判定する。
+  // Then: 0は有効とする。
+  assert.equal(hasInvalidEditableChart([{ ...chart, const: '0' }]), false)
+})
+
+test('ノーツ数が0の編集ドラフトは有効と判定すること', () => {
+  // Given: ノーツ数が0の編集譜面。
+  const [chart] = toSongDraft(managedSong, genres, difficulties).charts
+
+  // When: 編集譜面の不正を判定する。
+  // Then: 0は有効とする。
+  assert.equal(hasInvalidEditableChart([{ ...chart, notes: 0 }]), false)
+})
+
+test('追加リクエストは公式IDが10文字ちょうどなら受け付けること', () => {
+  // Given: 公式IDが10文字の追加ドラフト。
+  const draft = validCreateDraft()
+  const input = { ...draft, official_idx: '1234567890' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 長さエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.official_idx, '1234567890')
+})
+
+test('追加リクエストはBPMが0なら受け付けること', () => {
+  // Given: BPMが0の追加ドラフト。
+  const draft = validCreateDraft()
+  const input = { ...draft, bpm: 0 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: BPMエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.bpm, 0)
+})
+
+test('追加リクエストは有効な譜面の定数が0なら受け付けること', () => {
+  // Given: 有効な譜面の定数が0の追加ドラフト。
+  const draft = validCreateDraft()
+  const zeroConst = draft.charts.map((chart) =>
+    chart.difficulty_name === 'MASTER' ? { ...chart, const: '0' } : chart
+  )
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest({ ...draft, charts: zeroConst }, genres)
+
+  // Then: 譜面エラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+})
+
+test('追加リクエストは有効な譜面のノーツ数が負なら譜面エラーを返すこと', () => {
+  // Given: 有効な譜面のノーツ数が-1の追加ドラフト。
+  const draft = validCreateDraft()
+  const invalidMaster = draft.charts.map((chart) =>
+    chart.difficulty_name === 'MASTER' ? { ...chart, notes: -1 } : chart
+  )
+  const input = { ...draft, charts: invalidMaster }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest(input, genres)
+
+  // Then: 対応する検証エラーを返す。
+  assert.deepEqual(result, {
+    ok: false,
+    message: '追加する譜面の定数・ノーツは0以上で入力してください。',
+  })
+})
+
+test('追加リクエストは有効な譜面のノーツ数が0なら受け付けること', () => {
+  // Given: 有効な譜面のノーツ数が0の追加ドラフト。
+  const draft = validCreateDraft()
+  const zeroNotes = draft.charts.map((chart) =>
+    chart.difficulty_name === 'MASTER' ? { ...chart, notes: 0 } : chart
+  )
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest({ ...draft, charts: zeroNotes }, genres)
+
+  // Then: 譜面エラーを返さず受け付ける。
+  assert.equal(result.ok, true)
 })

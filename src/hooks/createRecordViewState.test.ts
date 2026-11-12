@@ -83,18 +83,29 @@ ${script}
 
 test('復元元データが揃った時点でフィルターを1回だけ復元し、列読込後に ready になる', async () => {
   await runBrowserTest(`
-// Given
-const view = setup({ readColumns: async () => ['b', 'invalid'] })
+// Given: 列の読み込みを保留し、復元元データもまだ揃っていない。
+let resolveColumns
+const columns = new Promise((resolve) => { resolveColumns = resolve })
+const view = setup({ readColumns: () => columns })
 await flush()
 assert.equal(view.state.ready(), false)
 
-// When
+// When: フィルターを復元した後、復元元データを再度変更する。
 view.setSource('saved')
 await flush()
 view.setSource('changed')
 await flush()
 
-// Then
+// Then: フィルターは1回だけ復元されるが、列の読み込み中は ready にならない。
+assert.deepEqual(view.state.filters(), { title: 'saved' })
+assert.equal(view.calls.restore, 1)
+assert.equal(view.state.ready(), false)
+
+// When: 列の読み込みを完了する。
+resolveColumns(['b', 'invalid'])
+await flush()
+
+// Then: 列を正規化して反映し、ready になる。
 assert.deepEqual(view.state.filters(), { title: 'saved' })
 assert.deepEqual(view.state.visibleColumnIds(), ['b'])
 assert.equal(view.calls.restore, 1)
@@ -224,6 +235,22 @@ assert.deepEqual(initialPrimarySort, { key: 'title', direction: 'asc' })
 assert.equal(initialSortcol, undefined)
 assert.deepEqual(view.state.primarySort(), { key: 'level', direction: 'desc' })
 assert.equal(view.searchParams.sortcol, undefined)
+view.dispose()
+`)
+})
+
+test('ソート列だけのクエリでも反映してクエリを取り除くこと', async () => {
+  await runBrowserTest(`
+// Given: ソート列だけのクエリ
+const view = setup({ initialSearchParams: { sortcol: 'title' } })
+
+// When: 初期反映を待つ
+await flush()
+
+// Then: 片方だけでも反映してクエリを取り除く
+assert.equal(view.state.primarySort().key, 'title')
+assert.equal(view.searchParams.sortcol, undefined)
+assert.equal(view.searchParams.sortorder, undefined)
 view.dispose()
 `)
 })

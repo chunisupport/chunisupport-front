@@ -89,6 +89,27 @@ test('toSavedWorldsendFilter は楽曲名順を持たないスキーマ4の保�
   assert.deepEqual(result.filter?.combo_lamp, DEFAULT_WORLDSEND_FILTER.combo_lamp)
 })
 
+test('スキーマ4のALL JUSTICE単独選択にはAJCを追加しない', async () => {
+  // Given: AJCを選択せず保存したスキーマ4のフィルター。
+  const { toSavedWorldsendFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: 'AJのみ',
+    filter_type: 'worldsend',
+    schema_version: 4,
+    filter: { ...DEFAULT_WORLDSEND_FILTER, combo_lamp: ['ALL JUSTICE'] },
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When: 保存フィルターを読み込む。
+  const result = toSavedWorldsendFilter(dto)
+
+  // Then: 旧スキーマの移行処理を適用せず単独選択を維持する。
+  assert.equal(result.isValid, true)
+  assert.deepEqual(result.filter?.combo_lamp, ['ALL JUSTICE'])
+})
+
 test('toSavedWorldsendFilter は旧スキーマのDTOを古くて無効な保存フィルターとして残す', async () => {
   // Given
   const { toSavedWorldsendFilter } = await loadStorageModule()
@@ -111,4 +132,48 @@ test('toSavedWorldsendFilter は旧スキーマのDTOを古くて無効な保存
   assert.equal(result.isValid, false)
   assert.equal(result.filter, null)
   assert.equal(result.invalidReason, '古い形式のため無効です。')
+})
+
+test('toSavedWorldsendFilter は無効なスキーマでは有効なフィルターでも無効にすること', async () => {
+  // Given: 有効なフィルターを持つ無効なスキーマのDTO。
+  const { toSavedWorldsendFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: '無効スキーマ',
+    filter_type: 'worldsend',
+    schema_version: 1,
+    filter: { ...DEFAULT_WORLDSEND_FILTER },
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When: 保存フィルターを読み込む。
+  const result = toSavedWorldsendFilter(dto)
+
+  // Then: 古い形式のため無効として残す。
+  assert.equal(result.isValid, false)
+  assert.equal(result.filter, null)
+  assert.equal(result.invalidReason, '古い形式のため無効です。')
+})
+
+test('toSavedWorldsendFilter は有効なスキーマでも壊れた保存値は無効にすること', async () => {
+  // Given: タイトルが壊れた有効なスキーマのDTO。
+  const { toSavedWorldsendFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '11111111-1111-1111-1111-111111111111',
+    name: '壊れた値',
+    filter_type: 'worldsend',
+    schema_version: 5,
+    filter: { ...DEFAULT_WORLDSEND_FILTER, title: 123 },
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When: 保存フィルターを読み込む。
+  const result = toSavedWorldsendFilter(dto)
+
+  // Then: 保存値が壊れているため無効として残す。
+  assert.equal(result.isValid, false)
+  assert.equal(result.filter, null)
+  assert.equal(result.invalidReason, '保存値が壊れているため無効です。')
 })

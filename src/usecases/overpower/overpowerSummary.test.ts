@@ -116,8 +116,21 @@ test('ALLのOP数値は理論値最大譜面が未プレイでも現在OP対象r
 })
 
 test('現在OP対象フラグが全てfalseでも曲内最大OPへフォールバックする', () => {
+  // Given: 先頭のEXPERTより後続のMASTERの現在OPが大きい。
+  const songs = [
+    createSong({
+      id: 'song-a',
+      maxop: 90,
+      charts: {
+        EXPERT: { const: 13, is_const_unknown: false, notes: null },
+        MASTER: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+
+  // When
   const summary = buildOverPowerSummary(
-    [createSong({ id: 'song-a', maxop: 90 })],
+    songs,
     [
       createRecord({ id: 'song-a', difficulty: 'EXPERT', overpower: 70, is_op_target: false }),
       createRecord({ id: 'song-a', difficulty: 'MASTER', overpower: 85, is_op_target: false }),
@@ -125,8 +138,13 @@ test('現在OP対象フラグが全てfalseでも曲内最大OPへフォール�
     versions
   )
 
+  // Then: 先頭候補ではなく最大OPのMASTERを曲の現在値に採用する。
   assert.equal(summary.all.current, 85)
   assert.equal(summary.all.max, 90)
+  assert.deepEqual(
+    summary.levels.map((row) => row.label),
+    ['15']
+  )
 })
 
 test('未プレイ曲は理論値対象難易度のレベルへ分類する', () => {
@@ -386,7 +404,9 @@ test('全難易度とレベル別はレコードがない未プレイ譜面も�
   )
 })
 
-test('通常未解禁楽曲は曲単位と譜面単位の集計から除外する', () => {
+test('通常未解禁楽曲は既定のOP対象集計から除外する', () => {
+  // Given: 通常未解禁曲と利用可能な曲がある。
+  // When
   const summary = buildOverPowerSummary(
     [createSong({ id: 'locked', maxop: 90 }), createSong({ id: 'available', maxop: 80 })],
     [
@@ -397,6 +417,7 @@ test('通常未解禁楽曲は曲単位と譜面単位の集計から除外す�
     [{ id: 'locked', is_ultima: false }]
   )
 
+  // Then
   assert.equal(summary.all.current, 70)
   assert.equal(summary.all.max, 80)
   assert.equal(summary.all.count, 1)
@@ -405,6 +426,59 @@ test('通常未解禁楽曲は曲単位と譜面単位の集計から除外す�
     ['15']
   )
 })
+
+for (const target of ['ALL', 'MASTER'] as const) {
+  test(`通常未解禁楽曲は${target}の譜面単位集計から除外する`, () => {
+    // Given: 両曲ともEXPERTとMASTERを持ち、未解禁曲だけが除外対象となる。
+    const songs = [
+      createSong({
+        id: 'locked',
+        charts: {
+          EXPERT: { const: 12, is_const_unknown: false, notes: null },
+          MASTER: { const: 15, is_const_unknown: false, notes: null },
+        },
+      }),
+      createSong({
+        id: 'available',
+        charts: {
+          EXPERT: { const: 13, is_const_unknown: false, notes: null },
+          MASTER: { const: 14, is_const_unknown: false, notes: null },
+        },
+      }),
+    ]
+    const records = [
+      createRecord({ id: 'locked', difficulty: 'EXPERT', overpower: 60 }),
+      createRecord({ id: 'locked', difficulty: 'MASTER', overpower: 85 }),
+      createRecord({ id: 'available', difficulty: 'EXPERT', overpower: 50 }),
+      createRecord({ id: 'available', difficulty: 'MASTER', overpower: 70 }),
+    ]
+
+    // When
+    const summary = buildOverPowerSummary(
+      songs,
+      records,
+      versions,
+      [{ id: 'locked', is_ultima: false }],
+      undefined,
+      target
+    )
+
+    // Then: 利用可能な曲の対象譜面だけが全体とレベル別に残る。
+    assert.deepEqual(
+      [summary.all.current, summary.all.max, summary.all.count],
+      target === 'ALL' ? [120, 165, 2] : [70, 85, 1]
+    )
+    assert.deepEqual(
+      summary.levels.map((row) => [row.label, row.current, row.max, row.count]),
+      target === 'ALL'
+        ? [
+            ['13', 50, 80, 1],
+            ['14', 70, 85, 1],
+          ]
+        : [['14', 70, 85, 1]]
+    )
+  })
+}
 
 test('ULTIMA未解禁はULTIMA譜面だけを集計から除外する', () => {
   const summary = buildOverPowerSummary(
@@ -544,4 +618,65 @@ test('全譜面のレベル別集計はOP対象外と未プレイを含み、他
     assert.equal(row.max, 90)
     assert.equal(row.count, 1)
   }
+})
+
+test('理論値が0のときOP%は0になりジャンルとレベルとバージョンの内訳行を作らない', () => {
+  // Given: 理論値が0の楽曲だけがある状態。
+  const songs = [createSong({ id: 'zero-max', maxop: 0 })]
+  const records = [createRecord({ id: 'zero-max', overpower: 0 })]
+
+  // When: 既定のOP対象で集計する。
+  const summary = buildOverPowerSummary(songs, records, versions)
+
+  // Then: ALLのOP%は0で、最大値0の内訳行は作らない。
+  assert.equal(summary.all.current, 0)
+  assert.equal(summary.all.max, 0)
+  assert.equal(summary.all.count, 1)
+  assert.equal(summary.all.percent, 0)
+  assert.deepEqual(summary.genres, [])
+  assert.deepEqual(summary.levels, [])
+  assert.deepEqual(summary.versions, [])
+})
+
+test('理論値が0のとき楽曲名順フォルダの内訳行を作らない', () => {
+  // Given: 理論値が0の楽曲だけがある状態。
+  const songs = [createSong({ id: 'zero-max', maxop: 0 })]
+  const records = [createRecord({ id: 'zero-max', overpower: 0 })]
+  const entries = selectOverPowerChartEntries(
+    buildOverPowerChartEntries(songs, records, versions),
+    'OP_TARGET'
+  )
+
+  // When: 楽曲名順フォルダごとに集計する。
+  const result = buildNameFolderSummaries(entries, [
+    { code: 'NUMBER', name: '数字', sort_order: 1 },
+  ])
+
+  // Then: 最大値0のフォルダ行は作らない。
+  assert.deepEqual(result, [])
+})
+
+test('バージョン別はリリース日順を保ち名前順に並べ替えない', () => {
+  // Given: 名前順とリリース日順が逆になるバージョンがある状態。
+  const orderedVersions: VersionSummaryDTO[] = [
+    { name: 'CHUNITHM ZEBRA', short_name: 'ZEB', released_at: '2021-11-04' },
+    { name: 'CHUNITHM APPLE', short_name: 'APP', released_at: '2024-12-12' },
+  ]
+  const songs = [
+    createSong({ id: 'zebra', release: '2021-11-04' }),
+    createSong({ id: 'apple', release: '2024-12-12' }),
+  ]
+  const records = [
+    createRecord({ id: 'zebra', overpower: 80 }),
+    createRecord({ id: 'apple', overpower: 70 }),
+  ]
+
+  // When: バージョン別に集計する。
+  const summary = buildOverPowerSummary(songs, records, orderedVersions)
+
+  // Then: リリース日順のまま並ぶ。
+  assert.deepEqual(
+    summary.versions.map((row) => row.label),
+    ['ZEBRA', 'APPLE']
+  )
 })

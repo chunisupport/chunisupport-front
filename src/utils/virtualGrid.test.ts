@@ -29,3 +29,14 @@ test('仮想行のスライスは列数分だけ切り出すこと', () => {
   assert.deepEqual(lastRow, ['e'])
   assert.deepEqual(getVirtualGridRowSlice(items, 0, 0), [])
 })
+
+test('行インデックスが負の場合は列数にかかわらず空配列を返すこと', () => {
+  // Given: 5件の識別子。
+  const items = ['a', 'b', 'c', 'd', 'e']
+
+  // When: 負の行インデックスで切り出す。
+  const result = getVirtualGridRowSlice(items, -2, 2)
+
+  // Then: 空配列になる。
+  assert.deepEqual(result, [])
+})

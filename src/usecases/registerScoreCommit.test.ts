@@ -222,6 +222,58 @@ test('normalizePlayerDataResult: 統計グループ内のS系項目が欠落し�
   })
 })
 
+test('requestChangedSongMasters: 通常譜面だけの差分では通常マスタ取得だけ開始する', () => {
+  // Given: 通常譜面の差分だけがある登録結果。
+  const calls: string[] = []
+  const result = createPlayerDataResult({
+    changes: [
+      {
+        record_type: 'standard',
+        change_type: 'new',
+        idx: '1',
+        diff: 'MASTER',
+        before: null,
+        after: { score: 1_000_000, clear_lamp: 'CLEAR', combo_lamp: null, full_chain: null },
+      },
+    ],
+  })
+
+  // When: 差分に必要な楽曲マスタの読み込みを要求する。
+  requestChangedSongMasters(result, {
+    ensureSongsLoaded: () => calls.push('standard'),
+    ensureWorldsendSongsLoaded: () => calls.push('worldsend'),
+  })
+
+  // Then: 通常マスタ取得だけが開始される。
+  assert.deepEqual(calls, ['standard'])
+})
+
+test("requestChangedSongMasters: WORLD'S ENDだけの差分ではWORLD'S ENDマスタ取得だけ開始する", () => {
+  // Given: WORLD'S ENDの差分だけがある登録結果。
+  const calls: string[] = []
+  const result = createPlayerDataResult({
+    changes: [
+      {
+        record_type: 'worldsend',
+        change_type: 'new',
+        idx: '2',
+        diff: 'WE',
+        before: null,
+        after: { score: 990_000, clear_lamp: 'CLEAR', combo_lamp: null, full_chain: null },
+      },
+    ],
+  })
+
+  // When: 差分に必要な楽曲マスタの読み込みを要求する。
+  requestChangedSongMasters(result, {
+    ensureSongsLoaded: () => calls.push('standard'),
+    ensureWorldsendSongsLoaded: () => calls.push('worldsend'),
+  })
+
+  // Then: WORLD'S ENDマスタ取得だけが開始される。
+  assert.deepEqual(calls, ['worldsend'])
+})
+
 test("requestChangedSongMasters: 通常譜面とWORLD'S ENDの差分に応じたマスタ取得だけ開始する", () => {
   // Given: 通常譜面とWORLD'S ENDの差分が混在している登録結果。
   const calls: string[] = []
@@ -284,26 +336,53 @@ test('commitRegisterScore: 登録結果を正規化して返す', async () => {
   assert.equal(friendRankingsInvalidated, true)
 })
 
-test('commitRegisterScore: 派生キャッシュ更新失敗時も確定済みの登録結果を返す', async () => {
-  // Given: スコア登録は成功し、IndexedDB削除とランキング無効化が失敗する状態。
-  const result = createPlayerDataResult()
+for (const failure of ['両方', 'キャッシュ削除だけ', 'ランキング無効化だけ'] as const) {
+  test(`commitRegisterScore: ${failure}が失敗しても両処理を試み登録結果を返す`, async () => {
+    // Given: スコア登録は成功し、指定した派生キャッシュ更新が失敗する状態。
+    const result = createPlayerDataResult()
+    const calls: string[] = []
 
-  // When: スコア登録確定処理を実行する。
+    // When: スコア登録確定処理を実行する。
+    const committed = await commitRegisterScore(
+      { uploadToken: '11111111-1111-4111-8111-111111111111' },
+      {
+        commitPlayerData: async () => result,
+        clearUserApiCache: async () => {
+          calls.push('cache')
+          if (failure !== 'ランキング無効化だけ') throw new Error('IndexedDB error')
+        },
+        invalidateFriendRankings: async () => {
+          calls.push('rankings')
+          if (failure !== 'キャッシュ削除だけ') throw new Error('Query invalidation error')
+        },
+        ensureSongsLoaded: () => {},
+        ensureWorldsendSongsLoaded: () => {},
+      }
+    )
+
+    // Then: 両方の処理を試み、登録結果全体を維持する。
+    assert.deepEqual(calls, ['cache', 'rankings'])
+    assert.deepEqual(committed.result, result)
+  })
+}
+
+test('commitRegisterScore: APIのnull配列と欠落した統計を補完して返す', async () => {
+  // Given: 配列がnullで統計が返却されない登録結果。
+  const expected = createPlayerDataResult()
+  const response = { ...expected, changes: null, skipped_records: null, statistics: undefined }
+
+  // When: ユースケース経由で登録を確定する。
   const committed = await commitRegisterScore(
     { uploadToken: '11111111-1111-4111-8111-111111111111' },
     {
-      commitPlayerData: async () => result,
-      clearUserApiCache: async () => {
-        throw new Error('IndexedDB error')
-      },
-      invalidateFriendRankings: async () => {
-        throw new Error('Query invalidation error')
-      },
+      commitPlayerData: async () => response as unknown as PlayerDataResult,
+      clearUserApiCache: async () => {},
+      invalidateFriendRankings: async () => {},
       ensureSongsLoaded: () => {},
       ensureWorldsendSongsLoaded: () => {},
     }
   )
 
-  // Then: 登録成功は派生キャッシュ更新エラーの影響を受けない。
-  assert.deepEqual(committed.result, result)
+  // Then: 配列・全体統計・全難易度の統計を補完し、他の項目も維持する。
+  assert.deepEqual(committed.result, expected)
 })

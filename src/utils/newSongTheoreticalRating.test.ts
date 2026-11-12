@@ -110,6 +110,42 @@ test('現行バージョンより前の全譜面からベスト枠上位30件を
 
   // Then: 現行バージョン以降の譜面と最下位譜面を除き、未確定定数を含む上位30譜面を返す。
   assert.equal(result?.entries.length, 30)
+  assert.equal(result?.rating, 16.7)
+  assert.deepEqual(
+    result?.entries.map((entry) => entry.songId),
+    [
+      'old-30',
+      'old-29',
+      'old-28',
+      'old-27',
+      'old-26',
+      'old-25',
+      'old-24',
+      'old-23',
+      'old-22',
+      'old-21',
+      'old-20',
+      'old-19',
+      'old-18',
+      'old-17',
+      'old-16',
+      'old-15',
+      'old-14',
+      'old-13',
+      'old-12',
+      'old-11',
+      'old-10',
+      'old-9',
+      'old-8',
+      'old-7',
+      'old-6',
+      'old-5',
+      'old-4',
+      'old-3',
+      'old-2',
+      'old-1',
+    ]
+  )
   assert.equal(
     result?.entries.some((entry) => entry.songId === 'future'),
     false
@@ -584,4 +620,32 @@ test('枠外譜面がない場合は並べ替えずにそのまま返すこと',
   // Then: 採用譜面の順序は変わらない。
   assert.deepEqual(prioritized.entries, theoretical.entries)
   assert.deepEqual(prioritized.boundaryEntries, [])
+})
+
+test('バージョン稼働日当日は現行バージョンとして新曲枠に含めること', () => {
+  // Given: 稼働日と同日のバージョンと、同日リリースの新曲。
+  const versions = [{ released_at: '2026-07-02' }]
+  const songs = [createMasterSong('new', '2026-07-02', 15)]
+
+  // When: 稼働日当日を基準日に新曲枠理論値を算出する。
+  const result = calculateNewSongTheoreticalRating(songs, versions, '2026-07-02', 20)
+
+  // Then: 当日バージョンを除外せず、1譜面の理論値を返す。
+  assert.equal(result?.entries.length, 1)
+  assert.equal(result?.rating, 17.15)
+})
+
+test('楽曲IDと難易度が両方一致する場合だけレコードを解決すること', () => {
+  // Given: 同じ楽曲の別難易度と、別楽曲の同難易度のレコード。
+  const entry = { songId: 'song', difficulty: 'MASTER' } as const
+  const currentRecords = [{ id: 'song', difficulty: 'ULTIMA', score: 1005000 }] as const
+  const candidateRecords = [{ id: 'other', difficulty: 'MASTER', score: 1004000 }] as const
+
+  // When: 現在枠と候補枠の進捗をそれぞれ解決する。
+  const currentResult = resolveRatingTheoreticalProgress(entry, currentRecords, [])
+  const candidateResult = resolveRatingTheoreticalProgress(entry, [], candidateRecords)
+
+  // Then: 片方だけ一致するレコードは未プレイとして扱う。
+  assert.deepEqual(currentResult, { slot: null, currentScore: null, scoreGap: null })
+  assert.deepEqual(candidateResult, { slot: null, currentScore: null, scoreGap: null })
 })

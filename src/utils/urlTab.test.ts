@@ -15,15 +15,15 @@ test('セグメントが空文字のタブは基準パスそのもの、それ�
   assert.deepEqual(paths, ['/base', '/base/second-tab'])
 })
 
-test('セグメントがない場合と空文字の場合は既定タブ、一致するセグメントは対応するタブを返すこと', () => {
+test('セグメントがなければ既定タブ、空文字を含む一致セグメントは対応するタブを返すこと', () => {
   // Given
   const segments = [undefined, '', 'second-tab']
 
   // When
-  const tabs = segments.map((segment) => resolveUrlTab(SEGMENTS, segment, 'first'))
+  const tabs = segments.map((segment) => resolveUrlTab(SEGMENTS, segment, 'second'))
 
   // Then
-  assert.deepEqual(tabs, ['first', 'first', 'second'])
+  assert.deepEqual(tabs, ['second', 'first', 'second'])
 })
 
 test('未対応のセグメントはnullを返すこと', () => {

@@ -28,7 +28,7 @@ test('CSVではカンマ・二重引用符・改行を含むセルを二重引�
   assert.equal(result, '"A, B","say ""hi""","line1\nline2",plain\r\n')
 })
 
-test('TSVではタブを含むセルだけを囲み、カンマは囲まないこと', () => {
+test('TSVではタブを含むセルを囲み、カンマだけのセルは囲まないこと', () => {
   // Given
   const rows = [['A, B', 'C\tD']]
 

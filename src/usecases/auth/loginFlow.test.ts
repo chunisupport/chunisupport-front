@@ -138,3 +138,14 @@ test('isMaintenanceStaffRequiredError: 専用の内部エラーだけを判定�
   assert.equal(isMaintenanceStaffRequiredError(error), true)
   assert.equal(isMaintenanceStaffRequiredError(new Error('other')), false)
 })
+
+test('isUnregisteredLoginError: nullは未登録エラーではない', () => {
+  // Given
+  const error = null
+
+  // When
+  const result = isUnregisteredLoginError(error)
+
+  // Then
+  assert.equal(result, false)
+})

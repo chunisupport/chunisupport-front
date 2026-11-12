@@ -47,7 +47,7 @@ test('確定した末尾の全角英字は検索値に残す', () => {
   })
 })
 
-test('変換中でない全角英字と、末尾以外の文字は検索値を変えない', () => {
+test('変換中でない末尾の全角英字と、末尾の全角数字・かなは検索値を変えない', () => {
   createRoot((dispose) => {
     // Given: 確定入力だけを受ける検索欄
     const [stored, setStored] = createSignal('')
@@ -65,6 +65,23 @@ test('変換中でない全角英字と、末尾以外の文字は検索値を�
     assert.equal(fullwidthDigit, 'かも９')
     assert.equal(stored(), 'かもね')
     assert.equal(input.displayedValue(), 'かもね')
+    dispose()
+  })
+})
+
+test('IME変換中でも末尾以外の全角英字は検索値から外さない', () => {
+  createRoot((dispose) => {
+    // Given: 変換を開始した検索欄
+    const [stored, setStored] = createSignal('')
+    const input = createComposingSearchInput({ value: stored, onChange: setStored })
+    input.beginComposition('')
+
+    // When: 先頭に全角Ａ、末尾にかなを持つ未確定文字列を入力する
+    input.handleChange('Ａか')
+
+    // Then: 末尾が全角英字ではないため、先頭の全角Ａも含めて検索値に残す
+    assert.equal(stored(), 'Ａか')
+    assert.equal(input.displayedValue(), 'Ａか')
     dispose()
   })
 })

@@ -6,6 +6,7 @@ import {
   filterManagedSongs,
   filterManagedWorldsendSongs,
   hasMissingManagedSongField,
+  hasMissingManagedWorldsendSongField,
 } from './songManagementFilters'
 
 /**
@@ -98,20 +99,58 @@ test('NOTES DESIGNERはBASICとADVANCEDを除外してEXPERT以降を判定す�
 })
 
 test('ジャンル・バージョン・追加日はAND条件で通常曲を絞り込む', () => {
-  // Given: すべての属性条件が一致するフィルター。
+  // Given: 一致する曲と、ジャンル・バージョン・追加日のいずれかだけが不一致の曲。
   const filters = {
     ...createSongManagementFilters(),
     genres: ['POPS & ANIME'],
     versions: ['CHUNITHM VERSE'],
     releaseMin: '2025-01-01',
-    releaseMax: '2025-01-01',
+    releaseMax: '2025-01-31',
   }
+  const versionList = [
+    ...versions,
+    { name: 'CHUNITHM VERSE PLUS', short_name: 'VRS+', released_at: '2025-01-15' },
+  ]
+  const genreMismatch = { ...standardSong, id: 'genre-mismatch', genre: 'ORIGINAL' }
+  const versionMismatch = { ...standardSong, id: 'version-mismatch', release: '2025-01-15' }
+  const releaseMismatch = { ...standardSong, id: 'release-mismatch', release: '2024-12-31' }
 
   // When: 通常曲へ条件を適用する。
-  const result = filterManagedSongs([standardSong], filters, versions)
+  const result = filterManagedSongs(
+    [standardSong, genreMismatch, versionMismatch, releaseMismatch],
+    filters,
+    versionList
+  )
 
-  // Then: 境界日を含めて一致する。
-  assert.deepEqual(result, [standardSong])
+  // Then: 開始境界日の一致曲だけを返し、条件が1つでも不一致なら除外する。
+  assert.deepEqual(
+    result.map((song) => song.id),
+    ['1']
+  )
+})
+
+test('追加日の範囲は開始日と終了日ちょうどを含み、その前後を除外する', () => {
+  // Given: 範囲の1日前・開始日・終了日・1日後に追加された曲。
+  const filters = {
+    ...createSongManagementFilters(),
+    releaseMin: '2025-01-01',
+    releaseMax: '2025-01-10',
+  }
+  const songs = [
+    { ...standardSong, id: 'before-min', release: '2024-12-31' },
+    { ...standardSong, id: 'on-min', release: '2025-01-01' },
+    { ...standardSong, id: 'on-max', release: '2025-01-10' },
+    { ...standardSong, id: 'after-max', release: '2025-01-11' },
+  ]
+
+  // When: 通常曲へ追加日の範囲を適用する。
+  const result = filterManagedSongs(songs, filters, versions)
+
+  // Then: 境界日ちょうどの曲だけを返す。
+  assert.deepEqual(
+    result.map((song) => song.id),
+    ['on-min', 'on-max']
+  )
 })
 
 test('収録中または削除済みの楽曲のみを表示する', () => {
@@ -214,4 +253,41 @@ test("楽曲名順で通常曲とWORLD'S END曲を絞り込む", () => {
   assert.deepEqual(matched, [standardSong])
   assert.deepEqual(other, [])
   assert.deepEqual(worldsendOther, [])
+})
+
+test('BPM欠落はBPMが未設定の通常曲だけを検出すること', () => {
+  // Given: BPMが未設定の通常曲と設定済みの通常曲。
+  const missing = { ...standardSong, bpm: null }
+
+  // When: BPM項目の欠落を判定する。
+  // Then: 未設定だけを欠落とし、設定済みは欠落としない。
+  assert.equal(hasMissingManagedSongField(missing, 'bpm'), true)
+  assert.equal(hasMissingManagedSongField(standardSong, 'bpm'), false)
+})
+
+test('BPM欠落はBPMが未設定のWORLD’S END曲だけを検出すること', () => {
+  // Given: BPMが未設定のWORLD’S END曲と設定済みのWORLD’S END曲。
+  const missing = { ...worldsendSong, bpm: null }
+
+  // When: BPM項目の欠落を判定する。
+  // Then: 未設定だけを欠落とし、設定済みは欠落としない。
+  assert.equal(hasMissingManagedWorldsendSongField(missing, 'bpm'), true)
+  assert.equal(hasMissingManagedWorldsendSongField(worldsendSong, 'bpm'), false)
+})
+
+test('WORLD’S ENDのノーツ欠落は未設定と譜面なしを検出すること', () => {
+  // Given: ノーツ未設定の譜面と譜面なしのWORLD’S END曲。
+  const originalChart = worldsendSong.charts.WORLDSEND
+  assert.ok(originalChart)
+  const missingNotes = {
+    ...worldsendSong,
+    charts: { WORLDSEND: { ...originalChart, notes: null } },
+  }
+  const missingChart = { ...worldsendSong, charts: {} }
+
+  // When: ノーツ項目の欠落を判定する。
+  // Then: 未設定と譜面なしを欠落とし、設定済みは欠落としない。
+  assert.equal(hasMissingManagedWorldsendSongField(missingNotes, 'notes'), true)
+  assert.equal(hasMissingManagedWorldsendSongField(worldsendSong, 'notes'), false)
+  assert.equal(hasMissingManagedWorldsendSongField(missingChart, 'notes'), true)
 })

@@ -15,12 +15,49 @@ test('APIトークン一覧は認証付きGETでtokensレスポンスを返す',
 
   // When: APIトークン一覧を取得する。
   const { fetchApiTokens } = await loadSettingsApi()
-  await fetchApiTokens()
+  const result = await fetchApiTokens()
 
-  // Then: 最新仕様の一覧エンドポイントを認証付きで呼び出す。
+  // Then: 空の一覧もレスポンスとして返し、最新仕様の一覧エンドポイントを認証付きで呼び出す。
+  assert.deepEqual(result, { tokens: [] })
   assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/auth/api-tokens')
   assert.equal(calls[0]?.init?.method, 'GET')
   assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
+})
+
+test('APIトークン一覧は非空のtokensレスポンスを返す', async () => {
+  // Given: 発行済みトークンを含む一覧レスポンス。
+  installFetchRecorder(() =>
+    Response.json({
+      tokens: [
+        {
+          id: 42,
+          name: 'CLI',
+          permission: 'read',
+          token_prefix: 'prefix',
+          last_used_at: null,
+          created_at: '2026-07-22T12:34:56+09:00',
+        },
+      ],
+    })
+  )
+
+  // When: APIトークン一覧を取得する。
+  const { fetchApiTokens } = await loadSettingsApi()
+  const result = await fetchApiTokens()
+
+  // Then: トークン管理情報を欠落させず返す。
+  assert.deepEqual(result, {
+    tokens: [
+      {
+        id: 42,
+        name: 'CLI',
+        permission: 'read',
+        token_prefix: 'prefix',
+        last_used_at: null,
+        created_at: '2026-07-22T12:34:56+09:00',
+      },
+    ],
+  })
 })
 
 test('APIトークン発行はnameとpermissionをJSONでPOSTする', async () => {
@@ -213,4 +250,27 @@ test('ユーザー名変更は再認証トークンと新しいユーザー名�
   assert.equal(new Headers(calls[0]?.init?.headers).get('X-Reauth-Token'), 'reauth-token')
   assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
   assert.equal(calls[0]?.init?.body, JSON.stringify({ username: 'newname' }))
+})
+
+test('データエクスポートは不正なファイル名を既定名へ置き換える', async () => {
+  // Given: json以外の添付ファイル名を返すエクスポート応答。
+  installFetchRecorder(
+    () =>
+      new Response('{"signed":true}', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Disposition': 'attachment; filename="evil.txt"',
+        },
+      })
+  )
+
+  // When: ユーザーデータをエクスポートする。
+  const { exportUserDataTransfer } = await loadSettingsApi()
+  const result = await exportUserDataTransfer()
+
+  // Then: 不正な指定名を使わず既定の移行ファイル名で返す。
+  assert.equal(result.filename.includes('evil.txt'), false)
+  assert.equal(result.filename.startsWith('chunisupport-transfer-'), true)
+  assert.equal(result.filename.endsWith('.json'), true)
+  assert.equal(await result.blob.text(), '{"signed":true}')
 })

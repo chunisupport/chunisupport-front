@@ -583,67 +583,51 @@ test('未解禁曲を除外する設定はレコードフィルターの未解�
   assert.equal(result.excludeLockedSongs, true)
 })
 
-test('未解禁設定の取得に成功しているときは除外設定を集計とレコード遷移の両方へ適用すること', () => {
-  // Given
-  const excludeLockedSongs = true
-  const lockedSongsLoadFailed = false
+for (const { name, excludeLockedSongs, lockedSongsLoadFailed, expected } of [
+  {
+    name: '除外オン・取得成功なら未解禁曲を除外する',
+    excludeLockedSongs: true,
+    lockedSongsLoadFailed: false,
+    expected: true,
+  },
+  {
+    name: '除外オン・取得失敗なら未解禁曲を除外しない',
+    excludeLockedSongs: true,
+    lockedSongsLoadFailed: true,
+    expected: false,
+  },
+  {
+    name: '除外オフ・取得成功なら未解禁曲を除外しない',
+    excludeLockedSongs: false,
+    lockedSongsLoadFailed: false,
+    expected: false,
+  },
+  {
+    name: '除外オフ・取得失敗なら未解禁曲を除外しない',
+    excludeLockedSongs: false,
+    lockedSongsLoadFailed: true,
+    expected: false,
+  },
+]) {
+  test(`${name}ことを除外フラグと遷移先フィルターで確認する`, () => {
+    // Given: 未解禁曲の除外設定と設定取得の成否。
 
-  // When
-  const applied = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, lockedSongsLoadFailed)
-  const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
-    difficulty: 'MASTER',
-    achievement: 'sss',
-    excludeLockedSongs: applied,
+    // When: 除外フラグを解決し、遷移先フィルターへ渡す。
+    const applied = resolveUniFillMatrixExcludeLockedSongs(
+      excludeLockedSongs,
+      lockedSongsLoadFailed
+    )
+    const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
+      difficulty: 'MASTER',
+      achievement: 'sss',
+      excludeLockedSongs: applied,
+    })
+
+    // Then: 解決した除外フラグと遷移先フィルターが期待する条件になる。
+    assert.equal(applied, expected)
+    assert.equal(filter.excludeLockedSongs, expected)
   })
-
-  // Then
-  assert.equal(applied, true)
-  assert.equal(filter.excludeLockedSongs, true)
-})
-
-test('未解禁設定の取得失敗時は集計とレコード遷移の両方で未解禁曲を除外しないこと', () => {
-  // Given
-  const excludeLockedSongs = true
-  const lockedSongsLoadFailed = true
-
-  // When
-  const applied = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, lockedSongsLoadFailed)
-  const filter = buildUniFillMatrixRecordFilter(DEFAULT_FILTER, {
-    difficulty: 'MASTER',
-    achievement: 'sss',
-    excludeLockedSongs: applied,
-  })
-
-  // Then
-  assert.equal(applied, false)
-  assert.equal(filter.excludeLockedSongs, false)
-})
-
-test('未解禁設定の取得失敗から復旧したときは再び未解禁曲を除外すること', () => {
-  // Given
-  const excludeLockedSongs = true
-
-  // When
-  const duringFailure = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, true)
-  const afterRecovery = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, false)
-
-  // Then
-  assert.equal(duringFailure, false)
-  assert.equal(afterRecovery, true)
-})
-
-test('未解禁曲除外がオフのときは取得の成否に関わらず除外しないこと', () => {
-  // Given
-  const excludeLockedSongs = false
-
-  // When
-  const whenLoaded = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, false)
-  const whenFailed = resolveUniFillMatrixExcludeLockedSongs(excludeLockedSongs, true)
-
-  // Then
-  assert.equal(whenLoaded, false)
-  assert.equal(whenFailed, false)
-})
+}
 
 test('全難易度のマスは全難易度を選択し、OP対象では絞り込まない', () => {
   // Given

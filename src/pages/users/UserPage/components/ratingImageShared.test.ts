@@ -26,7 +26,7 @@ test('getPrimaryHonor は1枠目の称号を優先すること', () => {
   assert.equal(honor?.name, '第一称号')
 })
 
-test('getPrimaryHonor は1枠目が無い場合は先頭の称号を返すこと', () => {
+test('getPrimaryHonor は1枠目が無く称号が1件だけならその称号を返すこと', () => {
   // Given: 1枠目を含まない称号一覧。
   const honors = [{ slot: 3, name: '第三称号' }] as HonorDTO[]
 
@@ -34,6 +34,21 @@ test('getPrimaryHonor は1枠目が無い場合は先頭の称号を返すこと
   const honor = getPrimaryHonor(honors)
 
   // Then: 先頭の称号が選ばれる。
+  assert.equal(honor?.name, '第三称号')
+})
+
+test('getPrimaryHonor は1枠目が無く複数件ある場合は最小スロットでなく先頭の称号を返すこと', () => {
+  // Given: 1枠目がなく、先頭より小さいスロットが後続にある。
+  const honors = [
+    { slot: 3, name: '第三称号' },
+    { slot: 2, name: '第二称号' },
+  ] as HonorDTO[]
+
+  // When
+  const honor = getPrimaryHonor(honors)
+
+  // Then: 末尾や最小スロットではなく先頭の称号を返す。
+  assert.equal(honor?.slot, 3)
   assert.equal(honor?.name, '第三称号')
 })
 

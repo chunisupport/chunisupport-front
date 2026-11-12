@@ -10,17 +10,33 @@ const loadFriendsApi = () =>
   loadTestModule((cacheKey) => import(`./friends.ts?cache=${cacheKey}`), { authenticate: true })
 
 test('フレンド一覧APIは認証付きGETでitemsレスポンスを返す', async () => {
-  // Given: フレンド一覧APIの呼び出し記録。
-  const calls = installFetchRecorder(() => Response.json({ items: [] }))
+  // Given: フレンド1件を含む一覧レスポンスを返すAPI。
+  const responseBody = {
+    items: [
+      {
+        username: 'frienduser',
+        player_level: 50,
+        player_name: 'FRIEND',
+        rating: 17.25,
+        overpower_value: 12345.67,
+        possession_id: 3,
+        is_private: false,
+        requested_at: '2026-01-01T00:00:00Z',
+        accepted_at: '2026-01-02T00:00:00Z',
+      },
+    ],
+  }
+  const calls = installFetchRecorder(() => Response.json(responseBody))
 
   // When: フレンド一覧を取得する。
   const { fetchFriends } = await loadFriendsApi()
-  await fetchFriends()
+  const result = await fetchFriends()
 
-  // Then: 仕様どおりのURLとメソッドで認証付き呼び出しをする。
+  // Then: 仕様どおりのURLとメソッドで認証付き呼び出しをし、レスポンスのitemsをそのまま返す。
   assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/friends')
   assert.equal(calls[0]?.init?.method, 'GET')
   assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
+  assert.deepEqual(result, responseBody)
 })
 
 test('フレンド一覧APIはAbortSignalをHTTPリクエストへ引き渡す', async () => {
@@ -56,7 +72,7 @@ test('フレンド申請APIはusernameをPOSTする', async () => {
   assert.equal(calls[0]?.init?.body, JSON.stringify({ username: 'targetuser' }))
 })
 
-test('フレンド操作APIはusernameをエンコードして呼び出す', async () => {
+test('フレンド操作APIはusernameを含む操作別パスとメソッドを使う', async () => {
   // Given: 操作API呼び出し内容の記録。
   const calls = installFetchRecorder(() => new Response(null, { status: 204 }))
 

@@ -37,9 +37,14 @@ test('同時の状態確認は1つのin-flight Promiseへ集約される', async
   // Then: API呼び出しとPromiseは共有され、通常稼働状態を反映する
   assert.equal(first, second)
   assert.equal(fetchCount, 1)
-  assert.equal(firstResult.type, 'success')
   assert.equal(secondResult, firstResult)
-  assert.equal(availability.state.kind, 'operational')
+  const expectedState = {
+    kind: 'operational',
+    updatedAt: '2026-07-26T12:34:56+09:00',
+    checkedAt: 100,
+  }
+  assert.deepEqual(firstResult, { type: 'success', state: expectedState })
+  assert.deepEqual(availability.state, expectedState)
 })
 
 test('既知のメンテナンス中に再確認が失敗してもコメントを保持する', async () => {
@@ -92,6 +97,100 @@ test('状態確認を中止した場合はStoreを接続不能へ変更しない
   // Then: キャンセル結果となり、確認前の状態を維持する
   assert.equal(result.type, 'aborted')
   assert.deepEqual(availability.state, { kind: 'checking' })
+})
+
+test('メンテナンス継続時は前回の再確認間隔を引き継ぐ', async () => {
+  // Given: 90秒の再確認間隔を持つメンテナンス状態
+  resetAvailability()
+  applySystemStatus(
+    {
+      status: 'maintenance',
+      comment: '更新中',
+      updated_at: '2026-07-26T12:34:56+09:00',
+    },
+    100,
+    90
+  )
+  const refresher = createAvailabilityRefresher({
+    fetchStatus: async () => ({
+      status: 'maintenance',
+      comment: '更新中',
+      updated_at: '2026-07-26T12:34:56+09:00',
+    }),
+    now: () => 200,
+  })
+
+  // When: オプション指定なしで状態確認する
+  const result = await refresher.refresh()
+
+  // Then: 前回の90秒を引き継いだメンテナンス状態になる
+  assert.equal(result.type, 'success')
+  assert.deepEqual(result.state, {
+    kind: 'maintenance',
+    comment: '更新中',
+    updatedAt: '2026-07-26T12:34:56+09:00',
+    retryAfterSeconds: 90,
+    checkedAt: 200,
+  })
+})
+
+test('完了後の状態確認は新しい取得を開始する', async () => {
+  // Given: 成功応答を返す取得関数
+  resetAvailability()
+  let fetchCount = 0
+  const refresher = createAvailabilityRefresher({
+    fetchStatus: async () => {
+      fetchCount += 1
+      return {
+        status: 'operational',
+        comment: '',
+        updated_at: '2026-07-26T12:34:56+09:00',
+      }
+    },
+    now: () => 100,
+  })
+
+  // When: 状態確認を完了後に再度要求する
+  await refresher.refresh()
+  const result = await refresher.refresh()
+
+  // Then: 取得は2回実行され通常稼働状態を返す
+  assert.equal(fetchCount, 2)
+  assert.deepEqual(result, {
+    type: 'success',
+    state: {
+      kind: 'operational',
+      updatedAt: '2026-07-26T12:34:56+09:00',
+      checkedAt: 100,
+    },
+  })
+})
+
+test('完了後のabortは前回signalを中断しない', async () => {
+  // Given: signalを記録する取得関数
+  resetAvailability()
+  const signals: AbortSignal[] = []
+  const refresher = createAvailabilityRefresher({
+    fetchStatus: async (signal) => {
+      if (signal) {
+        signals.push(signal)
+      }
+      return {
+        status: 'operational',
+        comment: '',
+        updated_at: '2026-07-26T12:34:56+09:00',
+      }
+    },
+    now: () => 100,
+  })
+  await refresher.refresh()
+
+  // When: 完了後にabortする
+  refresher.abort()
+
+  // Then: 前回signalは中断されない
+  assert.equal(signals.length, 1)
+  assert.equal(signals[0]?.aborted, false)
 })
 
 test('中止後に取得関数が成功してもStoreへ結果を反映しない', async () => {

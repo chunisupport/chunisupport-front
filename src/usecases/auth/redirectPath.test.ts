@@ -39,6 +39,17 @@ test('sanitizeRedirectPath: バックスラッシュを含むパスは拒否す�
   assert.equal(result, null)
 })
 
+test('sanitizeRedirectPath: 先頭スラッシュのない相対パスは拒否する', () => {
+  // Given
+  const rawPath = 'evil/path'
+
+  // When
+  const result = sanitizeRedirectPath(rawPath)
+
+  // Then
+  assert.equal(result, null)
+})
+
 test('buildLoginRedirectPath: 現在ページが安全なら redirect クエリを付与する', () => {
   const result = buildLoginRedirectPath('/users/user001')
   assert.equal(result, '/login?redirect=%2Fusers%2Fuser001')

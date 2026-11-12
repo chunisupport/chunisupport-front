@@ -34,6 +34,7 @@ test('fetchUserUpdatedAtは同じユーザーへの同時呼び出しを1リク�
   // Then
   assert.equal(fetchCount, 1)
   assert.equal(first, second)
+  assert.deepEqual(first, responseBody)
 })
 
 test('fetchUserUpdatedAtは完了後の呼び出しで最新更新日時を再取得すること', async () => {

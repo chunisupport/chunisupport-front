@@ -36,6 +36,27 @@ test('トップページ用メタ情報を追加し、既存タグを維持す�
   )
   assert.match(html, /<meta property="og:image" content="https:\/\/chunisupport\.net\/ogp\.png">/)
   assert.match(html, /<meta name="twitter:card" content="summary_large_image">/)
+  assert.ok(html.includes('<link rel="canonical" href="https://chunisupport.net/">'))
+  assert.ok(html.includes('<meta property="og:site_name" content="ChuniSupport">'))
+  assert.ok(
+    html.includes('<meta property="og:title" content="ChuniSupport | CHUNITHMスコアツール">')
+  )
+  assert.ok(
+    html.includes(
+      '<meta property="og:description" content="CHUNITHMプレイヤーのためのスコア管理ツール">'
+    )
+  )
+  assert.ok(html.includes('<meta property="og:url" content="https://chunisupport.net/">'))
+  assert.ok(html.includes('<meta property="og:type" content="website">'))
+  assert.ok(
+    html.includes('<meta name="twitter:title" content="ChuniSupport | CHUNITHMスコアツール">')
+  )
+  assert.ok(
+    html.includes(
+      '<meta name="twitter:description" content="CHUNITHMプレイヤーのためのスコア管理ツール">'
+    )
+  )
+  assert.ok(html.includes('<meta name="twitter:image" content="https://chunisupport.net/ogp.png">'))
   assert.match(html, /<meta name="robots" content="noindex">/)
   assert.match(html, /<script src="\/static\/app\.js"><\/script>/)
 })
@@ -75,18 +96,19 @@ test('title 要素がない HTML を拒否すること', () => {
   )
 })
 
-test('公開 URL をベース URL 末尾のスラッシュに依存せず解決すること', () => {
-  // Given
-  const baseUrl = 'https://chunisupport.net'
+for (const baseUrl of ['https://chunisupport.net', 'https://chunisupport.net/']) {
+  test(`公開 URL をベース URL ${baseUrl} から解決すること`, () => {
+    // Given: 末尾スラッシュの有無が異なる公開URL
 
-  // When
-  const rootUrl = resolvePublicUrl('/', baseUrl)
-  const imageUrl = resolvePublicUrl('/ogp.png', baseUrl)
+    // When
+    const rootUrl = resolvePublicUrl('/', baseUrl)
+    const imageUrl = resolvePublicUrl('/ogp.png', baseUrl)
 
-  // Then
-  assert.equal(rootUrl, 'https://chunisupport.net/')
-  assert.equal(imageUrl, 'https://chunisupport.net/ogp.png')
-})
+    // Then
+    assert.equal(rootUrl, 'https://chunisupport.net/')
+    assert.equal(imageUrl, 'https://chunisupport.net/ogp.png')
+  })
+}
 
 test('HTTP(S) 以外の公開 URL を拒否すること', () => {
   // Given
@@ -129,4 +151,15 @@ test('固定ページとして扱えないパスを拒否すること', () => {
       new Error(`固定ページのパスが不正です: ${invalidPath}`)
     )
   }
+})
+
+test('ドットで始まるファイル名のパスをdistの外側として拒否すること', () => {
+  // Given
+  const distDirectory = path.resolve('app', 'dist')
+
+  // When & Then
+  assert.throws(
+    () => resolveStaticPageOutputPath(distDirectory, '/..evil'),
+    new Error('固定ページの出力先が dist の外側です: /..evil')
+  )
 })

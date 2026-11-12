@@ -65,3 +65,17 @@ test('存在しない目標IDでは順序を変更しない', () => {
     [1, 2, 3]
   )
 })
+
+test('先頭位置への移動で順序を変更する', () => {
+  // Given
+  const goals = [1, 2, 3].map(createGoalWithProgress)
+
+  // When
+  const result = moveGoal(goals, 3, 1)
+
+  // Then
+  assert.deepEqual(
+    result.map(({ goal }) => goal.id),
+    [3, 1, 2]
+  )
+})

@@ -31,24 +31,30 @@ test('completeSongStatsRatingBands: 欠落した帯を0人の統計行で補完�
     result.map((band) => band.rating_band),
     ['16.00～16.24', '16.25～16.49']
   )
-  assert.equal(result[0]?.player_count, 0)
-  assert.equal(result[0]?.average_score, null)
-  assert.equal(result[0]?.median_score, null)
-  assert.equal(result[0]?.combo.ajc, 0)
-  assert.equal(result[0]?.clear.catastrophy, 0)
+  assert.deepEqual(result[0], {
+    rating_band: '16.00～16.24',
+    rank: { aaal: 0, s: 0, sp: 0, ss: 0, ssp: 0, sss: 0, sssp: 0, max: 0 },
+    combo: { none: 0, fc: 0, aj: 0, ajc: 0 },
+    clear: { failed: 0, clear: 0, hard: 0, brave: 0, absolute: 0, catastrophy: 0 },
+    average_score: null,
+    median_score: null,
+    player_count: 0,
+  })
   assert.equal(result[1], stats[0])
 })
 
 test('completeSongStatsRatingBands: 入力配列と既存統計行を変更しない', () => {
   // Given: マスターと統計が逆順で渡される。
   const stats = [createStatsBand('16.25～16.49', 3), createStatsBand('16.00～16.24', 2)]
-  const originalRatingBands = [...ratingBands]
+  const originalRatingBands = structuredClone(ratingBands)
+  const originalStats = structuredClone(stats)
 
   // When: 統計行をマスター順へ並べる。
   const result = completeSongStatsRatingBands(stats, ratingBands)
 
-  // Then: 入力は維持され、既存の統計行がそのまま利用される。
+  // Then: 入力の並び順とネストした内容は維持され、既存の統計行がそのまま利用される。
   assert.deepEqual(ratingBands, originalRatingBands)
+  assert.deepEqual(stats, originalStats)
   assert.equal(result[0], stats[1])
   assert.equal(result[1], stats[0])
 })
