@@ -174,3 +174,69 @@ test('maintenance_mode応答はセッションを維持して可用性StoreへRe
     resetAvailability()
   }
 })
+
+test('401以外のステータスでエラー情報がない場合はセッションクリアしない', async () => {
+  // Given: 認証エラーではない500応答。
+  const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()
+
+  // When: リダイレクト抑止なしでセッションクリア可否を判定する。
+  const result = shouldClearSessionOnUnauthorized(500, undefined, {})
+
+  // Then: 未認証を示す情報がないためクリアしない。
+  assert.equal(result, false)
+})
+
+test('401でエラー情報がない場合もセッションクリアする', async () => {
+  // Given: エラー本文のない401応答。
+  const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()
+
+  // When: リダイレクト抑止なしでセッションクリア可否を判定する。
+  const result = shouldClearSessionOnUnauthorized(401, undefined, {})
+
+  // Then: ステータスだけで未認証と判断してクリアする。
+  assert.equal(result, true)
+})
+
+test('401以外でも認証エラーコード付きならセッションクリアする', async () => {
+  // Given: ステータスは500だが認証エラーコードを含む応答。
+  const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()
+
+  // When: リダイレクト抑止なしでセッションクリア可否を判定する。
+  const result = shouldClearSessionOnUnauthorized(
+    500,
+    { error: { status: 500, code: 'invalid_token' } },
+    {}
+  )
+
+  // Then: コードから未認証と判断してクリアする。
+  assert.equal(result, true)
+})
+
+test('401以外で認証対象外コードならセッションクリアしない', async () => {
+  // Given: ステータスもコードも認証エラーではない応答。
+  const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()
+
+  // When: リダイレクト抑止なしでセッションクリア可否を判定する。
+  const result = shouldClearSessionOnUnauthorized(
+    500,
+    { error: { status: 500, code: 'recent_sign_in_required' } },
+    {}
+  )
+
+  // Then: 未認証を示さないためクリアしない。
+  assert.equal(result, false)
+})
+
+test('認証必須で未ログインの場合はリダイレクト有効でも未認証エラーになる', async () => {
+  // Given: Firebaseにログインしていない状態。
+  const { fetchWithAuth } = await loadFetchWithAuthModule()
+
+  // When & Then: ログイン画面へ遷移しようとせず未認証エラーになる。
+  await assert.rejects(
+    fetchWithAuth('https://example.com/internal/me', {
+      requireAuthentication: true,
+    }),
+    (error: Error & { status?: number; code?: string }) =>
+      error.status === 401 && error.code === 'missing_token'
+  )
+})

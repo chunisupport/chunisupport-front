@@ -251,3 +251,26 @@ test('ユーザー名変更は再認証トークンと新しいユーザー名�
   assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
   assert.equal(calls[0]?.init?.body, JSON.stringify({ username: 'newname' }))
 })
+
+test('データエクスポートは不正なファイル名を既定名へ置き換える', async () => {
+  // Given: json以外の添付ファイル名を返すエクスポート応答。
+  installFetchRecorder(
+    () =>
+      new Response('{"signed":true}', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Disposition': 'attachment; filename="evil.txt"',
+        },
+      })
+  )
+
+  // When: ユーザーデータをエクスポートする。
+  const { exportUserDataTransfer } = await loadSettingsApi()
+  const result = await exportUserDataTransfer()
+
+  // Then: 不正な指定名を使わず既定の移行ファイル名で返す。
+  assert.equal(result.filename.includes('evil.txt'), false)
+  assert.equal(result.filename.startsWith('chunisupport-transfer-'), true)
+  assert.equal(result.filename.endsWith('.json'), true)
+  assert.equal(await result.blob.text(), '{"signed":true}')
+})

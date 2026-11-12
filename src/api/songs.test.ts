@@ -328,3 +328,107 @@ test('requestSongsUpdatedAt は不正な updated_at を拒否し、HTTPキャッ
     assert.equal(calls[0]?.init?.cache, 'no-cache')
   }
 })
+
+test('requestSongsUpdatedAt は文字列の更新日時をそのまま返す', async () => {
+  // Given: 正常な文字列更新日時を持つレスポンス。
+  installFetchRecorder(() => Response.json({ updated_at: '2024-01-02T03:04:05+09:00' }))
+  const { requestSongsUpdatedAt } = await loadSongsApi()
+
+  // When: 楽曲更新日時を取得する。
+  const result = await requestSongsUpdatedAt()
+
+  // Then: 検証を通過して値がそのまま返る。
+  assert.deepEqual(result, { updated_at: '2024-01-02T03:04:05+09:00' })
+})
+
+test('requestSongsUpdatedAt は null の更新日時をそのまま返す', async () => {
+  // Given: 更新日時が未設定の正常レスポンス。
+  installFetchRecorder(() => Response.json({ updated_at: null }))
+  const { requestSongsUpdatedAt } = await loadSongsApi()
+
+  // When: 楽曲更新日時を取得する。
+  const result = await requestSongsUpdatedAt()
+
+  // Then: null が許容されてそのまま返る。
+  assert.deepEqual(result, { updated_at: null })
+})
+
+test('requestMasterData は文字列の実績種別を前後空白除去でコード化する', async () => {
+  // Given: 前後空白付きコードと空白だけの無効値。
+  installFetchRecorder(() => Response.json({ achievement_types: ['  SSS  ', '   '] }))
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 空白除去された1件だけが残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'SSS')
+})
+
+test('requestMasterData は実績種別の無効値を除外して有効値だけ残す', async () => {
+  // Given: 有効なオブジェクトと無効値の混在。
+  installFetchRecorder(() =>
+    Response.json({ achievement_types: [{ code: 'AAA' }, null, 123, {}, { code: '   ' }] })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 有効な1件だけが残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+})
+
+test('requestMasterData は code value id name の順で実績コードを解決する', async () => {
+  // Given: それぞれ別の項目だけにコード候補を持つ実績種別。
+  installFetchRecorder(() =>
+    Response.json({
+      achievement_types: [{ code: 'AAA' }, { value: 'VVV' }, { id: 'III' }, { name: 'NNN' }],
+    })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 4件とも fallback 順でコード化される。
+  assert.equal(result.achievement_types.length, 4)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+  assert.equal(result.achievement_types[1]?.code, 'VVV')
+  assert.equal(result.achievement_types[2]?.code, 'III')
+  assert.equal(result.achievement_types[3]?.code, 'NNN')
+})
+
+test('requestMasterData は実績種別の label を保持する', async () => {
+  // Given: 文字列ラベルを持つ実績種別。
+  installFetchRecorder(() =>
+    Response.json({ achievement_types: [{ code: 'AAA', label: '表示ラベル' }] })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: ラベルが欠落せず残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+  assert.equal(result.achievement_types[0]?.label, '表示ラベル')
+})
+
+test('requestMasterData は実績種別の name を保持する', async () => {
+  // Given: 文字列名を持つ実績種別。
+  installFetchRecorder(() =>
+    Response.json({ achievement_types: [{ code: 'AAA', name: '表示名' }] })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 名称が欠落せず残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+  assert.equal(result.achievement_types[0]?.name, '表示名')
+})
