@@ -317,3 +317,63 @@ dispose()
 assert.deepEqual(calls, ['select', 'cancel'])
 `)
 })
+
+test('本人確認ダイアログは再認証中でなければ閉じられること', async () => {
+  await runWizardTest(`
+// Given: 本人確認を開いた状態
+const { wizard, dispose } = setup()
+await selectTarget(wizard)
+assert.equal(wizard.isReauthOpen(), true)
+
+// When: 再認証中ではないまま閉じる
+wizard.setReauthOpen(false)
+
+// Then: 閉じる
+assert.equal(wizard.isReauthOpen(), false)
+assert.equal(wizard.isSubmitting(), false)
+dispose()
+`)
+})
+
+test('現在のメールアドレスを取得できない場合は変更先のメールアドレスで完了すること', async () => {
+  await runWizardTest(`
+// Given: 変更成功後に現在のメールアドレスが空で返る状態
+let current = 'old@example.com'
+const { wizard, dispose } = setup({
+  getCurrentEmail: () => current,
+  changeAccount: async () => {
+    current = ''
+    return true
+  },
+})
+await selectTarget(wizard)
+
+// When: 本人確認を確定する
+await wizard.submit()
+
+// Then: 変更先のメールアドレスで完了する
+assert.equal(wizard.currentEmail(), 'new@example.com')
+assert.equal(wizard.step(), 'done')
+dispose()
+`)
+})
+
+test('本人確認と無関係な文字列コードの失敗は本人確認ダイアログにAPIの文言を出すこと', async () => {
+  await runWizardTest(`
+// Given: 本人確認の対象外コードで失敗する変更
+const { wizard, dispose } = setup({
+  changeAccount: async () => {
+    throw codedError('auth/invalid-credential')
+  },
+})
+await selectTarget(wizard)
+
+// When: 本人確認を確定する
+await wizard.submit()
+
+// Then: 本人確認ダイアログにAPIの文言を出す
+assert.equal(wizard.reauthError(), '認証情報が無効です。もう一度ログインしてください。')
+assert.equal(wizard.isReauthOpen(), true)
+dispose()
+`)
+})

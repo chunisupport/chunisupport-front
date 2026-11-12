@@ -128,6 +128,30 @@ test('計算OPが公式OPより小さいときの差を符号付きで整形す�
   assert.equal(result, '-1.620')
 })
 
+test('計算OPと公式OPが等しいとき差分符号を付けずに整形すること', () => {
+  // Given
+  const calculated = 90
+  const official = 90
+
+  // When
+  const result = formatLockedSongsOverPowerDelta(calculated, official)
+
+  // Then
+  assert.equal(result, '0.000')
+})
+
+test('計算OP%と公式OP%が等しいとき差分符号を付けずに整形すること', () => {
+  // Given
+  const calculated = 76.26
+  const official = 76.26
+
+  // When
+  const result = formatLockedSongsOverPowerPercentDelta(calculated, official)
+
+  // Then
+  assert.equal(result, '0.00000%')
+})
+
 test('計算OP%が公式OP%より大きいときの差を符号付きで整形すること', () => {
   // Given
   const calculated = 76.26412

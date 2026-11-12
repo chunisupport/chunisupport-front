@@ -619,3 +619,64 @@ test('全譜面のレベル別集計はOP対象外と未プレイを含み、他
     assert.equal(row.count, 1)
   }
 })
+
+test('理論値が0のときOP%は0になりジャンルとレベルとバージョンの内訳行を作らない', () => {
+  // Given: 理論値が0の楽曲だけがある状態。
+  const songs = [createSong({ id: 'zero-max', maxop: 0 })]
+  const records = [createRecord({ id: 'zero-max', overpower: 0 })]
+
+  // When: 既定のOP対象で集計する。
+  const summary = buildOverPowerSummary(songs, records, versions)
+
+  // Then: ALLのOP%は0で、最大値0の内訳行は作らない。
+  assert.equal(summary.all.current, 0)
+  assert.equal(summary.all.max, 0)
+  assert.equal(summary.all.count, 1)
+  assert.equal(summary.all.percent, 0)
+  assert.deepEqual(summary.genres, [])
+  assert.deepEqual(summary.levels, [])
+  assert.deepEqual(summary.versions, [])
+})
+
+test('理論値が0のとき楽曲名順フォルダの内訳行を作らない', () => {
+  // Given: 理論値が0の楽曲だけがある状態。
+  const songs = [createSong({ id: 'zero-max', maxop: 0 })]
+  const records = [createRecord({ id: 'zero-max', overpower: 0 })]
+  const entries = selectOverPowerChartEntries(
+    buildOverPowerChartEntries(songs, records, versions),
+    'OP_TARGET'
+  )
+
+  // When: 楽曲名順フォルダごとに集計する。
+  const result = buildNameFolderSummaries(entries, [
+    { code: 'NUMBER', name: '数字', sort_order: 1 },
+  ])
+
+  // Then: 最大値0のフォルダ行は作らない。
+  assert.deepEqual(result, [])
+})
+
+test('バージョン別はリリース日順を保ち名前順に並べ替えない', () => {
+  // Given: 名前順とリリース日順が逆になるバージョンがある状態。
+  const orderedVersions: VersionSummaryDTO[] = [
+    { name: 'CHUNITHM ZEBRA', short_name: 'ZEB', released_at: '2021-11-04' },
+    { name: 'CHUNITHM APPLE', short_name: 'APP', released_at: '2024-12-12' },
+  ]
+  const songs = [
+    createSong({ id: 'zebra', release: '2021-11-04' }),
+    createSong({ id: 'apple', release: '2024-12-12' }),
+  ]
+  const records = [
+    createRecord({ id: 'zebra', overpower: 80 }),
+    createRecord({ id: 'apple', overpower: 70 }),
+  ]
+
+  // When: バージョン別に集計する。
+  const summary = buildOverPowerSummary(songs, records, orderedVersions)
+
+  // Then: リリース日順のまま並ぶ。
+  assert.deepEqual(
+    summary.versions.map((row) => row.label),
+    ['ZEBRA', 'APPLE']
+  )
+})

@@ -124,3 +124,81 @@ test('同時実行時は in-flight な認証確認を共有する', async () => 
   assert.equal(second, 'authenticated')
   assert.equal(callCount, 1)
 })
+
+test('me API から 401 以外のステータスが返った場合は error を返し認証情報を保持する', async () => {
+  // Given: 認証済みユーザーが保存済み
+  const user = createUser()
+  setAuthenticatedUser(user)
+
+  // When: me API が 403 を返す
+  const result = await resolveAuthSession(
+    async () => {
+      const error = new Error('forbidden') as Error & { status?: number }
+      error.status = 403
+      throw error
+    },
+    { forceRefresh: true }
+  )
+
+  // Then: error になり、保存済みユーザーを保持する
+  assert.equal(result, 'error')
+  assert.equal(getAuthStatus(), 'error')
+  assert.deepEqual(getAuthenticatedUser(), user)
+})
+
+test('me API から認証エラーコードが返った場合は unauthenticated へ更新する', async () => {
+  // Given: 認証済みユーザーが保存済み
+  setAuthenticatedUser(createUser())
+
+  // When: me API が invalid_token コードで失敗する
+  const result = await resolveAuthSession(
+    async () => {
+      throw Object.assign(new Error('invalid token'), { code: 'invalid_token' })
+    },
+    { forceRefresh: true }
+  )
+
+  // Then: unauthenticated になり、保存済みユーザーも消える
+  assert.equal(result, 'unauthenticated')
+  assert.equal(getAuthStatus(), 'unauthenticated')
+  assert.equal(getAuthenticatedUser(), null)
+})
+
+test('me API から未知のコードが返った場合は error を返し認証情報を保持する', async () => {
+  // Given: 認証済みユーザーが保存済み
+  const user = createUser()
+  setAuthenticatedUser(user)
+
+  // When: me API が未知のコードで失敗する
+  const result = await resolveAuthSession(
+    async () => {
+      throw Object.assign(new Error('unknown'), { code: 'not_auth_error' })
+    },
+    { forceRefresh: true }
+  )
+
+  // Then: error になり、保存済みユーザーを保持する
+  assert.equal(result, 'error')
+  assert.equal(getAuthStatus(), 'error')
+  assert.deepEqual(getAuthenticatedUser(), user)
+})
+
+test('解決後は in-flight な認証確認を使い回さず新しく取得し直す', async () => {
+  // Given: 強制再取得で認証済みになった後、未確定へ戻した状態
+  resetAuthSession()
+  await resolveAuthSession(async () => createUser(), { forceRefresh: true })
+  resetAuthSession()
+
+  // When: 未確定のまま再び解決する
+  let callCount = 0
+  const refreshedUser = { ...createUser(), username: 'bob' }
+  const result = await resolveAuthSession(async () => {
+    callCount += 1
+    return refreshedUser
+  })
+
+  // Then: 前回の解決を使い回さず、新しく取得する
+  assert.equal(result, 'authenticated')
+  assert.equal(callCount, 1)
+  assert.deepEqual(getAuthenticatedUser(), refreshedUser)
+})

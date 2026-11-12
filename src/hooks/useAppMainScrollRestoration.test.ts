@@ -159,3 +159,31 @@ assert.deepEqual(calls, [2400, 2400])
 view.dispose()
 `)
 })
+
+test('復元待ちの破棄ではスクロール位置を復元しないこと', async () => {
+  await runBrowserTest(`
+// Given: 復元要求を出す
+const view = createRoot((dispose) => {
+  const [path, setPath] = createSignal('/record-normal')
+  const [ready, setReady] = createSignal(true)
+  const [requestedOffset, setRequestedOffset] = createSignal()
+  createAppMainScrollOffsetRestoreEffect(path, ready, requestedOffset, () => {
+    setRequestedOffset(undefined)
+  })
+  return { dispose, setPath, setReady, setRequestedOffset }
+})
+view.setRequestedOffset(2400)
+
+// When: マイクロタスクの復元前に破棄する
+view.dispose()
+await Promise.resolve()
+await Promise.resolve()
+for (const [id, callback] of Array.from(frames)) {
+  frames.delete(id)
+  callback()
+}
+
+// Then: 破棄された復元は実行しない
+assert.deepEqual(calls, [])
+`)
+})

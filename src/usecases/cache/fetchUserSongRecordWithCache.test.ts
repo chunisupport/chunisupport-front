@@ -149,3 +149,40 @@ test('単曲レコード取得はTTL経過後に楽曲の外部更新を検知�
   assert.deepEqual(cached[0].data, [updatedRecord])
   assert.equal(cached[0].songsUpdatedAt, '2026-08-03T00:00:00Z')
 })
+
+test('WORLD END未プレイはnullをキャッシュし2回目はAPIを呼ばないこと', async () => {
+  // Given
+  setupApiTestEnv()
+  const { fetchUserWorldsendSongRecordWithCache } = await import(
+    './fetchUserSongRecordWithCache.ts'
+  )
+  setAuthenticatedUser(user)
+  let worldsendFetchCount = 0
+  globalThis.fetch = async (input) => {
+    const url = String(input)
+    if (url.endsWith('/internal/users/alice/updated-at')) {
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+    }
+    if (url.endsWith('/internal/songs/updated-at')) {
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+    }
+    if (url === `${API_BASE_URL}/internal/users/alice/record/worldsend-songs/we%2F1`) {
+      worldsendFetchCount += 1
+      return Response.json({
+        worldsend: null,
+        meta: { updated_at: '2026-07-06T00:00:00Z' },
+      })
+    }
+
+    throw new Error(`unexpected fetch: ${url}`)
+  }
+
+  // When
+  const first = await fetchUserWorldsendSongRecordWithCache('alice', 'we/1')
+  const second = await fetchUserWorldsendSongRecordWithCache('alice', 'we/1')
+
+  // Then
+  assert.equal(first, null)
+  assert.equal(second, null)
+  assert.equal(worldsendFetchCount, 1)
+})

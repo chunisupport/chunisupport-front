@@ -222,6 +222,58 @@ test('normalizePlayerDataResult: 統計グループ内のS系項目が欠落し�
   })
 })
 
+test('requestChangedSongMasters: 通常譜面だけの差分では通常マスタ取得だけ開始する', () => {
+  // Given: 通常譜面の差分だけがある登録結果。
+  const calls: string[] = []
+  const result = createPlayerDataResult({
+    changes: [
+      {
+        record_type: 'standard',
+        change_type: 'new',
+        idx: '1',
+        diff: 'MASTER',
+        before: null,
+        after: { score: 1_000_000, clear_lamp: 'CLEAR', combo_lamp: null, full_chain: null },
+      },
+    ],
+  })
+
+  // When: 差分に必要な楽曲マスタの読み込みを要求する。
+  requestChangedSongMasters(result, {
+    ensureSongsLoaded: () => calls.push('standard'),
+    ensureWorldsendSongsLoaded: () => calls.push('worldsend'),
+  })
+
+  // Then: 通常マスタ取得だけが開始される。
+  assert.deepEqual(calls, ['standard'])
+})
+
+test("requestChangedSongMasters: WORLD'S ENDだけの差分ではWORLD'S ENDマスタ取得だけ開始する", () => {
+  // Given: WORLD'S ENDの差分だけがある登録結果。
+  const calls: string[] = []
+  const result = createPlayerDataResult({
+    changes: [
+      {
+        record_type: 'worldsend',
+        change_type: 'new',
+        idx: '2',
+        diff: 'WE',
+        before: null,
+        after: { score: 990_000, clear_lamp: 'CLEAR', combo_lamp: null, full_chain: null },
+      },
+    ],
+  })
+
+  // When: 差分に必要な楽曲マスタの読み込みを要求する。
+  requestChangedSongMasters(result, {
+    ensureSongsLoaded: () => calls.push('standard'),
+    ensureWorldsendSongsLoaded: () => calls.push('worldsend'),
+  })
+
+  // Then: WORLD'S ENDマスタ取得だけが開始される。
+  assert.deepEqual(calls, ['worldsend'])
+})
+
 test("requestChangedSongMasters: 通常譜面とWORLD'S ENDの差分に応じたマスタ取得だけ開始する", () => {
   // Given: 通常譜面とWORLD'S ENDの差分が混在している登録結果。
   const calls: string[] = []

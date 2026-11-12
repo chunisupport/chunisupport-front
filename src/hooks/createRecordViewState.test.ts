@@ -238,3 +238,19 @@ assert.equal(view.searchParams.sortcol, undefined)
 view.dispose()
 `)
 })
+
+test('ソート列だけのクエリでも反映してクエリを取り除くこと', async () => {
+  await runBrowserTest(`
+// Given: ソート列だけのクエリ
+const view = setup({ initialSearchParams: { sortcol: 'title' } })
+
+// When: 初期反映を待つ
+await flush()
+
+// Then: 片方だけでも反映してクエリを取り除く
+assert.equal(view.state.primarySort().key, 'title')
+assert.equal(view.searchParams.sortcol, undefined)
+assert.equal(view.searchParams.sortorder, undefined)
+view.dispose()
+`)
+})

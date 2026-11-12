@@ -434,6 +434,258 @@ test('確認間隔がないcontrollerは表示・オンライン復帰時も通�
   }
 })
 
+test('接続不能から通常稼働へ戻ると現在URLを再読込する', () => {
+  // Given: 接続不能状態で開始したポーリング
+  let state: AvailabilityState = { kind: 'unavailable', retryCount: 1, checkedAt: 1 }
+  let reloadCount = 0
+  const controller = createAvailabilityPolling({
+    refresh: async () => undefined,
+    abort: () => undefined,
+    environment: {
+      getState: () => state,
+      isVisible: () => true,
+      isOnline: () => true,
+      setTimer: () => 1,
+      clearTimer: () => undefined,
+      addVisibilityListener: () => () => undefined,
+      addOnlineListener: () => () => undefined,
+      reload: () => {
+        reloadCount += 1
+      },
+    },
+  })
+  controller.start()
+
+  try {
+    // When: APIが通常稼働へ復帰した状態を同期する
+    state = { kind: 'operational', updatedAt: '2026-07-26T00:00:00Z', checkedAt: 2 }
+    controller.sync()
+
+    // Then: 現在URLの再読込を1回だけ要求する
+    assert.equal(reloadCount, 1)
+  } finally {
+    controller.dispose()
+  }
+})
+
+test('復旧条件を満たさない同期では再読込しない', () => {
+  // Given: 通常稼働中で開始したポーリング
+  const state: AvailabilityState = {
+    kind: 'operational',
+    updatedAt: '2026-07-26T00:00:00Z',
+    checkedAt: 1,
+  }
+  let reloadCount = 0
+  const controller = createAvailabilityPolling({
+    refresh: async () => undefined,
+    abort: () => undefined,
+    environment: {
+      getState: () => state,
+      isVisible: () => true,
+      isOnline: () => true,
+      setTimer: () => 1,
+      clearTimer: () => undefined,
+      addVisibilityListener: () => () => undefined,
+      addOnlineListener: () => () => undefined,
+      reload: () => {
+        reloadCount += 1
+      },
+    },
+  })
+  controller.start()
+
+  try {
+    // When: 通常稼働のまま同期する
+    controller.sync()
+
+    // Then: 再読込しない
+    assert.equal(reloadCount, 0)
+  } finally {
+    controller.dispose()
+  }
+})
+
+test('二度目の復旧では再読込しない', () => {
+  // Given: メンテナンスから復旧して再読込済みのポーリング
+  let state: AvailabilityState = {
+    kind: 'maintenance',
+    comment: '更新中',
+    updatedAt: null,
+    retryAfterSeconds: 60,
+    checkedAt: 1,
+  }
+  let reloadCount = 0
+  const controller = createAvailabilityPolling({
+    refresh: async () => undefined,
+    abort: () => undefined,
+    environment: {
+      getState: () => state,
+      isVisible: () => true,
+      isOnline: () => true,
+      setTimer: () => 1,
+      clearTimer: () => undefined,
+      addVisibilityListener: () => () => undefined,
+      addOnlineListener: () => () => undefined,
+      reload: () => {
+        reloadCount += 1
+      },
+    },
+  })
+  controller.start()
+
+  try {
+    // When: 一度復旧して再びメンテナンスから復旧する
+    state = { kind: 'operational', updatedAt: '2026-07-26T00:00:00Z', checkedAt: 2 }
+    controller.sync()
+    state = {
+      kind: 'maintenance',
+      comment: '更新中',
+      updatedAt: null,
+      retryAfterSeconds: 60,
+      checkedAt: 3,
+    }
+    controller.sync()
+    state = { kind: 'operational', updatedAt: '2026-07-26T00:00:00Z', checkedAt: 4 }
+    controller.sync()
+
+    // Then: 初回復旧時の1回だけ再読込する
+    assert.equal(reloadCount, 1)
+  } finally {
+    controller.dispose()
+  }
+})
+
+test('非表示またはオフラインの即時確認は通信せずnullを返す', async () => {
+  // Given: 非表示だがオンラインの環境と表示中だがオフラインの環境
+  const createController = (visible: boolean, online: boolean, onRefresh: () => void) =>
+    createAvailabilityPolling({
+      refresh: async () => {
+        onRefresh()
+      },
+      abort: () => undefined,
+      environment: {
+        getState: () => ({ kind: 'unavailable', retryCount: 1, checkedAt: 1 }) as AvailabilityState,
+        isVisible: () => visible,
+        isOnline: () => online,
+        setTimer: () => 1,
+        clearTimer: () => undefined,
+        addVisibilityListener: () => () => undefined,
+        addOnlineListener: () => () => undefined,
+        reload: () => undefined,
+      },
+    })
+  let hiddenRefreshCount = 0
+  let offlineRefreshCount = 0
+  const hiddenController = createController(false, true, () => {
+    hiddenRefreshCount += 1
+  })
+  const offlineController = createController(true, false, () => {
+    offlineRefreshCount += 1
+  })
+
+  try {
+    // When: 即時確認を要求する
+    const hiddenResult = await hiddenController.refreshNow()
+    const offlineResult = await offlineController.refreshNow()
+
+    // Then: 通信せずnullを返す
+    assert.equal(hiddenResult, null)
+    assert.equal(offlineResult, null)
+    assert.equal(hiddenRefreshCount, 0)
+    assert.equal(offlineRefreshCount, 0)
+  } finally {
+    hiddenController.dispose()
+    offlineController.dispose()
+  }
+})
+
+test('完了後の即時確認は新しい通信を開始する', async () => {
+  // Given: 完了を手動制御できる状態確認
+  const state: AvailabilityState = {
+    kind: 'maintenance',
+    comment: '更新中',
+    updatedAt: null,
+    retryAfterSeconds: 60,
+    checkedAt: 1,
+  }
+  let refreshCount = 0
+  let resolveRefresh: (() => void) | undefined
+  let pending = new Promise<void>((resolve) => {
+    resolveRefresh = resolve
+  })
+  const controller = createAvailabilityPolling({
+    refresh: () => {
+      refreshCount += 1
+      return pending
+    },
+    abort: () => undefined,
+    environment: {
+      getState: () => state,
+      isVisible: () => true,
+      isOnline: () => true,
+      setTimer: () => 1,
+      clearTimer: () => undefined,
+      addVisibilityListener: () => () => undefined,
+      addOnlineListener: () => () => undefined,
+      reload: () => undefined,
+    },
+  })
+
+  try {
+    // When: 初回通信を完了させて再度即時確認する
+    const first = controller.refreshNow()
+    resolveRefresh?.()
+    await first
+    pending = new Promise<void>((resolve) => {
+      resolveRefresh = resolve
+    })
+    const second = controller.refreshNow()
+    resolveRefresh?.()
+    await second
+
+    // Then: 通信は2回実行される
+    assert.equal(refreshCount, 2)
+    assert.notEqual(first, second)
+  } finally {
+    controller.dispose()
+  }
+})
+
+test('開始済みの二重開始は再予約しない', () => {
+  // Given: 接続不能状態で開始済みのポーリング
+  let timerCount = 0
+  let clearCount = 0
+  const state: AvailabilityState = { kind: 'unavailable', retryCount: 1, checkedAt: 1 }
+  const controller = createAvailabilityPolling({
+    refresh: async () => undefined,
+    abort: () => undefined,
+    environment: {
+      getState: () => state,
+      isVisible: () => true,
+      isOnline: () => true,
+      setTimer: () => ++timerCount,
+      clearTimer: () => {
+        clearCount += 1
+      },
+      addVisibilityListener: () => () => undefined,
+      addOnlineListener: () => () => undefined,
+      reload: () => undefined,
+    },
+  })
+
+  try {
+    // When: 開始を2回要求する
+    controller.start()
+    controller.start()
+
+    // Then: 初回の予約だけ残る
+    assert.equal(timerCount, 1)
+    assert.equal(clearCount, 0)
+  } finally {
+    controller.dispose()
+  }
+})
+
 test('メンテナンスまたは接続不能から通常稼働へ戻ると現在URLを再読込する', () => {
   // Given: メンテナンス状態で開始したポーリング
   let state: AvailabilityState = {

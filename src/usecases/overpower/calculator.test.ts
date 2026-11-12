@@ -155,6 +155,38 @@ test('レコードがない楽曲も理論値と未プレイ補完対象に含�
   assert.equal(data.playedAverageScoreByConst.size, 0)
 })
 
+test('同一定数で理論値対象が欠ける場合は先頭譜面を理論値対象にする', () => {
+  // Given: ULTIMA対象だがEXPERTとMASTERだけ同一定数の楽曲
+  const songs = [
+    createSong({
+      id: 'tie',
+      op_target_difficulty: 'ULTIMA',
+      charts: {
+        EXPERT: { const: 15, is_const_unknown: false, notes: null },
+        MASTER: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+  const records = [
+    createRecord({
+      id: 'tie',
+      difficulty: 'EXPERT',
+      is_played: false,
+      score: 0,
+      overpower: 0,
+      overpower_percent: 0,
+    }),
+    createRecord({ id: 'tie', difficulty: 'MASTER', score: 1010000, overpower: 90 }),
+  ]
+
+  // When: 自動入力値を生成する
+  const data = buildOverPowerCalculatorData(songs, records, [], [])
+
+  // Then: 先頭のEXPERTを理論値対象として未プレイ扱いにする
+  assert.equal(data.unplayedEntries[0]?.targetConst, 15)
+  assert.equal(data.unplayedEntries[0]?.isUnplayed, true)
+})
+
 test('未解禁曲を解禁扱いにすると全曲の理論値へ戻る', () => {
   // Given
   const songs = [createSong({ id: 'song' })]
