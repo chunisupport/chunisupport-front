@@ -13,24 +13,21 @@ test('normalizeSongReading は reading を trim して NFKC 正規化する', ()
   assert.equal(result, 'ソラ')
 })
 
-test('normalizeSongReading は reading が未設定の場合に曲名を使う', () => {
-  // Given
-  const song = { title: ' Ｓｋｙ ' }
+for (const { caseName, reading } of [
+  { caseName: 'undefined', reading: undefined },
+  { caseName: 'null', reading: null },
+  { caseName: '空文字', reading: '' },
+  { caseName: '半角空白のみ', reading: ' ' },
+  { caseName: 'タブ・改行・全角空白のみ', reading: '\t\n　' },
+]) {
+  test(`normalizeSongReading は reading が${caseName}の場合に正規化した曲名を使う`, () => {
+    // Given
+    const song = { title: ' Ｓｋｙ ', reading }
 
-  // When
-  const result = normalizeSongReading(song)
-
-  // Then
-  assert.equal(result, 'Sky')
-})
-
-test('normalizeSongReading は null・空文字・空白のみの読みを曲名へフォールバックする', () => {
-  // Given: 読みがない楽曲。半角・全角空白や改行も空欄として扱う。
-  for (const reading of [undefined, null, '', ' ', '\t\n　']) {
     // When
-    const result = normalizeSongReading({ title: ' Ｓｋｙ ', reading })
+    const result = normalizeSongReading(song)
 
-    // Then: 曲名を正規化して使用する。
+    // Then
     assert.equal(result, 'Sky')
-  }
-})
+  })
+}

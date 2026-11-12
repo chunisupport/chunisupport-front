@@ -157,19 +157,6 @@ test('レコード統計は公開ツールとして定義されていること',
   assert.equal(chartStats.icon, 'distribution')
 })
 
-test('getToolLink はパスに対応するツール情報を返すこと', () => {
-  // Given
-  const target = TOOL_LINKS[0]
-  assert.ok(target)
-
-  // When
-  const result = getToolLink(target.href)
-
-  // Then
-  assert.equal(result.title, target.title)
-  assert.equal(result.description, target.description)
-})
-
 test('getToolLink は全ツールパスに対応するツール情報を返すこと', () => {
   // Given / When / Then
   for (const tool of TOOL_LINKS) {

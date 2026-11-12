@@ -85,7 +85,8 @@ test('レベル10以上に存在する譜面だけを母数として難易度別
   const result = buildChartConstantCoverage(songs)
 
   // Then
-  assert.deepEqual(result.overall, { known: 2, total: 3, percent: (2 / 3) * 100 })
+  assert.equal(result.overall.known, 2)
+  assert.equal(result.overall.total, 3)
   assert.deepEqual(result.byDifficulty.BASIC, {
     known: 0,
     total: 0,

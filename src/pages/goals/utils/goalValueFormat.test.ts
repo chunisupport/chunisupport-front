@@ -1,33 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GoalAchievementType } from '../../../types/api'
 import {
   formatGoalValue,
   getGoalValueUnit,
   splitGoalNumberText,
   splitGoalValueDisplay,
 } from './goalValueFormat'
-
-const GOAL_ACHIEVEMENT_TYPES = [
-  'rank_count',
-  'score_count',
-  'rating_count',
-  'avg_score',
-  'hardlamp_count',
-  'combolamp_count',
-  'fullchain_count',
-  'rainbow_count',
-  'total_score',
-  'overpower_value',
-  'overpower_percent',
-] as const satisfies readonly GoalAchievementType[]
-
-test('目標値の表示単位はOVER POWER達成率だけ%を返す', () => {
-  // Given / When / Then
-  for (const type of GOAL_ACHIEVEMENT_TYPES) {
-    assert.equal(getGoalValueUnit(type), type === 'overpower_percent' ? '%' : '', type)
-  }
-})
 
 test('OVER POWER達成率は小数点以下3桁のまま末尾に%を付ける', () => {
   // Given

@@ -23,17 +23,25 @@ const createCourseRecord = (overrides: Partial<CourseRecordDTO> = {}): CourseRec
 })
 
 test('コースレコードの既定ソートはクラス昇順であること', () => {
-  // Given: コースレコード表の既定ソート条件。
-  const defaultSortCondition = DEFAULT_COURSE_RECORD_SORT_CONDITION
+  // Given: クラスの降順で並び、名前とスコアの昇順はクラス順と異なるコース。
+  const records = [
+    createCourseRecord({ idx: 'extra', class: 'extra', name: 'A', score: 2_900_000 }),
+    createCourseRecord({ idx: 'inf', class: 'inf', name: 'B', score: 2_920_000 }),
+    createCourseRecord({ idx: 'five', class: '5', name: 'C', score: 2_940_000 }),
+    createCourseRecord({ idx: 'four', class: '4', name: 'D', score: 2_960_000 }),
+    createCourseRecord({ idx: 'three', class: '3', name: 'E', score: 2_980_000 }),
+    createCourseRecord({ idx: 'two', class: '2', name: 'F', score: 3_000_000 }),
+    createCourseRecord({ idx: 'one', class: '1', name: 'G', score: 3_020_000 }),
+  ]
 
-  // When: ソートキーと方向を参照する。
-  const result = {
-    key: defaultSortCondition.key,
-    direction: defaultSortCondition.direction,
-  }
+  // When: コースレコード表の既定条件で並べ替える。
+  const result = sortCourseRecords(records, DEFAULT_COURSE_RECORD_SORT_CONDITION)
 
-  // Then: クラス昇順になっている。
-  assert.deepEqual(result, { key: 'courseClass', direction: 'asc' })
+  // Then: ⅠからⅤ、∞、EXの順になる。
+  assert.deepEqual(
+    result.map((record) => record.idx),
+    ['one', 'two', 'three', 'four', 'five', 'inf', 'extra']
+  )
 })
 
 test('コーススコアの昇降順でも未プレイを末尾へ固定すること', () => {

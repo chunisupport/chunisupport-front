@@ -1,24 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  X_TIMELINE_APPROACH_MARGIN_PX,
-  X_TIMELINE_EAGER_VISIBLE_RATIO,
-  X_TIMELINE_LOAD_ROOT_MARGIN,
-} from './constants'
+import { X_TIMELINE_APPROACH_MARGIN_PX, X_TIMELINE_EAGER_VISIBLE_RATIO } from './constants'
 import { measureXTimelineViewport, shouldRequestXTimeline } from './xTimelineViewport'
 
 const TIMELINE_HEIGHT = 600
-
-test('rootMargin は下方向の接近距離だけを広げる', () => {
-  // Given: 接近とみなす距離。
-  const marginPx = X_TIMELINE_APPROACH_MARGIN_PX
-
-  // When: IntersectionObserver へ渡す rootMargin を組み立てる。
-  const rootMargin = X_TIMELINE_LOAD_ROOT_MARGIN
-
-  // Then: 下方向だけをその距離だけ広げる。
-  assert.equal(rootMargin, `0px 0px ${marginPx}px 0px`)
-})
 
 test('予約領域が十分見えているときはスクロール前でも読み込む', () => {
   // Given: デスクトップの2カラムのように、予約領域の大半がビューポート内にある。

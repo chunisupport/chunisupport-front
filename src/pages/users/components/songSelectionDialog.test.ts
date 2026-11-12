@@ -118,3 +118,20 @@ test('選択キーの切り替えは元のSetを変更せず上限を守るこ�
   assert.deepEqual([...limited], ['song-1'])
   assert.deepEqual([...removed], [])
 })
+
+for (const { caseName, limit } of [
+  { caseName: '上限がない場合', limit: undefined },
+  { caseName: '選択数が上限未満の場合', limit: 2 },
+]) {
+  test(`選択キーの切り替えは${caseName}に未選択キーを追加すること`, () => {
+    // Given
+    const selected = new Set(['song-1'])
+
+    // When
+    const result = toggleSelectionKey(selected, 'song-2', limit)
+
+    // Then: 既存の選択を保って追加し、元のSetは変更しない。
+    assert.deepEqual([...result], ['song-1', 'song-2'])
+    assert.deepEqual([...selected], ['song-1'])
+  })
+}

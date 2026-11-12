@@ -80,20 +80,60 @@ test('継承プロパティの sortcol は rating desc に戻す', () => {
   }
 })
 
+/** 既定ソートの各段階で同値を解消し、前の条件を後の条件より優先することを検証する。 */
 test('通常レコードの既定ソートは単曲レート降順、定数降順、難易度降順、曲名昇順にする', () => {
-  // Given
-  const expectedSortConditions = [
-    { key: 'rating', direction: 'desc' },
-    { key: 'const', direction: 'desc' },
-    { key: 'difficulty', direction: 'desc' },
-    { key: 'title', direction: 'asc' },
+  // Given: 上位条件で優先されるレコードほど下位条件では後ろに並ぶ一覧。
+  const records = [
+    createRecord({
+      id: 'title-beta',
+      title: 'Beta',
+      reading: 'Beta',
+      rating: 16,
+      const: 14,
+      difficulty: 'MASTER',
+    }),
+    createRecord({
+      id: 'difficulty-first',
+      title: 'Zulu',
+      reading: 'Zulu',
+      rating: 16,
+      const: 14,
+      difficulty: 'ULTIMA',
+    }),
+    createRecord({
+      id: 'title-alpha',
+      title: 'Alpha',
+      reading: 'Alpha',
+      rating: 16,
+      const: 14,
+      difficulty: 'MASTER',
+    }),
+    createRecord({
+      id: 'const-first',
+      title: 'Zulu',
+      reading: 'Zulu',
+      rating: 16,
+      const: 15,
+      difficulty: 'EXPERT',
+    }),
+    createRecord({
+      id: 'rating-first',
+      title: 'Zulu',
+      reading: 'Zulu',
+      rating: 17,
+      const: 13,
+      difficulty: 'BASIC',
+    }),
   ]
 
-  // When
-  const result = DEFAULT_RECORD_SORT_CONDITIONS
+  // When: 通常レコードの既定条件で並べ替える。
+  const result = sortRecordsByConditions(records, DEFAULT_RECORD_SORT_CONDITIONS)
 
-  // Then
-  assert.deepEqual(result, expectedSortConditions)
+  // Then: 同率なら定数、同定数なら難易度、同難易度なら曲名の順で比較する。
+  assert.deepEqual(
+    result.map((record) => record.id),
+    ['rating-first', 'const-first', 'difficulty-first', 'title-alpha', 'title-beta']
+  )
 })
 
 test('初期ソートは第1ソートだけクエリ指定で置き換える', () => {

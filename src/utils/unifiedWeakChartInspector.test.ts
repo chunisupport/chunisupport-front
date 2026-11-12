@@ -300,36 +300,6 @@ test('新版は達成可能な普段の基準を維持し、得意と実際の�
   assert.equal(findEntry(entries, 'steady-0').aptitude, 50)
 })
 
-test('新版でも平均欠損・未プレイ・理論値超過の扱いを維持する', () => {
-  // Given: 比較可能な譜面に、平均なし・null平均・未プレイ・理論値超過を加える。
-  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0.5))
-  const baseline = findEntry(inspect(records, averages), 'steady-0').deviation
-  records.push(
-    createRecord('missing', MAX_SCORE),
-    createRecord('null-average', MAX_SCORE),
-    createRecord('unplayed', 0, 'MASTER', { is_played: false }),
-    createRecord('over-score', MAX_SCORE + 1)
-  )
-  averages.push(
-    { songId: 'null-average', difficulty: 'MASTER', averageScore: null },
-    { songId: 'unplayed', difficulty: 'MASTER', averageScore: 1000000 },
-    { songId: 'over-score', difficulty: 'MASTER', averageScore: 1000000 }
-  )
-
-  // When: 新版で分析する。
-  const entries = inspect(records, averages)
-
-  // Then: 不適格な譜面は除外し、平均欠損はデータなしとして基準に影響させない。
-  assert.equal(entries.length, 11)
-  assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
-  for (const id of ['missing', 'null-average']) {
-    const entry = findEntry(entries, id)
-    assert.equal(entry.category, 'unavailable')
-    assert.equal(entry.aptitude, null)
-    assert.equal(entry.deviation, null)
-  }
-})
-
 test('普段の失点比は譜面定数の近い譜面だけで求める', () => {
   // Given: 定数12では平均の半分、定数15では平均どおりの失点が普段の失点比になる。
   const { records, averages } = createCharts([
@@ -361,45 +331,63 @@ test('定数の近い譜面が少ない場合は比較できる全譜面で普�
   assert.equal(isolated.category, 'weakness')
 })
 
-test('平均統計がない譜面はデータなしにし、普段の失点比の計算にも含めない', () => {
-  // Given: 平均なしとnull平均の譜面を加える。
-  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0.8))
-  const baseline = findEntry(inspect(records, averages), 'steady-0').deviation
-  records.push(createRecord('missing-average', 900000), createRecord('null-average', 900000))
-  averages.push({ songId: 'null-average', difficulty: 'MASTER', averageScore: null })
+test('平均統計がない譜面はデータなしにし、普段の失点比の計算にも含めない', async (t) => {
+  for (const { name, lossFactor, score } of [
+    { name: '理論値の譜面でも平均欠損ならデータなしになる', lossFactor: 0.5, score: 1010000 },
+    { name: '低スコアの譜面でも平均欠損ならデータなしになる', lossFactor: 0.8, score: 900000 },
+  ]) {
+    await t.test(name, () => {
+      // Given: 平均なしとnull平均の譜面を加える。
+      const { records, averages } = createCharts(createSteadyCharts('steady', 14, lossFactor))
+      const baseline = findEntry(inspect(records, averages), 'steady-0').deviation
+      records.push(createRecord('missing-average', score), createRecord('null-average', score))
+      averages.push({ songId: 'null-average', difficulty: 'MASTER', averageScore: null })
 
-  // When: 統合分析を実行する。
-  const entries = inspect(records, averages)
+      // When: 統合分析を実行する。
+      const entries = inspect(records, averages)
 
-  // Then: 平均なし譜面は得意度を持たず、他譜面のずれも変わらない。
-  for (const id of ['missing-average', 'null-average']) {
-    const entry = findEntry(entries, id)
-    assert.equal(entry.category, 'unavailable')
-    assert.equal(entry.deviation, null)
-    assert.equal(entry.aptitude, null)
+      // Then: 平均なし譜面も出力に残るが得意度を持たず、他譜面のずれも変わらない。
+      assert.equal(entries.length, 11)
+      for (const id of ['missing-average', 'null-average']) {
+        const entry = findEntry(entries, id)
+        assert.equal(entry.category, 'unavailable')
+        assert.equal(entry.deviation, null)
+        assert.equal(entry.aptitude, null)
+      }
+      assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
+    })
   }
-  assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
 })
 
-test('未プレイ譜面と理論値超過スコアを出力と普段の失点比の計算から除外する', () => {
-  // Given: 適格な譜面に、未プレイの0点と上限を1点超える譜面を加える。
-  const { records, averages } = createCharts(createSteadyCharts('steady', 14, 0.8))
-  const baseline = findEntry(inspect(records, averages), 'steady-0').deviation
-  records.push(
-    createRecord('unplayed', 0, 'MASTER', { is_played: false }),
-    createRecord('over-score', 1010001)
-  )
-  averages.push(
-    { songId: 'unplayed', difficulty: 'MASTER', averageScore: 1000000 },
-    { songId: 'over-score', difficulty: 'MASTER', averageScore: 0 }
-  )
+test('未プレイ譜面と理論値超過スコアを出力と普段の失点比の計算から除外する', async (t) => {
+  for (const { name, lossFactor, averageScore } of [
+    { name: '平均が高得点でも不適格レコードを除外する', lossFactor: 0.5, averageScore: 1000000 },
+    { name: '平均が0点でも理論値超過レコードを除外する', lossFactor: 0.8, averageScore: 0 },
+  ]) {
+    await t.test(name, () => {
+      // Given: 適格な譜面に、未プレイの0点と上限を1点超える譜面を加える。
+      const { records, averages } = createCharts(createSteadyCharts('steady', 14, lossFactor))
+      const baseline = findEntry(inspect(records, averages), 'steady-0').deviation
+      records.push(
+        createRecord('unplayed', 0, 'MASTER', { is_played: false }),
+        createRecord('over-score', 1010001)
+      )
+      averages.push(
+        { songId: 'unplayed', difficulty: 'MASTER', averageScore: 1000000 },
+        { songId: 'over-score', difficulty: 'MASTER', averageScore }
+      )
 
-  // When: 全レコードを分析関数へ渡す。
-  const entries = inspect(records, averages)
+      // When: 全レコードを分析関数へ渡す。
+      const entries = inspect(records, averages)
 
-  // Then: 不適格レコードは結果に含まれず、ずれにも影響しない。
-  assert.equal(entries.length, 9)
-  assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
+      // Then: 不適格レコードは結果に含まれず、ずれにも影響しない。
+      assert.equal(entries.length, 9)
+      assert.ok(
+        entries.every(({ record }) => record.id !== 'unplayed' && record.id !== 'over-score')
+      )
+      assert.equal(findEntry(entries, 'steady-0').deviation, baseline)
+    })
+  }
 })
 
 test('失点比のばらつきがない場合も下限で割り、わずかなずれは過敏に判定しない', () => {

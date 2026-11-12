@@ -21,8 +21,6 @@ import {
   parseRandomSongDrawCount,
   parseRandomSongWeightValues,
   RANDOM_SONG_OP_TARGET_FILTER,
-  RANDOM_SONG_SELECTOR_DIFFICULTIES,
-  RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS,
   resolveRandomSongLevelWeightEnabledState,
   resolveRandomSongRecordLamp,
   restoreRandomSongResults,
@@ -160,33 +158,36 @@ test('楽曲一覧から譜面単位のランダム選曲候補を生成する�
   )
 })
 
-test('ランダム選曲の通常譜面難易度を共有定義で扱うこと', () => {
-  // Given: ランダム選曲で扱う難易度定義がある。
-  const difficulties = RANDOM_SONG_SELECTOR_DIFFICULTIES
+/** 5難易度を持つ楽曲から各通常譜面の候補が過不足なく生成されることを検証する。 */
+test('5難易度を持つ楽曲から通常譜面だけを1件ずつ候補にすること', () => {
+  // Given: 通常譜面が5難易度すべて揃った楽曲がある。
+  const song = createSong({
+    charts: {
+      BASIC: { const: 3, is_const_unknown: false, notes: 300 },
+      ADVANCED: { const: 6, is_const_unknown: false, notes: 500 },
+      EXPERT: { const: 10, is_const_unknown: false, notes: 800 },
+      MASTER: { const: 13.7, is_const_unknown: false, notes: 1200 },
+      ULTIMA: { const: 14.5, is_const_unknown: false, notes: 1400 },
+    },
+  })
 
-  // When: 楽曲候補生成とUIが参照する難易度を確認する。
-  const difficultyLabels = difficulties.map((difficulty) => difficulty)
+  // When: 楽曲から譜面単位の候補を生成する。
+  const candidates = buildRandomSongCandidates([song], versions)
 
-  // Then: 通常譜面の5難易度が大文字のドメイン値で定義されている。
-  assert.deepEqual(difficultyLabels, ['BASIC', 'ADVANCED', 'EXPERT', 'MASTER', 'ULTIMA'])
-})
-
-test('ランダム選曲の難易度絞り込みはOP対象を選択肢に含めること', () => {
-  // Given: ランダム選曲で表示する難易度絞り込み定義がある。
-  const difficultyFilters = RANDOM_SONG_SELECTOR_DIFFICULTY_FILTERS
-
-  // When: 画面の選択肢として扱う値を確認する。
-  const filterValues = difficultyFilters.map((difficulty) => difficulty)
-
-  // Then: 通常5難易度に加えてOP対象専用の絞り込み値が定義されている。
-  assert.deepEqual(filterValues, [
-    'BASIC',
-    'ADVANCED',
-    'EXPERT',
-    'MASTER',
-    'ULTIMA',
-    RANDOM_SONG_OP_TARGET_FILTER,
-  ])
+  // Then: 通常5難易度の譜面だけが、それぞれの定数で1件ずつ候補になる。
+  assert.deepEqual(
+    candidates.map((candidate) => ({
+      difficulty: candidate.difficulty,
+      chartConst: candidate.chartConst,
+    })),
+    [
+      { difficulty: 'BASIC', chartConst: 3 },
+      { difficulty: 'ADVANCED', chartConst: 6 },
+      { difficulty: 'EXPERT', chartConst: 10 },
+      { difficulty: 'MASTER', chartConst: 13.7 },
+      { difficulty: 'ULTIMA', chartConst: 14.5 },
+    ]
+  )
 })
 
 test('難易度・ジャンル・バージョン・譜面定数で候補を絞り込むこと', () => {

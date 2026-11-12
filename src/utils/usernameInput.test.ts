@@ -13,19 +13,23 @@ test('空文字は必須エラーになること', () => {
   assert.equal(result, 'required')
 })
 
-test('5〜50文字の小文字英数字は有効になること', () => {
-  // Given
-  const minimumLengthValue = 'user1'
-  const maximumLengthValue = 'a'.repeat(50)
+/** 長さの境界値と範囲内の小文字英数字が形式上有効になることを検証する。 */
+for (const { name, value } of [
+  { name: '最小長の5文字', value: 'user1' },
+  { name: '範囲内の11文字', value: 'currentuser' },
+  { name: '最大長の50文字', value: 'a'.repeat(50) },
+]) {
+  test(`${name}の小文字英数字は有効になること`, () => {
+    // Given: 許容される長さの小文字英数字。
+    const input = value
 
-  // When
-  const minimumLengthResult = validateUsername(minimumLengthValue)
-  const maximumLengthResult = validateUsername(maximumLengthValue)
+    // When: ユーザー名の形式を検証する。
+    const result = validateUsername(input)
 
-  // Then
-  assert.equal(minimumLengthResult, null)
-  assert.equal(maximumLengthResult, null)
-})
+    // Then: 現在のユーザー名との比較ではなく、形式として有効と判定する。
+    assert.equal(result, null)
+  })
+}
 
 test('アンダーバーを含むユーザー名は有効になること', () => {
   // Given
@@ -81,15 +85,4 @@ test('不正な username は API 呼び出し前の検証で例外になるこ�
 
   // When & Then
   assert.throws(() => assertValidUsername(value), TypeError)
-})
-
-test('現在と同じユーザー名も形式上は有効になること', () => {
-  // Given: 現在のユーザー名と同じ入力値。
-  const value = 'currentuser'
-
-  // When: 共通のユーザー名形式を検証する。
-  const result = validateUsername(value)
-
-  // Then: 変更有無の判定とは分離し、形式上は有効とする。
-  assert.equal(result, null)
 })

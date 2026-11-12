@@ -57,22 +57,6 @@ test("WORLD'S ENDの不正な sortcol はスコア降順に戻し、登録済み
   })
 })
 
-test("WORLD'S ENDの既定ソートはスコア降順、属性昇順、レベル降順、曲名昇順にする", () => {
-  // Given
-  const expectedSortConditions = [
-    { key: 'score', direction: 'desc' },
-    { key: 'attribute', direction: 'asc' },
-    { key: 'level', direction: 'desc' },
-    { key: 'title', direction: 'asc' },
-  ]
-
-  // When
-  const result = DEFAULT_WORLDSEND_RECORD_SORT_CONDITIONS
-
-  // Then
-  assert.deepEqual(result, expectedSortConditions)
-})
-
 test("WORLD'S ENDの初期ソートは第1ソートをクエリ指定にし、重複キーを既定条件で補完する", () => {
   // Given
   const sortKey = 'attribute'
@@ -121,7 +105,20 @@ test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条
   // Given
   const records = [
     createRecord({ id: 'fire-low', score: 1009000, attribute: 'FIRE', level_star: 2 }),
-    createRecord({ id: 'fire-high', score: 1009000, attribute: 'FIRE', level_star: 4 }),
+    createRecord({
+      id: 'fire-high-z',
+      title: 'Zulu',
+      score: 1009000,
+      attribute: 'FIRE',
+      level_star: 4,
+    }),
+    createRecord({
+      id: 'fire-high-a',
+      title: 'Alpha',
+      score: 1009000,
+      attribute: 'FIRE',
+      level_star: 4,
+    }),
     createRecord({ id: 'air', score: 1009000, attribute: 'AIR', level_star: 1 }),
     createRecord({ id: 'score-high', score: 1010000, attribute: 'FIRE', level_star: 1 }),
   ]
@@ -133,7 +130,7 @@ test("WORLD'S ENDの複数ソートは前の条件が同値の場合に次の条
   ).map((record) => record.id)
 
   // Then
-  assert.deepEqual(result, ['score-high', 'air', 'fire-high', 'fire-low'])
+  assert.deepEqual(result, ['score-high', 'air', 'fire-high-a', 'fire-high-z', 'fire-low'])
 })
 
 test("WORLD'S ENDのスコアソートは昇順でも未プレイを末尾に寄せる", () => {

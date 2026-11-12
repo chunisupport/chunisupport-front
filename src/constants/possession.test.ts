@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  DEFAULT_POSSESSION_NAME,
-  getPossessionClassName,
-  isPossessionName,
-  POSSESSION_CLASS_NAMES,
-  POSSESSION_NAMES,
-} from './possession'
+import { getPossessionClassName, isPossessionName, POSSESSION_NAMES } from './possession'
 
 test('ポゼッション名の正規値をすべて受け入れる', () => {
   // Given: APIが返すポゼッション名。
@@ -25,23 +19,22 @@ test('未知のポゼッション名は拒否する', () => {
   assert.equal(isPossessionName(''), false)
 })
 
-test('未指定時の既定ポゼッション名はnormalである', () => {
-  // Given / When / Then
-  assert.equal(DEFAULT_POSSESSION_NAME, 'normal')
-})
+for (const [name, expectedClass] of [
+  ['silver', 'user-nameplate--colored user-nameplate--silver'],
+  ['gold', 'user-nameplate--colored user-nameplate--gold'],
+  ['platina', 'user-nameplate--colored user-nameplate--platina'],
+  ['rainbow', 'user-nameplate--colored user-nameplate--rainbow'],
+]) {
+  test(`${name}のポゼッション名を対応する背景クラス名へ変換する`, () => {
+    // Given: 着色対象のポゼッション名。
 
-test('着色するポゼッション名を背景のCSSクラス名へ変換する', () => {
-  // Given: normal 以外の正規ポゼッション名。
+    // When: 背景クラス名へ変換する。
+    const result = getPossessionClassName(name)
 
-  // When / Then: 着色クラスと個別クラスを返す。
-  for (const name of POSSESSION_NAMES) {
-    if (name === DEFAULT_POSSESSION_NAME) continue
-    assert.equal(
-      getPossessionClassName(name),
-      `user-nameplate--colored ${POSSESSION_CLASS_NAMES[name]}`
-    )
-  }
-})
+    // Then: 指定したポゼッション固有の背景クラスを返す。
+    assert.equal(result, expectedClass)
+  })
+}
 
 test('normalと未知のポゼッション名は背景クラス名を付けない', () => {
   // Given: 既定値とマスタに存在しない名称。

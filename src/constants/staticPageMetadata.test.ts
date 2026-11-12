@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { CHART_STATS_PATH, SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
+import { SONGS_PATH, WORLDSEND_SONGS_PATH } from './routes'
 import { STATIC_PAGE_METADATA } from './staticPageMetadata'
 import { isPublicToolLink, TOOL_LINKS } from './tools'
 
@@ -23,9 +23,18 @@ test('公開ツールを固定ページ生成対象に含めること', () => {
   // Given
   const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
 
-  // When & Then
+  // When
+  const publicTools = TOOL_LINKS.filter(isPublicToolLink)
+
+  // Then: 公開ツールのメタ情報を収録し、非公開ツールは収録しない。
   for (const tool of TOOL_LINKS) {
     assert.equal(generatedPaths.has(tool.href), isPublicToolLink(tool))
+  }
+  for (const tool of publicTools) {
+    assert.deepEqual(
+      STATIC_PAGE_METADATA.find((page) => page.path === tool.href),
+      { path: tool.href, title: tool.title, description: tool.description }
+    )
   }
 })
 
@@ -36,15 +45,4 @@ test('楽曲一覧の固定ページを生成対象に含めること', () => {
   // When & Then
   assert.equal(generatedPaths.has(SONGS_PATH), true)
   assert.equal(generatedPaths.has(WORLDSEND_SONGS_PATH), true)
-})
-
-test('レコード統計は公開ツールとして固定ページを生成すること', () => {
-  // Given
-  const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))
-  const chartStats = TOOL_LINKS.find((tool) => tool.href === CHART_STATS_PATH)
-
-  // When & Then
-  assert.ok(chartStats)
-  assert.equal(generatedPaths.has(CHART_STATS_PATH), true)
-  assert.equal(isPublicToolLink(chartStats), true)
 })

@@ -188,71 +188,53 @@ test('既定のアクセントカラーを背景テーマとは独立して適�
   }
 })
 
-test('保存済みのオレンジアクセントを読み取って適用する', () => {
-  const previousWindow = globalThis.window
-  const previousDocument = globalThis.document
-  const documentElement = { dataset: {} as Record<string, string> }
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'orange',
-      },
-    },
-  })
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { documentElement },
-  })
+for (const { label, accent } of [
+  { label: 'オレンジ', accent: 'orange' },
+  { label: 'バイオレット', accent: 'violet' },
+  { label: 'ブルー', accent: 'blue' },
+]) {
+  test(`保存済みの${label}アクセントを読み取って適用する`, () => {
+    // Given: 選択したアクセントが保存された環境。
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
+    const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document')
+    const documentElement = { dataset: {} as Record<string, string> }
 
-  try {
-    assert.equal(readAccentPreference(), 'orange')
-    assert.equal(applyInitialAccent(), 'orange')
-    assert.equal(documentElement.dataset.accent, 'orange')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-    Object.defineProperty(globalThis, 'document', {
-      configurable: true,
-      value: previousDocument,
-    })
-  }
-})
+    try {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: {
+          localStorage: {
+            getItem: () => accent,
+          },
+        },
+      })
+      Object.defineProperty(globalThis, 'document', {
+        configurable: true,
+        value: { documentElement },
+      })
 
-test('保存済みのバイオレットアクセントを読み取って適用する', () => {
-  const previousWindow = globalThis.window
-  const previousDocument = globalThis.document
-  const documentElement = { dataset: {} as Record<string, string> }
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'violet',
-      },
-    },
-  })
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { documentElement },
-  })
+      // When: 保存済みの設定を読み取り、初期アクセントを適用する。
+      const preference = readAccentPreference()
+      const appliedAccent = applyInitialAccent()
 
-  try {
-    assert.equal(readAccentPreference(), 'violet')
-    assert.equal(applyInitialAccent(), 'violet')
-    assert.equal(documentElement.dataset.accent, 'violet')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-    Object.defineProperty(globalThis, 'document', {
-      configurable: true,
-      value: previousDocument,
-    })
-  }
-})
+      // Then: 保存した色を読み取り、ルート要素にも同じ色を適用する。
+      assert.equal(preference, accent)
+      assert.equal(appliedAccent, accent)
+      assert.equal(documentElement.dataset.accent, accent)
+    } finally {
+      if (previousWindow) {
+        Object.defineProperty(globalThis, 'window', previousWindow)
+      } else {
+        Reflect.deleteProperty(globalThis, 'window')
+      }
+      if (previousDocument) {
+        Object.defineProperty(globalThis, 'document', previousDocument)
+      } else {
+        Reflect.deleteProperty(globalThis, 'document')
+      }
+    }
+  })
+}
 
 test('保存済みのスカイブルーアクセントを読み取って適用する', () => {
   let savedValue: string | null = null
@@ -281,39 +263,6 @@ test('保存済みのスカイブルーアクセントを読み取って適用�
     assert.equal(readAccentPreference(), 'sky-blue')
     assert.equal(applyInitialAccent(), 'sky-blue')
     assert.equal(documentElement.dataset.accent, 'sky-blue')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-    Object.defineProperty(globalThis, 'document', {
-      configurable: true,
-      value: previousDocument,
-    })
-  }
-})
-
-test('保存済みのブルーアクセントを読み取って適用する', () => {
-  const previousWindow = globalThis.window
-  const previousDocument = globalThis.document
-  const documentElement = { dataset: {} as Record<string, string> }
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'blue',
-      },
-    },
-  })
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { documentElement },
-  })
-
-  try {
-    assert.equal(readAccentPreference(), 'blue')
-    assert.equal(applyInitialAccent(), 'blue')
-    assert.equal(documentElement.dataset.accent, 'blue')
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,

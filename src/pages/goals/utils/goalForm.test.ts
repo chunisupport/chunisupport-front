@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
-import { buildGoalPayload, formatGoalAttributesLabel, formatGoalTypeLabel } from './goalForm'
+import {
+  buildGoalPayload,
+  formatGoalAttributesLabel,
+  resolveGoalAchievementTypeLabel,
+} from './goalForm'
 
 const MASTER_DATA: MasterDataDTO = {
   difficulties: [
@@ -48,9 +52,27 @@ test('保存用ペイロードは実数値と割合の反転フラグを独立�
   assert.equal('invert' in result, false)
 })
 
-test('FULL CHAIN目標種別を日本語ラベルへ変換する', () => {
-  // Given / When / Then
-  assert.equal(formatGoalTypeLabel('fullchain_count'), 'FULL CHAIN達成数')
+test('未知の目標種別は代替ラベルの指定がなければコードを表示する', () => {
+  // Given: 表示名が登録されていない目標種別。
+  const code = 'unknown_goal_type'
+
+  // When: 代替ラベルを指定せずに表示名を解決する。
+  const result = resolveGoalAchievementTypeLabel(code)
+
+  // Then: 未知のコードをそのまま表示する。
+  assert.equal(result, 'unknown_goal_type')
+})
+
+test('未知の目標種別は明示された代替ラベルを表示する', () => {
+  // Given: 表示名が登録されていない目標種別と代替ラベル。
+  const code = 'unknown_goal_type'
+  const options = { fallbackLabel: '未対応の目標' }
+
+  // When: 代替ラベルを指定して表示名を解決する。
+  const result = resolveGoalAchievementTypeLabel(code, options)
+
+  // Then: コードではなく代替ラベルを表示する。
+  assert.equal(result, '未対応の目標')
 })
 
 test('空配列の条件は対象譜面なしとして表示する', () => {

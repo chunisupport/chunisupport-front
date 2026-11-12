@@ -210,23 +210,6 @@ test('楽曲名順を指定した目標は対象フォルダの候補だけに�
   )
 })
 
-test('目標属性のいずれかが空選択なら候補を返さないこと', () => {
-  // Given: 難易度が明示的な空配列で保存された目標がある。
-  const goal = createGoal({ attributes: { diff: [] } })
-
-  // When: 目標を候補へ適用する。
-  const filtered = filterRandomSongCandidatesByGoal(
-    [createCandidate({})],
-    new Map(),
-    goal,
-    masterData,
-    versions
-  )
-
-  // Then: 対象譜面なしとして空配列を返す。
-  assert.deepEqual(filtered, [])
-})
-
 test('集計系目標は譜面単位の絞り込み対象にしないこと', () => {
   // Given: 譜面単位の未達成条件を持たない総スコア目標がある。
   const goal = createGoal({

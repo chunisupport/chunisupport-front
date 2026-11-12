@@ -76,6 +76,35 @@ test('未挑戦の同点を除き、双方が挑戦した譜面だけを絞り�
   )
 })
 
+for (const { label, filter, expectedIds } of [
+  { label: '自分の勝ち', filter: 'SELF_WIN', expectedIds: ['selfWin'] },
+  { label: '引き分け', filter: 'DRAW', expectedIds: ['draw'] },
+  { label: '相手の勝ち', filter: 'FRIEND_WIN', expectedIds: ['friendWin'] },
+] as const) {
+  for (const excludeUnplayed of [false, true]) {
+    test(`${label}を指定すると該当する対戦済みの行だけが残る（未プレイ除外: ${excludeUnplayed}）`, () => {
+      // Given: 各勝敗と、片方または双方が未プレイの比較行。
+      const items = [
+        item('unplayed', 0, false, false),
+        item('selfOnly', 100, true, false),
+        item('friendOnly', -100, false, true),
+        item('selfWin', 100, true, true),
+        item('draw', 0, true, true),
+        item('friendWin', -100, true, true),
+      ]
+
+      // When: 勝敗を指定して比較行を絞り込む。
+      const result = filterFriendVsItems(items, filter, excludeUnplayed)
+
+      // Then: 指定した勝敗の対戦済み行が残り、それ以外は含まれない。
+      assert.deepEqual(
+        result.map((row) => row.song.id),
+        expectedIds
+      )
+    })
+  }
+}
+
 test('双方が挑戦した譜面だけを対戦結果として数える', () => {
   // Given: 双方未挑戦と片方のみ挑戦した譜面も含む。
   const items = [

@@ -3,23 +3,27 @@ import test from 'node:test'
 
 import { nextSortState, parseSortQuery, sanitizeSortQuery } from './sortingQuery.ts'
 
-test('STANDARD: クエリあり初期表示は指定ソートを使う', () => {
-  const result = parseSortQuery(
-    { sortcol: 'score', sortorder: 'asc' },
-    { score: 'score', rating: 'rating' } as const,
-    { sortKey: 'rating', sortDirection: 'desc' }
-  )
+test('対応表と同名の列は指定されたソート方向で使う', () => {
+  // Given: 列名とソートキーが同じ対応表と既定ソート。
+  const sortColMap = { score: 'score', rating: 'rating' } as const
+  const fallback = { sortKey: 'rating', sortDirection: 'desc' } as const
 
+  // When: 対応表にある列の昇順を指定する。
+  const result = parseSortQuery({ sortcol: 'score', sortorder: 'asc' }, sortColMap, fallback)
+
+  // Then: 指定された列と昇順を使う。
   assert.deepEqual(result, { sortKey: 'score', sortDirection: 'asc' })
 })
 
-test("WORLD'S END: クエリあり初期表示は指定ソートを使う", () => {
-  const result = parseSortQuery(
-    { sortcol: 'updated_at', sortorder: 'desc' },
-    { score: 'score', updated_at: 'updatedAt' } as const,
-    { sortKey: 'score', sortDirection: 'desc' }
-  )
+test('対応表で名前が変わる列は変換後のキーで指定ソートを使う', () => {
+  // Given: クエリの列名と画面内のソートキーが異なる対応表。
+  const sortColMap = { score: 'score', updated_at: 'updatedAt' } as const
+  const fallback = { sortKey: 'score', sortDirection: 'desc' } as const
 
+  // When: クエリ上の列名で降順を指定する。
+  const result = parseSortQuery({ sortcol: 'updated_at', sortorder: 'desc' }, sortColMap, fallback)
+
+  // Then: 画面内のキーへ変換し、指定された降順を使う。
   assert.deepEqual(result, { sortKey: 'updatedAt', sortDirection: 'desc' })
 })
 
@@ -45,30 +49,8 @@ test('対応表の自前プロパティでない sortcol は既定ソートへ�
 
     // Then: 関数やオブジェクトを通さず、各画面の既定ソートを返す
     assert.deepEqual(normalRecordResult, normalRecordFallback)
-    assert.equal(typeof normalRecordResult.sortKey, 'string')
     assert.deepEqual(worldsendResult, worldsendFallback)
-    assert.equal(typeof worldsendResult.sortKey, 'string')
   }
-})
-
-test('対応表の自前プロパティである sortcol は指定ソートを使う', () => {
-  // Given
-  const sortColMap = { score: 'score', rating: 'rating', updated_at: 'updatedAt' } as const
-  const fallback = { sortKey: 'rating', sortDirection: 'desc' } as const
-
-  // When
-  const sameNameKey = parseSortQuery({ sortcol: 'score', sortorder: 'asc' }, sortColMap, fallback)
-  const renamedKey = parseSortQuery(
-    { sortcol: 'updated_at', sortorder: 'desc' },
-    sortColMap,
-    fallback
-  )
-
-  // Then
-  assert.deepEqual(sameNameKey, { sortKey: 'score', sortDirection: 'asc' })
-  assert.equal(typeof sameNameKey.sortKey, 'string')
-  assert.deepEqual(renamedKey, { sortKey: 'updatedAt', sortDirection: 'desc' })
-  assert.equal(typeof renamedKey.sortKey, 'string')
 })
 
 test('1列を3回クリックすると asc -> desc -> 解除 になる', () => {

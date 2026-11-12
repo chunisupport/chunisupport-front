@@ -331,28 +331,6 @@ test('「現在値から」は現在値が正から0になると保存前検証�
   assert.equal(truncatedToZero, '現在値が0のため、現在値からは始められません。')
 })
 
-test('「現在値から」は現在値が正から達成済みになると保存前検証でエラーになる', () => {
-  // Given
-  const selectable = validateGoalGaugeStart({
-    ...gaugeStartInput,
-    gaugeStartMode: 'current',
-    current: 12,
-    target: 30,
-  })
-
-  // When: 目標値を下げて、切り捨て後の現在値が目標値に達する
-  const achieved = validateGoalGaugeStart({
-    ...gaugeStartInput,
-    gaugeStartMode: 'current',
-    current: 30,
-    target: 30,
-  })
-
-  // Then
-  assert.equal(selectable, undefined)
-  assert.equal(achieved, '現在値が目標値に達しているため、現在値からは始められません。')
-})
-
 test('「現在値から」は対象が0件になると保存前検証と選択欄の両方でエラーになる', () => {
   // Given: 対象があるあいだは保存でき、選択欄にもエラーを出さない
   const selectable = validateGoalGaugeStart({

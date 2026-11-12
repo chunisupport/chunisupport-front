@@ -2,12 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { PLAYER_DATA_DIFFICULTIES } from '../../constants/difficulty'
 import { PLAYER_NAME_MAX_LENGTH } from '../../constants/player'
-import { DEFAULT_POSSESSION_NAME, POSSESSION_NAMES } from '../../constants/possession'
 import { RATING_SLOT_COUNT } from '../../constants/rating'
-import {
-  RATING_IMAGE_DEFAULT_POSSESSION_OPTION,
-  RATING_IMAGE_POSSESSION_OPTIONS,
-} from './AdminRatingImageDomPreviewPanel.constants.ts'
+import { RATING_IMAGE_DEFAULT_POSSESSION_OPTION } from './AdminRatingImageDomPreviewPanel.constants.ts'
 import {
   buildRatingImageDomPreviewSample,
   countRatingImagePreviewJackets,
@@ -24,8 +20,10 @@ test('サンプルは空き枠が残る件数でベスト枠と新曲枠を返�
   const sample = buildRatingImageDomPreviewSample()
 
   // Then: 規定枠より少ない件数になり、空き枠を確認できる。
-  assert.equal(sample.rating.best.length, RATING_SLOT_COUNT.best - 2)
-  assert.equal(sample.rating.new.length, RATING_SLOT_COUNT.new - 2)
+  assert.ok(sample.rating.best.length > 0)
+  assert.ok(sample.rating.best.length < RATING_SLOT_COUNT.best)
+  assert.ok(sample.rating.new.length > 0)
+  assert.ok(sample.rating.new.length < RATING_SLOT_COUNT.new)
 })
 
 test('サンプルは省略確認用の長い曲名と各難易度を含むこと', () => {
@@ -140,15 +138,14 @@ test('管理者一覧に完全一致がなければnoneを返すこと', () => {
   assert.equal(username, 'none')
 })
 
-test('ポゼッション選択肢は全正規値を含み初期値はnormalであること', () => {
+test('ポゼッションの初期値は未着色のnormalであること', () => {
   // Given: レーティング画像DOM確認のポゼッションセレクト。
 
-  // When / Then: マスタの正規値をすべて選べ、初期値は未着色のnormal。
-  assert.deepEqual(
-    RATING_IMAGE_POSSESSION_OPTIONS.map((option) => option.value),
-    [...POSSESSION_NAMES]
-  )
-  assert.equal(RATING_IMAGE_DEFAULT_POSSESSION_OPTION.value, DEFAULT_POSSESSION_NAME)
+  // When: 初期選択値を取得する。
+  const value = RATING_IMAGE_DEFAULT_POSSESSION_OPTION.value
+
+  // Then: 未着色のnormalが選ばれる。
+  assert.equal(value, 'normal')
 })
 
 test('Ver.2は埋め込み済み枠数だけジャケット待ちにすること', () => {

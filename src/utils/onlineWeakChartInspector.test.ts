@@ -228,10 +228,11 @@ test('通常難易度の平均スコア取得難易度は選択順ではなく�
 })
 
 test('Onlineのジャンルとバージョンは表示時の属性フィルタとして適用する', () => {
-  // Given: 比較結果と楽曲マスタ由来の属性。
+  // Given: 両条件一致、ジャンルだけ不一致、バージョンだけ不一致、属性不明の譜面。
   const entries = [
     { record: record({ id: 'song-p', const: 14 }), averageScore: 1000000, difference: 0 },
-    { record: record({ id: 'song-v', const: 14 }), averageScore: 1000000, difference: 0 },
+    { record: record({ id: 'genre-mismatch', const: 14 }), averageScore: 1000000, difference: 0 },
+    { record: record({ id: 'version-mismatch', const: 14 }), averageScore: 1000000, difference: 0 },
     {
       record: record({ id: 'song-unknown', const: 14 }),
       averageScore: 1000000,
@@ -240,7 +241,8 @@ test('Onlineのジャンルとバージョンは表示時の属性フィルタ�
   ]
   const attributesBySongId = new Map([
     ['song-p', { genre: 'POPS & ANIME', version: 'CHUNITHM', nameFolder: 'A' }],
-    ['song-v', { genre: 'niconico', version: 'CHUNITHM', nameFolder: 'KA' }],
+    ['genre-mismatch', { genre: 'niconico', version: 'CHUNITHM', nameFolder: 'KA' }],
+    ['version-mismatch', { genre: 'POPS & ANIME', version: 'CHUNITHM PLUS', nameFolder: 'A' }],
   ])
 
   // When: ジャンルとバージョンを指定して表示対象を絞る。
@@ -257,7 +259,7 @@ test('Onlineのジャンルとバージョンは表示時の属性フィルタ�
     attributesBySongId
   )
 
-  // Then: 両方の属性に一致する譜面だけが残る。
+  // Then: 片方だけの不一致もそれぞれ除外され、両条件に一致する譜面だけが残る。
   assert.deepEqual(result, [entries[0]])
 })
 
