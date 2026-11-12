@@ -213,3 +213,22 @@ test('残数と割合は対象楽曲数から既存の件数目標と同様に�
   assert.equal(remainingResult.targetCount, 3)
   assert.equal(percentResult.target, 2)
 })
+
+test('対象楽曲の必須譜面をすべてAJにした虹枠目標は達成として扱う', () => {
+  // Given
+  const songs = [createSong()]
+  const records = [
+    createRecord('song-1', 'BASIC', 'ALL JUSTICE'),
+    createRecord('song-1', 'ADVANCED', 'ALL JUSTICE'),
+    createRecord('song-1', 'EXPERT', 'ALL JUSTICE'),
+    createRecord('song-1', 'MASTER', 'ALL JUSTICE'),
+  ]
+
+  // When
+  const result = calculateRainbowGoalProgress(createGoal({}), songs, records)
+
+  // Then
+  assert.equal(result.current, 1)
+  assert.equal(result.target, 1)
+  assert.equal(result.achieved, true)
+})

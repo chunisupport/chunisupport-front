@@ -105,6 +105,84 @@ test('単曲レート入力の変更に応じて到達可能譜面数を再解�
   assert.equal(rating1795Count, 2)
 })
 
+test('単曲レート未指定では到達可能な全譜面を数える', () => {
+  // Given
+  const data = {
+    username: 'player',
+    noPlayerData: false,
+    goals: [],
+    groups: [],
+    songs: [],
+    masterData: {
+      difficulties: [],
+      genres: [],
+      versions: [],
+      name_folders: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+      possessions: [],
+    },
+    versions: [],
+    records: [createRecord({ id: '15.8', const: 15.8 }), createRecord({ id: '15.9', const: 15.9 })],
+    lockedSongs: [],
+  } satisfies GoalsListData
+
+  // When
+  const result = resolveGoalAllCount(data, {}, 'rating_count')
+
+  // Then
+  assert.equal(result, 2)
+})
+
+test('虹枠の下書き進捗は対象楽曲数で計算する', () => {
+  // Given
+  const data = {
+    username: 'player',
+    noPlayerData: false,
+    goals: [],
+    groups: [],
+    songs: [],
+    masterData: {
+      difficulties: [],
+      genres: [],
+      versions: [],
+      name_folders: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+      possessions: [],
+    },
+    versions: [],
+    records: [createRecord({ id: 'song-1' })],
+    lockedSongs: [],
+  } satisfies GoalsListData
+  const draftGoal = {
+    group_id: null,
+    title: '虹枠の下書き',
+    achievement_type: 'rainbow_count',
+    achievement_params: { count: 1 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+  } satisfies GoalCreateRequest
+
+  // When
+  const result = resolveDraftGoalProgress(data, draftGoal)
+
+  // Then
+  assert.deepEqual(result, {
+    current: 0,
+    target: 1,
+    percent: 0,
+    achieved: false,
+    targetCount: 0,
+    hasUnknownMaxOp: false,
+  })
+})
+
 test('同じ対象条件の目標が複数あっても、目標ごとの成果パラメータで進捗を計算する', () => {
   // Given: MASTERの2譜面とEXPERTの1譜面があり、同じ条件の目標2件と別条件の目標1件がある。
   /**

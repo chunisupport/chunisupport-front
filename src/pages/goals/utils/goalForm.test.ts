@@ -187,3 +187,36 @@ test('レベル指定でもレベル境界と一致しない定数範囲は譜�
   // Then
   assert.equal(result, '定数: 13.7 ～ 14.2')
 })
+
+test('OP対象では難易度条件を表示しないこと', () => {
+  // Given: OP対象と難易度条件を両方指定した目標条件
+  const attributes = { chart_target: 'OP_TARGET' as const, diff: [1] }
+
+  // When: 条件ラベルへ変換する
+  const result = formatGoalAttributesLabel(attributes, MASTER_DATA, VERSIONS)
+
+  // Then: OP対象だけを表示し難易度は重ねて表示しない
+  assert.equal(result, '対象: OP対象')
+})
+
+test('定数の下限だけが指定された場合も譜面定数で表示すること', () => {
+  // Given: 下限だけを持つ定数条件
+  const attributes = { const: { min: 14 } }
+
+  // When: 条件ラベルへ変換する
+  const result = formatGoalAttributesLabel(attributes, MASTER_DATA, VERSIONS)
+
+  // Then: 未指定の上限をハイフンで補って表示する
+  assert.equal(result, '定数: 14 ～ -')
+})
+
+test('条件が未指定の場合は条件なしと表示すること', () => {
+  // Given: 条件を何も持たない目標条件
+  const attributes = {}
+
+  // When: 条件ラベルへ変換する
+  const result = formatGoalAttributesLabel(attributes, MASTER_DATA, VERSIONS)
+
+  // Then: 全譜面が対象であることを表示する
+  assert.equal(result, '条件なし（全譜面）')
+})

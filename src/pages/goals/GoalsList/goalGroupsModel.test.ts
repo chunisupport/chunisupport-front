@@ -243,3 +243,56 @@ test('未分類の目標がない場合は削除グループの目標を順序1�
     ]
   )
 })
+
+test('存在しないグループからの移動では順序を変えない', () => {
+  // Given
+  const groups = [createGroup(10, 1), createGroup(20, 2), createGroup(30, 3)]
+
+  // When
+  const result = moveGoalGroup(groups, 999, 20)
+
+  // Then
+  assert.deepEqual(
+    result.map(({ id }) => id),
+    [10, 20, 30]
+  )
+})
+
+test('存在しないグループへの移動では順序を変えない', () => {
+  // Given
+  const groups = [createGroup(10, 1), createGroup(20, 2), createGroup(30, 3)]
+
+  // When
+  const result = moveGoalGroup(groups, 10, 999)
+
+  // Then
+  assert.deepEqual(
+    result.map(({ id }) => id),
+    [10, 20, 30]
+  )
+})
+
+test('先頭グループへの移動では先頭へ挿入する', () => {
+  // Given
+  const groups = [createGroup(10, 1), createGroup(20, 2), createGroup(30, 3)]
+
+  // When
+  const result = moveGoalGroup(groups, 30, 10)
+
+  // Then
+  assert.deepEqual(
+    result.map(({ id }) => id),
+    [30, 10, 20]
+  )
+})
+
+test('グループ名が30文字ちょうどの場合は受け入れる', () => {
+  // Given
+  const groups = [createGroup(10, 1)]
+
+  // When
+  const result = validateGoalGroupName('abcdefghijabcdefghijabcdefghij', groups)
+
+  // Then
+  assert.equal(result, '')
+})

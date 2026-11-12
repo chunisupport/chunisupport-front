@@ -406,6 +406,34 @@ test('楽曲名順が空配列の目標ではレコード遷移を無効にす�
   assert.deepEqual(filter.nameFolders, [])
 })
 
+test('有効なハードランプ値の目標はレコード遷移できる', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'ABS', count: 1 },
+  })
+
+  // When
+  const enabled = isGoalRecordNavigationEnabled(goal)
+
+  // Then
+  assert.equal(enabled, true)
+})
+
+test('有効なコンボランプ値の目標はレコード遷移できる', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'AJ', count: 1 },
+  })
+
+  // When
+  const enabled = isGoalRecordNavigationEnabled(goal)
+
+  // Then
+  assert.equal(enabled, true)
+})
+
 test('OP対象目標ではOP理論値対象を固定した通常レコードフィルターへ遷移できる', () => {
   // Given
   const goal = createGoal({

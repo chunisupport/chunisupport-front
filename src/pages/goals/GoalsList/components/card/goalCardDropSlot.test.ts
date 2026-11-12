@@ -48,3 +48,15 @@ test('高さが同じカード同士では移動先カードの位置にその�
   // Then
   assert.equal(offset, target.top - source.top)
 })
+
+test('上端が同じ位置の場合は上端にそろえてずれが 0 になること', () => {
+  // Given: 上端は同じで高さだけが異なる移動先
+  const source = { top: 100, bottom: 200 }
+  const target = { top: 100, bottom: 250 }
+
+  // When
+  const offset = computeDropSlotOffsetY(source, target)
+
+  // Then
+  assert.equal(offset, 0)
+})
