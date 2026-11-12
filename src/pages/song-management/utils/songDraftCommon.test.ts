@@ -5,6 +5,7 @@ import {
   findGenreNameById,
   formatUpdatedAt,
   hasNotesDesigner,
+  readSongNewFlag,
   toNullableTrimmedString,
   toOptionalNumberInput,
   toOptionalTextInput,
@@ -84,4 +85,12 @@ test('ジャンル名とジャンルIDを相互に解決し、未登録なら nu
   assert.equal(findGenreIdByName(genres, '未登録'), null)
   assert.equal(findGenreNameById(genres, 1), 'POPS & ANIME')
   assert.equal(findGenreNameById(genres, null), null)
+})
+
+test('新曲フラグはtrueのときだけ真になること', () => {
+  // Given: 新曲と通常曲のフラグ値。
+  // When: 編集用の真偽値へ正規化する。
+  // Then: trueのときだけ真になり、それ以外は偽になる。
+  assert.equal(readSongNewFlag({ is_new: true }), true)
+  assert.equal(readSongNewFlag({ is_new: false }), false)
 })

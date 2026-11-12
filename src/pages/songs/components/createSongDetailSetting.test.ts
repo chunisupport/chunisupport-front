@@ -197,3 +197,50 @@ assert.equal(view.setting.playerNotLinked(), false)
 view.dispose()
 `)
 })
+
+test('未ログイン中の保存は実行せずエラーを投げない', async () => {
+  await runBrowserTest(`
+// Given: 未ログインで設定が存在しない状態。
+let saves = 0
+const view = createRoot((dispose) => {
+  const [username] = createSignal(undefined)
+  const setting = createSongDetailSetting({
+    username, songId: () => 'song-a', ...messages,
+    load: async () => false,
+    save: async () => { saves++ },
+  })
+  return { dispose, setting }
+})
+await settle()
+// When: 未ログインのまま保存を試みる。
+await view.setting.save(true)
+// Then: 保存は実行されずエラーにもならない。
+assert.equal(saves, 0)
+assert.equal(view.setting.errorMessage(), undefined)
+view.dispose()
+`)
+})
+
+test('破棄後に失敗した保存のエラーを表示に反映しない', async () => {
+  await runBrowserTest(`
+// Given: 保存中の設定を破棄待ちにする。
+let failSave
+const view = createRoot((dispose) => ({
+  dispose,
+  setting: createSongDetailSetting({
+    username: () => 'alice', songId: () => 'song-a', ...messages,
+    load: async () => 'initial',
+    save: async () => { await new Promise((_, reject) => { failSave = reject }) },
+  }),
+}))
+await settle()
+const saving = view.setting.save('next')
+await settle()
+// When: 破棄後に保存が失敗する。
+view.dispose()
+failSave(new Error('network'))
+await saving
+// Then: 破棄済みのエラーを表示しない。
+assert.equal(view.setting.errorMessage(), undefined)
+`)
+})

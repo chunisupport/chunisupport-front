@@ -130,3 +130,127 @@ test("WORLD'S END楽曲のノーツ数の未設定値は末尾に寄せる", () 
     ['high', 'low', 'missing-chart', 'missing-notes']
   )
 })
+
+test('属性のnull欠損は昇順でも末尾に寄せる', () => {
+  // Given: 属性がnullの楽曲と改の楽曲を、欠損が後ろになる入力順で用意する
+  const songs = [
+    createSong({
+      id: 'present',
+      charts: { WORLDSEND: { attribute: '改', level_star: 1, notes: 100 } },
+    }),
+    createSong({
+      id: 'missing',
+      charts: { WORLDSEND: { attribute: null, level_star: 1, notes: 100 } },
+    }),
+  ]
+
+  // When: 属性の昇順でソートする
+  const result = sortWorldsendSongs(songs, 'attribute', 'asc').map((song) => song.id)
+
+  // Then: null欠損は末尾に寄る
+  assert.deepEqual(result, ['present', 'missing'])
+})
+
+test('属性の空文字欠損は昇順でも末尾に寄せる', () => {
+  // Given: 属性が空文字の楽曲と改の楽曲を、欠損が後ろになる入力順で用意する
+  const songs = [
+    createSong({
+      id: 'present',
+      charts: { WORLDSEND: { attribute: '改', level_star: 1, notes: 100 } },
+    }),
+    createSong({
+      id: 'missing',
+      charts: { WORLDSEND: { attribute: '', level_star: 1, notes: 100 } },
+    }),
+  ]
+
+  // When: 属性の昇順でソートする
+  const result = sortWorldsendSongs(songs, 'attribute', 'asc').map((song) => song.id)
+
+  // Then: 空文字欠損は末尾に寄る
+  assert.deepEqual(result, ['present', 'missing'])
+})
+
+test('ソート方向が未指定の場合は入力順を維持する', () => {
+  // Given: タイトル順では並んでいない3曲
+  const songs = [
+    createSong({ id: 'b', title: '愛', reading: 'ラブ' }),
+    createSong({ id: 'a', title: '空', reading: 'ソラ' }),
+    createSong({ id: 'c', title: '林檎', reading: 'リンゴ' }),
+  ]
+
+  // When: ソート方向なしでソートする
+  const result = sortWorldsendSongs(songs, 'title', null).map((song) => song.id)
+
+  // Then: 入力順のまま返る
+  assert.deepEqual(result, ['b', 'a', 'c'])
+})
+
+test('ジャンルの欠損値はマスタ外のジャンルより後に寄せる', () => {
+  // Given: マスタ外のVARIETYとジャンルnullの楽曲
+  const songs = [
+    createSong({ id: 'present', genre: 'VARIETY' }),
+    createSong({ id: 'missing', genre: null }),
+  ]
+  const genres = [{ id: 1, name: 'POPS & ANIME', sort_order: 10 }]
+
+  // When: ジャンルの昇順でソートする
+  const result = sortWorldsendSongs(songs, 'genre', 'asc', genres).map((song) => song.id)
+
+  // Then: 欠損値はマスタ外より後ろに寄る
+  assert.deepEqual(result, ['present', 'missing'])
+})
+
+test('リリース日の降順は新しい順に並び未設定値は末尾に寄せる', () => {
+  // Given: 古い日付、新しい日付、未設定をこの順で用意する
+  const songs = [
+    createSong({ id: 'old', release: '2024-01-01' }),
+    createSong({ id: 'new', release: '2024-06-01' }),
+    createSong({ id: 'missing', release: null }),
+  ]
+
+  // When: リリース日の降順でソートする
+  const result = sortWorldsendSongs(songs, 'release', 'desc').map((song) => song.id)
+
+  // Then: 新しい順に並び未設定値は末尾に寄る
+  assert.deepEqual(result, ['new', 'old', 'missing'])
+})
+
+test('BPMの降順は高い順に並び未設定値は末尾に寄せる', () => {
+  // Given: 低いBPM、高いBPM、未設定をこの順で用意する
+  const songs = [
+    createSong({ id: 'low', bpm: 90 }),
+    createSong({ id: 'high', bpm: 180 }),
+    createSong({ id: 'missing', bpm: null }),
+  ]
+
+  // When: BPMの降順でソートする
+  const result = sortWorldsendSongs(songs, 'bpm', 'desc').map((song) => song.id)
+
+  // Then: 高い順に並び未設定値は末尾に寄る
+  assert.deepEqual(result, ['high', 'low', 'missing'])
+})
+
+test('属性の降順は逆順に並び未設定値は末尾に寄せる', () => {
+  // Given: 改、狂、属性nullをこの順で用意する
+  const songs = [
+    createSong({
+      id: 'kae',
+      charts: { WORLDSEND: { attribute: '改', level_star: 1, notes: 100 } },
+    }),
+    createSong({
+      id: 'kyou',
+      charts: { WORLDSEND: { attribute: '狂', level_star: 1, notes: 100 } },
+    }),
+    createSong({
+      id: 'missing',
+      charts: { WORLDSEND: { attribute: null, level_star: 1, notes: 100 } },
+    }),
+  ]
+
+  // When: 属性の降順でソートする
+  const result = sortWorldsendSongs(songs, 'attribute', 'desc').map((song) => song.id)
+
+  // Then: 逆順に並び未設定値は末尾に寄る
+  assert.deepEqual(result, ['kyou', 'kae', 'missing'])
+})

@@ -213,3 +213,27 @@ test('WORLD’S ENDと未解決譜面には単曲メトリクスを返さない'
     null
   )
 })
+
+test('WORLD’S ENDは難易度によらずソート対象外にすること', () => {
+  // Given: 通常難易度を持つWORLD’S END差分と対応する通常楽曲マスタ。
+  const change = { ...worldsendChange, diff: 'MASTER' as const }
+  const standardSongs = [{ ...createStandardSong(), official_idx: 'worldsend-idx' }]
+
+  // When: ソート用の値を解決する。
+  const result = resolveRegisterScoreSongSortValues(change, standardSongs)
+
+  // Then: レコード種別だけでソート対象外になる。
+  assert.deepEqual(result, { level: null, singleRating: null })
+})
+
+test('WORLD’S ENDは難易度によらず単曲メトリクスを返さないこと', () => {
+  // Given: 通常難易度を持つWORLD’S END差分と対応する通常楽曲マスタ。
+  const change = { ...worldsendChange, diff: 'MASTER' as const }
+  const standardSongs = [{ ...createStandardSong(), official_idx: 'worldsend-idx' }]
+
+  // When: 単曲メトリクスを解決する。
+  const result = resolveRegisterScoreSongMetrics(change, standardSongs)
+
+  // Then: レコード種別だけで対象外になる。
+  assert.equal(result, null)
+})

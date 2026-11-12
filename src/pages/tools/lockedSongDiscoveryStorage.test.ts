@@ -118,6 +118,20 @@ test('localStorageの読み書きが失敗しても例外を外に投げない',
   assert.doesNotThrow(() => saveLockedSongObservations('alice', {}))
 })
 
+test('配列形式の保存値は中身にかかわらず空の入力値として扱う', () => {
+  // Given: 有効な入力形状を持つ要素を含む配列の保存値。
+  stored.set(
+    `${LOCKED_SONG_DISCOVERY_OBSERVATIONS_STORAGE_PREFIX}alice`,
+    JSON.stringify([{ overPower: '12', percent: '34' }])
+  )
+
+  // When
+  const result = readLockedSongObservations('alice')
+
+  // Then: オブジェクト形式以外は空の入力値にする。
+  assert.deepEqual(result, {})
+})
+
 for (const { axis, expected } of [
   {
     axis: 'genre',

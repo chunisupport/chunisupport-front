@@ -260,3 +260,79 @@ test('追加リクエストは要解禁フラグを送ること', () => {
   if (!result.ok) return
   assert.equal(result.request.unlock_required, true)
 })
+
+test('追加リクエストは公式IDだけが空でも必須エラーを返すこと', () => {
+  // Given: 公式IDだけが未入力の追加ドラフト。
+  const draft = { ...validCreateDraft(), official_idx: '' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: 必須エラーを返す。
+  assert.deepEqual(result, { ok: false, message: '公式ID・タイトル・アーティストは必須です。' })
+})
+
+test('追加リクエストは公式IDが10文字なら受け付けること', () => {
+  // Given: 公式IDが上限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), official_idx: '1234567890' }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: 長さエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.official_idx, '1234567890')
+})
+
+test('追加リクエストはBPMが0なら受け付けること', () => {
+  // Given: BPMが下限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), bpm: 0 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: BPMエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.bpm, 0)
+})
+
+test('追加リクエストは星数が下限の1なら受け付けること', () => {
+  // Given: 星数が下限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), level_star: 1 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: レベルエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.chart?.level_star, 1)
+})
+
+test('追加リクエストは星数が上限の5なら受け付けること', () => {
+  // Given: 星数が上限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), level_star: 5 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: レベルエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.chart?.level_star, 5)
+})
+
+test('追加リクエストはノーツが0なら受け付けること', () => {
+  // Given: ノーツが下限ちょうどの追加ドラフト。
+  const draft = { ...validCreateDraft(), notes: 0 }
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateWorldsendSongRequest(draft, genres)
+
+  // Then: ノーツエラーを返さず受け付ける。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.chart?.notes, 0)
+})

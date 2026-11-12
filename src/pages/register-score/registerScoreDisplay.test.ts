@@ -359,3 +359,47 @@ test('解釈できない登録日時はプレースホルダーを表示する�
   // Then
   assert.equal(result, REGISTER_SCORE_NO_DATA_TEXT)
 })
+
+test('フルチェインのプラチナも表示対応値として残すこと', () => {
+  // Given: 小文字のプラチナフルチェイン。
+  const state = createRecordState({ full_chain: 'full chain platinum' })
+
+  // When: ランプ表示用に変換する。
+  const result = toRegisterScoreLampRecord(state)
+
+  // Then: 大文字のプラチナとして残る。
+  assert.equal(result.full_chain, 'FULL CHAIN PLATINUM')
+})
+
+test('未対応のクリアランプは表示しないこと', () => {
+  // Given: 未対応のクリアランプ。
+  const state = createRecordState({ clear_lamp: 'unknown lamp' })
+
+  // When: ランプ表示用に変換する。
+  const result = toRegisterScoreLampRecord(state)
+
+  // Then: クリアランプは持たない。
+  assert.equal(result.clear_lamp, null)
+})
+
+test('未対応のフルチェインは表示しないこと', () => {
+  // Given: 未対応のフルチェイン。
+  const state = createRecordState({ full_chain: 'unknown chain' })
+
+  // When: ランプ表示用に変換する。
+  const result = toRegisterScoreLampRecord(state)
+
+  // Then: フルチェインは持たない。
+  assert.equal(result.full_chain, null)
+})
+
+test('星数レベルが未設定の場合は表示しないこと', () => {
+  // Given: 未設定の星数レベル。
+  const levelStars = [null, undefined]
+
+  // When: レポート表示用に変換する。
+  const result = levelStars.map(formatWorldsendChartLevel)
+
+  // Then: いずれも未定義になる。
+  assert.deepEqual(result, [undefined, undefined])
+})

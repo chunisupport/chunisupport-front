@@ -8,6 +8,7 @@ import {
 } from '../../components/songCardLayout.constants.ts'
 import { SONG_CARD_DEFAULT_SORT_OPTION_ID, SONG_CARD_SORT_OPTIONS } from '../constants'
 import {
+  getAvailableSongCardWidth,
   getSongCardContentWidth,
   getSongCardGridWidth,
   resolveSongCardColumnCount,
@@ -41,6 +42,33 @@ test('狭い幅では本文幅を利用可能幅までに収めること', () =>
   // Then: 1列になり、横スクロールしない幅になる。
   assert.equal(resolveSongCardColumnCount(availableWidth), 1)
   assert.equal(contentWidth, availableWidth)
+})
+
+test('document がない環境では利用可能幅が0になること', () => {
+  // Given: Node.js 実行環境（document 未定義）。
+  // When: メイン領域から使える幅を求める。
+  const result = getAvailableSongCardWidth()
+
+  // Then: フォールバックとして0を返す。
+  assert.equal(result, 0)
+})
+
+test('列数0のグリッド幅は0になること', () => {
+  // Given: 列数0。
+  // When: グリッド幅を求める。
+  const result = getSongCardGridWidth(0)
+
+  // Then: 幅は0になる。
+  assert.equal(result, 0)
+})
+
+test('利用可能幅0では1列分のグリッド幅を返すこと', () => {
+  // Given: 利用可能幅0。
+  // When: 本文幅を求める。
+  const result = getSongCardContentWidth(0)
+
+  // Then: 1列分のカード幅になる。
+  assert.equal(result, 430.25)
 })
 
 test('FHD本文幅では4枚分のグリッド幅が本文幅と一致すること', () => {

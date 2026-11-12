@@ -367,6 +367,109 @@ test('buildWorldsendChartMetaUpdateRequest: WORLDSEND譜面だけを更新対象
   })
 })
 
+test('parseOptionalNonNegativeInteger: 桁あふれでInfinityになる数字列はinvalidにすること', () => {
+  // Given: 数字だけだが数値範囲を超える入力。
+  const value = '9'.repeat(400)
+
+  // When
+  const result = parseOptionalNonNegativeInteger(value)
+
+  // Then: 有限な整数ではないためinvalidにする。
+  assert.equal(result, 'invalid')
+})
+
+test('parseChartMetaDrafts: 定数Infinityはエラーにすること', () => {
+  // Given: 有限ではない譜面定数。
+  const drafts = [
+    {
+      difficulty: 'MASTER',
+      const: 'Infinity',
+      is_const_unknown: false,
+      notes: '',
+      notes_designer: '',
+    },
+  ] as const
+
+  // When
+  const result = parseChartMetaDrafts(drafts)
+
+  // Then
+  assert.equal(result.ok, false)
+})
+
+test('parseChartMetaDrafts: 定数0は有効として受け付けること', () => {
+  // Given: 下限ちょうどの譜面定数。
+  const drafts = [
+    {
+      difficulty: 'MASTER',
+      const: '0',
+      is_const_unknown: false,
+      notes: '',
+      notes_designer: '',
+    },
+  ] as const
+
+  // When
+  const result = parseChartMetaDrafts(drafts)
+
+  // Then
+  assert.equal(result.ok, true)
+  if (result.ok) {
+    assert.equal(result.value.MASTER?.const, 0)
+  }
+})
+
+test('parseChartMetaDrafts: NOTES DESIGNERが100文字ちょうどは受け付けて101文字はエラーにすること', () => {
+  // Given: 境界ちょうどと1文字超過の作者名。
+  const [basicDraft] = buildChartDraftsFromSong(createSong())
+  assert.ok(basicDraft)
+  const acceptedDrafts = [{ ...basicDraft, notes_designer: 'あ'.repeat(100) }]
+  const rejectedDrafts = [{ ...basicDraft, notes_designer: 'あ'.repeat(101) }]
+
+  // When
+  const accepted = parseChartMetaDrafts(acceptedDrafts)
+  const rejected = parseChartMetaDrafts(rejectedDrafts)
+
+  // Then
+  assert.equal(accepted.ok, true)
+  assert.equal(rejected.ok, false)
+})
+
+test('parseWorldsendChartMetaEditValues: NOTES DESIGNERが100文字ちょうどは受け付けて101文字はエラーにすること', () => {
+  // Given: 境界ちょうどと1文字超過の作者名。
+  const base = { attribute: '', levelStar: '', notes: '', notesDesigner: '' }
+
+  // When
+  const accepted = parseWorldsendChartMetaEditValues({
+    ...base,
+    notesDesigner: 'あ'.repeat(100),
+  })
+  const rejected = parseWorldsendChartMetaEditValues({
+    ...base,
+    notesDesigner: 'あ'.repeat(101),
+  })
+
+  // Then
+  assert.equal(accepted.ok, true)
+  assert.equal(rejected.ok, false)
+})
+
+test('parseWorldsendChartMetaEditValues: レベル1は有効として受け付けて0はエラーにすること', () => {
+  // Given: 下限ちょうどと下限未満の星数。
+  const base = { attribute: '', notes: '', notesDesigner: '' }
+
+  // When
+  const accepted = parseWorldsendChartMetaEditValues({ ...base, levelStar: '1' })
+  const rejected = parseWorldsendChartMetaEditValues({ ...base, levelStar: '0' })
+
+  // Then
+  assert.equal(accepted.ok, true)
+  if (accepted.ok) {
+    assert.equal(accepted.value.level_star, 1)
+  }
+  assert.equal(rejected.ok, false)
+})
+
 for (const unlockRequired of [true, false]) {
   test(`要解禁フラグ${unlockRequired}をフォームから通常曲・WORLD'S ENDの更新へ反映すること`, () => {
     // Given: 要解禁フラグだけを切り替えた入力。
