@@ -521,3 +521,62 @@ test('FCHソートはなし、GOLD、PLATINUM、未プレイの順で並べる',
     ['platinum', 'gold', 'none', 'unplayed']
   )
 })
+
+test('更新日ソートは降順でも無効日付と未プレイを末尾に寄せる', () => {
+  // Given: 有効な新旧と無効日付、未プレイのレコード。
+  const records = [
+    createRecord({ id: 'older', updated_at: '2026-04-19T00:00:00Z' }),
+    createRecord({ id: 'invalid', updated_at: 'invalid-date' }),
+    createRecord({ id: 'newer', updated_at: '2026-04-20T00:00:00Z' }),
+    createRecord({ id: 'unplayed', is_played: false, updated_at: null }),
+  ]
+
+  // When: 更新日で降順にソートする。
+  const result = sortRecords(records, 'updatedAt', 'desc').map((record) => record.id)
+
+  // Then: 新しい順に並び、無効日付と未プレイは入力順のまま末尾に残る。
+  assert.deepEqual(result, ['newer', 'older', 'invalid', 'unplayed'])
+})
+
+test('J数ソートは後続のスコア条件があってもJ数なし行を末尾に寄せる', () => {
+  // Given: スコアが高いJ数なし行とスコアが低いJ数あり行。
+  const records = [
+    createRecord({
+      id: 'fc-missing',
+      combo_lamp: 'FULL COMBO',
+      justice_count: null,
+      score: 1009990,
+    }),
+    createRecord({
+      id: 'aj-present',
+      combo_lamp: 'ALL JUSTICE',
+      justice_count: 1,
+      score: 1005000,
+    }),
+  ]
+
+  // When: J数昇順の次にスコア降順で並べる。
+  const result = sortRecordsByConditions(records, [
+    { key: 'justiceCount', direction: 'asc' },
+    { key: 'score', direction: 'desc' },
+  ]).map((record) => record.id)
+
+  // Then: スコアが高くてもJ数なし行は末尾になる。
+  assert.deepEqual(result, ['aj-present', 'fc-missing'])
+})
+
+test('単一ソートはキーまたは方向が未指定なら元の配列をそのまま返す', () => {
+  // Given: スコアが異なる2件のレコード。
+  const records = [
+    createRecord({ id: 'low', score: 1005000 }),
+    createRecord({ id: 'high', score: 1008000 }),
+  ]
+
+  // When: キーまたは方向を未指定でソートする。
+  const noKey = sortRecords(records, null, 'asc')
+  const noDirection = sortRecords(records, 'score', null)
+
+  // Then: ソートせず同じ配列参照を返す。
+  assert.equal(noKey, records)
+  assert.equal(noDirection, records)
+})

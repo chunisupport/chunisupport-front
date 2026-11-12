@@ -398,3 +398,36 @@ test("WORLD'S END フィルターは楽曲名順を判定できる", () => {
   assert.equal(unknownFolderWithAll, true)
   assert.equal(clearedResult, false)
 })
+
+test("WORLD'S END フィルターはジャンル未指定ならジャンル欠損のレコードを表示する", () => {
+  // Given: ジャンルを絞らないフィルターとジャンル欠損のレコード。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+  })
+  const record = createRecord({ genre: null })
+
+  // When: ジャンル欠損のレコードを判定する。
+  const result = isWorldsendRecordMatchedWithTitleMatcher(record, filters, matcher())
+
+  // Then: ジャンル条件がないため表示する。
+  assert.equal(filters.genres.length, 0)
+  assert.equal(result, true)
+})
+
+test("WORLD'S END フィルターはJUSTICE数指定中にAJ以外のJ数ありを除外する", () => {
+  // Given: JUSTICE数範囲とFULL COMBOだけを許すフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    levelStarRange: { min: 4, max: 4 },
+    justiceCount: { min: 1, max: 3 },
+    combo_lamp: ['FULL COMBO'],
+  })
+  const record = createRecord({ combo_lamp: 'FULL COMBO', justice_count: 2 })
+
+  // When: AJ以外でJUSTICE数があるレコードを判定する。
+  const result = isWorldsendRecordMatchedWithTitleMatcher(record, filters, matcher())
+
+  // Then: JUSTICE数条件があるためAJ以外は除外する。
+  assert.equal(result, false)
+})

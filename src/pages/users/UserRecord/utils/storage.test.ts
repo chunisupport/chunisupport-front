@@ -228,3 +228,47 @@ test('toSavedFilter は旧スキーマのDTOを古くて無効な保存フィル
   assert.equal(result.filter, null)
   assert.equal(result.invalidReason, '古い形式のため無効です。')
 })
+
+test('toSavedFilter は現行スキーマでも非オブジェクトの保存値を無効にする', async () => {
+  // Given: 現行スキーマで壊れた文字列の保存値。
+  const { toSavedFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '77777777-7777-7777-7777-777777777777',
+    name: '壊れた値',
+    filter_type: 'standard',
+    schema_version: 11,
+    filter: 'broken',
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When: 保存フィルターへ変換する。
+  const result = toSavedFilter(dto)
+
+  // Then: フィルター値が壊れているため無効になる。
+  assert.equal(result.isValid, false)
+  assert.equal(result.filter, null)
+  assert.equal(result.invalidReason, '保存値が壊れているため無効です。')
+})
+
+test('toSavedFilter は無効なスキーマでは正しい形状のフィルターでも無効にする', async () => {
+  // Given: 古いスキーマで正しい形状の保存値。
+  const { toSavedFilter } = await loadStorageModule()
+  const dto: RecordFilterDTO = {
+    id: '88888888-8888-8888-8888-888888888888',
+    name: '古い有効値',
+    filter_type: 'standard',
+    schema_version: 2,
+    filter: getDefaultFilter(),
+    created_at: '2026-06-15T12:00:00Z',
+    updated_at: '2026-06-15T12:00:00Z',
+  }
+
+  // When: 保存フィルターへ変換する。
+  const result = toSavedFilter(dto)
+
+  // Then: スキーマが古いため無効になる。
+  assert.equal(result.isValid, false)
+  assert.equal(result.filter, null)
+  assert.equal(result.invalidReason, '古い形式のため無効です。')
+})

@@ -651,3 +651,32 @@ for (const { query, expected } of [
     assert.equal(requestedRecords[0], record)
   })
 }
+
+test('譜面定数フィルターは下限と上限に一致するレコードを含める', () => {
+  // Given: 下限と上限ちょうどの譜面定数のレコード。
+  const filters: FilterState = { ...getDefaultFilter(), const: { min: 14.6, max: 14.8 } }
+
+  // When / Then: 境界値は除外せず残す。
+  assert.equal(isRecordMatched(createRecord({ const: 14.6 }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ const: 14.8 }), filters), true)
+})
+
+test('JUSTICE数フィルターは上限に一致するレコードを含める', () => {
+  // Given: 上限と同じJUSTICE数のAJレコード。
+  const filters: FilterState = { ...getDefaultFilter(), justiceCount: { min: 10, max: 15 } }
+
+  // When / Then: 上限ちょうどは除外しない。
+  assert.equal(
+    isRecordMatched(createRecord({ combo_lamp: 'ALL JUSTICE', justice_count: 15 }), filters),
+    true
+  )
+})
+
+test('OVER POWERフィルターは下限と上限に一致するレコードを含める', () => {
+  // Given: 境界値と同じOVER POWERのレコード。
+  const filters: FilterState = { ...getDefaultFilter(), overPower: { min: 88, max: 88.5 } }
+
+  // When / Then: 境界値は除外せず残す。
+  assert.equal(isRecordMatched(createRecord({ overpower: 88 }), filters), true)
+  assert.equal(isRecordMatched(createRecord({ overpower: 88.5 }), filters), true)
+})

@@ -291,3 +291,45 @@ for (const direction of ['asc', 'desc'] as const) {
     )
   })
 }
+
+test("WORLD'S ENDの更新日降順は日時なしのプレイ済みを末尾に寄せる", () => {
+  // Given: 日時なしと日時ありのプレイ済みレコード。
+  const records = [
+    createRecord({ id: 'missing', updated_at: null }),
+    createRecord({ id: 'valid', updated_at: '2026-04-20T00:00:00Z' }),
+  ]
+
+  // When: 更新日降順でソートする。
+  const result = sortWorldsendRecords(records, 'updatedAt', 'desc').map((record) => record.id)
+
+  // Then: 日時なしは方向に関わらず末尾に残る。
+  assert.deepEqual(result, ['valid', 'missing'])
+})
+
+test("WORLD'S ENDの更新日降順は日時あり同士を新しい順に並べる", () => {
+  // Given: 更新日が異なるプレイ済みレコード。
+  const records = [
+    createRecord({ id: 'older', updated_at: '2026-04-10T00:00:00Z' }),
+    createRecord({ id: 'newer', updated_at: '2026-04-20T00:00:00Z' }),
+  ]
+
+  // When: 更新日降順でソートする。
+  const result = sortWorldsendRecords(records, 'updatedAt', 'desc').map((record) => record.id)
+
+  // Then: 新しい順に並ぶ。
+  assert.deepEqual(result, ['newer', 'older'])
+})
+
+test("WORLD'S ENDの単一ソートは方向未指定なら入力順を維持する", () => {
+  // Given: スコア順と異なる入力順のレコード。
+  const records = [
+    createRecord({ id: 'low', score: 1005000 }),
+    createRecord({ id: 'high', score: 1010000 }),
+  ]
+
+  // When: 方向を指定せずにスコアでソートする。
+  const result = sortWorldsendRecords(records, 'score', null).map((record) => record.id)
+
+  // Then: 入力順を維持する。
+  assert.deepEqual(result, ['low', 'high'])
+})
