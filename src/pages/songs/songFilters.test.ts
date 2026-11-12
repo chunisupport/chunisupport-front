@@ -57,6 +57,42 @@ test('ジャンルとバージョン内はOR、異なる条件間はANDで絞る
   assert.deepEqual(filterSongs(songs, filters, versions), [songs[1]])
 })
 
+test('選択した各ジャンルと各バージョンを採用し、条件が1つだけ不一致の楽曲を除外する', () => {
+  // Given: 各選択肢の採用行と、ジャンル・バージョン・BPMだけが不一致の行
+  const input = [
+    { id: 'genre-only', genre: 'C', bpm: 170, release: '2015-07-16', name_folder_code: 'A' },
+    { id: 'selected-b-plus', genre: 'B', bpm: 180, release: '2016-02-04', name_folder_code: 'A' },
+    { id: 'version-only', genre: 'A', bpm: 170, release: '2017-02-09', name_folder_code: 'A' },
+    { id: 'bpm-only', genre: 'A', bpm: 159, release: '2015-07-16', name_folder_code: 'A' },
+    {
+      id: 'selected-a-original',
+      genre: 'A',
+      bpm: 160,
+      release: '2015-07-16',
+      name_folder_code: 'A',
+    },
+  ]
+  const availableVersions = [
+    ...versions,
+    { name: 'CHUNITHM AIR', short_name: 'AIR', released_at: '2017-02-09' },
+  ]
+  const filters = {
+    ...createSongFilters(),
+    genres: ['A', 'B'],
+    versions: ['CHUNITHM', 'CHUNITHM PLUS'],
+    bpmMin: '160',
+  }
+
+  // When: 複数のジャンルとバージョン、BPM下限を指定する
+  const result = filterSongs(input, filters, availableVersions)
+
+  // Then: 各選択肢をORで採用し、3条件すべてを満たす行だけを元の順序で返す
+  assert.deepEqual(
+    result.map((song) => song.id),
+    ['selected-b-plus', 'selected-a-original']
+  )
+})
+
 test('逆転した範囲では該当なしとなる', () => {
   assert.deepEqual(
     filterSongs(songs, { ...createSongFilters(), bpmMin: '200', bpmMax: '150' }, versions),

@@ -382,6 +382,17 @@ test('未プレイ譜面と理論値超過スコアを出力と普段の失点�
 
       // Then: 不適格レコードは結果に含まれず、ずれにも影響しない。
       assert.equal(entries.length, 9)
+      assert.deepEqual(entries.map(({ record }) => record.id).sort(), [
+        'steady-0',
+        'steady-1',
+        'steady-2',
+        'steady-3',
+        'steady-4',
+        'steady-5',
+        'steady-6',
+        'steady-7',
+        'steady-8',
+      ])
       assert.ok(
         entries.every(({ record }) => record.id !== 'unplayed' && record.id !== 'over-score')
       )

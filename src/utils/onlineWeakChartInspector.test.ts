@@ -339,63 +339,139 @@ test('Onlineのツールチップを譜面情報と差分の簡潔な形式へ�
   assert.equal(result, 'MASTER 14.1 / 1,008,906 (-1,020)')
 })
 
-test('Onlineの比較表を各列の昇順・降順で安定してソートする', () => {
-  // Given: 曲名、難易度、定数、スコア、平均、点差が異なる比較結果。
-  const entries = [
-    {
-      record: record({
-        id: 'song-c',
-        title: 'Gamma',
-        difficulty: 'ULTIMA',
-        const: 15,
-        score: 1004000,
-      }),
-      averageScore: 1005000,
-      difference: -1000,
-    },
-    {
-      record: record({
-        id: 'song-a',
-        title: 'Alpha',
-        difficulty: 'MASTER',
-        const: 14,
-        score: 1005000,
-      }),
-      averageScore: 1006000,
-      difference: -1000,
-    },
-    {
-      record: record({
-        id: 'song-b',
-        title: 'Beta',
-        difficulty: 'ADVANCED',
-        const: 13,
-        score: 1007000,
-      }),
-      averageScore: 1004000,
-      difference: 3000,
-    },
-  ]
+for (const { key, name, direction, expected } of [
+  {
+    key: 'title',
+    name: '曲名の昇順',
+    direction: 'asc',
+    expected: ['song-a', 'song-b', 'song-d', 'song-c'],
+  },
+  {
+    key: 'title',
+    name: '曲名の降順',
+    direction: 'desc',
+    expected: ['song-c', 'song-d', 'song-b', 'song-a'],
+  },
+  {
+    key: 'difficulty',
+    name: '難易度の昇順',
+    direction: 'asc',
+    expected: ['song-b', 'song-d', 'song-a', 'song-c'],
+  },
+  {
+    key: 'difficulty',
+    name: '難易度の降順',
+    direction: 'desc',
+    expected: ['song-c', 'song-a', 'song-d', 'song-b'],
+  },
+  {
+    key: 'const',
+    name: '譜面定数の昇順',
+    direction: 'asc',
+    expected: ['song-b', 'song-d', 'song-a', 'song-c'],
+  },
+  {
+    key: 'const',
+    name: '譜面定数の降順',
+    direction: 'desc',
+    expected: ['song-c', 'song-a', 'song-d', 'song-b'],
+  },
+  {
+    key: 'score',
+    name: 'スコアの昇順',
+    direction: 'asc',
+    expected: ['song-d', 'song-c', 'song-a', 'song-b'],
+  },
+  {
+    key: 'score',
+    name: 'スコアの降順',
+    direction: 'desc',
+    expected: ['song-b', 'song-a', 'song-c', 'song-d'],
+  },
+  {
+    key: 'averageScore',
+    name: '平均の昇順',
+    direction: 'asc',
+    expected: ['song-b', 'song-d', 'song-c', 'song-a'],
+  },
+  {
+    key: 'averageScore',
+    name: '平均の降順',
+    direction: 'desc',
+    expected: ['song-a', 'song-c', 'song-d', 'song-b'],
+  },
+  {
+    key: 'difference',
+    name: '点差の昇順',
+    direction: 'asc',
+    expected: ['song-d', 'song-c', 'song-a', 'song-b'],
+  },
+  {
+    key: 'difference',
+    name: '点差の降順',
+    direction: 'desc',
+    expected: ['song-b', 'song-c', 'song-a', 'song-d'],
+  },
+] as const) {
+  test(`Onlineの比較表は${name}で並び、同値は入力順を保つこと`, () => {
+    // Given: 曲名、難易度、定数、スコア、平均、点差が異なる比較結果。
+    const entries = [
+      {
+        record: record({
+          id: 'song-c',
+          title: 'Gamma',
+          difficulty: 'ULTIMA',
+          const: 15,
+          score: 1004000,
+        }),
+        averageScore: 1005000,
+        difference: -1000,
+      },
+      {
+        record: record({
+          id: 'song-a',
+          title: 'Alpha',
+          difficulty: 'MASTER',
+          const: 14,
+          score: 1005000,
+        }),
+        averageScore: 1006000,
+        difference: -1000,
+      },
+      {
+        record: record({
+          id: 'song-b',
+          title: 'Beta',
+          difficulty: 'ADVANCED',
+          const: 13,
+          score: 1007000,
+        }),
+        averageScore: 1004000,
+        difference: 3000,
+      },
+      {
+        record: record({
+          id: 'song-d',
+          title: 'Delta',
+          difficulty: 'EXPERT',
+          const: 13.5,
+          score: 1000000,
+        }),
+        averageScore: 1004500,
+        difference: -4500,
+      },
+    ]
 
-  // When: 各列を昇順・降順でソートする。
-  const ascendingIds = (key: Parameters<typeof sortOnlineWeakChartEntries>[1]) =>
-    sortOnlineWeakChartEntries(entries, key, 'asc').map(
-      ({ record: currentRecord }) => currentRecord.id
-    )
-  const descendingIds = (key: Parameters<typeof sortOnlineWeakChartEntries>[1]) =>
-    sortOnlineWeakChartEntries(entries, key, 'desc').map(
-      ({ record: currentRecord }) => currentRecord.id
-    )
+    // When: 指定した列と方向でソートする。
+    const result = sortOnlineWeakChartEntries(entries, key, direction)
 
-  // Then: 各列の値に対応した順序になり、同値の点差は元の順序を保つ。
-  assert.deepEqual(ascendingIds('title'), ['song-a', 'song-b', 'song-c'])
-  assert.deepEqual(ascendingIds('difficulty'), ['song-b', 'song-a', 'song-c'])
-  assert.deepEqual(ascendingIds('const'), ['song-b', 'song-a', 'song-c'])
-  assert.deepEqual(ascendingIds('score'), ['song-c', 'song-a', 'song-b'])
-  assert.deepEqual(ascendingIds('averageScore'), ['song-b', 'song-c', 'song-a'])
-  assert.deepEqual(ascendingIds('difference'), ['song-c', 'song-a', 'song-b'])
-  assert.deepEqual(descendingIds('difference'), ['song-b', 'song-c', 'song-a'])
-})
+    // Then: 各列の順序に並び、点差が同じsong-cとsong-aは入力順を保つ。
+    assert.deepEqual(
+      result.map(({ record: currentRecord }) => currentRecord.id),
+      expected
+    )
+  })
+}
 
 test('難易度の選択判定は、理論値OP対象では楽曲マスタの対象難易度だけを含める', () => {
   // Given: ULTIMAが理論値OP対象の曲と、MASTERが理論値OP対象の曲がある。

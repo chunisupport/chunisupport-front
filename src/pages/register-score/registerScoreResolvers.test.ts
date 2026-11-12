@@ -8,7 +8,6 @@ import type {
   SongDTO,
   WorldsendSongDTO,
 } from '../../types/api'
-import { calculateSingleRatingHundredths } from '../../utils/singleRating'
 import {
   resolveRegisterScoreChartLevel,
   resolveRegisterScoreCourseTitle,
@@ -144,7 +143,7 @@ test('通常譜面の表示レベルと単曲レーティングをソート用�
   // Then: 表示レベルの順序キーと単曲レーティングの百分の一単位を返す。
   assert.deepEqual(result, {
     level: 30,
-    singleRating: calculateSingleRatingHundredths(1_000_000, 15.4),
+    singleRating: 1640,
   })
 })
 

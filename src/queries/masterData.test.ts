@@ -390,6 +390,16 @@ test('バージョンキャッシュ無効化は全マスタも破棄し、ジ�
 
   // Then: ジャンル以外の2件だけを再取得する。
   assert.equal(calls.length, 5)
+  const countsByUrl = calls.reduce<Record<string, number>>((counts, call) => {
+    const url = String(call.input)
+    counts[url] = (counts[url] ?? 0) + 1
+    return counts
+  }, {})
+  assert.deepEqual(countsByUrl, {
+    'http://localhost:3000/internal/master/versions': 2,
+    'http://localhost:3000/internal/master': 2,
+    'http://localhost:3000/internal/master/genres': 1,
+  })
 })
 
 test('全マスタキーの前方一致による無効化はバージョンとジャンルを巻き込まない', async () => {

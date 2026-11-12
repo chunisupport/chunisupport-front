@@ -195,8 +195,11 @@ test('buildWorldsendSongMetaUpdateRequest: 譜面フィールドを載せない�
 })
 
 test('buildChartDraftsFromSong: 存在する譜面だけを難易度順のドラフトにすること', () => {
-  // Given
-  const song = createSong()
+  // Given: 難易度順と逆の挿入順で譜面を配置する。
+  const original = createSong()
+  const song = createSong({
+    charts: { MASTER: original.charts.MASTER, BASIC: original.charts.BASIC },
+  })
 
   // When
   const drafts = buildChartDraftsFromSong(song)
@@ -259,7 +262,7 @@ test('parseChartMetaDrafts: 定数10未満の譜面は定数不明をfalseにす
   }
 })
 
-test('buildChartMetaUpdateRequest: 楽曲フィールドは現行値、譜面は編集結果を載せること', () => {
+test('buildChartMetaUpdateRequest: 未編集の譜面と現行の楽曲フィールドを維持すること', () => {
   // Given
   const song = createSong()
   const parsed = parseChartMetaDrafts(buildChartDraftsFromSong(song))
@@ -276,6 +279,38 @@ test('buildChartMetaUpdateRequest: 楽曲フィールドは現行値、譜面は
   assert.equal(request.charts.MASTER?.notes_designer, '譜面ボーイズからの挑戦状')
   // Wikiページタイトルは省略して既存値を維持させる
   assert.equal('wiki_page_title' in request, false)
+})
+
+test('buildChartMetaUpdateRequest: 元譜面ではなく編集済みの譜面マップを載せること', () => {
+  // Given: 元値とは異なる定数、ノーツ数、作者を指定した編集結果。
+  const song = createSong()
+  const charts = {
+    BASIC: { const: 7, is_const_unknown: false, notes: 900, notes_designer: null },
+    MASTER: {
+      const: 15.8,
+      is_const_unknown: true,
+      notes: 4000,
+      notes_designer: '編集後の譜面作者',
+    },
+  }
+
+  // When
+  const request = buildChartMetaUpdateRequest(song, charts)
+
+  // Then: 楽曲フィールドを維持しつつ、譜面には編集後の値を採用する。
+  assert.equal(request.genre, 'ORIGINAL')
+  assert.equal(request.released_at, '2025-06-19')
+  assert.equal(request.is_new, true)
+  assert.equal('wiki_page_title' in request, false)
+  assert.deepEqual(request.charts, {
+    BASIC: { const: 7, is_const_unknown: false, notes: 900, notes_designer: null },
+    MASTER: {
+      const: 15.8,
+      is_const_unknown: true,
+      notes: 4000,
+      notes_designer: '編集後の譜面作者',
+    },
+  })
 })
 
 test('parseWorldsendChartMetaEditValues: レベル範囲外はエラー、空欄はnullにすること', () => {

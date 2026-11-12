@@ -52,19 +52,32 @@ test('FHD本文幅では4枚分のグリッド幅が本文幅と一致するこ�
   assert.equal(gridWidth, SONG_CARD_FHD_CONTENT_WIDTH_PX)
 })
 
+/** ソート選択肢のID・キー・表示指標の契約を検証する。 */
 test('カードソート選択肢は標準と各難易度の定数・ノーツを含むこと', () => {
   // Given: カード一覧のソート選択肢。
-  const optionIds = SONG_CARD_SORT_OPTIONS.map((option) => option.id)
+  const options = SONG_CARD_SORT_OPTIONS
 
-  // When: 初期選択肢と難易度キーを確認する。
-  const defaultOption = SONG_CARD_SORT_OPTIONS.find(
-    (option) => option.id === SONG_CARD_DEFAULT_SORT_OPTION_ID
-  )
+  // When: ラベル以外のソート設定を取り出す。
+  const actual = options.map(({ id, sortKey, chartMetric }) => ({ id, sortKey, chartMetric }))
 
-  // Then: 標準はソート解除、難易度は定数とノーツが対になる。
-  assert.equal(defaultOption?.sortKey, null)
-  assert.equal(optionIds.includes('master-const'), true)
-  assert.equal(optionIds.includes('master-notes'), true)
-  assert.equal(optionIds.includes('ultima-const'), true)
-  assert.equal(SONG_CARD_SORT_OPTIONS.length, 16)
+  // Then: 標準は解除、各難易度は定数とノーツを正しく切り替える。
+  assert.equal(SONG_CARD_DEFAULT_SORT_OPTION_ID, 'default')
+  assert.deepEqual(actual, [
+    { id: 'default', sortKey: null, chartMetric: 'const' },
+    { id: 'title', sortKey: 'title', chartMetric: 'const' },
+    { id: 'artist', sortKey: 'artist', chartMetric: 'const' },
+    { id: 'genre', sortKey: 'genre', chartMetric: 'const' },
+    { id: 'release', sortKey: 'release', chartMetric: 'const' },
+    { id: 'bpm', sortKey: 'bpm', chartMetric: 'const' },
+    { id: 'basic-const', sortKey: 'basic', chartMetric: 'const' },
+    { id: 'basic-notes', sortKey: 'basic', chartMetric: 'notes' },
+    { id: 'advanced-const', sortKey: 'advanced', chartMetric: 'const' },
+    { id: 'advanced-notes', sortKey: 'advanced', chartMetric: 'notes' },
+    { id: 'expert-const', sortKey: 'expert', chartMetric: 'const' },
+    { id: 'expert-notes', sortKey: 'expert', chartMetric: 'notes' },
+    { id: 'master-const', sortKey: 'master', chartMetric: 'const' },
+    { id: 'master-notes', sortKey: 'master', chartMetric: 'notes' },
+    { id: 'ultima-const', sortKey: 'ultima', chartMetric: 'const' },
+    { id: 'ultima-notes', sortKey: 'ultima', chartMetric: 'notes' },
+  ])
 })

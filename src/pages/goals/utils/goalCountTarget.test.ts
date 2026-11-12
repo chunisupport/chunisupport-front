@@ -2,14 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
 
-/**
- * 件数指定モードで入力した値が、反転表示設定に関係なく目標件数として保存されることを検証する。
- *
- * このテストでは、ユーザーが具体的な件数（例: 5件）を入力した場合、
- * その入力値がそのまま目標件数として扱われることを確認する。
- * 反転表示の有無によって値が変換されることなく、入力された数値がそのまま返される。
- */
-test('件数を指定した場合は反転表示の有無に関係なく入力値を目標件数として保存する', () => {
+/** 固定件数の文字列入力が数値の目標件数へ変換されることを検証する。 */
+test('固定件数を数値へ変換して保存する', () => {
   // Given: 5件を目標として入力する。
   const countValue = '5'
 

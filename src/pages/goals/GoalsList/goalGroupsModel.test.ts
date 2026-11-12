@@ -122,20 +122,74 @@ test('永続化済み順序への整列では目標object identityを維持す�
   assert.equal(result[1], second)
 })
 
-test('グループ名は空文字・制御文字・大文字小文字違いの重複を拒否する', () => {
+test('グループ名が空白だけの場合は入力を求める', () => {
   // Given
   const groups = [createGroup(10, 1)]
 
-  // When / Then
-  assert.equal(validateGoalGroupName('  ', groups), 'グループ名を入力してください。')
-  assert.equal(validateGoalGroupName('攻略\n中', groups), 'グループ名に制御文字は使用できません。')
-  groups[0].name = '失点'
-  assert.equal(validateGoalGroupName('失点', groups), '同じ名前の目標グループがすでに存在します。')
-  assert.equal(validateGoalGroupName('失点', groups, 10), '')
+  // When
+  const result = validateGoalGroupName('  ', groups)
+
+  // Then
+  assert.equal(result, 'グループ名を入力してください。')
 })
 
-test('削除グループの目標を順序を保って未分類末尾へ移動する', () => {
+test('グループ名に制御文字を含む場合は拒否する', () => {
   // Given
+  const groups = [createGroup(10, 1)]
+
+  // When
+  const result = validateGoalGroupName('攻略\n中', groups)
+
+  // Then
+  assert.equal(result, 'グループ名に制御文字は使用できません。')
+})
+
+test('グループ名が既存グループと同じ文字列の場合は重複として拒否する', () => {
+  // Given
+  const groups = [{ ...createGroup(10, 1), name: '失点' }]
+
+  // When
+  const result = validateGoalGroupName('失点', groups)
+
+  // Then
+  assert.equal(result, '同じ名前の目標グループがすでに存在します。')
+})
+
+test('グループ名は大文字小文字だけが異なる既存名を重複として拒否する', () => {
+  // Given
+  const groups = [{ ...createGroup(10, 1), name: 'Attack' }]
+
+  // When
+  const result = validateGoalGroupName('aTTACK', groups)
+
+  // Then
+  assert.equal(result, '同じ名前の目標グループがすでに存在します。')
+})
+
+test('改名中のグループ自身の名前は重複として扱わない', () => {
+  // Given
+  const groups = [{ ...createGroup(10, 1), name: 'Attack' }]
+
+  // When
+  const result = validateGoalGroupName('aTTACK', groups, 10)
+
+  // Then
+  assert.equal(result, '')
+})
+
+test('日本語名が既存グループ自身と同一でも改名を許可する', () => {
+  // Given
+  const groups = [{ ...createGroup(10, 1), name: '失点' }]
+
+  // When
+  const result = validateGoalGroupName('失点', groups, 10)
+
+  // Then
+  assert.equal(result, '')
+})
+
+test('未分類の順序1を維持して整列済みの削除目標を順序2・3へ移動する', () => {
+  // Given: 未分類の末尾は順序1で、移動元は順序1・2に整列している。
   const goals = [createGoal(1, null, 1), createGoal(2, 10, 1), createGoal(3, 10, 2)]
 
   // When
@@ -148,6 +202,44 @@ test('削除グループの目標を順序を保って未分類末尾へ移動�
       { id: 1, groupId: null, sortOrder: 1 },
       { id: 2, groupId: null, sortOrder: 2 },
       { id: 3, groupId: null, sortOrder: 3 },
+    ]
+  )
+})
+
+test('削除グループの目標を元の順序で未分類の最大順序の後ろへ移動する', () => {
+  // Given: 削除グループの目標は順序2・1の逆順で並び、未分類には順序10の目標が1件ある
+  const unrelatedGoal = createGoal(4, 20, 1)
+  const goals = [createGoal(1, null, 10), createGoal(3, 10, 2), createGoal(2, 10, 1), unrelatedGoal]
+
+  // When
+  const result = moveDeletedGroupGoalsToUngrouped(goals, 10)
+
+  // Then: 順序1の目標が11、順序2の目標が12になり、無関係なグループの目標は変わらない
+  assert.deepEqual(
+    result.map(({ goal }) => ({ id: goal.id, groupId: goal.group_id, sortOrder: goal.sort_order })),
+    [
+      { id: 1, groupId: null, sortOrder: 10 },
+      { id: 3, groupId: null, sortOrder: 12 },
+      { id: 2, groupId: null, sortOrder: 11 },
+      { id: 4, groupId: 20, sortOrder: 1 },
+    ]
+  )
+  assert.equal(result[3], unrelatedGoal)
+})
+
+test('未分類の目標がない場合は削除グループの目標を順序1から並べる', () => {
+  // Given
+  const goals = [createGoal(2, 10, 5), createGoal(1, 10, 3)]
+
+  // When
+  const result = moveDeletedGroupGoalsToUngrouped(goals, 10)
+
+  // Then
+  assert.deepEqual(
+    result.map(({ goal }) => ({ id: goal.id, groupId: goal.group_id, sortOrder: goal.sort_order })),
+    [
+      { id: 2, groupId: null, sortOrder: 2 },
+      { id: 1, groupId: null, sortOrder: 1 },
     ]
   )
 })

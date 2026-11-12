@@ -284,26 +284,53 @@ test('commitRegisterScore: 登録結果を正規化して返す', async () => {
   assert.equal(friendRankingsInvalidated, true)
 })
 
-test('commitRegisterScore: 派生キャッシュ更新失敗時も確定済みの登録結果を返す', async () => {
-  // Given: スコア登録は成功し、IndexedDB削除とランキング無効化が失敗する状態。
-  const result = createPlayerDataResult()
+for (const failure of ['両方', 'キャッシュ削除だけ', 'ランキング無効化だけ'] as const) {
+  test(`commitRegisterScore: ${failure}が失敗しても両処理を試み登録結果を返す`, async () => {
+    // Given: スコア登録は成功し、指定した派生キャッシュ更新が失敗する状態。
+    const result = createPlayerDataResult()
+    const calls: string[] = []
 
-  // When: スコア登録確定処理を実行する。
+    // When: スコア登録確定処理を実行する。
+    const committed = await commitRegisterScore(
+      { uploadToken: '11111111-1111-4111-8111-111111111111' },
+      {
+        commitPlayerData: async () => result,
+        clearUserApiCache: async () => {
+          calls.push('cache')
+          if (failure !== 'ランキング無効化だけ') throw new Error('IndexedDB error')
+        },
+        invalidateFriendRankings: async () => {
+          calls.push('rankings')
+          if (failure !== 'キャッシュ削除だけ') throw new Error('Query invalidation error')
+        },
+        ensureSongsLoaded: () => {},
+        ensureWorldsendSongsLoaded: () => {},
+      }
+    )
+
+    // Then: 両方の処理を試み、登録結果全体を維持する。
+    assert.deepEqual(calls, ['cache', 'rankings'])
+    assert.deepEqual(committed.result, result)
+  })
+}
+
+test('commitRegisterScore: APIのnull配列と欠落した統計を補完して返す', async () => {
+  // Given: 配列がnullで統計が返却されない登録結果。
+  const expected = createPlayerDataResult()
+  const response = { ...expected, changes: null, skipped_records: null, statistics: undefined }
+
+  // When: ユースケース経由で登録を確定する。
   const committed = await commitRegisterScore(
     { uploadToken: '11111111-1111-4111-8111-111111111111' },
     {
-      commitPlayerData: async () => result,
-      clearUserApiCache: async () => {
-        throw new Error('IndexedDB error')
-      },
-      invalidateFriendRankings: async () => {
-        throw new Error('Query invalidation error')
-      },
+      commitPlayerData: async () => response as unknown as PlayerDataResult,
+      clearUserApiCache: async () => {},
+      invalidateFriendRankings: async () => {},
       ensureSongsLoaded: () => {},
       ensureWorldsendSongsLoaded: () => {},
     }
   )
 
-  // Then: 登録成功は派生キャッシュ更新エラーの影響を受けない。
-  assert.deepEqual(committed.result, result)
+  // Then: 配列・全体統計・全難易度の統計を補完し、他の項目も維持する。
+  assert.deepEqual(committed.result, expected)
 })

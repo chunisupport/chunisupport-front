@@ -349,16 +349,36 @@ test('MASTER以外の難易度も分布と外れ値の計算に含めること',
 
 test('譜面定数ごとに独立した分布を昇順で生成すること', () => {
   // Given
-  const records = [createRecord(1000000, 14.5), createRecord(990000, 13.0)]
+  const records = [
+    createRecord(1000000, 14.5),
+    createRecord(990000, 13.0),
+    createRecord(1002000, 14.5),
+  ]
 
   // When
   const result = inspectWeakCharts(records)
 
-  // Then
-  assert.deepEqual(
-    result.distributions.map((distribution) => distribution.chartConst),
-    [13.0, 14.5]
-  )
+  // Then: 入力と逆の定数順で、それぞれのスコアだけを集計する。
+  assert.deepEqual(result.distributions, [
+    {
+      chartConst: 13.0,
+      count: 1,
+      lowerWhisker: 990000,
+      firstQuartile: 990000,
+      median: 990000,
+      thirdQuartile: 990000,
+      upperWhisker: 990000,
+    },
+    {
+      chartConst: 14.5,
+      count: 2,
+      lowerWhisker: 1000000,
+      firstQuartile: 1000500,
+      median: 1001000,
+      thirdQuartile: 1001500,
+      upperWhisker: 1002000,
+    },
+  ])
 })
 
 test('譜面定数の集計キーは小数点以下1桁で切り捨てること', () => {

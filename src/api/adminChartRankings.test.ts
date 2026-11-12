@@ -9,7 +9,7 @@ import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironme
 const loadAdminChartRankingsApi = () =>
   loadTestModule((cacheKey) => import(`./adminChartRankings.ts?cache=${cacheKey}`))
 
-test('管理者向け通常譜面ランキングAPIは表示IDをエンコードして難易度を大文字で送る', async () => {
+test('管理者向け通常譜面ランキングAPIは表示IDをエンコードして渡された大文字難易度をパスに含める', async () => {
   // Given: URLエンコードが必要な表示IDとキャンセルシグナル。
   const calls = installFetchRecorder(() =>
     Response.json({ song: {}, chart: {}, ranking: [], total: 0 })

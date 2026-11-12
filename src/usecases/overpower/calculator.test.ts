@@ -64,7 +64,7 @@ const createRecord = (
   slot: overrides.slot ?? null,
 })
 
-test('未解禁の通常曲とULTIMAを除外し、現行集計と同じ自動入力値を生成する', () => {
+test('未解禁の通常曲とULTIMAを除外した自動入力値を生成する', async (t) => {
   // Given
   const songs = [
     createSong({ id: 'locked' }),
@@ -90,13 +90,22 @@ test('未解禁の通常曲とULTIMAを除外し、現行集計と同じ自動�
   // When
   const data = buildOverPowerCalculatorData(songs, records, [], lockedSongs)
   const summary = buildOverPowerSummary(songs, records, [], lockedSongs)
-  // Then
-  assert.equal(data.current, summary.all.current)
-  assert.equal(data.max, summary.all.max)
-  assert.deepEqual(data.unplayedEntries, [
-    { current: 85, max: 90, targetConst: 15, isUnplayed: false },
-  ])
-  assert.equal(data.playedAverageScore, 1010000)
+  await t.test('利用可能なMASTERだけの現在値と理論値を返す', () => {
+    // Given / When: 上記の未解禁設定で生成した自動入力値。
+    // Then: 共通の集計実装から期待値を導出しない。
+    assert.equal(data.current, 85)
+    assert.equal(data.max, 90)
+    assert.deepEqual(data.unplayedEntries, [
+      { current: 85, max: 90, targetConst: 15, isUnplayed: false },
+    ])
+    assert.equal(data.playedAverageScore, 1010000)
+  })
+  await t.test('自動入力値と画面用サマリーの集計結果が一致する', () => {
+    // Given / When: 同じ入力で生成した自動入力値とサマリー。
+    // Then
+    assert.equal(data.current, summary.all.current)
+    assert.equal(data.max, summary.all.max)
+  })
 })
 
 test('下位譜面をプレイ済みでも理論値対象が未プレイなら補完対象に含める', () => {

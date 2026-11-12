@@ -429,25 +429,37 @@ test('スタート位置は決め方に応じて0・現在値・入力値から�
   assert.equal(custom, 99.6)
 })
 
-test('件数系と平均スコアの現在値は整数に切り捨ててスタート位置にする', () => {
-  // Given / When
-  const averageScore = resolveGoalFormGaugeStart({
+for (const { name, achievementType, current, expected } of [
+  {
+    name: '平均スコアの小数を切り捨てる',
     achievementType: 'avg_score',
-    gaugeStartMode: 'current',
-    gaugeStart: '',
     current: 1007600.7,
-  })
-  const count = resolveGoalFormGaugeStart({
+    expected: 1007600,
+  },
+  {
+    name: '件数の小数を切り捨てる',
     achievementType: 'combolamp_count',
-    gaugeStartMode: 'current',
-    gaugeStart: '',
+    current: 950.9,
+    expected: 950,
+  },
+  {
+    name: '件数の整数値を保持する',
+    achievementType: 'combolamp_count',
     current: 950,
-  })
+    expected: 950,
+  },
+] as const) {
+  test(`現在値からスタート位置を決めるとき${name}こと`, () => {
+    // Given: 現在値からスタート位置を決めるフォーム。
+    const input = { achievementType, gaugeStartMode: 'current', gaugeStart: '', current } as const
 
-  // Then
-  assert.equal(averageScore, 1007600)
-  assert.equal(count, 950)
-})
+    // When: スタート位置を解決する。
+    const result = resolveGoalFormGaugeStart(input)
+
+    // Then: 整数のスタート位置を返す。
+    assert.equal(result, expected)
+  })
+}
 
 test('ゲージ設定は「最初から」なら達成率への適用をfalseにして送信する', () => {
   // Given

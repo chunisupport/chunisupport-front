@@ -64,8 +64,9 @@ view.dispose()
 `)
 })
 
-test('楽曲やユーザーを切り替えた後の古い保存結果を表示に反映しない', async () => {
+test('楽曲とユーザーを両方切り替えた後の古い保存結果を表示に反映しない', async () => {
   await runBrowserTest(`
+// Given
 let finishSave
 const view = createRoot((dispose) => {
   const [songId, setSongId] = createSignal('song-a')
@@ -78,17 +79,56 @@ const view = createRoot((dispose) => {
   return { dispose, setting, setSongId, setUsername }
 })
 await settle()
+// When
 const saving = view.setting.save(true)
 view.setSongId('song-b')
 view.setUsername('bob')
 await settle()
 finishSave()
 await saving
+// Then
 assert.equal(view.setting.value(), false)
 assert.equal(view.setting.errorMessage(), undefined)
 view.dispose()
 `)
 })
+
+for (const { label, switchSource } of [
+  { label: '楽曲だけ', switchSource: "view.setSongId('song-b')" },
+  { label: 'ユーザーだけ', switchSource: "view.setUsername('bob')" },
+]) {
+  test(`${label}を切り替えた後の設定値を古い保存結果で上書きしない`, async () => {
+    await runBrowserTest(`
+// Given: 切替前後で異なる設定値を返し、古い保存処理を保留する。
+let finishSave
+const view = createRoot((dispose) => {
+  const [songId, setSongId] = createSignal('song-a')
+  const [username, setUsername] = createSignal('alice')
+  const setting = createSongDetailSetting({
+    username, songId, ...messages,
+    load: async (source) => source.songId === 'song-a' && source.username === 'alice' ? 'initial' : 'current',
+    save: async () => new Promise((resolve) => { finishSave = resolve }),
+  })
+  return { dispose, setting, setSongId, setUsername }
+})
+await settle()
+assert.equal(view.setting.value(), 'initial')
+
+// When: 保存中に一方の識別子だけを変更し、新しい設定値を読み込む。
+const saving = view.setting.save('stale')
+${switchSource}
+await settle()
+assert.equal(view.setting.value(), 'current')
+finishSave()
+await saving
+
+// Then: 古い保存結果ではなく、切替後の設定値を表示する。
+assert.equal(view.setting.value(), 'current')
+assert.equal(view.setting.errorMessage(), undefined)
+view.dispose()
+`)
+  })
+}
 
 test('ULTIMA専用設定の保存失敗時は通常設定を維持し、再試行できる', async () => {
   await runBrowserTest(`

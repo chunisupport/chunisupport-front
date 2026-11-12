@@ -52,8 +52,14 @@ test('表示カラムの順序を維持してカラム定義を取得できる',
 })
 
 test('表示カラム定義からgrid-template-columns文字列を生成できる', () => {
-  const columns = getVisibleColumns(['title', 'score'])
-  assert.equal(createGridTemplateColumns(columns), 'minmax(11.25rem,1fr) 4.6rem')
+  // Given: デザイン設定に依存しない、順序の異なる任意の幅。
+  const columns = [{ width: '8rem' }, { width: 'minmax(0,1fr)' }, { width: '24px' }]
+
+  // When
+  const result = createGridTemplateColumns(columns)
+
+  // Then
+  assert.equal(result, '8rem minmax(0,1fr) 24px')
 })
 
 test('表示カラムIDを定義順に並び替える', () => {

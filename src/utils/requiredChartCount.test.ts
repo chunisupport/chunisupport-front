@@ -77,25 +77,39 @@ test('目標90万点ちょうどと、90万点をまたぐ更新も範囲計算�
   })
 })
 
-test('達成済み・増分なし・理論値のランプ列は既存の表示を保つ', () => {
-  // Given & When & Then
-  assert.deepEqual(
-    calculateRequiredChartCountResult({ ...TARGET, current: 100 }, 850000, null, 800000, 0),
-    {
-      label: '0',
-      exceedsLimit: false,
-    }
-  )
-  for (const lamp of [null, 'FULL COMBO', 'ALL JUSTICE']) {
-    assert.deepEqual(calculateRequiredChartCountResult(TARGET, 1000000, lamp, 1007500, 100), {
-      label: '—',
-      exceedsLimit: false,
-    })
-  }
-  assert.deepEqual(calculateRequiredChartCountResult(TARGET, 1010000, 'FULL COMBO', 0, 100), {
-    label: '—',
-    exceedsLimit: false,
+test('目標達成済みなら収録曲数が0でも必要譜面数を0と表示する', () => {
+  // Given: 現在OPが目標と等しい状態。
+  const target = { ...TARGET, current: 100 }
+
+  // When: 収録曲数0で必要譜面数を求める。
+  const result = calculateRequiredChartCountResult(target, 850000, null, 800000, 0)
+
+  // Then: 追加の譜面は不要で収録曲数超過にもならない。
+  assert.deepEqual(result, { label: '0', exceedsLimit: false })
+})
+
+for (const lamp of [null, 'FULL COMBO', 'ALL JUSTICE']) {
+  test(`目標スコアが現在より低い場合はランプ${lamp ?? 'なし'}でも計算不能と表示する`, () => {
+    // Given: 現在1007500点に対して目標1000000点。
+    const currentScore = 1007500
+
+    // When: スコア低下時の必要譜面数を求める。
+    const result = calculateRequiredChartCountResult(TARGET, 1000000, lamp, currentScore, 100)
+
+    // Then: 計算不能を示し、収録曲数超過とはしない。
+    assert.deepEqual(result, { label: '—', exceedsLimit: false })
   })
+}
+
+test('理論値スコアにFULL COMBOを指定するとランプ条件を満たせず計算不能と表示する', () => {
+  // Given: 理論値1010000点とFULL COMBOの組み合わせ。
+  const score = 1010000
+
+  // When: 未プレイの0点から必要譜面数を求める。
+  const result = calculateRequiredChartCountResult(TARGET, score, 'FULL COMBO', 0, 100)
+
+  // Then: 計算不能を示し、収録曲数超過とはしない。
+  assert.deepEqual(result, { label: '—', exceedsLimit: false })
 })
 
 test('90万点超でも低定数のOP下限補正による範囲を保つ', () => {

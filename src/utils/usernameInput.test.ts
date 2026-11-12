@@ -76,7 +76,6 @@ test('大文字・記号・空白・全角文字は形式エラーになり入�
 
   // Then
   assert.deepEqual(results, ['invalid', 'invalid', 'invalid', 'invalid'])
-  assert.deepEqual(invalidValues, ['ChuniUser', 'chuni-user', 'chuni user', 'ｃｈｕｎｉ'])
 })
 
 test('不正な username は API 呼び出し前の検証で例外になること', () => {

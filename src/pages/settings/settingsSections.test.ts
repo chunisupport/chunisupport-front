@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { DEFAULT_SETTINGS_SECTION, normalizeSettingsSection } from './settingsSections'
+import { normalizeSettingsSection } from './settingsSections'
 
 test('既知の設定カテゴリはそのまま正規化されること', () => {
   // Given
@@ -13,11 +13,19 @@ test('既知の設定カテゴリはそのまま正規化されること', () =>
   assert.equal(result, section)
 })
 
-test('未指定または未知の設定カテゴリは外観へ正規化されること', () => {
-  // Given / When / Then
-  assert.equal(normalizeSettingsSection(undefined), DEFAULT_SETTINGS_SECTION)
-  assert.equal(normalizeSettingsSection('unknown'), DEFAULT_SETTINGS_SECTION)
-})
+for (const { name, section } of [
+  { name: '未指定', section: undefined },
+  { name: '未知', section: 'unknown' },
+]) {
+  test(`${name}の設定カテゴリは外観へ正規化されること`, () => {
+    // Given: 未指定または未知のカテゴリ。
+    // When
+    const result = normalizeSettingsSection(section)
+
+    // Then
+    assert.equal(result, 'appearance')
+  })
+}
 
 test('旧セクションURLは対応する新カテゴリへ正規化されること', () => {
   // Given / When / Then

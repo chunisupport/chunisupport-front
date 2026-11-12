@@ -73,6 +73,16 @@ test('サンプルはベスト枠と新曲枠に同日最新の更新レコー�
   // Then: 両枠の先頭が同じ最新日で、後続レコードより新しい。
   assert.equal(sample.rating.best[0]?.updated_at, sample.rating.new[0]?.updated_at)
   assert.notEqual(sample.rating.best[0]?.updated_at, sample.rating.best[1]?.updated_at)
+  for (const records of [sample.rating.best, sample.rating.new]) {
+    const latest = Date.parse(records[0]?.updated_at ?? '')
+    assert.ok(Number.isFinite(latest))
+    assert.ok(records.length > 1)
+    for (const record of records.slice(1)) {
+      const older = Date.parse(record.updated_at ?? '')
+      assert.ok(Number.isFinite(older))
+      assert.ok(latest > older, `${record.id}より先頭の更新日時が新しい`)
+    }
+  }
 })
 
 test('表示倍率パーセントを縮小倍率へ変換すること', () => {

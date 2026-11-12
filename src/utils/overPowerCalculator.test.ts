@@ -286,26 +286,31 @@ test('calculateUnplayedOverPower は理論値で埋める場合に未プレイ�
   assert.equal(result.max, 175)
 })
 
-test('calculateUnplayedOverPower は平均スコアで未プレイ曲を埋めること', () => {
-  // Given
-  const entries = [
-    { current: 80, max: 90, targetConst: 15, isUnplayed: false },
-    { current: 0, max: 85, targetConst: 14, isUnplayed: true },
-  ]
+for (const { name, manualScore } of [
+  { name: '手動スコアが平均と同値でも平均スコアで未プレイ曲を埋めること', manualScore: 1007500 },
+  { name: '手動スコアが平均より高くても平均スコアで未プレイ曲を埋めること', manualScore: 1010000 },
+]) {
+  test(`calculateUnplayedOverPower は${name}`, () => {
+    // Given
+    const entries = [
+      { current: 80, max: 90, targetConst: 15, isUnplayed: false },
+      { current: 0, max: 85, targetConst: 14, isUnplayed: true },
+    ]
 
-  // When
-  const result = calculateUnplayedOverPower({
-    entries,
-    playedAverageScore: 1007500,
-    playedAverageScoreByConst: new Map(),
-    mode: 'playedAverage',
-    manualScore: 1007500,
+    // When
+    const result = calculateUnplayedOverPower({
+      entries,
+      playedAverageScore: 1007500,
+      playedAverageScoreByConst: new Map(),
+      mode: 'playedAverage',
+      manualScore,
+    })
+
+    // Then
+    assert.equal(result.current, 160)
+    assert.equal(result.max, 175)
   })
-
-  // Then
-  assert.equal(result.current, 160)
-  assert.equal(result.max, 175)
-})
+}
 
 test('calculateUnplayedOverPower は譜面定数ごとの平均スコアで未プレイ曲を埋めること', () => {
   // Given

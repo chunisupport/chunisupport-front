@@ -122,12 +122,32 @@ test('isRecordFilterOptionsChanged は未解禁曲除外の変更を検出する
 })
 
 test('isRecordFilterOptionsChanged は有効なOP対象種別の変更を検出すること', () => {
-  // Given
-  const defaultFilter = { ...DEFAULT_FILTER }
+  // Given: OP対象フィルターは両方とも有効で、種別だけが異なる
+  const defaultFilter = {
+    ...DEFAULT_FILTER,
+    opTargetOnly: true,
+    opTargetType: 'current' as const,
+  }
   const currentFilter = {
     ...DEFAULT_FILTER,
     opTargetOnly: true,
     opTargetType: 'theoretical' as const,
+  }
+
+  // When
+  const result = isRecordFilterOptionsChanged(currentFilter, defaultFilter)
+
+  // Then
+  assert.equal(result, true)
+})
+
+test('isRecordFilterOptionsChanged はOP対象フィルターの有効化を検出すること', () => {
+  // Given: 種別は同じで、OP対象フィルターの有効・無効だけが異なる
+  const defaultFilter = { ...DEFAULT_FILTER, opTargetOnly: false }
+  const currentFilter = {
+    ...DEFAULT_FILTER,
+    opTargetOnly: true,
+    opTargetType: defaultFilter.opTargetType,
   }
 
   // When

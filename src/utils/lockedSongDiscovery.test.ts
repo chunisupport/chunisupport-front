@@ -217,20 +217,31 @@ test('差異が未入力なら候補範囲を生成しない', () => {
 })
 
 test('同じ曲の複数譜面が同一セルに属しても曲数は重複しない', () => {
-  // Given
+  // Given: song-1のMASTERとULTIMA (どちらも14+) と、同じセルに入る別曲song-2のMASTER
   const master = createEntry('song-1', 'Candidate', 'POPS & ANIME')
-  const duplicateMaster = { ...master }
+  const ultima: OverPowerChartEntry = { ...master, difficulty: 'ULTIMA' }
+  const otherSong = createEntry('song-2', 'Other', 'POPS & ANIME')
 
-  // When
-  const result = buildLockedSongDiscoveryCells([master, duplicateMaster], {
+  // When: 全難易度を候補にするレベル差異を含めて候補範囲を作る
+  const result = buildLockedSongDiscoveryCells([master, ultima, otherSong], {
     genres: ['POPS & ANIME'],
     versions: ['VERSE'],
     nameFolders: [],
-    levels: [],
+    levels: ['14+'],
   })
 
-  // Then
-  assert.equal(result[0].songs.length, 1)
+  // Then: セルは1つだけで、song-1は1回だけ、song-2も残る
+  assert.deepEqual(result, [
+    {
+      genre: 'POPS & ANIME',
+      nameFolder: null,
+      level: '14+',
+      songs: [
+        { id: 'song-1', title: 'Candidate' },
+        { id: 'song-2', title: 'Other' },
+      ],
+    },
+  ])
 })
 
 test('楽曲名順に差異があれば楽曲名順フォルダで候補範囲を絞り込んで分ける', () => {

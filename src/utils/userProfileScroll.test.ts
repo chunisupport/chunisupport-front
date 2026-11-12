@@ -14,7 +14,7 @@ test('プロフィール画面を下へスクロールしている場合は画�
   }
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
-    value: { getElementById: () => scrollTarget },
+    value: { getElementById: (id: string) => (id === 'app-main' ? scrollTarget : null) },
   })
 
   try {

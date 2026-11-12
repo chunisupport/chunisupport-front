@@ -16,6 +16,12 @@ test('指定IDの要素だけを更新し、他の要素の参照は維持する
 
   // Then
   assert.ok(result)
+  assert.notEqual(result, current)
+  assert.notEqual(result.songs, current.songs)
+  assert.deepEqual(current.songs, [first, second])
+  assert.equal(current.songs[0], first)
+  assert.equal(current.songs[1], second)
+  assert.equal(second.title, 'Second')
   assert.equal(result.songs[0], first)
   assert.notEqual(result.songs[1], second)
   assert.equal(result.songs[1]?.title, 'Updated')

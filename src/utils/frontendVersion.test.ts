@@ -16,11 +16,16 @@ test('公開中のビルドIDが実行中と異なる場合は一度だけ再読
     },
   }
 
-  // When: API失敗を続けて通知する。
-  await reloadWhenNewFrontendIsAvailable(dependencies)
+  // When: 1回目のAPI失敗を通知する。
   await reloadWhenNewFrontendIsAvailable(dependencies)
 
-  // Then: 同一セッションでは最初の一度だけ再読み込みする。
+  // Then: 初回の通知で再読み込みする。
+  assert.equal(reloadCount, 1)
+
+  // When: 同じセッションで2回目のAPI失敗を通知する。
+  await reloadWhenNewFrontendIsAvailable(dependencies)
+
+  // Then: 同じ公開ビルドへは再度読み込まない。
   assert.equal(reloadCount, 1)
 })
 

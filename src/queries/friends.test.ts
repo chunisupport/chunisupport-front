@@ -39,52 +39,80 @@ test('フレンド一覧query keyは認証ユーザーと一覧種別で分離�
   assert.notDeepEqual(aliceFriends, bobFriends)
 })
 
-test('フレンド操作ごとに必要なqueryだけを無効化対象にする', async () => {
-  // Given: 各フレンド操作。
+test('フレンド申請は必要なqueryだけを正確な一致範囲で無効化対象にする', async () => {
+  // Given: aliceのフレンド申請操作。
   const { getFriendMutationInvalidationFilters } = await loadFriendsQuery()
 
-  // When: query key一覧へ変換する。
-  const requestKeys = getFriendMutationInvalidationFilters('alice', 'request').map(
-    (filter) => filter.queryKey
-  )
-  const acceptKeys = getFriendMutationInvalidationFilters('alice', 'accept').map(
-    (filter) => filter.queryKey
-  )
-  const rejectKeys = getFriendMutationInvalidationFilters('alice', 'reject').map(
-    (filter) => filter.queryKey
-  )
-  const cancelKeys = getFriendMutationInvalidationFilters('alice', 'cancel').map(
-    (filter) => filter.queryKey
-  )
-  const removeKeys = getFriendMutationInvalidationFilters('alice', 'remove').map(
-    (filter) => filter.queryKey
-  )
+  // When: 無効化filter全体を取得する。
+  const filters = getFriendMutationInvalidationFilters('alice', 'request')
 
-  // Then: 交差申請、拒否、解除の影響範囲を分ける。
-  assert.deepEqual(requestKeys, [
-    ['friendships', 'alice', 'friends'],
-    ['friendships', 'alice', 'requests', 'received'],
-    ['friendships', 'alice', 'requests', 'sent'],
-    ['friendships', 'alice', 'slots'],
-    ['friend-rankings', 'alice'],
+  // Then: 一覧は完全一致、ランキング・比較は子queryも対象にする。
+  assert.deepEqual(filters, [
+    { queryKey: ['friendships', 'alice', 'friends'], exact: true },
+    { queryKey: ['friendships', 'alice', 'requests', 'received'], exact: true },
+    { queryKey: ['friendships', 'alice', 'requests', 'sent'], exact: true },
+    { queryKey: ['friendships', 'alice', 'slots'], exact: true },
+    { queryKey: ['friend-rankings', 'alice'] },
   ])
-  assert.deepEqual(acceptKeys, [
-    ['friendships', 'alice', 'requests', 'received'],
-    ['friendships', 'alice', 'friends'],
-    ['friendships', 'alice', 'slots'],
-    ['friend-rankings', 'alice'],
-    ['friend-comparisons', 'alice'],
+})
+
+test('フレンド承認は必要なqueryだけを正確な一致範囲で無効化対象にする', async () => {
+  // Given: aliceのフレンド承認操作。
+  const { getFriendMutationInvalidationFilters } = await loadFriendsQuery()
+
+  // When: 無効化filter全体を取得する。
+  const filters = getFriendMutationInvalidationFilters('alice', 'accept')
+
+  // Then: 一覧は完全一致、ランキング・比較は子queryも対象にする。
+  assert.deepEqual(filters, [
+    { queryKey: ['friendships', 'alice', 'requests', 'received'], exact: true },
+    { queryKey: ['friendships', 'alice', 'friends'], exact: true },
+    { queryKey: ['friendships', 'alice', 'slots'], exact: true },
+    { queryKey: ['friend-rankings', 'alice'] },
+    { queryKey: ['friend-comparisons', 'alice'] },
   ])
-  assert.deepEqual(rejectKeys, [['friendships', 'alice', 'requests', 'received']])
-  assert.deepEqual(cancelKeys, [
-    ['friendships', 'alice', 'requests', 'sent'],
-    ['friendships', 'alice', 'slots'],
+})
+
+test('フレンド拒否は必要なqueryだけを正確な一致範囲で無効化対象にする', async () => {
+  // Given: aliceのフレンド拒否操作。
+  const { getFriendMutationInvalidationFilters } = await loadFriendsQuery()
+
+  // When: 無効化filter全体を取得する。
+  const filters = getFriendMutationInvalidationFilters('alice', 'reject')
+
+  // Then: 一覧は完全一致、ランキング・比較は子queryも対象にする。
+  assert.deepEqual(filters, [
+    { queryKey: ['friendships', 'alice', 'requests', 'received'], exact: true },
   ])
-  assert.deepEqual(removeKeys, [
-    ['friendships', 'alice', 'friends'],
-    ['friendships', 'alice', 'slots'],
-    ['friend-rankings', 'alice'],
-    ['friend-comparisons', 'alice'],
+})
+
+test('フレンド取消は必要なqueryだけを正確な一致範囲で無効化対象にする', async () => {
+  // Given: aliceのフレンド取消操作。
+  const { getFriendMutationInvalidationFilters } = await loadFriendsQuery()
+
+  // When: 無効化filter全体を取得する。
+  const filters = getFriendMutationInvalidationFilters('alice', 'cancel')
+
+  // Then: 一覧は完全一致、ランキング・比較は子queryも対象にする。
+  assert.deepEqual(filters, [
+    { queryKey: ['friendships', 'alice', 'requests', 'sent'], exact: true },
+    { queryKey: ['friendships', 'alice', 'slots'], exact: true },
+  ])
+})
+
+test('フレンド解除は必要なqueryだけを正確な一致範囲で無効化対象にする', async () => {
+  // Given: aliceのフレンド解除操作。
+  const { getFriendMutationInvalidationFilters } = await loadFriendsQuery()
+
+  // When: 無効化filter全体を取得する。
+  const filters = getFriendMutationInvalidationFilters('alice', 'remove')
+
+  // Then: 一覧は完全一致、ランキング・比較は子queryも対象にする。
+  assert.deepEqual(filters, [
+    { queryKey: ['friendships', 'alice', 'friends'], exact: true },
+    { queryKey: ['friendships', 'alice', 'slots'], exact: true },
+    { queryKey: ['friend-rankings', 'alice'] },
+    { queryKey: ['friend-comparisons', 'alice'] },
   ])
 })
 

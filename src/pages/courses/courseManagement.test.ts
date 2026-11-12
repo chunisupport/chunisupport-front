@@ -52,6 +52,23 @@ test('sortManagedCoursesはidxを数値として昇順に並べること', () =>
   )
 })
 
+test('sortManagedCoursesは桁数が異なるidxも文字列順ではなく数値順に並べること', () => {
+  // Given: 文字列順なら10が2より前になる、数値降順の入力。
+  const input: ManagedCourseDTO[] = [
+    { id: 'ten', idx: '10', name: '十番', class: '1' },
+    { id: 'two', idx: '2', name: '二番', class: '1' },
+  ]
+
+  // When
+  const sorted = sortManagedCourses(input)
+
+  // Then
+  assert.deepEqual(
+    sorted.map((course) => course.idx),
+    ['2', '10']
+  )
+})
+
 test('filterManagedCoursesはコース名・idx・idで絞り込むこと', () => {
   // Given: 複数フィールドにヒットする検索語。
 

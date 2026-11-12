@@ -77,12 +77,12 @@ test('パスごとにスクロール位置を保存・取得できること', ()
 })
 
 test('メインスクロール要素がある場合は現在位置を返すこと', () => {
-  // Given
+  // Given: app-main のIDで検索したときだけスクロール要素を返す document
   const originalDocument = globalThis.document
   const scrollTarget = { scrollTop: 640 }
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
-    value: { getElementById: () => scrollTarget },
+    value: { getElementById: (id: string) => (id === 'app-main' ? scrollTarget : null) },
   })
 
   try {

@@ -17,14 +17,14 @@ type FakeHost = XTimelineScriptHost & {
 /**
  * スクリプトタグとウィジェットAPIを差し替えられる文書を作る。
  *
- * @param existingScript - すでに文書へ入っているスクリプト。
+ * @param existingScripts - すでに文書へ入っているスクリプトの一覧。
  * @returns ローダーへ渡せるホスト。
  */
-const createFakeHost = (existingScript?: XTimelineScriptElement): FakeHost => {
+const createFakeHost = (existingScripts: XTimelineScriptElement[] = []): FakeHost => {
   const listeners = new Map<string, Array<() => void>>()
   const appended: XTimelineScriptElement[] = []
   let widgets: XTimelineWidgets | undefined
-  const script: XTimelineScriptElement = existingScript ?? {
+  const script: XTimelineScriptElement = {
     src: '',
     async: false,
     addEventListener: (type, listener) => {
@@ -37,7 +37,10 @@ const createFakeHost = (existingScript?: XTimelineScriptElement): FakeHost => {
   return {
     appended,
     document: {
-      querySelector: () => (appended.length > 0 ? script : (existingScript ?? null)),
+      querySelector: (selector) =>
+        [...existingScripts, ...appended].find(
+          (node) => selector === `script[src="${node.src}"]`
+        ) ?? null,
       createElement: () => script,
       head: {
         append: (node) => {
@@ -95,7 +98,7 @@ test('既存のスクリプトタグがあるときは追加しない', async ()
   // Given: 同じURLのスクリプトが既に文書にある。
   const listeners = new Map<string, Array<() => void>>()
   const existing: XTimelineScriptElement = {
-    src: X_TIMELINE_SCRIPT_SRC,
+    src: 'https://platform.x.com/widgets.js',
     async: true,
     addEventListener: (type, listener) => {
       const list = listeners.get(type) ?? []
@@ -104,17 +107,46 @@ test('既存のスクリプトタグがあるときは追加しない', async ()
     },
   }
   const load = createXTimelineScriptLoader()
-  const host = createFakeHost(existing)
+  const unrelated: XTimelineScriptElement = {
+    src: 'https://example.com/unrelated.js',
+    async: true,
+    addEventListener: () => assert.fail('無関係なタグを再利用してはいけない'),
+  }
+  const host = createFakeHost([unrelated, existing])
   const widgets: XTimelineWidgets = { widgets: { load: () => {} } }
 
   // When: 既存タグの load でAPIが現れる。
   const pending = load(host)
+  assert.equal(listeners.get('load')?.length, 1)
   host.setWidgets(widgets)
   for (const listener of listeners.get('load') ?? []) listener()
 
   // Then: タグを増やさずAPIを返す。
   assert.equal(await pending, widgets)
   assert.equal(host.appended.length, 0)
+})
+
+test('無関係なURLのタグしかない場合は対象スクリプトを追加する', async () => {
+  // Given: widgets.js ではないスクリプトだけがある文書
+  const unrelated: XTimelineScriptElement = {
+    src: 'https://example.com/unrelated.js',
+    async: true,
+    addEventListener: () => assert.fail('無関係なタグを再利用してはいけない'),
+  }
+  const host = createFakeHost([unrelated])
+  const load = createXTimelineScriptLoader()
+  const widgets: XTimelineWidgets = { widgets: { load: () => {} } }
+
+  // When: 対象スクリプトを読み込む
+  const pending = load(host)
+  host.setWidgets(widgets)
+  host.fire('load')
+
+  // Then: 無関係なタグは使わず、正しいURLのタグを新しく追加する
+  assert.equal(host.appended.length, 1)
+  assert.equal(host.appended[0]?.src, 'https://platform.x.com/widgets.js')
+  assert.notEqual(host.appended[0], unrelated)
+  assert.equal(await pending, widgets)
 })
 
 test('読み込みに失敗したPromiseを再実行してもスクリプトを増やさない', async () => {

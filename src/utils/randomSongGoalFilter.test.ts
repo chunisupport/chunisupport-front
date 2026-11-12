@@ -114,11 +114,16 @@ const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
 })
 
 test('保存済み目標の属性と未達成スコアで候補を絞り込むこと', () => {
-  // Given: 目標対象内の未達成・達成済み譜面と、対象外難易度の譜面がある。
+  // Given: 未達成・達成済み譜面と、各属性だけが不一致の未達成譜面がある。
   const candidates = [
     createCandidate({ song: createSong({ id: 'song-a' }) }),
     createCandidate({ song: createSong({ id: 'song-b' }) }),
     createCandidate({ song: createSong({ id: 'song-c' }), difficulty: 'BASIC', chartConst: 3 }),
+    createCandidate({ song: createSong({ id: 'difficulty-only' }), difficulty: 'BASIC' }),
+    createCandidate({ song: createSong({ id: 'below-min' }), chartConst: 12.9 }),
+    createCandidate({ song: createSong({ id: 'above-max' }), chartConst: 14.1 }),
+    createCandidate({ song: createSong({ id: 'genre-only' }), genre: 'ORIGINAL' }),
+    createCandidate({ song: createSong({ id: 'version-only' }), version: 'ORI' }),
   ]
   const records = createRandomSongRecordMap([
     createRecord({ id: 'song-a', score: 999999 }),

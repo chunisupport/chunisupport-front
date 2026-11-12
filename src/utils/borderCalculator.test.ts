@@ -26,20 +26,18 @@ test('2800ノーツ、目標1007500、目標JUSTICE数100の場合は数学的�
   // When
   const result = calculateBorder(input)
 
-  // Then
+  // Then: 各候補は許容失点700 (JUSTICE 1 + ATTACK 51 + MISS 101) をちょうど使い切り、
+  // スコアは (101 * 2800 - 700) * 10000 / 2800 = 1007500 になる。
   assert.equal(result.reachable, true)
   assert.equal(result.mode, 'candidates')
-  assert.deepEqual(
-    result.candidates.map(({ justice, attack, miss }) => ({ justice, attack, miss })),
-    [
-      { justice: 144, attack: 1, miss: 5 },
-      { justice: 143, attack: 3, miss: 4 },
-      { justice: 142, attack: 5, miss: 3 },
-      { justice: 141, attack: 7, miss: 2 },
-      { justice: 140, attack: 9, miss: 1 },
-      { justice: 139, attack: 11, miss: 0 },
-    ]
-  )
+  assert.deepEqual(result.candidates, [
+    { justice: 144, attack: 1, miss: 5, loss: 700, score: 1007500 },
+    { justice: 143, attack: 3, miss: 4, loss: 700, score: 1007500 },
+    { justice: 142, attack: 5, miss: 3, loss: 700, score: 1007500 },
+    { justice: 141, attack: 7, miss: 2, loss: 700, score: 1007500 },
+    { justice: 140, attack: 9, miss: 1, loss: 700, score: 1007500 },
+    { justice: 139, attack: 11, miss: 0, loss: 700, score: 1007500 },
+  ])
 })
 
 test('目標JUSTICE数と同値の候補を含むこと', () => {

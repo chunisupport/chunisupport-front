@@ -29,9 +29,23 @@ for (const operation of ['create', 'rename', 'delete'] as const) {
 
     // Then: 管理API1件に加え、一覧と全マスタ2件だけが再取得される。
     assert.equal(calls.length, 6)
-    assert.equal(
-      calls[3]?.init?.method,
-      { create: 'POST', rename: 'PUT', delete: 'DELETE' }[operation]
+    assert.deepEqual(
+      {
+        versions: calls.filter(
+          (call) => String(call.input) === 'http://localhost:3000/internal/master/versions'
+        ).length,
+        master: calls.filter(
+          (call) => String(call.input) === 'http://localhost:3000/internal/master'
+        ).length,
+        genres: calls.filter(
+          (call) => String(call.input) === 'http://localhost:3000/internal/master/genres'
+        ).length,
+      },
+      { versions: 2, master: 2, genres: 1 }
+    )
+    assert.deepEqual(
+      calls.filter((call) => call.init?.method).map((call) => call.init?.method),
+      [{ create: 'POST', rename: 'PUT', delete: 'DELETE' }[operation]]
     )
   })
 

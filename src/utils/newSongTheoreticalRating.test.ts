@@ -110,6 +110,42 @@ test('現行バージョンより前の全譜面からベスト枠上位30件を
 
   // Then: 現行バージョン以降の譜面と最下位譜面を除き、未確定定数を含む上位30譜面を返す。
   assert.equal(result?.entries.length, 30)
+  assert.equal(result?.rating, 16.7)
+  assert.deepEqual(
+    result?.entries.map((entry) => entry.songId),
+    [
+      'old-30',
+      'old-29',
+      'old-28',
+      'old-27',
+      'old-26',
+      'old-25',
+      'old-24',
+      'old-23',
+      'old-22',
+      'old-21',
+      'old-20',
+      'old-19',
+      'old-18',
+      'old-17',
+      'old-16',
+      'old-15',
+      'old-14',
+      'old-13',
+      'old-12',
+      'old-11',
+      'old-10',
+      'old-9',
+      'old-8',
+      'old-7',
+      'old-6',
+      'old-5',
+      'old-4',
+      'old-3',
+      'old-2',
+      'old-1',
+    ]
+  )
   assert.equal(
     result?.entries.some((entry) => entry.songId === 'future'),
     false

@@ -57,22 +57,119 @@ test('コースマスタAPIはコース一覧を取得する', async () => {
   assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/courses')
 })
 
-test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
-  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
-  const {
-    createWorldsendSong,
-    deleteWorldsendSongByDisplayId,
-    fetchManagedWorldsendSongs,
-    fetchWorldsendSongByDisplayId,
-    fetchWorldsendSongs,
-    restoreWorldsendSongByDisplayId,
-    updateWorldsendSongs,
-  } = await loadSongsApi()
+for (const { label, operation, url, method } of [
+  {
+    label: '一覧取得',
+    operation: 'fetchWorldsendSongs',
+    url: 'http://localhost:3000/internal/worldsend-songs',
+    method: 'GET',
+  },
+  {
+    label: '管理用一覧取得',
+    operation: 'fetchManagedWorldsendSongs',
+    url: 'http://localhost:3000/internal/editor/worldsend-songs',
+    method: 'GET',
+  },
+  {
+    label: '詳細取得',
+    operation: 'fetchWorldsendSongByDisplayId',
+    url: 'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+    method: 'GET',
+  },
+  {
+    label: '削除',
+    operation: 'deleteWorldsendSongByDisplayId',
+    url: 'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+    method: 'DELETE',
+  },
+  {
+    label: '復元',
+    operation: 'restoreWorldsendSongByDisplayId',
+    url: 'http://localhost:3000/internal/worldsend-songs/A%2FB%20C/restore',
+    method: 'POST',
+  },
+] as const) {
+  test(`WORLD'S END楽曲の${label}は独立リソースのパスとHTTPメソッドを使う`, async () => {
+    // Given
+    const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+    const api = await loadSongsApi()
 
-  await fetchWorldsendSongs()
-  await fetchManagedWorldsendSongs()
-  await fetchWorldsendSongByDisplayId('A/B C')
+    // When
+    if (operation === 'fetchWorldsendSongs' || operation === 'fetchManagedWorldsendSongs') {
+      await api[operation]()
+    } else {
+      await api[operation]('A/B C')
+    }
+
+    // Then
+    assert.equal(calls.length, 1)
+    assert.equal(String(calls[0]?.input), url)
+    assert.equal(calls[0]?.init?.method ?? 'GET', method)
+  })
+}
+
+test("WORLD'S END楽曲の一括更新はPUTで空配列も送信する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { updateWorldsendSongs } = await loadSongsApi()
+
+  // When
   await updateWorldsendSongs([])
+
+  // Then
+  assert.equal(calls.length, 1)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.method, 'PUT')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.equal(calls[0]?.init?.body, '[]')
+})
+
+test("WORLD'S END楽曲の一括更新はPUTで更新内容をJSON本文に送信する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { updateWorldsendSongs } = await loadSongsApi()
+
+  // When
+  await updateWorldsendSongs([
+    {
+      id: 'A/B C',
+      title: '更新曲',
+      reading: null,
+      artist: 'artist',
+      genre: null,
+      bpm: null,
+      released_at: null,
+      jacket: null,
+      is_new: false,
+    },
+  ])
+
+  // Then
+  assert.equal(calls.length, 1)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.method, 'PUT')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), [
+    {
+      id: 'A/B C',
+      title: '更新曲',
+      reading: null,
+      artist: 'artist',
+      genre: null,
+      bpm: null,
+      released_at: null,
+      jacket: null,
+      is_new: false,
+    },
+  ])
+})
+
+test("WORLD'S END楽曲の新規作成はPOSTで作成内容をJSON本文に送信する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { createWorldsendSong } = await loadSongsApi()
+
+  // When
   await createWorldsendSong({
     official_idx: '1',
     title: 'test',
@@ -82,21 +179,21 @@ test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", as
     released_at: null,
     jacket: null,
   })
-  await deleteWorldsendSongByDisplayId('A/B C')
-  await restoreWorldsendSongByDisplayId('A/B C')
 
-  assert.deepEqual(
-    calls.map((call) => String(call.input)),
-    [
-      'http://localhost:3000/internal/worldsend-songs',
-      'http://localhost:3000/internal/editor/worldsend-songs',
-      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
-      'http://localhost:3000/internal/worldsend-songs',
-      'http://localhost:3000/internal/worldsend-songs',
-      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
-      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C/restore',
-    ]
-  )
+  // Then
+  assert.equal(calls.length, 1)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.method, 'POST')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
+    official_idx: '1',
+    title: 'test',
+    artist: 'artist',
+    genre: 'genre',
+    bpm: null,
+    released_at: null,
+    jacket: null,
+  })
 })
 
 test('スコア履歴APIはユーザーレコード配下の新パスを呼び出す', async () => {

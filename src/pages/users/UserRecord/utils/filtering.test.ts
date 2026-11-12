@@ -608,7 +608,7 @@ test('isRecordMatched は楽曲名順が空配列の場合にどのレコード�
   assert.equal(isRecordMatched(createRecord({ name_folder_code: 'SA' }), filters), false)
 })
 
-test('createRecordTitleMatcher は渡したキャッシュの検索用文字列で判定し、検索文字列を変えても同じ正規化結果を使うこと', () => {
+test('検索文字列を変えても同じレコードの正規化結果をキャッシュから再利用すること', () => {
   // Given
   const record = createRecord({ title: 'アルファ', artist: 'LeaF', reading: 'あるふぁ' })
   const getSearchText = createSearchTextCache<PlayerRecordWithSongMeta>()
@@ -623,3 +623,31 @@ test('createRecordTitleMatcher は渡したキャッシュの検索用文字列�
   assert.deepEqual(results, [true, true, false])
   assert.equal(getSearchText(record), cachedText)
 })
+
+for (const { query, expected } of [
+  { query: 'injected', expected: true },
+  { query: 'アルファ', expected: false },
+  { query: '存在しない曲', expected: false },
+]) {
+  test(`曲名マッチャーはレコード本体ではなく注入された検索用文字列で「${query}」を判定すること`, () => {
+    // Given: 本体に存在しない検索語を含む正規化結果。
+    const record = createRecord({ title: 'アルファ', artist: 'LeaF', reading: 'あるふぁ' })
+    const requestedRecords: PlayerRecordWithSongMeta[] = []
+    const matcher = createRecordTitleMatcher(query, (source) => {
+      requestedRecords.push(source)
+      return {
+        normalizedTitle: 'injected',
+        normalizedArtist: '',
+        normalizedReading: '',
+      }
+    })
+
+    // When: 注入した検索用文字列で判定する。
+    const result = matcher(record)
+
+    // Then: 本体を再正規化せず、渡されたレコードで注入関数を呼び出す。
+    assert.equal(result, expected)
+    assert.deepEqual(requestedRecords, [record])
+    assert.equal(requestedRecords[0], record)
+  })
+}

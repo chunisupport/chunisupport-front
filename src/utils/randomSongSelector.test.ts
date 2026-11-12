@@ -199,12 +199,22 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
       version: 'NEW',
       chartConst: 13.7,
     }),
-    createCandidate({ difficulty: 'EXPERT', genre: 'niconico', version: 'NEW', chartConst: 11.2 }),
+    createCandidate({
+      difficulty: 'EXPERT',
+      genre: 'POPS & ANIME',
+      version: 'NEW',
+      chartConst: 13.7,
+    }),
+    createCandidate({ genre: 'niconico', version: 'NEW', chartConst: 13.7 }),
+    createCandidate({ chartConst: 12.9 }),
+    createCandidate({ chartConst: 13 }),
+    createCandidate({ chartConst: 14 }),
+    createCandidate({ chartConst: 14.1 }),
     createCandidate({
       difficulty: 'ULTIMA',
       genre: 'POPS & ANIME',
       version: 'VERSE',
-      chartConst: 14.5,
+      chartConst: 13.7,
     }),
   ]
 
@@ -220,8 +230,15 @@ test('難易度・ジャンル・バージョン・譜面定数で候補を絞�
 
   // Then: すべての条件に一致した候補だけが残る。
   assert.deepEqual(
-    filtered.map((candidate) => candidate.difficulty),
-    ['MASTER']
+    filtered.map((candidate) => ({
+      difficulty: candidate.difficulty,
+      chartConst: candidate.chartConst,
+    })),
+    [
+      { difficulty: 'MASTER', chartConst: 13.7 },
+      { difficulty: 'MASTER', chartConst: 13 },
+      { difficulty: 'MASTER', chartConst: 14 },
+    ]
   )
 })
 
@@ -440,7 +457,7 @@ test('重み付き抽選は重み0の候補を除外し重複なしで選ぶこ�
   )
 })
 
-test('定数別の倍率は難易度倍率と掛け合わせて抽選対象を制御すること', () => {
+test('定数別の倍率0は小数点以下1桁で判定して抽選対象から除外すること', () => {
   // Given: 同じ難易度で譜面定数だけが異なる候補がある。
   const candidates = [
     createCandidate({
@@ -462,6 +479,36 @@ test('定数別の倍率は難易度倍率と掛け合わせて抽選対象を�
   assert.deepEqual(
     selected.map((candidate) => candidate.song.id),
     ['song-b']
+  )
+})
+
+/** 各倍率の積でのみ区間が決まる固定乱数で抽選を検証する。 */
+test('難易度倍率と定数倍率の積によって当選先が変わること', () => {
+  // Given: 積では重み6対1、片方だけなら2対1または3対1となる候補。
+  const candidates = [
+    createCandidate({
+      song: createSong({ id: 'weighted' }),
+      difficulty: 'MASTER',
+      chartConst: 13.7,
+    }),
+    createCandidate({ song: createSong({ id: 'ordinary' }), difficulty: 'ULTIMA', chartConst: 14 }),
+  ]
+
+  // When: 積の抽選区間内だが、片方だけの区間外となる乱数で抽選する。
+  const selected = drawRandomSongs(
+    candidates,
+    1,
+    {
+      difficultyWeights: { MASTER: 2 },
+      constWeights: { '13.7': 3 },
+    },
+    () => 0.8
+  )
+
+  // Then: 両倍率を掛けた候補が当選する（加算の重み5対2でも当選しない）。
+  assert.deepEqual(
+    selected.map((candidate) => candidate.song.id),
+    ['weighted']
   )
 })
 

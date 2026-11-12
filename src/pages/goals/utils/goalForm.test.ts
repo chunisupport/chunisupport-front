@@ -46,9 +46,18 @@ test('保存用ペイロードは実数値と割合の反転フラグを独立�
   // When: 保存用ペイロードへ変換する
   const result = buildGoalPayload(goal)
 
-  // Then: 両方の反転フラグが変更されずに含まれる
-  assert.equal(result.invert_value, true)
-  assert.equal(result.invert_percentage, false)
+  // Then: 保存項目だけを返し、レスポンス専用項目は含めない。
+  assert.deepEqual(result, {
+    group_id: null,
+    title: '残り値だけを表示',
+    achievement_type: 'score_count',
+    achievement_params: { score: 1_000_000, count: 10 },
+    attributes: {},
+    invert_value: true,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+  })
   assert.equal('invert' in result, false)
 })
 
@@ -123,9 +132,18 @@ test('保存用ペイロードはゲージのスタート位置と達成率へ�
   // When: 保存用ペイロードへ変換する
   const result = buildGoalPayload(goal)
 
-  // Then
-  assert.equal(result.gauge_start, 99.6)
-  assert.equal(result.apply_gauge_start_to_percentage, true)
+  // Then: ゲージ設定を含む保存項目だけを返す。
+  assert.deepEqual(result, {
+    group_id: null,
+    title: 'OP達成率99.8%',
+    achievement_type: 'overpower_percent',
+    achievement_params: { total: 99.8 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 99.6,
+    apply_gauge_start_to_percentage: true,
+  })
 })
 
 test('レベル指定で保存した定数範囲はレベルで表示する', () => {

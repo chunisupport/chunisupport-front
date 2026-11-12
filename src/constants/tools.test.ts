@@ -109,7 +109,7 @@ test('ウニ埋めマトリックスは通常ユーザーにも表示する公�
   // When / Then
   assert.ok(uniFillMatrix)
   assert.equal(uniFillMatrix.title, 'ウニ埋めマトリックス')
-  assert.equal(publicTools[publicTools.length - 1], uniFillMatrix)
+  assert.ok(publicTools.includes(uniFillMatrix))
   assert.equal(uniFillMatrix.adminOnly, undefined)
   assert.equal(isPublicToolLink(uniFillMatrix), true)
   for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {

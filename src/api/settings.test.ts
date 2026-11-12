@@ -15,12 +15,49 @@ test('APIトークン一覧は認証付きGETでtokensレスポンスを返す',
 
   // When: APIトークン一覧を取得する。
   const { fetchApiTokens } = await loadSettingsApi()
-  await fetchApiTokens()
+  const result = await fetchApiTokens()
 
-  // Then: 最新仕様の一覧エンドポイントを認証付きで呼び出す。
+  // Then: 空の一覧もレスポンスとして返し、最新仕様の一覧エンドポイントを認証付きで呼び出す。
+  assert.deepEqual(result, { tokens: [] })
   assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/auth/api-tokens')
   assert.equal(calls[0]?.init?.method, 'GET')
   assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
+})
+
+test('APIトークン一覧は非空のtokensレスポンスを返す', async () => {
+  // Given: 発行済みトークンを含む一覧レスポンス。
+  installFetchRecorder(() =>
+    Response.json({
+      tokens: [
+        {
+          id: 42,
+          name: 'CLI',
+          permission: 'read',
+          token_prefix: 'prefix',
+          last_used_at: null,
+          created_at: '2026-07-22T12:34:56+09:00',
+        },
+      ],
+    })
+  )
+
+  // When: APIトークン一覧を取得する。
+  const { fetchApiTokens } = await loadSettingsApi()
+  const result = await fetchApiTokens()
+
+  // Then: トークン管理情報を欠落させず返す。
+  assert.deepEqual(result, {
+    tokens: [
+      {
+        id: 42,
+        name: 'CLI',
+        permission: 'read',
+        token_prefix: 'prefix',
+        last_used_at: null,
+        created_at: '2026-07-22T12:34:56+09:00',
+      },
+    ],
+  })
 })
 
 test('APIトークン発行はnameとpermissionをJSONでPOSTする', async () => {

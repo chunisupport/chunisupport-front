@@ -26,12 +26,35 @@ test('更新日が未設定や不正な場合はハイフンを返す', () => {
   assert.equal(formatUpdatedAt('invalid'), '-')
 })
 
+test('更新日のソート値はUNIXエポックからのミリ秒になる', () => {
+  // Given: UTCと日本時間で表した同じ既知日時
+  const utc = '2026-01-01T00:00:00Z'
+  const jst = '2026-01-01T09:00:00+09:00'
+
+  // When
+  const utcTimestamp = updatedAtTimestamp(utc)
+  const jstTimestamp = updatedAtTimestamp(jst)
+
+  // Then: 秒や日付ではなくミリ秒単位の同じ値になる
+  assert.equal(utcTimestamp, 1_767_225_600_000)
+  assert.equal(jstTimestamp, 1_767_225_600_000)
+})
+
 test('更新日のソート値は新しい日時ほど大きくなる', () => {
+  // Given / When
   const older = updatedAtTimestamp('2025-01-01T00:00:00Z')
   const newer = updatedAtTimestamp('2026-01-01T00:00:00Z')
 
+  // Then
   assert.ok(newer > older)
-  assert.equal(updatedAtTimestamp(null), Number.NEGATIVE_INFINITY)
+})
+
+test('更新日が未設定のソート値は負の無限大になる', () => {
+  // Given / When
+  const missing = updatedAtTimestamp(null)
+
+  // Then
+  assert.equal(missing, Number.NEGATIVE_INFINITY)
 })
 
 test('不正な更新日は未設定として扱う', () => {

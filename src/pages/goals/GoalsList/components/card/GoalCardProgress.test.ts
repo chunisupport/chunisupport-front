@@ -121,7 +121,7 @@ test('スタート位置を達成率へ適用しない場合はゲージだけ�
   assert.deepEqual([inverted.percentPrefixText, inverted.percentText], ['あと', '0.10%'])
 })
 
-test('OVER POWER達成率の反転表示は残量の後ろに%を付ける', () => {
+test('現在値が目標の半分の場合もOVER POWER達成率の残量に%を付ける', () => {
   // Given
   const progress = {
     current: 10,
@@ -137,6 +137,25 @@ test('OVER POWER達成率の反転表示は残量の後ろに%を付ける', () 
 
   // Then
   assert.equal(result.currentText, '10.000%')
+  assert.equal(result.targetText, '20.000%')
+})
+
+test('OVER POWER達成率の反転表示は現在値ではなく残量の後ろに%を付ける', () => {
+  // Given: 現在値と残量が異なる進捗
+  const progress = {
+    current: 7,
+    target: 20,
+    percent: 35,
+    achieved: false,
+    targetCount: 10,
+    hasUnknownMaxOp: false,
+  }
+
+  // When: 実数値だけを反転表示する
+  const result = resolveGoalCardDisplayProgress(progress, 'overpower_percent', true, false)
+
+  // Then: 現在値7ではなく残量13に%を付け、目標値は変えない
+  assert.equal(result.currentText, '13.000%')
   assert.equal(result.targetText, '20.000%')
 })
 

@@ -80,6 +80,30 @@ test('目標値が0以下の場合も数値として扱える達成率を返す�
   assert.equal(result, 0)
 })
 
+test('目標値が0の場合は分母を1として現在値1を100%と計算すること', () => {
+  // Given: 目標値ちょうど0
+  const current = 1
+  const target = 0
+
+  // When
+  const result = calculateGoalGaugePercent(current, target, 10)
+
+  // Then: 0除算の非有限値ではなく、分母1の達成率になる
+  assert.equal(result, 100)
+})
+
+test('目標値が負数の場合は分母を1として現在値1を100%と計算すること', () => {
+  // Given: 目標値が0未満
+  const current = 1
+  const target = -1
+
+  // When
+  const result = calculateGoalGaugePercent(current, target, 10)
+
+  // Then: 負の分母で0%へ切り捨てず、分母1の達成率になる
+  assert.equal(result, 100)
+})
+
 test('スタート位置が目標値と等しい場合は無視して0から計算すること', () => {
   // Given
   const current = 50

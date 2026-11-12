@@ -78,6 +78,18 @@ test('マスタとレコードの更新日時から新しい方を選ぶこと',
   // When: 更新日時を比較する。
   const result = newerCourseUpdatedAt(masterUpdatedAt, recordUpdatedAt)
 
-  // Then: タイムゾーンを考慮した新しい日時を返す。
+  // Then: 新しいレコード日時を返す。
   assert.equal(result, recordUpdatedAt)
+})
+
+test('更新日時は文字列順ではなくタイムゾーンを考慮して新しい方を選ぶこと', () => {
+  // Given: 文字列では右が大きいが、実時刻では左が1時間新しい。
+  const left = '2026-07-15T02:00:00Z'
+  const right = '2026-07-15T10:00:00+09:00'
+
+  // When: 更新日時を比較する。
+  const result = newerCourseUpdatedAt(left, right)
+
+  // Then: UTCで新しい左の日時を返す。
+  assert.equal(result, '2026-07-15T02:00:00Z')
 })

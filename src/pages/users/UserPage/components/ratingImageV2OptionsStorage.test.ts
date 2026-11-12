@@ -15,7 +15,10 @@ import {
  * @returns なし。
  */
 const withMockedLocalStorage = (
-  localStorage: { getItem?: () => string | null; setItem?: (key: string, value: string) => void },
+  localStorage: {
+    getItem?: (key: string) => string | null
+    setItem?: (key: string, value: string) => void
+  },
   run: () => void
 ): void => {
   const previousWindow = globalThis.window
@@ -35,13 +38,18 @@ const withMockedLocalStorage = (
 }
 
 test('保存済みの開閉状態を読み取ること', () => {
-  // Given: 折りたたみ済みの値が保存されている。
+  // Given: キーを区別するメモリ上のStorage。
+  const stored = new Map<string, string>()
   withMockedLocalStorage(
     {
-      getItem: () => 'false',
+      getItem: (key) => stored.get(key) ?? null,
+      setItem: (key, value) => {
+        stored.set(key, value)
+      },
     },
     () => {
-      // When: 開閉状態を読み取る。
+      // When: 閉じた状態を保存し、同じStorageから読み戻す。
+      saveRatingImageV2OptionsOpen(false)
       const result = readRatingImageV2OptionsOpen()
 
       // Then: 閉じた状態になる。

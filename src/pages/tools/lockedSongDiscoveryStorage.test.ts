@@ -89,13 +89,19 @@ test('不正な項目を除外し、有効な入力文字列だけを復元す�
   })
 })
 
-test('未認証時は保存済みの入力値を読まず書き込まない', () => {
-  // Given, When
+test('未認証時は保存済みの入力値を読まず書き込まない', (t) => {
+  // Given: ストレージアクセスを記録する
+  const getItem = t.mock.method(window.localStorage, 'getItem')
+  const setItem = t.mock.method(window.localStorage, 'setItem')
+
+  // When
   saveLockedSongObservations(undefined, { 'level:14+': { overPower: '12', percent: '' } })
 
   // Then
   assert.deepEqual(readLockedSongObservations(undefined), {})
   assert.equal(stored.size, 0)
+  assert.equal(getItem.mock.callCount(), 0)
+  assert.equal(setItem.mock.callCount(), 0)
 })
 
 test('localStorageの読み書きが失敗しても例外を外に投げない', (t) => {
@@ -112,7 +118,43 @@ test('localStorageの読み書きが失敗しても例外を外に投げない',
   assert.doesNotThrow(() => saveLockedSongObservations('alice', {}))
 })
 
-for (const axis of ['genre', 'version', 'nameFolder', 'level'] as const) {
+for (const { axis, expected } of [
+  {
+    axis: 'genre',
+    expected: {
+      'version:VERSE': { overPower: '3', percent: '4' },
+      'nameFolder:C': { overPower: '5', percent: '6' },
+      'level:14+': { overPower: '7', percent: '8' },
+      'level:13': { overPower: '', percent: '9.' },
+    },
+  },
+  {
+    axis: 'version',
+    expected: {
+      'genre:POPS': { overPower: '1', percent: '2' },
+      'nameFolder:C': { overPower: '5', percent: '6' },
+      'level:14+': { overPower: '7', percent: '8' },
+      'level:13': { overPower: '', percent: '9.' },
+    },
+  },
+  {
+    axis: 'nameFolder',
+    expected: {
+      'genre:POPS': { overPower: '1', percent: '2' },
+      'version:VERSE': { overPower: '3', percent: '4' },
+      'level:14+': { overPower: '7', percent: '8' },
+      'level:13': { overPower: '', percent: '9.' },
+    },
+  },
+  {
+    axis: 'level',
+    expected: {
+      'genre:POPS': { overPower: '1', percent: '2' },
+      'version:VERSE': { overPower: '3', percent: '4' },
+      'nameFolder:C': { overPower: '5', percent: '6' },
+    },
+  },
+] as const) {
   test(`${axis}の消去は他分類と元の入力値を維持し、再読み込み後も復活しない`, () => {
     // Given
     const observations = {
@@ -125,16 +167,17 @@ for (const axis of ['genre', 'version', 'nameFolder', 'level'] as const) {
     saveLockedSongObservations('alice', observations)
 
     // When
-    const cleared = clearLockedSongObservations(readLockedSongObservations('alice'), axis)
+    const input = readLockedSongObservations('alice')
+    const snapshot = structuredClone(input)
+    const cleared = clearLockedSongObservations(input, axis)
     saveLockedSongObservations('alice', cleared)
 
     // Then
     const restored = readLockedSongObservations('alice')
-    for (const [key, value] of Object.entries(observations)) {
-      if (key.startsWith(`${axis}:`)) assert.equal(key in restored, false)
-      else assert.deepEqual(restored[key], value)
-    }
-    assert.equal(Object.keys(observations).length, 5)
+    assert.deepEqual(cleared, expected)
+    assert.deepEqual(restored, expected)
+    assert.deepEqual(input, snapshot)
+    assert.deepEqual(observations, snapshot)
     assert.deepEqual(clearLockedSongObservations(cleared, axis), cleared)
   })
 }

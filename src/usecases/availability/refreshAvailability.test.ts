@@ -37,9 +37,14 @@ test('同時の状態確認は1つのin-flight Promiseへ集約される', async
   // Then: API呼び出しとPromiseは共有され、通常稼働状態を反映する
   assert.equal(first, second)
   assert.equal(fetchCount, 1)
-  assert.equal(firstResult.type, 'success')
   assert.equal(secondResult, firstResult)
-  assert.equal(availability.state.kind, 'operational')
+  const expectedState = {
+    kind: 'operational',
+    updatedAt: '2026-07-26T12:34:56+09:00',
+    checkedAt: 100,
+  }
+  assert.deepEqual(firstResult, { type: 'success', state: expectedState })
+  assert.deepEqual(availability.state, expectedState)
 })
 
 test('既知のメンテナンス中に再確認が失敗してもコメントを保持する', async () => {

@@ -148,17 +148,18 @@ test('ULTIMAが存在する楽曲ではULTIMAも必須難易度に含める', ()
 })
 
 test('必須譜面がすべてAJの楽曲だけを虹枠達成数へ数える', () => {
-  // Given
+  // Given: BASIC〜MASTERの2曲。achievedは全譜面AJ、unachievedはMASTERだけFC
   const songs = [createSong({ id: 'achieved' }), createSong({ id: 'unachieved' })]
-  const records = songs.flatMap((song) =>
-    getRainbowRequiredDifficulties(song).map((difficulty) =>
-      createRecord(
-        song.id,
-        difficulty,
-        song.id === 'unachieved' && difficulty === 'MASTER' ? 'FULL COMBO' : 'ALL JUSTICE'
-      )
-    )
-  )
+  const records = [
+    createRecord('achieved', 'BASIC', 'ALL JUSTICE'),
+    createRecord('achieved', 'ADVANCED', 'ALL JUSTICE'),
+    createRecord('achieved', 'EXPERT', 'ALL JUSTICE'),
+    createRecord('achieved', 'MASTER', 'ALL JUSTICE'),
+    createRecord('unachieved', 'BASIC', 'ALL JUSTICE'),
+    createRecord('unachieved', 'ADVANCED', 'ALL JUSTICE'),
+    createRecord('unachieved', 'EXPERT', 'ALL JUSTICE'),
+    createRecord('unachieved', 'MASTER', 'FULL COMBO'),
+  ]
 
   // When
   const result = calculateRainbowGoalProgress(createGoal({}), songs, records)

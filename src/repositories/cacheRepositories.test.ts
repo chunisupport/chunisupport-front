@@ -264,12 +264,40 @@ test('コースマスタキャッシュは専用schemaVersionがない旧形式�
     coursesUpdatedAt: '2026-07-15T09:00:00Z',
     fetchedAt: '2026-07-15T09:00:00Z',
   })
-  await db.courses.put({ id: course.id, data: course } as CachedCourse)
+  await db.courses.put({ id: course.id, sortOrder: 0, data: course } as CachedCourse)
 
   // When: キャッシュを読み込む。
   const cachedCourses = await readCachedCourses('2026-07-15T09:00:00Z')
 
   // Then: 旧形式のコースキャッシュは利用しない。
+  assert.equal(cachedCourses, null)
+})
+
+test('コースマスタキャッシュは順序情報だけがない場合は読み込まれないこと', async () => {
+  // Given: 現行スキーマの行から順序情報だけを欠落させる。
+  await replaceCachedCourses([course], '2026-07-15T09:00:00Z')
+  await db.courses.put({
+    id: course.id,
+    schemaVersion: COURSE_CACHE_SCHEMA_VERSION,
+    data: course,
+  } as CachedCourse)
+
+  // When
+  const cachedCourses = await readCachedCourses('2026-07-15T09:00:00Z')
+
+  // Then
+  assert.equal(cachedCourses, null)
+})
+
+test('コースマスタキャッシュはschemaVersionも順序情報もない旧形式を読み込まないこと', async () => {
+  // Given: 両方の情報がない旧形式の行。
+  await replaceCachedCourses([course], '2026-07-15T09:00:00Z')
+  await db.courses.put({ id: course.id, data: course } as CachedCourse)
+
+  // When
+  const cachedCourses = await readCachedCourses('2026-07-15T09:00:00Z')
+
+  // Then
   assert.equal(cachedCourses, null)
 })
 
@@ -317,7 +345,14 @@ test('コースレコードキャッシュはマスタ情報を除いてユー�
     ],
     meta: courseRecordResponse.meta,
   })
-  assert.equal('name' in (stored?.data ?? {}), false)
+  assert.ok(stored)
+  assert.deepEqual(stored.data, {
+    id: 'course-1',
+    score: 3_020_000,
+    is_clear: true,
+    combo_lamp: 'FULL COMBO',
+    updated_at: '2026-07-15T10:00:00Z',
+  })
 })
 
 test('ユーザー API キャッシュは username と updated-at が一致する場合だけ読み込まれること', async () => {
@@ -354,48 +389,67 @@ test('ユーザー API キャッシュは username と updated-at が一致す�
   assert.equal(mismatchedRecord, null)
 })
 
-test('全件レコードキャッシュは曲単位に分割して保存されること', async () => {
+const standardSongRecord = {
+  is_played: true,
+  is_op_target: true,
+  updated_at: '2026-06-16T12:00:00Z',
+  difficulty: 'MASTER',
+  id: 'song-1',
+  title: 'テスト楽曲',
+  artist: 'テスト',
+  const: 14.5,
+  is_const_unknown: false,
+  score: 1_009_500,
+  rating: 17.14,
+  overpower: 5.67,
+  justice_count: null,
+  overpower_percent: 98.2857,
+  img: '',
+  clear_lamp: 'CLEAR',
+  combo_lamp: 'FULL COMBO',
+  full_chain: null,
+  slot: 'best',
+} as const
+
+const standardSongRecordKey = {
+  username: 'alice',
+  userUpdatedAt: 'user-1',
+  songsUpdatedAt: 'songs-1',
+}
+
+test('全件レコードキャッシュは1曲1譜面を曲単位で保存し、全件レスポンスとしては保存しないこと', async () => {
   // Given
-  const songRecord = {
-    is_played: true,
-    is_op_target: true,
-    updated_at: '2026-06-16T12:00:00Z',
-    difficulty: 'MASTER',
-    id: 'song-1',
-    title: 'テスト楽曲',
-    artist: 'テスト',
-    const: 14.5,
-    is_const_unknown: false,
-    score: 1_009_500,
-    rating: 17.14,
-    overpower: 5.67,
-    justice_count: null,
-    overpower_percent: 98.2857,
-    img: '',
-    clear_lamp: 'CLEAR',
-    combo_lamp: 'FULL COMBO',
-    full_chain: null,
-    slot: 'best',
-  } as const
   await saveCachedUserRecord('alice', 'user-1', 'songs-1', {
-    standard: [songRecord],
+    standard: [standardSongRecord],
     worldsend: [],
     meta: { updated_at: '2026-06-16T12:00:00Z' },
   })
 
   // When
-  const cached = await readCachedStandardSongRecord(
-    {
-      username: 'alice',
-      userUpdatedAt: 'user-1',
-      songsUpdatedAt: 'songs-1',
-    },
-    'song-1'
-  )
+  const cached = await readCachedStandardSongRecord(standardSongRecordKey, 'song-1')
 
   // Then
-  assert.deepEqual(cached, [songRecord])
+  assert.deepEqual(cached, [standardSongRecord])
   assert.equal(await db.userApiResponses.count(), 0)
+})
+
+test('全件レコードキャッシュは同じ曲の複数譜面をまとめ、別曲の譜面を混ぜずに曲単位で保存すること', async () => {
+  // Given: 同じ曲の EXPERT・MASTER の間に別曲のレコードを挟む。
+  const expertRecord = { ...standardSongRecord, difficulty: 'EXPERT', score: 1_000_000 } as const
+  const otherSongRecord = { ...standardSongRecord, id: 'song-2', title: '別の楽曲' } as const
+  await saveCachedUserRecord('alice', 'user-1', 'songs-1', {
+    standard: [expertRecord, otherSongRecord, standardSongRecord],
+    worldsend: [],
+    meta: { updated_at: '2026-06-16T12:00:00Z' },
+  })
+
+  // When
+  const cached = await readCachedStandardSongRecord(standardSongRecordKey, 'song-1')
+  const otherCached = await readCachedStandardSongRecord(standardSongRecordKey, 'song-2')
+
+  // Then
+  assert.deepEqual(cached, [expertRecord, standardSongRecord])
+  assert.deepEqual(otherCached, [otherSongRecord])
 })
 
 test("WORLD'S END未プレイはキャッシュなしと区別して保存されること", async () => {

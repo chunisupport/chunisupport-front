@@ -136,24 +136,34 @@ test('Early Hints の規則は HTML へ複数の Link を書き、非HTMLでは 
     nonHtmlPaths,
   })
   const lines = rules.split('\n')
-  const rulePaths = lines.filter(
-    (line) => line !== '' && !line.startsWith('#') && !line.startsWith(' ')
-  )
+  const blocks: { path: string; headers: string[] }[] = []
+  for (const line of lines) {
+    if (line === '' || line.startsWith('#')) continue
+    if (line.startsWith(' ')) {
+      blocks[blocks.length - 1]?.headers.push(line)
+    } else {
+      blocks.push({ path: line, headers: [] })
+    }
+  }
 
-  // Then
-  assert.deepEqual(rulePaths, ['/*', '/static/*', '/version.json', '/favicon.*.png', '/ogp.png'])
-  assert.deepEqual(
-    lines.filter((line) => line.startsWith('  Link:')),
-    [
-      '  Link: </static/css/index.cccccccccc.css>; rel=preload; as=style',
-      '  Link: </static/css/fonts.dddddddddd.css>; rel=preload; as=style',
-      '  Link: </static/js/1482.aaaaaaaaaa.js>; rel=preload; as=script',
-      '  Link: </static/js/index.bbbbbbbbbb.js>; rel=preload; as=script',
-      '  Link: <https://api.chunisupport.net>; rel=preconnect; crossorigin',
-    ]
-  )
+  // Then: 規則ごとに、HTML の /* へ Link を、各非HTMLパスへ ! Link を所属させる。
+  assert.deepEqual(blocks, [
+    {
+      path: '/*',
+      headers: [
+        '  Link: </static/css/index.cccccccccc.css>; rel=preload; as=style',
+        '  Link: </static/css/fonts.dddddddddd.css>; rel=preload; as=style',
+        '  Link: </static/js/1482.aaaaaaaaaa.js>; rel=preload; as=script',
+        '  Link: </static/js/index.bbbbbbbbbb.js>; rel=preload; as=script',
+        '  Link: <https://api.chunisupport.net>; rel=preconnect; crossorigin',
+      ],
+    },
+    { path: '/static/*', headers: ['  ! Link'] },
+    { path: '/version.json', headers: ['  ! Link'] },
+    { path: '/favicon.*.png', headers: ['  ! Link'] },
+    { path: '/ogp.png', headers: ['  ! Link'] },
+  ])
   const headerLines = lines.filter((line) => line.startsWith('  '))
-  assert.equal(lines.filter((line) => line === '  ! Link').length, nonHtmlPaths.length)
   assert.equal(
     headerLines.some((line) => line.includes('Cache-Control')),
     false

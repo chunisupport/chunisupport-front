@@ -609,10 +609,10 @@ for (const { name, excludeLockedSongs, lockedSongsLoadFailed, expected } of [
     expected: false,
   },
 ]) {
-  test(`${name}こと（集計とレコード遷移に共通）`, () => {
+  test(`${name}ことを除外フラグと遷移先フィルターで確認する`, () => {
     // Given: 未解禁曲の除外設定と設定取得の成否。
 
-    // When: 集計用の除外フラグを解決し、遷移先フィルターへ渡す。
+    // When: 除外フラグを解決し、遷移先フィルターへ渡す。
     const applied = resolveUniFillMatrixExcludeLockedSongs(
       excludeLockedSongs,
       lockedSongsLoadFailed
@@ -623,7 +623,7 @@ for (const { name, excludeLockedSongs, lockedSongsLoadFailed, expected } of [
       excludeLockedSongs: applied,
     })
 
-    // Then: 集計とレコード遷移の両方に同じ除外条件が適用される。
+    // Then: 解決した除外フラグと遷移先フィルターが期待する条件になる。
     assert.equal(applied, expected)
     assert.equal(filter.excludeLockedSongs, expected)
   })

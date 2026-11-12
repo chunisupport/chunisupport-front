@@ -13,7 +13,14 @@ test('normalizeForSearch はUnicode正規化して記号・空白を除去する
 })
 
 test('normalizeForSearch はカタカナとひらがなを同一視する', () => {
-  assert.equal(normalizeForSearch('カタカナ'), normalizeForSearch('かたかな'))
+  // Given: 同じ読みのカタカナとひらがな
+  // When
+  const fromKatakana = normalizeForSearch('カタカナ')
+  const fromHiragana = normalizeForSearch('かたかな')
+
+  // Then: どちらもひらがなへ揃う
+  assert.equal(fromKatakana, 'かたかな')
+  assert.equal(fromHiragana, 'かたかな')
 })
 
 test('matchesSearchQuery は曲名を検索できる', () => {
@@ -30,6 +37,12 @@ test('matchesSearchQuery は正規化後に部分一致しない場合 false を
 
 test('matchesSearchQuery は reading の濁点・半濁点を無視して検索できる', () => {
   assert.equal(matchesSearchQuery('テスト', 'アーティスト', 'カッツ', 'ガッツ'), true)
+})
+
+test('matchesSearchQuery は reading の半濁点を無視して検索できる', () => {
+  // Given: 半濁点付きの読みと、半濁点を外した検索語
+  // When & Then: 半濁点の有無にかかわらず一致する
+  assert.equal(matchesSearchQuery('テスト', 'アーティスト', 'ハ', 'パ'), true)
 })
 
 test('matchesSearchQuery は reading の長音記号をウとして扱う', () => {

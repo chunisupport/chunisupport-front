@@ -52,14 +52,33 @@ test('楽曲選択候補はリリース日、公式番号の新しい順に並�
   )
 })
 
-test('楽曲選択フィルターはジャンルとバージョンの差分を判定すること', () => {
+test('楽曲選択フィルターは同じ条件なら差分なしと判定すること', () => {
   // Given
   const defaultFilter = buildDefaultSongSelectionFilter(['ORIGINAL'], ['VERSE'])
 
-  // When & Then
-  assert.equal(hasSongSelectionFilterChanges(defaultFilter, defaultFilter), false)
-  assert.equal(hasSongSelectionFilterChanges({ ...defaultFilter, genres: [] }, defaultFilter), true)
+  // When
+  const changed = hasSongSelectionFilterChanges(defaultFilter, defaultFilter)
+
+  // Then
+  assert.equal(changed, false)
 })
+
+for (const { label, difference } of [
+  { label: 'ジャンル', difference: { genres: [] } },
+  { label: 'バージョン', difference: { versions: [] } },
+]) {
+  test(`楽曲選択フィルターは${label}だけが異なる場合に差分ありと判定すること`, () => {
+    // Given
+    const defaultFilter = buildDefaultSongSelectionFilter(['ORIGINAL'], ['VERSE'])
+    const current = { ...defaultFilter, ...difference }
+
+    // When
+    const changed = hasSongSelectionFilterChanges(current, defaultFilter)
+
+    // Then
+    assert.equal(changed, true)
+  })
+}
 
 test('楽曲選択フィルターは楽曲名順を全選択の null とし、選択時の差分を判定すること', () => {
   // Given

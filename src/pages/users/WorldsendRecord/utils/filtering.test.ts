@@ -129,45 +129,60 @@ test("WORLD'S END フィルターは★レベル範囲を絞ると★未登録�
   assert.equal(maxNarrowed, false)
 })
 
-test("WORLD'S END フィルターは属性・レベル・ジャンル・バージョンを判定できる", () => {
-  // Given: 属性、レベル、ジャンル、バージョンが一致するフィルター。
-  const filters = normalizeWorldsendFilterState({
-    attributes: ['狂'],
-    levelStarRange: { min: 4, max: 4 },
-    genres: ['POPS'],
-    versions: ['LUMINOUS'],
+for (const { label, overrides, expected } of [
+  { label: '全条件一致とレベル4の両端一致', overrides: {}, expected: true },
+  { label: '属性だけ不一致', overrides: { attribute: '改' }, expected: false },
+  { label: 'レベル3だけ下限未満', overrides: { level_star: 3 }, expected: false },
+  { label: 'レベル5だけ上限超過', overrides: { level_star: 5 }, expected: false },
+  { label: 'ジャンルだけ不一致', overrides: { genre: 'niconico' }, expected: false },
+  { label: 'ジャンルだけ欠損', overrides: { genre: null }, expected: false },
+  { label: 'バージョンだけ不一致', overrides: { release_version: 'VERSE' }, expected: false },
+] satisfies {
+  label: string
+  overrides: Partial<WorldsendRecordWithSongMeta>
+  expected: boolean
+}[]) {
+  /** 属性・レベル・ジャンル・バージョンを独立に判定することを検証する。 */
+  test(`WORLD'S END の属性・レベル・ジャンル・バージョン判定: ${label}`, () => {
+    // Given: 他の条件はすべて一致するレコード。
+    const filters = normalizeWorldsendFilterState({
+      attributes: ['狂'],
+      levelStarRange: { min: 4, max: 4 },
+      genres: ['POPS'],
+      versions: ['LUMINOUS'],
+    })
+    const record = createRecord(overrides)
+
+    // When: 指定した条件で判定する。
+    const result = isWorldsendRecordMatchedWithTitleMatcher(record, filters, matcher())
+
+    // Then: 各条件の不一致だけで除外される。
+    assert.equal(result, expected)
   })
+}
 
-  // When: 一致するレコードと属性だけ異なるレコードを判定する。
-  const matched = isWorldsendRecordMatchedWithTitleMatcher(createRecord(), filters, matcher())
-  const mismatched = isWorldsendRecordMatchedWithTitleMatcher(
-    createRecord({ attribute: '改' }),
-    filters,
-    matcher()
-  )
+for (const { label, query, expected } of [
+  { label: '曲名だけに一致', query: '楽曲', expected: true },
+  { label: 'アーティストだけに一致', query: 'アーティスト', expected: true },
+  { label: '設定済みの読みだけに一致', query: 'そらのうた', expected: true },
+  { label: 'どの項目にも不一致', query: '存在しない検索語', expected: false },
+]) {
+  /** 各検索対象だけで一致することと、全対象不一致を検証する。 */
+  test(`WORLD'S END の検索は${label}する場合を判定する`, () => {
+    // Given: 曲名・アーティスト・読みが別の検索語を持つレコード。
+    const record = createRecord({ reading: 'そらのうた' })
+    const filters = normalizeWorldsendFilterState({
+      attributes: ['狂'],
+      levelStarRange: { min: 4, max: 4 },
+    })
 
-  // Then: 全条件が一致するレコードだけが残る。
-  assert.equal(matched, true)
-  assert.equal(mismatched, false)
-})
+    // When: 各項目だけに含まれる語で検索する。
+    const result = isWorldsendRecordMatchedWithTitleMatcher(record, filters, matcher(query))
 
-test("WORLD'S END フィルターは曲名・アーティスト・読み検索を判定できる", () => {
-  // Given: アーティスト名で検索するフィルター。
-  const filters = normalizeWorldsendFilterState({
-    attributes: ['狂'],
-    levelStarRange: { min: 4, max: 4 },
+    // Then: 検索対象のいずれかに一致する場合だけ残る。
+    assert.equal(result, expected)
   })
-
-  // When: アーティスト名の一部を検索条件にする。
-  const matched = isWorldsendRecordMatchedWithTitleMatcher(
-    createRecord(),
-    filters,
-    matcher('アーティスト')
-  )
-
-  // Then: アーティスト名でも一致する。
-  assert.equal(matched, true)
-})
+}
 
 test("WORLD'S END レコードは読みが空欄なら曲名を読みとして検索する", () => {
   // Given: 読みがないレコードと、濁点・小書きカナ・長音を正規化した検索条件。
@@ -194,40 +209,103 @@ test("WORLD'S END レコードは読みが空欄なら曲名を読みとして�
   )
 })
 
-test("WORLD'S END フィルターはスコア・JUSTICE数・ランプ・未プレイ除外を判定できる", () => {
-  // Given: AJのJUSTICE数とランプを指定したフィルター。
-  const filters = normalizeWorldsendFilterState({
-    attributes: ['狂'],
-    levelStarRange: { min: 4, max: 4 },
-    score: { min: 1000000, max: 1010000 },
-    justiceCount: { min: 1, max: 3 },
-    combo_lamp: ['ALL JUSTICE'],
-    chain_lamp: ['FULL CHAIN GOLD'],
-    hard_lamp: ['HARD'],
-    excludeNoPlay: true,
-  })
-
-  // When: 条件を満たすレコードと未プレイレコードを判定する。
-  const matched = isWorldsendRecordMatchedWithTitleMatcher(
-    createRecord({
+for (const { label, overrides, expected } of [
+  { label: 'すべて一致', overrides: {}, expected: true },
+  { label: 'スコア下限ちょうど', overrides: { score: 1000000 }, expected: true },
+  { label: 'スコア下限未満', overrides: { score: 999999 }, expected: false },
+  { label: 'スコア上限超過', overrides: { score: 1010001 }, expected: false },
+  { label: 'JUSTICE数の下限ちょうど', overrides: { justice_count: 1 }, expected: true },
+  { label: 'JUSTICE数の上限ちょうど', overrides: { justice_count: 3 }, expected: true },
+  { label: 'JUSTICE数の下限未満', overrides: { justice_count: 0 }, expected: false },
+  { label: 'JUSTICE数の上限超過', overrides: { justice_count: 4 }, expected: false },
+  { label: 'JUSTICE数だけ欠損', overrides: { justice_count: null }, expected: false },
+  {
+    label: 'チェインランプだけ不一致',
+    overrides: { full_chain: 'FULL CHAIN PLATINUM' },
+    expected: false,
+  },
+  { label: 'ハードランプだけ不一致', overrides: { clear_lamp: 'CLEAR' }, expected: false },
+] satisfies {
+  label: string
+  overrides: Partial<WorldsendRecordWithSongMeta>
+  expected: boolean
+}[]) {
+  /** スコア・JUSTICE数・各ランプの単独の不一致を検証する。 */
+  test(`WORLD'S END のスコア・JUSTICE数・ランプ判定: ${label}`, () => {
+    // Given: 指定項目以外はすべての条件に一致するAJレコード。
+    const filters = normalizeWorldsendFilterState({
+      attributes: ['狂'],
+      levelStarRange: { min: 4, max: 4 },
+      score: { min: 1000000, max: 1010000 },
+      justiceCount: { min: 1, max: 3 },
+      combo_lamp: ['ALL JUSTICE'],
+      chain_lamp: ['FULL CHAIN GOLD'],
+      hard_lamp: ['HARD'],
+      excludeNoPlay: true,
+    })
+    const record = createRecord({
       score: 1009000,
       justice_count: 2,
       combo_lamp: 'ALL JUSTICE',
       full_chain: 'FULL CHAIN GOLD',
       clear_lamp: 'HARD',
-    }),
+      ...overrides,
+    })
+
+    // When: 全条件で判定する。
+    const result = isWorldsendRecordMatchedWithTitleMatcher(record, filters, matcher())
+
+    // Then: 1条件だけの不一致も検出する。
+    assert.equal(result, expected)
+  })
+}
+
+/** JUSTICE数条件による早期除外に頼らずコンボランプを検証する。 */
+test("WORLD'S END はJUSTICE数未指定でもコンボランプだけの不一致を除外する", () => {
+  // Given: コンボランプだけを絞ったフィルター。
+  const filters = normalizeWorldsendFilterState({
+    attributes: ['狂'],
+    combo_lamp: ['ALL JUSTICE'],
+  })
+
+  // When: コンボランプだけが異なるレコードを判定する。
+  const matched = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ combo_lamp: 'ALL JUSTICE' }),
     filters,
     matcher()
   )
-  const noPlayed = isWorldsendRecordMatchedWithTitleMatcher(
-    createRecord({ is_played: false }),
+  const mismatched = isWorldsendRecordMatchedWithTitleMatcher(
+    createRecord({ combo_lamp: 'FULL COMBO' }),
     filters,
     matcher()
   )
 
-  // Then: 条件を満たすプレイ済みレコードだけが残る。
+  // Then: コンボランプが一致したレコードだけが残る。
   assert.equal(matched, true)
-  assert.equal(noPlayed, false)
+  assert.equal(mismatched, false)
+})
+
+/** 未プレイ除外と他条件の相互干渉がないことを検証する。 */
+test("WORLD'S END の未プレイ除外は他条件を通る未プレイレコードだけでも機能する", () => {
+  // Given: 0点・ランプなしを許容するフィルターと未プレイレコード。
+  const filters = normalizeWorldsendFilterState({ attributes: ['狂'] })
+  const record = createRecord({ is_played: false })
+
+  // When: 未プレイ除外だけを切り替える。
+  const included = isWorldsendRecordMatchedWithTitleMatcher(
+    record,
+    { ...filters, excludeNoPlay: false },
+    matcher()
+  )
+  const excluded = isWorldsendRecordMatchedWithTitleMatcher(
+    record,
+    { ...filters, excludeNoPlay: true },
+    matcher()
+  )
+
+  // Then: 除外が有効な場合だけ残らない。
+  assert.equal(included, true)
+  assert.equal(excluded, false)
 })
 
 test("WORLD'S END フィルターはJUSTICE数指定中もAJCのコンボランプ条件を適用する", () => {

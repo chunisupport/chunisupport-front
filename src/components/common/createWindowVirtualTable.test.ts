@@ -85,20 +85,12 @@ const createFakeElement = (top, height = 30) => ({
 })
 `
 
-type BrowserSolidTestCase = {
-  name: string
-  script: string
-}
-
 /**
- * browser条件のSolidJSテストを1つのNode.jsプロセスで実行する。
- * @param cases 実行するテストケース。
+ * browser条件のSolidJSテストスクリプトを独立したNode.jsプロセスで実行する。
+ * @param testScript 共通セットアップの後に実行するテスト本体。
  * @returns 子プロセスの完了を表すPromise。
  */
-const runBrowserSolidTests = async (cases: readonly BrowserSolidTestCase[]) => {
-  const script = cases
-    .map(({ name, script: testScript }) => `// ${name}\n{\n${testScript}\n}`)
-    .join('\n')
+const runBrowserSolidTest = async (testScript: string) => {
   const { stderr } = await execFileAsync(
     process.execPath,
     [
@@ -108,7 +100,7 @@ const runBrowserSolidTests = async (cases: readonly BrowserSolidTestCase[]) => {
       '--disable-warning=ExperimentalWarning',
       '--input-type=module',
       '--eval',
-      `${BROWSER_SOLID_TEST_SETUP}\n${script}`,
+      `${BROWSER_SOLID_TEST_SETUP}\n${testScript}`,
     ],
     { cwd: process.cwd() }
   )
@@ -276,6 +268,46 @@ await new Promise((resolve) =>
 `,
   },
   {
+    name: 'resetOnRowCountChange有効時は行数変化で先頭行が表示領域の上端に来る位置へスクロールすること',
+    script: `
+const view = createRoot((dispose) => {
+  const [rowCount, setRowCount] = createSignal(100)
+  const scrollElement = createFakeScrollElement(0)
+  scrollElement.scrollHeight = 10000
+  const table = createWindowVirtualTable({
+    rowCount,
+    rowHeight: 10,
+    initialOffset: 500,
+    resetOnRowCountChange: true,
+    getScrollElement: () => scrollElement,
+  })
+  // Given: 本文の上端はスクロール領域の内容先頭から15pxの位置にあり、先頭行より下まで読み進めている
+  table.setTableBodyRef({
+    getBoundingClientRect: () => ({ top: 25 - scrollElement.scrollTop }),
+  })
+  table.setTableContainerRef(createFakeElement(20))
+  return { dispose, setRowCount, scrollElement, table }
+})
+await nextTask()
+await nextTask()
+assert.equal(view.scrollElement.scrollTop, 500)
+const callCountBeforeRowCountChange = view.scrollElement.scrollCalls.length
+
+// When: フィルター適用などで行数が変化する
+view.setRowCount(50)
+await nextTask()
+await nextTask()
+
+// Then: 先頭行の位置 (本文の上端) へのスクロールが1回だけ要求される
+assert.deepEqual(
+  view.scrollElement.scrollCalls.slice(callCountBeforeRowCountChange).map((call) => call.top),
+  [15]
+)
+assert.equal(view.scrollElement.scrollTop, 15)
+view.dispose()
+`,
+  },
+  {
     name: 'virtualRowsは現在の行数を超えた仮想行を除外すること',
     script: `
 await new Promise((resolve) =>
@@ -387,6 +419,8 @@ view.dispose()
   },
 ] as const
 
-test('createWindowVirtualTableのbrowser条件の挙動をまとめて検証すること', async () => {
-  await runBrowserSolidTests(BROWSER_SOLID_TEST_CASES)
-})
+for (const { name, script } of BROWSER_SOLID_TEST_CASES) {
+  test(name, async () => {
+    await runBrowserSolidTest(script)
+  })
+}

@@ -382,25 +382,25 @@ test('未判明譜面を曲名の昇順と降順で並べ替えられること',
 })
 
 test('未判明譜面を難易度とLvで並べ替えられること', () => {
-  // Given: 難易度とレベルが混在する未判明譜面。
+  // Given: 難易度順とレベル順が食い違い、入力順もどちらとも異なる未判明譜面。
   const charts = [
-    createUnknownChart('3', '楽曲う', 'ULTIMA', '14+'),
-    createUnknownChart('1', '楽曲あ', 'MASTER', '13+'),
-    createUnknownChart('2', '楽曲い', 'EXPERT', '13'),
+    createUnknownChart('3', '楽曲う', 'ULTIMA', '13+'),
+    createUnknownChart('1', '楽曲あ', 'EXPERT', '14+'),
+    createUnknownChart('2', '楽曲い', 'MASTER', '13'),
   ]
 
   // When: 難易度とLvで昇順に並べ替える。
   const byDifficulty = sortUnknownCharts(charts, 'difficulty', 'asc')
   const byLevel = sortUnknownCharts(charts, 'level', 'asc')
 
-  // Then: 難易度順とレベル順に並ぶこと。
+  // Then: 指定したキーごとに異なる順で並ぶこと。
   assert.deepEqual(
-    byDifficulty.map((chart) => chart.difficulty),
-    ['EXPERT', 'MASTER', 'ULTIMA']
+    byDifficulty.map((chart) => `${chart.difficulty}/${chart.level}`),
+    ['EXPERT/14+', 'MASTER/13', 'ULTIMA/13+']
   )
   assert.deepEqual(
-    byLevel.map((chart) => chart.level),
-    ['13', '13+', '14+']
+    byLevel.map((chart) => `${chart.difficulty}/${chart.level}`),
+    ['MASTER/13', 'ULTIMA/13+', 'EXPERT/14+']
   )
 })
 
@@ -428,17 +428,29 @@ test('未登録譜面を曲名と難易度で並べ替えられること', () =>
 })
 
 test('ソート未指定時は既定順を維持した複製を返すこと', () => {
-  // Given: 既定順の未判明譜面と未登録譜面。
-  const unknownCharts = [createUnknownChart('1', '楽曲あ', 'MASTER', '13+')]
-  const missingCharts = [createMissingChart('1', '楽曲あ', 'BASIC')]
+  // Given: 曲名・難易度・Lvのどの昇順とも異なる既定順の未判明譜面と未登録譜面。
+  const unknownCharts = [
+    createUnknownChart('2', '楽曲い', 'MASTER', '13+'),
+    createUnknownChart('1', '楽曲あ', 'EXPERT', '13'),
+  ]
+  const missingCharts = [
+    createMissingChart('2', '楽曲い', 'ULTIMA'),
+    createMissingChart('1', '楽曲あ', 'BASIC'),
+  ]
 
   // When: ソートキーまたは方向を指定しない。
   const unknownResult = sortUnknownCharts(unknownCharts, null, null)
   const missingResult = sortMissingCharts(missingCharts, 'songTitle', null)
 
-  // Then: 既定順のまま新しい配列で返ること。
-  assert.deepEqual(unknownResult, unknownCharts)
-  assert.deepEqual(missingResult, missingCharts)
+  // Then: 全要素が既定順のまま、新しい配列で返ること。
+  assert.deepEqual(unknownResult, [
+    { songId: '2', songTitle: '楽曲い', songReading: null, difficulty: 'MASTER', level: '13+' },
+    { songId: '1', songTitle: '楽曲あ', songReading: null, difficulty: 'EXPERT', level: '13' },
+  ])
+  assert.deepEqual(missingResult, [
+    { songId: '2', songTitle: '楽曲い', songReading: null, difficulty: 'ULTIMA' },
+    { songId: '1', songTitle: '楽曲あ', songReading: null, difficulty: 'BASIC' },
+  ])
   assert.notEqual(unknownResult, unknownCharts)
   assert.notEqual(missingResult, missingCharts)
 })

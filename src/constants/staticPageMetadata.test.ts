@@ -38,6 +38,35 @@ test('公開ツールを固定ページ生成対象に含めること', () => {
   }
 })
 
+for (const expected of [
+  {
+    path: '/tools',
+    title: 'ツール',
+    description: 'CHUNITHM のプレイや目標設定に役立つ計算・分析ツールを利用できます。',
+  },
+  {
+    path: '/tools/friend-vs',
+    title: 'フレンドVS',
+    description: 'フレンドとスコアで勝負。',
+  },
+  {
+    path: '/tools/border-calculator',
+    title: 'ボーダー計算機',
+    description: '楽曲と譜面を選び、目標スコアまでの許容判定数を計算します。',
+  },
+]) {
+  test(`${expected.path} の固定ページに対応するタイトルと説明を収録すること`, () => {
+    // Given: 代表ページのパス。
+    const path = expected.path
+
+    // When: 固定ページのメタ情報を検索する。
+    const result = STATIC_PAGE_METADATA.find((page) => page.path === path)
+
+    // Then: 同じページのタイトルと説明が組になっている。
+    assert.deepEqual(result, expected)
+  })
+}
+
 test('楽曲一覧の固定ページを生成対象に含めること', () => {
   // Given
   const generatedPaths = new Set(STATIC_PAGE_METADATA.map((page) => page.path))

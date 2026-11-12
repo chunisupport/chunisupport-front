@@ -60,12 +60,12 @@ test('認証必須リクエストはFirebaseユーザー不在時にAPIを呼ば
   }
 })
 
-test('IDトークンを指定した場合はログイン中のセッションではなく指定トークンで認証する', async () => {
+test('未ログインでも明示したIDトークンで認証必須APIを呼び出せる', async () => {
   // Given: Firebase にログインしておらず、別アカウントのIDトークンを指定する
   const { fetchWithAuth } = await loadFetchWithAuthModule()
   const originalFetch = globalThis.fetch
   let authorization: string | null = null
-  globalThis.fetch = async (_input, init) => {
+  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
     authorization = new Headers(init?.headers).get('Authorization')
     return new Response()
   }
@@ -81,6 +81,40 @@ test('IDトークンを指定した場合はログイン中のセッションで
     assert.equal(authorization, 'Bearer other-account-token')
   } finally {
     globalThis.fetch = originalFetch
+  }
+})
+
+test('IDトークンを指定した場合はログイン中のセッションではなく指定トークンで認証する', async (t) => {
+  // Given: 明示トークンとは異なるトークンを返すログイン済みユーザー
+  const { fetchWithAuth } = await loadFetchWithAuthModule()
+  const { auth } = await import('../lib/firebase.ts')
+  const originalCurrentUser = Object.getOwnPropertyDescriptor(auth, 'currentUser')
+  t.mock.method(auth, 'authStateReady', async () => undefined)
+  Object.defineProperty(auth, 'currentUser', {
+    configurable: true,
+    value: { getIdToken: async () => 'session-token' },
+  })
+  let authorization: string | null = null
+  t.mock.method(globalThis, 'fetch', async (_input: RequestInfo | URL, init?: RequestInit) => {
+    authorization = new Headers(init?.headers).get('Authorization')
+    return new Response()
+  })
+
+  try {
+    // When: ログイン中のセッションとは別のトークンを明示する
+    await fetchWithAuth('https://example.com/internal/me', {
+      requireAuthentication: true,
+      idToken: 'other-account-token',
+    })
+
+    // Then: セッションではなく明示したトークンで認証する
+    assert.equal(authorization, 'Bearer other-account-token')
+  } finally {
+    if (originalCurrentUser) {
+      Object.defineProperty(auth, 'currentUser', originalCurrentUser)
+    } else {
+      Reflect.deleteProperty(auth, 'currentUser')
+    }
   }
 })
 

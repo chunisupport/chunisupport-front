@@ -45,12 +45,15 @@ const createRecords = (
 ): PlayerRecordDTO[] => Array.from({ length: count }, (_, index) => createRecord(build(index)))
 
 test('未プレイを除き単曲レーティング降順の上位50曲を30曲と残りに分割すること', () => {
-  // Given: 新曲・旧曲を含む51曲と未プレイ1曲。
+  // Given: 楽曲ID順とは異なる単曲レーティング順を持つ51曲と未プレイ1曲。
   const records = [
-    ...createRecords(51, (index) => ({
-      id: `song-${String(index).padStart(2, '0')}`,
-      rating: 16.5 - index * 0.01,
-    })),
+    ...createRecords(51, (index) => {
+      const rank = (index * 17 + Math.floor(index / 3)) % 51
+      return {
+        id: `song-${String(index).padStart(2, '0')}`,
+        rating: 16.5 - rank * 0.01,
+      }
+    }),
     createRecord({ id: 'unplayed', is_played: false, rating: 17 }),
   ]
 
@@ -60,10 +63,66 @@ test('未プレイを除き単曲レーティング降順の上位50曲を30曲�
   // Then: 未プレイを除く上位30曲と31〜50曲が単曲レーティング順になる。
   assert.equal(result.primaryRecords.length, 30)
   assert.equal(result.remainingRecords.length, 20)
-  assert.equal(result.primaryRecords[0]?.id, 'song-00')
-  assert.equal(result.primaryRecords[29]?.id, 'song-29')
-  assert.equal(result.remainingRecords[0]?.id, 'song-30')
-  assert.equal(result.remainingRecords[19]?.id, 'song-49')
+  assert.deepEqual(
+    result.primaryRecords.map((record) => record.id),
+    [
+      'song-00',
+      'song-03',
+      'song-06',
+      'song-09',
+      'song-12',
+      'song-15',
+      'song-18',
+      'song-21',
+      'song-24',
+      'song-27',
+      'song-30',
+      'song-33',
+      'song-36',
+      'song-39',
+      'song-42',
+      'song-45',
+      'song-48',
+      'song-01',
+      'song-04',
+      'song-07',
+      'song-10',
+      'song-13',
+      'song-16',
+      'song-19',
+      'song-22',
+      'song-25',
+      'song-28',
+      'song-31',
+      'song-34',
+      'song-37',
+    ]
+  )
+  assert.deepEqual(
+    result.remainingRecords.map((record) => record.id),
+    [
+      'song-40',
+      'song-43',
+      'song-46',
+      'song-49',
+      'song-02',
+      'song-05',
+      'song-08',
+      'song-11',
+      'song-14',
+      'song-17',
+      'song-20',
+      'song-23',
+      'song-26',
+      'song-29',
+      'song-32',
+      'song-35',
+      'song-38',
+      'song-41',
+      'song-44',
+      'song-47',
+    ]
+  )
   assert.equal(
     result.primaryRecords.some((record) => record.id === 'unplayed'),
     false

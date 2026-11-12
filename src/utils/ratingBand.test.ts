@@ -26,11 +26,18 @@ test('ベスト枠平均は下限を含み上限を含まないレート帯へ�
 })
 
 test('最上位帯の取得ではALLを除外してsort_orderが最大の帯を返す', () => {
-  // Given: ALLを含むレート帯マスター。
-  // When: 最上位の通常レート帯を取得する。
-  const result = getHighestRatingBand(RATING_BANDS)
+  // Given: ALLが最大のsort_orderを持ち、通常帯も非ソート順のマスター。
+  const bands: RatingBandDTO[] = [
+    { id: 2, label: '15.0', min_inclusive: 15, max_exclusive: 15.1, sort_order: 2 },
+    { id: 0, label: 'ALL', min_inclusive: null, max_exclusive: null, sort_order: 99 },
+    { id: 3, label: '15.1+', min_inclusive: 15.1, max_exclusive: null, sort_order: 3 },
+    { id: 1, label: '-14.9', min_inclusive: null, max_exclusive: 15, sort_order: 1 },
+  ]
 
-  // Then: 最後の通常レート帯が返る。
+  // When: 最上位の通常レート帯を取得する。
+  const result = getHighestRatingBand(bands)
+
+  // Then: 配列の位置やALLではなく、sort_orderが最大の通常帯が返る。
   assert.equal(result?.label, '15.1+')
 })
 

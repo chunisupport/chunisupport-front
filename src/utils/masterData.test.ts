@@ -22,12 +22,16 @@ test('マスタ項目をsort_order順に並べる', () => {
 })
 
 test('マスタ順序にない名称は末尾で日本語順に並べる', () => {
+  // Given: 未知項目も既知項目も期待順とは異なる順序で入力する。
   const orderMap = createMasterItemOrderMap(genres)
-  const sorted = ['VARIETY', '東方Project', 'POPS & ANIME'].sort((left, right) =>
+
+  // When
+  const sorted = ['い', 'VARIETY', '東方Project', 'あ', 'POPS & ANIME'].sort((left, right) =>
     compareMasterItemNames(left, right, orderMap)
   )
 
-  assert.deepEqual(sorted, ['POPS & ANIME', '東方Project', 'VARIETY'])
+  // Then: 未知項目は既知項目の後ろで日本語順に並ぶ。
+  assert.deepEqual(sorted, ['POPS & ANIME', '東方Project', 'VARIETY', 'あ', 'い'])
 })
 
 test('マスタにない項目は昇順・降順とも末尾へ固定する', () => {
