@@ -148,6 +148,20 @@ afterEach(async () => {
   await clearStores()
 })
 
+test('WORLD END楽曲キャッシュは更新日時が一致すると保存順で復元し不一致なら使わない', async () => {
+  // Given: IDのソート順とは異なる順で保存された有効な楽曲キャッシュ。
+  const songs = [worldsendSong, { ...worldsendSong, id: 'worldsend-song-0', title: '後続曲' }]
+  await replaceCachedWorldsendSongs(songs, 'songs-current')
+
+  // When: 一致する更新日時と異なる更新日時で読み込む。
+  const matched = await readCachedWorldsendSongs('songs-current')
+  const mismatched = await readCachedWorldsendSongs('songs-new')
+
+  // Then: 一致時のみ保存順と内容を保って返す。
+  assert.deepEqual(matched, songs)
+  assert.equal(mismatched, null)
+})
+
 test('楽曲キャッシュは schemaVersion と updated-at が一致する場合だけ読み込まれること', async () => {
   // Given
   await replaceCachedSongs([song, previousIdSong], '2026-06-16T12:00:00Z')

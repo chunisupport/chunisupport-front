@@ -21,6 +21,77 @@ const validInput = {
   theoreticalTotal: 20,
 } as const
 
+test('スコア目標は下限・上限の直外を拒否し境界値は許可する', () => {
+  // Given: スコア件数と平均スコアの入力。
+  for (const achievementType of ['score_count', 'avg_score'] as const) {
+    for (const score of ['-1', '0', '1010000', '1010001']) {
+      // When
+      const result = validateGoalForm({ ...validInput, achievementType, score })
+
+      // Then: 上限+1も拒否し、0と理論値は許可する。
+      assert.equal(
+        result,
+        score === '-1' || score === '1010001'
+          ? 'スコアは 0 ～ 1,010,000 の範囲で入力してください。'
+          : undefined
+      )
+    }
+  }
+})
+
+test('件数モードごとの下限・上限と整数制約を検証する', () => {
+  // Given: 対象20譜面に対する数値・残数・割合・全件モード。
+  const cases = [
+    { countMode: 'number', count: '0', error: '件数は1以上の整数で入力してください。' },
+    { countMode: 'number', count: '1', error: undefined },
+    { countMode: 'number', count: '20', error: undefined },
+    { countMode: 'number', count: '21', error: '件数は20件以内で入力してください。' },
+    { countMode: 'remaining', count: '0', error: undefined },
+    { countMode: 'remaining', count: '0.5', error: '件数は0以上の整数で入力してください。' },
+    { countMode: 'remaining', count: '20', error: undefined },
+    { countMode: 'remaining', count: '21', error: '件数は20件以内で入力してください。' },
+    { countMode: 'percent', count: '0', error: undefined },
+    { countMode: 'percent', count: '0.5', error: undefined },
+    { countMode: 'percent', count: '100', error: undefined },
+    { countMode: 'percent', count: '100.1', error: '割合は100%以内で入力してください。' },
+    { countMode: 'all', count: 'not-a-number', error: undefined },
+  ] as const
+
+  // When & Then: 割合は対象譜面数ではなく100を上限とし、小数を許可する。
+  for (const { countMode, count, error } of cases) {
+    assert.equal(
+      validateGoalForm({ ...validInput, countMode, count }),
+      error,
+      `${countMode}:${count}`
+    )
+  }
+})
+
+test('総スコア・OP合計の割合指定は理論値にかかわらず100を上限にする', () => {
+  // Given: 100より小さい理論値と大きい理論値。
+  for (const achievementType of ['total_score', 'overpower_value'] as const) {
+    for (const theoreticalTotal of [20, 1000]) {
+      for (const total of ['0', '0.5', '100', '100.001']) {
+        // When
+        const result = validateGoalForm({
+          ...validInput,
+          achievementType,
+          totalMode: 'percent',
+          total,
+          theoreticalTotal,
+        })
+
+        // Then: 割合だけを基準に上限を判定する。
+        const label = achievementType === 'total_score' ? '総スコア目標' : 'OVER POWER合計目標'
+        assert.equal(
+          result,
+          total === '100.001' ? `${label}は最大 100 以下で入力してください。` : undefined
+        )
+      }
+    }
+  }
+})
+
 test('タイトルが空の場合は保存前検証でエラーになる', () => {
   // Given / When
   const result = validateGoalForm({ ...validInput, title: '   ' })

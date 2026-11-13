@@ -17,6 +17,32 @@ import {
   reconcileOverPowerCalculatorValue,
 } from './overPowerCalculator'
 
+for (const [score, expected] of [
+  [974999, 0],
+  [975000, 70],
+  [975001, 70.0002],
+  [999999, 74.9998],
+  [1000000, 75],
+  [1000001, 75.0005],
+  [1004999, 77.4995],
+  [1005000, 77.5],
+  [1005001, 77.501],
+  [1007499, 79.999],
+  [1007500, 80],
+  [1007501, 80.0015],
+  [1010000, 83.75],
+  [1010001, 83.75],
+]) {
+  test(`スコア区分の前後でOPを計算する: ${score}`, () => {
+    // Given: 譜面定数14.0、コンボ補正なしの区分境界と隣接スコア。
+    // When
+    const actual = calculateOverPowerForScore(score, 14)
+
+    // Then: 独立に算出した期待値と一致し、理論値超過は上限に制限する。
+    assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} != ${expected}`)
+  })
+}
+
 test('calculateOverPowerPercent は現在値と理論値から達成率を計算すること', () => {
   // Given
   const current = 975

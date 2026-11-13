@@ -2,6 +2,28 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { calculateChartConstant, resolveLampForScore } from './chartConstantCalculator'
 
+for (const [score, overPower] of [
+  [999999, 74.9998],
+  [1000000, 75],
+  [1000001, 75.0005],
+  [1004999, 77.4995],
+  [1005000, 77.5],
+  [1005001, 77.501],
+  [1007499, 79.999],
+  [1007500, 80],
+  [1007501, 80.0015],
+]) {
+  test(`区分境界と隣接スコアから譜面定数を逆算する: ${score}`, () => {
+    // Given: 譜面定数14.0・コンボ補正なしで独立に算出したスコアとOP。
+    // When
+    const result = calculateChartConstant({ score, overPower, lamp: 'NONE' })
+
+    // Then: 丸め後だけでなく生の定数も一致する。
+    assert.equal(result.rawChartConstant, 14)
+    assert.equal(result.estimatedChartConstant, 14)
+  })
+}
+
 test('理論値が入力された場合はALL JUSTICE CRITICALを選択すること', () => {
   // Given
   const score = 1010000

@@ -25,6 +25,34 @@ const loadStorageModule = async () => {
   return import('./storage.ts')
 }
 
+test('現行スキーマ5のWORLD END保存フィルターは選択条件を変更せず復元する', async () => {
+  // Given: AJCを選択しない現行スキーマの保存値。
+  const { toSavedWorldsendFilter } = await loadStorageModule()
+  const filter = {
+    ...DEFAULT_WORLDSEND_FILTER,
+    title: '現行WE',
+    combo_lamp: ['ALL JUSTICE' as const],
+    nameFolders: ['SA'],
+  }
+  const dto: RecordFilterDTO = {
+    id: 'current-worldsend',
+    name: '現行WE',
+    filter_type: 'worldsend',
+    schema_version: 5,
+    filter,
+    created_at: '2026-11-12T00:00:00Z',
+    updated_at: '2026-11-12T00:00:00Z',
+  }
+
+  // When: 保存値を画面用に変換する。
+  const result = toSavedWorldsendFilter(dto)
+
+  // Then: 現行条件を補完・破棄せず利用できる。
+  assert.equal(result.isValid, true)
+  assert.equal(result.invalidReason, undefined)
+  assert.deepEqual(result.filter, filter)
+})
+
 test("buildSavedWorldsendFilterRequest は WORLD'S END 用の保存リクエストを生成する", async () => {
   // Given
   const { buildSavedWorldsendFilterRequest } = await loadStorageModule()

@@ -160,6 +160,36 @@ test('難易度・ジャンル・バージョンをすべて空にした場合�
   assert.equal(isRecordMatched(createRecord(), filter), false)
 })
 
+for (const achievement_type of ['score_count', 'avg_score', 'rank_count'] as const) {
+  test(`${achievement_type}の目標スコア0では未達成譜面がないため遷移を無効にする`, () => {
+    // Given: 0点を達成条件とする目標。
+    const goal = createGoal({ achievement_type, achievement_params: { score: 0, count: 1 } })
+
+    // When: 未達成フィルターへ変換する。
+    const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+    // Then: プレイ済み0点も未プレイ0点も未達成として表示しない。
+    assert.equal(isGoalRecordNavigationEnabled(goal), false)
+    assert.equal(isRecordMatched(createRecord({ score: 0 }), filter), false)
+    assert.equal(isRecordMatched(createRecord({ score: 0, is_played: false }), filter), false)
+    assert.equal(isRecordMatched(createRecord({ score: 1 }), filter), false)
+  })
+}
+
+test('目標スコア1では0点を未達成として含め、遷移も有効にする', () => {
+  // Given: 最小の正の目標スコア。
+  const goal = createGoal({ achievement_params: { score: 1, count: 1 } })
+
+  // When: 未達成フィルターへ変換する。
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then: 0点と1点の境界を正確に区別する。
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ score: 0 }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ score: 0, is_played: false }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ score: 1 }), filter), false)
+})
+
 test('スコア件数目標では目標スコア未満の譜面だけに一致する', () => {
   // Given
   const filter = buildGoalRecordFilter(createGoal(), MASTER_DATA, VERSIONS)

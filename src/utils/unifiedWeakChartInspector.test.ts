@@ -165,6 +165,30 @@ const findEntry = (
   return entry
 }
 
+test('失点比の中央値とMAD換算のばらつきから得意度を正規化する', () => {
+  // Given: 補正後失点比が1/4・1/2・1・2・4になる5譜面。
+  // 対数比の中央値は0、MADはln(2)、標準偏差相当は1.4826 * ln(2)。
+  const losses = [25500, 12700, 6300, 3100, 1500]
+  const { records, averages } = createCharts(
+    losses.map((loss, index) => ({
+      id: `mad-${index}`,
+      loss,
+      averageLoss: 6300,
+    }))
+  )
+
+  // When: 下限ばらつきではなくMADが効く分布を分析する。
+  const entries = inspect(records, averages)
+
+  // Then: 各譜面のずれと整数の得意度は独立に算出した値に一致する。
+  for (let index = 0; index < losses.length; index += 1) {
+    const entry = findEntry(entries, `mad-${index}`)
+    const expectedDeviation = (index - 2) / 1.4826
+    assertClose(entry.deviation, expectedDeviation)
+    assert.equal(entry.aptitude, Math.round(50 + 10 * expectedDeviation))
+  }
+})
+
 test('平均より失点が少なくても、普段の失点比より大きく劣る譜面は苦手にする', () => {
   // Given: 普段は平均の半分の失点で、1譜面だけ平均の0.9倍の失点にとどまる。
   const { records, averages } = createCharts([

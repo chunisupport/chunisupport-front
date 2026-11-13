@@ -13,6 +13,32 @@ import {
   RECORD_FILTER_NAME_MAX_LENGTH,
 } from './savedRecordFilters'
 
+test('保存ペイロードは日本語を含めてUTF-8で8192バイトまで許可する', () => {
+  // Given: 同一ペイロードの空タイトル時のサイズから、境界値を独立に組み立てる。
+  const schemaVersion = 11
+  const emptyFilter = { ...DEFAULT_FILTER, title: '' }
+  const emptyBytes = Buffer.byteLength(
+    JSON.stringify({ schema_version: schemaVersion, filter: emptyFilter }),
+    'utf8'
+  )
+  const title =
+    'あ'.repeat(Math.floor((8192 - emptyBytes) / 3)) + 'x'.repeat((8192 - emptyBytes) % 3)
+  const boundary = { ...emptyFilter, title }
+  const over = { ...boundary, title: `${title}x` }
+  assert.equal(
+    Buffer.byteLength(JSON.stringify({ schema_version: schemaVersion, filter: boundary }), 'utf8'),
+    8192
+  )
+  assert.equal(
+    Buffer.byteLength(JSON.stringify({ schema_version: schemaVersion, filter: over }), 'utf8'),
+    8193
+  )
+
+  // When & Then: 文字数ではなくUTF-8バイト数で上限を判定する。
+  assert.equal(isRecordFilterPayloadWithinLimit(schemaVersion, boundary), true)
+  assert.equal(isRecordFilterPayloadWithinLimit(schemaVersion, over), false)
+})
+
 test('buildUniqueRecordFilterName は重複名へ番号を付与し文字数上限内に収めること', () => {
   // Given
   const baseName = '123456789012345678901234567890'

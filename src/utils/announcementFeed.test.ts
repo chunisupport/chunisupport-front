@@ -18,6 +18,25 @@ const VALID_FEED = {
   ],
 }
 
+for (const url of [
+  'https://evil.example/announcements/article/',
+  'https://docs.chunisupport.net/other/article/',
+  'https://docs.chunisupport.net/announcements-evil/article/',
+  'https://docs.chunisupport.net/announcements/../other/article/',
+]) {
+  test(`同じHTTPSでも許可オリジン・パス外のお知らせURLを拒否する: ${url}`, () => {
+    // Given: プロトコルだけは一致する不許可のリンク。
+    const feed = structuredClone(VALID_FEED)
+    feed.announcements[0].url = url
+
+    // When & Then: 別オリジンと許可パス外をそれぞれ独立に拒否する。
+    assert.throws(
+      () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+      /お知らせの形式が不正です/
+    )
+  })
+}
+
 test('バージョン1のお知らせフィードを受け入れる', () => {
   // Given: 必須項目を備えたフィード。
   const feed = structuredClone(VALID_FEED)

@@ -20,6 +20,8 @@ for (const { rank, min, max } of [
 
     // Then: 両端とも指定のランクへ分類される。
     assert.deepEqual(result, [rank, rank])
+    assert.equal(filterRankToScore(rank, 'min'), min)
+    assert.equal(filterRankToScore(rank, 'max'), max)
   })
 }
 

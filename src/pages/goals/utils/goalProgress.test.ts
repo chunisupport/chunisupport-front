@@ -79,6 +79,50 @@ const createGoal = (overrides: Partial<GoalDTO>): GoalDTO => ({
   ...overrides,
 })
 
+test('ハードランプは未達・一致・上位を区別し、上位も達成件数に含める', () => {
+  // Given: BRAVE目標に対しランプなし・下位・一致・上位の4譜面。
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'BRV', count: 4 },
+  })
+  const records = [null, 'HARD', 'BRAVE', 'ABSOLUTE'] as const
+
+  // When & Then: 1件ずつ判定し、下位を含めないことも確認する。
+  for (const [index, clear_lamp] of records.entries()) {
+    const result = calculateGoalProgress(goal, [createRecord({ clear_lamp })], [])
+    assert.equal(result.current, index >= 2 ? 1 : 0, String(clear_lamp))
+  }
+})
+
+test('コンボランプは未達・一致・上位を区別し、AJCもAJ達成件数に含める', () => {
+  // Given: FC目標とAJ目標に対する全コンボランプ。
+  const records = [
+    createRecord({ combo_lamp: null }),
+    createRecord({ combo_lamp: 'FULL COMBO' }),
+    createRecord({ combo_lamp: 'ALL JUSTICE' }),
+    createRecord({ combo_lamp: 'ALL JUSTICE', score: 1010000 }),
+  ]
+  for (const [lamp, minimumIndex] of [
+    ['FC', 1],
+    ['AJ', 2],
+  ] as const) {
+    const goal = createGoal({
+      achievement_type: 'combolamp_count',
+      achievement_params: { lamp, count: 4 },
+    })
+
+    // When & Then: 一致と上位だけが達成になる。
+    for (const [index, record] of records.entries()) {
+      const result = calculateGoalProgress(goal, [record], [])
+      assert.equal(
+        result.current,
+        index >= minimumIndex ? 1 : 0,
+        `${lamp}:${record.combo_lamp}:${record.score}`
+      )
+    }
+  }
+})
+
 test('件数目標のcountが欠落している場合は現在の対象譜面数を目標値にする', () => {
   const records = [
     createRecord({ id: 'song-1', score: 1000000 }),

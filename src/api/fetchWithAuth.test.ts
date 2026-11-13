@@ -8,6 +8,46 @@ import { loadTestModule } from '../test/setupTestEnvironment'
  */
 const loadFetchWithAuthModule = () => loadTestModule(() => import('./fetchWithAuth.ts'))
 
+test('401応答は通常セッションを消去し、明示した抑止時だけ維持する', async (t) => {
+  // Given: 認証済みセッションと、401を返すAPI。
+  const { fetchWithAuth } = await loadFetchWithAuthModule()
+  const { clearAuthenticatedUser, getAuthenticatedUser, setAuthenticatedUser } = await import(
+    '../stores/authSession.ts'
+  )
+  const user = {
+    username: 'alice',
+    account_type: 'PLAYER',
+    is_private: false,
+    last_score_update: null,
+  } as const
+  t.mock.method(globalThis, 'fetch', async () =>
+    Response.json({ error: { status: 401, code: 'invalid_token' } }, { status: 401 })
+  )
+  try {
+    for (const options of [
+      {},
+      { suppressUnauthorizedRedirectForCodes: ['invalid_token'] as const },
+      { redirectOnUnauthorized: false },
+    ]) {
+      setAuthenticatedUser(user)
+
+      // When: 実際の共通APIクライアントで401応答を処理する。
+      await assert.rejects(
+        fetchWithAuth('https://example.com/internal/me', { idToken: 'test-token', ...options }),
+        (error: Error & { status?: number; code?: string }) =>
+          error.status === 401 && error.code === 'invalid_token'
+      )
+
+      // Then: 判定関数の戻り値だけでなく、保存済みセッションの副作用も確認する。
+      const suppressed =
+        'suppressUnauthorizedRedirectForCodes' in options || 'redirectOnUnauthorized' in options
+      assert.deepEqual(getAuthenticatedUser(), suppressed ? user : null)
+    }
+  } finally {
+    clearAuthenticatedUser()
+  }
+})
+
 test('recent_sign_in_required は抑止対象ならセッションクリアしない', async () => {
   const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()
   const result = shouldClearSessionOnUnauthorized(

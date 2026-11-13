@@ -25,6 +25,35 @@ const loadStorageModule = async () => {
   return import('./storage.ts')
 }
 
+test('現行スキーマ11の保存フィルターは選択条件を変更せず復元する', async () => {
+  // Given: 旧形式への補完を必要としない現行の保存値。
+  const { toSavedFilter } = await loadStorageModule()
+  const filter = {
+    ...getDefaultFilter(),
+    title: '現行条件',
+    difficulties: ['MASTER' as const],
+    combo_lamp: ['ALL JUSTICE' as const],
+    unplayedOnly: true,
+  }
+  const dto: RecordFilterDTO = {
+    id: 'current-standard',
+    name: '現行通常',
+    filter_type: 'standard',
+    schema_version: 11,
+    filter,
+    created_at: '2026-11-12T00:00:00Z',
+    updated_at: '2026-11-12T00:00:00Z',
+  }
+
+  // When: APIの保存値を画面用に変換する。
+  const result = toSavedFilter(dto)
+
+  // Then: AJCの補完などを行わず、そのまま利用可能な条件になる。
+  assert.equal(result.isValid, true)
+  assert.equal(result.invalidReason, undefined)
+  assert.deepEqual(result.filter, filter)
+})
+
 test('buildSavedFilterRequest は通常レコード用の保存リクエストを生成する', async () => {
   // Given
   const { buildSavedFilterRequest } = await loadStorageModule()

@@ -82,6 +82,48 @@ ${script}
   assert.equal(stderr, '')
 }
 
+test('共有中は閉鎖と二重共有を防ぎ、完了後に閉鎖とURL解放を許可すること', async () => {
+  await runBrowserTest(`
+// Given: 生成済み画像と完了を保留する共有API。
+const { preview, dispose } = setup()
+preview.handleOpenChange(true)
+await flush()
+await resolveCapture(0)
+const files = [preview.previews()[0].file]
+const url = preview.previews()[0].url
+const pendingShare = Promise.withResolvers()
+navigator.share = async (data) => {
+  shared.push(data)
+  await pendingShare.promise
+}
+
+// When: 共有中に閉じようとし、もう一度共有する。
+const sharing = preview.share(files)
+assert.equal(preview.isSharing(), true)
+assert.equal(preview.isBusy(), true)
+assert.equal(preview.isCloseLocked(), true)
+preview.handleOpenChange(false)
+const duplicate = preview.share(files)
+
+// Then: ダイアログと画像を維持し、共有は1回のみ実行する。
+assert.equal(preview.open(), true)
+assert.equal(preview.previews()[0].url, url)
+assert.deepEqual(revoked, [])
+assert.equal(shared.length, 1)
+pendingShare.resolve()
+await Promise.all([sharing, duplicate])
+
+// When & Then: 完了後はロック解除し、閉じると画像URLを解放する。
+assert.equal(preview.isSharing(), false)
+assert.equal(preview.isBusy(), false)
+assert.equal(preview.isCloseLocked(), false)
+preview.handleOpenChange(false)
+assert.equal(preview.open(), false)
+assert.deepEqual(revoked, [url])
+dispose()
+`)
+})
+
 test('ダイアログを開くと自動で画像を生成し、閉じるとObject URLを解放すること', async () => {
   await runBrowserTest(`
 // Given

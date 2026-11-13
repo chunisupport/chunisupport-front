@@ -69,16 +69,19 @@
 
 ### `rank_count`、`score_count`
 
-達成条件 `score >= achievement_params.score` の反対を表すため、次のスコア範囲を使用します。
+達成条件 `score >= achievement_params.score` の反対を表すため、目標スコアが1点以上の場合は次のスコア範囲を使用します。
 
 ```text
 score.min = 0
-score.max = max(0, achievement_params.score - 1)
+score.max = achievement_params.score - 1
 ```
+
+目標スコアが0点の場合は、未プレイを含めて0点未満の譜面が存在しないため、タイトルからの遷移を無効にします。
+フィルター変換を直接呼んだ場合も、難易度を空配列にしてどの譜面にも一致させません。
 
 ### `avg_score`
 
-目標平均そのものの未達成を曲単位では判定できないため、`achievement_params.score` 未満の譜面を改善対象として表示します。スコア範囲は `rank_count`、`score_count` と同じです。
+目標平均そのものの未達成を曲単位では判定できないため、`achievement_params.score` 未満の譜面を改善対象として表示します。スコア範囲と目標スコア0点での扱いは `rank_count`、`score_count` と同じです。
 
 ### `hardlamp_count`
 

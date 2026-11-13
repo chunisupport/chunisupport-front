@@ -2,6 +2,20 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { calculateBorder, calculateLossBudget } from './borderCalculator'
 
+for (const input of [
+  { notes: -1, targetScore: 1000000 },
+  { notes: 1.5, targetScore: 1000000 },
+  { notes: 10, targetScore: 1000000.5 },
+  { notes: 10, targetScore: 1000000, targetJustice: 0.5 },
+  { notes: 10, targetScore: 1000000, targetJustice: 11 },
+]) {
+  test(`整数・ノーツ数の制約に反するボーダー入力を拒否する: ${JSON.stringify(input)}`, () => {
+    // Given: 整数範囲外またはノーツ数を超える入力。
+    // When & Then: 候補計算に入る前に入力エラーにする。
+    assert.throws(() => calculateBorder(input), /整数|ノーツ数以下/)
+  })
+}
+
 test('2800ノーツ、目標1007500の場合は許容失点が700になること', () => {
   // Given
   const notes = 2800
