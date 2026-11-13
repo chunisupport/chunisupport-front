@@ -153,13 +153,15 @@ test('全画面に近いダイアログ枠は狭い画面で上下に寄せ、�
     layer: 'base',
   })
 
-  // Then: 狭い画面の上下余白と、sm 以上の中央配置・固定高さに必要なクラスを持つ
+  // Then: 狭い画面の上下余白と、sm 以上の中央配置・固定高さ、本文だけをスクロールさせる縦並びに必要なクラスを持つ
   const classes = new Set(content.split(/\s+/))
   for (const token of [
     'fixed',
     'inset-x-4',
     'top-4',
     'bottom-4',
+    'flex',
+    'flex-col',
     'h-[calc(100dvh-2rem)]',
     'max-h-[calc(100dvh-2rem)]',
     'sm:h-[90dvh]',
