@@ -14,8 +14,10 @@ import type { SongDTO, WorldsendSongDTO } from '../../types/api.ts'
 beforeEach(() => appQueryClient.clear())
 
 const SONGS_UPDATED_AT = '2026-07-20T09:00:00Z'
-/** 外部更新後を想定したサーバー側の楽曲更新日時 */
-const EXTERNALLY_UPDATED_SONGS_UPDATED_AT = '2026-08-03T09:00:00Z'
+/** キャッシュ済み楽曲データの変更世代 */
+const SONGS_REVISION = 128
+/** 外部更新後を想定したサーバー側の楽曲データの変更世代 */
+const EXTERNALLY_UPDATED_SONGS_REVISION = 129
 
 const cachedSong: SongDTO = {
   id: 'cached-song',
@@ -120,10 +122,10 @@ afterEach(async () => {
   await clearSongCaches()
 })
 
-test('更新日時の欠落時はキャッシュを先行表示しても再検証済みとして返さないこと', async () => {
-  // Given: 旧キャッシュと、更新日時を欠いた API 応答。
+test('変更世代の欠落時はキャッシュを先行表示しても再検証済みとして返さないこと', async () => {
+  // Given: 旧キャッシュと、変更世代を欠いた API 応答。
   const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
-  await replaceCachedSongs([cachedSong], SONGS_UPDATED_AT)
+  await replaceCachedSongs([cachedSong], SONGS_REVISION)
   globalThis.fetch = async (input) =>
     Response.json(String(input).endsWith('/updated-at') ? {} : { songs: [fetchedSong] })
   const cachedResponses: SongDTO[][] = []
@@ -133,21 +135,21 @@ test('更新日時の欠落時はキャッシュを先行表示しても再検�
     onCached: ({ songs }) => cachedResponses.push(songs),
   })
 
-  // Then: 先行表示は維持し、最終結果は一覧 API から取得する。不正日時は保存しない。
+  // Then: 先行表示は維持し、最終結果は一覧 API から取得する。不正な応答の変更世代は保存しない。
   assert.deepEqual(cachedResponses, [[cachedSong]])
   assert.deepEqual(response.songs, [fetchedSong])
-  assert.equal((await db.cacheMetadata.get('songs'))?.songsUpdatedAt, SONGS_UPDATED_AT)
+  assert.equal((await db.cacheMetadata.get('songs'))?.songsRevision, SONGS_REVISION)
 })
 
-test('通常楽曲の強制再取得はupdated-atが同じでもIndexedDBキャッシュを使わないこと', async () => {
-  // Given: API と同じ更新日時を持つ旧楽曲キャッシュが存在する。
+test('通常楽曲の強制再取得はrevisionが同じでもIndexedDBキャッシュを使わないこと', async () => {
+  // Given: API と同じ変更世代を持つ旧楽曲キャッシュが存在する。
   const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
-  await replaceCachedSongs([cachedSong], SONGS_UPDATED_AT)
+  await replaceCachedSongs([cachedSong], SONGS_REVISION)
   let songsFetchCount = 0
   globalThis.fetch = async (input) => {
     const url = String(input)
     if (url.endsWith('/internal/songs/updated-at')) {
-      return Response.json({ updated_at: SONGS_UPDATED_AT })
+      return Response.json({ updated_at: SONGS_UPDATED_AT, revision: SONGS_REVISION })
     }
     if (url.endsWith('/internal/songs')) {
       songsFetchCount += 1
@@ -170,15 +172,15 @@ test('通常楽曲の強制再取得はupdated-atが同じでもIndexedDBキャ�
   ])
 })
 
-test("WORLD'S END楽曲の強制再取得はupdated-atが同じでもキャッシュを使わないこと", async () => {
-  // Given: API と同じ更新日時を持つ旧楽曲キャッシュが存在する。
+test("WORLD'S END楽曲の強制再取得はrevisionが同じでもキャッシュを使わないこと", async () => {
+  // Given: API と同じ変更世代を持つ旧楽曲キャッシュが存在する。
   const { fetchWorldsendSongsWithCache } = await loadSongsCacheUsecases()
-  await replaceCachedWorldsendSongs([cachedWorldsendSong], SONGS_UPDATED_AT)
+  await replaceCachedWorldsendSongs([cachedWorldsendSong], SONGS_REVISION)
   let songsFetchCount = 0
   globalThis.fetch = async (input) => {
     const url = String(input)
     if (url.endsWith('/internal/songs/updated-at')) {
-      return Response.json({ updated_at: SONGS_UPDATED_AT })
+      return Response.json({ updated_at: SONGS_UPDATED_AT, revision: SONGS_REVISION })
     }
     if (url.endsWith('/internal/worldsend-songs')) {
       songsFetchCount += 1
@@ -209,7 +211,7 @@ test('無効化前に開始した通常楽曲取得は完了後に旧データ�
   globalThis.fetch = async (input) => {
     const url = String(input)
     if (url.endsWith('/internal/songs/updated-at')) {
-      return Response.json({ updated_at: SONGS_UPDATED_AT })
+      return Response.json({ updated_at: SONGS_UPDATED_AT, revision: SONGS_REVISION })
     }
     if (url.endsWith('/internal/songs')) {
       notifySongsRequestStarted()
@@ -266,7 +268,7 @@ const revalidationTargets = [
     cachedSong,
     fetchedSong,
     fetchWithCache: async () => (await loadSongsCacheUsecases()).fetchAllSongsWithCache(),
-    replaceCache: (updatedAt: string) => replaceCachedSongs([cachedSong], updatedAt),
+    replaceCache: (revision: number) => replaceCachedSongs([cachedSong], revision),
   },
   {
     label: "WORLD'S END楽曲",
@@ -274,22 +276,23 @@ const revalidationTargets = [
     cachedSong: cachedWorldsendSong,
     fetchedSong: fetchedWorldsendSong,
     fetchWithCache: async () => (await loadSongsCacheUsecases()).fetchWorldsendSongsWithCache(),
-    replaceCache: (updatedAt: string) =>
-      replaceCachedWorldsendSongs([cachedWorldsendSong], updatedAt),
+    replaceCache: (revision: number) =>
+      replaceCachedWorldsendSongs([cachedWorldsendSong], revision),
   },
 ] as const
 
 /**
  * 楽曲更新日時 API と楽曲一覧 API を差し替え、呼び出し回数を記録する。
+ * 更新日時は固定し、変更世代だけを変えて世代の一致で判定することを検証する。
  *
  * @param songsPath - 楽曲一覧 API のパス。
- * @param getUpdatedAt - 呼び出し時点でサーバーが返す楽曲更新日時。
+ * @param getRevision - 呼び出し時点でサーバーが返す楽曲データの変更世代。
  * @param songs - 楽曲一覧 API が返す楽曲。
  * @returns 楽曲一覧 API と楽曲更新日時 API の呼び出し回数を返す関数。
  */
 const installSongsApi = (
   songsPath: string,
-  getUpdatedAt: () => string,
+  getRevision: () => number,
   songs: unknown[]
 ): { getSongsFetchCount: () => number; getUpdatedAtFetchCount: () => number } => {
   let songsFetchCount = 0
@@ -298,7 +301,7 @@ const installSongsApi = (
     const url = String(input)
     if (url.endsWith('/internal/songs/updated-at')) {
       updatedAtFetchCount += 1
-      return Response.json({ updated_at: getUpdatedAt() })
+      return Response.json({ updated_at: SONGS_UPDATED_AT, revision: getRevision() })
     }
     if (url.endsWith(songsPath)) {
       songsFetchCount += 1
@@ -314,33 +317,33 @@ const installSongsApi = (
 
 for (const target of revalidationTargets) {
   test(`${target.label}はTTL経過後に外部更新を検知して旧IndexedDBキャッシュを返さないこと`, async (t) => {
-    // Given: 更新日時 T1 で楽曲キャッシュとメモリ上の更新日時が揃っている。
+    // Given: 変更世代 R1 で楽曲キャッシュとメモリ上の変更世代が揃っている。
     t.mock.timers.enable({ apis: ['Date'], now: 0 })
-    await target.replaceCache(SONGS_UPDATED_AT)
-    let serverUpdatedAt = SONGS_UPDATED_AT
-    const { getSongsFetchCount } = installSongsApi(target.songsPath, () => serverUpdatedAt, [
+    await target.replaceCache(SONGS_REVISION)
+    let serverRevision = SONGS_REVISION
+    const { getSongsFetchCount } = installSongsApi(target.songsPath, () => serverRevision, [
       target.fetchedSong,
     ])
     const beforeUpdate = await target.fetchWithCache()
 
-    // When: 外部経路で T2 に更新され、TTL 経過後に再度キャッシュ付き取得を行う。
-    serverUpdatedAt = EXTERNALLY_UPDATED_SONGS_UPDATED_AT
+    // When: 同じ秒内の外部更新で更新日時は変わらず変更世代だけ R2 に進み、TTL 経過後に再度取得する。
+    serverRevision = EXTERNALLY_UPDATED_SONGS_REVISION
     t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
     const afterUpdate = await target.fetchWithCache()
 
-    // Then: 初回は T1 のキャッシュを返し、TTL 経過後は API から最新一覧を取得する。
+    // Then: 初回は R1 のキャッシュを返し、TTL 経過後は API から最新一覧を取得する。
     assert.deepEqual(beforeUpdate.songs, [target.cachedSong])
     assert.deepEqual(afterUpdate.songs, [target.fetchedSong])
     assert.equal(getSongsFetchCount(), 1)
   })
 
   test(`${target.label}はTTL直前まで更新日時を再取得せず、ちょうどTTLで再取得してもIndexedDBキャッシュを再利用すること`, async (t) => {
-    // Given: 更新日時 T1 で楽曲キャッシュとメモリ上の更新日時が揃っている。
+    // Given: 変更世代 R1 で楽曲キャッシュとメモリ上の変更世代が揃っている。
     t.mock.timers.enable({ apis: ['Date'], now: 0 })
-    await target.replaceCache(SONGS_UPDATED_AT)
+    await target.replaceCache(SONGS_REVISION)
     const { getSongsFetchCount, getUpdatedAtFetchCount } = installSongsApi(
       target.songsPath,
-      () => SONGS_UPDATED_AT,
+      () => SONGS_REVISION,
       [target.fetchedSong]
     )
     await target.fetchWithCache()
@@ -367,7 +370,7 @@ for (const target of revalidationTargets) {
 test('更新日時の応答前にキャッシュを通知し、外部更新後の一覧に差し替えること', async () => {
   // Given: 古いキャッシュがあり、更新日時 API の応答は保留されている。
   const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
-  await replaceCachedSongs([cachedSong], SONGS_UPDATED_AT)
+  await replaceCachedSongs([cachedSong], SONGS_REVISION)
   let resolveUpdatedAt!: (response: Response) => void
   const updatedAtResponse = new Promise<Response>((resolve) => {
     resolveUpdatedAt = resolve
@@ -384,7 +387,9 @@ test('更新日時の応答前にキャッシュを通知し、外部更新後�
   // When: 更新日時の応答を待たず、キャッシュの先行通知を受け取る。
   const request = fetchAllSongsWithCache({ onCached: ({ songs }) => notifyCached(songs) })
   assert.deepEqual(await cacheNotification, [cachedSong])
-  resolveUpdatedAt(Response.json({ updated_at: EXTERNALLY_UPDATED_SONGS_UPDATED_AT }))
+  resolveUpdatedAt(
+    Response.json({ updated_at: SONGS_UPDATED_AT, revision: EXTERNALLY_UPDATED_SONGS_REVISION })
+  )
 
   // Then: 最終応答と IndexedDB は外部更新後の楽曲になる。
   assert.deepEqual((await request).songs, [fetchedSong])
@@ -414,15 +419,15 @@ test('キャッシュなしでは更新日時の応答を待たずに楽曲一�
   // When: 更新日時を返す前に一覧リクエストの開始を確認する。
   const request = fetchAllSongsWithCache()
   await songsRequested
-  resolveUpdatedAt(Response.json({ updated_at: SONGS_UPDATED_AT }))
+  resolveUpdatedAt(Response.json({ updated_at: SONGS_UPDATED_AT, revision: SONGS_REVISION }))
 
   // Then: 一覧を取得して保存できる。
   assert.deepEqual((await request).songs, [fetchedSong])
   assert.equal(await db.songs.count(), 1)
 })
 
-test('並列取得した一覧に後から確定した更新日時を付けず、次回に再検証すること', async () => {
-  // Given: 一覧が古い内容を返した後、更新日時は新しい値を返す。
+test('並列取得した一覧に後から確定した変更世代を付けず、次回に再検証すること', async () => {
+  // Given: 一覧が古い内容を返した後、変更世代は新しい値を返す。
   const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
   let resolveUpdatedAt!: (response: Response) => void
   let notifySongsResponse!: () => void
@@ -438,18 +443,61 @@ test('並列取得した一覧に後から確定した更新日時を付けず�
     return Response.json({ songs: [cachedSong] })
   }
 
-  // When: 一覧の取得後に更新日時を確定する。
+  // When: 一覧の取得後に変更世代を確定する。
   const initialRequest = fetchAllSongsWithCache()
   await songsResponded
-  resolveUpdatedAt(Response.json({ updated_at: EXTERNALLY_UPDATED_SONGS_UPDATED_AT }))
+  resolveUpdatedAt(
+    Response.json({ updated_at: SONGS_UPDATED_AT, revision: EXTERNALLY_UPDATED_SONGS_REVISION })
+  )
   await initialRequest
 
-  // Then: 未確認のキャッシュとして保存され、同じ更新日時でも最新一覧を取り直す。
-  assert.equal((await db.cacheMetadata.get('songs'))?.songsUpdatedAt, undefined)
+  // Then: 未確認のキャッシュとして保存され、同じ変更世代でも最新一覧を取り直す。
+  assert.equal((await db.cacheMetadata.get('songs'))?.songsRevision, undefined)
   globalThis.fetch = async () => Response.json({ songs: [fetchedSong] })
   assert.deepEqual((await fetchAllSongsWithCache()).songs, [fetchedSong])
   assert.equal(
-    (await db.cacheMetadata.get('songs'))?.songsUpdatedAt,
-    EXTERNALLY_UPDATED_SONGS_UPDATED_AT
+    (await db.cacheMetadata.get('songs'))?.songsRevision,
+    EXTERNALLY_UPDATED_SONGS_REVISION
   )
+})
+
+test('変更世代を保存していない旧形式のキャッシュは更新日時が一致しても再取得して移行すること', async () => {
+  // Given: 更新日時だけを持つ旧形式のメタデータで楽曲キャッシュが保存されている。
+  const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
+  await replaceCachedSongs([cachedSong], undefined)
+  await db.cacheMetadata.update('songs', { songsUpdatedAt: SONGS_UPDATED_AT } as never)
+  const { getSongsFetchCount } = installSongsApi('/internal/songs', () => SONGS_REVISION, [
+    fetchedSong,
+  ])
+
+  // When: 同じ更新日時を返す API に対してキャッシュ付き取得を行う。
+  const response = await fetchAllSongsWithCache()
+
+  // Then: 一覧を再取得し、変更世代付きのキャッシュへ置き換える。
+  assert.deepEqual(response.songs, [fetchedSong])
+  assert.equal(getSongsFetchCount(), 1)
+  assert.equal((await db.cacheMetadata.get('songs'))?.songsRevision, SONGS_REVISION)
+})
+
+test("変更世代を保存していない旧形式のWORLD'S ENDキャッシュは再取得して移行すること", async () => {
+  // Given: 更新日時だけを持つ旧形式のメタデータで WORLD'S END 楽曲キャッシュが保存されている。
+  const { fetchWorldsendSongsWithCache } = await loadSongsCacheUsecases()
+  await replaceCachedWorldsendSongs([cachedWorldsendSong], SONGS_REVISION)
+  await db.cacheMetadata.update('worldsendSongs', {
+    songsRevision: undefined,
+    songsUpdatedAt: SONGS_UPDATED_AT,
+  } as never)
+  const { getSongsFetchCount } = installSongsApi(
+    '/internal/worldsend-songs',
+    () => SONGS_REVISION,
+    [fetchedWorldsendSong]
+  )
+
+  // When: 同じ更新日時を返す API に対してキャッシュ付き取得を行う。
+  const response = await fetchWorldsendSongsWithCache()
+
+  // Then: 一覧を再取得し、変更世代付きのキャッシュへ置き換える。
+  assert.deepEqual(response.songs, [fetchedWorldsendSong])
+  assert.equal(getSongsFetchCount(), 1)
+  assert.equal((await db.cacheMetadata.get('worldsendSongs'))?.songsRevision, SONGS_REVISION)
 })

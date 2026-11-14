@@ -12,6 +12,7 @@ import type {
   ScoreHistoryResponseDTO,
   SongDTO,
   SongStatsResponseDTO,
+  SongsUpdatedAtResponseDTO,
   UpdatedAtResponseDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
@@ -71,11 +72,11 @@ export const requestCoursesUpdatedAt = async (): Promise<UpdatedAtResponseDTO> =
 }
 
 /**
- * API から楽曲更新日時を取得する。
+ * API から楽曲更新日時と楽曲データの変更世代を取得する。
  *
- * @returns 通常楽曲と WORLD'S END 楽曲の共通更新日時レスポンス。
+ * @returns 通常楽曲と WORLD'S END 楽曲の共通の更新日時・変更世代レスポンス。
  */
-export const requestSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => {
+export const requestSongsUpdatedAt = async (): Promise<SongsUpdatedAtResponseDTO> => {
   // TTL 経過後の再検証がブラウザの HTTP キャッシュで古い値にならないよう、毎回サーバーへ確認する。
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/songs/updated-at`, {
     cache: 'no-cache',
@@ -90,8 +91,16 @@ export const requestSongsUpdatedAt = async (): Promise<UpdatedAtResponseDTO> => 
   ) {
     throw new TypeError('楽曲更新日時レスポンスの updated_at が不正です')
   }
+  if (
+    !('revision' in data) ||
+    typeof data.revision !== 'number' ||
+    !Number.isSafeInteger(data.revision) ||
+    data.revision < 0
+  ) {
+    throw new TypeError('楽曲更新日時レスポンスの revision が不正です')
+  }
 
-  return { updated_at: data.updated_at }
+  return { updated_at: data.updated_at, revision: data.revision }
 }
 
 export const fetchManagedSongs = async (): Promise<{ songs: ManagedSongDTO[] }> => {

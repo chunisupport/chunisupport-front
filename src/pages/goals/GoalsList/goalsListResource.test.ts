@@ -36,6 +36,7 @@ const installGoalsFetch = (hasPlayer: boolean, lockedSongsStatus = 200) =>
       case '/internal/master/versions':
         return Response.json({ versions: [] })
       case '/internal/songs/updated-at':
+        return Response.json({ updated_at: null, revision: 0 })
       case '/internal/users/test-user/updated-at':
         return Response.json({ updated_at: null })
       case '/internal/users/test-user/record':

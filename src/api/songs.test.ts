@@ -317,10 +317,19 @@ test('楽曲名順フォルダはAPIの表示名を保持してsort_order順に�
   assert.deepEqual(result.name_folders, [folders[1], folders[0]])
 })
 
-test('requestSongsUpdatedAt は不正な updated_at を拒否し、HTTPキャッシュを再検証する', async () => {
+test('requestSongsUpdatedAt は不正な updated_at と revision を拒否し、HTTPキャッシュを再検証する', async () => {
   // Given: 契約に反するレスポンス。
   const { requestSongsUpdatedAt } = await loadSongsApi()
-  for (const invalid of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
+  for (const invalid of [
+    {},
+    { updated_at: 123, revision: 1 },
+    { updated_at: false, revision: 1 },
+    { updated_at: '2024-01-02T03:04:05+09:00' },
+    { updated_at: null, revision: null },
+    { updated_at: null, revision: '1' },
+    { updated_at: null, revision: 1.5 },
+    null,
+  ]) {
     const calls = installFetchRecorder(() => Response.json(invalid))
 
     // When / Then: API層で型を検証し、HTTPキャッシュの再検証を要求する。
@@ -329,28 +338,30 @@ test('requestSongsUpdatedAt は不正な updated_at を拒否し、HTTPキャッ
   }
 })
 
-test('requestSongsUpdatedAt は文字列の更新日時をそのまま返す', async () => {
-  // Given: 正常な文字列更新日時を持つレスポンス。
-  installFetchRecorder(() => Response.json({ updated_at: '2024-01-02T03:04:05+09:00' }))
+test('requestSongsUpdatedAt は文字列の更新日時と変更世代をそのまま返す', async () => {
+  // Given: 正常な文字列更新日時と変更世代を持つレスポンス。
+  installFetchRecorder(() =>
+    Response.json({ updated_at: '2024-01-02T03:04:05+09:00', revision: 128 })
+  )
   const { requestSongsUpdatedAt } = await loadSongsApi()
 
   // When: 楽曲更新日時を取得する。
   const result = await requestSongsUpdatedAt()
 
   // Then: 検証を通過して値がそのまま返る。
-  assert.deepEqual(result, { updated_at: '2024-01-02T03:04:05+09:00' })
+  assert.deepEqual(result, { updated_at: '2024-01-02T03:04:05+09:00', revision: 128 })
 })
 
 test('requestSongsUpdatedAt は null の更新日時をそのまま返す', async () => {
   // Given: 更新日時が未設定の正常レスポンス。
-  installFetchRecorder(() => Response.json({ updated_at: null }))
+  installFetchRecorder(() => Response.json({ updated_at: null, revision: 0 }))
   const { requestSongsUpdatedAt } = await loadSongsApi()
 
   // When: 楽曲更新日時を取得する。
   const result = await requestSongsUpdatedAt()
 
   // Then: null が許容されてそのまま返る。
-  assert.deepEqual(result, { updated_at: null })
+  assert.deepEqual(result, { updated_at: null, revision: 0 })
 })
 
 test('requestMasterData は文字列の実績種別を前後空白除去でコード化する', async () => {

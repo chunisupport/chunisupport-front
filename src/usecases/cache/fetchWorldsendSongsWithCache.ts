@@ -25,17 +25,17 @@ export const fetchWorldsendSongsWithCache = async (
   options: FetchWorldsendSongsWithCacheOptions = {}
 ): Promise<WorldsendSongsResponse> => {
   const cacheGeneration = getSongCacheGeneration()
-  let songsUpdatedAt: string | null
+  let songsRevision: number
 
   try {
-    songsUpdatedAt = (await fetchSongsUpdatedAt()).updated_at
+    songsRevision = (await fetchSongsUpdatedAt()).revision
   } catch {
     return fetchWorldsendSongs()
   }
 
   if (!options.forceRefresh) {
     try {
-      const cachedSongs = await readCachedWorldsendSongs(songsUpdatedAt)
+      const cachedSongs = await readCachedWorldsendSongs(songsRevision)
       if (cachedSongs) {
         return { songs: cachedSongs }
       }
@@ -47,7 +47,7 @@ export const fetchWorldsendSongsWithCache = async (
   const response = await fetchWorldsendSongs()
 
   try {
-    await replaceCachedWorldsendSongs(response.songs, songsUpdatedAt, cacheGeneration)
+    await replaceCachedWorldsendSongs(response.songs, songsRevision, cacheGeneration)
   } catch {
     // IndexedDB への保存失敗は画面表示を止めない。
   }
