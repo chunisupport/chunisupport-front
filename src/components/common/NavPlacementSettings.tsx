@@ -8,8 +8,10 @@ import Smartphone from 'lucide-solid/icons/smartphone'
 import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 import {
+  navBarCompactMode,
   navBarSide,
   navRailSide,
+  updateNavBarCompactMode,
   updateNavBarSide,
   updateNavRailSide,
 } from '../../stores/navPlacementPreferences'
@@ -21,6 +23,7 @@ import {
 } from '../../utils/navPlacementPreference'
 import { NAV_PLACEMENT_SETTINGS_COPY } from './AppearanceSettings.constants'
 import { type AppTabOption, SegmentedToggleGroup } from './AppTabs'
+import { CheckboxField } from './CheckboxField'
 
 /** 配置側ごとに、その配置を図示するアイコン */
 const NAV_SIDE_ICONS: Record<NavRailSide | NavBarSide, LucideIcon> = {
@@ -78,8 +81,14 @@ const NAV_BAR_ROW_CLASS: Record<NavPlacementSettingsScope, string> = {
   current: 'flex md:hidden',
 }
 
+/** 横バーのコンパクトモード設定行。全行表示時は配置選択と同じ位置に揃える */
+const NAV_BAR_COMPACT_MODE_ROW_CLASS: Record<NavPlacementSettingsScope, string> = {
+  all: 'flex pl-8',
+  current: 'flex md:hidden',
+}
+
 /**
- * ナビゲーションの配置側を、幅の広い画面（縦レール）と狭い画面（横バー）で別々に選択するUIを表示する。
+ * ナビゲーションの配置側と、横バーのコンパクトモードを選択するUIを表示する。
  * 縦レールか横バーかは画面幅で決まるため、ここでは寄せる側だけを選ぶ。
  * 両方の行を並べる場合のみ、どちらの画面幅向けかを示す端末アイコンを添える。
  *
@@ -88,6 +97,16 @@ const NAV_BAR_ROW_CLASS: Record<NavPlacementSettingsScope, string> = {
  */
 const NavPlacementSettings = (props: NavPlacementSettingsProps): JSX.Element => {
   const scope = (): NavPlacementSettingsScope => props.scope ?? 'all'
+
+  /**
+   * 横バーのコンパクトモードのチェックを設定へ反映する。
+   *
+   * @param checked コンパクトモードを有効にするか
+   * @returns なし
+   */
+  const handleCompactModeChange = (checked: boolean): void => {
+    updateNavBarCompactMode(checked)
+  }
 
   return (
     <div>
@@ -115,6 +134,18 @@ const NavPlacementSettings = (props: NavPlacementSettingsProps): JSX.Element => 
             onChange={updateNavBarSide}
             ariaLabel={NAV_PLACEMENT_SETTINGS_COPY.barAriaLabel}
             itemClass={NAV_SIDE_TOGGLE_ITEM_CLASS}
+          />
+        </div>
+        <div class={`items-center gap-3 ${NAV_BAR_COMPACT_MODE_ROW_CLASS[scope()]}`}>
+          <CheckboxField
+            label={
+              <>
+                <span class="sr-only">{NAV_PLACEMENT_SETTINGS_COPY.barCompactModePrefix}</span>
+                {NAV_PLACEMENT_SETTINGS_COPY.barCompactModeToggle}
+              </>
+            }
+            checked={navBarCompactMode()}
+            onChange={handleCompactModeChange}
           />
         </div>
       </div>

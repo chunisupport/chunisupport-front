@@ -1,4 +1,5 @@
 import { createSignal } from 'solid-js'
+import { readNavBarCompactMode, saveNavBarCompactMode } from '../utils/navBarCompactMode'
 import {
   type NavBarSide,
   type NavRailSide,
@@ -12,7 +13,10 @@ import {
 const [navRailSide, setNavRailSideSignal] = createSignal<NavRailSide>(readNavRailSide())
 const [navBarSide, setNavBarSideSignal] = createSignal<NavBarSide>(readNavBarSide())
 
-export { navBarSide, navRailSide }
+/** 横バーのコンパクトモードが有効かを表す共有状態 */
+const [navBarCompactMode, setNavBarCompactModeSignal] = createSignal(readNavBarCompactMode())
+
+export { navBarCompactMode, navBarSide, navRailSide }
 
 /**
  * 縦レールの配置側を共有状態と永続ストレージへ反映する。
@@ -32,4 +36,14 @@ export const updateNavRailSide = (side: NavRailSide): void => {
 export const updateNavBarSide = (side: NavBarSide): void => {
   saveNavBarSide(side)
   setNavBarSideSignal(side)
+}
+
+/**
+ * 横バーのコンパクトモードを共有状態と永続ストレージへ反映する。
+ * @param enabled コンパクトモードを有効にするか
+ * @returns なし
+ */
+export const updateNavBarCompactMode = (enabled: boolean): void => {
+  saveNavBarCompactMode(enabled)
+  setNavBarCompactModeSignal(enabled)
 }

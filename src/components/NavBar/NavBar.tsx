@@ -19,7 +19,7 @@ import Shield from 'lucide-solid/icons/shield'
 import UsersRound from 'lucide-solid/icons/users-round'
 import Wrench from 'lucide-solid/icons/wrench'
 import type { JSX } from 'solid-js'
-import { createEffect, createSignal, For, onMount } from 'solid-js'
+import { createEffect, createSignal, For, onMount, Show } from 'solid-js'
 import { isNavItemActive } from './navItemMatching'
 
 type NavBarProps = {
@@ -44,7 +44,7 @@ import {
   refreshFriendRequestNotificationIfStale,
   setActiveFriendRequestNotificationUser,
 } from '../../stores/friendRequestNotification'
-import { navBarSide, navRailSide } from '../../stores/navPlacementPreferences'
+import { navBarCompactMode, navBarSide, navRailSide } from '../../stores/navPlacementPreferences'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
 import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
@@ -78,6 +78,21 @@ const NAV_RAIL_MENU_CONTENT_CLASS: Record<NavRailSide, string> = {
 const NAV_BAR_SIDE_CLASS: Record<NavBarSide, string> = {
   bottom: 'border-t',
   top: 'order-first border-b',
+}
+
+/** 横バーのラベル表示状態 */
+type NavBarLabelMode = 'labeled' | 'iconOnly'
+
+/** 横バーの内側余白。アイコンのみ表示では高さを抑える */
+const NAV_BAR_PADDING_CLASS: Record<NavBarLabelMode, string> = {
+  labeled: 'p-2',
+  iconOnly: 'px-2 py-1',
+}
+
+/** 横バーの各項目の間隔と高さ。アイコンのみ表示でもタップしやすい高さを確保する */
+const NAV_BAR_ITEM_SPACING_CLASS: Record<NavBarLabelMode, string> = {
+  labeled: 'gap-1 py-2',
+  iconOnly: 'min-h-11 py-1.5',
 }
 
 /** 横バーの「その他」メニューを、バーから画面領域側へ離して開くクラス */
@@ -281,6 +296,13 @@ const NavBar = (props: NavBarProps) => {
   })
 
   /**
+   * 横バーのラベル表示状態を取得する。
+   *
+   * @returns コンパクトモードならアイコンのみ、それ以外はラベルも表示する。
+   */
+  const navBarLabelMode = (): NavBarLabelMode => (navBarCompactMode() ? 'iconOnly' : 'labeled')
+
+  /**
    * ナビゲーション項目が現在のパスでアクティブかを判定する。
    *
    * @param item - 判定対象の項目。
@@ -432,7 +454,9 @@ const NavBar = (props: NavBarProps) => {
 
         {/* スマホ用nav-bar 768px未満 */}
         <nav
-          class={`md:hidden z-40 flex items-center justify-between border-border bg-surface p-2 shadow-sm ${NAV_BAR_SIDE_CLASS[navBarSide()]}`}
+          class={`md:hidden z-40 flex items-center justify-between border-border bg-surface shadow-sm ${
+            NAV_BAR_PADDING_CLASS[navBarLabelMode()]
+          } ${NAV_BAR_SIDE_CLASS[navBarSide()]}`}
         >
           <For each={getNavItems()}>
             {(item) =>
@@ -442,6 +466,8 @@ const NavBar = (props: NavBarProps) => {
                     variant="navBar"
                     label={item.label}
                     icon={item.icon()}
+                    hideLabel={navBarLabelMode() === 'iconOnly'}
+                    class={NAV_BAR_ITEM_SPACING_CLASS[navBarLabelMode()]}
                     hasNotificationDot={friendRequestNotification.hasPendingReceivedRequest}
                   />
                   <DropdownMenu.Portal>
@@ -456,23 +482,37 @@ const NavBar = (props: NavBarProps) => {
               item.requiresAuth && !isLoading() && !username() ? (
                 <Button
                   type="button"
-                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-disabled-text justify-center"
+                  class={`flex-1 flex flex-col items-center rounded-md px-0 text-xs font-semibold text-disabled-text justify-center ${
+                    NAV_BAR_ITEM_SPACING_CLASS[navBarLabelMode()]
+                  }`}
                   onClick={() => setShowLoginDialog(true)}
                 >
                   <span class="text-lg">{item.icon()}</span>
-                  <span>{item.label}</span>
+                  <Show
+                    when={navBarLabelMode() === 'labeled'}
+                    fallback={<span class="sr-only">{item.label}</span>}
+                  >
+                    <span>{item.label}</span>
+                  </Show>
                 </Button>
               ) : (
                 <A
                   href={item.path}
-                  class="flex-1 flex flex-col items-center gap-1 rounded-md px-0 py-2 text-xs font-semibold text-nav-text justify-center"
+                  class={`flex-1 flex flex-col items-center rounded-md px-0 text-xs font-semibold text-nav-text justify-center ${
+                    NAV_BAR_ITEM_SPACING_CLASS[navBarLabelMode()]
+                  }`}
                   classList={{
                     '!bg-action-primary !text-text-inverse hover:!bg-action-primary-hover hover:!text-text-inverse':
                       isActive(item),
                   }}
                 >
                   <span class="text-lg">{item.icon()}</span>
-                  <span>{item.label}</span>
+                  <Show
+                    when={navBarLabelMode() === 'labeled'}
+                    fallback={<span class="sr-only">{item.label}</span>}
+                  >
+                    <span>{item.label}</span>
+                  </Show>
                 </A>
               )
             }
