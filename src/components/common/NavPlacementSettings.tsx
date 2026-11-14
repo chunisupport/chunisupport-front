@@ -1,4 +1,6 @@
 import type { LucideIcon } from 'lucide-solid'
+import AlignVerticalJustifyEnd from 'lucide-solid/icons/align-vertical-justify-end'
+import AlignVerticalJustifyStart from 'lucide-solid/icons/align-vertical-justify-start'
 import Monitor from 'lucide-solid/icons/monitor'
 import PanelBottom from 'lucide-solid/icons/panel-bottom'
 import PanelLeft from 'lucide-solid/icons/panel-left'
@@ -11,15 +13,19 @@ import {
   navBarCompactMode,
   navBarSide,
   navRailSide,
+  navRailVerticalAlign,
   updateNavBarCompactMode,
   updateNavBarSide,
   updateNavRailSide,
+  updateNavRailVerticalAlign,
 } from '../../stores/navPlacementPreferences'
 import {
   NAV_BAR_SIDES,
   NAV_RAIL_SIDES,
+  NAV_RAIL_VERTICAL_ALIGNS,
   type NavBarSide,
   type NavRailSide,
+  type NavRailVerticalAlign,
 } from '../../utils/navPlacementPreference'
 import { NAV_PLACEMENT_SETTINGS_COPY } from './AppearanceSettings.constants'
 import { type AppTabOption, SegmentedToggleGroup } from './AppTabs'
@@ -31,6 +37,12 @@ const NAV_SIDE_ICONS: Record<NavRailSide | NavBarSide, LucideIcon> = {
   right: PanelRight,
   bottom: PanelBottom,
   top: PanelTop,
+}
+
+/** 縦レールの項目の縦位置ごとに、その寄せ方を図示するアイコン */
+const NAV_RAIL_VERTICAL_ALIGN_ICONS: Record<NavRailVerticalAlign, LucideIcon> = {
+  top: AlignVerticalJustifyStart,
+  bottom: AlignVerticalJustifyEnd,
 }
 
 /** 配置側の選択肢をタッチ操作しやすい大きさにするクラス */
@@ -53,6 +65,28 @@ const toSideOptions = <TSide extends NavRailSide | NavBarSide>(
         <>
           <Icon class="h-4 w-4" aria-hidden="true" />
           {NAV_PLACEMENT_SETTINGS_COPY.sideLabels[side]}
+        </>
+      ),
+    }
+  })
+
+/**
+ * 縦レールの項目の縦位置の一覧を、寄せ方を示すアイコン付きの選択肢へ変換する。
+ *
+ * @param aligns - 選択肢にする縦位置の一覧。
+ * @returns SegmentedToggleGroup に渡す選択肢。
+ */
+const toVerticalAlignOptions = (
+  aligns: readonly NavRailVerticalAlign[]
+): AppTabOption<NavRailVerticalAlign>[] =>
+  aligns.map((align) => {
+    const Icon = NAV_RAIL_VERTICAL_ALIGN_ICONS[align]
+    return {
+      value: align,
+      label: (
+        <>
+          <Icon class="h-4 w-4" aria-hidden="true" />
+          {NAV_PLACEMENT_SETTINGS_COPY.railVerticalAlignLabels[align]}
         </>
       ),
     }
@@ -87,8 +121,14 @@ const NAV_BAR_COMPACT_MODE_ROW_CLASS: Record<NavPlacementSettingsScope, string> 
   current: 'flex md:hidden',
 }
 
+/** 縦レールの項目の縦位置設定行。全行表示時は配置選択と同じ位置に揃える */
+const NAV_RAIL_VERTICAL_ALIGN_ROW_CLASS: Record<NavPlacementSettingsScope, string> = {
+  all: 'flex pl-8',
+  current: 'hidden md:flex',
+}
+
 /**
- * ナビゲーションの配置側と、横バーのコンパクトモードを選択するUIを表示する。
+ * ナビゲーションの配置側と、縦レールの項目の縦位置、横バーのコンパクトモードを選択するUIを表示する。
  * 縦レールか横バーかは画面幅で決まるため、ここでは寄せる側だけを選ぶ。
  * 両方の行を並べる場合のみ、どちらの画面幅向けかを示す端末アイコンを添える。
  *
@@ -121,6 +161,15 @@ const NavPlacementSettings = (props: NavPlacementSettingsProps): JSX.Element => 
             value={navRailSide()}
             onChange={updateNavRailSide}
             ariaLabel={NAV_PLACEMENT_SETTINGS_COPY.railAriaLabel}
+            itemClass={NAV_SIDE_TOGGLE_ITEM_CLASS}
+          />
+        </div>
+        <div class={`items-center gap-3 ${NAV_RAIL_VERTICAL_ALIGN_ROW_CLASS[scope()]}`}>
+          <SegmentedToggleGroup<NavRailVerticalAlign>
+            options={toVerticalAlignOptions(NAV_RAIL_VERTICAL_ALIGNS)}
+            value={navRailVerticalAlign()}
+            onChange={updateNavRailVerticalAlign}
+            ariaLabel={NAV_PLACEMENT_SETTINGS_COPY.railVerticalAlignAriaLabel}
             itemClass={NAV_SIDE_TOGGLE_ITEM_CLASS}
           />
         </div>

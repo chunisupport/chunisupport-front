@@ -4,15 +4,25 @@ export type NavRailSide = 'left' | 'right'
 /** 幅の狭い画面で横バーとして表示するナビゲーションの配置側 */
 export type NavBarSide = 'bottom' | 'top'
 
+/** 幅の広い画面の縦レールで、項目を上端と下端のどちらへ寄せるか */
+export type NavRailVerticalAlign = 'top' | 'bottom'
+
 /** 縦レールの配置側を保存する localStorage のキー */
 export const NAV_RAIL_SIDE_STORAGE_KEY = 'chunisupport-nav-rail-side'
 /** 横バーの配置側を保存する localStorage のキー */
 export const NAV_BAR_SIDE_STORAGE_KEY = 'chunisupport-nav-bar-side'
+/** 縦レールの項目の縦位置を保存する localStorage のキー */
+export const NAV_RAIL_VERTICAL_ALIGN_STORAGE_KEY = 'chunisupport-nav-rail-vertical-align'
 
 /** 縦レールの選択肢。先頭が既定値 */
 export const NAV_RAIL_SIDES = ['left', 'right'] as const satisfies readonly NavRailSide[]
 /** 横バーの選択肢。先頭が既定値 */
 export const NAV_BAR_SIDES = ['bottom', 'top'] as const satisfies readonly NavBarSide[]
+/** 縦レールの項目の縦位置の選択肢。先頭が既定値 */
+export const NAV_RAIL_VERTICAL_ALIGNS = [
+  'top',
+  'bottom',
+] as const satisfies readonly NavRailVerticalAlign[]
 
 /**
  * localStorageから配置側を読み取る。
@@ -73,3 +83,18 @@ export const readNavBarSide = (): NavBarSide => readSide(NAV_BAR_SIDE_STORAGE_KE
  * @returns なし
  */
 export const saveNavBarSide = (side: NavBarSide): void => saveSide(NAV_BAR_SIDE_STORAGE_KEY, side)
+
+/**
+ * 縦レールの項目の縦位置を読み取る。
+ * @returns 保存済みの縦位置。未設定または不正値の場合は上
+ */
+export const readNavRailVerticalAlign = (): NavRailVerticalAlign =>
+  readSide(NAV_RAIL_VERTICAL_ALIGN_STORAGE_KEY, NAV_RAIL_VERTICAL_ALIGNS)
+
+/**
+ * 縦レールの項目の縦位置を保存する。
+ * @param align 保存する縦位置
+ * @returns なし
+ */
+export const saveNavRailVerticalAlign = (align: NavRailVerticalAlign): void =>
+  saveSide(NAV_RAIL_VERTICAL_ALIGN_STORAGE_KEY, align)
