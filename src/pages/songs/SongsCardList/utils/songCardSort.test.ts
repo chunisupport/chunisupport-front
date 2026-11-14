@@ -15,6 +15,18 @@ test('不明なソートキーIDは標準選択肢へフォールバックする
   assert.equal(option.sortKey, null)
 })
 
+test('既知のソートキーIDは対応する選択肢を返すこと', () => {
+  // Given: タイトルの選択肢ID。
+  const optionId = 'title'
+
+  // When: 選択肢を解決する。
+  const option = findSongCardSortOption(optionId)
+
+  // Then: タイトルの選択肢になる。
+  assert.equal(option.id, 'title')
+  assert.equal(option.sortKey, 'title')
+})
+
 test('ソート方向は対応する選択肢を返すこと', () => {
   // Given: 降順。
   // When: 方向選択肢を解決する。

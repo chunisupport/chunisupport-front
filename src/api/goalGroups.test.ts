@@ -18,25 +18,15 @@ const loadGoalApi = () =>
     { authenticate: true }
   )
 
-test('目標グループCRUDと並び替えAPIは仕様どおりのパスと本文を使う', async () => {
-  // Given
-  const calls = installFetchRecorder((input, init) => {
-    if (init?.method === 'DELETE' || String(input).endsWith('/order')) {
-      return new Response(null, { status: 204 })
-    }
-    if (init?.method === 'GET') return Response.json({ groups: [] })
-    return Response.json({ id: 1, name: '失点', sort_order: 1, created_at: '' })
-  })
+test('目標グループの一覧取得APIは仕様どおりのパスと本文を使う', async () => {
+  // Given: 成功する一覧取得API。
+  const calls = installFetchRecorder(() => Response.json({ groups: [] }))
   const { goalGroupsApi } = await loadGoalApi()
 
-  // When
+  // When: 一覧取得を実行する。
   await goalGroupsApi.fetchGoalGroups()
-  await goalGroupsApi.createGoalGroup({ name: '失点' })
-  await goalGroupsApi.updateGoalGroup(1, { name: 'AJ' })
-  await goalGroupsApi.deleteGoalGroup(1)
-  await goalGroupsApi.reorderGoalGroups([2, 1])
 
-  // Then
+  // Then: 対象URLに指定したメソッドと本文を送る。
   assert.deepEqual(
     calls.map((call) => ({
       url: String(call.input),
@@ -44,26 +34,114 @@ test('目標グループCRUDと並び替えAPIは仕様どおりのパスと本�
       body: call.init?.body,
     })),
     [
-      { url: 'http://localhost:3000/internal/me/goal-groups', method: 'GET', body: undefined },
+      {
+        url: 'http://localhost:3000/internal/me/goal-groups',
+        method: 'GET',
+        body: undefined,
+      },
+    ]
+  )
+})
+
+test('目標グループの作成APIは仕様どおりのパスと本文を使う', async () => {
+  // Given: 成功する作成API。
+  const calls = installFetchRecorder(() =>
+    Response.json({ id: 1, name: '失点', sort_order: 1, created_at: '' })
+  )
+  const { goalGroupsApi } = await loadGoalApi()
+
+  // When: 作成を実行する。
+  await goalGroupsApi.createGoalGroup({ name: '失点' })
+
+  // Then: 対象URLに指定したメソッドと本文を送る。
+  assert.deepEqual(
+    calls.map((call) => ({
+      url: String(call.input),
+      method: call.init?.method,
+      body: call.init?.body,
+    })),
+    [
       {
         url: 'http://localhost:3000/internal/me/goal-groups',
         method: 'POST',
-        body: JSON.stringify({ name: '失点' }),
+        body: '{"name":"失点"}',
       },
+    ]
+  )
+})
+
+test('目標グループの更新APIは仕様どおりのパスと本文を使う', async () => {
+  // Given: 成功する更新API。
+  const calls = installFetchRecorder(() =>
+    Response.json({ id: 1, name: 'AJ', sort_order: 1, created_at: '' })
+  )
+  const { goalGroupsApi } = await loadGoalApi()
+
+  // When: 更新を実行する。
+  await goalGroupsApi.updateGoalGroup(1, { name: 'AJ' })
+
+  // Then: 対象URLに指定したメソッドと本文を送る。
+  assert.deepEqual(
+    calls.map((call) => ({
+      url: String(call.input),
+      method: call.init?.method,
+      body: call.init?.body,
+    })),
+    [
       {
         url: 'http://localhost:3000/internal/me/goal-groups/1',
         method: 'PUT',
-        body: JSON.stringify({ name: 'AJ' }),
+        body: '{"name":"AJ"}',
       },
+    ]
+  )
+})
+
+test('目標グループの削除APIは仕様どおりのパスと本文を使う', async () => {
+  // Given: 成功する削除API。
+  const calls = installFetchRecorder(() => new Response(null, { status: 204 }))
+  const { goalGroupsApi } = await loadGoalApi()
+
+  // When: 削除を実行する。
+  await goalGroupsApi.deleteGoalGroup(1)
+
+  // Then: 対象URLに指定したメソッドと本文を送る。
+  assert.deepEqual(
+    calls.map((call) => ({
+      url: String(call.input),
+      method: call.init?.method,
+      body: call.init?.body,
+    })),
+    [
       {
         url: 'http://localhost:3000/internal/me/goal-groups/1',
         method: 'DELETE',
         body: undefined,
       },
+    ]
+  )
+})
+
+test('目標グループの並び替えAPIは仕様どおりのパスと本文を使う', async () => {
+  // Given: 成功する並び替えAPI。
+  const calls = installFetchRecorder(() => new Response(null, { status: 204 }))
+  const { goalGroupsApi } = await loadGoalApi()
+
+  // When: 並び替えを実行する。
+  await goalGroupsApi.reorderGoalGroups([2, 1])
+
+  // Then: 対象URLに指定したメソッドと本文を送る。
+  assert.deepEqual(
+    calls.map((call) => ({
+      url: String(call.input),
+      method: call.init?.method,
+      body: call.init?.body,
+    })),
+    [
       {
         url: 'http://localhost:3000/internal/me/goal-groups/order',
         method: 'PUT',
-        body: JSON.stringify({ group_ids: [2, 1] }),
+        body: '{"group_ids":[2,1]}',
       },
     ]
   )

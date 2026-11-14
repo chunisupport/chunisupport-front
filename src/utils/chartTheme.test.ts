@@ -85,12 +85,23 @@ test('CSSカスタムプロパティのpx値をChart.js用の数値へ変換す�
   })
   Object.defineProperty(globalThis, 'getComputedStyle', {
     configurable: true,
-    value: () => ({ getPropertyValue: () => '6px' }),
+    value: () => ({
+      /**
+       * 指定したCSS変数だけにピクセル値を返す。
+       * @param variableName - 参照するCSS変数名。
+       * @returns 対象変数なら6px、それ以外は未定義を表す空文字列。
+       */
+      getPropertyValue: (variableName: string) =>
+        variableName === '--cs-size-score-rank-plus-stripe-period' ? '6px' : '',
+    }),
   })
 
   try {
-    // When & Then
-    assert.equal(resolveChartPixelLength('--cs-size-score-rank-plus-stripe-period', 4), 6)
+    // When
+    const length = resolveChartPixelLength('--cs-size-score-rank-plus-stripe-period', 4)
+
+    // Then
+    assert.equal(length, 6)
   } finally {
     Object.defineProperty(globalThis, 'document', {
       configurable: true,

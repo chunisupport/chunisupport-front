@@ -14,27 +14,6 @@ afterEach(() => appQueryClient.clear())
  */
 const loadMasterDataQueries = () => loadTestModule(() => import('./masterData.ts'))
 
-test('fetchVersions は一度取得したバージョン一覧をセッション中に再利用する', async () => {
-  // Given: APIの応答を準備する。
-  const responseBody = {
-    versions: [{ name: 'CHUNITHM VERSE', released_at: '2024-12-12' }],
-  }
-  let fetchCount = 0
-  installFetchRecorder(() => {
-    fetchCount += 1
-    return Response.json(responseBody)
-  })
-
-  // When: query経由で取得する。
-  const { fetchVersions } = await loadMasterDataQueries()
-  const first = await fetchVersions()
-  const second = await fetchVersions()
-
-  // Then: 取得回数と結果が期待どおりになる。
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-})
-
 test('バージョン更新後は公開バージョン一覧をAPIから再取得する', async () => {
   // Given: APIの応答を準備する。
   const responseBodies = [
@@ -61,19 +40,27 @@ test('バージョン更新後は公開バージョン一覧をAPIから再取�
 
 test('fetchSongsUpdatedAt は不正な更新日時を拒否し、失敗をキャッシュせず再試行する', async () => {
   // Given: 契約に違反する更新日時レスポンス。
-  for (const invalidResponse of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
+  for (const invalidResponse of [
+    {},
+    { updated_at: 123, revision: 1 },
+    { updated_at: false, revision: 1 },
+    { updated_at: null },
+    { updated_at: null, revision: '1' },
+    { updated_at: null, revision: 1.5 },
+    null,
+  ]) {
     appQueryClient.clear()
     let fetchCount = 0
     installFetchRecorder(() => {
       fetchCount += 1
-      return Response.json(fetchCount === 1 ? invalidResponse : { updated_at: null })
+      return Response.json(fetchCount === 1 ? invalidResponse : { updated_at: null, revision: 0 })
     })
     const { fetchSongsUpdatedAt } = await loadMasterDataQueries()
 
     // When / Then: 不正応答を拒否し、次の正常な null 応答は取得・キャッシュできる。
     await assert.rejects(() => fetchSongsUpdatedAt(), TypeError)
-    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
-    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
+    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null, revision: 0 })
+    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null, revision: 0 })
     assert.equal(fetchCount, 2)
   }
 })
@@ -81,7 +68,7 @@ test('fetchSongsUpdatedAt は不正な更新日時を拒否し、失敗をキャ
 test('fetchSongsUpdatedAt はTTL内であれば取得済みの更新日時を再利用する', async (t) => {
   // Given: 更新日時を一度取得済みで、TTL 直前まで時間が経過している。
   t.mock.timers.enable({ apis: ['Date'], now: 1 })
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
+  const responseBody = { updated_at: '2026-06-16T12:00:00Z', revision: 1 }
   let fetchCount = 0
   installFetchRecorder((input) => {
     if (String(input).endsWith('/internal/songs/updated-at')) {
@@ -106,8 +93,8 @@ test('fetchSongsUpdatedAt はTTL経過後にAPIから更新日時を再検証す
   // Given: 更新日時 T1 を取得済みで、その後サーバー側が T2 に更新されている。
   t.mock.timers.enable({ apis: ['Date'], now: 1 })
   const responseBodies = [
-    { updated_at: '2026-06-16T12:00:00Z' },
-    { updated_at: '2026-07-20T09:00:00Z' },
+    { updated_at: '2026-06-16T12:00:00Z', revision: 1 },
+    { updated_at: '2026-07-20T09:00:00Z', revision: 2 },
   ]
   let fetchCount = 0
   const calls = installFetchRecorder(() => {
@@ -132,8 +119,8 @@ test('fetchSongsUpdatedAt はTTL経過後にAPIから更新日時を再検証す
 test('楽曲更新日時キャッシュは無効化後にAPIから最新値を再取得する', async () => {
   // Given: 初回の更新日時を取得してメモリへキャッシュする。
   const responseBodies = [
-    { updated_at: '2026-06-16T12:00:00Z' },
-    { updated_at: '2026-07-20T09:00:00Z' },
+    { updated_at: '2026-06-16T12:00:00Z', revision: 1 },
+    { updated_at: '2026-07-20T09:00:00Z', revision: 2 },
   ]
   let fetchCount = 0
   installFetchRecorder((input) => {
@@ -156,8 +143,8 @@ test('楽曲更新日時キャッシュは無効化後にAPIから最新値を�
 
 test('無効化前に開始した楽曲更新日時の取得も最新値で解決し、古い応答は採用しない', async () => {
   // Given: 無効化前の更新日時リクエストを応答待ちにする。
-  const beforeMutation = { updated_at: '2026-06-16T12:00:00Z' }
-  const afterMutation = { updated_at: '2026-07-20T09:00:00Z' }
+  const beforeMutation = { updated_at: '2026-06-16T12:00:00Z', revision: 1 }
+  const afterMutation = { updated_at: '2026-07-20T09:00:00Z', revision: 2 }
   let fetchCount = 0
   let resolveBeforeMutation!: (response: Response) => void
   let notifyRequestStarted!: () => void
@@ -229,30 +216,9 @@ test('fetchCoursesUpdatedAtは同時呼び出しを1リクエストにまとめ�
   assert.equal(first, second)
 })
 
-test('fetchVersions は同時呼び出しを同じリクエストにまとめる', async () => {
-  // Given: APIの応答を準備する。
-  const responseBody = {
-    versions: [{ name: 'CHUNITHM LUMINOUS', released_at: '2023-12-14' }],
-  }
-  let fetchCount = 0
-  installFetchRecorder(async () => {
-    fetchCount += 1
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    return Response.json(responseBody)
-  })
-
-  // When: query経由で取得する。
-  const { fetchVersions } = await loadMasterDataQueries()
-  const [first, second] = await Promise.all([fetchVersions(), fetchVersions()])
-
-  // Then: 取得回数と結果が期待どおりになる。
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-})
-
 test('fetchSongsUpdatedAt は同時呼び出しを同じリクエストにまとめる', async () => {
   // Given: APIの応答を準備する。
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
+  const responseBody = { updated_at: '2026-06-16T12:00:00Z', revision: 1 }
   let fetchCount = 0
   installFetchRecorder(async (input) => {
     if (String(input).endsWith('/internal/songs/updated-at')) {
@@ -285,7 +251,7 @@ test('fetchSongsUpdatedAt は失敗後に再試行できる', async () => {
       throw new Error('network error')
     }
 
-    return Response.json({ updated_at: '2026-06-16T12:00:00Z' })
+    return Response.json({ updated_at: '2026-06-16T12:00:00Z', revision: 1 })
   })
 
   // When: query経由で取得する。
@@ -299,65 +265,18 @@ test('fetchSongsUpdatedAt は失敗後に再試行できる', async () => {
   assert.equal(result.updated_at, '2026-06-16T12:00:00Z')
 })
 
-test('fetchGenres はジャンル個別APIから取得し、セッション中に再利用する', async () => {
-  // Given
-  const genres = [
-    { id: 2, name: 'niconico', short_name: 'nico' },
-    { id: 1, name: 'POPS & ANIME', short_name: 'P&A' },
-  ]
-  const calls = installFetchRecorder(() => Response.json({ genres }))
-  const { fetchGenres } = await loadMasterDataQueries()
-
-  // When
-  const first = await fetchGenres()
-  const second = await fetchGenres()
-
-  // Then
-  assert.equal(calls.length, 1)
-  assert.ok(String(calls[0]?.input).endsWith('/internal/master/genres'))
-  assert.deepEqual(
-    first.map((genre) => genre.id),
-    [1, 2]
+test('fetchGenres はジャンル個別APIから取得したジャンルを返す', async () => {
+  // Given: ジャンル個別APIの応答を準備する。
+  const calls = installFetchRecorder(() =>
+    Response.json({ genres: [{ id: 1, name: 'POPS & ANIME', short_name: 'P&A' }] })
   )
-  assert.equal(first, second)
-})
-
-test('fetchGenres は同時呼び出しを同じリクエストにまとめる', async () => {
-  // Given
-  let fetchCount = 0
-  installFetchRecorder(async () => {
-    fetchCount += 1
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    return Response.json({ genres: [{ id: 1, name: 'POPS & ANIME', short_name: 'P&A' }] })
-  })
   const { fetchGenres } = await loadMasterDataQueries()
 
-  // When
-  const [first, second] = await Promise.all([fetchGenres(), fetchGenres()])
-
-  // Then
-  assert.equal(fetchCount, 1)
-  assert.equal(first, second)
-})
-
-test('fetchGenres は失敗後に再試行できる', async () => {
-  // Given
-  let fetchCount = 0
-  installFetchRecorder(() => {
-    fetchCount += 1
-    if (fetchCount === 1) {
-      throw new Error('network error')
-    }
-    return Response.json({ genres: [{ id: 1, name: 'POPS & ANIME', short_name: 'P&A' }] })
-  })
-  const { fetchGenres } = await loadMasterDataQueries()
-
-  // When
-  await assert.rejects(() => fetchGenres(), /network error/)
+  // When: ジャンル一覧を取得する。
   const genres = await fetchGenres()
 
-  // Then
-  assert.equal(fetchCount, 2)
+  // Then: 全マスタではなく個別APIに接続し、そのジャンルを返す。
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/master/genres')
   assert.deepEqual(genres, [{ id: 1, name: 'POPS & ANIME', short_name: 'P&A' }])
 })
 
@@ -365,10 +284,25 @@ for (const name of ['fetchVersions', 'fetchMasterData', 'fetchGenres'] as const)
   test(`${name} は同時取得・セッション再利用を行い、GC期限を設けない`, async () => {
     // Given: セッション中のマスタAPI。
     const queries = await loadMasterDataQueries()
-    const calls = installFetchRecorder(() => Response.json({ versions: [], genres: [] }))
+    let complete!: (response: Response) => void
+    const response = new Promise<Response>((resolve) => {
+      complete = resolve
+    })
+    let started!: () => void
+    const requestStarted = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    const calls = installFetchRecorder(() => {
+      started()
+      return response
+    })
 
-    // When: 同時取得した後、再取得する。
-    const [first, second] = await Promise.all([queries[name](), queries[name]()])
+    // When: 応答を保留したまま同時取得し、完了後に再取得する。
+    const firstRequest = queries[name]()
+    await requestStarted
+    const secondRequest = queries[name]()
+    complete(Response.json({ versions: [], genres: [] }))
+    const [first, second] = await Promise.all([firstRequest, secondRequest])
     const cached = await queries[name]()
 
     // Then: 1リクエストを共有し、セッション中はGCされない。
@@ -398,16 +332,23 @@ for (const name of [
     let count = 0
     installFetchRecorder(() => {
       if (++count === 1) throw new Error('network error')
-      return Response.json({ versions: [], genres: [], updated_at: null })
+      return Response.json({
+        versions: [],
+        genres: [{ id: 1, name: 'POPS & ANIME', short_name: 'P&A' }],
+        updated_at: null,
+      })
     })
 
     // When: 失敗後に明示的に再取得する。
     await assert.rejects(queries[name](), /network error/)
     assert.equal(count, 1)
-    await queries[name]()
+    const result = await queries[name]()
 
-    // Then: 失敗結果は再利用しない。
+    // Then: 失敗結果は再利用せず、成功時の内容を返す。
     assert.equal(count, 2)
+    if (name === 'fetchGenres') {
+      assert.deepEqual(result, [{ id: 1, name: 'POPS & ANIME', short_name: 'P&A' }])
+    }
   })
 }
 
@@ -457,6 +398,16 @@ test('バージョンキャッシュ無効化は全マスタも破棄し、ジ�
 
   // Then: ジャンル以外の2件だけを再取得する。
   assert.equal(calls.length, 5)
+  const countsByUrl = calls.reduce<Record<string, number>>((counts, call) => {
+    const url = String(call.input)
+    counts[url] = (counts[url] ?? 0) + 1
+    return counts
+  }, {})
+  assert.deepEqual(countsByUrl, {
+    'http://localhost:3000/internal/master/versions': 2,
+    'http://localhost:3000/internal/master': 2,
+    'http://localhost:3000/internal/master/genres': 1,
+  })
 })
 
 test('全マスタキーの前方一致による無効化はバージョンとジャンルを巻き込まない', async () => {

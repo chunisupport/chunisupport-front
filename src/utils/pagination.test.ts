@@ -142,3 +142,43 @@ test('中間ページでは左右に省略記号を出すこと', () => {
     { type: 'page', page: 10 },
   ])
 })
+
+test('左側の欠番が1つだけの場合は開始側の省略記号を出さないこと', () => {
+  // Given: 10ページ中3ページ目で左隣が2ページ目になる。
+  const currentPage = 3
+  const totalPages = 10
+
+  // When: 表示項目を生成する。
+  const result = buildPaginationItems(currentPage, totalPages)
+
+  // Then: 先頭5件と末尾だけが並ぶ。
+  assert.deepEqual(result, [
+    { type: 'page', page: 1 },
+    { type: 'page', page: 2 },
+    { type: 'page', page: 3 },
+    { type: 'page', page: 4 },
+    { type: 'page', page: 5 },
+    { type: 'ellipsis', key: 'end' },
+    { type: 'page', page: 10 },
+  ])
+})
+
+test('右側の欠番が1つだけの場合は終了側の省略記号を出さないこと', () => {
+  // Given: 10ページ中8ページ目で右隣が9ページ目になる。
+  const currentPage = 8
+  const totalPages = 10
+
+  // When: 表示項目を生成する。
+  const result = buildPaginationItems(currentPage, totalPages)
+
+  // Then: 先頭と末尾5件だけが並ぶ。
+  assert.deepEqual(result, [
+    { type: 'page', page: 1 },
+    { type: 'ellipsis', key: 'start' },
+    { type: 'page', page: 6 },
+    { type: 'page', page: 7 },
+    { type: 'page', page: 8 },
+    { type: 'page', page: 9 },
+    { type: 'page', page: 10 },
+  ])
+})

@@ -57,22 +57,119 @@ test('コースマスタAPIはコース一覧を取得する', async () => {
   assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/courses')
 })
 
-test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", async () => {
-  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
-  const {
-    createWorldsendSong,
-    deleteWorldsendSongByDisplayId,
-    fetchManagedWorldsendSongs,
-    fetchWorldsendSongByDisplayId,
-    fetchWorldsendSongs,
-    restoreWorldsendSongByDisplayId,
-    updateWorldsendSongs,
-  } = await loadSongsApi()
+for (const { label, operation, url, method } of [
+  {
+    label: '一覧取得',
+    operation: 'fetchWorldsendSongs',
+    url: 'http://localhost:3000/internal/worldsend-songs',
+    method: 'GET',
+  },
+  {
+    label: '管理用一覧取得',
+    operation: 'fetchManagedWorldsendSongs',
+    url: 'http://localhost:3000/internal/editor/worldsend-songs',
+    method: 'GET',
+  },
+  {
+    label: '詳細取得',
+    operation: 'fetchWorldsendSongByDisplayId',
+    url: 'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+    method: 'GET',
+  },
+  {
+    label: '削除',
+    operation: 'deleteWorldsendSongByDisplayId',
+    url: 'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
+    method: 'DELETE',
+  },
+  {
+    label: '復元',
+    operation: 'restoreWorldsendSongByDisplayId',
+    url: 'http://localhost:3000/internal/worldsend-songs/A%2FB%20C/restore',
+    method: 'POST',
+  },
+] as const) {
+  test(`WORLD'S END楽曲の${label}は独立リソースのパスとHTTPメソッドを使う`, async () => {
+    // Given
+    const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+    const api = await loadSongsApi()
 
-  await fetchWorldsendSongs()
-  await fetchManagedWorldsendSongs()
-  await fetchWorldsendSongByDisplayId('A/B C')
+    // When
+    if (operation === 'fetchWorldsendSongs' || operation === 'fetchManagedWorldsendSongs') {
+      await api[operation]()
+    } else {
+      await api[operation]('A/B C')
+    }
+
+    // Then
+    assert.equal(calls.length, 1)
+    assert.equal(String(calls[0]?.input), url)
+    assert.equal(calls[0]?.init?.method ?? 'GET', method)
+  })
+}
+
+test("WORLD'S END楽曲の一括更新はPUTで空配列も送信する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { updateWorldsendSongs } = await loadSongsApi()
+
+  // When
   await updateWorldsendSongs([])
+
+  // Then
+  assert.equal(calls.length, 1)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.method, 'PUT')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.equal(calls[0]?.init?.body, '[]')
+})
+
+test("WORLD'S END楽曲の一括更新はPUTで更新内容をJSON本文に送信する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { updateWorldsendSongs } = await loadSongsApi()
+
+  // When
+  await updateWorldsendSongs([
+    {
+      id: 'A/B C',
+      title: '更新曲',
+      reading: null,
+      artist: 'artist',
+      genre: null,
+      bpm: null,
+      released_at: null,
+      jacket: null,
+      is_new: false,
+    },
+  ])
+
+  // Then
+  assert.equal(calls.length, 1)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.method, 'PUT')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), [
+    {
+      id: 'A/B C',
+      title: '更新曲',
+      reading: null,
+      artist: 'artist',
+      genre: null,
+      bpm: null,
+      released_at: null,
+      jacket: null,
+      is_new: false,
+    },
+  ])
+})
+
+test("WORLD'S END楽曲の新規作成はPOSTで作成内容をJSON本文に送信する", async () => {
+  // Given
+  const calls = installFetchRecorder(() => Response.json({ songs: [] }))
+  const { createWorldsendSong } = await loadSongsApi()
+
+  // When
   await createWorldsendSong({
     official_idx: '1',
     title: 'test',
@@ -82,21 +179,21 @@ test("WORLD'S END 楽曲APIは独立リソースの新パスを呼び出す", as
     released_at: null,
     jacket: null,
   })
-  await deleteWorldsendSongByDisplayId('A/B C')
-  await restoreWorldsendSongByDisplayId('A/B C')
 
-  assert.deepEqual(
-    calls.map((call) => String(call.input)),
-    [
-      'http://localhost:3000/internal/worldsend-songs',
-      'http://localhost:3000/internal/editor/worldsend-songs',
-      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
-      'http://localhost:3000/internal/worldsend-songs',
-      'http://localhost:3000/internal/worldsend-songs',
-      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C',
-      'http://localhost:3000/internal/worldsend-songs/A%2FB%20C/restore',
-    ]
-  )
+  // Then
+  assert.equal(calls.length, 1)
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/worldsend-songs')
+  assert.equal(calls[0]?.init?.method, 'POST')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
+    official_idx: '1',
+    title: 'test',
+    artist: 'artist',
+    genre: 'genre',
+    bpm: null,
+    released_at: null,
+    jacket: null,
+  })
 })
 
 test('スコア履歴APIはユーザーレコード配下の新パスを呼び出す', async () => {
@@ -220,14 +317,129 @@ test('楽曲名順フォルダはAPIの表示名を保持してsort_order順に�
   assert.deepEqual(result.name_folders, [folders[1], folders[0]])
 })
 
-test('requestSongsUpdatedAt は不正な updated_at を拒否し、HTTPキャッシュを再検証する', async () => {
+test('requestSongsUpdatedAt は不正な updated_at と revision を拒否し、HTTPキャッシュを再検証する', async () => {
   // Given: 契約に反するレスポンス。
   const { requestSongsUpdatedAt } = await loadSongsApi()
-  for (const invalid of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
+  for (const invalid of [
+    {},
+    { updated_at: 123, revision: 1 },
+    { updated_at: false, revision: 1 },
+    { updated_at: '2024-01-02T03:04:05+09:00' },
+    { updated_at: null, revision: null },
+    { updated_at: null, revision: '1' },
+    { updated_at: null, revision: 1.5 },
+    null,
+  ]) {
     const calls = installFetchRecorder(() => Response.json(invalid))
 
     // When / Then: API層で型を検証し、HTTPキャッシュの再検証を要求する。
     await assert.rejects(requestSongsUpdatedAt(), TypeError)
     assert.equal(calls[0]?.init?.cache, 'no-cache')
   }
+})
+
+test('requestSongsUpdatedAt は文字列の更新日時と変更世代をそのまま返す', async () => {
+  // Given: 正常な文字列更新日時と変更世代を持つレスポンス。
+  installFetchRecorder(() =>
+    Response.json({ updated_at: '2024-01-02T03:04:05+09:00', revision: 128 })
+  )
+  const { requestSongsUpdatedAt } = await loadSongsApi()
+
+  // When: 楽曲更新日時を取得する。
+  const result = await requestSongsUpdatedAt()
+
+  // Then: 検証を通過して値がそのまま返る。
+  assert.deepEqual(result, { updated_at: '2024-01-02T03:04:05+09:00', revision: 128 })
+})
+
+test('requestSongsUpdatedAt は null の更新日時をそのまま返す', async () => {
+  // Given: 更新日時が未設定の正常レスポンス。
+  installFetchRecorder(() => Response.json({ updated_at: null, revision: 0 }))
+  const { requestSongsUpdatedAt } = await loadSongsApi()
+
+  // When: 楽曲更新日時を取得する。
+  const result = await requestSongsUpdatedAt()
+
+  // Then: null が許容されてそのまま返る。
+  assert.deepEqual(result, { updated_at: null, revision: 0 })
+})
+
+test('requestMasterData は文字列の実績種別を前後空白除去でコード化する', async () => {
+  // Given: 前後空白付きコードと空白だけの無効値。
+  installFetchRecorder(() => Response.json({ achievement_types: ['  SSS  ', '   '] }))
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 空白除去された1件だけが残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'SSS')
+})
+
+test('requestMasterData は実績種別の無効値を除外して有効値だけ残す', async () => {
+  // Given: 有効なオブジェクトと無効値の混在。
+  installFetchRecorder(() =>
+    Response.json({ achievement_types: [{ code: 'AAA' }, null, 123, {}, { code: '   ' }] })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 有効な1件だけが残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+})
+
+test('requestMasterData は code value id name の順で実績コードを解決する', async () => {
+  // Given: それぞれ別の項目だけにコード候補を持つ実績種別。
+  installFetchRecorder(() =>
+    Response.json({
+      achievement_types: [{ code: 'AAA' }, { value: 'VVV' }, { id: 'III' }, { name: 'NNN' }],
+    })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 4件とも fallback 順でコード化される。
+  assert.equal(result.achievement_types.length, 4)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+  assert.equal(result.achievement_types[1]?.code, 'VVV')
+  assert.equal(result.achievement_types[2]?.code, 'III')
+  assert.equal(result.achievement_types[3]?.code, 'NNN')
+})
+
+test('requestMasterData は実績種別の label を保持する', async () => {
+  // Given: 文字列ラベルを持つ実績種別。
+  installFetchRecorder(() =>
+    Response.json({ achievement_types: [{ code: 'AAA', label: '表示ラベル' }] })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: ラベルが欠落せず残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+  assert.equal(result.achievement_types[0]?.label, '表示ラベル')
+})
+
+test('requestMasterData は実績種別の name を保持する', async () => {
+  // Given: 文字列名を持つ実績種別。
+  installFetchRecorder(() =>
+    Response.json({ achievement_types: [{ code: 'AAA', name: '表示名' }] })
+  )
+  const { requestMasterData } = await loadSongsApi()
+
+  // When: マスターデータを取得する。
+  const result = await requestMasterData()
+
+  // Then: 名称が欠落せず残る。
+  assert.equal(result.achievement_types.length, 1)
+  assert.equal(result.achievement_types[0]?.code, 'AAA')
+  assert.equal(result.achievement_types[0]?.name, '表示名')
 })

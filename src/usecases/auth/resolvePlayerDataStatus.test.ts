@@ -57,13 +57,39 @@ test('プレイヤー連携済みの場合は本人のプロフィールから�
 })
 
 test('認証情報の取得に失敗した場合はエラーをスローすること', async () => {
-  // Given: 認証セッションの解決が一時的なエラーになる
-  // When & Then: エラーとして扱われる
+  // Given: 認証に失敗するが、ユーザー名は残っている。
+  let profileCalls = 0
+
+  // When / Then: 認証失敗のエラーを返し、プロフィール取得には進まない。
   await assert.rejects(
     resolvePlayerDataStatus({
       resolveAuth: async () => 'error',
-      getUsername: () => null,
-      fetchProfile: async (username) => ({ username, player }),
-    })
+      getUsername: () => 'alice',
+      fetchProfile: async (username) => {
+        profileCalls += 1
+        return { username, player }
+      },
+    }),
+    new Error('認証情報の取得に失敗しました。ページを再読み込みしてください。')
   )
+  assert.equal(profileCalls, 0)
+})
+
+test('認証済みでもユーザー名を取得できない場合はエラーをスローすること', async () => {
+  // Given: 認証は成功したが、ユーザー名が取得できない。
+  let profileCalls = 0
+
+  // When / Then: 認証失敗と同じエラーを返し、プロフィール取得には進まない。
+  await assert.rejects(
+    resolvePlayerDataStatus({
+      resolveAuth: async () => 'authenticated',
+      getUsername: () => null,
+      fetchProfile: async (username) => {
+        profileCalls += 1
+        return { username, player }
+      },
+    }),
+    new Error('認証情報の取得に失敗しました。ページを再読み込みしてください。')
+  )
+  assert.equal(profileCalls, 0)
 })

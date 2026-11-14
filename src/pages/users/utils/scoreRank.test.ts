@@ -1,18 +1,29 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { filterRankToScore, SCORE_RANKS, type ScoreRank, scoreToFilterRank } from './scoreRank'
+import { filterRankToScore, type ScoreRank, scoreToFilterRank } from './scoreRank'
 
-test('SCORE_RANKS は0点とAAA以上のランクを昇順で返すこと', () => {
-  // Given: スコアランクフィルターの選択肢を参照する。
-  const expected: ScoreRank[] = ['0点', 'AAA', 'S', 'S+', 'SS', 'SS+', 'SSS', 'SSS+']
+for (const { rank, min, max } of [
+  { rank: 'S', min: 975000, max: 989999 },
+  { rank: 'S+', min: 990000, max: 999999 },
+  { rank: 'SS', min: 1000000, max: 1004999 },
+  { rank: 'SS+', min: 1005000, max: 1007499 },
+  { rank: 'SSS', min: 1007500, max: 1008999 },
+  { rank: 'SSS+', min: 1009000, max: 1010000 },
+] as const) {
+  test(`${rank}帯の下限と上限のスコアは${rank}へ変換される`, () => {
+    // Given: ランク帯の両端のスコア。
+    const scores = [min, max]
 
-  // When: 選択肢を取得する。
-  const result = SCORE_RANKS
+    // When: フィルター用ランクラベルへ変換する。
+    const result = scores.map(scoreToFilterRank)
 
-  // Then: AAAを含む期待順で返る。
-  assert.deepEqual(result, expected)
-})
+    // Then: 両端とも指定のランクへ分類される。
+    assert.deepEqual(result, [rank, rank])
+    assert.equal(filterRankToScore(rank, 'min'), min)
+    assert.equal(filterRankToScore(rank, 'max'), max)
+  })
+}
 
 test('filterRankToScore は0点上限を0点として返すこと', () => {
   // Given: 0点ランクの上限を指定する。

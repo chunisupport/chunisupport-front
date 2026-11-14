@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { MAINTENANCE_COMMENT_MAX_CODE_POINTS } from '../constants/maintenance'
 import {
   countMaintenanceCommentCodePoints,
   normalizeMaintenanceComment,
@@ -31,7 +30,7 @@ test('サロゲートペアを1コードポイントとして数えること', (
 
 test('1000コードポイントのコメントを許可すること', () => {
   // Given
-  const value = '😀'.repeat(MAINTENANCE_COMMENT_MAX_CODE_POINTS)
+  const value = '😀'.repeat(1000)
 
   // When
   const result = validateMaintenanceComment(value, { required: true })
@@ -42,7 +41,7 @@ test('1000コードポイントのコメントを許可すること', () => {
 
 test('1001コードポイントのコメントを拒否すること', () => {
   // Given
-  const value = '保'.repeat(MAINTENANCE_COMMENT_MAX_CODE_POINTS + 1)
+  const value = '保'.repeat(1001)
 
   // When
   const result = validateMaintenanceComment(value, { required: true })

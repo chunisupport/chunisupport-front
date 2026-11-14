@@ -51,6 +51,56 @@ const resetTestState = async (): Promise<void> => {
 
 afterEach(resetTestState)
 
+test('他ユーザーのコースレコードは本人向けキャッシュを読み書きしないこと', async () => {
+  // Given: aliceでログインしてbobのコースレコードを取得する。
+  setupApiTestEnv()
+  setAuthenticatedUser(user)
+  const urls: string[] = []
+  globalThis.fetch = async (input) => {
+    const url = String(input)
+    urls.push(url)
+    if (url.endsWith('/updated-at')) return Response.json({ updated_at: '2026-11-12T00:00:00Z' })
+    if (url.endsWith('/internal/courses'))
+      return Response.json({
+        courses: [{ id: 'course-1', idx: '50001', name: 'COURSE 1', class: '1' }],
+      })
+    if (url.endsWith('/internal/users/bob/record/courses')) {
+      return Response.json({
+        courses: [
+          {
+            id: 'course-1',
+            idx: '50001',
+            name: 'COURSE 1',
+            class: '1',
+            is_played: true,
+            score: 3020000,
+            is_clear: true,
+            combo_lamp: null,
+            updated_at: null,
+          },
+        ],
+        meta: { updated_at: '2026-11-12T00:00:00Z' },
+      })
+    }
+    throw new Error(`unexpected fetch: ${url}`)
+  }
+  const { fetchUserCourseRecordsWithCache } = await import('./fetchUserCourseRecordsWithCache.ts')
+
+  // When: 同じ他ユーザーを繰り返し取得する。
+  const first = await fetchUserCourseRecordsWithCache('bob')
+  const second = await fetchUserCourseRecordsWithCache('bob')
+
+  // Then: 毎回APIから読み込み、ユーザーキャッシュも更新日時の問い合わせも残さない。
+  assert.deepEqual(first, second)
+  assert.equal(first.courses[0].score, 3020000)
+  assert.equal(urls.filter((url) => url.endsWith('/internal/users/bob/record/courses')).length, 2)
+  assert.equal(
+    urls.some((url) => url.endsWith('/internal/users/bob/updated-at')),
+    false
+  )
+  assert.equal(await db.userCourseRecords.count(), 0)
+})
+
 test('コースマスタとプレイ済みレコードを更新日時ごとに独立して再取得すること', async () => {
   // Given: 本人のコースマスタとレコードが別々のタイミングで更新される。
   setupApiTestEnv()

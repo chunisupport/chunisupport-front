@@ -27,6 +27,24 @@ test('星数が未設定ならハイフンを返すこと', () => {
   assert.equal(result, WORLDSEND_SONG_CARD_EMPTY)
 })
 
+test('星数が0ならハイフンを返すこと', () => {
+  // Given: 星数0。
+  // When: カード用の星表示へ変換する。
+  const result = formatWorldsendSongCardStars(0)
+
+  // Then: プレースホルダになる。
+  assert.equal(result, '-')
+})
+
+test('星数が未定義ならハイフンを返すこと', () => {
+  // Given: 星数 undefined。
+  // When: カード用の星表示へ変換する。
+  const result = formatWorldsendSongCardStars(undefined)
+
+  // Then: プレースホルダになる。
+  assert.equal(result, '-')
+})
+
 test('属性と星数を1行に整形すること', () => {
   // Given: 属性「狂」と星5。
   const attribute = '狂'

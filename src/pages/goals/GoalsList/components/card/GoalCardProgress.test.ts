@@ -1,29 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatGoalCardValue, resolveGoalCardDisplayProgress } from './goalCardProgressModel'
-
-test('折りたたみ表示の達成率は反転設定に応じた接頭辞を含む', () => {
-  // Given
-  const progress = {
-    current: 30,
-    target: 100,
-    percent: 30,
-    achieved: false,
-    targetCount: 100,
-    hasUnknownMaxOp: false,
-  }
-
-  // When
-  const normalProgress = resolveGoalCardDisplayProgress(progress, 'score_count', false, false)
-  const invertedProgress = resolveGoalCardDisplayProgress(progress, 'score_count', false, true)
-
-  // Then
-  assert.deepEqual([normalProgress.percentPrefixText, normalProgress.percentText], ['', '30.00%'])
-  assert.deepEqual(
-    [invertedProgress.percentPrefixText, invertedProgress.percentText],
-    ['あと', '70.00%']
-  )
-})
+import { resolveGoalCardDisplayProgress } from './goalCardProgressModel'
 
 test('平均スコア目標は残り点数を固定表示し、反転設定を適用しない', () => {
   // Given
@@ -52,34 +29,23 @@ test('平均スコア目標は残り点数を固定表示し、反転設定を�
   })
 })
 
-test('OVER POWER値は小数点以下3桁で表示される', () => {
-  // Given / When
-  const result = formatGoalCardValue(1234.5, 'overpower_value')
+test('OVER POWER目標の表示モデルは現在値と目標値を小数点以下3桁で表示する', () => {
+  // Given: 現在値には切り捨てが必要で、目標値には小数部のゼロ埋めが必要な進捗。
+  const progress = {
+    current: 1234.5679,
+    target: 2000.5,
+    percent: 61.71,
+    achieved: false,
+    targetCount: 10,
+    hasUnknownMaxOp: false,
+  }
 
-  // Then
-  assert.equal(result, '1,234.500')
-})
+  // When: OVER POWER目標のカード表示モデルへ変換する。
+  const result = resolveGoalCardDisplayProgress(progress, 'overpower_value', false, false)
 
-test('OVER POWER値は小数点以下3桁で切り捨て表示される', () => {
-  // Given
-  const roundedUpByToLocaleString = 1234.5679
-
-  // When
-  const result = formatGoalCardValue(roundedUpByToLocaleString, 'overpower_value')
-
-  // Then
-  assert.equal(result, '1,234.567')
-})
-
-test('OVER POWER達成率は小数点以下3桁で切り捨て表示される', () => {
-  // Given
-  const roundedUpByToLocaleString = 97.5369
-
-  // When
-  const result = formatGoalCardValue(roundedUpByToLocaleString, 'overpower_percent')
-
-  // Then
-  assert.equal(result, '97.536%')
+  // Then: 現在値と目標値の両方にOVER POWER用の表示形式を適用する。
+  assert.equal(result.currentText, '1,234.567')
+  assert.equal(result.targetText, '2,000.500')
 })
 
 test('スタート位置を達成率へ適用する場合はゲージと割合表示がそろうこと', () => {
@@ -155,7 +121,7 @@ test('スタート位置を達成率へ適用しない場合はゲージだけ�
   assert.deepEqual([inverted.percentPrefixText, inverted.percentText], ['あと', '0.10%'])
 })
 
-test('OVER POWER達成率の反転表示は残量の後ろに%を付ける', () => {
+test('現在値が目標の半分の場合もOVER POWER達成率の残量に%を付ける', () => {
   // Given
   const progress = {
     current: 10,
@@ -171,6 +137,25 @@ test('OVER POWER達成率の反転表示は残量の後ろに%を付ける', () 
 
   // Then
   assert.equal(result.currentText, '10.000%')
+  assert.equal(result.targetText, '20.000%')
+})
+
+test('OVER POWER達成率の反転表示は現在値ではなく残量の後ろに%を付ける', () => {
+  // Given: 現在値と残量が異なる進捗
+  const progress = {
+    current: 7,
+    target: 20,
+    percent: 35,
+    achieved: false,
+    targetCount: 10,
+    hasUnknownMaxOp: false,
+  }
+
+  // When: 実数値だけを反転表示する
+  const result = resolveGoalCardDisplayProgress(progress, 'overpower_percent', true, false)
+
+  // Then: 現在値7ではなく残量13に%を付け、目標値は変えない
+  assert.equal(result.currentText, '13.000%')
   assert.equal(result.targetText, '20.000%')
 })
 

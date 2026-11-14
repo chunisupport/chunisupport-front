@@ -69,20 +69,34 @@ const LOCAL_PATHS = new Map([
 const STYLESHEET_HREF =
   'https://fonts.googleapis.com/css2?family=Jost&amp;family=Noto+Sans&display=swap'
 
-test('同じ内容は同じハッシュ付きファイル名になり、内容が違えばファイル名も変わること', () => {
+/** フォントバイナリの内容に応じた命名を検証する。 */
+test('woff2は同じ内容なら同じ名前になり、異なる内容なら名前が変わること', () => {
   // Given
   const first = new TextEncoder().encode('woff2-a')
   const second = new TextEncoder().encode('woff2-b')
 
   // When
   const firstName = createFontFileName(first)
-  const stylesheetName = createFontStylesheetName('font-face')
 
   // Then
   assert.equal(firstName, createFontFileName(first))
   assert.match(firstName, /^[a-f0-9]{10}\.woff2$/)
   assert.notEqual(firstName, createFontFileName(second))
-  assert.match(stylesheetName, /^fonts\.[a-f0-9]{10}\.css$/)
+})
+
+/** CSSの内容に応じた命名と拡張子を検証する。 */
+test('CSSは同じ内容なら同じ名前になり、異なる内容なら名前が変わること', () => {
+  // Given: 内容が異なる2つのCSS。
+  const first = 'font-face'
+  const second = 'font-face-changed'
+
+  // When: CSSのファイル名を生成する。
+  const name = createFontStylesheetName(first)
+
+  // Then: 内容が名前へ反映される。
+  assert.equal(name, createFontStylesheetName(first))
+  assert.notEqual(name, createFontStylesheetName(second))
+  assert.match(name, /^fonts\.[a-f0-9]{10}\.css$/)
 })
 
 test('Google Fonts の CSS から woff2 を出現順に取り出すこと', () => {
@@ -190,6 +204,22 @@ test('HTML の Google Fonts link を同一オリジンの preload とスタイ�
     ),
     true
   )
+})
+
+test('クエリ付きの woff2 URL は拒否すること', () => {
+  // Given: 拡張子は woff2 だがクエリが付いた URL。
+  const css = FONT_CSS.replace(OSWALD, `${OSWALD}?v=123`)
+
+  // When / Then: クエリだけでも拒否する。
+  assert.throws(() => collectGoogleFontFileUrls(css), /woff2 ではありません/)
+})
+
+test('単一ウェイトの font-weight は拒否すること', () => {
+  // Given: 可変範囲ではなく単一ウェイトの @font-face。
+  const css = FONT_CSS.replace('font-weight: 100 900;', 'font-weight: 400;')
+
+  // When / Then: ウェイトの記述があれば範囲外として拒否する。
+  assert.throws(() => collectGoogleFontFileUrls(css), /可変ウェイトではありません/)
 })
 
 test('Google Fonts のスタイルシートが無い、または置換後も URL が残る場合は失敗すること', () => {

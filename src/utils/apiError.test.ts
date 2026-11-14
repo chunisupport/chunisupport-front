@@ -64,6 +64,17 @@ test('存在しない表示IDと形式不正の表示IDをNot Found相当とし�
   )
 })
 
+test('関数をAPIエラーとして扱わないこと', () => {
+  // Given
+  const functionError = Object.assign(() => undefined, { status: 404, code: 'user_not_found' })
+
+  // When
+  const result = isNotFoundApiError(functionError)
+
+  // Then
+  assert.equal(result, false)
+})
+
 test('プレイヤーデータ未連携のAPIエラーだけを未連携として判定すること', () => {
   // Given
   const cases = [

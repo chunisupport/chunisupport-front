@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import test from 'node:test'
 import {
   clearAppMainScrollOffsets,
@@ -62,6 +63,32 @@ test('popstate後のパス文字列上書きでも履歴戻りの位置を復元
   assert.equal(resolveRestoredAppMainScrollOffset(1280), 0)
 })
 
+test('windowがある場合はpopstateの購読を開始すること', () => {
+  // Given: 呼び出しを記録するwindowを用意して読み込むスクリプト
+  const script = [
+    "globalThis.window = { addEventListener: (type, listener, capture) => { globalThis.__called = { type, capture, isFn: typeof listener === 'function' } } }",
+    "await import('./src/utils/appMainScrollRestoration.ts')",
+    'console.log(JSON.stringify(globalThis.__called ?? null))',
+  ].join('\n')
+
+  // When: 子プロセスでモジュールを読み込む
+  const output = execFileSync(
+    process.execPath,
+    [
+      '--import',
+      './scripts/register-ts-extension-loader.mjs',
+      '--disable-warning=ExperimentalWarning',
+      '--input-type=module',
+      '-e',
+      script,
+    ],
+    { encoding: 'utf8' }
+  )
+
+  // Then: popstateがcapture付きで購読される
+  assert.deepEqual(JSON.parse(output.trim()), { type: 'popstate', capture: true, isFn: true })
+})
+
 test('パスごとにスクロール位置を保存・取得できること', () => {
   // Given
   clearAppMainScrollOffsets()
@@ -77,12 +104,12 @@ test('パスごとにスクロール位置を保存・取得できること', ()
 })
 
 test('メインスクロール要素がある場合は現在位置を返すこと', () => {
-  // Given
+  // Given: app-main のIDで検索したときだけスクロール要素を返す document
   const originalDocument = globalThis.document
   const scrollTarget = { scrollTop: 640 }
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
-    value: { getElementById: () => scrollTarget },
+    value: { getElementById: (id: string) => (id === 'app-main' ? scrollTarget : null) },
   })
 
   try {

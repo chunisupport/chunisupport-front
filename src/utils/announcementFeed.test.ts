@@ -18,6 +18,25 @@ const VALID_FEED = {
   ],
 }
 
+for (const url of [
+  'https://evil.example/announcements/article/',
+  'https://docs.chunisupport.net/other/article/',
+  'https://docs.chunisupport.net/announcements-evil/article/',
+  'https://docs.chunisupport.net/announcements/../other/article/',
+]) {
+  test(`同じHTTPSでも許可オリジン・パス外のお知らせURLを拒否する: ${url}`, () => {
+    // Given: プロトコルだけは一致する不許可のリンク。
+    const feed = structuredClone(VALID_FEED)
+    feed.announcements[0].url = url
+
+    // When & Then: 別オリジンと許可パス外をそれぞれ独立に拒否する。
+    assert.throws(
+      () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+      /お知らせの形式が不正です/
+    )
+  })
+}
+
 test('バージョン1のお知らせフィードを受け入れる', () => {
   // Given: 必須項目を備えたフィード。
   const feed = structuredClone(VALID_FEED)
@@ -70,6 +89,41 @@ test('許可されたドキュメント配下ではないURLを拒否する', ()
   feed.announcements[0].url = 'javascript:alert(1)'
 
   // When & Then: リンクへ設定される前に拒否する。
+  assert.throws(
+    () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+    new Error('お知らせの形式が不正です')
+  )
+})
+
+test('解析できないURLを含むお知らせフィードを拒否する', () => {
+  // Given: 解析できないURLを含むフィード
+  const feed = structuredClone(VALID_FEED)
+  feed.announcements[0].url = 'https://'
+
+  // When & Then: 不正な外部JSONとして拒否する
+  assert.throws(
+    () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+    new Error('お知らせの形式が不正です')
+  )
+})
+
+test('nullのフィードを拒否する', () => {
+  // Given: nullの外部JSON
+  const feed = null
+
+  // When & Then: 不正な外部JSONとして拒否する
+  assert.throws(
+    () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
+    new Error('お知らせの形式が不正です')
+  )
+})
+
+test('存在しない月を含む公開日を拒否する', () => {
+  // Given: 13月を含むフィード
+  const feed = structuredClone(VALID_FEED)
+  feed.announcements[0].publishedAt = '2026-13-01'
+
+  // When & Then: 不正な外部JSONとして拒否する
   assert.throws(
     () => parseAnnouncementFeed(feed, ANNOUNCEMENTS_BASE_URL),
     new Error('お知らせの形式が不正です')

@@ -27,3 +27,25 @@ test('空文字と数値として確定していない入力を保持するこ�
   assert.equal(clampNumericInput('', 0, 10), '')
   assert.equal(clampNumericInput('.', 0, 10), '.')
 })
+
+test('下限値と等しい小数表記は入力を保持すること', () => {
+  // Given
+  const boundaryValue = '1.0'
+
+  // When
+  const result = clampNumericInput(boundaryValue, 1, 16)
+
+  // Then
+  assert.equal(result, '1.0')
+})
+
+test('上限値と等しい小数表記は入力を保持すること', () => {
+  // Given
+  const boundaryValue = '10.0'
+
+  // When
+  const result = clampNumericInput(boundaryValue, 1, 10)
+
+  // Then
+  assert.equal(result, '10.0')
+})

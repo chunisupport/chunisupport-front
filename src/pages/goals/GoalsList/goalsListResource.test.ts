@@ -36,6 +36,7 @@ const installGoalsFetch = (hasPlayer: boolean, lockedSongsStatus = 200) =>
       case '/internal/master/versions':
         return Response.json({ versions: [] })
       case '/internal/songs/updated-at':
+        return Response.json({ updated_at: null, revision: 0 })
       case '/internal/users/test-user/updated-at':
         return Response.json({ updated_at: null })
       case '/internal/users/test-user/record':
@@ -96,4 +97,31 @@ test('プレイヤー登録済みの未解禁曲取得エラーは未登録と�
       status: 500,
     }
   )
+})
+
+test('認証切れでは認証エラー処理を実行して例外を投げる', async () => {
+  // Given
+  let unauthorizedCalls = 0
+  installFetchRecorder((input) => {
+    const path = new URL(String(input)).pathname
+    if (path === '/internal/me') {
+      return Response.json(
+        { error: { code: 'unauthorized', message: '認証切れ' } },
+        { status: 401 }
+      )
+    }
+    throw new Error(`Unexpected request: ${path}`)
+  })
+  const { fetchGoalsListData } = await loadGoalsListResource()
+
+  // When
+  await assert.rejects(
+    fetchGoalsListData(() => {
+      unauthorizedCalls += 1
+    }),
+    { status: 401 }
+  )
+
+  // Then
+  assert.equal(unauthorizedCalls, 1)
 })

@@ -122,7 +122,28 @@ test('属性未指定時は全難易度・全定数・全ジャンル・全バ�
   assert.equal(filter.nameFolders, null)
 })
 
-test('属性が空配列の場合はレコード遷移を無効にし、どの譜面にも一致しない条件にする', () => {
+for (const { label, attributes } of [
+  { label: '難易度だけ', attributes: { diff: [] } },
+  { label: 'ジャンルだけ', attributes: { genre: [] } },
+  { label: 'バージョンだけ', attributes: { ver: [] } },
+]) {
+  test(`${label}が空配列の場合はレコード遷移を無効にして代表レコードに一致しない`, () => {
+    // Given: 空指定以外の条件には一致するレコードと、属性を1つだけ空にした目標。
+    const record = createRecord()
+    const defaultFilter = buildGoalRecordFilter(createGoal(), MASTER_DATA, VERSIONS)
+    assert.equal(isRecordMatched(record, defaultFilter), true)
+    const goal = createGoal({ attributes })
+
+    // When
+    const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+    // Then: 空指定を未指定として扱わず、遷移も照合も無効にする。
+    assert.equal(isGoalRecordNavigationEnabled(goal), false)
+    assert.equal(isRecordMatched(record, filter), false)
+  })
+}
+
+test('難易度・ジャンル・バージョンをすべて空にした場合は空のフィルターを返して遷移を無効にする', () => {
   // Given
   const goal = createGoal({
     attributes: { diff: [], genre: [], ver: [] },
@@ -136,6 +157,37 @@ test('属性が空配列の場合はレコード遷移を無効にし、どの�
   assert.deepEqual(filter.genres, [])
   assert.deepEqual(filter.versions, [])
   assert.equal(isGoalRecordNavigationEnabled(goal), false)
+  assert.equal(isRecordMatched(createRecord(), filter), false)
+})
+
+for (const achievement_type of ['score_count', 'avg_score', 'rank_count'] as const) {
+  test(`${achievement_type}の目標スコア0では未達成譜面がないため遷移を無効にする`, () => {
+    // Given: 0点を達成条件とする目標。
+    const goal = createGoal({ achievement_type, achievement_params: { score: 0, count: 1 } })
+
+    // When: 未達成フィルターへ変換する。
+    const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+    // Then: プレイ済み0点も未プレイ0点も未達成として表示しない。
+    assert.equal(isGoalRecordNavigationEnabled(goal), false)
+    assert.equal(isRecordMatched(createRecord({ score: 0 }), filter), false)
+    assert.equal(isRecordMatched(createRecord({ score: 0, is_played: false }), filter), false)
+    assert.equal(isRecordMatched(createRecord({ score: 1 }), filter), false)
+  })
+}
+
+test('目標スコア1では0点を未達成として含め、遷移も有効にする', () => {
+  // Given: 最小の正の目標スコア。
+  const goal = createGoal({ achievement_params: { score: 1, count: 1 } })
+
+  // When: 未達成フィルターへ変換する。
+  const filter = buildGoalRecordFilter(goal, MASTER_DATA, VERSIONS)
+
+  // Then: 0点と1点の境界を正確に区別する。
+  assert.equal(isGoalRecordNavigationEnabled(goal), true)
+  assert.equal(isRecordMatched(createRecord({ score: 0 }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ score: 0, is_played: false }), filter), true)
+  assert.equal(isRecordMatched(createRecord({ score: 1 }), filter), false)
 })
 
 test('スコア件数目標では目標スコア未満の譜面だけに一致する', () => {
@@ -382,6 +434,34 @@ test('楽曲名順が空配列の目標ではレコード遷移を無効にす�
   assert.equal(isGoalRecordNavigationEnabled(goal), false)
   assert.deepEqual(filter.difficulties, [])
   assert.deepEqual(filter.nameFolders, [])
+})
+
+test('有効なハードランプ値の目標はレコード遷移できる', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'ABS', count: 1 },
+  })
+
+  // When
+  const enabled = isGoalRecordNavigationEnabled(goal)
+
+  // Then
+  assert.equal(enabled, true)
+})
+
+test('有効なコンボランプ値の目標はレコード遷移できる', () => {
+  // Given
+  const goal = createGoal({
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'AJ', count: 1 },
+  })
+
+  // When
+  const enabled = isGoalRecordNavigationEnabled(goal)
+
+  // Then
+  assert.equal(enabled, true)
 })
 
 test('OP対象目標ではOP理論値対象を固定した通常レコードフィルターへ遷移できる', () => {

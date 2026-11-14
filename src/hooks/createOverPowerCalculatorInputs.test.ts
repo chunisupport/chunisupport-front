@@ -64,11 +64,12 @@ assert.equal(input.targetPercent(), '99.50000')
 
 test('未編集の満点と獲得値は再取得で更新し、目標は初回値を保持する', async () => {
   await runInputTest(`
-// Given & When: 未編集で再取得
-view.setBase({ current: 600, max: 1200 })
-// Then
+// Given: 初回集計 500/1000 (50%) から未編集のまま
+// When: 達成率が75%になる集計値を再取得
+view.setBase({ current: 900, max: 1200 })
+// Then: 満点と獲得値は再取得値になり、目標は初回の50%のまま
 assert.equal(input.maxValue(), '1200.000')
-assert.equal(input.currentValue(), '600.000')
+assert.equal(input.currentValue(), '900.000')
 assert.equal(input.targetPercent(), '50.00000')
 `)
 })

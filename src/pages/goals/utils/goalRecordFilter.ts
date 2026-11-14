@@ -99,6 +99,20 @@ const resolveUnachievedRatingMax = (rating: number): number =>
   fromRatingHundredths(Math.max(0, toRatingHundredths(rating) - SINGLE_RATING_STEP_HUNDREDTHS))
 
 /**
+ * 目標スコアが下限値で、改善対象となる譜面が存在しないか判定する。
+ * 未プレイも0点として扱うため、0点以上の条件にはすべての譜面が到達する。
+ *
+ * @param goal - 未達成条件を調べる目標。
+ * @returns スコア系の目標値が0点の場合は true。
+ */
+const hasNoUnachievedScore = (goal: GoalDTO): boolean =>
+  (goal.achievement_type === 'rank_count' ||
+    goal.achievement_type === 'score_count' ||
+    goal.achievement_type === 'avg_score') &&
+  'score' in goal.achievement_params &&
+  goal.achievement_params.score === SCORE_MIN
+
+/**
  * 目標種別ごとの未達成条件を通常レコードフィルターへ反映する。
  *
  * @param filter - 属性条件を反映済みのフィルター。
@@ -159,7 +173,7 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
  * @param goal - 変換元となる目標。
  * @param masterData - 難易度とジャンルを解決するマスタデータ。
  * @param versions - 目標用バージョン番号を表示名へ変換するバージョン一覧。
- * @returns 目標属性と未達成条件を反映した通常レコードフィルター。
+ * @returns 目標属性と未達成条件を反映した通常レコードフィルター。改善対象が存在しないスコア目標は空の難易度条件を返す。
  */
 export const buildGoalRecordFilter = (
   goal: GoalDTO,
@@ -174,6 +188,7 @@ export const buildGoalRecordFilter = (
   const defaultFilter = buildDefaultFilter(masterData.genres, versions)
   const isOpTargetGoal = goal.attributes.chart_target === 'OP_TARGET'
   const hasNoSelectedCharts =
+    hasNoUnachievedScore(goal) ||
     hasNoSelectedAttributeIds(difficultyIds) ||
     hasNoSelectedAttributeIds(genreIds) ||
     hasNoSelectedAttributeIds(versionIds) ||
@@ -231,9 +246,10 @@ export const buildGoalRecordFilter = (
  * 目標を曲単位の未達成フィルターへ変換できるか判定する。
  *
  * @param goal - 判定対象の目標。
- * @returns 通常レコードへのフィルター付き遷移が可能な場合は true。
+ * @returns 通常レコードへのフィルター付き遷移が可能な場合は true。目標スコア0点など改善対象が存在しない場合は false。
  */
 export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
+  !hasNoUnachievedScore(goal) &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.diff)) &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.genre)) &&
   !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.ver)) &&

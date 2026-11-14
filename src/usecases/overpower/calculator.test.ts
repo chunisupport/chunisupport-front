@@ -64,7 +64,7 @@ const createRecord = (
   slot: overrides.slot ?? null,
 })
 
-test('未解禁の通常曲とULTIMAを除外し、現行集計と同じ自動入力値を生成する', () => {
+test('未解禁の通常曲とULTIMAを除外した自動入力値を生成する', async (t) => {
   // Given
   const songs = [
     createSong({ id: 'locked' }),
@@ -90,13 +90,22 @@ test('未解禁の通常曲とULTIMAを除外し、現行集計と同じ自動�
   // When
   const data = buildOverPowerCalculatorData(songs, records, [], lockedSongs)
   const summary = buildOverPowerSummary(songs, records, [], lockedSongs)
-  // Then
-  assert.equal(data.current, summary.all.current)
-  assert.equal(data.max, summary.all.max)
-  assert.deepEqual(data.unplayedEntries, [
-    { current: 85, max: 90, targetConst: 15, isUnplayed: false },
-  ])
-  assert.equal(data.playedAverageScore, 1010000)
+  await t.test('利用可能なMASTERだけの現在値と理論値を返す', () => {
+    // Given / When: 上記の未解禁設定で生成した自動入力値。
+    // Then: 共通の集計実装から期待値を導出しない。
+    assert.equal(data.current, 85)
+    assert.equal(data.max, 90)
+    assert.deepEqual(data.unplayedEntries, [
+      { current: 85, max: 90, targetConst: 15, isUnplayed: false },
+    ])
+    assert.equal(data.playedAverageScore, 1010000)
+  })
+  await t.test('自動入力値と画面用サマリーの集計結果が一致する', () => {
+    // Given / When: 同じ入力で生成した自動入力値とサマリー。
+    // Then
+    assert.equal(data.current, summary.all.current)
+    assert.equal(data.max, summary.all.max)
+  })
 })
 
 test('下位譜面をプレイ済みでも理論値対象が未プレイなら補完対象に含める', () => {
@@ -144,6 +153,38 @@ test('レコードがない楽曲も理論値と未プレイ補完対象に含�
   assert.equal(data.unplayedEntries[0].isUnplayed, true)
   assert.equal(data.playedAverageScore, null)
   assert.equal(data.playedAverageScoreByConst.size, 0)
+})
+
+test('同一定数で理論値対象が欠ける場合は先頭譜面を理論値対象にする', () => {
+  // Given: ULTIMA対象だがEXPERTとMASTERだけ同一定数の楽曲
+  const songs = [
+    createSong({
+      id: 'tie',
+      op_target_difficulty: 'ULTIMA',
+      charts: {
+        EXPERT: { const: 15, is_const_unknown: false, notes: null },
+        MASTER: { const: 15, is_const_unknown: false, notes: null },
+      },
+    }),
+  ]
+  const records = [
+    createRecord({
+      id: 'tie',
+      difficulty: 'EXPERT',
+      is_played: false,
+      score: 0,
+      overpower: 0,
+      overpower_percent: 0,
+    }),
+    createRecord({ id: 'tie', difficulty: 'MASTER', score: 1010000, overpower: 90 }),
+  ]
+
+  // When: 自動入力値を生成する
+  const data = buildOverPowerCalculatorData(songs, records, [], [])
+
+  // Then: 先頭のEXPERTを理論値対象として未プレイ扱いにする
+  assert.equal(data.unplayedEntries[0]?.targetConst, 15)
+  assert.equal(data.unplayedEntries[0]?.isUnplayed, true)
 })
 
 test('未解禁曲を解禁扱いにすると全曲の理論値へ戻る', () => {

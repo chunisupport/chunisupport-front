@@ -195,8 +195,11 @@ test('buildWorldsendSongMetaUpdateRequest: 譜面フィールドを載せない�
 })
 
 test('buildChartDraftsFromSong: 存在する譜面だけを難易度順のドラフトにすること', () => {
-  // Given
-  const song = createSong()
+  // Given: 難易度順と逆の挿入順で譜面を配置する。
+  const original = createSong()
+  const song = createSong({
+    charts: { MASTER: original.charts.MASTER, BASIC: original.charts.BASIC },
+  })
 
   // When
   const drafts = buildChartDraftsFromSong(song)
@@ -259,7 +262,7 @@ test('parseChartMetaDrafts: 定数10未満の譜面は定数不明をfalseにす
   }
 })
 
-test('buildChartMetaUpdateRequest: 楽曲フィールドは現行値、譜面は編集結果を載せること', () => {
+test('buildChartMetaUpdateRequest: 未編集の譜面と現行の楽曲フィールドを維持すること', () => {
   // Given
   const song = createSong()
   const parsed = parseChartMetaDrafts(buildChartDraftsFromSong(song))
@@ -276,6 +279,38 @@ test('buildChartMetaUpdateRequest: 楽曲フィールドは現行値、譜面は
   assert.equal(request.charts.MASTER?.notes_designer, '譜面ボーイズからの挑戦状')
   // Wikiページタイトルは省略して既存値を維持させる
   assert.equal('wiki_page_title' in request, false)
+})
+
+test('buildChartMetaUpdateRequest: 元譜面ではなく編集済みの譜面マップを載せること', () => {
+  // Given: 元値とは異なる定数、ノーツ数、作者を指定した編集結果。
+  const song = createSong()
+  const charts = {
+    BASIC: { const: 7, is_const_unknown: false, notes: 900, notes_designer: null },
+    MASTER: {
+      const: 15.8,
+      is_const_unknown: true,
+      notes: 4000,
+      notes_designer: '編集後の譜面作者',
+    },
+  }
+
+  // When
+  const request = buildChartMetaUpdateRequest(song, charts)
+
+  // Then: 楽曲フィールドを維持しつつ、譜面には編集後の値を採用する。
+  assert.equal(request.genre, 'ORIGINAL')
+  assert.equal(request.released_at, '2025-06-19')
+  assert.equal(request.is_new, true)
+  assert.equal('wiki_page_title' in request, false)
+  assert.deepEqual(request.charts, {
+    BASIC: { const: 7, is_const_unknown: false, notes: 900, notes_designer: null },
+    MASTER: {
+      const: 15.8,
+      is_const_unknown: true,
+      notes: 4000,
+      notes_designer: '編集後の譜面作者',
+    },
+  })
 })
 
 test('parseWorldsendChartMetaEditValues: レベル範囲外はエラー、空欄はnullにすること', () => {
@@ -330,6 +365,109 @@ test('buildWorldsendChartMetaUpdateRequest: WORLDSEND譜面だけを更新対象
       notes_designer: null,
     },
   })
+})
+
+test('parseOptionalNonNegativeInteger: 桁あふれでInfinityになる数字列はinvalidにすること', () => {
+  // Given: 数字だけだが数値範囲を超える入力。
+  const value = '9'.repeat(400)
+
+  // When
+  const result = parseOptionalNonNegativeInteger(value)
+
+  // Then: 有限な整数ではないためinvalidにする。
+  assert.equal(result, 'invalid')
+})
+
+test('parseChartMetaDrafts: 定数Infinityはエラーにすること', () => {
+  // Given: 有限ではない譜面定数。
+  const drafts = [
+    {
+      difficulty: 'MASTER',
+      const: 'Infinity',
+      is_const_unknown: false,
+      notes: '',
+      notes_designer: '',
+    },
+  ] as const
+
+  // When
+  const result = parseChartMetaDrafts(drafts)
+
+  // Then
+  assert.equal(result.ok, false)
+})
+
+test('parseChartMetaDrafts: 定数0は有効として受け付けること', () => {
+  // Given: 下限ちょうどの譜面定数。
+  const drafts = [
+    {
+      difficulty: 'MASTER',
+      const: '0',
+      is_const_unknown: false,
+      notes: '',
+      notes_designer: '',
+    },
+  ] as const
+
+  // When
+  const result = parseChartMetaDrafts(drafts)
+
+  // Then
+  assert.equal(result.ok, true)
+  if (result.ok) {
+    assert.equal(result.value.MASTER?.const, 0)
+  }
+})
+
+test('parseChartMetaDrafts: NOTES DESIGNERが100文字ちょうどは受け付けて101文字はエラーにすること', () => {
+  // Given: 境界ちょうどと1文字超過の作者名。
+  const [basicDraft] = buildChartDraftsFromSong(createSong())
+  assert.ok(basicDraft)
+  const acceptedDrafts = [{ ...basicDraft, notes_designer: 'あ'.repeat(100) }]
+  const rejectedDrafts = [{ ...basicDraft, notes_designer: 'あ'.repeat(101) }]
+
+  // When
+  const accepted = parseChartMetaDrafts(acceptedDrafts)
+  const rejected = parseChartMetaDrafts(rejectedDrafts)
+
+  // Then
+  assert.equal(accepted.ok, true)
+  assert.equal(rejected.ok, false)
+})
+
+test('parseWorldsendChartMetaEditValues: NOTES DESIGNERが100文字ちょうどは受け付けて101文字はエラーにすること', () => {
+  // Given: 境界ちょうどと1文字超過の作者名。
+  const base = { attribute: '', levelStar: '', notes: '', notesDesigner: '' }
+
+  // When
+  const accepted = parseWorldsendChartMetaEditValues({
+    ...base,
+    notesDesigner: 'あ'.repeat(100),
+  })
+  const rejected = parseWorldsendChartMetaEditValues({
+    ...base,
+    notesDesigner: 'あ'.repeat(101),
+  })
+
+  // Then
+  assert.equal(accepted.ok, true)
+  assert.equal(rejected.ok, false)
+})
+
+test('parseWorldsendChartMetaEditValues: レベル1は有効として受け付けて0はエラーにすること', () => {
+  // Given: 下限ちょうどと下限未満の星数。
+  const base = { attribute: '', notes: '', notesDesigner: '' }
+
+  // When
+  const accepted = parseWorldsendChartMetaEditValues({ ...base, levelStar: '1' })
+  const rejected = parseWorldsendChartMetaEditValues({ ...base, levelStar: '0' })
+
+  // Then
+  assert.equal(accepted.ok, true)
+  if (accepted.ok) {
+    assert.equal(accepted.value.level_star, 1)
+  }
+  assert.equal(rejected.ok, false)
 })
 
 for (const unlockRequired of [true, false]) {

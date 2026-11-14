@@ -4,18 +4,31 @@ import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
   buildUserStatsPagePath,
-  DEFAULT_PROFILE_PAGE_QUERY,
   isRecordPageQuery,
   resolveOverPowerSubPage,
   resolveProfilePageQuery,
 } from './userProfileRoute.ts'
 
 test('page パラメータ未指定時は rating_best を返す', () => {
-  assert.equal(resolveProfilePageQuery(undefined), DEFAULT_PROFILE_PAGE_QUERY)
+  // Given
+  const page = undefined
+
+  // When
+  const result = resolveProfilePageQuery(page)
+
+  // Then
+  assert.equal(result, 'rating_best')
 })
 
 test('page パスパラメータが不正値のときは rating_best を返す', () => {
-  assert.equal(resolveProfilePageQuery('invalid'), DEFAULT_PROFILE_PAGE_QUERY)
+  // Given
+  const page = 'invalid'
+
+  // When
+  const result = resolveProfilePageQuery(page)
+
+  // Then
+  assert.equal(result, 'rating_best')
 })
 
 test('page パスパラメータが許可値ならそのまま返す', () => {

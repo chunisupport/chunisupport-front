@@ -1,9 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  WORLDSEND_SONG_CARD_DEFAULT_SORT_OPTION_ID,
-  WORLDSEND_SONG_CARD_SORT_OPTIONS,
-} from '../constants'
+import { WORLDSEND_SONG_CARD_DEFAULT_SORT_OPTION_ID } from '../constants'
 import {
   findWorldsendSongCardSortDirectionOption,
   findWorldsendSongCardSortOption,
@@ -30,19 +27,25 @@ test('ソート方向は対応する選択肢を返すこと', () => {
   assert.equal(option.value, 'desc')
 })
 
-test("WORLD'S ENDカードソート選択肢は属性・レベル・ノーツを含むこと", () => {
-  // Given: カード一覧のソート選択肢。
-  const optionIds = WORLDSEND_SONG_CARD_SORT_OPTIONS.map((option) => option.id)
+for (const { id, expected } of [
+  { id: 'default', expected: null },
+  { id: 'title', expected: 'title' },
+  { id: 'artist', expected: 'artist' },
+  { id: 'genre', expected: 'genre' },
+  { id: 'release', expected: 'release' },
+  { id: 'bpm', expected: 'bpm' },
+  { id: 'attribute', expected: 'attribute' },
+  { id: 'level', expected: 'level' },
+  { id: 'notes', expected: 'notes' },
+] as const) {
+  test(`ソートID「${id}」は対応するソートキー「${expected ?? '解除'}」を返すこと`, () => {
+    // Given: 利用者が選択したソートID。
 
-  // When: 初期選択肢と譜面キーを確認する。
-  const defaultOption = WORLDSEND_SONG_CARD_SORT_OPTIONS.find(
-    (option) => option.id === WORLDSEND_SONG_CARD_DEFAULT_SORT_OPTION_ID
-  )
+    // When: IDに対応する選択肢を検索する。
+    const option = findWorldsendSongCardSortOption(id)
 
-  // Then: 標準はソート解除、属性・レベル・ノーツを選べる。
-  assert.equal(defaultOption?.sortKey, null)
-  assert.equal(optionIds.includes('attribute'), true)
-  assert.equal(optionIds.includes('level'), true)
-  assert.equal(optionIds.includes('notes'), true)
-  assert.equal(WORLDSEND_SONG_CARD_SORT_OPTIONS.length, 9)
-})
+    // Then: 選択したIDと対応するソートキーを返す。
+    assert.equal(option.id, id)
+    assert.equal(option.sortKey, expected)
+  })
+}

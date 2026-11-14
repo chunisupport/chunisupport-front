@@ -14,7 +14,7 @@ test('プロフィール画面を下へスクロールしている場合は画�
   }
   Object.defineProperty(globalThis, 'document', {
     configurable: true,
-    value: { getElementById: () => scrollTarget },
+    value: { getElementById: (id: string) => (id === 'app-main' ? scrollTarget : null) },
   })
 
   try {
@@ -23,6 +23,54 @@ test('プロフィール画面を下へスクロールしている場合は画�
 
     // Then
     assert.deepEqual(scrollOptions, { top: 0, behavior: 'auto' })
+  } finally {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: originalDocument,
+    })
+  }
+})
+
+test('スクロール位置が先頭の場合はスクロールしないこと', () => {
+  // Given
+  const originalDocument = globalThis.document
+  let called = false
+  const scrollTarget = {
+    scrollTop: 0,
+    scrollTo: () => {
+      called = true
+    },
+  }
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { getElementById: (id: string) => (id === 'app-main' ? scrollTarget : null) },
+  })
+
+  try {
+    // When
+    scrollToUserProfileContent()
+
+    // Then
+    assert.equal(called, false)
+  } finally {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: originalDocument,
+    })
+  }
+})
+
+test('スクロール対象が存在しない場合は何もしないこと', () => {
+  // Given
+  const originalDocument = globalThis.document
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { getElementById: () => null },
+  })
+
+  try {
+    // When & Then
+    assert.doesNotThrow(() => scrollToUserProfileContent())
   } finally {
     Object.defineProperty(globalThis, 'document', {
       configurable: true,

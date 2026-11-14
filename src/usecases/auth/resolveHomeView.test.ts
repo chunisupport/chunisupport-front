@@ -26,3 +26,14 @@ test('認証状態が曖昧な場合は loading view を返す', () => {
 
   assert.deepEqual(result, { type: 'loading' })
 })
+
+test('認証済みでもユーザー名がない場合は loading view を返す', () => {
+  // Given
+  const params = { authStatus: 'authenticated', username: null } as const
+
+  // When
+  const result = resolveHomeView(params)
+
+  // Then
+  assert.deepEqual(result, { type: 'loading' })
+})

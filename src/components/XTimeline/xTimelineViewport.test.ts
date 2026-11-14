@@ -1,24 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  X_TIMELINE_APPROACH_MARGIN_PX,
-  X_TIMELINE_EAGER_VISIBLE_RATIO,
-  X_TIMELINE_LOAD_ROOT_MARGIN,
-} from './constants'
+import { X_TIMELINE_APPROACH_MARGIN_PX, X_TIMELINE_EAGER_VISIBLE_RATIO } from './constants'
 import { measureXTimelineViewport, shouldRequestXTimeline } from './xTimelineViewport'
 
 const TIMELINE_HEIGHT = 600
-
-test('rootMargin は下方向の接近距離だけを広げる', () => {
-  // Given: 接近とみなす距離。
-  const marginPx = X_TIMELINE_APPROACH_MARGIN_PX
-
-  // When: IntersectionObserver へ渡す rootMargin を組み立てる。
-  const rootMargin = X_TIMELINE_LOAD_ROOT_MARGIN
-
-  // Then: 下方向だけをその距離だけ広げる。
-  assert.equal(rootMargin, `0px 0px ${marginPx}px 0px`)
-})
 
 test('予約領域が十分見えているときはスクロール前でも読み込む', () => {
   // Given: デスクトップの2カラムのように、予約領域の大半がビューポート内にある。
@@ -126,4 +111,33 @@ test('高さが0の領域は見えていないものとして扱う', () => {
   // Then: 表示割合は0で、スクロール前は読み込まない。
   assert.equal(measurement.viewportVisibleRatio, 0)
   assert.equal(shouldRequestXTimeline(measurement, false), false)
+})
+
+test('予約領域の下端がビューポート上端ちょうどのときは上にあるものとして扱う', () => {
+  // Given: 下端が0ちょうどで上端がビューポートより上にある境界。
+  const measurement = measureXTimelineViewport({ top: -600, bottom: 0, height: 600 }, 800)
+
+  // When: スクロール済みでも判定する。
+  const shouldLoad = shouldRequestXTimeline(measurement, true)
+
+  // Then: 上にあるので表示割合は0で読み込まない。
+  assert.equal(measurement.isAboveViewport, true)
+  assert.equal(measurement.viewportVisibleRatio, 0)
+  assert.equal(shouldLoad, false)
+})
+
+test('ビューポート下端から240pxちょうどでもスクロール後に読み込む', () => {
+  // Given: 予約領域の上端が接近余白ちょうどの境界。
+  const measurement = measureXTimelineViewport({ top: 1040, bottom: 1640, height: 600 }, 800)
+
+  // When: スクロールの有無で判定する。
+  const beforeScroll = shouldRequestXTimeline(measurement, false)
+  const afterScroll = shouldRequestXTimeline(measurement, true)
+
+  // Then: 境界上はまだ範囲内なのでスクロール後に読み込む。
+  assert.equal(measurement.distanceFromViewportBottomPx, 240)
+  assert.equal(measurement.viewportVisibleRatio, 0)
+  assert.equal(measurement.isAboveViewport, false)
+  assert.equal(beforeScroll, false)
+  assert.equal(afterScroll, true)
 })

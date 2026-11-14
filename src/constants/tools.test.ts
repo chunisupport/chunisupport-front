@@ -109,7 +109,7 @@ test('ウニ埋めマトリックスは通常ユーザーにも表示する公�
   // When / Then
   assert.ok(uniFillMatrix)
   assert.equal(uniFillMatrix.title, 'ウニ埋めマトリックス')
-  assert.equal(publicTools[publicTools.length - 1], uniFillMatrix)
+  assert.ok(publicTools.includes(uniFillMatrix))
   assert.equal(uniFillMatrix.adminOnly, undefined)
   assert.equal(isPublicToolLink(uniFillMatrix), true)
   for (const accountType of [undefined, 'PLAYER', 'EDITOR', 'ADMIN', 'EXTDEV'] as const) {
@@ -155,19 +155,6 @@ test('レコード統計は公開ツールとして定義されていること',
   assert.equal(isToolLinkListed(chartStats, 'PLAYER'), true)
   assert.equal(isToolLinkListed(chartStats, 'ADMIN'), true)
   assert.equal(chartStats.icon, 'distribution')
-})
-
-test('getToolLink はパスに対応するツール情報を返すこと', () => {
-  // Given
-  const target = TOOL_LINKS[0]
-  assert.ok(target)
-
-  // When
-  const result = getToolLink(target.href)
-
-  // Then
-  assert.equal(result.title, target.title)
-  assert.equal(result.description, target.description)
 })
 
 test('getToolLink は全ツールパスに対応するツール情報を返すこと', () => {

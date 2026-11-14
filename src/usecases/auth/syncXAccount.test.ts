@@ -23,6 +23,23 @@ const createCredential = (providerId: string, screenName: string): UserCredentia
     _tokenResponse: { providerId, screenName, rawUserInfo: '{}' },
   }) as unknown as UserCredential
 
+test('保持したX認証結果は一致・不一致のどちらの取り出しでも一度で破棄すること', async () => {
+  // Given: 同じユーザーのX認証結果を保持する。
+  const { holdXAuthResultForSignup, takeHeldXAuthResult } = await loadSyncXAccountModule()
+  const held = { providerId: 'twitter.com', user: { uid: 'uid-once' } } as UserCredential
+  for (const requestedUid of ['uid-once', 'other-uid']) {
+    holdXAuthResultForSignup(held)
+
+    // When: 一致または不一致のUIDで取り出した後、再度本人として取り出す。
+    const first = takeHeldXAuthResult(requestedUid)
+    const second = takeHeldXAuthResult('uid-once')
+
+    // Then: 最初の一致時だけ返し、不一致時も保持を残さない。
+    assert.equal(first, requestedUid === 'uid-once' ? held : undefined)
+    assert.equal(second, undefined)
+  }
+})
+
 test('Xでの認証結果から@IDを読み取ること', async () => {
   // Given: X で認証した結果
   const { readXUsernameFromResult } = await loadSyncXAccountModule()
@@ -45,4 +62,52 @@ test('X以外での認証結果からは@IDを読み取らないこと', async (
 
   // Then
   assert.equal(username, undefined)
+})
+
+test('Xでの認証結果を保持し、同じユーザーの取り出しで返すこと', async () => {
+  // Given: X で認証した結果を保持した状態
+  const { holdXAuthResultForSignup, takeHeldXAuthResult } = await loadSyncXAccountModule()
+  const held = {
+    providerId: 'twitter.com',
+    user: { uid: 'uid-1' },
+  } as unknown as UserCredential
+  holdXAuthResultForSignup(held)
+
+  // When
+  const result = takeHeldXAuthResult('uid-1')
+
+  // Then
+  assert.equal(result, held)
+})
+
+test('別のユーザーの取り出しでは保持したXの認証結果を使わないこと', async () => {
+  // Given: X で認証した結果を保持した状態
+  const { holdXAuthResultForSignup, takeHeldXAuthResult } = await loadSyncXAccountModule()
+  const held = {
+    providerId: 'twitter.com',
+    user: { uid: 'uid-1' },
+  } as unknown as UserCredential
+  holdXAuthResultForSignup(held)
+
+  // When
+  const result = takeHeldXAuthResult('uid-2')
+
+  // Then
+  assert.equal(result, undefined)
+})
+
+test('X以外での認証結果は保持せず、取り出しでも使わないこと', async () => {
+  // Given: Google で認証した結果を保持しようとした状態
+  const { holdXAuthResultForSignup, takeHeldXAuthResult } = await loadSyncXAccountModule()
+  const googleResult = {
+    providerId: 'google.com',
+    user: { uid: 'uid-1' },
+  } as unknown as UserCredential
+  holdXAuthResultForSignup(googleResult)
+
+  // When
+  const result = takeHeldXAuthResult('uid-1')
+
+  // Then
+  assert.equal(result, undefined)
 })

@@ -66,6 +66,73 @@ const setup = async (overrides = {}) => {
 ${script}
 `)
 
+test('別トークンの名前変更中は削除を実行せず、完了後は削除できること', async () => {
+  await runApiTokenSettingsTest(`
+// Given: ID 1の名前変更を保留し、ID 2の削除を準備する。
+const pending = Promise.withResolvers()
+const { settings, calls, dispose } = await setup({
+  renameToken: async (id, request) => {
+    calls.rename.push([id, request])
+    await pending.promise
+    return token(id, request.name)
+  },
+})
+settings.startRenaming(settings.tokens().tokens[0])
+settings.setEditingName('Renamed')
+const renaming = settings.rename(1)
+settings.openDeleteDialog(settings.tokens().tokens[1])
+
+// When: 名前変更が終わる前に別の行の削除を確定する。
+await settings.confirmDelete()
+
+// Then: 操作中のIDと一覧を保ち、削除APIを呼ばない。
+assert.deepEqual(calls.delete, [])
+assert.equal(settings.mutatingTokenId(), 1)
+assert.deepEqual(names(settings), ['Bot', 'CLI'])
+pending.resolve()
+await renaming
+
+// When & Then: 名前変更完了後は削除できる。
+await settings.confirmDelete()
+assert.deepEqual(calls.delete, [2])
+assert.deepEqual(names(settings), ['Renamed'])
+dispose()
+`)
+})
+
+test('別トークンの削除中は名前変更を実行せず、完了後は変更できること', async () => {
+  await runApiTokenSettingsTest(`
+// Given: ID 2を編集中にID 1の削除を保留する。
+const pending = Promise.withResolvers()
+const { settings, calls, dispose } = await setup({
+  deleteToken: async (id) => {
+    calls.delete.push(id)
+    await pending.promise
+  },
+})
+settings.startRenaming(settings.tokens().tokens[1])
+settings.setEditingName('Terminal')
+settings.openDeleteDialog(settings.tokens().tokens[0])
+const deleting = settings.confirmDelete()
+
+// When: 削除が終わる前に別の行の名前変更を保存する。
+await settings.rename(2)
+
+// Then: 名前変更APIを呼ばず、操作中のIDと入力を保つ。
+assert.deepEqual(calls.rename, [])
+assert.equal(settings.mutatingTokenId(), 1)
+assert.equal(settings.editingName(), 'Terminal')
+pending.resolve()
+await deleting
+
+// When & Then: 削除完了後は名前変更できる。
+await settings.rename(2)
+assert.deepEqual(calls.rename, [[2, { name: 'Terminal' }]])
+assert.deepEqual(names(settings), ['Terminal'])
+dispose()
+`)
+})
+
 test('発行成功時は平文トークンを保持し、管理情報を一覧の先頭へ追加すること', async () => {
   await runApiTokenSettingsTest(`
 // Given: 2件のAPIトークンを取得済みで、発行ダイアログを開いた状態
@@ -198,7 +265,28 @@ dispose()
 `)
 })
 
-test('一覧の取得前と上限到達時は発行できないこと', async () => {
+test('一覧の取得前は有効な名前で直接発行してもAPIを呼ばないこと', async () => {
+  await runApiTokenSettingsTest(`
+// Given: 一覧の取得を保留したまま有効な名前を入力する
+const pending = Promise.withResolvers()
+const { settings, calls, dispose } = await setup({
+  fetchTokens: async () => pending.promise,
+})
+settings.setIssueName('Bot')
+
+// When: 一覧取得前に直接発行する
+await settings.issue()
+
+// Then: 発行不可のままでAPIも呼ばない
+assert.equal(settings.isIssueDisabled(), true)
+assert.equal(calls.issue.length, 0)
+pending.resolve({ tokens: [] })
+await settle()
+dispose()
+`)
+})
+
+test('一覧が上限の10件に到達している場合は発行できないこと', async () => {
   await runApiTokenSettingsTest(`
 // Given: 取得を待たせる一覧API
 const pending = Promise.withResolvers()

@@ -80,20 +80,60 @@ test('継承プロパティの sortcol は rating desc に戻す', () => {
   }
 })
 
+/** 既定ソートの各段階で同値を解消し、前の条件を後の条件より優先することを検証する。 */
 test('通常レコードの既定ソートは単曲レート降順、定数降順、難易度降順、曲名昇順にする', () => {
-  // Given
-  const expectedSortConditions = [
-    { key: 'rating', direction: 'desc' },
-    { key: 'const', direction: 'desc' },
-    { key: 'difficulty', direction: 'desc' },
-    { key: 'title', direction: 'asc' },
+  // Given: 上位条件で優先されるレコードほど下位条件では後ろに並ぶ一覧。
+  const records = [
+    createRecord({
+      id: 'title-beta',
+      title: 'Beta',
+      reading: 'Beta',
+      rating: 16,
+      const: 14,
+      difficulty: 'MASTER',
+    }),
+    createRecord({
+      id: 'difficulty-first',
+      title: 'Zulu',
+      reading: 'Zulu',
+      rating: 16,
+      const: 14,
+      difficulty: 'ULTIMA',
+    }),
+    createRecord({
+      id: 'title-alpha',
+      title: 'Alpha',
+      reading: 'Alpha',
+      rating: 16,
+      const: 14,
+      difficulty: 'MASTER',
+    }),
+    createRecord({
+      id: 'const-first',
+      title: 'Zulu',
+      reading: 'Zulu',
+      rating: 16,
+      const: 15,
+      difficulty: 'EXPERT',
+    }),
+    createRecord({
+      id: 'rating-first',
+      title: 'Zulu',
+      reading: 'Zulu',
+      rating: 17,
+      const: 13,
+      difficulty: 'BASIC',
+    }),
   ]
 
-  // When
-  const result = DEFAULT_RECORD_SORT_CONDITIONS
+  // When: 通常レコードの既定条件で並べ替える。
+  const result = sortRecordsByConditions(records, DEFAULT_RECORD_SORT_CONDITIONS)
 
-  // Then
-  assert.deepEqual(result, expectedSortConditions)
+  // Then: 同率なら定数、同定数なら難易度、同難易度なら曲名の順で比較する。
+  assert.deepEqual(
+    result.map((record) => record.id),
+    ['rating-first', 'const-first', 'difficulty-first', 'title-alpha', 'title-beta']
+  )
 })
 
 test('初期ソートは第1ソートだけクエリ指定で置き換える', () => {
@@ -178,8 +218,22 @@ test('第4ソートは曲名指定でも方向を昇順へ固定する', () => {
 test('複数ソートは第4ソートまで評価できる', () => {
   // Given
   const records = [
-    createRecord({ id: 'alpha', title: 'Alpha', score: 1000000, const: 14, difficulty: 'MASTER' }),
-    createRecord({ id: 'beta', title: 'Beta', score: 1000000, const: 14, difficulty: 'MASTER' }),
+    createRecord({
+      id: 'beta',
+      title: 'Beta',
+      reading: 'Beta',
+      score: 1000000,
+      const: 14,
+      difficulty: 'MASTER',
+    }),
+    createRecord({
+      id: 'alpha',
+      title: 'Alpha',
+      reading: 'Alpha',
+      score: 1000000,
+      const: 14,
+      difficulty: 'MASTER',
+    }),
   ]
 
   // When
@@ -353,7 +407,8 @@ test('複数ソートは前の条件が同値の場合に次の条件で並べ�
   )
 })
 
-test('J数ソートは数値順に並べ、J数なし行は後続条件へ委譲する', () => {
+test('J数ソートは数値順に並べ、J数なし行は入力順を維持して末尾へ寄せる', () => {
+  // Given
   const records = [
     createRecord({ id: 'aj-j2', combo_lamp: 'ALL JUSTICE', justice_count: 2 }),
     createRecord({ id: 'aj-j1', combo_lamp: 'ALL JUSTICE', justice_count: 1 }),
@@ -368,7 +423,7 @@ test('J数ソートは数値順に並べ、J数なし行は後続条件へ委譲
     createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, notes: 1000, score: 0 }),
   ]
 
-  // Then: J数なしの3件は後続条件がないため、入力順のまま末尾へ残る。
+  // When / Then: J数なしの3件は後続条件がないため、入力順のまま末尾へ残る。
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'asc').map((record) => record.id),
     ['aj-j0', 'aj-j1', 'aj-j2', 'aj-null', 'fc', 'unplayed']
@@ -377,6 +432,28 @@ test('J数ソートは数値順に並べ、J数なし行は後続条件へ委譲
   assert.deepEqual(
     sortRecords(records, 'justiceCount', 'desc').map((record) => record.id),
     ['aj-j2', 'aj-j1', 'aj-j0', 'aj-null', 'fc', 'unplayed']
+  )
+})
+
+test('J数なし行同士は後続のスコア降順で並べる', () => {
+  // Given: J数なしのプレイ済み行をスコア昇順で渡す。
+  const records = [
+    createRecord({ id: 'aj-null', combo_lamp: 'ALL JUSTICE', justice_count: null, score: 1005000 }),
+    createRecord({ id: 'fc', combo_lamp: 'FULL COMBO', justice_count: null, score: 1009990 }),
+    createRecord({ id: 'aj-j0', combo_lamp: 'ALL JUSTICE', justice_count: 0, score: 1010000 }),
+    createRecord({ id: 'unplayed', is_played: false, combo_lamp: null, score: 0 }),
+  ]
+
+  // When
+  const result = sortRecordsByConditions(records, [
+    { key: 'justiceCount', direction: 'asc' },
+    { key: 'score', direction: 'desc' },
+  ])
+
+  // Then
+  assert.deepEqual(
+    result.map((record) => record.id),
+    ['aj-j0', 'fc', 'aj-null', 'unplayed']
   )
 })
 
@@ -400,7 +477,8 @@ test('ランプソートはランプなし、FC、AJ、AJC、未プレイの順�
   )
 })
 
-test('ハードランプソートはCATASTROPHYより後ろにFAILEDを並べる', () => {
+test('ハードランプソートは昇順ではFAILEDを先に、降順ではCATASTROPHYを先に並べる', () => {
+  // Given
   const records = [
     createRecord({ id: 'clear', clear_lamp: 'CLEAR' }),
     createRecord({ id: 'hard', clear_lamp: 'HARD' }),
@@ -413,11 +491,13 @@ test('ハードランプソートはCATASTROPHYより後ろにFAILEDを並べる
   ]
 
   assert.deepEqual(
+    // When / Then: 昇順ではFAILEDが先になる。
     sortRecords(records, 'hardLamp', 'asc').map((record) => record.id),
     ['failed', 'clear', 'hard', 'brave', 'absolute', 'catastrophy', 'none', 'unplayed']
   )
 
   assert.deepEqual(
+    // When / Then: 降順ではCATASTROPHYが先になる。
     sortRecords(records, 'hardLamp', 'desc').map((record) => record.id),
     ['catastrophy', 'absolute', 'brave', 'hard', 'clear', 'failed', 'none', 'unplayed']
   )
@@ -440,4 +520,63 @@ test('FCHソートはなし、GOLD、PLATINUM、未プレイの順で並べる',
     sortRecords(records, 'fullChain', 'desc').map((record) => record.id),
     ['platinum', 'gold', 'none', 'unplayed']
   )
+})
+
+test('更新日ソートは降順でも無効日付と未プレイを末尾に寄せる', () => {
+  // Given: 有効な新旧と無効日付、未プレイのレコード。
+  const records = [
+    createRecord({ id: 'older', updated_at: '2026-04-19T00:00:00Z' }),
+    createRecord({ id: 'invalid', updated_at: 'invalid-date' }),
+    createRecord({ id: 'newer', updated_at: '2026-04-20T00:00:00Z' }),
+    createRecord({ id: 'unplayed', is_played: false, updated_at: null }),
+  ]
+
+  // When: 更新日で降順にソートする。
+  const result = sortRecords(records, 'updatedAt', 'desc').map((record) => record.id)
+
+  // Then: 新しい順に並び、無効日付と未プレイは入力順のまま末尾に残る。
+  assert.deepEqual(result, ['newer', 'older', 'invalid', 'unplayed'])
+})
+
+test('J数ソートは後続のスコア条件があってもJ数なし行を末尾に寄せる', () => {
+  // Given: スコアが高いJ数なし行とスコアが低いJ数あり行。
+  const records = [
+    createRecord({
+      id: 'fc-missing',
+      combo_lamp: 'FULL COMBO',
+      justice_count: null,
+      score: 1009990,
+    }),
+    createRecord({
+      id: 'aj-present',
+      combo_lamp: 'ALL JUSTICE',
+      justice_count: 1,
+      score: 1005000,
+    }),
+  ]
+
+  // When: J数昇順の次にスコア降順で並べる。
+  const result = sortRecordsByConditions(records, [
+    { key: 'justiceCount', direction: 'asc' },
+    { key: 'score', direction: 'desc' },
+  ]).map((record) => record.id)
+
+  // Then: スコアが高くてもJ数なし行は末尾になる。
+  assert.deepEqual(result, ['aj-present', 'fc-missing'])
+})
+
+test('単一ソートはキーまたは方向が未指定なら元の配列をそのまま返す', () => {
+  // Given: スコアが異なる2件のレコード。
+  const records = [
+    createRecord({ id: 'low', score: 1005000 }),
+    createRecord({ id: 'high', score: 1008000 }),
+  ]
+
+  // When: キーまたは方向を未指定でソートする。
+  const noKey = sortRecords(records, null, 'asc')
+  const noDirection = sortRecords(records, 'score', null)
+
+  // Then: ソートせず同じ配列参照を返す。
+  assert.equal(noKey, records)
+  assert.equal(noDirection, records)
 })

@@ -74,7 +74,8 @@ assert.equal(field.maxValue, '14.4')
 `)
 })
 
-test('空欄を確定すると全範囲の端点になり低レベルの上限は小数9になる', async () => {
+/** 空欄確定による両端のフォールバックを検証する。 */
+test('空欄を確定すると全範囲の端点になる', async () => {
   await runRangeTest(`
 // Given: 数値指定で範囲を変更する。
 field.onConstFilterModeChange('number')
@@ -84,10 +85,18 @@ field.onMaxCommit('14')
 field.onMinCommit('')
 field.onMaxCommit('')
 // Then: 全範囲へ戻る。
-assert.deepEqual(selection().constRange, createFullChartConstRange())
-field.onConstFilterModeChange('level')
+assert.deepEqual(selection().constRange, { min: 1, max: 16 })
+`)
+})
+
+/** 低レベル指定の上下端への変換を検証する。 */
+test('低レベルの範囲を選ぶと上限は小数9になる', async () => {
+  await runRangeTest(`
+// Given: レベル指定の全範囲。
+// When: レベル5から6までを選ぶ。
 field.onConstLevelChange('min', '5')
 field.onConstLevelChange('max', '6')
+// Then: レベル6の小数部分も範囲に含める。
 assert.deepEqual(selection().constRange, { min: 5, max: 6.9 })
 `)
 })

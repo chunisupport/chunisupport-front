@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
-import { buildGoalPayload, formatGoalAttributesLabel, formatGoalTypeLabel } from './goalForm'
+import {
+  buildGoalPayload,
+  formatGoalAttributesLabel,
+  resolveGoalAchievementTypeLabel,
+} from './goalForm'
 
 const MASTER_DATA: MasterDataDTO = {
   difficulties: [
@@ -42,15 +46,54 @@ test('保存用ペイロードは実数値と割合の反転フラグを独立�
   // When: 保存用ペイロードへ変換する
   const result = buildGoalPayload(goal)
 
-  // Then: 両方の反転フラグが変更されずに含まれる
-  assert.equal(result.invert_value, true)
-  assert.equal(result.invert_percentage, false)
+  // Then: 保存項目だけを返し、レスポンス専用項目は含めない。
+  assert.deepEqual(result, {
+    group_id: null,
+    title: '残り値だけを表示',
+    achievement_type: 'score_count',
+    achievement_params: { score: 1_000_000, count: 10 },
+    attributes: {},
+    invert_value: true,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+  })
   assert.equal('invert' in result, false)
 })
 
-test('FULL CHAIN目標種別を日本語ラベルへ変換する', () => {
-  // Given / When / Then
-  assert.equal(formatGoalTypeLabel('fullchain_count'), 'FULL CHAIN達成数')
+test('登録済みの目標種別は代替ラベルより登録済みの日本語ラベルを優先して表示する', () => {
+  // Given: 表示名が登録されている目標種別と代替ラベル。
+  const code = 'fullchain_count'
+  const options = { fallbackLabel: '未対応の目標' }
+
+  // When: 代替ラベルを指定して表示名を解決する。
+  const result = resolveGoalAchievementTypeLabel(code, options)
+
+  // Then: 代替ラベルやコードではなく登録済みの日本語ラベルを表示する。
+  assert.equal(result, 'FULL CHAIN達成数')
+})
+
+test('未知の目標種別は代替ラベルの指定がなければコードを表示する', () => {
+  // Given: 表示名が登録されていない目標種別。
+  const code = 'unknown_goal_type'
+
+  // When: 代替ラベルを指定せずに表示名を解決する。
+  const result = resolveGoalAchievementTypeLabel(code)
+
+  // Then: 未知のコードをそのまま表示する。
+  assert.equal(result, 'unknown_goal_type')
+})
+
+test('未知の目標種別は明示された代替ラベルを表示する', () => {
+  // Given: 表示名が登録されていない目標種別と代替ラベル。
+  const code = 'unknown_goal_type'
+  const options = { fallbackLabel: '未対応の目標' }
+
+  // When: 代替ラベルを指定して表示名を解決する。
+  const result = resolveGoalAchievementTypeLabel(code, options)
+
+  // Then: コードではなく代替ラベルを表示する。
+  assert.equal(result, '未対応の目標')
 })
 
 test('空配列の条件は対象譜面なしとして表示する', () => {
@@ -101,9 +144,18 @@ test('保存用ペイロードはゲージのスタート位置と達成率へ�
   // When: 保存用ペイロードへ変換する
   const result = buildGoalPayload(goal)
 
-  // Then
-  assert.equal(result.gauge_start, 99.6)
-  assert.equal(result.apply_gauge_start_to_percentage, true)
+  // Then: ゲージ設定を含む保存項目だけを返す。
+  assert.deepEqual(result, {
+    group_id: null,
+    title: 'OP達成率99.8%',
+    achievement_type: 'overpower_percent',
+    achievement_params: { total: 99.8 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 99.6,
+    apply_gauge_start_to_percentage: true,
+  })
 })
 
 test('レベル指定で保存した定数範囲はレベルで表示する', () => {
@@ -146,4 +198,37 @@ test('レベル指定でもレベル境界と一致しない定数範囲は譜�
 
   // Then
   assert.equal(result, '定数: 13.7 ～ 14.2')
+})
+
+test('OP対象では難易度条件を表示しないこと', () => {
+  // Given: OP対象と難易度条件を両方指定した目標条件
+  const attributes = { chart_target: 'OP_TARGET' as const, diff: [1] }
+
+  // When: 条件ラベルへ変換する
+  const result = formatGoalAttributesLabel(attributes, MASTER_DATA, VERSIONS)
+
+  // Then: OP対象だけを表示し難易度は重ねて表示しない
+  assert.equal(result, '対象: OP対象')
+})
+
+test('定数の下限だけが指定された場合も譜面定数で表示すること', () => {
+  // Given: 下限だけを持つ定数条件
+  const attributes = { const: { min: 14 } }
+
+  // When: 条件ラベルへ変換する
+  const result = formatGoalAttributesLabel(attributes, MASTER_DATA, VERSIONS)
+
+  // Then: 未指定の上限をハイフンで補って表示する
+  assert.equal(result, '定数: 14 ～ -')
+})
+
+test('条件が未指定の場合は条件なしと表示すること', () => {
+  // Given: 条件を何も持たない目標条件
+  const attributes = {}
+
+  // When: 条件ラベルへ変換する
+  const result = formatGoalAttributesLabel(attributes, MASTER_DATA, VERSIONS)
+
+  // Then: 全譜面が対象であることを表示する
+  assert.equal(result, '条件なし（全譜面）')
 })

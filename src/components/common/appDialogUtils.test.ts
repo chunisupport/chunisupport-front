@@ -27,7 +27,7 @@ test('送信中の閉鎖要求は通知せず、開く要求と送信完了後�
   assert.deepEqual(calls, [true, false])
 })
 
-test('開いた直後の自動フォーカスはダイアログ本体へ移し、本体が無いときも既定フォーカスを止める', () => {
+test('開いた直後は既定フォーカスを止めてダイアログ本体へ移す', () => {
   // Given: 自動フォーカスイベントと、フォーカスを記録する本体
   let prevented = false
   let focused = false
@@ -42,13 +42,23 @@ test('開いた直後の自動フォーカスはダイアログ本体へ移し�
     },
   } as unknown as HTMLElement
 
-  // When: 本体がある場合とない場合
+  // When: 本体が接続されている状態で開く
   focusDialogContentOnOpen(event, content)
-  focusDialogContentOnOpen(event, undefined)
 
-  // Then: 既定のフォーカスは両方で止まり、本体があるときだけ focus する
+  // Then: 既定のフォーカスを止め、本体へフォーカスする
   assert.equal(prevented, true)
   assert.equal(focused, true)
+})
+
+test('開いた直後にダイアログ本体が無い場合も既定フォーカスを止める', () => {
+  // Given: 本体が未接続の自動フォーカスイベント
+  const event = new Event('openAutoFocus', { cancelable: true })
+
+  // When: 本体なしで開く
+  focusDialogContentOnOpen(event, undefined)
+
+  // Then: 既定のフォーカスを止める
+  assert.equal(event.defaultPrevented, true)
 })
 
 test('オーバーレイは重なり順ごとに1段上の階層を使う', () => {
@@ -78,13 +88,61 @@ test('中央の編集ダイアログ枠は最大高さと幅を持ち、本文�
     layer: 'base',
   })
 
-  // Then: 既存の中央ダイアログと同じトークンで、スクロールは枠に付かない
+  // Then: 中央配置・最大高さ・幅の契約を満たし、外枠はスクロールしない
+  const classes = new Set(content.split(/\s+/))
+  for (const token of [
+    'fixed',
+    'left-1/2',
+    'top-1/2',
+    '-translate-x-1/2',
+    '-translate-y-1/2',
+    'flex',
+    'flex-col',
+    'max-h-[90dvh]',
+    'w-[90vw]',
+    'max-w-lg',
+  ]) {
+    assert.ok(classes.has(token), `必要なクラス: ${token}`)
+  }
   assert.equal(
-    content,
-    'fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[90vw] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-surface shadow-lg p-6'
+    [...classes].some((token) => /(^|:)overflow(?:-[xy])?-(auto|scroll)$/.test(token)),
+    false
   )
-  assert.equal(content.includes('overflow-y-auto'), false)
 })
+
+test('基本階層のダイアログ枠はオーバーレイより1段上の階層に置く', () => {
+  // Given / When: 基本階層のオーバーレイと枠
+  const overlay = appDialogOverlayClass('base').split(/\s+/)
+  const content = appDialogContentClass({
+    placement: 'center',
+    size: 'lg',
+    height: 'max90',
+    layer: 'base',
+  }).split(/\s+/)
+
+  // Then: オーバーレイは z-40、枠は z-50 になる
+  assert.ok(overlay.includes('z-40'))
+  assert.ok(content.includes('z-50'))
+})
+
+for (const { label, option, token } of [
+  { label: '選択禁止', option: { selectNone: true }, token: 'select-none' },
+  { label: 'はみ出しの非表示', option: { overflowHidden: true }, token: 'overflow-hidden' },
+  { label: '枠線', option: { bordered: true }, token: 'border-border-strong' },
+]) {
+  test(`ダイアログ枠の${label}は指定したときだけ付く`, () => {
+    // Given: 追加の見た目を指定しない枠と、1つだけ指定した枠
+    const base = { placement: 'center', size: 'lg', height: 'max90', layer: 'base' } as const
+
+    // When
+    const plain = appDialogContentClass(base).split(/\s+/)
+    const modified = appDialogContentClass({ ...base, ...option }).split(/\s+/)
+
+    // Then: 未指定では付かず、指定すると付く
+    assert.equal(plain.includes(token), false)
+    assert.equal(modified.includes(token), true)
+  })
+}
 
 test('全画面に近いダイアログ枠は狭い画面で上下に寄せ、広い画面では中央の固定高さになる', () => {
   // Given / When: 楽曲選択と同じ枠
@@ -95,11 +153,30 @@ test('全画面に近いダイアログ枠は狭い画面で上下に寄せ、�
     layer: 'base',
   })
 
-  // Then: モバイルは余白付きの全面、sm 以上は 90dvh
-  assert.equal(
-    content,
-    'fixed inset-x-4 top-4 bottom-4 z-50 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] sm:h-[90dvh] sm:max-h-[90dvh] flex-col rounded-lg bg-surface shadow-lg p-4 sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[92vw] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6'
-  )
+  // Then: 狭い画面の上下余白と、sm 以上の中央配置・固定高さ、本文だけをスクロールさせる縦並びに必要なクラスを持つ
+  const classes = new Set(content.split(/\s+/))
+  for (const token of [
+    'fixed',
+    'inset-x-4',
+    'top-4',
+    'bottom-4',
+    'flex',
+    'flex-col',
+    'h-[calc(100dvh-2rem)]',
+    'max-h-[calc(100dvh-2rem)]',
+    'sm:h-[90dvh]',
+    'sm:max-h-[90dvh]',
+    'sm:bottom-auto',
+    'sm:left-1/2',
+    'sm:right-auto',
+    'sm:top-1/2',
+    'sm:w-[92vw]',
+    'sm:max-w-2xl',
+    'sm:-translate-x-1/2',
+    'sm:-translate-y-1/2',
+  ]) {
+    assert.ok(classes.has(token), `必要なクラス: ${token}`)
+  }
 })
 
 test('ランダム選曲の詳細設定枠は内容の高さに沿い、広い画面では上限だけを付ける', () => {

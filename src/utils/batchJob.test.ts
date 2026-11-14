@@ -80,6 +80,17 @@ test('終了していないジョブや不正な日時の所要時間はnullを�
   assert.deepEqual(results, [null, null, null])
 })
 
+test('開始と終了が同じ時刻の所要時間は0秒と表示すること', () => {
+  // Given
+  const job = createJob({ started_at: '2026-09-26T03:00:00Z', finished_at: '2026-09-26T03:00:00Z' })
+
+  // When
+  const result = formatBatchJobDuration(job)
+
+  // Then
+  assert.equal(result, '0秒')
+})
+
 test('ジョブの状態を表示用の色調へ変換すること', () => {
   // Given
   const statuses = [

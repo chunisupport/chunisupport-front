@@ -39,7 +39,7 @@ const setup = (overrides = {}) => {
         calls.push('cancel')
       },
       changeAccount: async (target) => {
-        calls.push(['change', target.email])
+        calls.push(['change', target])
         email = target.email
         return true
       },
@@ -59,10 +59,18 @@ const selectTarget = async (wizard) => {
 ${script}
 `)
 
-test('変更先を選ぶと確認ステップへ進み、変更成功で完了して現在のメールアドレスを更新すること', async () => {
-  await runWizardTest(`
+for (const credential of [
+  null,
+  { providerId: 'google.com', signInMethod: 'google.com', idToken: 'selected-token' },
+]) {
+  test(`認証情報が${credential === null ? 'null' : '非null'}の変更先を選ぶと確認へ進み、対象全体を渡して変更し、完了して現在のメールアドレスを更新すること`, async () => {
+    await runWizardTest(`
 // Given: ウィザードを開いた状態
-const { wizard, calls, dispose } = setup()
+const selectedTarget = { email: 'new@example.com', credential: ${JSON.stringify(credential)} }
+const { wizard, calls, dispose } = setup({ selectTarget: async () => {
+  calls.push('select')
+  return selectedTarget
+} })
 wizard.setOpen(true)
 assert.equal(wizard.step(), 'select')
 
@@ -75,7 +83,8 @@ assert.equal(wizard.isReauthOpen(), true)
 await wizard.submit()
 
 // Then: 完了ステップで変更先のメールアドレスを表示し、使用済みの認証情報を保持しない
-assert.deepEqual(calls, ['select', ['change', 'new@example.com']])
+assert.deepEqual(calls, ['select', ['change', selectedTarget]])
+assert.equal(calls[1][1], selectedTarget)
 assert.equal(wizard.step(), 'done')
 assert.equal(wizard.isReauthOpen(), false)
 assert.equal(wizard.currentEmail(), 'new@example.com')
@@ -83,7 +92,8 @@ assert.equal(wizard.target(), undefined)
 assert.equal(wizard.isSubmitting(), false)
 dispose()
 `)
-})
+  })
+}
 
 test('変更後にセッションを切り替えられなかった場合はセッション喪失時の処理を行うこと', async () => {
   await runWizardTest(`
@@ -107,31 +117,35 @@ dispose()
 `)
 })
 
-test('本人確認で別アカウントが選ばれた場合は本人確認ダイアログに現在のメールアドレスを示すこと', async () => {
-  await runWizardTest(`
-// Given: auth/user-mismatch、続いて401のinvalid_credentialsで失敗する変更
-const errors = [codedError('auth/user-mismatch'), codedError('invalid_credentials', 401)]
+for (const { code, status } of [
+  { code: 'auth/user-mismatch', status: undefined },
+  { code: 'invalid_credentials', status: 401 },
+]) {
+  test(`${code}で本人確認に失敗した場合は本人確認ダイアログに現在のメールアドレスを示すこと`, async () => {
+    await runWizardTest(`
+// Given: 選択したエラーコードで失敗する変更
+const error = codedError('${code}', ${status})
 const { wizard, calls, dispose } = setup({
   changeAccount: async () => {
-    throw errors.shift()
+    throw error
   },
 })
 await selectTarget(wizard)
 
-for (const _ of [1, 2]) {
-  // When: 本人確認を確定する
-  await wizard.submit()
+// When: 本人確認を確定する
+await wizard.submit()
 
-  // Then: 本人確認ダイアログを開いたまま、選ぶべきアカウントを示す
-  assert.equal(wizard.reauthError(), COPY.userMismatch('old@example.com'))
-  assert.equal(wizard.error(), '')
-  assert.equal(wizard.isReauthOpen(), true)
-  assert.equal(wizard.target().email, 'new@example.com')
-}
+// Then: 本人確認ダイアログを開いたまま、選ぶべきアカウントを示す
+assert.equal(wizard.reauthError(), COPY.userMismatch('old@example.com'))
+assert.ok(wizard.reauthError().includes('old@example.com'))
+assert.equal(wizard.error(), '')
+assert.equal(wizard.isReauthOpen(), true)
+assert.equal(wizard.target().email, 'new@example.com')
 assert.equal(calls.includes('cancel'), false)
 dispose()
 `)
-})
+  })
+}
 
 test('401のrecent_sign_in_requiredは本人確認を閉じてウィザード本体で変更先を選び直させること', async () => {
   await runWizardTest(`
@@ -273,23 +287,93 @@ dispose()
 
 test('ウィザードを閉じると途中の状態と変更先のサインイン状態を破棄すること', async () => {
   await runWizardTest(`
-// Given: 変更先を選んだ状態
+// Given: 変更先を選び、本人確認を開いた状態
 const { wizard, calls, dispose } = setup()
-wizard.setOpen(true)
-await wizard.select()
+await selectTarget(wizard)
 
 // When: ウィザードを閉じる
 wizard.setOpen(false)
 
 // Then: 選択ステップへ戻し、変更先のサインイン状態を破棄する
 assert.equal(wizard.isOpen(), false)
+assert.equal(wizard.isReauthOpen(), false)
 assert.equal(wizard.step(), 'select')
 assert.deepEqual(calls, ['select', 'cancel'])
+assert.equal(wizard.target(), undefined)
+dispose()
+`)
+})
 
-// When: 画面から取り除かれる
+test('ウィザードを開いたまま画面から取り除くと変更先のサインイン状態を破棄すること', async () => {
+  await runWizardTest(`
+// Given: 変更先を選び、ウィザードを開いたままの状態
+const { wizard, calls, dispose } = setup()
+await selectTarget(wizard)
+
+// When: 画面から取り除く
 dispose()
 
-// Then: 変更先のサインイン状態をもう一度破棄する
-assert.deepEqual(calls, ['select', 'cancel', 'cancel'])
+// Then: 変更先のサインイン状態を破棄する
+assert.deepEqual(calls, ['select', 'cancel'])
+`)
+})
+
+test('本人確認ダイアログは再認証中でなければ閉じられること', async () => {
+  await runWizardTest(`
+// Given: 本人確認を開いた状態
+const { wizard, dispose } = setup()
+await selectTarget(wizard)
+assert.equal(wizard.isReauthOpen(), true)
+
+// When: 再認証中ではないまま閉じる
+wizard.setReauthOpen(false)
+
+// Then: 閉じる
+assert.equal(wizard.isReauthOpen(), false)
+assert.equal(wizard.isSubmitting(), false)
+dispose()
+`)
+})
+
+test('現在のメールアドレスを取得できない場合は変更先のメールアドレスで完了すること', async () => {
+  await runWizardTest(`
+// Given: 変更成功後に現在のメールアドレスが空で返る状態
+let current = 'old@example.com'
+const { wizard, dispose } = setup({
+  getCurrentEmail: () => current,
+  changeAccount: async () => {
+    current = ''
+    return true
+  },
+})
+await selectTarget(wizard)
+
+// When: 本人確認を確定する
+await wizard.submit()
+
+// Then: 変更先のメールアドレスで完了する
+assert.equal(wizard.currentEmail(), 'new@example.com')
+assert.equal(wizard.step(), 'done')
+dispose()
+`)
+})
+
+test('本人確認と無関係な文字列コードの失敗は本人確認ダイアログにAPIの文言を出すこと', async () => {
+  await runWizardTest(`
+// Given: 本人確認の対象外コードで失敗する変更
+const { wizard, dispose } = setup({
+  changeAccount: async () => {
+    throw codedError('auth/invalid-credential')
+  },
+})
+await selectTarget(wizard)
+
+// When: 本人確認を確定する
+await wizard.submit()
+
+// Then: 本人確認ダイアログにAPIの文言を出す
+assert.equal(wizard.reauthError(), '認証情報が無効です。もう一度ログインしてください。')
+assert.equal(wizard.isReauthOpen(), true)
+dispose()
 `)
 })

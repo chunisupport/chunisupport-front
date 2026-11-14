@@ -167,3 +167,87 @@ test('不明ジャンルとバージョンのグラフ内訳はサマリー件�
     assert.equal(row.comboBands.find((band) => band.label === 'OTHER')?.count, 1)
   }
 })
+
+test('SSS のスコアは SSS 帯に集計され OTHER にならない', () => {
+  // Given
+  const recordsByLabel = new Map<string, PlayerRecordDTO[]>([
+    ['MASTER', [createRecord({ id: 'sss', score: 1008000, combo_lamp: null })]],
+  ])
+
+  // When
+  const [result] = buildGraphRows([summaryRow], recordsByLabel)
+
+  // Then
+  assert.equal(result?.scoreBands.find((band) => band.label === 'SSS')?.count, 1)
+  assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 0)
+})
+
+test('SS+ のスコアは SS+ 帯に集計され OTHER にならない', () => {
+  // Given
+  const recordsByLabel = new Map<string, PlayerRecordDTO[]>([
+    ['MASTER', [createRecord({ id: 'ss-plus', score: 1006000, combo_lamp: null })]],
+  ])
+
+  // When
+  const [result] = buildGraphRows([summaryRow], recordsByLabel)
+
+  // Then
+  assert.equal(result?.scoreBands.find((band) => band.label === 'SS+')?.count, 1)
+  assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 0)
+})
+
+test('SS のスコアは SS 帯に集計され OTHER にならない', () => {
+  // Given
+  const recordsByLabel = new Map<string, PlayerRecordDTO[]>([
+    ['MASTER', [createRecord({ id: 'ss', score: 1002000, combo_lamp: null })]],
+  ])
+
+  // When
+  const [result] = buildGraphRows([summaryRow], recordsByLabel)
+
+  // Then
+  assert.equal(result?.scoreBands.find((band) => band.label === 'SS')?.count, 1)
+  assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 0)
+})
+
+test('S+ のスコアは S+ 帯に集計され OTHER にならない', () => {
+  // Given
+  const recordsByLabel = new Map<string, PlayerRecordDTO[]>([
+    ['MASTER', [createRecord({ id: 's-plus', score: 995000, combo_lamp: null })]],
+  ])
+
+  // When
+  const [result] = buildGraphRows([summaryRow], recordsByLabel)
+
+  // Then
+  assert.equal(result?.scoreBands.find((band) => band.label === 'S+')?.count, 1)
+  assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 0)
+})
+
+test('S のスコアは S 帯に集計され OTHER にならない', () => {
+  // Given
+  const recordsByLabel = new Map<string, PlayerRecordDTO[]>([
+    ['MASTER', [createRecord({ id: 's', score: 980000, combo_lamp: null })]],
+  ])
+
+  // When
+  const [result] = buildGraphRows([summaryRow], recordsByLabel)
+
+  // Then
+  assert.equal(result?.scoreBands.find((band) => band.label === 'S')?.count, 1)
+  assert.equal(result?.scoreBands.find((band) => band.label === 'OTHER')?.count, 0)
+})
+
+test('FULL COMBO のランプは FULL COMBO 帯に集計され OTHER にならない', () => {
+  // Given
+  const recordsByLabel = new Map<string, PlayerRecordDTO[]>([
+    ['MASTER', [createRecord({ id: 'fc', score: 1002000, combo_lamp: 'FULL COMBO' })]],
+  ])
+
+  // When
+  const [result] = buildGraphRows([summaryRow], recordsByLabel)
+
+  // Then
+  assert.equal(result?.comboBands.find((band) => band.label === 'FULL COMBO')?.count, 1)
+  assert.equal(result?.comboBands.find((band) => band.label === 'OTHER')?.count, 0)
+})

@@ -77,7 +77,7 @@ test('通常楽曲詳細の単曲レコード取得は2回目にIndexedDBキャ�
       return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
     }
     if (url.endsWith('/internal/songs/updated-at')) {
-      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', revision: 1 })
     }
     if (url === `${API_BASE_URL}/internal/users/alice/record/songs/song%2F1`) {
       return Response.json({
@@ -101,7 +101,7 @@ test('通常楽曲詳細の単曲レコード取得は2回目にIndexedDBキャ�
 })
 
 test('単曲レコード取得はTTL経過後に楽曲の外部更新を検知してIndexedDBキャッシュを使わないこと', async (t) => {
-  // Given: 楽曲更新日時 T1 で単曲レコードをキャッシュ済み。
+  // Given: 楽曲データの変更世代 R1 で単曲レコードをキャッシュ済み。
   t.mock.timers.enable({ apis: ['Date'], now: 0 })
   setupApiTestEnv()
   const [{ invalidateSongsUpdatedAtCache }, { fetchUserStandardSongRecordWithCache }] =
@@ -111,33 +111,78 @@ test('単曲レコード取得はTTL経過後に楽曲の外部更新を検知�
     ])
   invalidateSongsUpdatedAtCache()
   setAuthenticatedUser(user)
-  let songsUpdatedAt = '2026-07-06T00:00:00Z'
+  let songsRevision = 1
   let recordFetchCount = 0
+  const updatedRecord = { ...record, score: 1_010_000 }
+  let apiRecord = record
   globalThis.fetch = async (input) => {
     const url = String(input)
     if (url.endsWith('/internal/users/alice/updated-at')) {
       return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
     }
     if (url.endsWith('/internal/songs/updated-at')) {
-      return Response.json({ updated_at: songsUpdatedAt })
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', revision: songsRevision })
     }
     if (url === `${API_BASE_URL}/internal/users/alice/record/songs/song%2F1`) {
       recordFetchCount += 1
       return Response.json({
-        standard: [record],
+        standard: [apiRecord],
         meta: { updated_at: '2026-07-06T00:00:00Z' },
       })
     }
 
     throw new Error(`unexpected fetch: ${url}`)
   }
-  await fetchUserStandardSongRecordWithCache('alice', 'song/1')
+  assert.deepEqual(await fetchUserStandardSongRecordWithCache('alice', 'song/1'), [record])
 
-  // When: 外部経路で楽曲更新日時が T2 になり、TTL 経過後に再取得する。
-  songsUpdatedAt = '2026-08-03T00:00:00Z'
+  // When: 同じ秒内の外部更新で更新日時は変わらず変更世代だけ R2 に進み、TTL 経過後に再取得する。
+  songsRevision = 2
+  apiRecord = updatedRecord
   t.mock.timers.tick(SONGS_UPDATED_AT_CACHE_TTL_MS)
-  await fetchUserStandardSongRecordWithCache('alice', 'song/1')
+  const result = await fetchUserStandardSongRecordWithCache('alice', 'song/1')
 
-  // Then: 旧楽曲更新日時のキャッシュは使わず、レコード API を再実行する。
+  // Then: 旧変更世代のキャッシュは使わず、レコード API を再実行する。
   assert.equal(recordFetchCount, 2)
+  assert.deepEqual(result, [updatedRecord])
+  const cached = await db.userSongRecords.toArray()
+  assert.equal(cached.length, 1)
+  assert.deepEqual(cached[0].data, [updatedRecord])
+  assert.equal(cached[0].songsRevision, 2)
+})
+
+test('WORLD END未プレイはnullをキャッシュし2回目はAPIを呼ばないこと', async () => {
+  // Given
+  setupApiTestEnv()
+  const { fetchUserWorldsendSongRecordWithCache } = await import(
+    './fetchUserSongRecordWithCache.ts'
+  )
+  setAuthenticatedUser(user)
+  let worldsendFetchCount = 0
+  globalThis.fetch = async (input) => {
+    const url = String(input)
+    if (url.endsWith('/internal/users/alice/updated-at')) {
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+    }
+    if (url.endsWith('/internal/songs/updated-at')) {
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', revision: 1 })
+    }
+    if (url === `${API_BASE_URL}/internal/users/alice/record/worldsend-songs/we%2F1`) {
+      worldsendFetchCount += 1
+      return Response.json({
+        worldsend: null,
+        meta: { updated_at: '2026-07-06T00:00:00Z' },
+      })
+    }
+
+    throw new Error(`unexpected fetch: ${url}`)
+  }
+
+  // When
+  const first = await fetchUserWorldsendSongRecordWithCache('alice', 'we/1')
+  const second = await fetchUserWorldsendSongRecordWithCache('alice', 'we/1')
+
+  // Then
+  assert.equal(first, null)
+  assert.equal(second, null)
+  assert.equal(worldsendFetchCount, 1)
 })

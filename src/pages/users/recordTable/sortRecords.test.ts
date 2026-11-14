@@ -10,6 +10,7 @@ test('sortRecordsWithConditions は複数条件で安定ソートする', () => 
   // Given
   const records = [
     { id: 'b', score: 100, title: 'Beta' },
+    { id: 'z', score: 100, title: 'Alpha' },
     { id: 'a', score: 100, title: 'Alpha' },
     { id: 'c', score: 90, title: 'Charlie' },
   ]
@@ -37,7 +38,7 @@ test('sortRecordsWithConditions は複数条件で安定ソートする', () => 
   ).map((record) => record.id)
 
   // Then
-  assert.deepEqual(result, ['a', 'b', 'c'])
+  assert.deepEqual(result, ['z', 'a', 'b', 'c'])
 })
 
 test('compareNumberWithUnplayedLast は方向に関係なく未プレイを末尾として比較する', () => {
@@ -53,14 +54,23 @@ test('compareNumberWithUnplayedLast は方向に関係なく未プレイを末�
   assert.equal(compareNumberWithUnplayedLast(unplayed, unplayed, 1), 0)
 })
 
-test('compareNumberWithUnplayedLast はプレイ済み同士では方向を反映して数値を比較する', () => {
-  // Given
-  const playedLow = { isPlayed: true, value: 10 }
-  const playedHigh = { isPlayed: true, value: 20 }
+for (const { name, left, right, direction, sign } of [
+  { name: '昇順で小さい値を前にする', left: 10, right: 20, direction: 1, sign: -1 },
+  { name: '降順で小さい値を後にする', left: 10, right: 20, direction: -1, sign: 1 },
+  { name: '昇順で大きい値を後にする', left: 20, right: 10, direction: 1, sign: 1 },
+  { name: '降順で大きい値を前にする', left: 20, right: 10, direction: -1, sign: -1 },
+  { name: '昇順で同じ値を同順とする', left: 10, right: 10, direction: 1, sign: 0 },
+  { name: '降順で同じ値を同順とする', left: 10, right: 10, direction: -1, sign: 0 },
+] as const) {
+  test(`プレイ済み同士の数値比較は${name}`, () => {
+    // Given
+    const leftRecord = { isPlayed: true, value: left }
+    const rightRecord = { isPlayed: true, value: right }
 
-  // When & Then
-  assert.equal(compareNumberWithUnplayedLast(playedLow, playedHigh, 1), -10)
-  assert.equal(compareNumberWithUnplayedLast(playedLow, playedHigh, -1), 10)
-  assert.equal(compareNumberWithUnplayedLast(playedHigh, playedLow, 1), 10)
-  assert.equal(compareNumberWithUnplayedLast(playedHigh, playedLow, -1), -10)
-})
+    // When
+    const result = compareNumberWithUnplayedLast(leftRecord, rightRecord, direction)
+
+    // Then: 比較関数の契約である符号だけを確認する (+ 0 で -0 を 0 にそろえる)。
+    assert.equal(Math.sign(result) + 0, sign)
+  })
+}

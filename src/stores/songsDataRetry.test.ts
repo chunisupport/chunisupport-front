@@ -11,7 +11,7 @@ const execFileAsync = promisify(execFile)
  * 楽曲一覧 API (`songsPath`) への `fetch` は1回目だけ通信エラーにし、以降は成功させる。
  * それ以外の API は通信エラーにして、キャッシュを経由しない取得経路に固定する。
  *
- * @param script - `store`・`calls()`・`flush()` を使う検証コード。
+ * @param script - `store`・`calls()`・`flush()`・`waitUntil()` を使う検証コード。
  * @param songsPath - 失敗させる楽曲一覧 API のパス。
  * @returns 検証終了時に解決する Promise。
  */
@@ -45,6 +45,13 @@ const { useSongsData } = await import('./src/stores/songsData.ts')
 const store = useSongsData()
 const calls = () => songsCalls
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+const waitUntil = async (predicate, timeoutMs = 5000) => {
+  const deadline = Date.now() + timeoutMs
+  while (!predicate()) {
+    if (Date.now() > deadline) assert.fail('store did not settle')
+    await flush()
+  }
+}
 
 ${script}
 `,
@@ -58,19 +65,15 @@ test('通常楽曲の初回取得に失敗した後、再度ensureすると再�
     `
 // Given: 初回取得が失敗している
 store.ensureSongsLoaded()
-await flush()
-await flush()
+await waitUntil(() => store.songsResponse.state === 'errored')
 assert.equal(calls(), 1)
-assert.equal(store.songsResponse.state, 'errored')
 
 // When: 別画面から再度取得を要求する
 store.ensureSongsLoaded()
-await flush()
-await flush()
+await waitUntil(() => store.songsResponse.state === 'ready')
 
 // Then: 再取得され、成功済みなら追加の取得は行わない
 assert.equal(calls(), 2)
-assert.equal(store.songsResponse.state, 'ready')
 assert.deepEqual(store.songsResponse()?.songs, [{ title: 'A' }])
 store.ensureSongsLoaded()
 await flush()
@@ -85,19 +88,16 @@ test("WORLD'S END楽曲の初回取得に失敗した後、再度ensureすると
     `
 // Given: 初回取得が失敗している
 store.ensureWorldsendSongsLoaded()
-await flush()
-await flush()
+await waitUntil(() => store.worldsendSongsResponse.state === 'errored')
 assert.equal(calls(), 1)
-assert.equal(store.worldsendSongsResponse.state, 'errored')
 
 // When: 別画面から再度取得を要求する
 store.ensureWorldsendSongsLoaded()
-await flush()
-await flush()
+await waitUntil(() => store.worldsendSongsResponse.state === 'ready')
 
 // Then: 再取得され、成功済みなら追加の取得は行わない
 assert.equal(calls(), 2)
-assert.equal(store.worldsendSongsResponse.state, 'ready')
+assert.deepEqual(store.worldsendSongsResponse()?.songs, [{ title: 'A' }])
 store.ensureWorldsendSongsLoaded()
 await flush()
 assert.equal(calls(), 2)
@@ -122,13 +122,6 @@ globalThis.fetch = async (input) => {
   if (String(input).endsWith('/updated-at')) return updatedAtResponse
   if (${shouldFail}) throw new TypeError('network error')
   return Response.json({ songs: [fetchedSong] })
-}
-const waitUntil = async (predicate) => {
-  for (let i = 0; i < 200; i += 1) {
-    if (predicate()) return
-    await flush()
-  }
-  assert.fail('store did not settle')
 }
 
 // When: 更新日時の応答前にキャッシュを表示する。

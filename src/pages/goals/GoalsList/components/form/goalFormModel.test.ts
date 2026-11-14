@@ -9,7 +9,10 @@ import {
   buildGoalFormGaugeStartParams,
   createDefaultGoalConstSelection,
   createGoalFormInitialState,
+  getDefaultTotalGoalValue,
+  getRankGoalScore,
   resolveGoalFormGaugeStart,
+  toggleSelection,
 } from './goalFormModel'
 
 const selectionFallbacks = {
@@ -429,25 +432,37 @@ test('スタート位置は決め方に応じて0・現在値・入力値から�
   assert.equal(custom, 99.6)
 })
 
-test('件数系と平均スコアの現在値は整数に切り捨ててスタート位置にする', () => {
-  // Given / When
-  const averageScore = resolveGoalFormGaugeStart({
+for (const { name, achievementType, current, expected } of [
+  {
+    name: '平均スコアの小数を切り捨てる',
     achievementType: 'avg_score',
-    gaugeStartMode: 'current',
-    gaugeStart: '',
     current: 1007600.7,
-  })
-  const count = resolveGoalFormGaugeStart({
+    expected: 1007600,
+  },
+  {
+    name: '件数の小数を切り捨てる',
     achievementType: 'combolamp_count',
-    gaugeStartMode: 'current',
-    gaugeStart: '',
+    current: 950.9,
+    expected: 950,
+  },
+  {
+    name: '件数の整数値を保持する',
+    achievementType: 'combolamp_count',
     current: 950,
-  })
+    expected: 950,
+  },
+] as const) {
+  test(`現在値からスタート位置を決めるとき${name}こと`, () => {
+    // Given: 現在値からスタート位置を決めるフォーム。
+    const input = { achievementType, gaugeStartMode: 'current', gaugeStart: '', current } as const
 
-  // Then
-  assert.equal(averageScore, 1007600)
-  assert.equal(count, 950)
-})
+    // When: スタート位置を解決する。
+    const result = resolveGoalFormGaugeStart(input)
+
+    // Then: 整数のスタート位置を返す。
+    assert.equal(result, expected)
+  })
+}
 
 test('ゲージ設定は「最初から」なら達成率への適用をfalseにして送信する', () => {
   // Given
@@ -542,4 +557,249 @@ test('平均スコア目標のスタート位置は「任意の数値から」�
   assert.equal(result.gaugeStartMode, 'custom')
   assert.equal(result.gaugeStart, '1007000')
   assert.equal(result.applyGaugeStartToPercentage, true)
+})
+
+test('ランク目標の保存用スコアはTHEORETICALと通常ランクで切り替わること', () => {
+  // Given: ランク目標の選択値
+  // When: 保存用スコアへ変換する
+  const theoretical = getRankGoalScore('THEORETICAL')
+  const normal = getRankGoalScore('S')
+
+  // Then: THEORETICALは上限、通常ランクは下限スコアになる
+  assert.equal(theoretical, 1010000)
+  assert.equal(normal, 975000)
+})
+
+test('目標値入力の初期値は種別ごとに切り替わること', () => {
+  // Given: 目標種別ごとの目標値入力欄
+  // When: 初期値を取得する
+  const totalScore = getDefaultTotalGoalValue('total_score')
+  const overpowerValue = getDefaultTotalGoalValue('overpower_value')
+  const overpowerPercent = getDefaultTotalGoalValue('overpower_percent')
+  const rankCount = getDefaultTotalGoalValue('rank_count')
+
+  // Then: 種別に応じた初期値になる
+  assert.equal(totalScore, '1000000')
+  assert.equal(overpowerValue, '10')
+  assert.equal(overpowerPercent, '90')
+  assert.equal(rankCount, '10')
+})
+
+test('チェックを外すと対象だけが選択から外れること', () => {
+  // Given: 2件選択中の状態
+  const current = ['1', '2']
+
+  // When: 1件のチェックを外す
+  const result = toggleSelection(current, '1', false)
+
+  // Then: 外した対象だけが取り除かれる
+  assert.deepEqual(result, ['2'])
+})
+
+test('コンボランプ目標の編集状態はハードランプを既定値で復元すること', () => {
+  // Given: コンボランプAJで保存した目標
+  const goal = {
+    id: 11,
+    group_id: null,
+    title: 'AJ目標',
+    achievement_type: 'combolamp_count',
+    achievement_params: { lamp: 'AJ', count: 10 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: ハードランプは既定値のままになる
+  assert.equal(result.hardLamp, 'HRD')
+})
+
+test('ハードランプ目標の編集状態はコンボランプを既定値で復元すること', () => {
+  // Given: ハードランプABSで保存した目標
+  const goal = {
+    id: 12,
+    group_id: null,
+    title: 'ABS目標',
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'ABS', count: 10 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: コンボランプは既定値のままになる
+  assert.equal(result.comboLamp, 'FC')
+})
+
+test('ハードランプ目標の編集状態はFULL CHAINを既定値で復元すること', () => {
+  // Given: ハードランプABSで保存した目標
+  const goal = {
+    id: 13,
+    group_id: null,
+    title: 'ABS目標',
+    achievement_type: 'hardlamp_count',
+    achievement_params: { lamp: 'ABS', count: 10 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: FULL CHAINは既定値のままになる
+  assert.equal(result.fullChain, 'GOLD')
+})
+
+test('単曲レートの編集状態は既定値と異なるレートを復元すること', () => {
+  // Given: レート17.5で保存した目標
+  const goal = {
+    id: 14,
+    group_id: null,
+    title: '単曲17.5を増やす',
+    achievement_type: 'rating_count',
+    achievement_params: { rating: 17.5, count: 5 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: 保存したレートが文字列で復元される
+  assert.equal(result.rating, '17.5')
+})
+
+test('ランク件数目標の編集状態は保存済みスコアのランクを復元すること', () => {
+  // Given: SSS+相当のスコアで保存したランク件数目標
+  const goal = {
+    id: 15,
+    group_id: null,
+    title: 'SSS+目標',
+    achievement_type: 'rank_count',
+    achievement_params: { score: 1009000, count: 5 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: SSS+が復元される
+  assert.equal(result.rank, 'SSS+')
+})
+
+test('スコア件数目標の編集状態はランクを既定値で復元すること', () => {
+  // Given: SSS+相当のスコアで保存したスコア件数目標
+  const goal = {
+    id: 16,
+    group_id: null,
+    title: 'スコア目標',
+    achievement_type: 'score_count',
+    achievement_params: { score: 1009000, count: 5 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: ランク件数ではないため既定値のSになる
+  assert.equal(result.rank, 'S')
+})
+
+test('合計スコア目標の編集状態は保存済みの合計値を復元すること', () => {
+  // Given: 合計5で保存した合計スコア目標
+  const goal = {
+    id: 17,
+    group_id: null,
+    title: '合計目標',
+    achievement_type: 'total_score',
+    achievement_params: { total: 5 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const result = createGoalFormInitialState(goal, selectionFallbacks)
+
+  // Then: 保存した合計値が文字列で復元される
+  assert.equal(result.total, '5')
+})
+
+test('編集フォームはOP対象指定を復元すること', () => {
+  // Given: OP対象と通常条件で保存した目標
+  const opGoal = {
+    id: 18,
+    group_id: null,
+    title: 'OP対象目標',
+    achievement_type: 'score_count',
+    achievement_params: { score: 1009000, count: 5 },
+    attributes: { chart_target: 'OP_TARGET' },
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+  const normalGoal = {
+    id: 19,
+    group_id: null,
+    title: '通常目標',
+    achievement_type: 'score_count',
+    achievement_params: { score: 1009000, count: 5 },
+    attributes: {},
+    invert_value: false,
+    invert_percentage: false,
+    gauge_start: 0,
+    apply_gauge_start_to_percentage: false,
+    sort_order: 1,
+    created_at: '2026-01-01T00:00:00Z',
+  } satisfies GoalDTO
+
+  // When: 編集用初期状態を作成する
+  const opResult = createGoalFormInitialState(opGoal, selectionFallbacks)
+  const normalResult = createGoalFormInitialState(normalGoal, selectionFallbacks)
+
+  // Then: OP対象指定が復元される
+  assert.equal(opResult.chartTargetMode, 'op_target')
+  assert.equal(normalResult.chartTargetMode, 'normal')
 })

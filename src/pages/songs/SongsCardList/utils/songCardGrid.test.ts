@@ -8,6 +8,7 @@ import {
 } from '../../components/songCardLayout.constants.ts'
 import { SONG_CARD_DEFAULT_SORT_OPTION_ID, SONG_CARD_SORT_OPTIONS } from '../constants'
 import {
+  getAvailableSongCardWidth,
   getSongCardContentWidth,
   getSongCardGridWidth,
   resolveSongCardColumnCount,
@@ -43,6 +44,33 @@ test('狭い幅では本文幅を利用可能幅までに収めること', () =>
   assert.equal(contentWidth, availableWidth)
 })
 
+test('document がない環境では利用可能幅が0になること', () => {
+  // Given: Node.js 実行環境（document 未定義）。
+  // When: メイン領域から使える幅を求める。
+  const result = getAvailableSongCardWidth()
+
+  // Then: フォールバックとして0を返す。
+  assert.equal(result, 0)
+})
+
+test('列数0のグリッド幅は0になること', () => {
+  // Given: 列数0。
+  // When: グリッド幅を求める。
+  const result = getSongCardGridWidth(0)
+
+  // Then: 幅は0になる。
+  assert.equal(result, 0)
+})
+
+test('利用可能幅0では1列分のグリッド幅を返すこと', () => {
+  // Given: 利用可能幅0。
+  // When: 本文幅を求める。
+  const result = getSongCardContentWidth(0)
+
+  // Then: 1列分のカード幅になる。
+  assert.equal(result, 430.25)
+})
+
 test('FHD本文幅では4枚分のグリッド幅が本文幅と一致すること', () => {
   // Given: FHD本文幅で4列並べる。
   // When: グリッド幅を求める。
@@ -52,19 +80,32 @@ test('FHD本文幅では4枚分のグリッド幅が本文幅と一致するこ�
   assert.equal(gridWidth, SONG_CARD_FHD_CONTENT_WIDTH_PX)
 })
 
+/** ソート選択肢のID・キー・表示指標の契約を検証する。 */
 test('カードソート選択肢は標準と各難易度の定数・ノーツを含むこと', () => {
   // Given: カード一覧のソート選択肢。
-  const optionIds = SONG_CARD_SORT_OPTIONS.map((option) => option.id)
+  const options = SONG_CARD_SORT_OPTIONS
 
-  // When: 初期選択肢と難易度キーを確認する。
-  const defaultOption = SONG_CARD_SORT_OPTIONS.find(
-    (option) => option.id === SONG_CARD_DEFAULT_SORT_OPTION_ID
-  )
+  // When: ラベル以外のソート設定を取り出す。
+  const actual = options.map(({ id, sortKey, chartMetric }) => ({ id, sortKey, chartMetric }))
 
-  // Then: 標準はソート解除、難易度は定数とノーツが対になる。
-  assert.equal(defaultOption?.sortKey, null)
-  assert.equal(optionIds.includes('master-const'), true)
-  assert.equal(optionIds.includes('master-notes'), true)
-  assert.equal(optionIds.includes('ultima-const'), true)
-  assert.equal(SONG_CARD_SORT_OPTIONS.length, 16)
+  // Then: 標準は解除、各難易度は定数とノーツを正しく切り替える。
+  assert.equal(SONG_CARD_DEFAULT_SORT_OPTION_ID, 'default')
+  assert.deepEqual(actual, [
+    { id: 'default', sortKey: null, chartMetric: 'const' },
+    { id: 'title', sortKey: 'title', chartMetric: 'const' },
+    { id: 'artist', sortKey: 'artist', chartMetric: 'const' },
+    { id: 'genre', sortKey: 'genre', chartMetric: 'const' },
+    { id: 'release', sortKey: 'release', chartMetric: 'const' },
+    { id: 'bpm', sortKey: 'bpm', chartMetric: 'const' },
+    { id: 'basic-const', sortKey: 'basic', chartMetric: 'const' },
+    { id: 'basic-notes', sortKey: 'basic', chartMetric: 'notes' },
+    { id: 'advanced-const', sortKey: 'advanced', chartMetric: 'const' },
+    { id: 'advanced-notes', sortKey: 'advanced', chartMetric: 'notes' },
+    { id: 'expert-const', sortKey: 'expert', chartMetric: 'const' },
+    { id: 'expert-notes', sortKey: 'expert', chartMetric: 'notes' },
+    { id: 'master-const', sortKey: 'master', chartMetric: 'const' },
+    { id: 'master-notes', sortKey: 'master', chartMetric: 'notes' },
+    { id: 'ultima-const', sortKey: 'ultima', chartMetric: 'const' },
+    { id: 'ultima-notes', sortKey: 'ultima', chartMetric: 'notes' },
+  ])
 })

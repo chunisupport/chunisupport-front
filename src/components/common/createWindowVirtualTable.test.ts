@@ -85,20 +85,12 @@ const createFakeElement = (top, height = 30) => ({
 })
 `
 
-type BrowserSolidTestCase = {
-  name: string
-  script: string
-}
-
 /**
- * browser条件のSolidJSテストを1つのNode.jsプロセスで実行する。
- * @param cases 実行するテストケース。
+ * browser条件のSolidJSテストスクリプトを独立したNode.jsプロセスで実行する。
+ * @param testScript 共通セットアップの後に実行するテスト本体。
  * @returns 子プロセスの完了を表すPromise。
  */
-const runBrowserSolidTests = async (cases: readonly BrowserSolidTestCase[]) => {
-  const script = cases
-    .map(({ name, script: testScript }) => `// ${name}\n{\n${testScript}\n}`)
-    .join('\n')
+const runBrowserSolidTest = async (testScript: string) => {
   const { stderr } = await execFileAsync(
     process.execPath,
     [
@@ -108,7 +100,7 @@ const runBrowserSolidTests = async (cases: readonly BrowserSolidTestCase[]) => {
       '--disable-warning=ExperimentalWarning',
       '--input-type=module',
       '--eval',
-      `${BROWSER_SOLID_TEST_SETUP}\n${script}`,
+      `${BROWSER_SOLID_TEST_SETUP}\n${testScript}`,
     ],
     { cwd: process.cwd() }
   )
@@ -276,6 +268,46 @@ await new Promise((resolve) =>
 `,
   },
   {
+    name: 'resetOnRowCountChange有効時は行数変化で先頭行が表示領域の上端に来る位置へスクロールすること',
+    script: `
+const view = createRoot((dispose) => {
+  const [rowCount, setRowCount] = createSignal(100)
+  const scrollElement = createFakeScrollElement(0)
+  scrollElement.scrollHeight = 10000
+  const table = createWindowVirtualTable({
+    rowCount,
+    rowHeight: 10,
+    initialOffset: 500,
+    resetOnRowCountChange: true,
+    getScrollElement: () => scrollElement,
+  })
+  // Given: 本文の上端はスクロール領域の内容先頭から15pxの位置にあり、先頭行より下まで読み進めている
+  table.setTableBodyRef({
+    getBoundingClientRect: () => ({ top: 25 - scrollElement.scrollTop }),
+  })
+  table.setTableContainerRef(createFakeElement(20))
+  return { dispose, setRowCount, scrollElement, table }
+})
+await nextTask()
+await nextTask()
+assert.equal(view.scrollElement.scrollTop, 500)
+const callCountBeforeRowCountChange = view.scrollElement.scrollCalls.length
+
+// When: フィルター適用などで行数が変化する
+view.setRowCount(50)
+await nextTask()
+await nextTask()
+
+// Then: 先頭行の位置 (本文の上端) へのスクロールが1回だけ要求される
+assert.deepEqual(
+  view.scrollElement.scrollCalls.slice(callCountBeforeRowCountChange).map((call) => call.top),
+  [15]
+)
+assert.equal(view.scrollElement.scrollTop, 15)
+view.dispose()
+`,
+  },
+  {
     name: 'virtualRowsは現在の行数を超えた仮想行を除外すること',
     script: `
 await new Promise((resolve) =>
@@ -352,6 +384,135 @@ view.dispose()
 `,
   },
   {
+    name: 'スクロール要素がない場合はscrollMarginを更新しないこと',
+    script: `
+await new Promise((resolve) =>
+  createRoot(async (dispose) => {
+    // Given: スクロール要素がなく本文だけあるテーブル
+    const [rowCount] = createSignal(3)
+    const table = createWindowVirtualTable({
+      rowCount,
+      rowHeight: 10,
+      getScrollElement: () => null,
+    })
+    table.setTableBodyRef(createFakeElement(25))
+    table.setTableContainerRef(createFakeElement(20))
+
+    // When: レイアウト監視とmicrotaskを反映する
+    await nextTask()
+    await nextTask()
+
+    // Then: scrollMarginは初期値のままになる
+    assert.equal(table.scrollMargin(), 0)
+    dispose()
+    resolve()
+  })
+)
+`,
+  },
+  {
+    name: '本文位置の差がちょうど1pxのときscrollMarginを更新すること',
+    script: `
+await new Promise((resolve) =>
+  createRoot(async (dispose) => {
+    // Given: 差が1pxになる配置のテーブル
+    const [rowCount] = createSignal(3)
+    const scrollElement = createFakeScrollElement(0)
+    const table = createWindowVirtualTable({
+      rowCount,
+      rowHeight: 10,
+      getScrollElement: () => scrollElement,
+    })
+    table.setTableBodyRef(createFakeElement(11))
+    table.setTableContainerRef(createFakeElement(20))
+
+    // When: レイアウト監視とmicrotaskを反映する
+    await nextTask()
+    await nextTask()
+
+    // Then: 1pxの差でも更新される
+    assert.equal(table.scrollMargin(), 1)
+    dispose()
+    resolve()
+  })
+)
+`,
+  },
+  {
+    name: '予約された次フレームの更新で変わった本文位置を反映すること',
+    script: `
+await new Promise((resolve) =>
+  createRoot(async (dispose) => {
+    // Given: 初期位置が確定したテーブル
+    const [rowCount] = createSignal(3)
+    const scrollElement = createFakeScrollElement(0)
+    const table = createWindowVirtualTable({
+      rowCount,
+      rowHeight: 10,
+      getScrollElement: () => scrollElement,
+    })
+    let bodyTop = 25
+    table.setTableBodyRef({
+      offsetHeight: 30,
+      offsetWidth: 100,
+      getBoundingClientRect: () => ({ top: bodyTop, height: 30, width: 100 }),
+    })
+    table.setTableContainerRef(createFakeElement(20))
+    const nextMicrotask = () => new Promise((done) => queueMicrotask(done))
+    await nextMicrotask()
+    await nextMicrotask()
+    assert.equal(table.scrollMargin(), 15)
+
+    // When: 次フレームの更新を待つ間に本文位置が変わる
+    bodyTop = 35
+    await nextTask()
+    await nextTask()
+
+    // Then: 予約された更新で新しい位置が反映される
+    assert.equal(table.scrollMargin(), 25)
+    dispose()
+    resolve()
+  })
+)
+`,
+  },
+  {
+    name: '破棄時は予約中の次フレーム更新を取り消すこと',
+    script: `
+let bodyTop = 25
+const view = createRoot((dispose) => {
+  // Given: 更新が次フレームに予約されたテーブル
+  const [rowCount] = createSignal(3)
+  const scrollElement = createFakeScrollElement(0)
+  const table = createWindowVirtualTable({
+    rowCount,
+    rowHeight: 10,
+    getScrollElement: () => scrollElement,
+  })
+  table.setTableBodyRef({
+    offsetHeight: 30,
+    offsetWidth: 100,
+    getBoundingClientRect: () => ({ top: bodyTop, height: 30, width: 100 }),
+  })
+  table.setTableContainerRef(createFakeElement(20))
+  return { dispose, table }
+})
+const nextMicrotask = () => new Promise((done) => queueMicrotask(done))
+await nextMicrotask()
+await nextMicrotask()
+assert.equal(view.table.scrollMargin(), 15)
+
+// When: 予約された更新が動く前に破棄する
+bodyTop = 35
+view.dispose()
+await nextTask()
+await nextTask()
+
+// Then: 破棄後の更新で位置は変わらない
+assert.equal(view.table.scrollMargin(), 15)
+`,
+  },
+  {
     name: '非同期に行が揃った仮想テーブルで深い位置を復元し、末尾付近の行を描画する',
     script: `
 const view = createRoot((dispose) => {
@@ -387,6 +548,8 @@ view.dispose()
   },
 ] as const
 
-test('createWindowVirtualTableのbrowser条件の挙動をまとめて検証すること', async () => {
-  await runBrowserSolidTests(BROWSER_SOLID_TEST_CASES)
-})
+for (const { name, script } of BROWSER_SOLID_TEST_CASES) {
+  test(name, async () => {
+    await runBrowserSolidTest(script)
+  })
+}

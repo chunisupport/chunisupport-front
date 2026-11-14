@@ -128,7 +128,7 @@ test('表の集計値は非累積指定で区分ごとの排他人数を返す�
   )
 })
 
-test('指標列のソートは累積と排他で評価値を使い分けること', () => {
+test('累積SSSと排他AAA以下の各列を人数の昇順に並べること', () => {
   // Given: SSS累積は mid=60 > low=6、SSS排他は low=3 < mid=30
   const charts = [
     createSortableChart({
@@ -155,6 +155,38 @@ test('指標列のソートは累積と排他で評価値を使い分けるこ�
     ['chart-mid', 'chart-low']
   )
 })
+
+for (const { name, cumulative, expected } of [
+  { name: '累積SSS人数の多い譜面を先に並べること', cumulative: true, expected: ['A', 'C', 'B'] },
+  { name: '排他SSS人数の多い譜面を先に並べること', cumulative: false, expected: ['B', 'C', 'A'] },
+]) {
+  test(name, () => {
+    // Given: 累積SSSはA=60、B=30、C=40、排他SSSはA=10、B=30、C=20
+    const charts = [
+      createSortableChart({
+        title: 'C',
+        rank: { max: 10, sssp: 10, sss: 20, ssp: 0, ss: 0, sp: 0, s: 0, aaal: 60 },
+      }),
+      createSortableChart({
+        title: 'A',
+        rank: { max: 20, sssp: 30, sss: 10, ssp: 0, ss: 0, sp: 0, s: 0, aaal: 40 },
+      }),
+      createSortableChart({
+        title: 'B',
+        rank: { max: 0, sssp: 0, sss: 30, ssp: 0, ss: 0, sp: 0, s: 0, aaal: 70 },
+      }),
+    ]
+
+    // When: 指標と方向を固定し、累積指定だけを切り替える
+    const sorted = sortChartStats(charts, 'sss', 'desc', 'rank', cumulative)
+
+    // Then: 累積と排他でAとBの順位が反転する
+    assert.deepEqual(
+      sorted.map(({ title }) => title),
+      expected
+    )
+  })
+}
 
 test('グラフ凡例のソートはRANK・COMBO・HARDの排他的な人数を使うこと', () => {
   // Given
@@ -572,32 +604,47 @@ test('楽曲マスタからsong_idごとの属性マップを生成すること'
   assert.deepEqual(attributes.get('song-2'), { genre: null, version: '不明', nameFolder: 'NUMBER' })
 })
 
-test('曲名検索とバージョン・ジャンルで絞り込むこと', () => {
-  // Given
-  const charts = [
-    createSortableChart({ title: 'song-1', song_id: 'song-1' }),
-    createSortableChart({ title: 'song-2', song_id: 'song-2' }),
-    createSortableChart({ title: 'song-3', song_id: 'song-3' }),
-  ]
-  const attributes = new Map([
-    ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
-    ['song-2', { genre: 'niconico', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
-    ['song-3', { genre: 'POPS & ANIME', version: 'CHUNITHM LUMINOUS', nameFolder: 'A' }],
-  ])
+for (const { name, query, expected } of [
+  {
+    name: '曲名検索が空ならバージョンとジャンルだけで絞り込むこと',
+    query: '',
+    expected: ['song-1', 'song-4'],
+  },
+  {
+    name: '曲名検索とバージョン・ジャンルのすべてに一致する譜面だけを残すこと',
+    query: 'song',
+    expected: ['song-1'],
+  },
+]) {
+  test(name, () => {
+    // Given: 曲名・ジャンル・バージョンの各条件だけが不一致になる譜面
+    const charts = [
+      createSortableChart({ title: 'song-1', song_id: 'song-1' }),
+      createSortableChart({ title: 'song-2', song_id: 'song-2' }),
+      createSortableChart({ title: 'song-3', song_id: 'song-3' }),
+      createSortableChart({ title: '別の曲', song_id: 'song-4' }),
+    ]
+    const attributes = new Map([
+      ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
+      ['song-2', { genre: 'niconico', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
+      ['song-3', { genre: 'POPS & ANIME', version: 'CHUNITHM LUMINOUS', nameFolder: 'A' }],
+      ['song-4', { genre: 'POPS & ANIME', version: 'CHUNITHM VERSE', nameFolder: 'A' }],
+    ])
 
-  // When
-  const filtered = filterChartStats(charts, '', attributes, {
-    ...createDefaultChartStatsAttributeFilter(),
-    genres: ['POPS & ANIME'],
-    versions: ['CHUNITHM VERSE'],
+    // When: 検索文字列と属性条件を組み合わせる
+    const filtered = filterChartStats(charts, query, attributes, {
+      ...createDefaultChartStatsAttributeFilter(),
+      genres: ['POPS & ANIME'],
+      versions: ['CHUNITHM VERSE'],
+    })
+
+    // Then: いずれかの条件だけが不一致でも除外する
+    assert.deepEqual(
+      filtered.map(({ song_id }) => song_id),
+      expected
+    )
   })
-
-  // Then
-  assert.deepEqual(
-    filtered.map(({ song_id }) => song_id),
-    ['song-1']
-  )
-})
+}
 
 test('属性マップ未取得時は曲名検索のみを適用すること', () => {
   // Given
@@ -647,6 +694,100 @@ test('マップにない譜面は不明扱いで判定すること', () => {
   assert.equal(withoutFilter.length, 1)
   assert.equal(withUnknownVersion.length, 1)
   assert.equal(withGenre.length, 0)
+})
+
+test('通常譜面とWORLD’S END譜面が混在しても通常譜面を先に並べること', () => {
+  // Given: WORLD'S ENDを先頭に置いた混在の一覧
+  const charts = [
+    createSortableWorldsendChart('worldsend', 5, 'カ'),
+    createSortableChart({ title: 'normal' }),
+  ]
+
+  // When: 昇順と降順で定数・星数列を並べ替える
+  const ascending = sortChartStats(charts, 'level', 'asc', 'rank')
+  const descending = sortChartStats(charts, 'level', 'desc', 'rank')
+
+  // Then: 方向に関わらず通常譜面が先になる
+  assert.deepEqual(
+    ascending.map(({ title }) => title),
+    ['normal', 'worldsend']
+  )
+  assert.deepEqual(
+    descending.map(({ title }) => title),
+    ['normal', 'worldsend']
+  )
+})
+
+test('星数欠損と星数ありでは属性順が逆でも欠損を末尾に置くこと', () => {
+  // Given: 属性だけを見ると欠損側が先になる組み合わせ
+  const charts = [
+    createSortableWorldsendChart('null-a', null, 'ア'),
+    createSortableWorldsendChart('star5-ka', 5, 'カ'),
+  ]
+
+  // When: 星数列の昇順に並べ替える
+  const ascending = sortChartStats(charts, 'level', 'asc', 'rank')
+
+  // Then: 星数がある譜面が先になる
+  assert.deepEqual(
+    ascending.map(({ title }) => title),
+    ['star5-ka', 'null-a']
+  )
+})
+
+test('属性欠損と属性ありでは表題順に関わらず欠損を末尾に置くこと', () => {
+  // Given: 表題順では欠損側が先になる組み合わせ
+  const charts = [
+    createSortableWorldsendChart('B song', 5, 'カ'),
+    createSortableWorldsendChart('A song', 5, null),
+  ]
+
+  // When: 星数が同順の状態で属性列の昇順に並べ替える
+  const ascending = sortChartStats(charts, 'level', 'asc', 'rank')
+
+  // Then: 属性がある譜面が先になる
+  assert.deepEqual(
+    ascending.map(({ title }) => title),
+    ['B song', 'A song']
+  )
+})
+
+test('バージョンだけを指定した場合は不一致の譜面を除外すること', () => {
+  // Given: ジャンル未指定でバージョンだけが不一致の譜面
+  const charts = [createSortableChart({ title: 'song-1', song_id: 'song-1' })]
+  const attributes = new Map([
+    ['song-1', { genre: 'POPS & ANIME', version: 'CHUNITHM LUMINOUS', nameFolder: 'A' }],
+  ])
+
+  // When: バージョン条件だけで絞り込む
+  const filtered = filterChartStats(charts, '', attributes, {
+    ...createDefaultChartStatsAttributeFilter(),
+    versions: ['CHUNITHM VERSE'],
+  })
+
+  // Then: バージョンが一致しないため残らない
+  assert.deepEqual(
+    filtered.map(({ song_id }) => song_id),
+    []
+  )
+})
+
+test('ソート方向だけが未指定の場合は元の順序を保つこと', () => {
+  // Given: 表題の昇順に並んだ一覧
+  const charts = [
+    createSortableChart({ title: 'A song' }),
+    createSortableChart({ title: 'B song' }),
+  ]
+
+  // When: 方向を指定せずに表題列で並べ替える
+  const sorted = sortChartStats(charts, 'title', null, 'rank')
+
+  // Then: 元の順序のまま複製される
+  assert.deepEqual(
+    sorted.map(({ title }) => title),
+    ['A song', 'B song']
+  )
+  assert.notEqual(sorted, charts)
 })
 
 test('楽曲名順で絞り込み、不明な楽曲は選択時に除外すること', () => {

@@ -11,6 +11,33 @@ import {
   saveThemePreference,
 } from './themePreference'
 
+/**
+ * キーごとの保存値と読み書き履歴を保持するストレージ代替を作る。
+ *
+ * @param entries - テスト開始時のキーと保存値。
+ * @returns 保存値、読み書き履歴、localStorage互換の読み書き関数。
+ */
+const createStorage = (entries: [string, string][]) => {
+  const values = new Map(entries)
+  const reads: string[] = []
+  const writes: [string, string][] = []
+  return {
+    values,
+    reads,
+    writes,
+    localStorage: {
+      getItem: (key: string) => {
+        reads.push(key)
+        return values.get(key) ?? null
+      },
+      setItem: (key: string, value: string) => {
+        writes.push([key, value])
+        values.set(key, value)
+      },
+    },
+  }
+}
+
 test('明示的にlightが保存されている場合はlightを適用する', () => {
   assert.equal(resolveAppliedTheme('light', true), 'light')
 })
@@ -128,25 +155,36 @@ test('localStorageにblackが保存されている場合はblackを返す', () =
 })
 
 test('旧system設定は現在のOSテーマに対応する明示的なテーマへ移行する', () => {
+  // Given: テーマとアクセントは異なるキーで保存されている。
   const previousWindow = globalThis.window
-  let savedValue = ''
+  const storage = createStorage([
+    ['chunisupport-theme', 'system'],
+    ['chunisupport-accent', 'sky-blue'],
+  ])
 
   Object.defineProperty(globalThis, 'window', {
     configurable: true,
     value: {
-      localStorage: {
-        getItem: () => 'system',
-        setItem: (_key: string, value: string) => {
-          savedValue = value
-        },
-      },
+      localStorage: storage.localStorage,
       matchMedia: () => ({ matches: true }),
     },
   })
 
   try {
-    assert.equal(readThemePreference(), 'dark')
-    assert.equal(savedValue, 'dark')
+    // When
+    const theme = readThemePreference()
+
+    // Then: テーマのキーだけを読み書きし、アクセントは保持する。
+    assert.equal(theme, 'dark')
+    assert.deepEqual(storage.reads, ['chunisupport-theme'])
+    assert.deepEqual(storage.writes, [['chunisupport-theme', 'dark']])
+    assert.deepEqual(
+      [...storage.values],
+      [
+        ['chunisupport-theme', 'dark'],
+        ['chunisupport-accent', 'sky-blue'],
+      ]
+    )
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
@@ -188,86 +226,64 @@ test('既定のアクセントカラーを背景テーマとは独立して適�
   }
 })
 
-test('保存済みのオレンジアクセントを読み取って適用する', () => {
-  const previousWindow = globalThis.window
-  const previousDocument = globalThis.document
-  const documentElement = { dataset: {} as Record<string, string> }
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'orange',
-      },
-    },
-  })
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { documentElement },
-  })
+for (const { label, accent } of [
+  { label: 'オレンジ', accent: 'orange' },
+  { label: 'バイオレット', accent: 'violet' },
+  { label: 'ブルー', accent: 'blue' },
+]) {
+  test(`保存済みの${label}アクセントを読み取って適用する`, () => {
+    // Given: 選択したアクセントが保存された環境。
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
+    const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document')
+    const documentElement = { dataset: {} as Record<string, string> }
 
-  try {
-    assert.equal(readAccentPreference(), 'orange')
-    assert.equal(applyInitialAccent(), 'orange')
-    assert.equal(documentElement.dataset.accent, 'orange')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-    Object.defineProperty(globalThis, 'document', {
-      configurable: true,
-      value: previousDocument,
-    })
-  }
-})
+    try {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: {
+          localStorage: {
+            getItem: () => accent,
+          },
+        },
+      })
+      Object.defineProperty(globalThis, 'document', {
+        configurable: true,
+        value: { documentElement },
+      })
 
-test('保存済みのバイオレットアクセントを読み取って適用する', () => {
-  const previousWindow = globalThis.window
-  const previousDocument = globalThis.document
-  const documentElement = { dataset: {} as Record<string, string> }
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'violet',
-      },
-    },
-  })
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { documentElement },
-  })
+      // When: 保存済みの設定を読み取り、初期アクセントを適用する。
+      const preference = readAccentPreference()
+      const appliedAccent = applyInitialAccent()
 
-  try {
-    assert.equal(readAccentPreference(), 'violet')
-    assert.equal(applyInitialAccent(), 'violet')
-    assert.equal(documentElement.dataset.accent, 'violet')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-    Object.defineProperty(globalThis, 'document', {
-      configurable: true,
-      value: previousDocument,
-    })
-  }
-})
+      // Then: 保存した色を読み取り、ルート要素にも同じ色を適用する。
+      assert.equal(preference, accent)
+      assert.equal(appliedAccent, accent)
+      assert.equal(documentElement.dataset.accent, accent)
+    } finally {
+      if (previousWindow) {
+        Object.defineProperty(globalThis, 'window', previousWindow)
+      } else {
+        Reflect.deleteProperty(globalThis, 'window')
+      }
+      if (previousDocument) {
+        Object.defineProperty(globalThis, 'document', previousDocument)
+      } else {
+        Reflect.deleteProperty(globalThis, 'document')
+      }
+    }
+  })
+}
 
 test('保存済みのスカイブルーアクセントを読み取って適用する', () => {
-  let savedValue: string | null = null
+  // Given: 背景テーマはアクセントとは別のキーで保存されている。
+  const storage = createStorage([['chunisupport-theme', 'black']])
   const previousWindow = globalThis.window
   const previousDocument = globalThis.document
   const documentElement = { dataset: {} as Record<string, string> }
   Object.defineProperty(globalThis, 'window', {
     configurable: true,
     value: {
-      localStorage: {
-        getItem: () => savedValue,
-        setItem: (_key: string, value: string) => {
-          savedValue = value
-        },
-      },
+      localStorage: storage.localStorage,
     },
   })
   Object.defineProperty(globalThis, 'document', {
@@ -276,44 +292,24 @@ test('保存済みのスカイブルーアクセントを読み取って適用�
   })
 
   try {
+    // When
     saveAccentPreference('sky-blue')
-    assert.equal(savedValue, 'sky-blue')
-    assert.equal(readAccentPreference(), 'sky-blue')
-    assert.equal(applyInitialAccent(), 'sky-blue')
+    const preference = readAccentPreference()
+    const appliedAccent = applyInitialAccent()
+
+    // Then: アクセントのキーだけを読み書きし、背景テーマの保存値は変更しない。
+    assert.equal(preference, 'sky-blue')
+    assert.equal(appliedAccent, 'sky-blue')
     assert.equal(documentElement.dataset.accent, 'sky-blue')
-  } finally {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: previousWindow,
-    })
-    Object.defineProperty(globalThis, 'document', {
-      configurable: true,
-      value: previousDocument,
-    })
-  }
-})
-
-test('保存済みのブルーアクセントを読み取って適用する', () => {
-  const previousWindow = globalThis.window
-  const previousDocument = globalThis.document
-  const documentElement = { dataset: {} as Record<string, string> }
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      localStorage: {
-        getItem: () => 'blue',
-      },
-    },
-  })
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: { documentElement },
-  })
-
-  try {
-    assert.equal(readAccentPreference(), 'blue')
-    assert.equal(applyInitialAccent(), 'blue')
-    assert.equal(documentElement.dataset.accent, 'blue')
+    assert.deepEqual(storage.reads, ['chunisupport-accent', 'chunisupport-accent'])
+    assert.deepEqual(storage.writes, [['chunisupport-accent', 'sky-blue']])
+    assert.deepEqual(
+      [...storage.values],
+      [
+        ['chunisupport-theme', 'black'],
+        ['chunisupport-accent', 'sky-blue'],
+      ]
+    )
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
@@ -348,20 +344,17 @@ test('不正なアクセント保存値は既定値へ戻す', () => {
 })
 
 test('オレンジアクセントを保存し、背景テーマと独立して適用する', () => {
+  // Given: 黒背景が画面にもストレージにも設定済み。
   const previousWindow = globalThis.window
   const previousDocument = globalThis.document
-  let savedValue = ''
+  const storage = createStorage([['chunisupport-theme', 'black']])
   const documentElement = {
     dataset: { theme: 'black' } as Record<string, string>,
   }
   Object.defineProperty(globalThis, 'window', {
     configurable: true,
     value: {
-      localStorage: {
-        setItem: (_key: string, value: string) => {
-          savedValue = value
-        },
-      },
+      localStorage: storage.localStorage,
     },
   })
   Object.defineProperty(globalThis, 'document', {
@@ -370,11 +363,22 @@ test('オレンジアクセントを保存し、背景テーマと独立して�
   })
 
   try {
+    // When
     saveAccentPreference('orange')
-    assert.equal(savedValue, 'orange')
-    assert.equal(applyAccentPreference('orange'), 'orange')
+    const appliedAccent = applyAccentPreference('orange')
+
+    // Then: アクセントだけを保存・適用し、背景テーマは保存値も表示も変えない。
+    assert.equal(appliedAccent, 'orange')
     assert.equal(documentElement.dataset.accent, 'orange')
     assert.equal(documentElement.dataset.theme, 'black')
+    assert.deepEqual(storage.writes, [['chunisupport-accent', 'orange']])
+    assert.deepEqual(
+      [...storage.values],
+      [
+        ['chunisupport-theme', 'black'],
+        ['chunisupport-accent', 'orange'],
+      ]
+    )
   } finally {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,

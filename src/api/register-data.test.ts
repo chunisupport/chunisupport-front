@@ -97,3 +97,34 @@ test('更新履歴APIは未対応の保存形式を拒否する', async () => {
   // Then: 画面に渡す前にエラーを返す。
   await assert.rejects(fetchRecentPlayerDataUpdates, /保存済み更新結果の形式に対応していません。/)
 })
+
+test('登録データ送信はjson形式でクエリとJSONヘッダーを付ける', async () => {
+  // Given: JSON形式の登録データとAPI呼び出し記録。
+  const calls = installFetchRecorder(() => new Response(null, { status: 200 }))
+
+  // When: JSON形式で登録データを送信する。
+  const { postRegisterData } = await loadRegisterDataApi()
+  await postRegisterData({ data: '{"records":[]}', format: 'json' })
+
+  // Then: json用クエリとJSONヘッダーで送信する。
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/me/register-data?format=json'
+  )
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
+  assert.equal(calls[0]?.init?.body, '{"records":[]}')
+})
+
+test('登録データ送信はtext形式でクエリなしとテキストヘッダーを使う', async () => {
+  // Given: テキスト形式の登録データとAPI呼び出し記録。
+  const calls = installFetchRecorder(() => new Response(null, { status: 200 }))
+
+  // When: テキスト形式で登録データを送信する。
+  const { postRegisterData } = await loadRegisterDataApi()
+  await postRegisterData({ data: 'raw-data', format: 'text' })
+
+  // Then: クエリなしでテキストヘッダーを使って送信する。
+  assert.equal(String(calls[0]?.input), 'http://localhost:3000/internal/me/register-data')
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'text/plain')
+  assert.equal(calls[0]?.init?.body, 'raw-data')
+})

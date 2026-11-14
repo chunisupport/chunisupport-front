@@ -49,3 +49,25 @@ test('APIトークン名に紐づくAPIエラーだけを入力エラーとし�
   // Then: 名前に直接関係する2種類だけを入力エラーとする。
   assert.deepEqual(results, [true, true, false])
 })
+
+test('APIトークン名は1文字でも有効と判定する', () => {
+  // Given: 最短の1文字。
+  const value = 'a'
+
+  // When: 検証する。
+  const result = isValidApiTokenName(value)
+
+  // Then: 有効と判定する。
+  assert.equal(result, true)
+})
+
+test('APIトークン名の判定はnullを入力エラーにしない', () => {
+  // Given: エラーではないnull。
+  const error = null
+
+  // When: 入力エラーか判定する。
+  const result = isApiTokenNameError(error)
+
+  // Then: 入力エラーにしない。
+  assert.equal(result, false)
+})

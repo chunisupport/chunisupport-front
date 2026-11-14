@@ -49,10 +49,10 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 
 | 用途 | エンドポイント | レスポンス |
 | ---- | -------------- | ---------- |
-| 楽曲更新判定 | `GET /internal/songs/updated-at` | `{ updated_at: string \| null }` |
+| 楽曲更新判定 | `GET /internal/songs/updated-at` | `{ updated_at: string \| null, revision: number }` |
 | ユーザー更新判定 | `GET /internal/users/{username}/updated-at` | `{ updated_at: string \| null }` |
 
-`GET /internal/songs/updated-at` は `songs`, `charts`, `worldsend_charts` の `updated_at` 最大値を返します。そのため、通常楽曲と WORLD'S END 楽曲の共通更新判定として使います。
+`GET /internal/songs/updated-at` は `songs`, `charts`, `worldsend_charts` の `updated_at` 最大値と、楽曲データの変更世代 `revision` を返します。通常楽曲と WORLD'S END 楽曲の共通更新判定には `revision` を使います。`updated_at` は秒精度のため同じ秒内の変更を取りこぼすので、キャッシュ判定には使いません。`revision` は一致・不一致だけを比較し、大小は比較しません（API 側の DB 再構築などで小さくなる場合があります）。
 
 `GET /internal/users/{username}/updated-at` は、プロフィール更新日時と通常/WORLD'S END レコード更新日時の最大値を返します。このため、プロフィール更新時もユーザー系キャッシュを再検証します。
 
@@ -62,11 +62,11 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 
 | 対象 | 保存粒度 | 更新判定 |
 | ---- | -------- | -------- |
-| 通常楽曲一覧 | 1曲単位（`id -> SongDTO`） | `songsUpdatedAt` |
-| WORLD'S END 楽曲一覧 | 1曲単位（`id -> WorldsendSongDTO`） | `songsUpdatedAt` |
+| 通常楽曲一覧 | 1曲単位（`id -> SongDTO`） | `songsRevision` |
+| WORLD'S END 楽曲一覧 | 1曲単位（`id -> WorldsendSongDTO`） | `songsRevision` |
 | コース一覧 | 1コース単位 | `coursesUpdatedAt` |
-| ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsUpdatedAt` |
-| ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsUpdatedAt` |
+| ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsRevision` |
+| ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsRevision` |
 | ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` |
 
 全件レコード API のレスポンスは `saveCachedUserRecord` で曲単位へ分割して `userSongRecords` に保存します。全件取得時は、メタデータと曲単位キャッシュが一致していれば `UserRecordDTO` を復元します。曲詳細画面では同じ `userSongRecords` から対象曲だけを取得できます。
@@ -113,16 +113,18 @@ ChuniSupportCache
 
 通常楽曲と WORLD'S END 楽曲は、共通で `GET /internal/songs/updated-at` を使います。
 
-`songsUpdatedAt` は `src/queries/masterData.ts` の TanStack Query（`staleTime: SONGS_UPDATED_AT_CACHE_TTL_MS`）で取得から5分間メモリ上で再利用し、経過後は HTTP キャッシュを使わず（`cache: 'no-cache'`）API で再検証します。ユーザー系キャッシュの判定も同じ値を使うため、song-batch など外部経路での楽曲更新は、同じタブでも最大5分で検知されます。
+`updated-at` のレスポンス（`songsRevision` の取得元）は `src/queries/masterData.ts` の TanStack Query（`staleTime: SONGS_UPDATED_AT_CACHE_TTL_MS`）で取得から5分間メモリ上で再利用し、経過後は HTTP キャッシュを使わず（`cache: 'no-cache'`）API で再検証します。ユーザー系キャッシュの判定も同じ値を使うため、song-batch など外部経路での楽曲更新は、同じタブでも最大5分で検知されます。
 
 ```
-1. GET /internal/songs/updated-at を呼び、songsUpdatedAt を取得する。
+1. GET /internal/songs/updated-at を呼び、revision を songsRevision として取得する。
 2. cacheMetadata.songs または cacheMetadata.worldsendSongs を読む。
-3. songsUpdatedAt と schemaVersion が一致し、対象 store にデータがあればキャッシュを返す。
+3. songsRevision と schemaVersion が一致し、対象 store にデータがあればキャッシュを返す。
 4. 不一致なら本 API を呼ぶ。
 5. 本 API の取得結果で対象 store を入れ替え、metadata を保存し、API 結果を返す。
 6. IndexedDB 操作に失敗した場合は、本 API の結果だけを返す。
 ```
+
+`songsRevision` を持たない旧形式のキャッシュ（`songsUpdatedAt` で判定していた頃のもの）は不一致として扱い、初回に本 API を再取得して `songsRevision` 付きのキャッシュへ移行します。
 
 通常楽曲:
 
@@ -143,19 +145,19 @@ WORLD'S END 楽曲:
 ```
 1. ログインユーザー本人のページか判定する。本人以外なら API 直呼び出し。
 2. GET /internal/users/{username}/updated-at を呼び、userUpdatedAt を取得する。
-3. GET /internal/songs/updated-at を呼び、songsUpdatedAt を取得する。
+3. GET /internal/songs/updated-at を呼び、revision を songsRevision として取得する。
 4. userApiResponses.userRating を読む。
-5. username, userUpdatedAt, songsUpdatedAt, schemaVersion がすべて一致すればキャッシュを返す。
+5. username, userUpdatedAt, songsRevision, schemaVersion がすべて一致すればキャッシュを返す。
 6. 不一致なら GET /internal/users/{username}/rating を呼ぶ。
 7. API レスポンスを userApiResponses.userRating に丸ごと保存し、API 結果を返す。
 8. updated-at 取得または IndexedDB 操作に失敗した場合は、本 API を呼ぶ。
 ```
 
-`songsUpdatedAt` も見る理由は、レーティングレスポンスに楽曲タイトルや譜面定数など楽曲メタ情報が含まれるためです。
+`songsRevision` も見る理由は、レーティングレスポンスに楽曲タイトルや譜面定数など楽曲メタ情報が含まれるためです。
 
 ### レコード
 
-全件レコード取得では、`userUpdatedAt` と `songsUpdatedAt`、`schemaVersion` が一致し、`cacheMetadata.userRecord` と `userSongRecords` が有効なら曲単位キャッシュから `UserRecordDTO` を復元します。キャッシュが揃っていなければ `GET /internal/users/{username}/record` を呼び、レスポンスを曲単位に分割して保存します。未プレイデータは API により常に補完されます。
+全件レコード取得では、`userUpdatedAt` と `songsRevision`、`schemaVersion` が一致し、`cacheMetadata.userRecord` と `userSongRecords` が有効なら曲単位キャッシュから `UserRecordDTO` を復元します。キャッシュが揃っていなければ `GET /internal/users/{username}/record` を呼び、レスポンスを曲単位に分割して保存します。未プレイデータは API により常に補完されます。
 
 曲詳細では `GET /internal/users/{username}/record/songs/{displayId}` または `GET /internal/users/{username}/record/worldsend-songs/{displayId}` を利用し、対象曲だけを `userSongRecords` へ保存・取得します。未プレイデータは API により常に補完されます。
 

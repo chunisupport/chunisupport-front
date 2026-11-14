@@ -1,15 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
+import {
+  buildGoalTargetParam,
+  getNumberGoalTargetParam,
+  resolveGoalDynamicTarget,
+} from './goalCountTarget'
 
-/**
- * 件数指定モードで入力した値が、反転表示設定に関係なく目標件数として保存されることを検証する。
- *
- * このテストでは、ユーザーが具体的な件数（例: 5件）を入力した場合、
- * その入力値がそのまま目標件数として扱われることを確認する。
- * 反転表示の有無によって値が変換されることなく、入力された数値がそのまま返される。
- */
-test('件数を指定した場合は反転表示の有無に関係なく入力値を目標件数として保存する', () => {
+/** 固定件数の文字列入力が数値の目標件数へ変換されることを検証する。 */
+test('固定件数を数値へ変換して保存する', () => {
   // Given: 5件を目標として入力する。
   const countValue = '5'
 
@@ -91,4 +89,54 @@ test('動的目標値は丸め方法を指定できる', () => {
 
   // Then
   assert.equal(result, 2)
+})
+
+test('動的目標値はfloor指定で切り捨てる', () => {
+  // Given
+  const params = { percent: 50 }
+
+  // When
+  const result = resolveGoalDynamicTarget(params, 3, 'count', { rounding: 'floor' })
+
+  // Then
+  assert.equal(result, 1)
+})
+
+test('動的目標値はround指定で四捨五入する', () => {
+  // Given
+  const params = { percent: 50 }
+
+  // When
+  const result = resolveGoalDynamicTarget(params, 5, 'count', { rounding: 'round' })
+
+  // Then
+  assert.equal(result, 3)
+})
+
+test('数値の成果パラメータをそのまま返す', () => {
+  // Given
+  const numberParams = { count: 5 }
+  const stringParams = { count: '5' }
+
+  // When
+  const numberResult = getNumberGoalTargetParam(numberParams, 'count')
+  const stringResult = getNumberGoalTargetParam(stringParams, 'count')
+
+  // Then
+  assert.equal(numberResult, 5)
+  assert.equal(stringResult, 0)
+})
+
+test('絶対値指定は最大値より優先される', () => {
+  // Given
+  const fiveParams = { count: 5 }
+  const zeroParams = { count: 0 }
+
+  // When
+  const fiveResult = resolveGoalDynamicTarget(fiveParams, 10, 'count')
+  const zeroResult = resolveGoalDynamicTarget(zeroParams, 10, 'count')
+
+  // Then
+  assert.equal(fiveResult, 5)
+  assert.equal(zeroResult, 0)
 })

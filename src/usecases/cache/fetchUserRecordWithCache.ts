@@ -40,7 +40,7 @@ export const fetchUserRecordWithCache = async (username: string): Promise<UserRe
     await saveCachedUserRecord(
       username,
       timestamps.userUpdatedAt,
-      timestamps.songsUpdatedAt,
+      timestamps.songsRevision,
       response
     )
   } catch {

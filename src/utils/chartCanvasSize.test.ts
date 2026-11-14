@@ -83,3 +83,27 @@ test('長さが0の場合は0を返すこと', () => {
   // Then
   assert.equal(result, 0)
 })
+
+test('切り詰めが上限回数ちょうどで成功する場合はその長さを返すこと', () => {
+  // Given: 100物理ピクセル切り詰めて初めて条件を満たす長さ
+  const cssLength = 33.1
+  const devicePixelRatio = 3.33
+
+  // When
+  const result = snapChartCanvasLength(cssLength, devicePixelRatio)
+
+  // Then: 110物理ピクセルから100切り詰めた10物理ピクセルに対応する3を返す。
+  assert.equal(result, 3)
+})
+
+test('1物理ピクセルに満たない長さは0.1px単位の切り捨て値を返すこと', () => {
+  // Given: 物理ピクセル数が0になる長さ
+  const cssLength = 0.5
+  const devicePixelRatio = 1
+
+  // When
+  const result = snapChartCanvasLength(cssLength, devicePixelRatio)
+
+  // Then
+  assert.equal(result, 0.5)
+})

@@ -25,7 +25,7 @@ test('基準日以前に稼働開始したバージョンだけを返すこと',
   )
 })
 
-test('絞り込みで元の順序を変えず、元配列を変更しないこと', () => {
+test('絞り込み結果が1件でも元配列を変更しないこと', () => {
   // Given: リリース日順ではない一覧がある。
   const versions = [
     { name: 'B', released_at: '2027-01-01' },
@@ -40,7 +40,33 @@ test('絞り込みで元の順序を変えず、元配列を変更しないこ�
     result.map((version) => version.name),
     ['A']
   )
-  assert.equal(versions.length, 2)
+  assert.deepEqual(versions, [
+    { name: 'B', released_at: '2027-01-01' },
+    { name: 'A', released_at: '2024-12-12' },
+  ])
+})
+
+test('公開済みバージョンが複数あっても元の順序と元配列全体を維持すること', () => {
+  // Given: 公開済みの2件は日付降順で、間に未来のバージョンがある。
+  const versions = [
+    { name: 'B', released_at: '2025-12-11' },
+    { name: 'FUTURE', released_at: '2027-01-01' },
+    { name: 'A', released_at: '2024-12-12' },
+  ]
+
+  // When
+  const result = filterReleasedVersions(versions, '2026-09-03')
+
+  // Then: 日付で並べ替えず、入力の値も順序も変更しない。
+  assert.deepEqual(result, [
+    { name: 'B', released_at: '2025-12-11' },
+    { name: 'A', released_at: '2024-12-12' },
+  ])
+  assert.deepEqual(versions, [
+    { name: 'B', released_at: '2025-12-11' },
+    { name: 'FUTURE', released_at: '2027-01-01' },
+    { name: 'A', released_at: '2024-12-12' },
+  ])
 })
 
 test('公開済みバージョンの短縮名を元の順序で返すこと', () => {
@@ -58,16 +84,6 @@ test('公開済みバージョンの短縮名を元の順序で返すこと', ()
   assert.deepEqual(result, ['CHUNITHM', 'VERSE'])
 })
 
-test('JST今日がYYYY-MM-DD形式で返ること', () => {
-  // Given: なし。
-
-  // When: JST今日を取得する。
-  const result = getTodayChunithmDate()
-
-  // Then: 日付形式である。
-  assert.match(result, /^\d{4}-\d{2}-\d{2}$/)
-})
-
 test('新バージョンは稼働日のJST 07:00から公開済みになること', () => {
   // Given: 旧バージョンと、稼働日が2026-09-03の新バージョン。
   // 太平洋夏時間ではどちらの時刻も2026-09-02の午後になる。
@@ -82,7 +98,9 @@ test('新バージョンは稼働日のJST 07:00から公開済みになるこ�
   const before = filterReleasedVersions(versions, beforeDayStart)
   const atStart = filterReleasedVersions(versions, atDayStart)
 
-  // Then: 06:59:59は旧バージョンのまま、07:00:00から新バージョンを含む。
+  // Then: 運用日はYYYY-MM-DD形式で切り替わり、公開済みバージョンにも反映する。
+  assert.equal(beforeDayStart, '2026-09-02')
+  assert.equal(atDayStart, '2026-09-03')
   assert.deepEqual(
     before.map((version) => version.name),
     ['CHUNITHM X-VERSE']
@@ -105,4 +123,32 @@ test('未来バージョンがあっても過去曲の解決結果は変わら�
 
   // Then: 未来の影響を受けず過去バージョンになる。
   assert.equal(result, 'CHUNITHM VERSE')
+})
+
+test('明示した基準日が当日の運用日と異なっても指定日で絞り込むこと', () => {
+  // Given: 過去に稼働した2バージョンがある。
+  const versions = [
+    { name: 'CHUNITHM', released_at: '2015-07-16' },
+    { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+  ]
+
+  // When: 最初の稼働日の前日を基準日に指定する。
+  const result = getReleasedVersionShortNames(versions, '2015-07-15')
+
+  // Then: 当日の運用日ではなく指定日で絞られるため空になる。
+  assert.deepEqual(result, [])
+})
+
+test('リリース日と稼働日が同じ日はそのバージョンを返すこと', () => {
+  // Given: 稼働日が異なる2バージョンがある。
+  const versions = [
+    { name: 'CHUNITHM VERSE', released_at: '2024-12-12' },
+    { name: 'CHUNITHM XCROSS', released_at: '2026-09-03' },
+  ]
+
+  // When: 新バージョンの稼働日当日で解決する。
+  const result = resolveVersionNameByReleaseDate('2026-09-03', versions)
+
+  // Then: 当日を含むため新バージョンになる。
+  assert.equal(result, 'CHUNITHM XCROSS')
 })

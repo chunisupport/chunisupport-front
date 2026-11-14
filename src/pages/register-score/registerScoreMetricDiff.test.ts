@@ -5,6 +5,7 @@ import {
   formatRegisterScoreOverPowerDelta,
   formatRegisterScoreOverPowerPercentDelta,
   formatRegisterScoreRatingDelta,
+  getRegisterScoreMetricDeltaClass,
 } from './registerScoreMetricDiff'
 
 test('レート差分は小数点以下4桁と符号を表示する', () => {
@@ -71,4 +72,24 @@ test('表示桁未満の差分は表示しない', () => {
 
   // Then
   assert.equal(result, null)
+})
+
+test('メトリクス差分の増減に応じた文字色を返すこと', () => {
+  // Given: 増加・減少・変化なしの差分。
+  const increasedDelta = 1
+  const decreasedDelta = -1
+  const zeroDelta = 0
+  const missingDelta = null
+
+  // When: 差分の文字色を解決する。
+  const increased = getRegisterScoreMetricDeltaClass(increasedDelta)
+  const decreased = getRegisterScoreMetricDeltaClass(decreasedDelta)
+  const zero = getRegisterScoreMetricDeltaClass(zeroDelta)
+  const missing = getRegisterScoreMetricDeltaClass(missingDelta)
+
+  // Then: 増加は情報色、減少は危険色、変化なしは通常文字色になる。
+  assert.equal(increased, 'text-info')
+  assert.equal(decreased, 'text-danger')
+  assert.equal(zero, 'text-text')
+  assert.equal(missing, 'text-text')
 })

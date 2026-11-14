@@ -169,3 +169,40 @@ test('不正日時を含む履歴でもバージョン行を重複させない',
     [1_010_000, 'CHUNITHM X-VERSE-X', 'CHUNITHM X-VERSE', 1_007_500, 1_005_000, 'CHUNITHM VERSE']
   )
 })
+
+test('バージョン境界と同時刻の履歴は旧バージョン側に残すこと', () => {
+  // Given: 境界07:00と同時刻の履歴を挟む3件の履歴がある。
+  const entries = [
+    createHistoryEntry('2026-06-18T10:00:00+09:00', 1_010_000),
+    createHistoryEntry('2026-06-18T07:00:00+09:00', 1_005_000),
+    createHistoryEntry('2026-06-17T12:00:00+09:00', 1_000_000),
+  ]
+  const versions = [
+    { name: 'CHUNITHM X-VERSE-X', short_name: 'XVSX', released_at: '2026-06-18' },
+    { name: 'CHUNITHM X-VERSE', short_name: 'XVRS', released_at: '2025-12-11' },
+  ]
+
+  // When: 表示行を組み立てる。
+  const result = buildScoreHistoryTableRows(entries, versions)
+
+  // Then: 境界と同時刻の履歴の後に新バージョン行が入る。
+  assert.deepEqual(
+    result.map((row) => (row.type === 'score' ? row.entry.score : row.name)),
+    [1_010_000, 1_005_000, 'CHUNITHM X-VERSE-X', 1_000_000, 'CHUNITHM X-VERSE']
+  )
+})
+
+test('最古履歴が稼働日07:00と同時刻ならそのバージョン行を末尾に付けること', () => {
+  // Given: 稼働日07:00と同時刻の履歴が1件だけある。
+  const entries = [createHistoryEntry('2026-06-18T07:00:00+09:00', 1_010_000)]
+  const versions = [{ name: 'CHUNITHM X-VERSE-X', short_name: 'XVSX', released_at: '2026-06-18' }]
+
+  // When: 表示行を組み立てる。
+  const result = buildScoreHistoryTableRows(entries, versions)
+
+  // Then: 履歴の後にバージョン行が付く。
+  assert.deepEqual(
+    result.map((row) => (row.type === 'score' ? row.entry.score : row.name)),
+    [1_010_000, 'CHUNITHM X-VERSE-X']
+  )
+})

@@ -39,6 +39,12 @@ export interface UpdatedAtResponseDTO {
   updated_at: string | null
 }
 
+/** 楽曲キャッシュ更新判定 API が返す更新日時と変更世代のレスポンス */
+export interface SongsUpdatedAtResponseDTO extends UpdatedAtResponseDTO {
+  /** 公開中の楽曲データの変更世代。キャッシュ判定では一致・不一致だけを比較する */
+  revision: number
+}
+
 /** APIが返すシステムの運用状態 */
 export type SystemStatus = 'operational' | 'maintenance'
 

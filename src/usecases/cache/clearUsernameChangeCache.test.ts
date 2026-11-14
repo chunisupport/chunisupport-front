@@ -76,7 +76,7 @@ afterEach(async () => {
 test('ユーザーネーム変更後は認証ユーザー用キャッシュを削除し表示設定を保持すること', async () => {
   // Given: ユーザーAPI、通知、表示設定、フレンドqueryを保存する。
   const { clearUsernameChangeCache, friendshipQueryKeys } = await loadUsernameChangeCache()
-  await saveCachedUserRating('alice', 'user-1', 'songs-1', rating)
+  await saveCachedUserRating('alice', 'user-1', 1, rating)
   await saveFriendRequestNotificationState('alice', true, '2026-09-01T00:00:00.000Z')
   await saveFriendRequestNotificationState('bob', false, '2026-09-01T00:05:00.000Z')
   await saveStandardRecordColumnsSetting(['title', 'score'])
@@ -100,9 +100,12 @@ test('ユーザーネーム変更後は認証ユーザー用キャッシュを�
 })
 
 test('キャッシュ削除に失敗してもユーザーネーム変更の成功フローを拒否しないこと', async () => {
-  // Given: IndexedDBのユーザーAPIキャッシュ削除だけが失敗する。
-  const { clearUsernameChangeCache } = await loadUsernameChangeCache()
+  // Given: aliceの通知とフレンドqueryを保存し、IndexedDBのユーザーAPIキャッシュ削除だけが失敗する。
+  const { clearUsernameChangeCache, friendshipQueryKeys } = await loadUsernameChangeCache()
+  await saveFriendRequestNotificationState('alice', true, '2026-09-01T00:00:00.000Z')
   const queryClient = createTestQueryClient()
+  const aliceQueryKey = friendshipQueryKeys.friends('alice')
+  queryClient.setQueryData(aliceQueryKey, [])
   const originalClear = db.userApiResponses.clear.bind(db.userApiResponses)
   db.userApiResponses.clear = (() =>
     Promise.reject(new Error('IndexedDB error'))) as typeof db.userApiResponses.clear
@@ -110,6 +113,10 @@ test('キャッシュ削除に失敗してもユーザーネーム変更の成�
   try {
     // When & Then: 補助的な削除失敗は呼び出し元へ伝播しない。
     await assert.doesNotReject(clearUsernameChangeCache(queryClient, 'alice'))
+
+    // Then: APIキャッシュ削除の失敗後も、通知とフレンドqueryの削除は完了している。
+    assert.equal(await readFriendRequestNotificationState('alice'), null)
+    assert.equal(queryClient.getQueryState(aliceQueryKey), undefined)
   } finally {
     db.userApiResponses.clear = originalClear
     queryClient.clear()
