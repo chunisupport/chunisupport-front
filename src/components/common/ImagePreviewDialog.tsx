@@ -65,8 +65,9 @@ type Props = {
 /**
  * 画像プレビュー・共有ダイアログの共通の外枠を表示する。
  *
- * 固定高さの Dialog.Content にヘッダー、スクロールするプレビュー領域、フッターを配置し、
- * プレビュー未生成時はローディング、生成失敗時はエラーと再試行ボタンを表示する。
+ * 画像の高さに合わせて広がる Dialog.Content に、ヘッダー、高さがビューポートを超えた場合に
+ * スクロールするプレビュー領域、フッターを配置し、プレビュー未生成時はローディング、
+ * 生成失敗時はエラーと再試行ボタンを表示する。
  *
  * @param props - 開閉状態、トリガー、文言、エラー、プレビューと各スロット。
  * @returns トリガーボタンとプレビューダイアログ。
@@ -86,7 +87,7 @@ export const ImagePreviewDialog: Component<Props> = (props) => (
       <Dialog.Portal>
         <Dialog.Overlay class="fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
-          class={`fixed inset-x-4 top-4 bottom-4 z-60 flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[94vw] ${IMAGE_PREVIEW_DIALOG_WIDTH_CLASS[props.width ?? 'md']} sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6`}
+          class={`fixed left-1/2 top-1/2 z-60 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface p-4 shadow-lg sm:max-h-[92dvh] sm:w-[94vw] ${IMAGE_PREVIEW_DIALOG_WIDTH_CLASS[props.width ?? 'md']} sm:p-6`}
         >
           <AppDialogHeader
             title={props.title}
@@ -97,41 +98,39 @@ export const ImagePreviewDialog: Component<Props> = (props) => (
 
           {props.controls}
 
-          <div class="mt-4 min-h-0 flex-1 basis-0 overflow-hidden rounded-md bg-bg p-3">
-            <div
-              class="scrollbar-none h-full w-full overflow-y-auto overscroll-contain"
-              aria-busy={props.previewBusy}
+          <div
+            class="scrollbar-none mt-4 min-h-0 overflow-y-auto overscroll-contain rounded-md bg-bg p-3"
+            aria-busy={props.previewBusy}
+          >
+            <Show
+              when={props.hasPreview}
+              fallback={
+                <div class="flex min-h-full items-center justify-center">
+                  <Show
+                    when={props.captureError}
+                    fallback={<Loading ariaLabel={props.loadingLabel} />}
+                  >
+                    {(message) => (
+                      <div class="flex flex-col items-center gap-3 text-center">
+                        <p class="text-sm text-danger" role="alert">
+                          {message()}
+                        </p>
+                        <AppButton
+                          variant="surface"
+                          size="sm"
+                          leftIcon={<RotateCcw class="h-4 w-4" aria-hidden="true" />}
+                          onClick={() => props.onRetry()}
+                        >
+                          {props.retryLabel}
+                        </AppButton>
+                      </div>
+                    )}
+                  </Show>
+                </div>
+              }
             >
-              <Show
-                when={props.hasPreview}
-                fallback={
-                  <div class="flex min-h-full items-center justify-center">
-                    <Show
-                      when={props.captureError}
-                      fallback={<Loading ariaLabel={props.loadingLabel} />}
-                    >
-                      {(message) => (
-                        <div class="flex flex-col items-center gap-3 text-center">
-                          <p class="text-sm text-danger" role="alert">
-                            {message()}
-                          </p>
-                          <AppButton
-                            variant="surface"
-                            size="sm"
-                            leftIcon={<RotateCcw class="h-4 w-4" aria-hidden="true" />}
-                            onClick={() => props.onRetry()}
-                          >
-                            {props.retryLabel}
-                          </AppButton>
-                        </div>
-                      )}
-                    </Show>
-                  </div>
-                }
-              >
-                {props.children}
-              </Show>
-            </div>
+              {props.children}
+            </Show>
           </div>
 
           <div class="mt-4 flex shrink-0 flex-col items-end gap-2">
