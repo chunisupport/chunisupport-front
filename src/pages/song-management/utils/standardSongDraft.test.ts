@@ -586,7 +586,17 @@ test('譜面定数の入力は文字列全体が10進数の場合だけ数値へ
   assert.equal(parseChartConstDraft('13.7'), 13.7)
   assert.equal(parseChartConstDraft(' 14.5 '), 14.5)
   // 部分的に数値として読める文字列や非有限値は不正とする。
-  for (const value of ['12abc', '12.3foo', 'Infinity', '-1', '', '.5', '12.', '0x10']) {
+  for (const value of [
+    '12abc',
+    '12.3foo',
+    'Infinity',
+    '-1',
+    '',
+    '.5',
+    '12.',
+    '0x10',
+    `1${'0'.repeat(309)}`,
+  ]) {
     assert.equal(parseChartConstDraft(value), null, value)
   }
 })

@@ -172,7 +172,10 @@ const CHART_CONST_DRAFT_PATTERN = /^\d+(?:\.\d+)?$/
  */
 export const parseChartConstDraft = (value: string): number | null => {
   const trimmed = value.trim()
-  return CHART_CONST_DRAFT_PATTERN.test(trimmed) ? Number(trimmed) : null
+  if (!CHART_CONST_DRAFT_PATTERN.test(trimmed)) return null
+  // 桁数が極端に多い入力は形式上正しくても Infinity になるため弾く。
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 /**
