@@ -1,4 +1,8 @@
-import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
+import type {
+  NavBarSide,
+  NavRailSide,
+  NavRailVerticalAlign,
+} from '../../utils/navPlacementPreference'
 import type { AccentPreference, ThemePreference } from '../../utils/themePreference'
 
 /** 外観設定で選択できる背景テーマ */
@@ -29,17 +33,21 @@ export const ACCENT_OPTIONS = [
 export const NAV_PLACEMENT_SETTINGS_COPY = {
   label: 'ナビゲーション',
   railAriaLabel: '幅の広い画面でのナビゲーション位置',
+  railVerticalAlignAriaLabel: '幅の広い画面でのナビゲーションの縦位置',
   barAriaLabel: '幅の狭い画面でのナビゲーション位置',
   barCompactModeToggle: 'コンパクトモード',
   barCompactModePrefix: '横バーの',
   sideLabels: { left: '左', right: '右', bottom: '下', top: '上' },
+  railVerticalAlignLabels: { top: '上寄せ', bottom: '下寄せ' },
 } as const satisfies {
   label: string
   railAriaLabel: string
+  railVerticalAlignAriaLabel: string
   barAriaLabel: string
   barCompactModeToggle: string
   barCompactModePrefix: string
   sideLabels: Record<NavRailSide | NavBarSide, string>
+  railVerticalAlignLabels: Record<NavRailVerticalAlign, string>
 }
 
 /** 外観設定に表示する文言 */

@@ -44,10 +44,19 @@ import {
   refreshFriendRequestNotificationIfStale,
   setActiveFriendRequestNotificationUser,
 } from '../../stores/friendRequestNotification'
-import { navBarCompactMode, navBarSide, navRailSide } from '../../stores/navPlacementPreferences'
+import {
+  navBarCompactMode,
+  navBarSide,
+  navRailSide,
+  navRailVerticalAlign,
+} from '../../stores/navPlacementPreferences'
 import { resolveAuthSession } from '../../usecases/auth/resolveAuthSession'
 import { clearClientCache } from '../../usecases/cache/clearClientCache'
-import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
+import type {
+  NavBarSide,
+  NavRailSide,
+  NavRailVerticalAlign,
+} from '../../utils/navPlacementPreference'
 import MaintenanceStatusLabel from '../availability/MaintenanceStatusLabel'
 import { AppButton } from '../common/AppButton'
 import { AppDialog } from '../common/AppDialog'
@@ -60,6 +69,12 @@ import NavPlacementSettings from '../common/NavPlacementSettings'
 const NAV_RAIL_SIDE_CLASS: Record<NavRailSide, string> = {
   left: 'md:border-r',
   right: 'md:order-last md:border-l',
+}
+
+/** 縦レールの項目を、レール内の上端と下端のどちらへ寄せるかを表すクラス */
+const NAV_RAIL_VERTICAL_ALIGN_CLASS: Record<NavRailVerticalAlign, string> = {
+  top: 'justify-start',
+  bottom: 'justify-end',
 }
 
 /** 縦レールの「その他」メニューを、トリガーのどちらの端へ揃えて開くか */
@@ -395,7 +410,9 @@ const NavBar = (props: NavBarProps) => {
       <aside
         class={`hidden md:flex md:w-24 md:flex-col md:border-border md:bg-surface ${NAV_RAIL_SIDE_CLASS[navRailSide()]}`}
       >
-        <nav class="flex flex-1 flex-col px-2 py-6">
+        <nav
+          class={`flex flex-1 flex-col px-2 py-6 ${NAV_RAIL_VERTICAL_ALIGN_CLASS[navRailVerticalAlign()]}`}
+        >
           <For each={getNavItems()}>
             {(item) =>
               item.dropdown ? (
