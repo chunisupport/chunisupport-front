@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
 import { For } from 'solid-js'
 import { SiteLogoMark } from '../../../../components/common/SiteLogoMark'
-import { SITE_NAME } from '../../../../constants/site'
+import { SITE_NAME, SITE_URL } from '../../../../constants/site'
 import {
   OVER_POWER_IMAGE_CARD_GAP,
   OVER_POWER_IMAGE_CARD_WIDTH,
@@ -54,9 +54,10 @@ export const OverPowerImageSheet: Component<Props> = (props) => (
     >
       <For each={props.rows}>{(row) => <OverPowerSummaryCard row={row} imageMode />}</For>
     </div>
-    <footer class="text-right font-sans text-sm text-text-muted">
+    <footer class="text-right font-sans text-[16px] text-text-muted">
       <span class="whitespace-nowrap">
         {OVER_POWER_IMAGE_COPY.generatedBy} <strong class="font-bold">{SITE_NAME}</strong>
+        {` (${SITE_URL})`}
       </span>
     </footer>
   </div>
