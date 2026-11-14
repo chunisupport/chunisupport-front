@@ -160,6 +160,33 @@ export const addUltimaChartToDraft = (draft: SongDraft, ultimaDifficultyId: numb
   }
 }
 
+/** 譜面定数として受け付ける入力形式（前後空白を除いた0以上の10進数） */
+const CHART_CONST_DRAFT_PATTERN = /^\d+(?:\.\d+)?$/
+
+/**
+ * 譜面定数の入力文字列を、文字列全体が10進数の場合だけ数値へ変換する。
+ * `parseFloat` のように `12abc` を `12` として部分的に読み取らない。
+ *
+ * @param value 譜面定数の入力文字列
+ * @returns 0以上の有限な数値。形式が不正なら null
+ */
+export const parseChartConstDraft = (value: string): number | null => {
+  const trimmed = value.trim()
+  if (!CHART_CONST_DRAFT_PATTERN.test(trimmed)) return null
+  // 桁数が極端に多い入力は形式上正しくても Infinity になるため弾く。
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * 譜面ドラフトの定数・ノーツ数が不正か判定する。
+ *
+ * @param chart 検証対象の譜面ドラフト
+ * @returns 定数が数値形式でない、またはノーツ数が負なら true
+ */
+const isInvalidChartDraft = (chart: { const: string; notes: number | null }): boolean =>
+  parseChartConstDraft(chart.const) === null || (chart.notes !== null && chart.notes < 0)
+
 /**
  * 編集中の通常譜面に無効な数値入力が含まれているか判定する。
  *
@@ -167,10 +194,7 @@ export const addUltimaChartToDraft = (draft: SongDraft, ultimaDifficultyId: numb
  * @returns 無効な譜面が1件でもあれば true
  */
 export const hasInvalidEditableChart = (charts: EditableChartDraft[]): boolean => {
-  return charts.some((chart) => {
-    const chartConst = parseFloat(chart.const)
-    return Number.isNaN(chartConst) || chartConst < 0 || (chart.notes !== null && chart.notes < 0)
-  })
+  return charts.some(isInvalidChartDraft)
 }
 
 /**
@@ -297,7 +321,7 @@ export const buildUpdateSongRequest = (
         draft.charts.map((chart) => [
           chart.difficulty_name,
           {
-            const: parseFloat(chart.const),
+            const: Number(chart.const.trim()),
             is_const_unknown: chart.is_const_unknown,
             notes: chart.notes,
             notes_designer: toNullableTrimmedString(chart.notes_designer),
@@ -336,12 +360,8 @@ export const buildCreateSongRequest = (
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.bpmInvalid }
   }
 
-  // 定数は自由入力のため、数値として読めない値も負数と同様に弾く（NaN は送信時に null になる）。
-  const invalidChart = draft.charts.find((chart) => {
-    if (!chart.enabled) return false
-    const chartConst = parseFloat(chart.const)
-    return Number.isNaN(chartConst) || chartConst < 0 || (chart.notes !== null && chart.notes < 0)
-  })
+  // 定数は自由入力のため、文字列全体が数値形式でない値は負数と同様に弾く。
+  const invalidChart = draft.charts.find((chart) => chart.enabled && isInvalidChartDraft(chart))
   if (invalidChart) {
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.createChartInvalid }
   }
@@ -369,7 +389,7 @@ export const buildCreateSongRequest = (
         .filter((chart) => chart.enabled)
         .map((chart) => ({
           difficulty: chart.difficulty_name,
-          const: parseFloat(chart.const),
+          const: Number(chart.const.trim()),
           is_const_unknown: chart.is_const_unknown,
           notes: chart.notes,
           notes_designer: toNullableTrimmedString(chart.notes_designer),
@@ -395,7 +415,7 @@ export const applySongDraftToManagedSong = (
   for (const chart of draft.charts) {
     const previous = song.charts[chart.difficulty_name]
     charts[chart.difficulty_name] = {
-      const: parseFloat(chart.const),
+      const: Number(chart.const.trim()),
       is_const_unknown: chart.is_const_unknown,
       notes: chart.notes,
       notes_designer: toNullableTrimmedString(chart.notes_designer),

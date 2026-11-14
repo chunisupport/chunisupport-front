@@ -12,6 +12,7 @@ import {
   hasInvalidEditableChart,
   hasSongDraftChanges,
   hasUltimaChart,
+  parseChartConstDraft,
   toSongDraft,
 } from './standardSongDraft'
 
@@ -301,6 +302,10 @@ test('追加リクエストは有効な譜面の定数が負なら譜面エラ�
 for (const { label, value } of [
   { label: '数字でない文字列', value: 'abc' },
   { label: '空文字', value: '' },
+  { label: '数値の後ろに不正文字を含む文字列', value: '12abc' },
+  { label: '小数の後ろに不正文字を含む文字列', value: '12.3foo' },
+  { label: 'Infinity', value: 'Infinity' },
+  { label: '指数表記', value: '1e1' },
 ]) {
   test(`追加リクエストは有効な譜面の定数が${label}なら譜面エラーを返すこと`, () => {
     // Given: 数値として読めない定数を持つ有効な譜面。
@@ -573,4 +578,51 @@ test('追加リクエストは有効な譜面のノーツ数が0なら受け付�
 
   // Then: 譜面エラーを返さず受け付ける。
   assert.equal(result.ok, true)
+})
+
+test('譜面定数の入力は文字列全体が10進数の場合だけ数値へ変換すること', () => {
+  // Given / When / Then: 正常な整数・小数と前後空白は数値として読み取る。
+  assert.equal(parseChartConstDraft('13'), 13)
+  assert.equal(parseChartConstDraft('13.7'), 13.7)
+  assert.equal(parseChartConstDraft(' 14.5 '), 14.5)
+  // 部分的に数値として読める文字列や非有限値は不正とする。
+  for (const value of [
+    '12abc',
+    '12.3foo',
+    'Infinity',
+    '-1',
+    '',
+    '.5',
+    '12.',
+    '0x10',
+    `1${'0'.repeat(309)}`,
+  ]) {
+    assert.equal(parseChartConstDraft(value), null, value)
+  }
+})
+
+test('編集ドラフトは定数の後ろに不正文字を含む譜面を無効と判定すること', () => {
+  // Given: 定数の後ろに不正文字を含む編集譜面。
+  const [chart] = toSongDraft(managedSong, genres, difficulties).charts
+
+  // When / Then: 部分的に数値化せず無効と判定する。
+  assert.equal(hasInvalidEditableChart([{ ...chart, const: '12abc' }]), true)
+  assert.equal(hasInvalidEditableChart([{ ...chart, const: '12.3foo' }]), true)
+  assert.equal(hasInvalidEditableChart([{ ...chart, const: 'Infinity' }]), true)
+})
+
+test('追加リクエストは前後空白を含む正常な小数の定数を数値として送ること', () => {
+  // Given: 前後空白を含む正常な小数の定数を持つ追加ドラフト。
+  const draft = validCreateDraft()
+  const charts = draft.charts.map((chart) =>
+    chart.difficulty_name === 'MASTER' ? { ...chart, const: ' 14.5 ' } : chart
+  )
+
+  // When: 追加リクエストを組み立てる。
+  const result = buildCreateSongRequest({ ...draft, charts }, genres)
+
+  // Then: 定数を数値へ変換して送る。
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.request.charts?.[0]?.const, 14.5)
 })
