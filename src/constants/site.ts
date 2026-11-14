@@ -1,6 +1,9 @@
 /** サービス名。 */
 export const SITE_NAME = 'ChuniSupport'
 
+/** サービスの公開URL。生成画像など、外部へ共有する表記に使う。 */
+export const SITE_URL = 'https://chunisupport.net/'
+
 /** ドキュメントタイトル内の区切り文字。 */
 export const DOCUMENT_TITLE_SEPARATOR = ' | '
 
