@@ -40,19 +40,27 @@ test('バージョン更新後は公開バージョン一覧をAPIから再取�
 
 test('fetchSongsUpdatedAt は不正な更新日時を拒否し、失敗をキャッシュせず再試行する', async () => {
   // Given: 契約に違反する更新日時レスポンス。
-  for (const invalidResponse of [{}, { updated_at: 123 }, { updated_at: false }, null]) {
+  for (const invalidResponse of [
+    {},
+    { updated_at: 123, revision: 1 },
+    { updated_at: false, revision: 1 },
+    { updated_at: null },
+    { updated_at: null, revision: '1' },
+    { updated_at: null, revision: 1.5 },
+    null,
+  ]) {
     appQueryClient.clear()
     let fetchCount = 0
     installFetchRecorder(() => {
       fetchCount += 1
-      return Response.json(fetchCount === 1 ? invalidResponse : { updated_at: null })
+      return Response.json(fetchCount === 1 ? invalidResponse : { updated_at: null, revision: 0 })
     })
     const { fetchSongsUpdatedAt } = await loadMasterDataQueries()
 
     // When / Then: 不正応答を拒否し、次の正常な null 応答は取得・キャッシュできる。
     await assert.rejects(() => fetchSongsUpdatedAt(), TypeError)
-    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
-    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null })
+    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null, revision: 0 })
+    assert.deepEqual(await fetchSongsUpdatedAt(), { updated_at: null, revision: 0 })
     assert.equal(fetchCount, 2)
   }
 })
@@ -60,7 +68,7 @@ test('fetchSongsUpdatedAt は不正な更新日時を拒否し、失敗をキャ
 test('fetchSongsUpdatedAt はTTL内であれば取得済みの更新日時を再利用する', async (t) => {
   // Given: 更新日時を一度取得済みで、TTL 直前まで時間が経過している。
   t.mock.timers.enable({ apis: ['Date'], now: 1 })
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
+  const responseBody = { updated_at: '2026-06-16T12:00:00Z', revision: 1 }
   let fetchCount = 0
   installFetchRecorder((input) => {
     if (String(input).endsWith('/internal/songs/updated-at')) {
@@ -85,8 +93,8 @@ test('fetchSongsUpdatedAt はTTL経過後にAPIから更新日時を再検証す
   // Given: 更新日時 T1 を取得済みで、その後サーバー側が T2 に更新されている。
   t.mock.timers.enable({ apis: ['Date'], now: 1 })
   const responseBodies = [
-    { updated_at: '2026-06-16T12:00:00Z' },
-    { updated_at: '2026-07-20T09:00:00Z' },
+    { updated_at: '2026-06-16T12:00:00Z', revision: 1 },
+    { updated_at: '2026-07-20T09:00:00Z', revision: 2 },
   ]
   let fetchCount = 0
   const calls = installFetchRecorder(() => {
@@ -111,8 +119,8 @@ test('fetchSongsUpdatedAt はTTL経過後にAPIから更新日時を再検証す
 test('楽曲更新日時キャッシュは無効化後にAPIから最新値を再取得する', async () => {
   // Given: 初回の更新日時を取得してメモリへキャッシュする。
   const responseBodies = [
-    { updated_at: '2026-06-16T12:00:00Z' },
-    { updated_at: '2026-07-20T09:00:00Z' },
+    { updated_at: '2026-06-16T12:00:00Z', revision: 1 },
+    { updated_at: '2026-07-20T09:00:00Z', revision: 2 },
   ]
   let fetchCount = 0
   installFetchRecorder((input) => {
@@ -135,8 +143,8 @@ test('楽曲更新日時キャッシュは無効化後にAPIから最新値を�
 
 test('無効化前に開始した楽曲更新日時の取得も最新値で解決し、古い応答は採用しない', async () => {
   // Given: 無効化前の更新日時リクエストを応答待ちにする。
-  const beforeMutation = { updated_at: '2026-06-16T12:00:00Z' }
-  const afterMutation = { updated_at: '2026-07-20T09:00:00Z' }
+  const beforeMutation = { updated_at: '2026-06-16T12:00:00Z', revision: 1 }
+  const afterMutation = { updated_at: '2026-07-20T09:00:00Z', revision: 2 }
   let fetchCount = 0
   let resolveBeforeMutation!: (response: Response) => void
   let notifyRequestStarted!: () => void
@@ -210,7 +218,7 @@ test('fetchCoursesUpdatedAtは同時呼び出しを1リクエストにまとめ�
 
 test('fetchSongsUpdatedAt は同時呼び出しを同じリクエストにまとめる', async () => {
   // Given: APIの応答を準備する。
-  const responseBody = { updated_at: '2026-06-16T12:00:00Z' }
+  const responseBody = { updated_at: '2026-06-16T12:00:00Z', revision: 1 }
   let fetchCount = 0
   installFetchRecorder(async (input) => {
     if (String(input).endsWith('/internal/songs/updated-at')) {
@@ -243,7 +251,7 @@ test('fetchSongsUpdatedAt は失敗後に再試行できる', async () => {
       throw new Error('network error')
     }
 
-    return Response.json({ updated_at: '2026-06-16T12:00:00Z' })
+    return Response.json({ updated_at: '2026-06-16T12:00:00Z', revision: 1 })
   })
 
   // When: query経由で取得する。

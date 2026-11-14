@@ -25,7 +25,8 @@ test('統計用の所属フォルダは読みから再判定せずAPIのコー�
   }
   installFetchRecorder((input) => {
     const path = new URL(String(input)).pathname
-    if (path === '/internal/songs/updated-at') return Response.json({ updated_at: null })
+    if (path === '/internal/songs/updated-at')
+      return Response.json({ updated_at: null, revision: 0 })
     if (path === '/internal/songs') return Response.json({ songs: [song] })
     if (path === '/internal/master/versions') return Response.json({ versions: [] })
     if (path === '/internal/master') {

@@ -37,6 +37,7 @@ import {
   readCachedUserRating,
   readCachedUserRecord,
   readCachedWorldsendSongRecord,
+  saveCachedStandardSongRecord,
   saveCachedUserRating,
   saveCachedUserRecord,
   saveCachedWorldsendSongRecord,
@@ -148,27 +149,27 @@ afterEach(async () => {
   await clearStores()
 })
 
-test('WORLD END楽曲キャッシュは更新日時が一致すると保存順で復元し不一致なら使わない', async () => {
+test('WORLD END楽曲キャッシュは変更世代が一致すると保存順で復元し不一致なら使わない', async () => {
   // Given: IDのソート順とは異なる順で保存された有効な楽曲キャッシュ。
   const songs = [worldsendSong, { ...worldsendSong, id: 'worldsend-song-0', title: '後続曲' }]
-  await replaceCachedWorldsendSongs(songs, 'songs-current')
+  await replaceCachedWorldsendSongs(songs, 1)
 
-  // When: 一致する更新日時と異なる更新日時で読み込む。
-  const matched = await readCachedWorldsendSongs('songs-current')
-  const mismatched = await readCachedWorldsendSongs('songs-new')
+  // When: 一致する変更世代と異なる変更世代で読み込む。
+  const matched = await readCachedWorldsendSongs(1)
+  const mismatched = await readCachedWorldsendSongs(2)
 
   // Then: 一致時のみ保存順と内容を保って返す。
   assert.deepEqual(matched, songs)
   assert.equal(mismatched, null)
 })
 
-test('楽曲キャッシュは schemaVersion と updated-at が一致する場合だけ読み込まれること', async () => {
+test('楽曲キャッシュは schemaVersion と revision が一致する場合だけ読み込まれること', async () => {
   // Given
-  await replaceCachedSongs([song, previousIdSong], '2026-06-16T12:00:00Z')
+  await replaceCachedSongs([song, previousIdSong], 1)
 
   // When
-  const matched = await readCachedSongs('2026-06-16T12:00:00Z')
-  const mismatched = await readCachedSongs('2026-06-16T12:01:00Z')
+  const matched = await readCachedSongs(1)
+  const mismatched = await readCachedSongs(2)
 
   // Then
   assert.deepEqual(matched, [song, previousIdSong])
@@ -177,14 +178,14 @@ test('楽曲キャッシュは schemaVersion と updated-at が一致する場�
 
 test("WORLD'S END の旧キャッシュに新曲フラグがなければ再取得すること", async () => {
   // Given
-  const songsUpdatedAt = '2026-06-16T12:00:00Z'
-  await replaceCachedWorldsendSongs([worldsendSong], songsUpdatedAt)
+  const songsRevision = 1
+  await replaceCachedWorldsendSongs([worldsendSong], songsRevision)
   const oldSong = { ...worldsendSong }
   delete (oldSong as Partial<WorldsendSongDTO>).is_new
   await db.worldsendSongs.put({ id: oldSong.id, sortOrder: 0, data: oldSong })
 
   // When
-  const cached = await readCachedWorldsendSongs(songsUpdatedAt)
+  const cached = await readCachedWorldsendSongs(songsRevision)
 
   // Then
   assert.equal(cached, null)
@@ -192,14 +193,14 @@ test("WORLD'S END の旧キャッシュに新曲フラグがなければ再取�
 
 test('通常楽曲の旧キャッシュに要解禁フラグがなければ再取得すること', async () => {
   // Given: 要解禁フラグ追加前の形式で保存された通常楽曲キャッシュ。
-  const songsUpdatedAt = '2026-06-16T12:00:00Z'
-  await replaceCachedSongs([song], songsUpdatedAt)
+  const songsRevision = 1
+  await replaceCachedSongs([song], songsRevision)
   const oldSong = { ...song }
   delete (oldSong as Partial<SongDTO>).unlock_required
   await db.songs.put({ id: oldSong.id, sortOrder: 0, data: oldSong })
 
   // When
-  const cached = await readCachedSongs(songsUpdatedAt)
+  const cached = await readCachedSongs(songsRevision)
 
   // Then
   assert.equal(cached, null)
@@ -207,24 +208,24 @@ test('通常楽曲の旧キャッシュに要解禁フラグがなければ再�
 
 test("WORLD'S END の旧キャッシュに要解禁フラグがなければ再取得すること", async () => {
   // Given: 要解禁フラグ追加前の形式で保存された WORLD'S END 楽曲キャッシュ。
-  const songsUpdatedAt = '2026-06-16T12:00:00Z'
-  await replaceCachedWorldsendSongs([worldsendSong], songsUpdatedAt)
+  const songsRevision = 1
+  await replaceCachedWorldsendSongs([worldsendSong], songsRevision)
   const oldSong = { ...worldsendSong }
   delete (oldSong as Partial<WorldsendSongDTO>).unlock_required
   await db.worldsendSongs.put({ id: oldSong.id, sortOrder: 0, data: oldSong })
 
   // When
-  const cached = await readCachedWorldsendSongs(songsUpdatedAt)
+  const cached = await readCachedWorldsendSongs(songsRevision)
 
   // Then
   assert.equal(cached, null)
 })
 
 test("楽曲キャッシュ無効化は通常楽曲とWORLD'S END楽曲をまとめて削除すること", async () => {
-  // Given: 共通の更新日時で両方の楽曲キャッシュを保存する。
-  const songsUpdatedAt = '2026-06-16T12:00:00Z'
-  await replaceCachedSongs([song], songsUpdatedAt)
-  await replaceCachedWorldsendSongs([worldsendSong], songsUpdatedAt)
+  // Given: 共通の変更世代で両方の楽曲キャッシュを保存する。
+  const songsRevision = 1
+  await replaceCachedSongs([song], songsRevision)
+  await replaceCachedWorldsendSongs([worldsendSong], songsRevision)
 
   // When: 楽曲 CRUD 後のキャッシュ無効化を実行する。
   await clearCachedSongData()
@@ -241,7 +242,7 @@ test('楽曲キャッシュは順序情報がない旧形式の場合は読み�
   await db.cacheMetadata.put({
     key: 'songs',
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
-    songsUpdatedAt: '2026-06-16T12:00:00Z',
+    songsRevision: 1,
     fetchedAt: '2026-06-16T12:00:00Z',
   })
   await db.songs.put({
@@ -250,7 +251,7 @@ test('楽曲キャッシュは順序情報がない旧形式の場合は読み�
   } as CachedSong)
 
   // When
-  const cachedSongs = await readCachedSongs('2026-06-16T12:00:00Z')
+  const cachedSongs = await readCachedSongs(1)
 
   // Then
   assert.equal(cachedSongs, null)
@@ -260,7 +261,7 @@ test('コースマスタキャッシュは専用updated-atが一致する場合�
   // Given: コースマスタを専用更新日時とともに保存する。
   await replaceCachedCourses([course], '2026-07-15T09:00:00Z')
 
-  // When: 一致する更新日時と異なる更新日時で読み込む。
+  // When: 一致する変更世代と異なる変更世代で読み込む。
   const matched = await readCachedCourses('2026-07-15T09:00:00Z')
   const mismatched = await readCachedCourses('2026-07-15T09:01:00Z')
 
@@ -318,7 +319,7 @@ test('コースマスタキャッシュはschemaVersionも順序情報もない�
 test('コースキャッシュの専用schemaVersion不一致は他のキャッシュを無効化しないこと', async () => {
   // Given: コース、楽曲、画面設定を現行バージョンで保存する。
   await replaceCachedCourses([course], '2026-07-15T09:00:00Z')
-  await replaceCachedSongs([song], '2026-07-15T09:00:00Z')
+  await replaceCachedSongs([song], 1)
   await saveStandardRecordColumnsSetting(['title'])
   await db.cacheMetadata.update('courses', {
     courseSchemaVersion: COURSE_CACHE_SCHEMA_VERSION - 1,
@@ -326,7 +327,7 @@ test('コースキャッシュの専用schemaVersion不一致は他のキャッ�
 
   // When: コースだけ専用schemaVersionが古い状態で読み込む。
   const cachedCourses = await readCachedCourses('2026-07-15T09:00:00Z')
-  const cachedSongs = await readCachedSongs('2026-07-15T09:00:00Z')
+  const cachedSongs = await readCachedSongs(1)
   const columns = await readStandardRecordColumnsSetting()
 
   // Then: コースだけ無効化し、楽曲と画面設定は利用できる。
@@ -369,31 +370,31 @@ test('コースレコードキャッシュはマスタ情報を除いてユー�
   })
 })
 
-test('ユーザー API キャッシュは username と updated-at が一致する場合だけ読み込まれること', async () => {
+test('ユーザー API キャッシュは username と更新日時・変更世代が一致する場合だけ読み込まれること', async () => {
   // Given
-  await saveCachedUserRating('alice', 'user-1', 'songs-1', rating)
-  await saveCachedUserRecord('alice', 'user-1', 'songs-1', record)
+  await saveCachedUserRating('alice', 'user-1', 1, rating)
+  await saveCachedUserRecord('alice', 'user-1', 1, record)
 
   // When
   const matchedRating = await readCachedUserRating({
     username: 'alice',
     userUpdatedAt: 'user-1',
-    songsUpdatedAt: 'songs-1',
+    songsRevision: 1,
   })
   const mismatchedRating = await readCachedUserRating({
     username: 'bob',
     userUpdatedAt: 'user-1',
-    songsUpdatedAt: 'songs-1',
+    songsRevision: 1,
   })
   const matchedRecord = await readCachedUserRecord({
     username: 'alice',
     userUpdatedAt: 'user-1',
-    songsUpdatedAt: 'songs-1',
+    songsRevision: 1,
   })
   const mismatchedRecord = await readCachedUserRecord({
     username: 'bob',
     userUpdatedAt: 'user-1',
-    songsUpdatedAt: 'songs-1',
+    songsRevision: 1,
   })
 
   // Then
@@ -428,12 +429,12 @@ const standardSongRecord = {
 const standardSongRecordKey = {
   username: 'alice',
   userUpdatedAt: 'user-1',
-  songsUpdatedAt: 'songs-1',
+  songsRevision: 1,
 }
 
 test('全件レコードキャッシュは1曲1譜面を曲単位で保存し、全件レスポンスとしては保存しないこと', async () => {
   // Given
-  await saveCachedUserRecord('alice', 'user-1', 'songs-1', {
+  await saveCachedUserRecord('alice', 'user-1', 1, {
     standard: [standardSongRecord],
     worldsend: [],
     meta: { updated_at: '2026-06-16T12:00:00Z' },
@@ -451,7 +452,7 @@ test('全件レコードキャッシュは同じ曲の複数譜面をまとめ�
   // Given: 同じ曲の EXPERT・MASTER の間に別曲のレコードを挟む。
   const expertRecord = { ...standardSongRecord, difficulty: 'EXPERT', score: 1_000_000 } as const
   const otherSongRecord = { ...standardSongRecord, id: 'song-2', title: '別の楽曲' } as const
-  await saveCachedUserRecord('alice', 'user-1', 'songs-1', {
+  await saveCachedUserRecord('alice', 'user-1', 1, {
     standard: [expertRecord, otherSongRecord, standardSongRecord],
     worldsend: [],
     meta: { updated_at: '2026-06-16T12:00:00Z' },
@@ -471,7 +472,7 @@ test("WORLD'S END未プレイはキャッシュなしと区別して保存され
   const match = {
     username: 'alice',
     userUpdatedAt: 'user-1',
-    songsUpdatedAt: 'songs-1',
+    songsRevision: 1,
   }
   await saveCachedWorldsendSongRecord(match, 'worldsend-1', null)
 
@@ -486,13 +487,13 @@ test("WORLD'S END未プレイはキャッシュなしと区別して保存され
 
 test('ユーザーAPIキャッシュの全削除はレーティング・曲別レコード・全件メタデータを削除すること', async () => {
   // Given
-  await saveCachedUserRating('alice', 'user-1', 'songs-1', rating)
-  await saveCachedUserRecord('alice', 'user-1', 'songs-1', record)
+  await saveCachedUserRating('alice', 'user-1', 1, rating)
+  await saveCachedUserRecord('alice', 'user-1', 1, record)
   await saveCachedWorldsendSongRecord(
     {
       username: 'alice',
       userUpdatedAt: 'user-1',
-      songsUpdatedAt: 'songs-1',
+      songsRevision: 1,
     },
     'worldsend-1',
     null
@@ -517,7 +518,7 @@ test('集計値がない旧形式のレーティングキャッシュは読み�
     username: 'alice',
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
     userUpdatedAt: 'user-1',
-    songsUpdatedAt: 'songs-1',
+    songsRevision: 1,
     fetchedAt: new Date().toISOString(),
     data: {
       best: [],
@@ -532,7 +533,7 @@ test('集計値がない旧形式のレーティングキャッシュは読み�
   const cachedRating = await readCachedUserRating({
     username: 'alice',
     userUpdatedAt: 'user-1',
-    songsUpdatedAt: 'songs-1',
+    songsRevision: 1,
   })
 
   // Then
@@ -560,8 +561,8 @@ test('画面設定は現行 schemaVersion の保存値だけ読み込まれる�
 
 test("フォルダコードのない旧楽曲キャッシュは通常曲とWORLD'S ENDの両方で無効になる", async () => {
   // Given
-  await replaceCachedSongs([song], 'songs-1')
-  await replaceCachedWorldsendSongs([worldsendSong], 'songs-1')
+  await replaceCachedSongs([song], 1)
+  await replaceCachedWorldsendSongs([worldsendSong], 1)
   const legacySong = { ...song } as Partial<SongDTO>
   const legacyWorldsendSong = { ...worldsendSong } as Partial<WorldsendSongDTO>
   delete legacySong.name_folder_code
@@ -572,10 +573,33 @@ test("フォルダコードのない旧楽曲キャッシュは通常曲とWORLD
   })
 
   // When
-  const normal = await readCachedSongs('songs-1')
-  const worldsend = await readCachedWorldsendSongs('songs-1')
+  const normal = await readCachedSongs(1)
+  const worldsend = await readCachedWorldsendSongs(1)
 
   // Then
   assert.equal(normal, null)
   assert.equal(worldsend, null)
+})
+
+test('変更世代を保存していない旧形式のユーザー API キャッシュは読み込まれないこと', async () => {
+  // Given: レーティング・全件レコード・曲単位レコードを保存し、変更世代を取り除いて旧形式にする。
+  await saveCachedUserRating('alice', 'user-1', 1, rating)
+  await saveCachedUserRecord('alice', 'user-1', 1, record)
+  const match = { username: 'alice', userUpdatedAt: 'user-1', songsRevision: 1 }
+  await saveCachedStandardSongRecord(match, 'song-1', [])
+  await db.userApiResponses.update('userRating', { songsRevision: undefined } as never)
+  await db.cacheMetadata.update('userRecord', { songsRevision: undefined })
+  await db.userSongRecords.toCollection().modify((entry) => {
+    delete (entry as Partial<typeof entry>).songsRevision
+  })
+
+  // When: 現行の変更世代で読み込む。
+  const cachedRating = await readCachedUserRating(match)
+  const cachedRecord = await readCachedUserRecord(match)
+  const cachedSongRecord = await readCachedStandardSongRecord(match, 'song-1')
+
+  // Then: いずれも不一致として扱い、API から再取得させる。
+  assert.equal(cachedRating, null)
+  assert.equal(cachedRecord, null)
+  assert.equal(cachedSongRecord, null)
 })

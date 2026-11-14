@@ -40,7 +40,7 @@ export const fetchUserRatingWithCache = async (username: string): Promise<UserRa
     await saveCachedUserRating(
       username,
       timestamps.userUpdatedAt,
-      timestamps.songsUpdatedAt,
+      timestamps.songsRevision,
       response
     )
   } catch {

@@ -76,7 +76,7 @@ afterEach(async () => {
 test('ユーザーネーム変更後は認証ユーザー用キャッシュを削除し表示設定を保持すること', async () => {
   // Given: ユーザーAPI、通知、表示設定、フレンドqueryを保存する。
   const { clearUsernameChangeCache, friendshipQueryKeys } = await loadUsernameChangeCache()
-  await saveCachedUserRating('alice', 'user-1', 'songs-1', rating)
+  await saveCachedUserRating('alice', 'user-1', 1, rating)
   await saveFriendRequestNotificationState('alice', true, '2026-09-01T00:00:00.000Z')
   await saveFriendRequestNotificationState('bob', false, '2026-09-01T00:05:00.000Z')
   await saveStandardRecordColumnsSetting(['title', 'score'])
