@@ -347,7 +347,7 @@ const LandingPage = () => {
         <div class="grid gap-6 md:grid-cols-2 md:items-start">
           <Announcements />
 
-          <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
+          <section class="min-w-0">
             <h2 class="mb-3 text-xl font-semibold">{X_TIMELINE_HEADING}</h2>
             <XTimeline />
           </section>
