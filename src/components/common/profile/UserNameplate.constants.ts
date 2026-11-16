@@ -12,6 +12,9 @@ export const USER_NAMEPLATE_METRIC_LABELS = {
   overPower: 'OVER POWER',
 } as const
 
+/** プロフィールカード下部に差し込む内容とその上の区切り線に使うスタイル */
+export const USER_NAMEPLATE_FOOTER_CLASS = 'mt-4 border-t border-current/20 pt-3'
+
 /** プロフィールカードの履歴導線で使用する文言 */
 export const USER_NAMEPLATE_HISTORY_LINK_LABEL = '履歴'
 /** プロフィールカードの履歴導線を説明するアクセシブル名 */

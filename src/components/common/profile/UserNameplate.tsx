@@ -53,7 +53,7 @@ const VISIBLE_HONOR_LIMIT = 3
 type Props = {
   /** カード配置先に合わせた幅。省略時はマイページの既定幅 */
   widthClass?: string
-  /** カード下部に表示する操作導線 */
+  /** カード下部に表示する操作導線。区切り線と余白は呼び出し側で付与する */
   footer?: JSX.Element
   playerInfo: PlayerDTO
   honors: HonorDTO[]
@@ -435,9 +435,7 @@ export const UserNameplate: Component<Props> = (props) => {
           )}
         </Show>
       </div>
-      <Show when={props.footer}>
-        <div class="mt-4 border-t border-current/20 pt-3">{props.footer}</div>
-      </Show>
+      {props.footer}
     </div>
   )
 }
