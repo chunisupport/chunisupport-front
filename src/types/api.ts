@@ -809,7 +809,7 @@ export interface MasterDataDTO {
   account_types: MasterItemDTO[]
   rating_bands: RatingBandDTO[]
   achievement_types: AchievementTypeDTO[]
-  /** ポゼッション一覧（ID順）。`PlayerDTO.possession_id` の解決に使用する */
+  /** ポゼッション一覧（ID順）。`name` は `PlayerDTO.possession` の名称に対応する */
   possessions: MasterItemDTO[]
 }
 
@@ -1032,8 +1032,8 @@ export interface FriendshipUserDTO {
   rating: number | null
   /** OVER POWER値。プレイヤーデータ未連携の場合は null */
   overpower_value: number | null
-  /** ポゼッションID。`MasterDataDTO.possessions` の `id` に対応する。プレイヤーデータ未連携の場合は null */
-  possession_id: number | null
+  /** ポゼッション名。プレイヤーデータ未連携、または非公開の未承認相手の場合は null */
+  possession: PossessionName | null
   /** 非公開アカウントかどうか */
   is_private: boolean
   /** 申請日時 */
@@ -1064,7 +1064,6 @@ export interface FriendRequestCreateRequest {
 
 /** 登録直後と保存済み最新結果で共通するプレイヤーデータ更新結果 */
 export interface PlayerDataUpdateResult {
-  player_id: number
   app_ver: string
   imported_at: string
   /** 登録後のプレイヤープロフィール情報 */
@@ -1090,19 +1089,17 @@ export interface PlayerLatestUpdateResult extends PlayerDataUpdateResult {
   schema_version: number
 }
 
-/** スコア登録・保存済み更新結果のプロフィール。エンブレムは数値IDを返す。 */
+/** スコア登録・保存済み更新結果のプロフィール。マスタ参照は名称で返る。 */
 export interface PlayerDataProfile {
-  player_id: number
   name: string
   level: number
   rating: number | null
-  class_emblem_id: number | null
-  class_emblem_base_id: number | null
-  /**
-   * ポゼッションID。`MasterDataDTO.possessions` の `id` に対応する。
-   * 現行APIは常に返すが、保存済み最新更新結果の旧schemaでは未返却のことがある。
-   */
-  possession_id?: number
+  /** クラスエンブレムのマスタ名。未設定・解決不能時はnull */
+  class_emblem: string | null
+  /** クラスエンブレムベースのマスタ名。未設定・解決不能時はnull */
+  class_emblem_base: string | null
+  /** ポゼッション名。保存済みの旧形式でも API が normal に補完する */
+  possession: PossessionName
   last_played_at: string | null
   overpower_value: number | null
   overpower_percent: number | null
@@ -1364,8 +1361,8 @@ export interface PlayerDTO {
   class_emblem: string | null
   /** 解決済みのクラスエンブレムベースのマスタ名。未設定・解決不能時はnull */
   class_emblem_base: string | null
-  /** ポゼッションID。`MasterDataDTO.possessions` の `id` に対応する */
-  possession_id: number
+  /** ポゼッション名 */
+  possession: PossessionName
   last_played_at: string | null
   overpower_value: number | null
   overpower_percent: number | null
@@ -1751,8 +1748,6 @@ export interface DataTransferValidationResponse {
 
 /** ユーザーデータ移行の確定結果 */
 export interface DataTransferImportResponse {
-  /** 移行先で新規採番されたプレイヤーID */
-  player_id: number
   /** 保存されたデータ件数 */
   counts: DataTransferCountsResponse
 }

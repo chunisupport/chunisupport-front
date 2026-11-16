@@ -10,7 +10,6 @@ import { AppDialog } from '../../../../components/common/AppDialog'
 import { showSuccessToast } from '../../../../components/common/AppToast'
 import { AppTooltipIconButton } from '../../../../components/common/AppTooltipIconButton'
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../../../components/common/filterStyles'
-import { USER_NAMEPLATE_WIDTH_CLASS } from '../../../../components/common/profile/UserNameplate.constants'
 import { USER_COMMENT_MAX_LENGTH } from '../../../../constants/userComment'
 import { isFeatureEnabled } from '../../../../lib/featureFlags'
 import { userCommentQueryOptions, userQueryKeys } from '../../../../queries/users'
@@ -29,7 +28,7 @@ type ProfileCommentProps = {
 }
 
 /**
- * プロフィールカードの下に、カードと同じ幅でプロフィールコメントを表示する。
+ * プロフィールカード内のRATING・OVER POWER表示の下に区切り線を挟んでプロフィールコメントを表示する。
  * 自分のプロフィールでは編集ダイアログを開く操作を添える。
  * `profile_comment` が無効な環境では何も出さず、コメントの取得も保存もしない。
  *
@@ -122,7 +121,8 @@ export const ProfileComment: Component<ProfileCommentProps> = (props) => {
   return (
     <>
       <Show when={comment() !== undefined && (comment() !== null || isOwnProfile())}>
-        <div class={`${USER_NAMEPLATE_WIDTH_CLASS} mb-2`}>
+        <div class="w-full">
+          <hr class="my-2 border-t" />
           <Show
             when={comment()}
             fallback={
@@ -139,9 +139,7 @@ export const ProfileComment: Component<ProfileCommentProps> = (props) => {
           >
             {(text) => (
               <div class="flex items-start gap-1">
-                <p class="min-w-0 flex-1 wrap-anywhere px-1 py-2 font-sans text-sm text-text">
-                  {text()}
-                </p>
+                <p class="min-w-0 flex-1 wrap-anywhere py-1 font-sans text-sm">{text()}</p>
                 <Show when={isOwnProfile()}>
                   <AppTooltipIconButton
                     tone="ghost"

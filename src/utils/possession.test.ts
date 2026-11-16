@@ -1,50 +1,31 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { MasterItemDTO } from '../types/api'
-import { resolvePossessionName } from './possession'
+import { normalizePossessionName } from './possession'
 
-const POSSESSIONS: MasterItemDTO[] = [
-  { id: 1, name: 'normal' },
-  { id: 2, name: 'silver' },
-  { id: 3, name: 'gold' },
-  { id: 4, name: 'platina' },
-  { id: 5, name: 'rainbow' },
-]
+test('正規のポゼッション名はそのまま返す', () => {
+  // Given: APIが返す虹のポゼッション名。
 
-test('ポゼッションIDをマスタ名称へ解決する', () => {
-  // Given: 虹のポゼッションID。
+  // When: 名称を正規化する。
+  const name = normalizePossessionName('rainbow')
 
-  // When: マスタから名称を解決する。
-  const name = resolvePossessionName(5, POSSESSIONS)
-
-  // Then: 対応するマスタ名称になる。
+  // Then: 同じ名称になる。
   assert.equal(name, 'rainbow')
 })
 
-test('ポゼッションIDが未指定の場合はnormalを返す', () => {
-  // Given: 旧schemaの最新更新結果など、ポゼッションIDがない状態。
+test('ポゼッション名が未指定の場合はnormalを返す', () => {
+  // Given: プレイヤー未連携など、ポゼッション名がない状態。
 
-  // When: 名称を解決する。
-  const name = resolvePossessionName(undefined, POSSESSIONS)
-
-  // Then: API省略時と同じ既定値になる。
-  assert.equal(name, 'normal')
+  // When / Then: API省略時と同じ既定値になる。
+  assert.equal(normalizePossessionName(undefined), 'normal')
+  assert.equal(normalizePossessionName(null), 'normal')
 })
 
-test('マスタに存在しないポゼッションIDはnormalを返す', () => {
-  // Given: 未知のID、または空のマスタ。
+test('正規値でないポゼッション名はnormalを返す', () => {
+  // Given: 想定外の名称。
 
-  // When / Then: 表示不能にせず既定値へ落とす。
-  assert.equal(resolvePossessionName(99, POSSESSIONS), 'normal')
-  assert.equal(resolvePossessionName(5, []), 'normal')
-})
+  // When: 名称を正規化する。
+  const name = normalizePossessionName('unknown')
 
-test('マスタ名称が正規値でない場合はnormalを返す', () => {
-  // Given: 想定外の名称を持つマスタ項目。
-
-  // When: 名称を解決する。
-  const name = resolvePossessionName(1, [{ id: 1, name: 'unknown' }])
-
-  // Then: 正規のポゼッション名だけを返す。
+  // Then: 表示不能にせず既定値へ落とす。
   assert.equal(name, 'normal')
 })

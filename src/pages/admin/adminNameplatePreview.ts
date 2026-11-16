@@ -13,7 +13,7 @@ export const NAMEPLATE_PREVIEW_PLAYER: PlayerDTO = {
   rating: 16.5,
   class_emblem: null,
   class_emblem_base: null,
-  possession_id: 1,
+  possession: 'normal',
   last_played_at: null,
   overpower_value: 12_345.678,
   overpower_percent: 12.34567,

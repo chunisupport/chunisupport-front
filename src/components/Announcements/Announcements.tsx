@@ -33,7 +33,7 @@ const Announcements = () => {
   const [announcements] = createResource(fetchAnnouncements)
 
   return (
-    <section class="min-w-0 rounded-lg border border-border bg-surface p-6">
+    <section class="min-w-0">
       <div class="mb-3 flex items-center justify-between gap-3">
         <h2 class="text-xl font-semibold">{ANNOUNCEMENTS_HEADING}</h2>
         <a
@@ -75,7 +75,7 @@ const Announcements = () => {
                     <li>
                       <a
                         href={announcement.url}
-                        class={`block ${ANNOUNCEMENT_CARD_FRAME_CLASS} ${ANNOUNCEMENT_CARD_MIN_HEIGHT_CLASS} hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring`}
+                        class={`block ${ANNOUNCEMENT_CARD_FRAME_CLASS} ${ANNOUNCEMENT_CARD_MIN_HEIGHT_CLASS} bg-surface hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring`}
                       >
                         <div class="mb-2 flex flex-wrap items-center gap-2 text-xs text-text-muted">
                           <span

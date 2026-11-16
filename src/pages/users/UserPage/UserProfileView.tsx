@@ -362,10 +362,12 @@ export const UserProfileView: Component<Props> = (props) => {
           rating={props.profile.rating}
           historyHref={buildUserStatsPagePath(props.username)}
           records={recordProfile()?.record.standard}
+          footer={
+            <Show when={isFeatureEnabled('profile_comment')}>
+              <ProfileComment username={props.username} />
+            </Show>
+          }
         />
-        <Show when={isFeatureEnabled('profile_comment')}>
-          <ProfileComment username={props.username} />
-        </Show>
         <ProfileFriendAction username={props.username} playerName={playerInfo().name} />
       </div>
 

@@ -19,17 +19,15 @@ const createStatisticsGroup = (after = 0): PlayerDataStatisticsGroup => ({
 })
 
 const createPlayerDataResult = (overrides: Partial<PlayerDataResult> = {}): PlayerDataResult => ({
-  player_id: 1,
   app_ver: '0.0.1a',
   imported_at: '2026-06-10T00:00:00Z',
   profile: {
-    player_id: 1,
     name: 'TEST',
     level: 1,
     rating: null,
-    class_emblem_id: null,
-    class_emblem_base_id: null,
-    possession_id: 1,
+    class_emblem: null,
+    class_emblem_base: null,
+    possession: 'normal',
     last_played_at: null,
     overpower_value: null,
     overpower_percent: null,
