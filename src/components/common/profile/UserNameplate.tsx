@@ -6,7 +6,6 @@ import {
   type Component,
   createEffect,
   createMemo,
-  createResource,
   createSignal,
   For,
   type JSX,
@@ -16,7 +15,6 @@ import {
 } from 'solid-js'
 import { HONOR_TYPE_CLASS_NAMES } from '../../../constants/honors'
 import { getPossessionClassName } from '../../../constants/possession'
-import { fetchPossessions } from '../../../queries/possessions'
 import { useSongsData } from '../../../stores/songsData'
 import type {
   HonorDTO,
@@ -26,7 +24,7 @@ import type {
   UserRatingDTO,
 } from '../../../types/api'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../../utils/overPowerFormat'
-import { resolvePossessionName } from '../../../utils/possession'
+import { normalizePossessionName } from '../../../utils/possession'
 import { formatNullablePlayerRating } from '../../../utils/ratingFormat'
 import { buildTheoreticalOverPowerTargetDifficultyBySongId } from '../../../utils/theoreticalOverPowerTarget'
 import {
@@ -234,19 +232,13 @@ const HonorTitle: Component<HonorTitleProps> = (props) => {
  */
 export const UserNameplate: Component<Props> = (props) => {
   const { songsResponse, ensureSongsLoaded } = useSongsData()
-  const [possessions] = createResource(
-    () => (props.possessionName == null ? true : undefined),
-    () => fetchPossessions()
-  )
 
   createEffect(() => {
     if (props.records) ensureSongsLoaded()
   })
-  /** 明示指定、またはマスタから解決したポゼッション名。未取得時は既定値 */
+  /** 明示指定、またはプレイヤー情報のポゼッション名 */
   const possessionName = createMemo(
-    () =>
-      props.possessionName ??
-      resolvePossessionName(props.playerInfo.possession_id, possessions() ?? [])
+    () => props.possessionName ?? normalizePossessionName(props.playerInfo.possession)
   )
   const playerRatingText = createMemo(() => formatNullablePlayerRating(props.rating.rating))
   const bestRatingText = createMemo(() => formatNullablePlayerRating(props.rating.best_average))
