@@ -9,7 +9,7 @@ const player: PlayerDTO = {
   rating: 0,
   class_emblem: 'inf',
   class_emblem_base: '3',
-  possession_id: 1,
+  possession: 'normal',
   last_played_at: null,
   overpower_value: 0,
   overpower_percent: 0,

@@ -4,7 +4,6 @@ import { createMemo, createSignal, Show } from 'solid-js'
 import { AppIconButton } from '../../components/common/AppButton'
 import { ClassEmblem } from '../../components/common/profile/ClassEmblem'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
-import { resolveClassEmblemMasterName } from '../../utils/classEmblem'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatPlayerLevelLabel } from '../../utils/playerLevel'
 import { REGISTER_SCORE_COPY } from './constants'
@@ -123,8 +122,8 @@ export const RegisterScoreProfileSummary = (props: {
         </div>
         <Show when={props.showClassEmblem}>
           <ClassEmblem
-            emblem={resolveClassEmblemMasterName(props.result.profile.class_emblem_id)}
-            base={resolveClassEmblemMasterName(props.result.profile.class_emblem_base_id)}
+            emblem={props.result.profile.class_emblem}
+            base={props.result.profile.class_emblem_base}
             class="h-7"
           />
         </Show>

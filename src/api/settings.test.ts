@@ -176,7 +176,6 @@ test('データ移行の検証と確定は同じJSON BlobをPOSTする', async (
     unresolved_reference_count: 0,
   }
   const importResponse = {
-    player_id: 42,
     counts: validationResponse.counts,
   }
   const calls = installFetchRecorder((input) =>

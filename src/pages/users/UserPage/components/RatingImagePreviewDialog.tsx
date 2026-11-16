@@ -2,7 +2,7 @@ import { Collapsible } from '@kobalte/core/collapsible'
 import ImageDown from 'lucide-solid/icons/image-down'
 import Share2 from 'lucide-solid/icons/share-2'
 import type { Component } from 'solid-js'
-import { createEffect, createMemo, createResource, createSignal, on, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { Loading } from '../../../../components'
 import { AppButton, getAppButtonClass } from '../../../../components/common/AppButton'
 import { AppDisclosureTrigger } from '../../../../components/common/AppDisclosureTrigger'
@@ -12,11 +12,10 @@ import { ImagePreviewDialog } from '../../../../components/common/ImagePreviewDi
 import { DEFAULT_POSSESSION_NAME } from '../../../../constants/possession'
 import { RATING_SLOT_COUNT } from '../../../../constants/rating'
 import { createImagePreview } from '../../../../hooks/createImagePreview'
-import { fetchPossessions } from '../../../../queries/possessions'
 import type { HonorDTO, PlayerDTO, UserRatingDTO } from '../../../../types/api'
 import { canShareFiles, captureElementAsImage } from '../../../../utils/domImageCapture'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
-import { resolvePossessionName } from '../../../../utils/possession'
+import { normalizePossessionName } from '../../../../utils/possession'
 import {
   RATING_IMAGE_COPY,
   RATING_IMAGE_DEFAULT_VERSION_OPTION,
@@ -119,15 +118,11 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
     shareTitle: RATING_IMAGE_COPY.dialogTitle,
   })
 
-  const [possessions] = createResource(
-    () => (preview.open() && selectedVersionOption().value === 'v2' ? true : undefined),
-    fetchPossessions
-  )
   /** レーティング枠画像 Ver. 2 のヘッダーへ渡すポゼッション名 */
   const possessionName = createMemo(() => {
     if (!applyPossession()) return DEFAULT_POSSESSION_NAME
 
-    return resolvePossessionName(props.playerInfo.possession_id, possessions() ?? [])
+    return normalizePossessionName(props.playerInfo.possession)
   })
 
   /**
@@ -148,23 +143,12 @@ export const RatingImagePreviewDialog: Component<Props> = (props) => {
   }
 
   /**
-   * ポゼッションマスタの取得が終わり、ヘッダー色を確定できるかを返す。
-   *
-   * @returns Ver. 1、ポゼッション非反映、またはマスタ取得完了・失敗時は true。
-   */
-  const isPossessionReady = (): boolean => {
-    if (selectedVersionOption().value !== 'v2' || !applyPossession()) return true
-
-    return possessions.state === 'ready' || possessions.state === 'errored'
-  }
-
-  /**
-   * ジャケットとポゼッション色の準備が終わり、画像化を開始できるかを返す。
+   * ジャケットの準備が終わり、画像化を開始できるかを返す。
+   * ポゼッション色はプレイヤー情報の名称から決まるため、追加の取得を待たない。
    *
    * @returns 画像化を開始可能な場合はtrue。
    */
-  const isPreviewReady = (): boolean =>
-    readyJacketCount() >= expectedJacketCount() && isPossessionReady()
+  const isPreviewReady = (): boolean => readyJacketCount() >= expectedJacketCount()
 
   /**
    * 現在のブラウザがJPEGファイルの共有に対応しているかを返す。

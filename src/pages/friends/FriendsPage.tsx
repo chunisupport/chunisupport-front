@@ -12,15 +12,7 @@ import UserMinus from 'lucide-solid/icons/user-minus'
 import UserPlus from 'lucide-solid/icons/user-plus'
 import X from 'lucide-solid/icons/x'
 import type { JSX } from 'solid-js'
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  For,
-  onCleanup,
-  Show,
-} from 'solid-js'
+import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import {
   acceptFriendRequest,
   cancelFriendRequest,
@@ -47,17 +39,15 @@ import {
   receivedFriendRequestsQueryOptions,
   sentFriendRequestsQueryOptions,
 } from '../../queries/friends'
-import { fetchPossessions } from '../../queries/possessions'
 import { authSession } from '../../stores/authSession'
 import {
   friendRequestNotification,
   setActiveFriendRequestNotificationUser,
   syncFriendRequestNotificationFromReceivedCount,
 } from '../../stores/friendRequestNotification'
-import type { FriendshipUserDTO, MasterItemDTO } from '../../types/api'
+import type { FriendshipUserDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { isFriendshipSlotsFull } from '../../utils/friendshipSlots'
-import { resolvePossessionName } from '../../utils/possession'
 import {
   USERNAME_MIN_LENGTH,
   USERNAME_PATTERN,
@@ -99,8 +89,6 @@ type FriendshipListProps = {
   variant: FriendsTabValue
   /** 表示するユーザー概要の一覧 */
   items: FriendshipUserDTO[]
-  /** ID順のポゼッションマスタ。未取得時は空配列 */
-  possessions: readonly MasterItemDTO[]
   /** 空状態で表示する文言 */
   emptyMessage: string
   /** 一覧内の操作を無効化するか */
@@ -334,11 +322,7 @@ const FriendshipList = (props: FriendshipListProps): JSX.Element => (
           const hidesProfile = createMemo(() => shouldHideFriendProfile(props.variant, user))
           const display = createMemo(() => buildFriendCardDisplay(user, hidesProfile()))
           const possessionClassName = createMemo(() =>
-            hidesProfile()
-              ? ''
-              : getPossessionClassName(
-                  resolvePossessionName(user.possession_id ?? undefined, props.possessions)
-                )
+            hidesProfile() ? '' : getPossessionClassName(user.possession ?? '')
           )
           return (
             <li class="flex flex-col rounded-md shadow-sm">
@@ -436,9 +420,6 @@ const FriendsPage = () => {
   const sentRequestsQuery = useQuery(() => sentFriendRequestsQueryOptions(ownUsername() || null))
   /** フレンド枠。表示の補助なので、取得前や取得失敗時は枠表示を出さず申請も止めない */
   const slotsQuery = useQuery(() => friendshipSlotsQueryOptions(ownUsername() || null))
-  const [possessions] = createResource(fetchPossessions)
-  /** カード背景に使うポゼッションマスタ。装飾用のため取得失敗時は空配列で既定色にする */
-  const possessionMaster = createMemo(() => (possessions.state === 'ready' ? possessions() : []))
 
   /**
    * フレンド操作成功を通知し、影響するqueryを無効化する。
@@ -921,7 +902,6 @@ const FriendsPage = () => {
               <FriendshipList
                 variant="friends"
                 items={currentData().friends}
-                possessions={possessionMaster()}
                 emptyMessage={FRIENDS_COPY.emptyFriends}
                 actionsDisabled={operation() !== null}
                 onAccept={handleAccept}
@@ -934,7 +914,6 @@ const FriendsPage = () => {
               <FriendshipList
                 variant="received"
                 items={currentData().received}
-                possessions={possessionMaster()}
                 emptyMessage={FRIENDS_COPY.emptyReceived}
                 actionsDisabled={operation() !== null}
                 acceptDisabled={isSlotsFull()}
@@ -948,7 +927,6 @@ const FriendsPage = () => {
               <FriendshipList
                 variant="sent"
                 items={currentData().sent}
-                possessions={possessionMaster()}
                 emptyMessage={FRIENDS_COPY.emptySent}
                 actionsDisabled={operation() !== null}
                 onAccept={handleAccept}
