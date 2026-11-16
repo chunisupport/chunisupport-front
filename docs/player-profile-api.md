@@ -8,7 +8,7 @@
 | `class_emblem_base` | `string \| null` | 解決済みのクラスエンブレムベースのマスタ名 |
 | `possession` | `PossessionName` | ポゼッション名（`"normal"` / `"silver"` / `"gold"` / `"platina"` / `"rainbow"`） |
 
-エンブレムの値は `"1"`〜`"5"`、`"inf"` の文字列です。未設定または解決不能の場合は `null` です。APIはDBの数値IDを公開しないため、`class_emblem_id`、`class_emblem_base_id`、`possession_id` は含まれません。
+エンブレムの値は `"1"`〜`"5"`、`"inf"` の文字列です。未設定または解決不能の場合は `null` です。内部APIはDBの数値IDを公開しないため、`class_emblem_id`、`class_emblem_base_id`、`possession_id` は含まれません。
 
 プロフィール取得結果はマスタで再解決せず、そのまま扱います。プロフィールは永続キャッシュに保存しません。
 
@@ -16,4 +16,4 @@
 
 フレンド一覧の `possession` もポゼッション名で、プレイヤー由来の項目を返さない場合は `null` です。ポゼッション色はマスタを取得せず、これらの名称から決めます。
 
-外部API v1のプロフィールも同じ名称で返します。フロントエンドの `PlayerDTO` は内部API専用です。
+外部API v1のプロフィールも同じ名称を返します。ただし後方互換のため、`class_emblem_id`、`class_emblem_base_id`、`possession_id` の数値IDも返します。フロントエンドの `PlayerDTO` は内部API専用です。
