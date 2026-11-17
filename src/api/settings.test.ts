@@ -30,7 +30,7 @@ test('APIトークン一覧は非空のtokensレスポンスを返す', async ()
     Response.json({
       tokens: [
         {
-          id: 42,
+          id: '3f9a1c0b7d2e4a51',
           name: 'CLI',
           permission: 'read',
           token_prefix: 'prefix',
@@ -49,7 +49,7 @@ test('APIトークン一覧は非空のtokensレスポンスを返す', async ()
   assert.deepEqual(result, {
     tokens: [
       {
-        id: 42,
+        id: '3f9a1c0b7d2e4a51',
         name: 'CLI',
         permission: 'read',
         token_prefix: 'prefix',
@@ -63,7 +63,7 @@ test('APIトークン一覧は非空のtokensレスポンスを返す', async ()
 test('APIトークン発行はnameとpermissionをJSONでPOSTする', async () => {
   // Given: 発行結果とAPI呼び出し記録。
   const responseBody = {
-    id: 42,
+    id: '3f9a1c0b7d2e4a51',
     name: 'Discord Bot',
     permission: 'read',
     token: 'plain-text-token',
@@ -90,7 +90,7 @@ test('APIトークンの名称変更と削除はID指定エンドポイントを
   const calls = installFetchRecorder((_input, init) =>
     init?.method === 'PATCH'
       ? Response.json({
-          id: 42,
+          id: '3f9a1c0b7d2e4a51',
           name: 'CLI',
           permission: 'read_write',
           token_prefix: 'plain',
@@ -100,10 +100,10 @@ test('APIトークンの名称変更と削除はID指定エンドポイントを
       : new Response(null, { status: 204 })
   )
 
-  // When: ID 42の名称変更と削除を行う。
+  // When: ID 3f9a1c0b7d2e4a51の名称変更と削除を行う。
   const { deleteApiToken, renameApiToken } = await loadSettingsApi()
-  await renameApiToken(42, { name: 'CLI' })
-  await deleteApiToken(42)
+  await renameApiToken('3f9a1c0b7d2e4a51', { name: 'CLI' })
+  await deleteApiToken('3f9a1c0b7d2e4a51')
 
   // Then: PATCHとDELETEの双方でID指定パスを使用する。
   assert.deepEqual(
@@ -114,12 +114,12 @@ test('APIトークンの名称変更と削除はID指定エンドポイントを
     })),
     [
       {
-        url: 'http://localhost:3000/internal/auth/api-tokens/42',
+        url: 'http://localhost:3000/internal/auth/api-tokens/3f9a1c0b7d2e4a51',
         method: 'PATCH',
         body: JSON.stringify({ name: 'CLI' }),
       },
       {
-        url: 'http://localhost:3000/internal/auth/api-tokens/42',
+        url: 'http://localhost:3000/internal/auth/api-tokens/3f9a1c0b7d2e4a51',
         method: 'DELETE',
         body: undefined,
       },

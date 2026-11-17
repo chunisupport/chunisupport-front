@@ -2,8 +2,6 @@ import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO } from '../../types
 import type { ChartLevelLabel } from '../../utils/chartLevel'
 import type { OVER_POWER_THEORETICAL_TARGET, OverPowerMasterUltimaTarget } from './constants'
 
-export type OverPowerCategory = 'genre' | 'level' | 'version' | 'difficulty'
-
 export type OverPowerSummaryRow = {
   id: string
   label: string

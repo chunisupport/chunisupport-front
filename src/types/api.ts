@@ -6,20 +6,6 @@ export interface ErrorResponse {
 }
 
 /**
- * API ルートが返す公開メタ情報。
- */
-export interface ApiRootResponse {
-  /** API アプリケーション名 */
-  app_name: string
-  /** API のビルド日時または開発環境識別子 */
-  build_date: string
-  /** API の短縮コミットハッシュ。管理者向けレスポンスで返される */
-  revision?: string
-  /** API が返すバージョン番号。未設定の環境では省略される */
-  version?: string
-}
-
-/**
  * GET /version が返すAPIバージョン情報。
  */
 export interface ApiVersionResponse {
@@ -1519,23 +1505,6 @@ export interface UserProfileWithRecordsDTO {
   updated_at: string | null
 }
 
-export type LinkedUserProfileWithRecordsDTO = UserProfileWithRecordsDTO & {
-  player: PlayerDTO
-  records: UserRecordDTO
-}
-
-export interface UserRecordResponseDTO {
-  updated_at: string
-  best: PlayerRecordDTO[]
-  best_candidate: PlayerRecordDTO[]
-  new: PlayerRecordDTO[]
-  new_candidate: PlayerRecordDTO[]
-  /** 通常譜面のユーザーレコード */
-  standard: PlayerRecordDTO[]
-  /** WORLD'S END のユーザーレコード */
-  worldsend?: WorldsendRecordDTO[]
-}
-
 export interface PlayerRecordDTO {
   is_played: boolean
   /** 曲ごとの現在OVER POWER集計対象か。楽曲マスタ上の理論値対象譜面ではない */
@@ -1764,8 +1733,8 @@ export interface DataTransferExportFile {
 
 /** APIトークンの管理画面用情報 */
 export interface ApiToken {
-  /** APIトークンID。名称変更・削除時に使用する */
-  id: number
+  /** APIトークンID。名称変更・削除時に使用する、16文字の小文字16進数 */
+  id: string
   /** ユーザーが指定した表示名 */
   name: string
   /** APIトークンで許可される操作 */

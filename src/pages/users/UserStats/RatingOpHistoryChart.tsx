@@ -14,7 +14,7 @@ import { ChartCanvasFrame } from '../../../components/common/ChartCanvasFrame'
 import { accentPreference, themePreference } from '../../../stores/themePreferences'
 import type { PlayerMetricHistoryEntryDTO } from '../../../types/api'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../utils/chartTheme'
-import { formatFixed } from '../../../utils/numberFormat'
+import { formatTruncatedFixed } from '../../../utils/numberFormat'
 import {
   buildPlayerMetricHistoryAxisRange,
   buildPlayerMetricHistoryChartPoints,
@@ -111,7 +111,7 @@ const createMetricChartOptions = (
             const value = context.parsed.y
             return value === null
               ? definition.title
-              : `${definition.title}: ${formatFixed(value, definition.decimalPlaces)}${definition.suffix}`
+              : `${definition.title}: ${formatTruncatedFixed(value, definition.decimalPlaces)}${definition.suffix}`
           },
         },
       },
@@ -136,7 +136,7 @@ const createMetricChartOptions = (
           color: textColor,
           font: { family: fontFamily },
           callback: (value) =>
-            `${formatFixed(Number(value), definition.decimalPlaces)}${definition.suffix}`,
+            `${formatTruncatedFixed(Number(value), definition.decimalPlaces)}${definition.suffix}`,
         },
         grid: {
           color: gridColor,
