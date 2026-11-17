@@ -99,3 +99,55 @@ test('APIの通信エラーはバージョン確認の完了を待たずに送�
     Object.assign(globalThis, { window: originalWindow })
   }
 })
+
+for (const { name, respond } of [
+  { name: '入力エラー', respond: () => new Response(null, { status: 400 }) },
+  {
+    name: '通信エラー',
+    respond: () => {
+      throw new Error('api network error')
+    },
+  },
+]) {
+  test(`更新系リクエストの${name}ではバージョン確認をしない`, async () => {
+    // Given: 新しいビルドが公開済みで、バージョン確認が走れば再読み込みされる状態。
+    const originalFetch = globalThis.fetch
+    const originalWindow = globalThis.window
+    const requestedUrls: string[] = []
+    let reloadCount = 0
+    globalThis.fetch = async (input) => {
+      requestedUrls.push(String(input))
+      if (String(input) === '/version.json') {
+        return Response.json({ buildId: 'new-build' })
+      }
+      return respond()
+    }
+    Object.assign(globalThis, {
+      __FRONTEND_BUILD_ID__: 'current-build',
+      window: {
+        location: {
+          reload: () => {
+            reloadCount += 1
+          },
+        },
+        sessionStorage: {
+          getItem: () => null,
+          setItem: () => undefined,
+        },
+      },
+    })
+
+    try {
+      // When: POSTでAPIを呼び出す。
+      await fetchApi('/internal/goals', { method: 'POST' }).catch(() => undefined)
+      await new Promise((resolve) => setImmediate(resolve))
+
+      // Then: version.jsonを取得せず、再読み込みもしない。
+      assert.deepEqual(requestedUrls, ['/internal/goals'])
+      assert.equal(reloadCount, 0)
+    } finally {
+      globalThis.fetch = originalFetch
+      Object.assign(globalThis, { window: originalWindow })
+    }
+  })
+}
