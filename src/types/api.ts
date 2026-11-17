@@ -1764,8 +1764,8 @@ export interface DataTransferExportFile {
 
 /** APIトークンの管理画面用情報 */
 export interface ApiToken {
-  /** APIトークンID。名称変更・削除時に使用する */
-  id: number
+  /** APIトークンID。名称変更・削除時に使用する、16文字の小文字16進数 */
+  id: string
   /** ユーザーが指定した表示名 */
   name: string
   /** APIトークンで許可される操作 */

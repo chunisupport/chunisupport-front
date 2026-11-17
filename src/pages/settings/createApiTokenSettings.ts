@@ -26,15 +26,15 @@ type ApiTokenSettingsOptions = {
   /** APIトークンを発行する */
   issueToken: (request: ApiTokenIssueRequest) => Promise<ApiTokenIssueResponse>
   /** APIトークンの名前を変更する */
-  renameToken: (id: number, request: ApiTokenRenameRequest) => Promise<ApiToken>
+  renameToken: (id: string, request: ApiTokenRenameRequest) => Promise<ApiToken>
   /** APIトークンを削除する */
-  deleteToken: (id: number) => Promise<void>
+  deleteToken: (id: string) => Promise<void>
 }
 
 /** 操作に失敗したAPIトークンの行に表示するエラー */
 type TokenActionError = {
   /** エラーを表示する行のAPIトークンID */
-  tokenId: number
+  tokenId: string
   /** 表示する文言 */
   message: string
 }
@@ -71,10 +71,10 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   const [issueSuccess, setIssueSuccess] = createSignal('')
   const [issuing, setIssuing] = createSignal(false)
   const [generatedToken, setGeneratedToken] = createSignal<ApiTokenIssueResponse>()
-  const [editingTokenId, setEditingTokenId] = createSignal<number | null>(null)
+  const [editingTokenId, setEditingTokenId] = createSignal<string | null>(null)
   const [editingName, setEditingNameSignal] = createSignal('')
   const [editingNameError, setEditingNameError] = createSignal('')
-  const [mutatingTokenId, setMutatingTokenId] = createSignal<number | null>(null)
+  const [mutatingTokenId, setMutatingTokenId] = createSignal<string | null>(null)
   const [tokenActionError, setTokenActionError] = createSignal<TokenActionError | null>(null)
   const [tokenActionSuccess, setTokenActionSuccess] = createSignal('')
   const [deleteTarget, setDeleteTarget] = createSignal<ApiToken | null>(null)
@@ -224,7 +224,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
    * @param tokenId - 名前変更対象のAPIトークンID。
    * @returns 更新処理完了後に解決されるPromise。
    */
-  const rename = async (tokenId: number): Promise<void> => {
+  const rename = async (tokenId: string): Promise<void> => {
     if (mutatingTokenId() !== null) return
 
     setEditingNameError('')
@@ -318,7 +318,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
    * @param tokenId - 行のAPIトークンID。
    * @returns その行の操作に失敗した場合の文言。ない場合は空文字。
    */
-  const tokenActionErrorFor = (tokenId: number): string => {
+  const tokenActionErrorFor = (tokenId: string): string => {
     const actionError = tokenActionError()
     return actionError?.tokenId === tokenId ? actionError.message : ''
   }
