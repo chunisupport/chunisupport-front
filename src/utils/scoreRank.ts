@@ -29,16 +29,6 @@ export const SCORE_RANK_MAX_SCORES: Record<ScoreRank, number> = Object.fromEntri
 
 export const SCORE_RANKS_ASC = SCORE_RANK_MASTER.map(({ rank }) => rank)
 
-export const HIGH_SCORE_RANKS = SCORE_RANKS_ASC.filter(
-  (rank): rank is Extract<ScoreRank, 'S' | 'S+' | 'SS' | 'SS+' | 'SSS' | 'SSS+'> =>
-    rank === 'S' ||
-    rank === 'S+' ||
-    rank === 'SS' ||
-    rank === 'SS+' ||
-    rank === 'SSS' ||
-    rank === 'SSS+'
-)
-
 export const getScoreRank = (score: number): ScoreRank => {
   const normalized = Math.max(0, Math.min(score, MAX_SCORE))
 

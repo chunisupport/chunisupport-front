@@ -40,32 +40,6 @@ export const postPlayerDataCommit = async (uploadToken: string): Promise<PlayerD
 }
 
 /**
- * 認証済みユーザーの保存済み最新プレイヤーデータ更新結果を取得する。
- *
- * @returns 最新更新結果。保存済みの結果がない場合はnull。
- */
-export const fetchLatestPlayerDataUpdate = async (): Promise<PlayerLatestUpdateResult | null> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/player-data/latest-update`, {
-    requireAuthentication: true,
-  })
-
-  if (response.status === 204) {
-    return null
-  }
-
-  const result: PlayerLatestUpdateResult = await response.json()
-  if (
-    !SUPPORTED_LATEST_SCORE_UPDATE_SCHEMA_VERSIONS.some(
-      (schemaVersion) => schemaVersion === result.schema_version
-    )
-  ) {
-    throw new Error('保存済み更新結果の形式に対応していません。')
-  }
-
-  return result
-}
-
-/**
  * 本人の保存済み更新差分を新しい順に取得する。
  *
  * @returns 最新を含む最大5件の更新結果。

@@ -65,9 +65,6 @@ export const resolveGoalAchievementTypeLabel = (
   return localized[code] ?? options?.fallbackLabel ?? code
 }
 
-export const formatGoalTypeLabel = (type: GoalAchievementType): string =>
-  resolveGoalAchievementTypeLabel(type)
-
 /**
  * 目標条件をユーザー向けの要約テキストへ変換する。
  *

@@ -6,20 +6,6 @@ export interface ErrorResponse {
 }
 
 /**
- * API ルートが返す公開メタ情報。
- */
-export interface ApiRootResponse {
-  /** API アプリケーション名 */
-  app_name: string
-  /** API のビルド日時または開発環境識別子 */
-  build_date: string
-  /** API の短縮コミットハッシュ。管理者向けレスポンスで返される */
-  revision?: string
-  /** API が返すバージョン番号。未設定の環境では省略される */
-  version?: string
-}
-
-/**
  * GET /version が返すAPIバージョン情報。
  */
 export interface ApiVersionResponse {
@@ -1517,23 +1503,6 @@ export interface UserProfileWithRecordsDTO {
   player: PlayerDTO | null
   records: UserRecordDTO | null
   updated_at: string | null
-}
-
-export type LinkedUserProfileWithRecordsDTO = UserProfileWithRecordsDTO & {
-  player: PlayerDTO
-  records: UserRecordDTO
-}
-
-export interface UserRecordResponseDTO {
-  updated_at: string
-  best: PlayerRecordDTO[]
-  best_candidate: PlayerRecordDTO[]
-  new: PlayerRecordDTO[]
-  new_candidate: PlayerRecordDTO[]
-  /** 通常譜面のユーザーレコード */
-  standard: PlayerRecordDTO[]
-  /** WORLD'S END のユーザーレコード */
-  worldsend?: WorldsendRecordDTO[]
 }
 
 export interface PlayerRecordDTO {
