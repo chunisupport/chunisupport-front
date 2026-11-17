@@ -67,12 +67,12 @@ test('計算結果が負になる場合は単曲レーティングを0にする�
 })
 
 test('浮動小数の誤差を含む譜面定数を0.1単位へ丸めて計算すること', () => {
-  // Given: 0.1 + 14.4 のように誤差を含む定数
-  const chartConstant = 0.1 + 14.4
+  // Given: 10倍すると102.99999999999999になり、切り捨てでは10.2として扱われてしまう定数
+  const chartConstant = 10.2 + 0.1
 
   // When
   const actual = calculateSingleRatingHundredths(1_007_500, chartConstant)
 
-  // Then
-  assert.equal(actual, 1650)
+  // Then: 10.3 + 2.0
+  assert.equal(actual, 1230)
 })

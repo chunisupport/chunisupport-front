@@ -138,12 +138,16 @@ for (const { name, respond } of [
     })
 
     try {
-      // When: POSTでAPIを呼び出す。
+      // When: initとRequestのそれぞれでPOSTを指定してAPIを呼び出す。
       await fetchApi('/internal/goals', { method: 'POST' }).catch(() => undefined)
+      await fetchApi(new Request('http://localhost/internal/goals', { method: 'POST' })).catch(
+        () => undefined
+      )
       await new Promise((resolve) => setImmediate(resolve))
 
       // Then: version.jsonを取得せず、再読み込みもしない。
-      assert.deepEqual(requestedUrls, ['/internal/goals'])
+      assert.equal(requestedUrls.length, 2)
+      assert.ok(requestedUrls.every((url) => !url.includes('/version.json')))
       assert.equal(reloadCount, 0)
     } finally {
       globalThis.fetch = originalFetch

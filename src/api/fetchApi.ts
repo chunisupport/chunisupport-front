@@ -11,7 +11,8 @@ import { checkForFrontendUpdate } from '../utils/frontendVersion'
  * @throws fetchが通信エラーになった場合。
  */
 export const fetchApi = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const shouldCheckUpdate = (init?.method ?? 'GET').toUpperCase() === 'GET'
+  const method = init?.method ?? (input instanceof Request ? input.method : 'GET')
+  const shouldCheckUpdate = method.toUpperCase() === 'GET'
   try {
     const response = await fetch(input, init)
     if (!response.ok && shouldCheckUpdate) void checkForFrontendUpdate()
