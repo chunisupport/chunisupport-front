@@ -13,6 +13,7 @@ import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import { courseListQueryOptions, courseStatsQueryOptions } from '../../../queries/courses'
 import { authSession } from '../../../stores/authSession'
 import type { CourseStatsBandDTO } from '../../../types/api'
+import { calculateChartStatsPercent } from '../../../utils/chartStats'
 import { getCourseScoreRank } from '../../../utils/courseScoreRank'
 import NotFoundPage from '../../NotFoundPage'
 import { COURSE_PAGE_COPY } from '../constants'
@@ -25,10 +26,12 @@ const STATS_CELL_CLASS = 'px-2 py-1.5 text-right font-jost tabular-nums whitespa
  *
  * @param count - 対象の人数。
  * @param band - 母数を持つレート帯統計。
- * @returns 小数1桁のパーセント表記。
+ * @returns 小数1桁のパーセント表記。プレイ人数が0の場合はハイフン。
  */
-const formatRate = (count: number, band: CourseStatsBandDTO): string =>
-  `${((count / band.player_count) * 100).toFixed(1)}%`
+const formatRate = (count: number, band: CourseStatsBandDTO): string => {
+  const percent = calculateChartStatsPercent(count, band.player_count)
+  return percent === null ? '-' : `${percent.toFixed(1)}%`
+}
 
 /**
  * スコアを整数の桁区切りで表示用に整形する。
