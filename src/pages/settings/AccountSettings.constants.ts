@@ -1,11 +1,12 @@
 import type { ErrorCode } from '../../types/api'
 
-/** アカウント設定のユーザーネーム変更欄で使用する表示文言。 */
+/** アカウント設定のユーザーネーム変更ダイアログで使用する表示文言。 */
 export const USERNAME_CHANGE_COPY = {
   title: 'ユーザーネームを変更',
   label: '新しいユーザーネーム',
   placeholder: '新しいユーザーネームを入力',
   formatHint: '5〜50文字の小文字英数字と_（英数字を含む）',
+  cancel: 'キャンセル',
   submit: '変更する',
   submitting: '変更中...',
   invalid: '5〜50文字の小文字英数字と_で、英数字を含めて入力してください。',
