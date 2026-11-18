@@ -245,7 +245,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                   <RadioGroup.Label class="text-sm font-medium text-text-muted">
                     {API_TOKEN_SETTINGS_COPY.permissionLabel}
                   </RadioGroup.Label>
-                  <div class="grid gap-2 sm:grid-cols-2">
+                  <div class="grid gap-2">
                     <For each={API_TOKEN_PERMISSION_OPTIONS}>
                       {(option) => (
                         <SelectableCardItem
@@ -273,7 +273,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                 <RadioGroup.Label class="text-sm font-medium text-text-muted">
                   {API_TOKEN_SETTINGS_COPY.publicOnlyLabel}
                 </RadioGroup.Label>
-                <div class="grid gap-2 sm:grid-cols-2">
+                <div class="grid gap-2">
                   <For each={API_TOKEN_PUBLIC_ONLY_OPTIONS}>
                     {(option) => (
                       <SelectableCardItem
