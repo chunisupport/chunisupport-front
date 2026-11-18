@@ -75,7 +75,9 @@ export const UsernameChangeDialog: Component<UsernameChangeDialogProps> = (props
       onOpenChange={handleOpenChange}
       pending={change.submitting()}
       size="sm"
+      height="max90"
       layer="raised"
+      scroll="cap"
       title={USERNAME_CHANGE_COPY.title}
       onInteractOutside={(event) => event.preventDefault()}
       trigger={
