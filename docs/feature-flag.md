@@ -1,6 +1,6 @@
 # フロントエンド feature-flag
 
-運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは、X でのログインを切り替える `x_login`（[ログイン方法](authentication.md)）と、プロフィールコメントを切り替える `profile_comment` です。
+運用環境ごとに、機能の表示・利用可否を切り替える仕組みです。設定はビルド時に確定し、変更の反映には再ビルド・再配布が必要です。現在の登録フラグは、X でのログインを切り替える `x_login`（[ログイン方法](authentication.md)）、プロフィールコメントを切り替える `profile_comment`、コース一覧・詳細画面を切り替える `course_pages` です。
 
 API からのフラグ取得、ユーザー単位・割合での公開、実行中の切り替え、緊急停止スイッチは扱いません。無効な機能のコードをバンドルから除去する仕組みでもないため、隠したい情報は含めないでください。
 
@@ -62,6 +62,7 @@ export const FEATURE_FLAG_DEFINITIONS = {
 | --- | --- | --- | --- | --- |
 | `x_login` | 有効 | 有効 | 無効 | X でのログイン導線と @ID の取得を出さない。詳細は [ログイン方法](authentication.md)。 |
 | `profile_comment` | 有効 | 有効 | 無効（`false`） | プロフィールのコメント表示と編集 UI を出さない。コメントの取得（`GET /internal/users/:username/comment`）と保存（`PUT /internal/me/comment`）も呼ばない。 |
+| `course_pages` | 有効 | 有効 | 無効（`false`） | `/songs/courses` 配下は Not Found を表示する。ユーザーページのコース名リンクも出さない。 |
 
 `profile_comment` は、API の `feature-flag.yml` に同じ機能を足すときの snake_case 名に揃えています。フロントは API からフラグ一覧を受け取らず、この定義だけで判定します。
 

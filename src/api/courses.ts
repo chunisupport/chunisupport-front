@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config'
 import type {
+  CourseStatsResponseDTO,
   CreateCourseRequestDTO,
   ManagedCourseDTO,
   ManagedCoursesResponse,
@@ -84,4 +85,18 @@ export const restoreCourseByDisplayId = async (displayId: string): Promise<void>
   await fetchWithAuth(`${INTERNAL_COURSES_PATH}/${encodeURIComponent(displayId)}/restore`, {
     method: 'POST',
   })
+}
+
+/**
+ * 指定したコースのレーティング帯別プレイヤー統計を取得する。
+ *
+ * @param displayId - 対象コースの表示ID。
+ * @returns コース統計レスポンス。
+ */
+export const fetchCourseStats = async (displayId: string): Promise<CourseStatsResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_COURSES_PATH}/${encodeURIComponent(displayId)}/stats`
+  )
+
+  return response.json()
 }

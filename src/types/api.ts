@@ -1214,6 +1214,30 @@ export interface CourseDTO {
   class: string
 }
 
+/** コース統計のレーティング帯1件分 */
+export interface CourseStatsBandDTO {
+  /** レーティング帯のラベル（ALL、-14.9、15.0 など） */
+  rating_band: string
+  /** コンボランプ別の人数 */
+  combo: { none: number; fc: number; aj: number }
+  /** クリア状態別の人数 */
+  clear: { failed: number; clear: number }
+  /** 平均スコア。集計対象がない場合はnull */
+  average_score: number | null
+  /** 中央値スコア。集計対象がない場合はnull */
+  median_score: number | null
+  /** プレイ人数 */
+  player_count: number
+}
+
+/** コース統計レスポンス */
+export interface CourseStatsResponseDTO {
+  /** コースの表示用ID */
+  course_id: string
+  /** レーティング帯別統計。未集計の場合は空配列 */
+  stats: CourseStatsBandDTO[]
+}
+
 /** 編集者向けコースマスタ。削除済みを含み、更新日時を返す */
 export interface ManagedCourseDTO extends CourseDTO {
   /** 論理削除済みかどうか。false の場合は API が省略することがある */
