@@ -18,9 +18,11 @@ import {
   API_TOKEN_COPIED_FEEDBACK_DURATION_MS,
   API_TOKEN_MAX_COUNT,
   API_TOKEN_PERMISSION_OPTIONS,
+  API_TOKEN_PUBLIC_ONLY_OPTIONS,
   API_TOKEN_SETTINGS_COPY,
   formatApiTokenDeleteTargetMessage,
   formatApiTokenPermission,
+  formatApiTokenPublicOnly,
 } from './ApiTokenSettings.constants'
 import { createApiTokenSettings } from './createApiTokenSettings'
 import { formatSettingsDateTime } from './settingsDateTime'
@@ -243,7 +245,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                   <RadioGroup.Label class="text-sm font-medium text-text-muted">
                     {API_TOKEN_SETTINGS_COPY.permissionLabel}
                   </RadioGroup.Label>
-                  <div class="grid gap-2 sm:grid-cols-2">
+                  <div class="grid gap-2">
                     <For each={API_TOKEN_PERMISSION_OPTIONS}>
                       {(option) => (
                         <SelectableCardItem
@@ -261,6 +263,36 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                   </div>
                 </RadioGroup>
               </Show>
+              <RadioGroup
+                name="api-token-public-only"
+                value={String(settings.issuePublicOnly())}
+                onChange={(value) => settings.setIssuePublicOnly(value === 'true')}
+                disabled={settings.issuing()}
+                class="grid gap-2"
+              >
+                <RadioGroup.Label class="text-sm font-medium text-text-muted">
+                  {API_TOKEN_SETTINGS_COPY.publicOnlyLabel}
+                </RadioGroup.Label>
+                <div class="grid gap-2">
+                  <For each={API_TOKEN_PUBLIC_ONLY_OPTIONS}>
+                    {(option) => (
+                      <SelectableCardItem
+                        value={String(option.value)}
+                        title={option.label}
+                        description={option.description}
+                        ariaLabel={option.label}
+                        selected={settings.issuePublicOnly() === option.value}
+                        disabled={settings.issuing()}
+                        density="compact"
+                        class="rounded-md"
+                      />
+                    )}
+                  </For>
+                </div>
+                <RadioGroup.Description class="text-xs text-text-muted">
+                  {API_TOKEN_SETTINGS_COPY.publicOnlyNotice}
+                </RadioGroup.Description>
+              </RadioGroup>
               <p class="text-sm text-danger empty:hidden" role="alert">
                 {settings.issueActionError()}
               </p>
@@ -321,6 +353,9 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                           {API_TOKEN_SETTINGS_COPY.permissionValueLabel}
                         </th>
                         <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.publicOnlyValueLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
                           {API_TOKEN_SETTINGS_COPY.prefixLabel}
                         </th>
                         <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
@@ -349,6 +384,9 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                                 </th>
                                 <td class="px-3 py-3 text-text-muted whitespace-nowrap">
                                   {formatApiTokenPermission(token.permission)}
+                                </td>
+                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
+                                  {formatApiTokenPublicOnly(token.public_only)}
                                 </td>
                                 <td class="px-3 py-3 font-mono text-xs text-text-muted whitespace-nowrap">
                                   {token.token_prefix
@@ -393,7 +431,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                             }
                           >
                             <tr class="border-t border-border">
-                              <td colSpan={6} class="p-3">
+                              <td colSpan={7} class="p-3">
                                 <form
                                   class="flex flex-col gap-3 sm:flex-row sm:items-end"
                                   onSubmit={(event) => {

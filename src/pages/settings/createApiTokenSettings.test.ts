@@ -26,10 +26,11 @@ import { errorMessages } from './src/types/api.ts'
 
 const settle = () => new Promise((resolve) => setImmediate(resolve))
 const codedError = (code, status) => Object.assign(new Error('raw'), { code, status })
-const token = (id, name, permission = 'read') => ({
+const token = (id, name, permission = 'read', publicOnly = true) => ({
   id,
   name,
   permission,
+  public_only: publicOnly,
   token_prefix: 'prefix' + id,
   last_used_at: null,
   created_at: '2026-11-01T00:00:00+09:00',
@@ -47,7 +48,10 @@ const setup = async (overrides = {}) => {
       },
       issueToken: async (request) => {
         calls.issue.push(request)
-        return { ...token('0000000000000003', request.name, request.permission), token: 'plain-text-token' }
+        return {
+          ...token('0000000000000003', request.name, request.permission, request.public_only),
+          token: 'plain-text-token',
+        }
       },
       renameToken: async (id, request) => {
         calls.rename.push([id, request])
@@ -145,7 +149,7 @@ settings.setIssueName('  Discord Bot  ')
 await settings.issue()
 
 // Then: 前後空白を除いた名前で発行し、一覧の先頭に平文を含まない管理情報を追加する
-assert.deepEqual(calls.issue, [{ name: 'Discord Bot', permission: 'read' }])
+assert.deepEqual(calls.issue, [{ name: 'Discord Bot', permission: 'read', public_only: true }])
 assert.deepEqual(names(settings), ['Discord Bot', 'Bot', 'CLI'])
 assert.equal('token' in settings.tokens().tokens[0], false)
 assert.equal(settings.generatedToken().token, 'plain-text-token')
@@ -153,6 +157,25 @@ assert.equal(settings.issueSuccess(), COPY.issueSuccess)
 assert.equal(settings.issueFormOpen(), false)
 assert.equal(settings.issueName(), '')
 assert.equal(calls.fetch, 1)
+dispose()
+`)
+})
+
+test('公開ユーザーのみをOFFにすると public_only=false で発行し、発行後は既定のONへ戻すこと', async () => {
+  await runApiTokenSettingsTest(`
+// Given: 公開ユーザーのみをOFFにした状態
+const { settings, calls, dispose } = await setup()
+settings.setIssueFormOpen(true)
+settings.setIssueName('Private Tool')
+settings.setIssuePublicOnly(false)
+
+// When: 発行する
+await settings.issue()
+
+// Then: public_only=false で発行して一覧にも反映し、次回の既定値はONに戻る
+assert.equal(calls.issue[0].public_only, false)
+assert.equal(settings.tokens().tokens[0].public_only, false)
+assert.equal(settings.issuePublicOnly(), true)
 dispose()
 `)
 })

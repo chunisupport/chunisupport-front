@@ -1763,6 +1763,8 @@ export interface ApiToken {
   name: string
   /** APIトークンで許可される操作 */
   permission: ApiTokenPermission
+  /** true の場合、本人やフレンドであっても非公開ユーザーを参照できない */
+  public_only: boolean
   /** 表示用のトークン先頭5文字。旧仕様からの移行データは null */
   token_prefix: string | null
   /** 最終利用日時。未使用の場合は null */
@@ -1780,6 +1782,8 @@ export interface ApiTokenIssueRequest {
   name: string
   /** 発行後は変更できないAPIトークン権限 */
   permission: ApiTokenPermission
+  /** 発行後は変更できない、公開ユーザーのみ参照する設定 */
+  public_only: boolean
 }
 
 /** APIトークン発行時に一度だけ返る平文トークン付きレスポンス */
