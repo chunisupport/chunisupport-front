@@ -50,6 +50,7 @@ const toApiTokenMetadata = (issued: ApiTokenIssueResponse): ApiToken => ({
   id: issued.id,
   name: issued.name,
   permission: issued.permission,
+  public_only: issued.public_only,
   token_prefix: issued.token_prefix,
   last_used_at: issued.last_used_at,
   created_at: issued.created_at,
@@ -65,6 +66,8 @@ const toApiTokenMetadata = (issued: ApiTokenIssueResponse): ApiToken => ({
 export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   const [issueName, setIssueNameSignal] = createSignal('')
   const [issuePermission, setIssuePermission] = createSignal<ApiTokenPermission>('read')
+  // トークン漏えい時の被害を公開データに限るため、既定は公開ユーザーのみ
+  const [issuePublicOnly, setIssuePublicOnly] = createSignal(true)
   const [issueFormOpen, setIssueFormOpenSignal] = createSignal(false)
   const [issueNameError, setIssueNameError] = createSignal('')
   const [issueActionError, setIssueActionError] = createSignal('')
@@ -136,7 +139,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   }
 
   /**
-   * 入力された名前と権限でAPIトークンを発行し、一覧の先頭へ追加する。
+   * 入力された名前・権限・公開ユーザーのみ参照の設定でAPIトークンを発行し、一覧の先頭へ追加する。
    * 発行できない状態で呼ばれた場合や発行中に重ねて呼ばれた場合は何もしない。
    * 名前に起因するエラーは名前入力欄に、それ以外は発行ダイアログに表示する。
    *
@@ -159,10 +162,12 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
       const issued = await options.issueToken({
         name: normalizeApiTokenName(issueName()),
         permission: resolveApiTokenIssuePermission(options.accountType(), issuePermission()),
+        public_only: issuePublicOnly(),
       })
       setGeneratedToken(issued)
       setIssueNameSignal('')
       setIssuePermission('read')
+      setIssuePublicOnly(true)
       setIssueFormOpenSignal(false)
       setIssueSuccess(API_TOKEN_SETTINGS_COPY.issueSuccess)
       mutateTokens((current) => ({
@@ -334,6 +339,8 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
     setIssueName,
     issuePermission,
     setIssuePermission,
+    issuePublicOnly,
+    setIssuePublicOnly,
     issueNameError,
     issueActionError,
     issueSuccess,
