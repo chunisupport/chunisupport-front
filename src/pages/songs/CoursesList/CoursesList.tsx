@@ -39,7 +39,7 @@ const CoursesList = () => {
         <Show when={coursesQuery.data} fallback={<Loading />}>
           {(data) => (
             <ul
-              aria-label={COURSE_PAGE_COPY.listAriaLabel}
+              aria-label={COURSE_PAGE_COPY.listTitle}
               class="overflow-hidden rounded-lg border-b border-border text-sm"
             >
               <For each={data().courses}>

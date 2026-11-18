@@ -9,7 +9,6 @@ export const SONG_DETAIL_LINK_COPY = {
 /** コース画面の文言 */
 export const COURSE_PAGE_COPY = {
   listTitle: 'コース一覧',
-  listAriaLabel: 'コース一覧',
   back: '← 戻る',
   ownRecordHeading: '自己ベスト',
   notPlayed: '未プレイ',

@@ -51,11 +51,15 @@ const CourseDetail = () => {
   const params = useParams<{ displayid: string }>()
   const isAuthenticated = () => authSession.status === 'authenticated'
   const coursesQuery = useQuery(() => courseListQueryOptions(authSession.user?.username ?? null))
-  const statsQuery = useQuery(() => courseStatsQueryOptions(params.displayid))
   // shortcut: 単件APIを使わず一覧キャッシュから引く。収録曲など一覧にない情報を出すときは単件APIへ切り替える
   const course = createMemo(() =>
     coursesQuery.data?.courses.find((candidate) => candidate.id === params.displayid)
   )
+  // 存在しないコースでは統計APIを呼ばない
+  const statsQuery = useQuery(() => ({
+    ...courseStatsQueryOptions(params.displayid),
+    enabled: Boolean(course()),
+  }))
 
   useDocumentTitle(() => course()?.name ?? COURSE_PAGE_COPY.listTitle)
 
