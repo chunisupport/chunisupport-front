@@ -54,6 +54,7 @@ import {
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
   CHART_STATS_PATH,
+  COURSES_PATH,
   DASHBOARD_PATH,
   EDITOR_COURSES_PATH,
   EDITOR_PATH,
@@ -88,6 +89,7 @@ import {
 import { useRememberAppMainScrollNavigationType } from './hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import { useRobotsMeta } from './hooks/useRobotsMeta'
+import { isFeatureEnabled } from './lib/featureFlags'
 import NotFoundPage from './pages/NotFoundPage'
 import { authSession, getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
@@ -106,6 +108,8 @@ const GoalsList = lazy(() => import('./pages/goals/GoalsList/GoalsList'))
 const SongsList = lazy(() => import('./pages/songs/SongsList/SongsList'))
 const WorldsendSongsList = lazy(() => import('./pages/songs/WorldsendSongsList/WorldsendSongsList'))
 const SongDetail = lazy(() => import('./pages/songs/SongDetail/SongDetail'))
+const CoursesList = lazy(() => import('./pages/songs/CoursesList/CoursesList'))
+const CourseDetail = lazy(() => import('./pages/songs/CourseDetail/CourseDetail'))
 const WorldsendSongDetail = lazy(
   () => import('./pages/songs/WorldsendSongDetail/WorldsendSongDetail')
 )
@@ -717,6 +721,22 @@ const App = () => {
       <Route
         path={WORLDSEND_SONGS_PATH}
         component={withNavBar(withRouteLoadBoundary(WorldsendSongsList))}
+      />
+      <Route
+        path={COURSES_PATH}
+        component={
+          isFeatureEnabled('course_pages')
+            ? withNavBar(withRouteLoadBoundary(CoursesList))
+            : NotFoundPage
+        }
+      />
+      <Route
+        path={`${COURSES_PATH}/:displayid`}
+        component={
+          isFeatureEnabled('course_pages')
+            ? withNavBar(withRouteLoadBoundary(CourseDetail))
+            : NotFoundPage
+        }
       />
       <Route
         path={`${WORLDSEND_SONGS_PATH}/:displayid/chart-detail`}
