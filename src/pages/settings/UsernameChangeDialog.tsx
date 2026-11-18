@@ -127,7 +127,7 @@ export const UsernameChangeDialog: Component<UsernameChangeDialogProps> = (props
           <Dialog.CloseButton
             type="button"
             aria-label={USERNAME_CHANGE_COPY.cancel}
-            class={getAppButtonClass({ variant: 'secondary' })}
+            class={getAppButtonClass({ variant: 'secondary', class: 'focus-visible:ring-inset' })}
             disabled={change.submitting()}
           >
             {USERNAME_CHANGE_COPY.cancel}
@@ -135,6 +135,7 @@ export const UsernameChangeDialog: Component<UsernameChangeDialogProps> = (props
           <AppButton
             type="submit"
             variant="primary"
+            class="focus-visible:ring-inset"
             disabled={change.submitting() || change.username().length === 0}
           >
             {change.submitting() ? USERNAME_CHANGE_COPY.submitting : USERNAME_CHANGE_COPY.submit}
