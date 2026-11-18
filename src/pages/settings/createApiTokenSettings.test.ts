@@ -26,10 +26,11 @@ import { errorMessages } from './src/types/api.ts'
 
 const settle = () => new Promise((resolve) => setImmediate(resolve))
 const codedError = (code, status) => Object.assign(new Error('raw'), { code, status })
-const token = (id, name, permission = 'read') => ({
+const token = (id, name, permission = 'read', publicOnly = true) => ({
   id,
   name,
   permission,
+  public_only: publicOnly,
   token_prefix: 'prefix' + id,
   last_used_at: null,
   created_at: '2026-11-01T00:00:00+09:00',
@@ -43,11 +44,14 @@ const setup = async (overrides = {}) => {
       accountType: () => 'PLAYER',
       fetchTokens: async () => {
         calls.fetch++
-        return { tokens: [token(1, 'Bot'), token(2, 'CLI')] }
+        return { tokens: [token('0000000000000001', 'Bot'), token('0000000000000002', 'CLI')] }
       },
       issueToken: async (request) => {
         calls.issue.push(request)
-        return { ...token(3, request.name, request.permission), token: 'plain-text-token' }
+        return {
+          ...token('0000000000000003', request.name, request.permission, request.public_only),
+          token: 'plain-text-token',
+        }
       },
       renameToken: async (id, request) => {
         calls.rename.push([id, request])
@@ -79,7 +83,7 @@ const { settings, calls, dispose } = await setup({
 })
 settings.startRenaming(settings.tokens().tokens[0])
 settings.setEditingName('Renamed')
-const renaming = settings.rename(1)
+const renaming = settings.rename('0000000000000001')
 settings.openDeleteDialog(settings.tokens().tokens[1])
 
 // When: 名前変更が終わる前に別の行の削除を確定する。
@@ -87,14 +91,14 @@ await settings.confirmDelete()
 
 // Then: 操作中のIDと一覧を保ち、削除APIを呼ばない。
 assert.deepEqual(calls.delete, [])
-assert.equal(settings.mutatingTokenId(), 1)
+assert.equal(settings.mutatingTokenId(), '0000000000000001')
 assert.deepEqual(names(settings), ['Bot', 'CLI'])
 pending.resolve()
 await renaming
 
 // When & Then: 名前変更完了後は削除できる。
 await settings.confirmDelete()
-assert.deepEqual(calls.delete, [2])
+assert.deepEqual(calls.delete, ['0000000000000002'])
 assert.deepEqual(names(settings), ['Renamed'])
 dispose()
 `)
@@ -116,18 +120,18 @@ settings.openDeleteDialog(settings.tokens().tokens[0])
 const deleting = settings.confirmDelete()
 
 // When: 削除が終わる前に別の行の名前変更を保存する。
-await settings.rename(2)
+await settings.rename('0000000000000002')
 
 // Then: 名前変更APIを呼ばず、操作中のIDと入力を保つ。
 assert.deepEqual(calls.rename, [])
-assert.equal(settings.mutatingTokenId(), 1)
+assert.equal(settings.mutatingTokenId(), '0000000000000001')
 assert.equal(settings.editingName(), 'Terminal')
 pending.resolve()
 await deleting
 
 // When & Then: 削除完了後は名前変更できる。
-await settings.rename(2)
-assert.deepEqual(calls.rename, [[2, { name: 'Terminal' }]])
+await settings.rename('0000000000000002')
+assert.deepEqual(calls.rename, [['0000000000000002', { name: 'Terminal' }]])
 assert.deepEqual(names(settings), ['Terminal'])
 dispose()
 `)
@@ -145,7 +149,7 @@ settings.setIssueName('  Discord Bot  ')
 await settings.issue()
 
 // Then: 前後空白を除いた名前で発行し、一覧の先頭に平文を含まない管理情報を追加する
-assert.deepEqual(calls.issue, [{ name: 'Discord Bot', permission: 'read' }])
+assert.deepEqual(calls.issue, [{ name: 'Discord Bot', permission: 'read', public_only: true }])
 assert.deepEqual(names(settings), ['Discord Bot', 'Bot', 'CLI'])
 assert.equal('token' in settings.tokens().tokens[0], false)
 assert.equal(settings.generatedToken().token, 'plain-text-token')
@@ -153,6 +157,25 @@ assert.equal(settings.issueSuccess(), COPY.issueSuccess)
 assert.equal(settings.issueFormOpen(), false)
 assert.equal(settings.issueName(), '')
 assert.equal(calls.fetch, 1)
+dispose()
+`)
+})
+
+test('公開ユーザーのみをOFFにすると public_only=false で発行し、発行後は既定のONへ戻すこと', async () => {
+  await runApiTokenSettingsTest(`
+// Given: 公開ユーザーのみをOFFにした状態
+const { settings, calls, dispose } = await setup()
+settings.setIssueFormOpen(true)
+settings.setIssueName('Private Tool')
+settings.setIssuePublicOnly(false)
+
+// When: 発行する
+await settings.issue()
+
+// Then: public_only=false で発行して一覧にも反映し、次回の既定値はONに戻る
+assert.equal(calls.issue[0].public_only, false)
+assert.equal(settings.tokens().tokens[0].public_only, false)
+assert.equal(settings.issuePublicOnly(), true)
 dispose()
 `)
 })
@@ -241,7 +264,7 @@ const { settings, calls, dispose } = await setup({
   issueToken: async (request) => {
     calls.issue.push(request)
     await pending.promise
-    return { ...token(3, request.name), token: 'plain-text-token' }
+    return { ...token('0000000000000003', request.name), token: 'plain-text-token' }
   },
 })
 settings.setIssueFormOpen(true)
@@ -340,15 +363,15 @@ test('名前変更成功時は一覧の該当行だけを置き換え、入力�
 // Given: ID 2の名前変更を開始した状態
 const { settings, calls, dispose } = await setup()
 settings.startRenaming(settings.tokens().tokens[1])
-assert.equal(settings.editingTokenId(), 2)
+assert.equal(settings.editingTokenId(), '0000000000000002')
 assert.equal(settings.editingName(), 'CLI')
 settings.setEditingName(' Terminal ')
 
 // When: 保存する
-await settings.rename(2)
+await settings.rename('0000000000000002')
 
 // Then: 前後空白を除いた名前で保存し、該当行だけを置き換える
-assert.deepEqual(calls.rename, [[2, { name: 'Terminal' }]])
+assert.deepEqual(calls.rename, [['0000000000000002', { name: 'Terminal' }]])
 assert.deepEqual(names(settings), ['Bot', 'Terminal'])
 assert.equal(settings.editingTokenId(), null)
 assert.equal(settings.tokenActionSuccess(), COPY.renameSuccess)
@@ -370,21 +393,21 @@ settings.startRenaming(settings.tokens().tokens[1])
 settings.setEditingName('Terminal')
 
 // When: 名前の不正で失敗する
-await settings.rename(2)
+await settings.rename('0000000000000002')
 
 // Then: 入力欄にエラーを出し、編集を続けられる
 assert.equal(settings.editingNameError(), errorMessages.invalid_api_token_name)
-assert.equal(settings.tokenActionErrorFor(2), '')
-assert.equal(settings.editingTokenId(), 2)
+assert.equal(settings.tokenActionErrorFor('0000000000000002'), '')
+assert.equal(settings.editingTokenId(), '0000000000000002')
 
 // When: 認証エラーで失敗する
-await settings.rename(2)
+await settings.rename('0000000000000002')
 
 // Then: 対象の行にだけエラーを出し、一覧は変えない
 assert.equal(settings.editingNameError(), '')
-assert.equal(settings.tokenActionErrorFor(2), errorMessages.unauthorized)
-assert.equal(settings.tokenActionErrorFor(1), '')
-assert.equal(settings.editingTokenId(), 2)
+assert.equal(settings.tokenActionErrorFor('0000000000000002'), errorMessages.unauthorized)
+assert.equal(settings.tokenActionErrorFor('0000000000000001'), '')
+assert.equal(settings.editingTokenId(), '0000000000000002')
 assert.deepEqual(names(settings), ['Bot', 'CLI'])
 dispose()
 `)
@@ -405,12 +428,12 @@ settings.startRenaming(settings.tokens().tokens[0])
 settings.setEditingName('Renamed')
 
 // When: 保存中にもう一度保存する
-const renaming = settings.rename(1)
-await settings.rename(1)
+const renaming = settings.rename('0000000000000001')
+await settings.rename('0000000000000001')
 
 // Then: 1回だけ保存する
 assert.equal(calls.rename.length, 1)
-assert.equal(settings.mutatingTokenId(), 1)
+assert.equal(settings.mutatingTokenId(), '0000000000000001')
 pending.resolve()
 await renaming
 assert.deepEqual(names(settings), ['Renamed', 'CLI'])
@@ -428,11 +451,11 @@ settings.startRenaming(settings.tokens().tokens[0])
 
 // When: ID 3を削除する
 settings.openDeleteDialog(settings.tokens().tokens[0])
-assert.equal(settings.deleteTarget().id, 3)
+assert.equal(settings.deleteTarget().id, '0000000000000003')
 await settings.confirmDelete()
 
 // Then: 一覧から取り除き、平文の表示と名前変更を終了してダイアログを閉じる
-assert.deepEqual(calls.delete, [3])
+assert.deepEqual(calls.delete, ['0000000000000003'])
 assert.deepEqual(names(settings), ['Bot', 'CLI'])
 assert.equal(settings.generatedToken(), undefined)
 assert.equal(settings.editingTokenId(), null)
@@ -457,8 +480,8 @@ await settings.confirmDelete()
 
 // Then: 対象の行にだけエラーを出し、一覧はそのまま
 assert.equal(settings.deleteTarget(), null)
-assert.equal(settings.tokenActionErrorFor(1), errorMessages.token_expired)
-assert.equal(settings.tokenActionErrorFor(2), '')
+assert.equal(settings.tokenActionErrorFor('0000000000000001'), errorMessages.token_expired)
+assert.equal(settings.tokenActionErrorFor('0000000000000002'), '')
 assert.equal(settings.tokenActionSuccess(), '')
 assert.deepEqual(names(settings), ['Bot', 'CLI'])
 
@@ -466,7 +489,7 @@ assert.deepEqual(names(settings), ['Bot', 'CLI'])
 settings.openDeleteDialog(settings.tokens().tokens[1])
 
 // Then: 前回のエラーを消す
-assert.equal(settings.tokenActionErrorFor(1), '')
+assert.equal(settings.tokenActionErrorFor('0000000000000001'), '')
 dispose()
 `)
 })
@@ -488,9 +511,9 @@ const deleting = settings.confirmDelete()
 await settings.confirmDelete()
 
 // Then: 1回だけ削除し、削除中は対象を保持する
-assert.deepEqual(calls.delete, [1])
-assert.equal(settings.mutatingTokenId(), 1)
-assert.equal(settings.deleteTarget().id, 1)
+assert.deepEqual(calls.delete, ['0000000000000001'])
+assert.equal(settings.mutatingTokenId(), '0000000000000001')
+assert.equal(settings.deleteTarget().id, '0000000000000001')
 pending.resolve()
 await deleting
 assert.deepEqual(names(settings), ['CLI'])

@@ -1,4 +1,3 @@
-import { NumberField } from '@kobalte/core/number-field'
 import { TextField } from '@kobalte/core/text-field'
 import type { JSX } from 'solid-js'
 import { createUniqueId, Show } from 'solid-js'
@@ -24,46 +23,6 @@ type RangeControlRowProps = {
   start: JSX.Element
   /** 右側に表示する範囲終了フィールド */
   end: JSX.Element
-  /** 追加で適用する Tailwind クラス */
-  class?: string
-}
-
-type RangeNumberFieldProps = {
-  /** 入力欄の id */
-  id: string
-  /** スクリーンリーダー向けラベル */
-  label: JSX.Element
-  /** 現在の入力値 */
-  value: string
-  /** 入力欄の min 属性 */
-  min?: number
-  /** 入力欄の max 属性 */
-  max?: number
-  /** 入力欄の step 属性 */
-  step?: number
-  /** 入力中の値変更を通知する処理 */
-  onInput: (value: string) => void
-  /** 入力確定時の値を通知する処理 */
-  onCommit: (value: string) => void
-}
-
-type NumberRangeInputProps = {
-  /** 入力欄の見出し */
-  title?: JSX.Element
-  /** 開始側の数値入力設定 */
-  start: RangeNumberFieldProps
-  /** 終了側の数値入力設定 */
-  end: RangeNumberFieldProps
-  /** NumberField に許可する入力文字 */
-  allowedInput?: RegExp
-  /** NumberField の既定 step */
-  step?: number
-  /** 入力値を表示フォーマットするか */
-  format?: boolean
-  /** 入力欄に適用する Tailwind クラス */
-  inputClass: string
-  /** エラーメッセージ */
-  errorMessage?: JSX.Element
   /** 追加で適用する Tailwind クラス */
   class?: string
 }
@@ -169,77 +128,6 @@ export const RangeControlRow = (props: RangeControlRowProps): JSX.Element => (
     <div class="min-w-0">{props.start}</div>
     <RangeSeparator />
     <div class="min-w-0">{props.end}</div>
-  </div>
-)
-
-/**
- * 範囲入力の片側に表示する Kobalte NumberField を組み立てる。
- *
- * @param props - 数値入力欄の設定。
- * @returns 範囲入力用の数値フィールド。
- */
-const RangeNumberField = (props: {
-  field: RangeNumberFieldProps
-  allowedInput?: RegExp
-  format: boolean
-  inputClass: string
-  step?: number
-}): JSX.Element => (
-  <NumberField
-    value={props.field.value}
-    onChange={props.field.onInput}
-    class="w-full"
-    format={props.format}
-    allowedInput={props.allowedInput}
-    step={props.field.step ?? props.step}
-  >
-    <NumberField.Label class="sr-only">{props.field.label}</NumberField.Label>
-    <NumberField.Input
-      id={props.field.id}
-      min={props.field.min}
-      max={props.field.max}
-      step={props.field.step ?? props.step}
-      class={props.inputClass}
-      onFocus={(event) => event.currentTarget.select()}
-      onBlur={(event) => props.field.onCommit(event.currentTarget.value)}
-    />
-  </NumberField>
-)
-
-/**
- * 数値の範囲入力欄を共通レイアウトで表示する。
- *
- * @param props - 見出し、左右の数値入力欄、入力制限、クラス設定。
- * @returns 数値範囲入力欄。
- */
-export const NumberRangeInput = (props: NumberRangeInputProps): JSX.Element => (
-  <div class={props.class}>
-    <Show when={props.title}>
-      {(title) => <div class="mb-1 text-sm font-medium">{title()}</div>}
-    </Show>
-    <RangeControlRow
-      start={
-        <RangeNumberField
-          field={props.start}
-          allowedInput={props.allowedInput}
-          format={props.format ?? false}
-          inputClass={props.inputClass}
-          step={props.step}
-        />
-      }
-      end={
-        <RangeNumberField
-          field={props.end}
-          allowedInput={props.allowedInput}
-          format={props.format ?? false}
-          inputClass={props.inputClass}
-          step={props.step}
-        />
-      }
-    />
-    <Show when={props.errorMessage}>
-      {(errorMessage) => <p class="mt-1 text-xs text-danger">{errorMessage()}</p>}
-    </Show>
   </div>
 )
 

@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js'
 import { createMemo, For } from 'solid-js'
 import type { PlayerMetricHistoryEntryDTO } from '../../../types/api'
-import { formatFixed } from '../../../utils/numberFormat'
+import { formatTruncatedFixed } from '../../../utils/numberFormat'
 import {
   formatPlayerMetricHistoryDateTime,
   sortPlayerMetricHistoryEntries,
@@ -80,19 +80,19 @@ export const RatingOpHistoryTable: Component<Props> = (props) => {
                   <td
                     class={`whitespace-nowrap py-3 text-center font-jost text-base font-semibold tabular-nums text-text ${PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS}`}
                   >
-                    {formatFixed(entry.rating, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
+                    {formatTruncatedFixed(entry.rating, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
                   </td>
                   <td
                     class={`whitespace-nowrap py-3 text-center font-jost text-base font-semibold tabular-nums text-text ${PLAYER_METRIC_HISTORY_TABLE_MIDDLE_COLUMN_CLASS}`}
                   >
-                    {formatFixed(entry.overpower, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
+                    {formatTruncatedFixed(entry.overpower, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}
                   </td>
                   <td
                     class={`whitespace-nowrap py-3 text-center font-jost text-base font-semibold tabular-nums text-text ${PLAYER_METRIC_HISTORY_TABLE_LAST_COLUMN_CLASS}`}
                   >
                     {entry.overpower_percent === null
                       ? PLAYER_METRIC_HISTORY_COPY.missingValue
-                      : `${formatFixed(entry.overpower_percent, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}%`}
+                      : `${formatTruncatedFixed(entry.overpower_percent, PLAYER_METRIC_HISTORY_DECIMAL_PLACES)}%`}
                   </td>
                 </tr>
               )}

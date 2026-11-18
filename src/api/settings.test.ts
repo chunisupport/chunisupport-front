@@ -30,9 +30,10 @@ test('APIトークン一覧は非空のtokensレスポンスを返す', async ()
     Response.json({
       tokens: [
         {
-          id: 42,
+          id: '3f9a1c0b7d2e4a51',
           name: 'CLI',
           permission: 'read',
+          public_only: true,
           token_prefix: 'prefix',
           last_used_at: null,
           created_at: '2026-07-22T12:34:56+09:00',
@@ -49,9 +50,10 @@ test('APIトークン一覧は非空のtokensレスポンスを返す', async ()
   assert.deepEqual(result, {
     tokens: [
       {
-        id: 42,
+        id: '3f9a1c0b7d2e4a51',
         name: 'CLI',
         permission: 'read',
+        public_only: true,
         token_prefix: 'prefix',
         last_used_at: null,
         created_at: '2026-07-22T12:34:56+09:00',
@@ -60,12 +62,13 @@ test('APIトークン一覧は非空のtokensレスポンスを返す', async ()
   })
 })
 
-test('APIトークン発行はnameとpermissionをJSONでPOSTする', async () => {
+test('APIトークン発行はname・permission・public_onlyをJSONでPOSTする', async () => {
   // Given: 発行結果とAPI呼び出し記録。
   const responseBody = {
-    id: 42,
+    id: '3f9a1c0b7d2e4a51',
     name: 'Discord Bot',
     permission: 'read',
+    public_only: true,
     token: 'plain-text-token',
     token_prefix: 'plain',
     last_used_at: null,
@@ -75,14 +78,21 @@ test('APIトークン発行はnameとpermissionをJSONでPOSTする', async () =
 
   // When: 名前付きAPIトークンを発行する。
   const { issueApiToken } = await loadSettingsApi()
-  const result = await issueApiToken({ name: 'Discord Bot', permission: 'read' })
+  const result = await issueApiToken({
+    name: 'Discord Bot',
+    permission: 'read',
+    public_only: true,
+  })
 
-  // Then: nameとpermissionをJSONリクエストとして送信し、平文付きレスポンスを返す。
+  // Then: name・permission・public_onlyをJSONリクエストとして送信し、平文付きレスポンスを返す。
   assert.equal(result.token, 'plain-text-token')
   assert.equal(result.permission, 'read')
   assert.equal(calls[0]?.init?.method, 'POST')
   assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
-  assert.equal(calls[0]?.init?.body, JSON.stringify({ name: 'Discord Bot', permission: 'read' }))
+  assert.equal(
+    calls[0]?.init?.body,
+    JSON.stringify({ name: 'Discord Bot', permission: 'read', public_only: true })
+  )
 })
 
 test('APIトークンの名称変更と削除はID指定エンドポイントを使う', async () => {
@@ -90,9 +100,10 @@ test('APIトークンの名称変更と削除はID指定エンドポイントを
   const calls = installFetchRecorder((_input, init) =>
     init?.method === 'PATCH'
       ? Response.json({
-          id: 42,
+          id: '3f9a1c0b7d2e4a51',
           name: 'CLI',
           permission: 'read_write',
+          public_only: false,
           token_prefix: 'plain',
           last_used_at: null,
           created_at: '2026-07-22T12:34:56+09:00',
@@ -100,10 +111,10 @@ test('APIトークンの名称変更と削除はID指定エンドポイントを
       : new Response(null, { status: 204 })
   )
 
-  // When: ID 42の名称変更と削除を行う。
+  // When: ID 3f9a1c0b7d2e4a51の名称変更と削除を行う。
   const { deleteApiToken, renameApiToken } = await loadSettingsApi()
-  await renameApiToken(42, { name: 'CLI' })
-  await deleteApiToken(42)
+  await renameApiToken('3f9a1c0b7d2e4a51', { name: 'CLI' })
+  await deleteApiToken('3f9a1c0b7d2e4a51')
 
   // Then: PATCHとDELETEの双方でID指定パスを使用する。
   assert.deepEqual(
@@ -114,12 +125,12 @@ test('APIトークンの名称変更と削除はID指定エンドポイントを
     })),
     [
       {
-        url: 'http://localhost:3000/internal/auth/api-tokens/42',
+        url: 'http://localhost:3000/internal/auth/api-tokens/3f9a1c0b7d2e4a51',
         method: 'PATCH',
         body: JSON.stringify({ name: 'CLI' }),
       },
       {
-        url: 'http://localhost:3000/internal/auth/api-tokens/42',
+        url: 'http://localhost:3000/internal/auth/api-tokens/3f9a1c0b7d2e4a51',
         method: 'DELETE',
         body: undefined,
       },

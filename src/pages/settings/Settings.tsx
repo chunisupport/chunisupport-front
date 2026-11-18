@@ -34,7 +34,7 @@ import { PRIVACY_SETTINGS_COPY } from './ProfileSettings.constants'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
 import { SETTINGS_ROW_LIST_CLASS, SETTINGS_SUBSECTION_CLASS } from './settingsStyles'
-import { UsernameChangeForm } from './UsernameChangeForm'
+import { UsernameChangeDialog } from './UsernameChangeDialog'
 
 type SettingsSummary = {
   me: Awaited<ReturnType<typeof fetchMe>>
@@ -256,10 +256,16 @@ const Settings = () => {
                         アカウント
                       </h2>
                       <dl class={`mt-2 ${SETTINGS_ROW_LIST_CLASS}`}>
-                        <div class="flex justify-between gap-4 py-4">
-                          <dt class="text-text-muted">ユーザーネーム</dt>
-                          <dd class="font-sans font-medium text-text">
-                            {loadedSummary().me.username}
+                        <div class="flex items-center justify-between gap-4 py-2.5">
+                          <dt class="shrink-0 text-text-muted">ユーザーネーム</dt>
+                          <dd class="flex min-w-0 items-center gap-2">
+                            <span class="min-w-0 wrap-anywhere text-right font-sans font-medium text-text">
+                              {loadedSummary().me.username}
+                            </span>
+                            <UsernameChangeDialog
+                              currentUsername={loadedSummary().me.username}
+                              onChanged={handleUsernameChanged}
+                            />
                           </dd>
                         </div>
                         <div class="flex justify-between gap-4 py-4">
@@ -267,10 +273,6 @@ const Settings = () => {
                           <dd class="font-medium text-text">{loadedSummary().me.account_type}</dd>
                         </div>
                       </dl>
-                      <UsernameChangeForm
-                        currentUsername={loadedSummary().me.username}
-                        onChanged={handleUsernameChanged}
-                      />
                       <LoginMethodSettingsSection
                         accounts={linkedAuthAccounts.accounts()}
                         onChanged={linkedAuthAccounts.refresh}

@@ -196,16 +196,6 @@ export const sortSongsByReleaseDescAndIdxDesc = <
   return keyed.map(({ song }) => song)
 }
 
-/**
- * 楽曲を reading の日本語辞書順でソートする。
- *
- * @param songs - ソート対象の楽曲配列。
- * @returns ソート済みの新しい配列。
- */
-export const sortSongsByTitle = <T extends { title: string; reading?: string | null }>(
-  songs: T[]
-): T[] => [...songs].sort(compareSongsByReading)
-
 let songsStore: ReturnType<typeof createSongsStore> | undefined
 
 export const useSongsData = () => {

@@ -6,20 +6,6 @@ export interface ErrorResponse {
 }
 
 /**
- * API ルートが返す公開メタ情報。
- */
-export interface ApiRootResponse {
-  /** API アプリケーション名 */
-  app_name: string
-  /** API のビルド日時または開発環境識別子 */
-  build_date: string
-  /** API の短縮コミットハッシュ。管理者向けレスポンスで返される */
-  revision?: string
-  /** API が返すバージョン番号。未設定の環境では省略される */
-  version?: string
-}
-
-/**
  * GET /version が返すAPIバージョン情報。
  */
 export interface ApiVersionResponse {
@@ -1228,6 +1214,30 @@ export interface CourseDTO {
   class: string
 }
 
+/** コース統計のレーティング帯1件分 */
+export interface CourseStatsBandDTO {
+  /** レーティング帯のラベル（ALL、-14.9、15.0 など） */
+  rating_band: string
+  /** コンボランプ別の人数 */
+  combo: { none: number; fc: number; aj: number }
+  /** クリア状態別の人数 */
+  clear: { failed: number; clear: number }
+  /** 平均スコア。集計対象がない場合はnull */
+  average_score: number | null
+  /** 中央値スコア。集計対象がない場合はnull */
+  median_score: number | null
+  /** プレイ人数 */
+  player_count: number
+}
+
+/** コース統計レスポンス */
+export interface CourseStatsResponseDTO {
+  /** コースの表示用ID */
+  course_id: string
+  /** レーティング帯別統計。未集計の場合は空配列 */
+  stats: CourseStatsBandDTO[]
+}
+
 /** 編集者向けコースマスタ。削除済みを含み、更新日時を返す */
 export interface ManagedCourseDTO extends CourseDTO {
   /** 論理削除済みかどうか。false の場合は API が省略することがある */
@@ -1519,23 +1529,6 @@ export interface UserProfileWithRecordsDTO {
   updated_at: string | null
 }
 
-export type LinkedUserProfileWithRecordsDTO = UserProfileWithRecordsDTO & {
-  player: PlayerDTO
-  records: UserRecordDTO
-}
-
-export interface UserRecordResponseDTO {
-  updated_at: string
-  best: PlayerRecordDTO[]
-  best_candidate: PlayerRecordDTO[]
-  new: PlayerRecordDTO[]
-  new_candidate: PlayerRecordDTO[]
-  /** 通常譜面のユーザーレコード */
-  standard: PlayerRecordDTO[]
-  /** WORLD'S END のユーザーレコード */
-  worldsend?: WorldsendRecordDTO[]
-}
-
 export interface PlayerRecordDTO {
   is_played: boolean
   /** 曲ごとの現在OVER POWER集計対象か。楽曲マスタ上の理論値対象譜面ではない */
@@ -1764,12 +1757,14 @@ export interface DataTransferExportFile {
 
 /** APIトークンの管理画面用情報 */
 export interface ApiToken {
-  /** APIトークンID。名称変更・削除時に使用する */
-  id: number
+  /** APIトークンID。名称変更・削除時に使用する、16文字の小文字16進数 */
+  id: string
   /** ユーザーが指定した表示名 */
   name: string
   /** APIトークンで許可される操作 */
   permission: ApiTokenPermission
+  /** true の場合、本人やフレンドであっても非公開ユーザーを参照できない */
+  public_only: boolean
   /** 表示用のトークン先頭5文字。旧仕様からの移行データは null */
   token_prefix: string | null
   /** 最終利用日時。未使用の場合は null */
@@ -1787,6 +1782,8 @@ export interface ApiTokenIssueRequest {
   name: string
   /** 発行後は変更できないAPIトークン権限 */
   permission: ApiTokenPermission
+  /** 発行後は変更できない、公開ユーザーのみ参照する設定 */
+  public_only: boolean
 }
 
 /** APIトークン発行時に一度だけ返る平文トークン付きレスポンス */

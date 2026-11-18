@@ -21,6 +21,8 @@ export const FRIEND_VS_PATH = `${TOOLS_PATH}/friend-vs`
 export const SONGS_PATH = '/songs'
 /** WORLD'S END楽曲一覧画面のパス */
 export const WORLDSEND_SONGS_PATH = `${SONGS_PATH}/worldsend`
+/** コース一覧画面のパス */
+export const COURSES_PATH = `${SONGS_PATH}/courses`
 /** OVER POWER計算機の公開パス。 */
 export const OVER_POWER_CALCULATOR_PATH = `${TOOLS_PATH}/overpower-calc`
 export const CHART_CONSTANT_CALCULATOR_PATH = `${TOOLS_PATH}/chart-constant-calculator`
@@ -93,6 +95,15 @@ export const buildSongDetailPath = (displayId: string, difficulty?: string): str
  */
 export const buildWorldsendSongDetailPath = (displayId: string): string =>
   `${WORLDSEND_SONGS_PATH}/${encodeURIComponent(displayId)}`
+
+/**
+ * コース詳細画面パスを生成する。
+ *
+ * @param displayId - コース表示ID。
+ * @returns コース詳細画面パス。
+ */
+export const buildCourseDetailPath = (displayId: string): string =>
+  `${COURSES_PATH}/${encodeURIComponent(displayId)}`
 
 /**
  * 比較相手を指定したフレンドVS画面パスを生成する。

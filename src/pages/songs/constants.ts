@@ -6,6 +6,26 @@ export const SONG_DETAIL_LINK_COPY = {
   youtubeAriaLabel: 'YouTubeで楽曲を検索する',
 } as const
 
+/** コース画面の文言 */
+export const COURSE_PAGE_COPY = {
+  listTitle: 'コース一覧',
+  back: '← 戻る',
+  ownRecordHeading: '自己ベスト',
+  notPlayed: '未プレイ',
+  statsHeading: 'プレイヤー統計',
+  statsEmpty: '統計はまだありません。',
+  statsLoadingLabel: '統計を読み込み中',
+  statsColumns: {
+    ratingBand: 'レート帯',
+    players: '人数',
+    average: 'CLEAR平均',
+    median: 'CLEAR中央値',
+    clear: 'CLEAR',
+    fc: 'FC',
+    aj: 'AJ',
+  },
+} as const
+
 /** 楽曲一覧で選択できる表示形式 */
 export type SongListViewMode = 'card' | 'table'
 

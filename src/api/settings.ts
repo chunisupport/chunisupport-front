@@ -92,7 +92,7 @@ export const fetchApiTokens = async (): Promise<ApiTokenListResponse> => {
  * @returns 変更後のAPIトークン管理情報。
  */
 export const renameApiToken = async (
-  id: number,
+  id: string,
   data: ApiTokenRenameRequest
 ): Promise<ApiToken> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens/${id}`, {
@@ -110,7 +110,7 @@ export const renameApiToken = async (
  * @param id - 削除対象のAPIトークンID。
  * @returns 削除完了後に解決されるPromise。
  */
-export const deleteApiToken = async (id: number): Promise<void> => {
+export const deleteApiToken = async (id: string): Promise<void> => {
   await fetchWithAuth(`${API_BASE_URL}/internal/auth/api-tokens/${id}`, {
     method: 'DELETE',
   })

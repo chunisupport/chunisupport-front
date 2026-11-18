@@ -19,15 +19,6 @@ export const RecordDifficultyBadge = (props: { difficulty: PlayerDataDifficulty 
 )
 
 /**
- * 未プレイ状態を示す小さなバッジを表示する。
- *
- * @returns NoPlayバッジ。
- */
-export const NoPlayBadge = () => (
-  <span class="rounded-lg bg-surface-hover px-2 py-1 text-xs text-text-subtle">NoPlay</span>
-)
-
-/**
  * ランプ未設定時のプレースホルダーバッジを表示する。
  *
  * @param props - 追加クラス。

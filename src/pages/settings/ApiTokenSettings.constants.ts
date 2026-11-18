@@ -36,6 +36,38 @@ export const API_TOKEN_PERMISSION_OPTIONS: readonly {
 export const formatApiTokenPermission = (permission: ApiTokenPermission): string =>
   API_TOKEN_PERMISSION_OPTIONS.find((option) => option.value === permission)?.label ?? permission
 
+/**
+ * APIトークン発行時に選択できる参照範囲。
+ * 漏えい時の被害を公開データに限れるため、公開ユーザーのみを先頭（推奨）に置く。
+ */
+export const API_TOKEN_PUBLIC_ONLY_OPTIONS: readonly {
+  value: boolean
+  label: string
+  description: string
+}[] = [
+  {
+    value: true,
+    label: '公開ユーザーのみ（推奨）',
+    description:
+      'トークンが漏れても、読み取られるのは公開ユーザーのデータだけです。自分自身やフレンドでも、非公開ユーザーのデータは取得できません。',
+  },
+  {
+    value: false,
+    label: '非公開ユーザーも含む',
+    description:
+      '本人や相互フレンドであれば、非公開ユーザーのデータも取得できます。自分の非公開データを外部ツールで使いたい場合だけ選んでください。',
+  },
+]
+
+/**
+ * APIトークンの参照範囲の表示名を返す。
+ *
+ * @param publicOnly - APIが返した、公開ユーザーのみ参照する設定。
+ * @returns 一覧で表示する参照範囲名。
+ */
+export const formatApiTokenPublicOnly = (publicOnly: boolean): string =>
+  publicOnly ? '公開ユーザーのみ' : '非公開ユーザーも含む'
+
 /** APIトークン設定欄で使用する表示文言 */
 export const API_TOKEN_SETTINGS_COPY = {
   title: 'APIトークン管理',
@@ -43,9 +75,14 @@ export const API_TOKEN_SETTINGS_COPY = {
   issueLabel: '新しいAPIトークン名',
   issuePlaceholder: '例: Discord Bot',
   issueDialogTitle: 'APIトークンを発行',
-  issueDialogDescription: '名前と権限を指定します。権限は発行後に変更できません。',
-  issueReadOnlyDialogDescription: '名前を指定します。権限は読み取り専用で発行されます。',
+  issueDialogDescription:
+    '名前・権限・参照範囲を指定します。権限と参照範囲は発行後に変更できず、変えるにはトークンを削除して再発行する必要があります。',
+  issueReadOnlyDialogDescription:
+    '名前と参照範囲を指定します。権限は読み取り専用で発行されます。参照範囲は発行後に変更できず、変えるにはトークンを削除して再発行する必要があります。',
   permissionLabel: '権限',
+  publicOnlyLabel: '参照範囲',
+  publicOnlyNotice:
+    '「公開ユーザーのみ」のトークンでは、自分自身やフレンドであっても非公開ユーザーのデータは取得できず、404になります。chunirec互換APIで user_name を省略して自分のデータを取得する場合も、自分が非公開なら404です。',
   issueButton: 'APIトークンを発行',
   startIssueButton: '新しいトークンを発行',
   cancelIssueButton: 'キャンセル',
@@ -59,6 +96,7 @@ export const API_TOKEN_SETTINGS_COPY = {
   createdAtLabel: '発行日時',
   lastUsedAtLabel: '最終利用',
   permissionValueLabel: '権限',
+  publicOnlyValueLabel: '参照範囲',
   actionsLabel: '操作',
   generatedTitle: '発行されたAPIトークン',
   generatedNotice: 'この画面を離れると再表示できません。',
