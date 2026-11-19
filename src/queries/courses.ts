@@ -10,6 +10,8 @@ const COURSE_STATS_STALE_TIME_MS = 10 * 60 * 1000
 /** コース画面queryのkey factory。 */
 export const courseQueryKeys = {
   all: ['course-pages'] as const,
+  /** @returns プレイ記録を含まないコースマスタ一覧のqueryキー。 */
+  master: () => [...courseQueryKeys.all, 'master'] as const,
   /** @returns 閲覧ユーザーのレコードを合わせたコース一覧のqueryキー。未ログインはnull。 */
   list: (username: string | null) => [...courseQueryKeys.all, 'list', username] as const,
   /** @returns コース統計のqueryキー。 */
@@ -30,6 +32,17 @@ export const courseListQueryOptions = (username: string | null) =>
       const master = await fetchCoursesWithCache()
       return mergeCourseRecords(master.courses, [], master.updatedAt)
     },
+  })
+
+/**
+ * コースマスタのみをIndexedDB経由で取得するquery optionsを生成する。
+ *
+ * @returns コース一覧と更新日時を取得するquery options。
+ */
+export const courseMasterQueryOptions = () =>
+  queryOptions({
+    queryKey: courseQueryKeys.master(),
+    queryFn: fetchCoursesWithCache,
   })
 
 /**

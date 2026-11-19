@@ -2,8 +2,8 @@ import { fetchAllSongs } from '../../api/songs'
 import { fetchSongsUpdatedAt } from '../../queries/masterData'
 import {
   getSongCacheGeneration,
-  readCachedSongs,
-  readCachedSongsWithoutFreshnessCheck,
+  hasCachedSongsRevision,
+  readCachedSongsSnapshot,
   replaceCachedSongs,
 } from '../../repositories/songCacheRepository'
 import type { SongDTO } from '../../types/api'
@@ -20,7 +20,7 @@ type FetchAllSongsWithCacheOptions = {
 
 /**
  * 通常楽曲一覧を取得し、任意の通知先にはキャッシュを鮮度確認より先に渡す。
- * キャッシュの鮮度は楽曲データの変更世代 (revision) の一致で判定し、キャッシュがない場合は変更世代と一覧を並列取得する。
+ * 保存済み一覧は一度だけ読み、API と現在のメタデータの変更世代が一致すれば再利用する。キャッシュがない場合は変更世代と一覧を並列取得する。
  *
  * @param options - キャッシュ利用方法。
  * @returns キャッシュ、または API から取得した通常楽曲一覧レスポンス。
@@ -39,9 +39,9 @@ export const fetchAllSongsWithCache = async (
     .catch(() => undefined)
   const cachedSongs = options.forceRefresh
     ? null
-    : await readCachedSongsWithoutFreshnessCheck().catch(() => null)
+    : await readCachedSongsSnapshot().catch(() => null)
   if (cachedSongs && cacheGeneration === getSongCacheGeneration()) {
-    options.onCached?.({ songs: cachedSongs })
+    options.onCached?.({ songs: cachedSongs.songs })
   }
 
   // キャッシュがなければ鮮度確認を待たずに本体を取得する。
@@ -51,11 +51,14 @@ export const fetchAllSongsWithCache = async (
     songsCacheStateRequest,
     songsRequest,
   ])
-  if (songsCacheState && cachedSongs) {
-    const freshSongs = await readCachedSongs(songsCacheState.revision).catch(() => null)
-    if (freshSongs) {
-      return { songs: freshSongs }
-    }
+  if (
+    cachedSongs &&
+    songsCacheState &&
+    cachedSongs.revision === songsCacheState.revision &&
+    (await hasCachedSongsRevision(songsCacheState.revision).catch(() => false)) &&
+    cacheGeneration === getSongCacheGeneration()
+  ) {
+    return { songs: cachedSongs.songs }
   }
 
   const response = initialResponse ?? (await fetchAllSongs())

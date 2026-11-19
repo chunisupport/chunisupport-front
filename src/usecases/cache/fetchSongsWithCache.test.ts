@@ -10,6 +10,7 @@ import {
   replaceCachedWorldsendSongs,
 } from '../../repositories/songCacheRepository.ts'
 import type { SongDTO, WorldsendSongDTO } from '../../types/api.ts'
+import { clearClientCache } from './clearClientCache.ts'
 
 beforeEach(() => appQueryClient.clear())
 
@@ -364,6 +365,62 @@ for (const target of revalidationTargets) {
     assert.deepEqual(atTtl.songs, [target.cachedSong])
     assert.equal(getUpdatedAtFetchCount(), 2)
     assert.equal(getSongsFetchCount(), 0)
+  })
+}
+
+test('通常曲の変更世代が一致すれば先に読み込んだ一覧を再利用すること', async (t) => {
+  // Given: サーバーと同じ変更世代の一覧がブラウザーに保存されている。
+  const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
+  await replaceCachedSongs([cachedSong], SONGS_REVISION)
+  const readSongs = t.mock.method(db.songs, 'toArray')
+  const api = installSongsApi('/internal/songs', () => SONGS_REVISION, [fetchedSong])
+  let displayed: SongDTO[] | undefined
+
+  // When: 一覧の先行表示と鮮度確認を行う。
+  const response = await fetchAllSongsWithCache({
+    onCached: ({ songs }) => {
+      displayed = songs
+    },
+  })
+
+  // Then: 先行表示した一覧をそのまま返し、再読み込みも一覧APIの呼び出しも行わない。
+  assert.deepEqual(response.songs, [cachedSong])
+  assert.equal(response.songs, displayed)
+  assert.equal(readSongs.mock.callCount(), 1)
+  assert.equal(api.getSongsFetchCount(), 0)
+})
+
+for (const action of ['削除', '差し替え']) {
+  test(`鮮度確認中に別タブがキャッシュを${action}した場合は先行表示した一覧を使い回さないこと`, async (t) => {
+    // Given: 先行表示できる一覧があるが、変更世代 API の応答はまだ届いていない。
+    const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()
+    await replaceCachedSongs([cachedSong], SONGS_REVISION)
+    let finishRevision!: (response: Response) => void
+    const revision = new Promise<Response>((resolve) => {
+      finishRevision = resolve
+    })
+    const fetchMock = t.mock.method(globalThis, 'fetch', async (input: RequestInfo | URL) =>
+      String(input).endsWith('/updated-at') ? revision : Response.json({ songs: [fetchedSong] })
+    )
+
+    let onCached!: (response: { songs: SongDTO[] }) => void
+    const displayed = new Promise<{ songs: SongDTO[] }>((resolve) => {
+      onCached = resolve
+    })
+    const request = fetchAllSongsWithCache({ onCached })
+    assert.deepEqual((await displayed).songs, [cachedSong])
+
+    // When: このタブの無効化世代を変えずに共有DBを更新し、古い変更世代の応答を返す。
+    if (action === '削除') {
+      await clearClientCache()
+    } else {
+      await replaceCachedSongs([fetchedSong], EXTERNALLY_UPDATED_SONGS_REVISION)
+    }
+    finishRevision(Response.json({ updated_at: SONGS_UPDATED_AT, revision: SONGS_REVISION }))
+
+    // Then: 先行表示の一覧を確定せず、楽曲一覧 API の結果を返す。
+    assert.deepEqual((await request).songs, [fetchedSong])
+    assert.equal(fetchMock.mock.callCount(), 2)
   })
 }
 
