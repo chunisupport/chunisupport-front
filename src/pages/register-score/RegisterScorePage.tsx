@@ -167,7 +167,9 @@ const RegisterScorePage = () => {
               <RegisterScoreResultView
                 pageTitle={REGISTER_SCORE_COPY.title}
                 result={successState.result}
-                canCapture={!hasCourseChanges() || !coursesQuery.isPending}
+                canCapture={
+                  !hasCourseChanges() || (!coursesQuery.isPending && !coursesQuery.isFetching)
+                }
                 resolveSongTitle={songTitleByIdx}
                 resolveChartLevel={chartLevelByIdx}
                 resolveSongSortValues={songSortValuesByIdx}
