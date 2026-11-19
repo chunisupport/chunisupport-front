@@ -27,6 +27,8 @@ type ApiTokenSettingsOptions = {
   issueToken: (request: ApiTokenIssueRequest) => Promise<ApiTokenIssueResponse>
   /** APIトークンの名前を変更する */
   renameToken: (id: string, request: ApiTokenRenameRequest) => Promise<ApiToken>
+  /** APIトークンの名前変更に成功したことを通知する */
+  onRenamed: () => void
   /** APIトークンを削除する */
   deleteToken: (id: string) => Promise<void>
 }
@@ -222,7 +224,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   }
 
   /**
-   * 入力されたAPIトークン名を保存し、一覧の該当行を置き換える。
+   * 入力されたAPIトークン名を保存し、一覧の該当行を置き換えて成功を通知する。
    * ほかのAPIトークンを操作中に呼ばれた場合は何もしない。
    * 名前に起因するエラーは名前入力欄に、それ以外は対象の行に表示する。
    *
@@ -251,7 +253,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
           : current
       )
       cancelRenaming()
-      setTokenActionSuccess(API_TOKEN_SETTINGS_COPY.renameSuccess)
+      options.onRenamed()
     } catch (caught) {
       const message = toUserFriendlyErrorMessage(caught, API_TOKEN_SETTINGS_COPY.renameFailure)
       if (isApiTokenNameError(caught)) {

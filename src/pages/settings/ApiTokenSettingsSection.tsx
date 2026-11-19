@@ -11,6 +11,7 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { AppDialog } from '../../components/common/AppDialog'
+import { showSuccessToast } from '../../components/common/AppToast'
 import { AppTooltipIconButton } from '../../components/common/AppTooltipIconButton'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { API_DOCUMENTATION_URL } from '../../config'
@@ -170,6 +171,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
     fetchTokens: fetchApiTokens,
     issueToken: issueApiToken,
     renameToken: renameApiToken,
+    onRenamed: () => showSuccessToast(API_TOKEN_SETTINGS_COPY.renameSuccess),
     deleteToken: deleteApiToken,
   })
 
@@ -388,106 +390,58 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                     <tbody>
                       <For each={loaded().tokens}>
                         {(token) => (
-                          <Show
-                            when={settings.editingTokenId() === token.id}
-                            fallback={
-                              <tr class="border-t border-border">
-                                <th
-                                  scope="row"
-                                  class="px-3 py-3 text-left font-sans font-semibold text-text whitespace-nowrap"
+                          <tr class="border-t border-border">
+                            <th
+                              scope="row"
+                              class="px-3 py-3 text-left font-sans font-semibold text-text whitespace-nowrap"
+                            >
+                              {token.name}
+                            </th>
+                            <td class="px-3 py-3 font-mono text-xs text-text-muted whitespace-nowrap">
+                              {token.token_prefix
+                                ? `${token.token_prefix}…`
+                                : API_TOKEN_SETTINGS_COPY.migratedPrefix}
+                            </td>
+                            <td class="px-3 py-3 text-center text-text-muted whitespace-nowrap">
+                              <ApiTokenPermissionIcons permission={token.permission} />
+                            </td>
+                            <td class="px-3 py-3 text-center text-text-muted whitespace-nowrap">
+                              <ApiTokenPublicOnlyIcons publicOnly={token.public_only} />
+                            </td>
+                            <td class="px-3 py-3 text-center text-text-muted tabular-nums whitespace-nowrap">
+                              {formatSettingsDateTime(token.created_at)}
+                            </td>
+                            <td class="px-3 py-3 text-center text-text-muted tabular-nums whitespace-nowrap">
+                              {formatSettingsDateTime(
+                                token.last_used_at,
+                                API_TOKEN_SETTINGS_COPY.unused
+                              )}
+                            </td>
+                            <td class="px-3 py-3 text-center">
+                              <div class="flex justify-center gap-2 whitespace-nowrap">
+                                <AppTooltipIconButton
+                                  tone="ghost"
+                                  onClick={() => settings.startRenaming(token)}
+                                  disabled={settings.mutatingTokenId() !== null}
+                                  label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.renameAriaLabelSuffix}`}
                                 >
-                                  {token.name}
-                                </th>
-                                <td class="px-3 py-3 font-mono text-xs text-text-muted whitespace-nowrap">
-                                  {token.token_prefix
-                                    ? `${token.token_prefix}…`
-                                    : API_TOKEN_SETTINGS_COPY.migratedPrefix}
-                                </td>
-                                <td class="px-3 py-3 text-center text-text-muted whitespace-nowrap">
-                                  <ApiTokenPermissionIcons permission={token.permission} />
-                                </td>
-                                <td class="px-3 py-3 text-center text-text-muted whitespace-nowrap">
-                                  <ApiTokenPublicOnlyIcons publicOnly={token.public_only} />
-                                </td>
-                                <td class="px-3 py-3 text-center text-text-muted tabular-nums whitespace-nowrap">
-                                  {formatSettingsDateTime(token.created_at)}
-                                </td>
-                                <td class="px-3 py-3 text-center text-text-muted tabular-nums whitespace-nowrap">
-                                  {formatSettingsDateTime(
-                                    token.last_used_at,
-                                    API_TOKEN_SETTINGS_COPY.unused
-                                  )}
-                                </td>
-                                <td class="px-3 py-3 text-center">
-                                  <div class="flex justify-center gap-2 whitespace-nowrap">
-                                    <AppTooltipIconButton
-                                      tone="ghost"
-                                      onClick={() => settings.startRenaming(token)}
-                                      disabled={settings.mutatingTokenId() !== null}
-                                      label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.renameAriaLabelSuffix}`}
-                                    >
-                                      <PencilLine size={18} aria-hidden="true" />
-                                    </AppTooltipIconButton>
-                                    <AppTooltipIconButton
-                                      tone="ghost"
-                                      onClick={() => settings.openDeleteDialog(token)}
-                                      disabled={settings.mutatingTokenId() !== null}
-                                      aria-busy={settings.mutatingTokenId() === token.id}
-                                      label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
-                                    >
-                                      <Trash2 size={18} aria-hidden="true" />
-                                    </AppTooltipIconButton>
-                                  </div>
-                                  <p class="mt-2 text-sm text-danger empty:hidden" role="alert">
-                                    {settings.tokenActionErrorFor(token.id)}
-                                  </p>
-                                </td>
-                              </tr>
-                            }
-                          >
-                            <tr class="border-t border-border">
-                              <td colSpan={7} class="p-3">
-                                <form
-                                  class="flex flex-col gap-3 sm:flex-row sm:items-end"
-                                  onSubmit={(event) => {
-                                    event.preventDefault()
-                                    void settings.rename(token.id)
-                                  }}
+                                  <PencilLine size={18} aria-hidden="true" />
+                                </AppTooltipIconButton>
+                                <AppTooltipIconButton
+                                  tone="ghost"
+                                  onClick={() => settings.openDeleteDialog(token)}
+                                  disabled={settings.mutatingTokenId() !== null}
+                                  aria-busy={settings.mutatingTokenId() === token.id}
+                                  label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
                                 >
-                                  <ApiTokenNameField
-                                    label={API_TOKEN_SETTINGS_COPY.renameLabel}
-                                    value={settings.editingName()}
-                                    disabled={settings.mutatingTokenId() === token.id}
-                                    error={settings.editingNameError()}
-                                    onChange={settings.setEditingName}
-                                  />
-                                  <div class="flex shrink-0 gap-2">
-                                    <AppButton
-                                      size="xs"
-                                      variant="primary"
-                                      type="submit"
-                                      disabled={settings.mutatingTokenId() === token.id}
-                                      aria-busy={settings.mutatingTokenId() === token.id}
-                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.saveAriaLabelSuffix}`}
-                                    >
-                                      {API_TOKEN_SETTINGS_COPY.save}
-                                    </AppButton>
-                                    <AppButton
-                                      size="xs"
-                                      onClick={settings.cancelRenaming}
-                                      disabled={settings.mutatingTokenId() === token.id}
-                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.cancelAriaLabelSuffix}`}
-                                    >
-                                      {API_TOKEN_SETTINGS_COPY.cancel}
-                                    </AppButton>
-                                  </div>
-                                </form>
-                                <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                                  {settings.tokenActionErrorFor(token.id)}
-                                </p>
-                              </td>
-                            </tr>
-                          </Show>
+                                  <Trash2 size={18} aria-hidden="true" />
+                                </AppTooltipIconButton>
+                              </div>
+                              <p class="mt-2 text-sm text-danger empty:hidden" role="alert">
+                                {settings.tokenActionErrorFor(token.id)}
+                              </p>
+                            </td>
+                          </tr>
                         )}
                       </For>
                     </tbody>
@@ -498,6 +452,56 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
           </Show>
         </Show>
       </div>
+
+      <AppDialog
+        open={settings.editingTokenId() !== null}
+        onOpenChange={(open) => {
+          if (!open) settings.cancelRenaming()
+        }}
+        pending={settings.mutatingTokenId() !== null}
+        layer="raised"
+        fontSans
+        title={API_TOKEN_SETTINGS_COPY.renameDialogTitle}
+      >
+        <form
+          class="mt-5 flex flex-col"
+          onSubmit={(event) => {
+            event.preventDefault()
+            const tokenId = settings.editingTokenId()
+            if (tokenId) void settings.rename(tokenId)
+          }}
+        >
+          <ApiTokenNameField
+            label={API_TOKEN_SETTINGS_COPY.renameLabel}
+            value={settings.editingName()}
+            disabled={settings.mutatingTokenId() !== null}
+            error={settings.editingNameError()}
+            onChange={settings.setEditingName}
+          />
+          <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+            {settings.tokenActionErrorFor(settings.editingTokenId() ?? '')}
+          </p>
+          <div class="mt-5 flex justify-end gap-2">
+            <Dialog.CloseButton
+              class={getAppButtonClass({ variant: 'secondary' })}
+              disabled={settings.mutatingTokenId() !== null}
+            >
+              {API_TOKEN_SETTINGS_COPY.cancel}
+            </Dialog.CloseButton>
+            <AppButton
+              variant="primary"
+              type="submit"
+              disabled={
+                settings.mutatingTokenId() !== null ||
+                !normalizeApiTokenName(settings.editingName())
+              }
+              aria-busy={settings.mutatingTokenId() !== null}
+            >
+              {API_TOKEN_SETTINGS_COPY.save}
+            </AppButton>
+          </div>
+        </form>
+      </AppDialog>
 
       <AppConfirmDialog
         open={settings.deleteTarget() !== null}

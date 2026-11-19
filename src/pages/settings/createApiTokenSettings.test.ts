@@ -37,7 +37,7 @@ const token = (id, name, permission = 'read', publicOnly = true) => ({
 })
 const names = (settings) => settings.tokens().tokens.map((item) => item.name)
 const setup = async (overrides = {}) => {
-  const calls = { fetch: 0, issue: [], rename: [], delete: [] }
+  const calls = { fetch: 0, issue: [], rename: [], renamed: 0, delete: [] }
   const view = createRoot((dispose) => {
     const settings = createApiTokenSettings({
       username: () => 'alice',
@@ -56,6 +56,9 @@ const setup = async (overrides = {}) => {
       renameToken: async (id, request) => {
         calls.rename.push([id, request])
         return token(id, request.name)
+      },
+      onRenamed: () => {
+        calls.renamed++
       },
       deleteToken: async (id) => {
         calls.delete.push(id)
@@ -358,7 +361,7 @@ dispose()
 `)
 })
 
-test('名前変更成功時は一覧の該当行だけを置き換え、入力を終了すること', async () => {
+test('名前変更成功時は一覧の該当行だけを置き換え、入力を終了して成功を通知すること', async () => {
   await runApiTokenSettingsTest(`
 // Given: ID 2の名前変更を開始した状態
 const { settings, calls, dispose } = await setup()
@@ -370,11 +373,11 @@ settings.setEditingName(' Terminal ')
 // When: 保存する
 await settings.rename('0000000000000002')
 
-// Then: 前後空白を除いた名前で保存し、該当行だけを置き換える
+// Then: 前後空白を除いた名前で保存し、該当行だけを置き換えて成功を通知する
 assert.deepEqual(calls.rename, [['0000000000000002', { name: 'Terminal' }]])
 assert.deepEqual(names(settings), ['Bot', 'Terminal'])
 assert.equal(settings.editingTokenId(), null)
-assert.equal(settings.tokenActionSuccess(), COPY.renameSuccess)
+assert.equal(calls.renamed, 1)
 assert.equal(settings.mutatingTokenId(), null)
 dispose()
 `)
