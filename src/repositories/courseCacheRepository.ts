@@ -35,28 +35,30 @@ export const readCachedCourses = async (
   coursesUpdatedAt: string | null
 ): Promise<CourseDTO[] | null> => {
   const db = await getCacheDB()
-  const metadata = await db.cacheMetadata.get('courses')
-  if (
-    metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
-    metadata.courseSchemaVersion !== COURSE_CACHE_SCHEMA_VERSION ||
-    metadata.coursesUpdatedAt !== coursesUpdatedAt
-  ) {
-    return null
-  }
+  return db.transaction('r', db.cacheMetadata, db.courses, async () => {
+    const metadata = await db.cacheMetadata.get('courses')
+    if (
+      metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
+      metadata.courseSchemaVersion !== COURSE_CACHE_SCHEMA_VERSION ||
+      metadata.coursesUpdatedAt !== coursesUpdatedAt
+    ) {
+      return null
+    }
 
-  const cachedCourses = await db.courses.toArray()
-  if (
-    !cachedCourses.every(
-      (course) =>
-        course.schemaVersion === COURSE_CACHE_SCHEMA_VERSION && Number.isInteger(course.sortOrder)
-    )
-  ) {
-    return null
-  }
+    const cachedCourses = await db.courses.toArray()
+    if (
+      !cachedCourses.every(
+        (course) =>
+          course.schemaVersion === COURSE_CACHE_SCHEMA_VERSION && Number.isInteger(course.sortOrder)
+      )
+    ) {
+      return null
+    }
 
-  return cachedCourses
-    .sort((left, right) => left.sortOrder - right.sortOrder)
-    .map((course) => course.data)
+    return cachedCourses
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((course) => course.data)
+  })
 }
 
 /**
@@ -104,35 +106,37 @@ export const readCachedUserCourseRecords = async (
   match: UserCourseRecordCacheMatch
 ): Promise<PlayedCourseRecords | null> => {
   const db = await getCacheDB()
-  const metadata = await db.cacheMetadata.get('userCourseRecords')
-  if (
-    metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
-    metadata.courseSchemaVersion !== COURSE_CACHE_SCHEMA_VERSION ||
-    metadata.username !== match.username ||
-    metadata.userUpdatedAt !== match.userUpdatedAt
-  ) {
-    return null
-  }
+  return db.transaction('r', db.cacheMetadata, db.userCourseRecords, async () => {
+    const metadata = await db.cacheMetadata.get('userCourseRecords')
+    if (
+      metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
+      metadata.courseSchemaVersion !== COURSE_CACHE_SCHEMA_VERSION ||
+      metadata.username !== match.username ||
+      metadata.userUpdatedAt !== match.userUpdatedAt
+    ) {
+      return null
+    }
 
-  const entries = await db.userCourseRecords.where('username').equals(match.username).toArray()
-  if (
-    !entries.every(
-      (entry) =>
-        entry.schemaVersion === COURSE_CACHE_SCHEMA_VERSION &&
-        entry.username === match.username &&
-        entry.userUpdatedAt === match.userUpdatedAt &&
-        Number.isInteger(entry.sortOrder)
-    )
-  ) {
-    return null
-  }
+    const entries = await db.userCourseRecords.where('username').equals(match.username).toArray()
+    if (
+      !entries.every(
+        (entry) =>
+          entry.schemaVersion === COURSE_CACHE_SCHEMA_VERSION &&
+          entry.username === match.username &&
+          entry.userUpdatedAt === match.userUpdatedAt &&
+          Number.isInteger(entry.sortOrder)
+      )
+    ) {
+      return null
+    }
 
-  return {
-    courses: entries
-      .sort((left, right) => left.sortOrder - right.sortOrder)
-      .map((entry) => entry.data),
-    meta: { updated_at: metadata.recordUpdatedAt ?? null },
-  }
+    return {
+      courses: entries
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map((entry) => entry.data),
+      meta: { updated_at: metadata.recordUpdatedAt ?? null },
+    }
+  })
 }
 
 /**

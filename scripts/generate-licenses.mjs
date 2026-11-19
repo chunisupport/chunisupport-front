@@ -64,9 +64,10 @@ function writeLicenseNotice(outputPath, licenseNoticeText) {
 
 /**
  * 生成済みライセンスファイルが Git 管理下で最新か検証する。
+ * @param {string} licenseNoticeText - 比較する生成結果。
  * @returns {void}
  */
-function verifyGeneratedFiles() {
+function verifyGeneratedFiles(licenseNoticeText) {
   try {
     execFileSync('git', ['ls-files', '--error-unmatch', '--', ...OUTPUT_FILES], {
       cwd: projectRoot,
@@ -80,13 +81,14 @@ function verifyGeneratedFiles() {
   }
 
   try {
-    execFileSync('git', ['diff', '--exit-code', '--', ...OUTPUT_FILES], {
-      cwd: projectRoot,
-      encoding: 'utf8',
-      stdio: 'inherit',
-    })
-  } catch {
-    console.error('License notice files are not up to date.')
+    const expected = licenseNoticeText.replaceAll('\r\n', '\n')
+    for (const outputFile of OUTPUT_FILES) {
+      if (readFileSync(outputFile, 'utf8').replaceAll('\r\n', '\n') !== expected) {
+        throw new Error(outputFile)
+      }
+    }
+  } catch (error) {
+    console.error('License notice files are not up to date:', error.message)
     process.exit(1)
   }
 }
@@ -98,12 +100,14 @@ function verifyGeneratedFiles() {
 async function main() {
   const licenseNoticeText = await createLicenseNoticeText()
 
-  for (const outputFile of OUTPUT_FILES) {
-    writeLicenseNotice(outputFile, licenseNoticeText)
+  if (isCheckMode) {
+    verifyGeneratedFiles(licenseNoticeText)
+    console.log('License notice files are up to date.')
+    return
   }
 
-  if (isCheckMode) {
-    verifyGeneratedFiles()
+  for (const outputFile of OUTPUT_FILES) {
+    writeLicenseNotice(outputFile, licenseNoticeText)
   }
 
   console.log('Done. Both THIRD-PARTY-NOTICES.txt files have been updated.')

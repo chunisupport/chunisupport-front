@@ -19,6 +19,8 @@ import { createRegisterScoreImageFiles } from './registerScoreImageFiles'
 type Props = {
   /** プレビュー用画像を生成する処理 */
   captureImages: (layout: RegisterScoreImageLayout) => Promise<RegisterScoreImageCaptureResult>
+  /** プレビュー画像の生成を開始できるか。省略時は直ちに生成する。 */
+  canCapture?: boolean
   /** 共有するJPEG画像のファイル名 */
   imageFilename: string
 }
@@ -26,7 +28,7 @@ type Props = {
 /**
  * 更新差分の全ページをプレビューし、まとめて共有または個別に保存する。
  *
- * @param props - 画像生成処理と共有ファイル名。
+ * @param props - 画像生成処理、生成を開始できるか、共有ファイル名。
  * @returns 画像化・共有ボタンとプレビューダイアログ。
  */
 export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
@@ -36,6 +38,7 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
 
   const preview = createImagePreview({
     capture: () => props.captureImages(imageLayout()),
+    canCapture: () => props.canCapture ?? true,
     toFiles: ({ blobs, splitPageCount: pageCount }) => {
       setSplitPageCount(pageCount)
       return createRegisterScoreImageFiles(blobs, props.imageFilename)
@@ -129,7 +132,7 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
         </div>
       }
       hasPreview={preview.previews().length > 0}
-      previewBusy={preview.isCapturing()}
+      previewBusy={props.canCapture === false || preview.isCapturing()}
       loadingLabel={REGISTER_SCORE_COPY.preparingImagePreview}
       captureError={preview.captureError()}
       retryLabel={REGISTER_SCORE_COPY.retryImagePreview}

@@ -51,47 +51,61 @@ const hasSongFlags = <TSong extends CachedSong | CachedWorldsendSong>(
  * 楽曲キャッシュのメタデータが現行スキーマと楽曲データの変更世代に一致するか判定する。
  *
  * @param kind - 判定対象のキャッシュ種別。
- * @param songsRevision - API の楽曲データの変更世代。undefined は鮮度を確認せずスキーマだけ検証する。
+ * @param songsRevision - API の楽曲データの変更世代。
  * @returns キャッシュが利用可能な場合は true。
  */
 const hasValidSongMetadata = async (
   kind: SongCacheKind,
-  songsRevision: number | undefined
+  songsRevision: number
 ): Promise<boolean> => {
   const db = await getCacheDB()
   const metadata = await db.cacheMetadata.get(kind)
   return (
     metadata?.schemaVersion === CLIENT_CACHE_SCHEMA_VERSION &&
-    (songsRevision === undefined || metadata.songsRevision === songsRevision)
+    metadata.songsRevision === songsRevision
   )
 }
 
 /**
- * 指定した鮮度確認条件で通常楽曲一覧キャッシュを読み込む。
+ * 通常楽曲キャッシュが指定した変更世代でまだ保存されているか、メタデータだけで確認する。
  *
- * @param songsRevision - API の楽曲データの変更世代。undefined は先行表示用に鮮度確認を省く。
- * @returns 利用可能な通常楽曲キャッシュ。存在しない場合は null。
+ * @param songsRevision - 先に読み込んだ一覧の変更世代。
+ * @returns 削除や異なる世代への入れ替えがない場合は true。
  */
-const readSongCache = async (songsRevision: number | undefined): Promise<SongDTO[] | null> => {
-  if (!(await hasValidSongMetadata('songs', songsRevision))) {
-    return null
-  }
+export const hasCachedSongsRevision = (songsRevision: number): Promise<boolean> =>
+  hasValidSongMetadata('songs', songsRevision)
 
+/**
+ * 先行表示と鮮度判定のため、通常楽曲一覧とその変更世代を同じ時点のデータとして読み込む。
+ *
+ * @returns スキーマが有効な通常楽曲一覧と変更世代。利用できない場合は null。
+ */
+export const readCachedSongsSnapshot = async (): Promise<{
+  songs: SongDTO[]
+  revision: number | undefined
+} | null> => {
   const db = await getCacheDB()
-  const cachedSongs = await db.songs.toArray()
-  if (
-    cachedSongs.length === 0 ||
-    !hasSongSortOrder(cachedSongs) ||
-    !hasSongFlags(cachedSongs, ['unlock_required']) ||
-    !cachedSongs.every((song) => typeof song.data.name_folder_code === 'string')
-  ) {
-    return null
-  }
+  return db.transaction('r', db.cacheMetadata, db.songs, async () => {
+    const metadata = await db.cacheMetadata.get('songs')
+    if (metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION) return null
 
-  return cachedSongs
-    .slice()
-    .sort((left, right) => left.sortOrder - right.sortOrder)
-    .map((song) => song.data)
+    const cachedSongs = await db.songs.toArray()
+    if (
+      cachedSongs.length === 0 ||
+      !hasSongSortOrder(cachedSongs) ||
+      !hasSongFlags(cachedSongs, ['unlock_required']) ||
+      !cachedSongs.every((song) => typeof song.data.name_folder_code === 'string')
+    ) {
+      return null
+    }
+
+    return {
+      songs: cachedSongs
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map((song) => song.data),
+      revision: metadata.songsRevision,
+    }
+  })
 }
 
 /**
@@ -100,16 +114,10 @@ const readSongCache = async (songsRevision: number | undefined): Promise<SongDTO
  * @param songsRevision - API で確認した楽曲データの変更世代。
  * @returns 変更世代が一致する通常楽曲キャッシュ。利用できない場合は null。
  */
-export const readCachedSongs = (songsRevision: number): Promise<SongDTO[] | null> =>
-  readSongCache(songsRevision)
-
-/**
- * 先行表示のため、鮮度を確認せず通常楽曲一覧キャッシュを読み込む。
- *
- * @returns スキーマが有効な通常楽曲キャッシュ。利用できない場合は null。
- */
-export const readCachedSongsWithoutFreshnessCheck = (): Promise<SongDTO[] | null> =>
-  readSongCache(undefined)
+export const readCachedSongs = async (songsRevision: number): Promise<SongDTO[] | null> => {
+  const cached = await readCachedSongsSnapshot()
+  return cached?.revision === songsRevision ? cached.songs : null
+}
 
 /**
  * WORLD'S END 楽曲一覧キャッシュを読み込む。

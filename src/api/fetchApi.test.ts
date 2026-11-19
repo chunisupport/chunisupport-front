@@ -100,6 +100,40 @@ test('APIの通信エラーはバージョン確認の完了を待たずに送�
   }
 })
 
+for (const fromRequest of [false, true]) {
+  test(`中止されたGETはフロントエンド更新を確認しない (${fromRequest ? 'Request' : 'init'}のsignal)`, async (t) => {
+    // Given: 呼び出し元のsignalが中止されるまで通信が続く。
+    const controller = new AbortController()
+    const { signal } = controller
+    const fetchMock = t.mock.method(
+      globalThis,
+      'fetch',
+      () =>
+        new Promise<Response>((_resolve, reject) => {
+          if (signal.aborted) reject(signal.reason)
+          else signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+        })
+    )
+    const originalWindow = globalThis.window
+    const originalBuildId = Reflect.get(globalThis, '__FRONTEND_BUILD_ID__')
+    Object.assign(globalThis, { window: {}, __FRONTEND_BUILD_ID__: 'old-build' })
+    t.after(() => {
+      Object.assign(globalThis, { window: originalWindow, __FRONTEND_BUILD_ID__: originalBuildId })
+    })
+
+    // When: Requestまたはinitからsignalを渡し、通信開始後に中止する。
+    const input = fromRequest ? new Request('http://localhost/songs', { signal }) : '/songs'
+    const request = fetchApi(input, fromRequest ? undefined : { signal })
+    assert.equal(fetchMock.mock.callCount(), 1)
+    controller.abort()
+    await assert.rejects(request, { name: 'AbortError' })
+    await new Promise((resolve) => setImmediate(resolve))
+
+    // Then: 元のエラーだけを返し、version.jsonは取得しない。
+    assert.equal(fetchMock.mock.callCount(), 1)
+  })
+}
+
 for (const { name, respond } of [
   { name: '入力エラー', respond: () => new Response(null, { status: 400 }) },
   {

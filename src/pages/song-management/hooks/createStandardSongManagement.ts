@@ -51,6 +51,7 @@ export const createStandardSongManagement = (
   const [draft, setDraft] = createSignal<SongDraft | null>(null)
   const [initialDraft, setInitialDraft] = createSignal<SongDraft | null>(null)
   const [saving, setSaving] = createSignal(false)
+  const [creating, setCreating] = createSignal(false)
   const [createDraft, setCreateDraft] = createSignal<CreateSongDraft>(buildCreateSongDraft())
   const [searchQuery, setSearchQuery] = createSignal('')
   const [filters, setFilters] = createSignal(createSongManagementFilters())
@@ -256,11 +257,13 @@ export const createStandardSongManagement = (
   }
 
   /**
-   * 入力中の通常楽曲を検証して追加する。
+   * 入力中の通常楽曲を検証して追加する。作成中の二重送信は無視する。
    *
    * @returns 処理完了後に解決されるPromise。
    */
   const create = async (): Promise<void> => {
+    if (creating()) return
+
     const current = createDraft()
 
     const md = masterData()
@@ -275,6 +278,7 @@ export const createStandardSongManagement = (
       return
     }
 
+    setCreating(true)
     try {
       await createSong(result.request)
       showSuccessToast(SONG_MANAGEMENT_MESSAGES.standardCreated)
@@ -282,6 +286,8 @@ export const createStandardSongManagement = (
       await refreshSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, SONG_MANAGEMENT_MESSAGES.createError))
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -347,6 +353,7 @@ export const createStandardSongManagement = (
     createDraft,
     updateCreateDraftField,
     updateCreateChart,
+    creating,
     create,
   }
 }
