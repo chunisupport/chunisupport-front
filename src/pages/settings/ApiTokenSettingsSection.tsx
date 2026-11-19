@@ -24,6 +24,7 @@ import {
   formatApiTokenPermission,
   formatApiTokenPublicOnly,
 } from './ApiTokenSettings.constants'
+import { normalizeApiTokenName } from './apiTokenName'
 import { createApiTokenSettings } from './createApiTokenSettings'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { SETTINGS_SUBSECTION_CLASS, SETTINGS_SUBSECTION_TITLE_CLASS } from './settingsStyles'
@@ -307,7 +308,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
               <AppButton
                 variant="primary"
                 type="submit"
-                disabled={settings.issuing()}
+                disabled={settings.issuing() || !normalizeApiTokenName(settings.issueName())}
                 aria-busy={settings.issuing()}
               >
                 {API_TOKEN_SETTINGS_COPY.issueButton}
