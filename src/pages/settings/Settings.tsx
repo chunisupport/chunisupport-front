@@ -10,6 +10,7 @@ import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import AppearanceSettings from '../../components/common/AppearanceSettings'
 import { APPEARANCE_SETTINGS_COPY } from '../../components/common/AppearanceSettings.constants'
 import { AppSwitch } from '../../components/common/AppSwitch'
+import { showSuccessToast } from '../../components/common/AppToast'
 import { FILTER_DIALOG_FIELD_FOCUS_CLASS } from '../../components/common/filterStyles'
 import NavPlacementSettings from '../../components/common/NavPlacementSettings'
 import { LOGIN_PATH } from '../../constants/routes'
@@ -83,10 +84,14 @@ const Settings = () => {
     source: () => currentSummary()?.me.is_private,
     update: updatePrivacy,
     refresh: fetchPrivacy,
-    onSaved: (isPrivate) =>
+    onSaved: (isPrivate) => {
       mutateSummary((current) =>
         current ? { ...current, me: { ...current.me, is_private: isPrivate } } : current
-      ),
+      )
+      showSuccessToast(
+        isPrivate ? PRIVACY_SETTINGS_COPY.privateSuccess : PRIVACY_SETTINGS_COPY.publicSuccess
+      )
+    },
   })
   const playerDataDeletion = createPlayerDataDeletion({
     username: () => currentSummary()?.me.username,
@@ -192,9 +197,6 @@ const Settings = () => {
                       </div>
                       <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
                         {privacy.error()}
-                      </p>
-                      <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-                        {privacy.success()}
                       </p>
                     </section>
                   </Show>
