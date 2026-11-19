@@ -202,6 +202,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
           size="lg"
           height="maxScreen"
           layer="raised"
+          fontSans
           title={API_TOKEN_SETTINGS_COPY.issueDialogTitle}
           description={
             settings.canIssueReadWrite()

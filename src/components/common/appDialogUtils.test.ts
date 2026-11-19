@@ -129,6 +129,7 @@ for (const { label, option, token } of [
   { label: '選択禁止', option: { selectNone: true }, token: 'select-none' },
   { label: 'はみ出しの非表示', option: { overflowHidden: true }, token: 'overflow-hidden' },
   { label: '枠線', option: { bordered: true }, token: 'border-border-strong' },
+  { label: 'sans系フォント', option: { fontSans: true }, token: 'font-sans' },
 ]) {
   test(`ダイアログ枠の${label}は指定したときだけ付く`, () => {
     // Given: 追加の見た目を指定しない枠と、1つだけ指定した枠
