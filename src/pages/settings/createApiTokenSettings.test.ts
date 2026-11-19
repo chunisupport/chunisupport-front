@@ -37,7 +37,7 @@ const token = (id, name, permission = 'read', publicOnly = true) => ({
 })
 const names = (settings) => settings.tokens().tokens.map((item) => item.name)
 const setup = async (overrides = {}) => {
-  const calls = { fetch: 0, issue: [], rename: [], renamed: 0, delete: [] }
+  const calls = { fetch: 0, issue: [], rename: [], renamed: 0, delete: [], deleted: 0 }
   const view = createRoot((dispose) => {
     const settings = createApiTokenSettings({
       username: () => 'alice',
@@ -62,6 +62,9 @@ const setup = async (overrides = {}) => {
       },
       deleteToken: async (id) => {
         calls.delete.push(id)
+      },
+      onDeleted: () => {
+        calls.deleted++
       },
       ...overrides,
     })
@@ -444,7 +447,7 @@ dispose()
 `)
 })
 
-test('削除成功時は一覧から取り除き、発行直後の表示と名前変更も終了すること', async () => {
+test('削除成功時は一覧から取り除き、発行直後の表示と名前変更も終了して成功を通知すること', async () => {
   await runApiTokenSettingsTest(`
 // Given: 発行直後のID 3を名前変更中の状態
 const { settings, calls, dispose } = await setup()
@@ -463,7 +466,7 @@ assert.deepEqual(names(settings), ['Bot', 'CLI'])
 assert.equal(settings.generatedToken(), undefined)
 assert.equal(settings.editingTokenId(), null)
 assert.equal(settings.deleteTarget(), null)
-assert.equal(settings.tokenActionSuccess(), COPY.deleteSuccess)
+assert.equal(calls.deleted, 1)
 dispose()
 `)
 })
@@ -471,7 +474,7 @@ dispose()
 test('削除失敗時はダイアログを閉じて対象の行にエラーを出し、一覧を変えないこと', async () => {
   await runApiTokenSettingsTest(`
 // Given: 401を返す削除API
-const { settings, dispose } = await setup({
+const { settings, calls, dispose } = await setup({
   deleteToken: async () => {
     throw codedError('token_expired', 401)
   },
@@ -485,7 +488,7 @@ await settings.confirmDelete()
 assert.equal(settings.deleteTarget(), null)
 assert.equal(settings.tokenActionErrorFor('0000000000000001'), errorMessages.token_expired)
 assert.equal(settings.tokenActionErrorFor('0000000000000002'), '')
-assert.equal(settings.tokenActionSuccess(), '')
+assert.equal(calls.deleted, 0)
 assert.deepEqual(names(settings), ['Bot', 'CLI'])
 
 // When: 別の行の削除ダイアログを開く

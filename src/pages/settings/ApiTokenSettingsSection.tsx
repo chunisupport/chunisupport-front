@@ -173,6 +173,7 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
     renameToken: renameApiToken,
     onRenamed: () => showSuccessToast(API_TOKEN_SETTINGS_COPY.renameSuccess),
     deleteToken: deleteApiToken,
+    onDeleted: () => showSuccessToast(API_TOKEN_SETTINGS_COPY.deleteSuccess),
   })
 
   return (
@@ -342,10 +343,6 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
       <Show when={settings.generatedToken()} keyed>
         {(issued) => <GeneratedApiTokenNotice token={issued.token} />}
       </Show>
-
-      <p class="mt-3 text-sm text-action-primary empty:hidden" role="status">
-        {settings.tokenActionSuccess()}
-      </p>
 
       <div class="mt-4">
         <Show when={!settings.tokens.error} fallback={<LoadError error={settings.tokens.error} />}>

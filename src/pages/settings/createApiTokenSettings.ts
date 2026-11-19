@@ -31,6 +31,8 @@ type ApiTokenSettingsOptions = {
   onRenamed: () => void
   /** APIトークンを削除する */
   deleteToken: (id: string) => Promise<void>
+  /** APIトークンの削除に成功したことを通知する */
+  onDeleted: () => void
 }
 
 /** 操作に失敗したAPIトークンの行に表示するエラー */
@@ -81,7 +83,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   const [editingNameError, setEditingNameError] = createSignal('')
   const [mutatingTokenId, setMutatingTokenId] = createSignal<string | null>(null)
   const [tokenActionError, setTokenActionError] = createSignal<TokenActionError | null>(null)
-  const [tokenActionSuccess, setTokenActionSuccess] = createSignal('')
   const [deleteTarget, setDeleteTarget] = createSignal<ApiToken | null>(null)
 
   const [tokens, { mutate: mutateTokens }] = createResource(options.username, () =>
@@ -153,7 +154,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
     setIssueNameError('')
     setIssueActionError('')
     setIssueSuccess('')
-    setTokenActionSuccess('')
     if (!isValidApiTokenName(issueName())) {
       setIssueNameError(API_TOKEN_SETTINGS_COPY.nameValidationError)
       return
@@ -198,7 +198,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
     setEditingNameSignal(token.name)
     setEditingNameError('')
     setTokenActionError(null)
-    setTokenActionSuccess('')
   }
 
   /**
@@ -236,7 +235,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
 
     setEditingNameError('')
     setTokenActionError(null)
-    setTokenActionSuccess('')
     if (!isValidApiTokenName(editingName())) {
       setEditingNameError(API_TOKEN_SETTINGS_COPY.nameValidationError)
       return
@@ -274,7 +272,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
    */
   const openDeleteDialog = (token: ApiToken): void => {
     setTokenActionError(null)
-    setTokenActionSuccess('')
     setDeleteTarget(token)
   }
 
@@ -290,7 +287,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   }
 
   /**
-   * 確認ダイアログで確定されたAPIトークンを削除し、一覧から取り除く。
+   * 確認ダイアログで確定されたAPIトークンを削除し、一覧から取り除いて成功を通知する。
    * 操作中に重ねて呼ばれた場合は何もしない。完了後は成否によらずダイアログを閉じ、失敗時のエラーは対象の行に表示する。
    *
    * @returns 削除処理完了後に解決されるPromise。
@@ -307,7 +304,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
       )
       if (generatedToken()?.id === token.id) setGeneratedToken(undefined)
       if (editingTokenId() === token.id) cancelRenaming()
-      setTokenActionSuccess(API_TOKEN_SETTINGS_COPY.deleteSuccess)
+      options.onDeleted()
     } catch (caught) {
       setTokenActionError({
         tokenId: token.id,
@@ -358,7 +355,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
     rename,
     mutatingTokenId,
     tokenActionErrorFor,
-    tokenActionSuccess,
     deleteTarget,
     openDeleteDialog,
     setDeleteDialogOpen,
