@@ -1,6 +1,7 @@
 import { TextField } from '@kobalte/core/text-field'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { useQueryClient } from '@tanstack/solid-query'
+import UserRound from 'lucide-solid/icons/user-round'
 import { createResource, For, Show } from 'solid-js'
 import { deleteAccount, deletePlayerData, fetchPrivacy, updatePrivacy } from '../../api/settings'
 import { fetchMe, fetchUserProfileSummary } from '../../api/users'
@@ -34,7 +35,11 @@ import { PLAYER_DATA_DELETE_COPY } from './PlayerDataSettings.constants'
 import { PRIVACY_SETTINGS_COPY } from './ProfileSettings.constants'
 import { formatSettingsDateTime } from './settingsDateTime'
 import { normalizeSettingsSection, SETTINGS_SECTIONS } from './settingsSections'
-import { SETTINGS_ROW_LIST_CLASS, SETTINGS_SUBSECTION_CLASS } from './settingsStyles'
+import {
+  SETTINGS_ROW_LIST_CLASS,
+  SETTINGS_SUBSECTION_CLASS,
+  SETTINGS_SUBSECTION_TITLE_CLASS,
+} from './settingsStyles'
 import { UsernameChangeDialog } from './UsernameChangeDialog'
 
 type SettingsSummary = {
@@ -176,31 +181,6 @@ const Settings = () => {
             <Show when={summary()} fallback={<Loading />}>
               {(loadedSummary) => (
                 <>
-                  <Show when={activeSection() === 'profile'}>
-                    <section aria-labelledby="profile-title">
-                      <h2 id="profile-title" class="text-xl font-semibold text-text">
-                        {PRIVACY_SETTINGS_COPY.sectionTitle}
-                      </h2>
-                      <div class="mt-2 flex items-center justify-between gap-4 py-4">
-                        <div>
-                          <h3 class="font-medium text-text">{PRIVACY_SETTINGS_COPY.label}</h3>
-                          <p class="mt-1 text-sm text-text-muted">
-                            {PRIVACY_SETTINGS_COPY.description}
-                          </p>
-                        </div>
-                        <AppSwitch
-                          checked={privacy.value()}
-                          onChange={(nextValue) => void privacy.toggle(nextValue)}
-                          disabled={privacy.submitting()}
-                          label={PRIVACY_SETTINGS_COPY.label}
-                        />
-                      </div>
-                      <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
-                        {privacy.error()}
-                      </p>
-                    </section>
-                  </Show>
-
                   <Show when={activeSection() === 'api'}>
                     <ApiTokenSettingsSection
                       username={loadedSummary().me.username}
@@ -275,6 +255,32 @@ const Settings = () => {
                           <dd class="font-medium text-text">{loadedSummary().me.account_type}</dd>
                         </div>
                       </dl>
+                      <section
+                        aria-labelledby="profile-privacy-title"
+                        class={SETTINGS_SUBSECTION_CLASS}
+                      >
+                        <h3 id="profile-privacy-title" class={SETTINGS_SUBSECTION_TITLE_CLASS}>
+                          <UserRound aria-hidden="true" class="h-5 w-5" />
+                          {PRIVACY_SETTINGS_COPY.sectionTitle}
+                        </h3>
+                        <div class="mt-2 flex items-center justify-between gap-4 py-4">
+                          <div>
+                            <p class="font-medium text-text">{PRIVACY_SETTINGS_COPY.label}</p>
+                            <p class="mt-1 text-sm text-text-muted">
+                              {PRIVACY_SETTINGS_COPY.description}
+                            </p>
+                          </div>
+                          <AppSwitch
+                            checked={privacy.value()}
+                            onChange={(nextValue) => void privacy.toggle(nextValue)}
+                            disabled={privacy.submitting()}
+                            label={PRIVACY_SETTINGS_COPY.label}
+                          />
+                        </div>
+                        <p class="mt-3 text-sm text-danger empty:hidden" role="alert">
+                          {privacy.error()}
+                        </p>
+                      </section>
                       <LoginMethodSettingsSection
                         accounts={linkedAuthAccounts.accounts()}
                         onChanged={linkedAuthAccounts.refresh}
