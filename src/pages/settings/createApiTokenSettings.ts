@@ -66,7 +66,7 @@ const toApiTokenMetadata = (issued: ApiTokenIssueResponse): ApiToken => ({
 export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   const [issueName, setIssueNameSignal] = createSignal('')
   const [issuePermission, setIssuePermission] = createSignal<ApiTokenPermission>('read')
-  // トークン漏えい時の被害を公開データに限るため、既定は公開ユーザーのみ
+  // 他者向けのWebサービスで非公開ユーザーのデータを出さないよう、既定は公開ユーザーのみ
   const [issuePublicOnly, setIssuePublicOnly] = createSignal(true)
   const [issueFormOpen, setIssueFormOpenSignal] = createSignal(false)
   const [issueNameError, setIssueNameError] = createSignal('')

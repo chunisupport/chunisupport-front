@@ -38,7 +38,7 @@ export const formatApiTokenPermission = (permission: ApiTokenPermission): string
 
 /**
  * APIトークン発行時に選択できる参照範囲。
- * 漏えい時の被害を公開データに限れるため、公開ユーザーのみを先頭（推奨）に置く。
+ * 非公開ユーザーでも自分の非公開データを出さずに他者向けのWebサービスを作れるよう、公開ユーザーのみを先頭（推奨）に置く。
  */
 export const API_TOKEN_PUBLIC_ONLY_OPTIONS: readonly {
   value: boolean
@@ -49,13 +49,13 @@ export const API_TOKEN_PUBLIC_ONLY_OPTIONS: readonly {
     value: true,
     label: '公開ユーザーのみ（推奨）',
     description:
-      'トークンが漏れても、読み取られるのは公開ユーザーのデータだけです。自分自身やフレンドでも、非公開ユーザーのデータは取得できません。',
+      '自分やフレンドを含め、非公開ユーザーのデータを取得することができません。一般に公開するWebサービスにおすすめです。',
   },
   {
     value: false,
     label: '非公開ユーザーも含む',
     description:
-      '本人や相互フレンドであれば、非公開ユーザーのデータも取得できます。自分の非公開データを外部ツールで使いたい場合だけ選んでください。',
+      '本人や相互フレンドであれば、非公開ユーザーのデータも取得できます。自分用のツールを作る場合におすすめです。',
   },
 ]
 
