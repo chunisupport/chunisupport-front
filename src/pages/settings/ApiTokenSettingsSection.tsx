@@ -290,9 +290,6 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                     )}
                   </For>
                 </div>
-                <RadioGroup.Description class="text-xs text-text-muted">
-                  {API_TOKEN_SETTINGS_COPY.publicOnlyNotice}
-                </RadioGroup.Description>
               </RadioGroup>
               <p class="text-sm text-danger empty:hidden" role="alert">
                 {settings.issueActionError()}

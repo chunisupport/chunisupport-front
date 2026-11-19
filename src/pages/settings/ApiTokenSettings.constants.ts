@@ -81,8 +81,6 @@ export const API_TOKEN_SETTINGS_COPY = {
     '名前と参照範囲を指定します。権限は読み取り専用で発行されます。参照範囲は発行後に変更できず、変えるにはトークンを削除して再発行する必要があります。',
   permissionLabel: '権限',
   publicOnlyLabel: '参照範囲',
-  publicOnlyNotice:
-    '「公開ユーザーのみ」のトークンでは、自分自身やフレンドであっても非公開ユーザーのデータは取得できず、404になります。chunirec互換APIで user_name を省略して自分のデータを取得する場合も、自分が非公開なら404です。',
   issueButton: 'APIトークンを発行',
   startIssueButton: '新しいトークンを発行',
   cancelIssueButton: 'キャンセル',
