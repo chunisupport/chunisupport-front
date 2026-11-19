@@ -2,6 +2,8 @@ import { Dialog } from '@kobalte/core/dialog'
 import { RadioGroup } from '@kobalte/core/radio-group'
 import { TextField } from '@kobalte/core/text-field'
 import ExternalLink from 'lucide-solid/icons/external-link'
+import PencilLine from 'lucide-solid/icons/pencil-line'
+import Trash2 from 'lucide-solid/icons/trash-2'
 import type { Component } from 'solid-js'
 import { createSignal, For, onCleanup, Show } from 'solid-js'
 import { deleteApiToken, fetchApiTokens, issueApiToken, renameApiToken } from '../../api/settings'
@@ -9,11 +11,18 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, getAppButtonClass } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { AppDialog } from '../../components/common/AppDialog'
+import { AppTooltipIconButton } from '../../components/common/AppTooltipIconButton'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { API_DOCUMENTATION_URL } from '../../config'
 import { DEVELOPER_API_COPY } from '../../constants/developerApi'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
 import type { AccountType, ApiTokenPermission } from '../../types/api'
+import {
+  ApiTokenPermissionIconRow,
+  ApiTokenPermissionIcons,
+  ApiTokenPublicOnlyIconRow,
+  ApiTokenPublicOnlyIcons,
+} from './ApiTokenBadges'
 import {
   API_TOKEN_COPIED_FEEDBACK_DURATION_MS,
   API_TOKEN_MAX_COUNT,
@@ -21,8 +30,6 @@ import {
   API_TOKEN_PUBLIC_ONLY_OPTIONS,
   API_TOKEN_SETTINGS_COPY,
   formatApiTokenDeleteTargetMessage,
-  formatApiTokenPermission,
-  formatApiTokenPublicOnly,
 } from './ApiTokenSettings.constants'
 import { normalizeApiTokenName } from './apiTokenName'
 import { createApiTokenSettings } from './createApiTokenSettings'
@@ -252,7 +259,12 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                       {(option) => (
                         <SelectableCardItem
                           value={option.value}
-                          title={option.label}
+                          title={
+                            <span class="inline-flex items-center gap-2">
+                              <ApiTokenPermissionIconRow permission={option.value} />
+                              {option.label}
+                            </span>
+                          }
                           description={option.description}
                           ariaLabel={option.label}
                           selected={settings.issuePermission() === option.value}
@@ -280,7 +292,12 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                     {(option) => (
                       <SelectableCardItem
                         value={String(option.value)}
-                        title={option.label}
+                        title={
+                          <span class="inline-flex items-center gap-2">
+                            <ApiTokenPublicOnlyIconRow publicOnly={option.value} />
+                            {option.label}
+                          </span>
+                        }
                         description={option.description}
                         ariaLabel={option.label}
                         selected={settings.issuePublicOnly() === option.value}
@@ -349,21 +366,21 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                           {API_TOKEN_SETTINGS_COPY.nameLabel}
                         </th>
                         <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
-                          {API_TOKEN_SETTINGS_COPY.permissionValueLabel}
-                        </th>
-                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
-                          {API_TOKEN_SETTINGS_COPY.publicOnlyValueLabel}
-                        </th>
-                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
                           {API_TOKEN_SETTINGS_COPY.prefixLabel}
                         </th>
-                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                        <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.permissionValueLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
+                          {API_TOKEN_SETTINGS_COPY.publicOnlyValueLabel}
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
                           {API_TOKEN_SETTINGS_COPY.createdAtLabel}
                         </th>
-                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                        <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
                           {API_TOKEN_SETTINGS_COPY.lastUsedAtLabel}
                         </th>
-                        <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+                        <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
                           {API_TOKEN_SETTINGS_COPY.actionsLabel}
                         </th>
                       </tr>
@@ -381,46 +398,45 @@ export const ApiTokenSettingsSection: Component<ApiTokenSettingsSectionProps> = 
                                 >
                                   {token.name}
                                 </th>
-                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
-                                  {formatApiTokenPermission(token.permission)}
-                                </td>
-                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
-                                  {formatApiTokenPublicOnly(token.public_only)}
-                                </td>
                                 <td class="px-3 py-3 font-mono text-xs text-text-muted whitespace-nowrap">
                                   {token.token_prefix
                                     ? `${token.token_prefix}…`
                                     : API_TOKEN_SETTINGS_COPY.migratedPrefix}
                                 </td>
-                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
+                                <td class="px-3 py-3 text-center text-text-muted whitespace-nowrap">
+                                  <ApiTokenPermissionIcons permission={token.permission} />
+                                </td>
+                                <td class="px-3 py-3 text-center text-text-muted whitespace-nowrap">
+                                  <ApiTokenPublicOnlyIcons publicOnly={token.public_only} />
+                                </td>
+                                <td class="px-3 py-3 text-center text-text-muted tabular-nums whitespace-nowrap">
                                   {formatSettingsDateTime(token.created_at)}
                                 </td>
-                                <td class="px-3 py-3 text-text-muted whitespace-nowrap">
+                                <td class="px-3 py-3 text-center text-text-muted tabular-nums whitespace-nowrap">
                                   {formatSettingsDateTime(
                                     token.last_used_at,
                                     API_TOKEN_SETTINGS_COPY.unused
                                   )}
                                 </td>
-                                <td class="px-3 py-3">
-                                  <div class="flex gap-2 whitespace-nowrap">
-                                    <AppButton
-                                      size="xs"
+                                <td class="px-3 py-3 text-center">
+                                  <div class="flex justify-center gap-2 whitespace-nowrap">
+                                    <AppTooltipIconButton
+                                      tone="ghost"
                                       onClick={() => settings.startRenaming(token)}
                                       disabled={settings.mutatingTokenId() !== null}
-                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.renameAriaLabelSuffix}`}
+                                      label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.renameAriaLabelSuffix}`}
                                     >
-                                      {API_TOKEN_SETTINGS_COPY.rename}
-                                    </AppButton>
-                                    <AppButton
-                                      size="xs"
-                                      variant="danger"
+                                      <PencilLine size={18} aria-hidden="true" />
+                                    </AppTooltipIconButton>
+                                    <AppTooltipIconButton
+                                      tone="ghost"
                                       onClick={() => settings.openDeleteDialog(token)}
                                       disabled={settings.mutatingTokenId() !== null}
                                       aria-busy={settings.mutatingTokenId() === token.id}
-                                      aria-label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
+                                      label={`「${token.name}」${API_TOKEN_SETTINGS_COPY.deleteAriaLabelSuffix}`}
                                     >
-                                      {API_TOKEN_SETTINGS_COPY.delete}
-                                    </AppButton>
+                                      <Trash2 size={18} aria-hidden="true" />
+                                    </AppTooltipIconButton>
                                   </div>
                                   <p class="mt-2 text-sm text-danger empty:hidden" role="alert">
                                     {settings.tokenActionErrorFor(token.id)}

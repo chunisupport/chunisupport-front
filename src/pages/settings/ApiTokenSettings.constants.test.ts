@@ -21,5 +21,5 @@ test('APIトークンの参照範囲を日本語の表示名に変換するこ�
   const labels = values.map(formatApiTokenPublicOnly)
 
   // Then: 公開ユーザーのみかどうかを判別できる文言になる。
-  assert.deepEqual(labels, ['公開ユーザーのみ', '非公開ユーザーも含む'])
+  assert.deepEqual(labels, ['公開ユーザーのみ', '公開ユーザー＋フレンド'])
 })

@@ -66,7 +66,7 @@ export const API_TOKEN_PUBLIC_ONLY_OPTIONS: readonly {
  * @returns 一覧で表示する参照範囲名。
  */
 export const formatApiTokenPublicOnly = (publicOnly: boolean): string =>
-  publicOnly ? '公開ユーザーのみ' : '非公開ユーザーも含む'
+  publicOnly ? '公開ユーザーのみ' : '公開ユーザー＋フレンド'
 
 /** APIトークン設定欄で使用する表示文言 */
 export const API_TOKEN_SETTINGS_COPY = {
@@ -101,7 +101,6 @@ export const API_TOKEN_SETTINGS_COPY = {
   copy: 'コピー',
   copied: 'コピーしました',
   copyFailure: 'コピーに失敗しました。手動でコピーしてください。',
-  rename: '名前変更',
   renameAriaLabelSuffix: 'の名前を変更',
   renameLabel: '新しいAPIトークン名',
   save: '保存',
@@ -110,7 +109,6 @@ export const API_TOKEN_SETTINGS_COPY = {
   cancelAriaLabelSuffix: 'の名前変更をキャンセル',
   renameSuccess: 'APIトークン名を変更しました。',
   renameFailure: 'APIトークン名の変更に失敗しました。',
-  delete: '削除',
   deleteAriaLabelSuffix: 'を削除',
   deleteDialogTitle: 'APIトークンを削除しますか？',
   deleteDialogSubmit: '削除する',
