@@ -12,10 +12,8 @@ import { ratingBandsQueryOptions } from '../../../queries/ratingBands'
 import { userRatingQueryOptions } from '../../../queries/users'
 import { authSession } from '../../../stores/authSession'
 import { formatCourseClass } from '../../../utils/courseClassDisplay'
-import { findCourseAllStatsBand } from '../../../utils/courseStats'
 import NotFoundPage from '../../NotFoundPage'
 import { COURSE_PAGE_COPY } from '../constants'
-import CourseOverviewCard from './components/CourseOverviewCard'
 import CourseOwnScoreCard from './components/CourseOwnScoreCard'
 import CourseScoreHistorySection from './components/CourseScoreHistorySection'
 import CourseStatsSection from './components/CourseStatsSection'
@@ -45,9 +43,6 @@ const CourseDetail = () => {
   const ratingBandsQuery = useQuery(() => ratingBandsQueryOptions())
   const ownRatingQuery = useQuery(() => userRatingQueryOptions(username()))
 
-  const allStats = createMemo(() =>
-    statsQuery.data ? findCourseAllStatsBand(statsQuery.data.stats) : undefined
-  )
   const ownBestAverage = createMemo(() => ownRatingQuery.data?.best_average)
   const ownScore = createMemo(() => {
     const currentCourse = course()
@@ -105,8 +100,6 @@ const CourseDetail = () => {
               </header>
 
               <CourseTracksSection />
-
-              <CourseOverviewCard allStats={allStats()} />
 
               <Show when={isAuthenticated()}>
                 <CourseOwnScoreCard record={currentCourse()} />
