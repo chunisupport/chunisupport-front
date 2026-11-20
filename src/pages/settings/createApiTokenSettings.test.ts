@@ -37,7 +37,7 @@ const token = (id, name, permission = 'read', publicOnly = true) => ({
 })
 const names = (settings) => settings.tokens().tokens.map((item) => item.name)
 const setup = async (overrides = {}) => {
-  const calls = { fetch: 0, issue: [], rename: [], delete: [] }
+  const calls = { fetch: 0, issue: [], rename: [], renamed: 0, delete: [], deleted: 0 }
   const view = createRoot((dispose) => {
     const settings = createApiTokenSettings({
       username: () => 'alice',
@@ -57,8 +57,14 @@ const setup = async (overrides = {}) => {
         calls.rename.push([id, request])
         return token(id, request.name)
       },
+      onRenamed: () => {
+        calls.renamed++
+      },
       deleteToken: async (id) => {
         calls.delete.push(id)
+      },
+      onDeleted: () => {
+        calls.deleted++
       },
       ...overrides,
     })
@@ -358,7 +364,7 @@ dispose()
 `)
 })
 
-test('名前変更成功時は一覧の該当行だけを置き換え、入力を終了すること', async () => {
+test('名前変更成功時は一覧の該当行だけを置き換え、入力を終了して成功を通知すること', async () => {
   await runApiTokenSettingsTest(`
 // Given: ID 2の名前変更を開始した状態
 const { settings, calls, dispose } = await setup()
@@ -370,11 +376,11 @@ settings.setEditingName(' Terminal ')
 // When: 保存する
 await settings.rename('0000000000000002')
 
-// Then: 前後空白を除いた名前で保存し、該当行だけを置き換える
+// Then: 前後空白を除いた名前で保存し、該当行だけを置き換えて成功を通知する
 assert.deepEqual(calls.rename, [['0000000000000002', { name: 'Terminal' }]])
 assert.deepEqual(names(settings), ['Bot', 'Terminal'])
 assert.equal(settings.editingTokenId(), null)
-assert.equal(settings.tokenActionSuccess(), COPY.renameSuccess)
+assert.equal(calls.renamed, 1)
 assert.equal(settings.mutatingTokenId(), null)
 dispose()
 `)
@@ -441,7 +447,7 @@ dispose()
 `)
 })
 
-test('削除成功時は一覧から取り除き、発行直後の表示と名前変更も終了すること', async () => {
+test('削除成功時は一覧から取り除き、発行直後の表示と名前変更も終了して成功を通知すること', async () => {
   await runApiTokenSettingsTest(`
 // Given: 発行直後のID 3を名前変更中の状態
 const { settings, calls, dispose } = await setup()
@@ -460,7 +466,7 @@ assert.deepEqual(names(settings), ['Bot', 'CLI'])
 assert.equal(settings.generatedToken(), undefined)
 assert.equal(settings.editingTokenId(), null)
 assert.equal(settings.deleteTarget(), null)
-assert.equal(settings.tokenActionSuccess(), COPY.deleteSuccess)
+assert.equal(calls.deleted, 1)
 dispose()
 `)
 })
@@ -468,7 +474,7 @@ dispose()
 test('削除失敗時はダイアログを閉じて対象の行にエラーを出し、一覧を変えないこと', async () => {
   await runApiTokenSettingsTest(`
 // Given: 401を返す削除API
-const { settings, dispose } = await setup({
+const { settings, calls, dispose } = await setup({
   deleteToken: async () => {
     throw codedError('token_expired', 401)
   },
@@ -482,7 +488,7 @@ await settings.confirmDelete()
 assert.equal(settings.deleteTarget(), null)
 assert.equal(settings.tokenActionErrorFor('0000000000000001'), errorMessages.token_expired)
 assert.equal(settings.tokenActionErrorFor('0000000000000002'), '')
-assert.equal(settings.tokenActionSuccess(), '')
+assert.equal(calls.deleted, 0)
 assert.deepEqual(names(settings), ['Bot', 'CLI'])
 
 // When: 別の行の削除ダイアログを開く

@@ -28,6 +28,21 @@ jobs:
       - name: Check third-party licenses
         run: pnpm run licenses:check
 
+      - name: Verify license check leaves stale notices untouched
+        run: |
+          notice=THIRD-PARTY-NOTICES.txt
+          backup=$(mktemp)
+          cp -p "$notice" "$backup"
+          trap 'mv "$backup" "$notice"' EXIT
+          printf '\nCI stale-notice fixture\n' >> "$notice"
+          checksums=$(sha256sum "$notice" "public/$notice")
+          if output=$(pnpm run licenses:check 2>&1); then
+            echo "License check accepted a stale notice"
+            exit 1
+          fi
+          printf '%s\n' "$output" | grep -F 'License notice files are not up to date:'
+          test "$checksums" = "$(sha256sum "$notice" "public/$notice")"
+
       - name: Check
         run: pnpm run check:ci
 

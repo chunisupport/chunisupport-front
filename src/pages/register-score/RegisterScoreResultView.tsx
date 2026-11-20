@@ -43,6 +43,8 @@ type RegisterScoreResultViewProps = {
   pageTitle: string
   /** 表示用に正規化した登録結果 */
   result: NormalizedPlayerDataUpdateResult
+  /** 初回の補助データ取得を終え、共有画像を生成できるか。省略時は生成できる。 */
+  canCapture?: boolean
   /** 楽曲タイトルの解決関数 */
   resolveSongTitle: RegisterScoreSongTitleResolver
   /** 譜面レベル表記の解決関数 */
@@ -62,7 +64,7 @@ type RegisterScoreResultViewProps = {
  *
  * 表示設定の状態を生成し、表示設定・縮小表示枠・画像化する原寸レポートを組み立てる。
  *
- * @param props - ページ見出し、登録結果、各表示値の解決関数、空状態文言。
+ * @param props - ページ見出し、登録結果、画像生成可否、各表示値の解決関数、空状態文言。
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: RegisterScoreResultViewProps) => {
@@ -101,6 +103,7 @@ export const RegisterScoreResultView = (props: RegisterScoreResultViewProps) => 
         <h1 class="text-2xl font-semibold">{props.pageTitle}</h1>
         <RegisterScoreImagePreviewDialog
           captureImages={captureReportImages}
+          canCapture={props.canCapture}
           imageFilename={formatRegisterScoreImageFilename(props.result.imported_at)}
         />
       </header>

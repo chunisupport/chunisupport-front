@@ -139,11 +139,13 @@ export const ProfileComment: Component<ProfileCommentProps> = (props) => {
           >
             {(text) => (
               <div class="flex items-start gap-1">
-                <p class="min-w-0 flex-1 wrap-anywhere py-1 font-sans text-sm">{text()}</p>
+                <p class="min-w-0 flex-1 wrap-anywhere font-sans text-sm">{text()}</p>
                 <Show when={isOwnProfile()}>
                   <AppTooltipIconButton
                     tone="ghost"
-                    class="shrink-0"
+                    // タップ領域の高さ(36px)とコメント1行の行高(20px)の差16pxを上下8pxずつ相殺し、行の高さを広げない。
+                    // はみ出した分はカード側の py-3 に収まるため、カード内で見切れない
+                    class="-my-2 shrink-0"
                     label={PROFILE_COMMENT_COPY.edit}
                     onClick={openDialog}
                   >

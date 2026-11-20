@@ -29,7 +29,8 @@ for (const { name, section } of [
 
 test('旧セクションURLは対応する新カテゴリへ正規化されること', () => {
   // Given / When / Then
-  assert.equal(normalizeSettingsSection('privacy'), 'profile')
+  assert.equal(normalizeSettingsSection('profile'), 'account')
+  assert.equal(normalizeSettingsSection('privacy'), 'account')
   assert.equal(normalizeSettingsSection('api-token'), 'api')
   assert.equal(normalizeSettingsSection('data-transfer'), 'data')
   assert.equal(normalizeSettingsSection('player-data'), 'data')

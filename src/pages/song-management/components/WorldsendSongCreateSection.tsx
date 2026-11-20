@@ -134,6 +134,7 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
         class="mt-4"
         leftIcon={<Plus size={16} aria-hidden="true" />}
         onClick={props.management.create}
+        disabled={props.management.creating()}
       >
         {SONG_MANAGEMENT_ACTION_COPY.addWorldsend}
       </AppButton>

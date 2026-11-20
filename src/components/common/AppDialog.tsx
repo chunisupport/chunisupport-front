@@ -36,6 +36,8 @@ export type AppDialogProps = {
   layer?: AppDialogLayer
   /** 本文の選択を抑止する場合は true */
   selectNone?: boolean
+  /** ダイアログ内の文字を sans 系フォントにする場合は true */
+  fontSans?: boolean
   /** 枠自体の溢れを隠す場合は true */
   overflowHidden?: boolean
   /** 枠線を付ける場合は true */
@@ -155,6 +157,7 @@ export const AppDialog = (props: AppDialogProps): JSX.Element => {
             height: height(),
             layer: layer(),
             selectNone: props.selectNone,
+            fontSans: props.fontSans,
             overflowHidden: props.overflowHidden,
             bordered: props.bordered,
           })}

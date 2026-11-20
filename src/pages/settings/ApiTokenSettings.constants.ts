@@ -38,7 +38,7 @@ export const formatApiTokenPermission = (permission: ApiTokenPermission): string
 
 /**
  * APIトークン発行時に選択できる参照範囲。
- * 漏えい時の被害を公開データに限れるため、公開ユーザーのみを先頭（推奨）に置く。
+ * 非公開ユーザーでも自分の非公開データを出さずに他者向けのWebサービスを作れるよう、公開ユーザーのみを先頭（推奨）に置く。
  */
 export const API_TOKEN_PUBLIC_ONLY_OPTIONS: readonly {
   value: boolean
@@ -49,13 +49,13 @@ export const API_TOKEN_PUBLIC_ONLY_OPTIONS: readonly {
     value: true,
     label: '公開ユーザーのみ（推奨）',
     description:
-      'トークンが漏れても、読み取られるのは公開ユーザーのデータだけです。自分自身やフレンドでも、非公開ユーザーのデータは取得できません。',
+      '自分やフレンドを含め、非公開ユーザーのデータを取得することができません。一般に公開するWebサービスにおすすめです。',
   },
   {
     value: false,
     label: '非公開ユーザーも含む',
     description:
-      '本人や相互フレンドであれば、非公開ユーザーのデータも取得できます。自分の非公開データを外部ツールで使いたい場合だけ選んでください。',
+      '本人や相互フレンドであれば、非公開ユーザーのデータも取得できます。自分用のツールを作る場合におすすめです。',
   },
 ]
 
@@ -66,7 +66,7 @@ export const API_TOKEN_PUBLIC_ONLY_OPTIONS: readonly {
  * @returns 一覧で表示する参照範囲名。
  */
 export const formatApiTokenPublicOnly = (publicOnly: boolean): string =>
-  publicOnly ? '公開ユーザーのみ' : '非公開ユーザーも含む'
+  publicOnly ? '公開ユーザーのみ' : '公開ユーザー＋フレンド'
 
 /** APIトークン設定欄で使用する表示文言 */
 export const API_TOKEN_SETTINGS_COPY = {
@@ -81,8 +81,6 @@ export const API_TOKEN_SETTINGS_COPY = {
     '名前と参照範囲を指定します。権限は読み取り専用で発行されます。参照範囲は発行後に変更できず、変えるにはトークンを削除して再発行する必要があります。',
   permissionLabel: '権限',
   publicOnlyLabel: '参照範囲',
-  publicOnlyNotice:
-    '「公開ユーザーのみ」のトークンでは、自分自身やフレンドであっても非公開ユーザーのデータは取得できず、404になります。chunirec互換APIで user_name を省略して自分のデータを取得する場合も、自分が非公開なら404です。',
   issueButton: 'APIトークンを発行',
   startIssueButton: '新しいトークンを発行',
   cancelIssueButton: 'キャンセル',
@@ -103,16 +101,13 @@ export const API_TOKEN_SETTINGS_COPY = {
   copy: 'コピー',
   copied: 'コピーしました',
   copyFailure: 'コピーに失敗しました。手動でコピーしてください。',
-  rename: '名前変更',
   renameAriaLabelSuffix: 'の名前を変更',
+  renameDialogTitle: 'APIトークン名を変更',
   renameLabel: '新しいAPIトークン名',
   save: '保存',
-  saveAriaLabelSuffix: 'の名前を保存',
   cancel: 'キャンセル',
-  cancelAriaLabelSuffix: 'の名前変更をキャンセル',
   renameSuccess: 'APIトークン名を変更しました。',
   renameFailure: 'APIトークン名の変更に失敗しました。',
-  delete: '削除',
   deleteAriaLabelSuffix: 'を削除',
   deleteDialogTitle: 'APIトークンを削除しますか？',
   deleteDialogSubmit: '削除する',

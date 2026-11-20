@@ -180,6 +180,7 @@ const StandardSongCreateSection = (props: StandardSongCreateSectionProps) => {
           variant="primary"
           leftIcon={<Plus size={16} aria-hidden="true" />}
           onClick={props.management.create}
+          disabled={props.management.creating()}
         >
           {SONG_MANAGEMENT_ACTION_COPY.addStandard}
         </AppButton>

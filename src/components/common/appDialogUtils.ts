@@ -51,6 +51,8 @@ export type AppDialogFrameOptions = {
   layer: AppDialogLayer
   /** 本文の選択を抑止する場合は true */
   selectNone?: boolean
+  /** ダイアログ内の文字を sans 系フォントにする場合は true */
+  fontSans?: boolean
   /** 枠自体の溢れを隠す場合は true。スクロールは本文側に置く */
   overflowHidden?: boolean
   /** 枠線を付ける場合は true */
@@ -173,6 +175,7 @@ export const appDialogContentClass = (options: AppDialogFrameOptions): string =>
   const height = HEIGHT_CLASS[options.height]
   const modifiers = joinClass(
     options.selectNone && 'select-none',
+    options.fontSans && 'font-sans',
     options.overflowHidden && 'overflow-hidden',
     options.bordered && 'border border-border-strong'
   )

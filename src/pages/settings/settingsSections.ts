@@ -1,6 +1,5 @@
 export const SETTINGS_SECTIONS = [
   { id: 'appearance', label: '外観' },
-  { id: 'profile', label: 'プロフィール' },
   { id: 'api', label: 'API・外部連携' },
   { id: 'data', label: 'データ管理' },
   { id: 'account', label: 'アカウント' },
@@ -12,7 +11,8 @@ export const DEFAULT_SETTINGS_SECTION: SettingsSectionId = 'appearance'
 
 /** 旧設定URLのカテゴリIDと現在のカテゴリIDの対応表 */
 const LEGACY_SECTION_CATEGORIES = new Map<string, SettingsSectionId>([
-  ['privacy', 'profile'],
+  ['profile', 'account'],
+  ['privacy', 'account'],
   ['api-token', 'api'],
   ['data-transfer', 'data'],
   ['player-data', 'data'],

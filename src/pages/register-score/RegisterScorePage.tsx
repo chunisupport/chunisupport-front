@@ -1,16 +1,15 @@
 import { useSearchParams } from '@solidjs/router'
-import { useQueryClient } from '@tanstack/solid-query'
+import { createQuery, useQueryClient } from '@tanstack/solid-query'
 import { createSignal, Match, onMount, Show, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { courseMasterQueryOptions } from '../../queries/courses'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
-import type { CourseDTO } from '../../types/api'
-import { fetchCoursesWithCache } from '../../usecases/cache/fetchCoursesWithCache'
 import {
   commitRegisterScore,
   type NormalizedPlayerDataResult,
@@ -35,9 +34,6 @@ type RegisterScoreViewState =
   | { type: 'success'; result: NormalizedPlayerDataResult }
   | { type: 'error'; message: string }
 
-/** コースタイトル検索に必要なコースマスタ項目 */
-type CourseLookupItem = Pick<CourseDTO, 'idx' | 'name'>
-
 /**
  * エラー表示に利用するメッセージへ変換する。
  *
@@ -49,7 +45,7 @@ const resolveRegisterScoreErrorMessage = (error: unknown): string => {
 }
 
 /**
- * `/register-score` でアップロードトークンを確定保存する画面を表示する。
+ * `/register-score` でアップロードトークンを確定保存し、補助データを待たずに結果を表示する。
  *
  * @returns スコア登録画面。
  */
@@ -58,7 +54,18 @@ const RegisterScorePage = () => {
   const songsData = useSongsData()
   const queryClient = useQueryClient()
   const [viewState, setViewState] = createSignal<RegisterScoreViewState>({ type: 'committing' })
-  let courses: CourseLookupItem[] = []
+  /** @returns 確定結果にコース名の取得を必要とする差分がある場合は true。 */
+  const hasCourseChanges = (): boolean => {
+    const state = viewState()
+    return (
+      state.type === 'success' &&
+      state.result.changes.some((change) => change.record_type === 'course')
+    )
+  }
+  const coursesQuery = createQuery(() => ({
+    ...courseMasterQueryOptions(),
+    enabled: hasCourseChanges(),
+  }))
 
   /**
    * ログイン中ユーザーのフレンドランキングキャッシュを無効化する。
@@ -109,18 +116,6 @@ const RegisterScorePage = () => {
     return resolveRegisterScoreSongSortValues(change, standardSongs)
   }
 
-  /**
-   * 差分に含まれるコースidxから表示用のコースタイトルを解決する。
-   *
-   * @param change - APIから返却されたコース差分。
-   * @param courses - 取得済みコース一覧。
-   * @returns コースタイトル。未取得の場合はプレースホルダー。
-   */
-  const courseTitleByIdx = (
-    change: Parameters<typeof resolveRegisterScoreCourseTitle>[0],
-    courses: CourseLookupItem[]
-  ) => resolveRegisterScoreCourseTitle(change, courses)
-
   onMount(async () => {
     const uploadToken = normalizeUploadTokenParam(searchParams.token)
     if (!uploadToken || !isValidUploadToken(uploadToken)) {
@@ -139,12 +134,6 @@ const RegisterScorePage = () => {
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
       )
-      courses = result.changes.some((change) => change.record_type === 'course')
-        ? await fetchCoursesWithCache()
-            .then((response) => response.courses)
-            .catch(() => [])
-        : []
-
       setViewState({ type: 'success', result })
     } catch (error) {
       setViewState({ type: 'error', message: resolveRegisterScoreErrorMessage(error) })
@@ -178,6 +167,9 @@ const RegisterScorePage = () => {
               <RegisterScoreResultView
                 pageTitle={REGISTER_SCORE_COPY.title}
                 result={successState.result}
+                canCapture={
+                  !hasCourseChanges() || (!coursesQuery.isPending && !coursesQuery.isFetching)
+                }
                 resolveSongTitle={songTitleByIdx}
                 resolveChartLevel={chartLevelByIdx}
                 resolveSongSortValues={songSortValuesByIdx}
@@ -187,7 +179,9 @@ const RegisterScorePage = () => {
                     songsData.songsResponse.latest?.songs ?? []
                   )
                 }
-                resolveCourseTitle={(change) => courseTitleByIdx(change, courses)}
+                resolveCourseTitle={(change) =>
+                  resolveRegisterScoreCourseTitle(change, coursesQuery.data?.courses ?? [])
+                }
               />
             )
           }}

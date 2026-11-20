@@ -106,36 +106,38 @@ export const readCachedUserRecord = async (
   match: UserApiCacheMatch
 ): Promise<UserRecordDTO | null> => {
   const db = await getCacheDB()
-  const metadata = await db.cacheMetadata.get('userRecord')
-  if (
-    metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
-    metadata.username !== match.username ||
-    metadata.userUpdatedAt !== match.userUpdatedAt ||
-    metadata.songsRevision !== match.songsRevision
-  ) {
-    return null
-  }
+  return db.transaction('r', db.cacheMetadata, db.userSongRecords, async () => {
+    const metadata = await db.cacheMetadata.get('userRecord')
+    if (
+      metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
+      metadata.username !== match.username ||
+      metadata.userUpdatedAt !== match.userUpdatedAt ||
+      metadata.songsRevision !== match.songsRevision
+    ) {
+      return null
+    }
 
-  const [standardEntries, worldsendEntries] = await Promise.all([
-    db.userSongRecords.where('[username+kind]').equals([match.username, 'standard']).toArray(),
-    db.userSongRecords.where('[username+kind]').equals([match.username, 'worldsend']).toArray(),
-  ])
-  if (
-    !standardEntries.every((entry) => isUserSongRecordCacheMatched(entry, match)) ||
-    !worldsendEntries.every((entry) => isUserSongRecordCacheMatched(entry, match))
-  ) {
-    return null
-  }
+    const [standardEntries, worldsendEntries] = await Promise.all([
+      db.userSongRecords.where('[username+kind]').equals([match.username, 'standard']).toArray(),
+      db.userSongRecords.where('[username+kind]').equals([match.username, 'worldsend']).toArray(),
+    ])
+    if (
+      !standardEntries.every((entry) => isUserSongRecordCacheMatched(entry, match)) ||
+      !worldsendEntries.every((entry) => isUserSongRecordCacheMatched(entry, match))
+    ) {
+      return null
+    }
 
-  return {
-    standard: [...standardEntries]
-      .sort((left, right) => left.sortOrder - right.sortOrder)
-      .flatMap((entry) => (entry.kind === 'standard' ? entry.data : [])),
-    worldsend: [...worldsendEntries]
-      .sort((left, right) => left.sortOrder - right.sortOrder)
-      .flatMap((entry) => (entry.kind === 'worldsend' && entry.data ? [entry.data] : [])),
-    meta: { updated_at: metadata.recordUpdatedAt ?? null },
-  }
+    return {
+      standard: [...standardEntries]
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .flatMap((entry) => (entry.kind === 'standard' ? entry.data : [])),
+      worldsend: [...worldsendEntries]
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .flatMap((entry) => (entry.kind === 'worldsend' && entry.data ? [entry.data] : [])),
+      meta: { updated_at: metadata.recordUpdatedAt ?? null },
+    }
+  })
 }
 
 /**

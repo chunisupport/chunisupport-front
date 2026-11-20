@@ -60,7 +60,7 @@ dispose()
 `)
 })
 
-test('保存成功時はAPIの結果を表示と取得済みデータへ反映し、成功文言を出すこと', async () => {
+test('保存成功時はAPIの結果を表示と取得済みデータへ反映すること', async () => {
   await runPrivacySettingTest(`
 // Given: 要求した非公開とは異なる公開状態を返すAPI
 const { setting, calls, dispose } = setup({
@@ -73,11 +73,10 @@ const { setting, calls, dispose } = setup({
 // When: 非公開へ切り替える
 await setting.toggle(true)
 
-// Then: 保存した値を反映し、成功文言を表示する
+// Then: 保存した値を反映する
 assert.deepEqual(calls.update, [true])
 assert.deepEqual(calls.saved, [false])
 assert.equal(setting.value(), false)
-assert.equal(setting.success(), COPY.success)
 assert.equal(setting.error(), '')
 assert.equal(setting.submitting(), false)
 dispose()
@@ -107,7 +106,7 @@ assert.equal(setting.submitting(), true)
 pending.resolve()
 await saving
 assert.equal(setting.submitting(), false)
-assert.equal(setting.success(), COPY.success)
+assert.deepEqual(calls.saved, [true])
 dispose()
 `)
 })
@@ -142,7 +141,6 @@ await saving
 
 // Then: 認証エラーを表示し、サーバーの最新状態を表示する
 assert.equal(setting.error(), errorMessages.unauthorized)
-assert.equal(setting.success(), '')
 assert.equal(calls.refresh, 1)
 assert.deepEqual(calls.saved, [])
 assert.equal(setting.value(), true)
@@ -175,41 +173,12 @@ dispose()
 `)
 })
 
-test('次の保存を開始すると前回の成功文言を消すこと', async () => {
-  await runPrivacySettingTest(`
-// Given: 非公開への保存に成功した設定
-const pending = Promise.withResolvers()
-const { setting, calls, dispose } = setup({
-  update: async (isPrivate) => {
-    calls.update.push(isPrivate)
-    if (calls.update.length === 2) await pending.promise
-    return { is_private: isPrivate }
-  },
-})
-await setting.toggle(true)
-assert.equal(setting.value(), true)
-assert.deepEqual(calls.saved, [true])
-assert.equal(setting.success(), COPY.success)
-
-// When: 次の保存を開始し、完了を保留する
-const saving = setting.toggle(false)
-
-// Then: 保存の完了を待たずに成功文言を消す
-assert.equal(setting.submitting(), true)
-assert.equal(setting.success(), '')
-assert.equal(setting.error(), '')
-pending.resolve()
-await saving
-dispose()
-`)
-})
-
-test('次の保存を開始すると前回の失敗文言を消し、成功時は成功文言を出すこと', async () => {
+test('次の保存を開始すると前回の失敗文言を消し、成功時は保存結果を反映すること', async () => {
   await runPrivacySettingTest(`
 // Given: 1回目は失敗し、2回目は成功するAPI
 let fail = true
 const pending = Promise.withResolvers()
-const { setting, dispose } = setup({
+const { setting, calls, dispose } = setup({
   update: async (isPrivate) => {
     if (fail) throw new Error('network')
     await pending.promise
@@ -226,15 +195,14 @@ const saving = setting.toggle(true)
 // Then: 完了前に失敗文言を消す
 assert.equal(setting.submitting(), true)
 assert.equal(setting.error(), '')
-assert.equal(setting.success(), '')
 
 // When: 保存が成功する
 pending.resolve()
 await saving
 
-// Then: 失敗文言を消して成功文言だけを表示する
+// Then: 失敗文言を消したまま保存結果を反映する
 assert.equal(setting.error(), '')
-assert.equal(setting.success(), COPY.success)
+assert.deepEqual(calls.saved, [true])
 dispose()
 `)
 })

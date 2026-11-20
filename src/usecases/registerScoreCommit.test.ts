@@ -334,6 +334,35 @@ test('commitRegisterScore: 登録結果を正規化して返す', async () => {
   assert.equal(friendRankingsInvalidated, true)
 })
 
+test('commitRegisterScore: 補助更新の完了前に確定結果を返す', async () => {
+  // Given: 保存は成功するが、補助更新はまだ終わらない。
+  const result = createPlayerDataResult()
+  let finishBackground!: () => void
+  const background = new Promise<void>((resolve) => {
+    finishBackground = resolve
+  })
+
+  // When: スコアを確定する。
+  const commit = commitRegisterScore(
+    { uploadToken: '11111111-1111-4111-8111-111111111111' },
+    {
+      commitPlayerData: async () => result,
+      clearUserApiCache: () => background,
+      invalidateFriendRankings: () => background,
+      ensureSongsLoaded: () => {},
+      ensureWorldsendSongsLoaded: () => {},
+    }
+  )
+
+  // Then: 補助更新が保留中でも結果を受け取れる。
+  try {
+    const first = await Promise.race([commit, new Promise((resolve) => setImmediate(resolve))])
+    assert.deepEqual(first, { result })
+  } finally {
+    finishBackground()
+  }
+})
+
 for (const failure of ['両方', 'キャッシュ削除だけ', 'ランキング無効化だけ'] as const) {
   test(`commitRegisterScore: ${failure}が失敗しても両処理を試み登録結果を返す`, async () => {
     // Given: スコア登録は成功し、指定した派生キャッシュ更新が失敗する状態。

@@ -158,7 +158,7 @@ export const requestChangedSongMasters = (
  *
  * @param input - アップロードトークン。
  * @param dependencies - API呼び出しと周辺データ取得を行う依存関数群。
- * @returns 正規化済み登録結果と、必要な場合のみユーザー名取得Promise。
+ * @returns 補助キャッシュの更新完了を待たずに返す、正規化済み登録結果。
  */
 export const commitRegisterScore = async (
   input: RegisterScoreCommitInput,
@@ -167,7 +167,7 @@ export const commitRegisterScore = async (
   const result = normalizePlayerDataResult(await dependencies.commitPlayerData(input.uploadToken))
 
   // 確定済みスコアの結果表示は、派生キャッシュ更新の失敗で妨げない。
-  await Promise.allSettled([
+  void Promise.allSettled([
     dependencies.clearUserApiCache(),
     dependencies.invalidateFriendRankings(),
   ])

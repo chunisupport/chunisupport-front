@@ -47,6 +47,7 @@ export const createWorldsendSongManagement = (
   const [draft, setDraft] = createSignal<WorldsendDraft | null>(null)
   const [initialDraft, setInitialDraft] = createSignal<WorldsendDraft | null>(null)
   const [saving, setSaving] = createSignal(false)
+  const [creating, setCreating] = createSignal(false)
   const [createDraft, setCreateDraft] = createSignal<CreateWorldsendDraft>(
     buildCreateWorldsendDraft()
   )
@@ -191,9 +192,13 @@ export const createWorldsendSongManagement = (
   /**
    * 入力中のWORLD'S END楽曲を検証して追加する。
    *
+   * 作成中の二重送信は無視する。
+   *
    * @returns 処理完了後に解決されるPromise。
    */
   const create = async (): Promise<void> => {
+    if (creating()) return
+
     const current = createDraft()
 
     const md = masterData()
@@ -208,6 +213,7 @@ export const createWorldsendSongManagement = (
       return
     }
 
+    setCreating(true)
     try {
       await createWorldsendSong(result.request)
       showSuccessToast(SONG_MANAGEMENT_MESSAGES.worldsendCreated)
@@ -215,6 +221,8 @@ export const createWorldsendSongManagement = (
       await refreshSongData()
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, SONG_MANAGEMENT_MESSAGES.createError))
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -277,6 +285,7 @@ export const createWorldsendSongManagement = (
     restore,
     createDraft,
     updateCreateDraftField,
+    creating,
     create,
   }
 }

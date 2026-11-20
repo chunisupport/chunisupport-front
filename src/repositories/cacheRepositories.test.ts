@@ -1,10 +1,12 @@
 import 'fake-indexeddb/auto'
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
+import Dexie from 'dexie'
 import { db } from '../lib/db/cacheDB.ts'
 import {
   type CachedCourse,
   type CachedSong,
+  type CacheMetadataKey,
   CLIENT_CACHE_SCHEMA_VERSION,
   COURSE_CACHE_SCHEMA_VERSION,
   type UserApiResponse,
@@ -465,6 +467,33 @@ test('全件レコードキャッシュは同じ曲の複数譜面をまとめ�
   // Then
   assert.deepEqual(cached, [expertRecord, standardSongRecord])
   assert.deepEqual(otherCached, [otherSongRecord])
+})
+
+test('全件レコードのメタデータを読み取った直後にキャッシュが削除されても空の成績を返さないこと', async (t) => {
+  // Given: 1譜面分の全件レコードが保存されている。
+  const saved = { ...record, standard: [standardSongRecord] }
+  await saveCachedUserRecord('alice', 'user-1', 1, saved)
+  let deletion: Promise<void> | undefined
+  const getMetadata: (key: CacheMetadataKey) => Promise<unknown> = db.cacheMetadata.get
+  const get = t.mock.method(db.cacheMetadata, 'get', async (key: CacheMetadataKey) => {
+    const metadata = await getMetadata.call(db.cacheMetadata, key)
+    if (key === 'userRecord' && !deletion) {
+      deletion = Dexie.ignoreTransaction(clearCachedUserApiResponses)
+      // トランザクションの外では、次の読み取りの前に削除が完了できる。
+      if (!Dexie.currentTransaction) await deletion
+    }
+    return metadata
+  })
+
+  // When: メタデータの読み取り直後に、別トランザクションがキャッシュの削除を要求する。
+  const cached = await readCachedUserRecord(standardSongRecordKey)
+  assert.ok(deletion)
+  await deletion
+
+  // Then: 削除前の完全な成績が返り、その後の読み取りはキャッシュなしになる。
+  assert.deepEqual(cached, saved)
+  get.mock.restore()
+  assert.equal(await readCachedUserRecord(standardSongRecordKey), null)
 })
 
 test("WORLD'S END未プレイはキャッシュなしと区別して保存されること", async () => {

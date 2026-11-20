@@ -27,8 +27,12 @@ type ApiTokenSettingsOptions = {
   issueToken: (request: ApiTokenIssueRequest) => Promise<ApiTokenIssueResponse>
   /** APIトークンの名前を変更する */
   renameToken: (id: string, request: ApiTokenRenameRequest) => Promise<ApiToken>
+  /** APIトークンの名前変更に成功したことを通知する */
+  onRenamed: () => void
   /** APIトークンを削除する */
   deleteToken: (id: string) => Promise<void>
+  /** APIトークンの削除に成功したことを通知する */
+  onDeleted: () => void
 }
 
 /** 操作に失敗したAPIトークンの行に表示するエラー */
@@ -66,7 +70,7 @@ const toApiTokenMetadata = (issued: ApiTokenIssueResponse): ApiToken => ({
 export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   const [issueName, setIssueNameSignal] = createSignal('')
   const [issuePermission, setIssuePermission] = createSignal<ApiTokenPermission>('read')
-  // トークン漏えい時の被害を公開データに限るため、既定は公開ユーザーのみ
+  // 他者向けのWebサービスで非公開ユーザーのデータを出さないよう、既定は公開ユーザーのみ
   const [issuePublicOnly, setIssuePublicOnly] = createSignal(true)
   const [issueFormOpen, setIssueFormOpenSignal] = createSignal(false)
   const [issueNameError, setIssueNameError] = createSignal('')
@@ -79,7 +83,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   const [editingNameError, setEditingNameError] = createSignal('')
   const [mutatingTokenId, setMutatingTokenId] = createSignal<string | null>(null)
   const [tokenActionError, setTokenActionError] = createSignal<TokenActionError | null>(null)
-  const [tokenActionSuccess, setTokenActionSuccess] = createSignal('')
   const [deleteTarget, setDeleteTarget] = createSignal<ApiToken | null>(null)
 
   const [tokens, { mutate: mutateTokens }] = createResource(options.username, () =>
@@ -151,7 +154,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
     setIssueNameError('')
     setIssueActionError('')
     setIssueSuccess('')
-    setTokenActionSuccess('')
     if (!isValidApiTokenName(issueName())) {
       setIssueNameError(API_TOKEN_SETTINGS_COPY.nameValidationError)
       return
@@ -196,7 +198,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
     setEditingNameSignal(token.name)
     setEditingNameError('')
     setTokenActionError(null)
-    setTokenActionSuccess('')
   }
 
   /**
@@ -222,7 +223,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   }
 
   /**
-   * 入力されたAPIトークン名を保存し、一覧の該当行を置き換える。
+   * 入力されたAPIトークン名を保存し、一覧の該当行を置き換えて成功を通知する。
    * ほかのAPIトークンを操作中に呼ばれた場合は何もしない。
    * 名前に起因するエラーは名前入力欄に、それ以外は対象の行に表示する。
    *
@@ -234,7 +235,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
 
     setEditingNameError('')
     setTokenActionError(null)
-    setTokenActionSuccess('')
     if (!isValidApiTokenName(editingName())) {
       setEditingNameError(API_TOKEN_SETTINGS_COPY.nameValidationError)
       return
@@ -251,7 +251,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
           : current
       )
       cancelRenaming()
-      setTokenActionSuccess(API_TOKEN_SETTINGS_COPY.renameSuccess)
+      options.onRenamed()
     } catch (caught) {
       const message = toUserFriendlyErrorMessage(caught, API_TOKEN_SETTINGS_COPY.renameFailure)
       if (isApiTokenNameError(caught)) {
@@ -272,7 +272,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
    */
   const openDeleteDialog = (token: ApiToken): void => {
     setTokenActionError(null)
-    setTokenActionSuccess('')
     setDeleteTarget(token)
   }
 
@@ -288,7 +287,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
   }
 
   /**
-   * 確認ダイアログで確定されたAPIトークンを削除し、一覧から取り除く。
+   * 確認ダイアログで確定されたAPIトークンを削除し、一覧から取り除いて成功を通知する。
    * 操作中に重ねて呼ばれた場合は何もしない。完了後は成否によらずダイアログを閉じ、失敗時のエラーは対象の行に表示する。
    *
    * @returns 削除処理完了後に解決されるPromise。
@@ -305,7 +304,7 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
       )
       if (generatedToken()?.id === token.id) setGeneratedToken(undefined)
       if (editingTokenId() === token.id) cancelRenaming()
-      setTokenActionSuccess(API_TOKEN_SETTINGS_COPY.deleteSuccess)
+      options.onDeleted()
     } catch (caught) {
       setTokenActionError({
         tokenId: token.id,
@@ -356,7 +355,6 @@ export const createApiTokenSettings = (options: ApiTokenSettingsOptions) => {
     rename,
     mutatingTokenId,
     tokenActionErrorFor,
-    tokenActionSuccess,
     deleteTarget,
     openDeleteDialog,
     setDeleteDialogOpen,

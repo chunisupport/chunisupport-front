@@ -1,8 +1,8 @@
-import type { RatingBandDTO } from '../../../../types/api'
-import { ALL_RATING_BAND_LABEL, findRatingBandForValue } from '../../../../utils/ratingBand'
+import type { RatingBandDTO } from '../../../types/api'
+import { ALL_RATING_BAND_LABEL, findRatingBandForValue } from '../../../utils/ratingBand'
 
 /**
- * 楽曲統計行がログインユーザーのベスト枠平均レート帯に該当するか判定する。
+ * 統計行がログインユーザーのベスト枠平均レート帯に該当するか判定する。
  *
  * @param ratingBandLabel - 統計行のレーティング帯ラベル。
  * @param bestAverage - ログインユーザーのベスト枠平均レーティング。

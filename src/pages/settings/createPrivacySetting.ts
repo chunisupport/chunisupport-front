@@ -12,22 +12,21 @@ type PrivacySettingOptions = {
   update: (isPrivate: boolean) => Promise<PrivacyResult>
   /** 保存失敗後にサーバー側の最新状態を取得する */
   refresh: () => Promise<PrivacyResult>
-  /** 保存に成功した非公開状態を設定画面の取得済みデータへ反映する */
+  /** 保存に成功した非公開状態を設定画面の取得済みデータへ反映し、成功を通知する */
   onSaved: (isPrivate: boolean) => void
 }
 
 /**
- * プロフィール非公開設定の切り替えと、保存中・成功・失敗の表示状態を管理する。
+ * プロフィール非公開設定の切り替えと、保存中・失敗の表示状態を管理する。
  * 切り替え直後に表示へ反映し、保存に失敗した場合は直前の状態へ戻してからサーバーの最新状態に合わせる。
  *
  * @param options - 取得済みの非公開状態と、保存・再取得・反映の処理。
- * @returns 表示中の非公開状態、保存中か、成功・失敗の文言、および切り替え関数。
+ * @returns 表示中の非公開状態、保存中か、失敗の文言、および切り替え関数。
  */
 export const createPrivacySetting = (options: PrivacySettingOptions) => {
   const [value, setValue] = createSignal(false)
   const [submitting, setSubmitting] = createSignal(false)
   const [error, setError] = createSignal('')
-  const [success, setSuccess] = createSignal('')
 
   createEffect(() => {
     const source = options.source()
@@ -44,7 +43,6 @@ export const createPrivacySetting = (options: PrivacySettingOptions) => {
     if (submitting()) return
 
     setError('')
-    setSuccess('')
     const previousValue = value()
     setValue(nextValue)
     setSubmitting(true)
@@ -52,7 +50,6 @@ export const createPrivacySetting = (options: PrivacySettingOptions) => {
       const result = await options.update(nextValue)
       setValue(result.is_private)
       options.onSaved(result.is_private)
-      setSuccess(PRIVACY_SETTINGS_COPY.success)
     } catch (caught) {
       setValue(previousValue)
       setError(toUserFriendlyErrorMessage(caught, PRIVACY_SETTINGS_COPY.failure))
@@ -64,5 +61,5 @@ export const createPrivacySetting = (options: PrivacySettingOptions) => {
     }
   }
 
-  return { value, submitting, error, success, toggle }
+  return { value, submitting, error, toggle }
 }
