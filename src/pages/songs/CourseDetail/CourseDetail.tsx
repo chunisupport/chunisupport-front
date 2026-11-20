@@ -17,10 +17,12 @@ import NotFoundPage from '../../NotFoundPage'
 import { COURSE_PAGE_COPY } from '../constants'
 import CourseOverviewCard from './components/CourseOverviewCard'
 import CourseOwnScoreCard from './components/CourseOwnScoreCard'
+import CourseScoreHistorySection from './components/CourseScoreHistorySection'
 import CourseStatsSection from './components/CourseStatsSection'
+import CourseTracksSection from './components/CourseTracksSection'
 
 /**
- * コースの基本情報、全体サマリー、自己ベスト、レート帯別統計を表示する。
+ * コースの基本情報、自己ベストと履歴、プレイヤー統計を表示する。
  *
  * @returns コース詳細ページ。
  */
@@ -102,10 +104,21 @@ const CourseDetail = () => {
                 </div>
               </header>
 
+              <CourseTracksSection />
+
               <CourseOverviewCard allStats={allStats()} />
 
               <Show when={isAuthenticated()}>
                 <CourseOwnScoreCard record={currentCourse()} />
+              </Show>
+
+              <Show when={currentCourse().is_played && username()}>
+                {(currentUsername) => (
+                  <CourseScoreHistorySection
+                    username={currentUsername()}
+                    displayId={currentCourse().id}
+                  />
+                )}
               </Show>
 
               <CourseStatsSection

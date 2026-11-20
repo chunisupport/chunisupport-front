@@ -1478,6 +1478,17 @@ export interface CourseRecordDTO {
   updated_at: string | null
 }
 
+/** 現行または過去のコースベスト記録。 */
+export type CourseScoreHistoryEntryDTO = Pick<
+  CourseRecordDTO,
+  'score' | 'is_clear' | 'combo_lamp'
+> & { updated_at: string }
+
+/** コーススコア履歴レスポンス。現行ベストが先頭、それ以降は新しい順。 */
+export interface CourseScoreHistoryResponseDTO {
+  entries: CourseScoreHistoryEntryDTO[]
+}
+
 /** ユーザーのコースレコード一覧レスポンス */
 export interface UserCourseRecordsDTO {
   courses: CourseRecordDTO[]

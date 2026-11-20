@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/solid-query'
-import { fetchCourseStats } from '../api/courses'
+import { fetchCourseStats, fetchOwnCourseScoreHistory } from '../api/courses'
 import { fetchCoursesWithCache } from '../usecases/cache/fetchCoursesWithCache'
 import { fetchUserCourseRecordsWithCache } from '../usecases/cache/fetchUserCourseRecordsWithCache'
 import { mergeCourseRecords } from '../utils/courseRecordMerger'
@@ -12,10 +12,20 @@ export const courseQueryKeys = {
   all: ['course-pages'] as const,
   /** @returns プレイ記録を含まないコースマスタ一覧のqueryキー。 */
   master: () => [...courseQueryKeys.all, 'master'] as const,
+  /**
+   * ユーザー名変更やログアウト時に破棄するコース関連queryの共通キー。
+   *
+   * @param username - 閲覧ユーザー名。未ログインはnull。
+   * @returns 閲覧ユーザーのコース一覧・スコア履歴に共通するqueryキー。
+   */
+  user: (username: string | null) => [...courseQueryKeys.all, 'user', username] as const,
   /** @returns 閲覧ユーザーのレコードを合わせたコース一覧のqueryキー。未ログインはnull。 */
-  list: (username: string | null) => [...courseQueryKeys.all, 'list', username] as const,
+  list: (username: string | null) => [...courseQueryKeys.user(username), 'list'] as const,
   /** @returns コース統計のqueryキー。 */
   stats: (displayId: string) => [...courseQueryKeys.all, 'stats', displayId] as const,
+  /** @returns ユーザー別・コース別のスコア履歴のqueryキー。 */
+  history: (username: string, displayId: string) =>
+    [...courseQueryKeys.user(username), 'history', displayId] as const,
 }
 
 /**
@@ -43,6 +53,19 @@ export const courseMasterQueryOptions = () =>
   queryOptions({
     queryKey: courseQueryKeys.master(),
     queryFn: fetchCoursesWithCache,
+  })
+
+/**
+ * コーススコア履歴のquery optionsを生成する。
+ *
+ * @param username - 現在のログインユーザー名。
+ * @param displayId - 対象コースの表示ID。
+ * @returns コーススコア履歴用query options。
+ */
+export const courseScoreHistoryQueryOptions = (username: string, displayId: string) =>
+  queryOptions({
+    queryKey: courseQueryKeys.history(username, displayId),
+    queryFn: ({ signal }) => fetchOwnCourseScoreHistory(username, displayId, signal),
   })
 
 /**

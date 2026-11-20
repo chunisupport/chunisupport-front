@@ -12,10 +12,9 @@ import {
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { ChartCanvasFrame } from '../../../../components/common/ChartCanvasFrame'
 import { accentPreference, themePreference } from '../../../../stores/themePreferences'
-import type { ScoreHistoryEntryDTO } from '../../../../types/api'
 import { CHART_COLOR_FALLBACK, resolveChartColor } from '../../../../utils/chartTheme'
 import { formatScoreKilo } from '../../../../utils/numberFormat'
-import { formatScoreHistoryTimestamp } from '../../../../utils/scoreHistory'
+import { formatScoreHistoryTimestamp, type ScoreHistoryPoint } from '../../../../utils/scoreHistory'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import { SCORE_HISTORY_EMPTY_LABEL, SCORE_HISTORY_SCORE_LABEL } from './constants'
 
@@ -23,7 +22,9 @@ Chart.register(Legend, LineController, LineElement, LinearScale, PointElement, T
 
 type Props = {
   /** 表示対象のスコア履歴 */
-  entries: readonly ScoreHistoryEntryDTO[]
+  entries: readonly ScoreHistoryPoint[]
+  /** 通常譜面と異なる場合の理論値 */
+  maxScore?: number
 }
 
 type ScoreHistoryChartPoint = {
@@ -50,7 +51,7 @@ const CHART_TENSION = 0
  * @param entries - APIが返したスコア履歴。
  * @returns 日時昇順のスコア履歴。
  */
-const sortEntriesByUpdatedAt = (entries: readonly ScoreHistoryEntryDTO[]): ScoreHistoryEntryDTO[] =>
+const sortEntriesByUpdatedAt = (entries: readonly ScoreHistoryPoint[]): ScoreHistoryPoint[] =>
   [...entries].sort((left, right) => {
     const leftTime = new Date(left.updated_at).getTime()
     const rightTime = new Date(right.updated_at).getTime()
@@ -63,7 +64,7 @@ const sortEntriesByUpdatedAt = (entries: readonly ScoreHistoryEntryDTO[]): Score
  * @param entries - 表示対象のスコア履歴。
  * @returns 目盛りに合わせたスコア下限。
  */
-const getScoreAxisMin = (entries: readonly ScoreHistoryEntryDTO[]): number => {
+const getScoreAxisMin = (entries: readonly ScoreHistoryPoint[]): number => {
   const minScore = Math.min(...entries.map((entry) => entry.score))
   return Math.max(0, Math.floor((minScore - CHART_MIN_PADDING) / CHART_MIN_STEP) * CHART_MIN_STEP)
 }
@@ -72,10 +73,12 @@ const getScoreAxisMin = (entries: readonly ScoreHistoryEntryDTO[]): number => {
  * スコア推移グラフのChart.js設定を生成する。
  *
  * @param entries - 表示対象のスコア履歴。
+ * @param maxScore - 縦軸の上限となる理論値。
  * @returns 折れ線グラフ設定。
  */
 const createScoreHistoryChartOptions = (
-  entries: readonly ScoreHistoryEntryDTO[]
+  entries: readonly ScoreHistoryPoint[],
+  maxScore: number
 ): ChartOptions<'line'> => {
   const textColor = resolveChartColor(CHART_TEXT_COLOR_VARIABLE, CHART_COLOR_FALLBACK)
   const gridColor = resolveChartColor(CHART_GRID_COLOR_VARIABLE, CHART_COLOR_FALLBACK)
@@ -122,10 +125,10 @@ const createScoreHistoryChartOptions = (
       },
       y: {
         min: getScoreAxisMin(entries),
-        max: MAX_SCORE,
+        max: maxScore,
         ticks: {
           color: textColor,
-          stepSize: SCORE_HISTORY_TICK_INTERVAL,
+          stepSize: maxScore === MAX_SCORE ? SCORE_HISTORY_TICK_INTERVAL : undefined,
           callback: (value) => formatScoreKilo(Number(value)),
         },
         grid: {
@@ -181,17 +184,18 @@ const ScoreHistoryChart = (props: Props) => {
       ],
     }
 
+    const options = createScoreHistoryChartOptions(entries, props.maxScore ?? MAX_SCORE)
     if (!chart) {
       chart = new Chart(canvasRef, {
         type: 'line',
         data: chartData,
-        options: createScoreHistoryChartOptions(entries),
+        options,
       })
       return
     }
 
     chart.data = chartData
-    chart.options = createScoreHistoryChartOptions(entries)
+    chart.options = options
     chart.update('none')
   })
 

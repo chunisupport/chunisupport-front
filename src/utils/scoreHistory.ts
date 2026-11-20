@@ -3,9 +3,12 @@ import { JST_TIME_ZONE } from '../constants/dateTime'
 import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../types/api'
 import { toChunithmDayStartTimestamp } from './chunithmDate'
 
+/** 楽曲・コース共通のスコア履歴の時系列データ。 */
+export type ScoreHistoryPoint = Pick<ScoreHistoryEntryDTO, 'score' | 'updated_at'>
+
 /** スコア履歴テーブルに表示するスコア行またはバージョン境界行 */
-export type ScoreHistoryTableRow =
-  | { type: 'score'; entry: ScoreHistoryEntryDTO }
+export type ScoreHistoryTableRow<Entry extends ScoreHistoryPoint> =
+  | { type: 'score'; entry: Entry }
   | { type: 'version'; name: string }
 
 /** スコア履歴の日付表示に使うJSTの暦日フォーマッター。バージョン境界の07:00とは別に、表示上の日付は暦日のまま */
@@ -61,10 +64,10 @@ export const formatScoreHistoryTimestamp = (value: number): string => {
  * @param versions - バージョン名と稼働日の一覧。
  * @returns スコア行とバージョン境界行を含む表示行。
  */
-export const buildScoreHistoryTableRows = (
-  entries: readonly ScoreHistoryEntryDTO[],
+export const buildScoreHistoryTableRows = <Entry extends ScoreHistoryPoint>(
+  entries: readonly Entry[],
   versions: readonly VersionSummaryDTO[]
-): ScoreHistoryTableRow[] => {
+): ScoreHistoryTableRow<Entry>[] => {
   const versionBoundaries = versions
     .map((version) => ({
       name: version.name,
@@ -73,7 +76,7 @@ export const buildScoreHistoryTableRows = (
     .filter((version) => !Number.isNaN(version.timestamp))
     .sort((left, right) => right.timestamp - left.timestamp)
 
-  const rows: ScoreHistoryTableRow[] = []
+  const rows: ScoreHistoryTableRow<Entry>[] = []
   const emittedVersionBoundaries = new Set<number>()
 
   entries.forEach((entry, index) => {

@@ -1,6 +1,11 @@
 import { createMemo, For, Show } from 'solid-js'
+import { CourseRecordLampBadges } from '../../../../components/common/course/CourseRecordParts'
 import { DefaultRecordLampBadges } from '../../../../components/common/record/RecordDisplayParts'
-import type { ScoreHistoryEntryDTO, VersionSummaryDTO } from '../../../../types/api'
+import type {
+  CourseScoreHistoryEntryDTO,
+  ScoreHistoryEntryDTO,
+  VersionSummaryDTO,
+} from '../../../../types/api'
 import {
   buildScoreHistoryTableRows,
   formatScoreHistoryDateTime,
@@ -9,6 +14,7 @@ import {
   CURRENT_BEST_LABEL,
   SCORE_HISTORY_LAMP_LABEL,
   SCORE_HISTORY_SCORE_LABEL,
+  SCORE_HISTORY_SECTION_LABEL,
   SCORE_HISTORY_TABLE_MIN_WIDTH_CLASS,
   SCORE_HISTORY_UPDATED_AT_LABEL,
 } from './constants'
@@ -20,18 +26,23 @@ import {
  * @returns スコア履歴テーブル。
  */
 const ScoreHistoryTable = (props: {
-  entries: readonly ScoreHistoryEntryDTO[]
-  versions: readonly VersionSummaryDTO[]
-  showVersions: boolean
+  entries: readonly (ScoreHistoryEntryDTO | CourseScoreHistoryEntryDTO)[]
+  versions?: readonly VersionSummaryDTO[]
+  showVersions?: boolean
 }) => {
   const rows = createMemo(() =>
-    props.showVersions
+    props.showVersions && props.versions
       ? buildScoreHistoryTableRows(props.entries, props.versions)
       : props.entries.map((entry) => ({ type: 'score' as const, entry }))
   )
 
   return (
-    <div class="overflow-x-auto rounded-lg border border-border bg-surface">
+    <section
+      class="overflow-x-auto rounded-lg border border-border bg-surface"
+      aria-label={SCORE_HISTORY_SECTION_LABEL}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: 横スクロール領域をキーボードでも操作できるようにする。
+      tabIndex={0}
+    >
       <table class={`w-full table-fixed border-collapse ${SCORE_HISTORY_TABLE_MIN_WIDTH_CLASS}`}>
         <thead class="bg-surface-muted text-center text-xs text-text-muted">
           <tr>
@@ -78,7 +89,14 @@ const ScoreHistoryTable = (props: {
                       {entry().score.toLocaleString('ja-JP')}
                     </td>
                     <td class="px-3 py-3 sm:px-4">
-                      <DefaultRecordLampBadges record={entry()} class="justify-center" />
+                      {(() => {
+                        const record = entry()
+                        return 'is_clear' in record ? (
+                          <CourseRecordLampBadges record={record} class="justify-center" />
+                        ) : (
+                          <DefaultRecordLampBadges record={record} class="justify-center" />
+                        )
+                      })()}
                     </td>
                   </tr>
                 )}
@@ -87,7 +105,7 @@ const ScoreHistoryTable = (props: {
           </For>
         </tbody>
       </table>
-    </div>
+    </section>
   )
 }
 

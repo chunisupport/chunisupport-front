@@ -20,6 +20,11 @@ export const COURSE_PAGE_COPY = {
   notPlayed: '未プレイ',
   perTrackAveragePrefix: '1曲平均',
   updatedAtPrefix: '更新',
+  tracks: {
+    heading: 'コース楽曲',
+    trackPrefix: 'TRACK',
+    unregistered: '未登録',
+  },
   overview: {
     sectionAriaLabel: 'コース統計サマリー',
     players: 'プレイ人数',

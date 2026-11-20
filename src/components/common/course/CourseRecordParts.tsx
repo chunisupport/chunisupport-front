@@ -1,5 +1,5 @@
 import { Show } from 'solid-js'
-import type { CourseRecordDTO } from '../../../types/api'
+import type { CourseRecordDTO, CourseScoreHistoryEntryDTO } from '../../../types/api'
 import {
   courseClassBadgeClass,
   formatCourseClass,
@@ -7,7 +7,14 @@ import {
 } from '../../../utils/courseClassDisplay'
 import { COURSE_TRACK_COUNT } from '../../../utils/courseScoreRank'
 import { ClassEmblem } from '../profile/ClassEmblem'
-import { RecordHardLampCell, RecordLampCell } from '../record/RecordDisplayParts'
+import {
+  RECORD_LAMP_COLUMN_CLASS,
+  RecordHardLampCell,
+  RecordLampCell,
+  renderDefaultRecordHardLampBadge,
+  renderDefaultRecordLampBadge,
+} from '../record/RecordDisplayParts'
+import { getDefaultRecordLampAccessibleLabel } from '../record/recordLampLabel'
 
 /** エンブレム非対応クラス（EXなど）を円形バッジで表示するための基本クラス */
 const COURSE_CLASS_CIRCLE_BADGE_BASE_CLASS =
@@ -54,6 +61,39 @@ export const CourseClassMark = (props: { courseClass: string; size?: 'sm' | 'lg'
         />
       )}
     </Show>
+  )
+}
+
+/**
+ * コースのクリア・コンボランプを並べて表示する。
+ *
+ * @param props - コースの成績と配置用クラス。
+ * @returns 表示用と読み上げ用のランプ情報。
+ */
+export const CourseRecordLampBadges = (props: {
+  record: Pick<CourseScoreHistoryEntryDTO, 'is_clear' | 'combo_lamp' | 'score'>
+  class?: string
+}) => {
+  const clearLamp = () => (props.record.is_clear ? 'CLEAR' : null)
+  // 理論値判定を通常譜面と同じ基準で行うため1曲平均へ換算する
+  const scorePerTrack = () => props.record.score / COURSE_TRACK_COUNT
+  const comboLabel = () =>
+    getDefaultRecordLampAccessibleLabel(props.record.combo_lamp, scorePerTrack())
+
+  return (
+    <div class={`relative flex ${RECORD_LAMP_COLUMN_CLASS} ${props.class ?? ''}`}>
+      <span class="sr-only">
+        クリアランプ {clearLamp() ?? '未クリア'}、コンボランプ {comboLabel()}
+      </span>
+      <div class="flex gap-2" aria-hidden="true">
+        {renderDefaultRecordHardLampBadge(clearLamp())}
+        {renderDefaultRecordLampBadge(props.record.combo_lamp, {
+          is_played: true,
+          combo_lamp: props.record.combo_lamp,
+          score: scorePerTrack(),
+        })}
+      </div>
+    </div>
   )
 }
 
