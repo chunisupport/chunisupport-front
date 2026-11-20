@@ -23,7 +23,7 @@ import {
   resolveChartColor,
   resolveChartPixelLength,
 } from '../../../../utils/chartTheme'
-import { truncateDecimal } from '../../../../utils/numberFormat'
+import { formatScoreKilo, truncateDecimal } from '../../../../utils/numberFormat'
 import {
   calculateDisplayedScoreDifference,
   formatScoreDifference,
@@ -634,7 +634,7 @@ const createAverageScoreChartOptions = (): ChartOptions<'line'> => {
         max: MAX_SCORE,
         ticks: {
           color: textColor,
-          callback: (value) => Number(value).toLocaleString(),
+          callback: (value) => formatScoreKilo(Number(value)),
         },
         grid: {
           color: gridColor,
