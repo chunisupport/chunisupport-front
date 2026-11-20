@@ -89,7 +89,6 @@ import {
 import { useRememberAppMainScrollNavigationType } from './hooks/useAppMainScrollRestoration'
 import { useDocumentTitle } from './hooks/useDocumentTitle'
 import { useRobotsMeta } from './hooks/useRobotsMeta'
-import { isFeatureEnabled } from './lib/featureFlags'
 import NotFoundPage from './pages/NotFoundPage'
 import { authSession, getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
@@ -493,6 +492,8 @@ const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableEditorCoursesPage = withRouteLoadBoundary(EditorCoursesPage)
 const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
+const LoadableCoursesListPage = withRouteLoadBoundary(CoursesList)
+const LoadableCourseDetailPage = withRouteLoadBoundary(CourseDetail)
 
 /**
  * ADMIN 権限を要求して管理メニューを表示する。
@@ -660,6 +661,28 @@ const GuardedRegisterScoreTempPage = () => (
 )
 
 /**
+ * ADMIN 権限を要求してコース一覧画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したコース一覧画面。
+ */
+const GuardedCoursesListPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableCoursesListPage />
+  </RequireRole>
+)
+
+/**
+ * ADMIN 権限を要求してコース詳細画面を表示する。
+ *
+ * @returns 権限制御と route module 読み込み境界を付与したコース詳細画面。
+ */
+const GuardedCourseDetailPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableCourseDetailPage />
+  </RequireRole>
+)
+
+/**
  * ルートのコードを状態確認と並列に取得し、API可用性ゲートと共通トースト領域で包む。
  * 楽曲一覧のスクロール復元のため、直近の遷移種別も記録する。
  *
@@ -722,22 +745,8 @@ const App = () => {
         path={WORLDSEND_SONGS_PATH}
         component={withNavBar(withRouteLoadBoundary(WorldsendSongsList))}
       />
-      <Route
-        path={COURSES_PATH}
-        component={
-          isFeatureEnabled('course_pages')
-            ? withNavBar(withRouteLoadBoundary(CoursesList))
-            : NotFoundPage
-        }
-      />
-      <Route
-        path={`${COURSES_PATH}/:displayid`}
-        component={
-          isFeatureEnabled('course_pages')
-            ? withNavBar(withRouteLoadBoundary(CourseDetail))
-            : NotFoundPage
-        }
-      />
+      <Route path={COURSES_PATH} component={withNavBar(GuardedCoursesListPage)} />
+      <Route path={`${COURSES_PATH}/:displayid`} component={withNavBar(GuardedCourseDetailPage)} />
       <Route
         path={`${WORLDSEND_SONGS_PATH}/:displayid/chart-detail`}
         component={withNavBar(withAuth(withRouteLoadBoundary(WorldsendScoreHistory)))}

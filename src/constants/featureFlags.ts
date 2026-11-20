@@ -22,8 +22,6 @@ export const FEATURE_FLAG_DEFINITIONS = {
    * develop と staging で有効。production は false とし、本番ビルドでは無効。
    */
   profile_comment: { develop: true, staging: true, production: false },
-  /** コース一覧・詳細画面と、そこへのリンク。仮実装のため production では無効。 */
-  course_pages: { develop: true, staging: true, production: false },
 } as const satisfies Record<string, FeatureFlagDefinition>
 
 /** 登録済みの機能名。定義が0件の場合は never。 */
