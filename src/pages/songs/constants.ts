@@ -6,23 +6,46 @@ export const SONG_DETAIL_LINK_COPY = {
   youtubeAriaLabel: 'YouTubeで楽曲を検索する',
 } as const
 
+/** 楽曲詳細・コース詳細および統計グラフで共通利用する自己スコアのラベル */
+export const OWN_SCORE_LABEL = '自分のスコア'
+
 /** コース画面の文言 */
 export const COURSE_PAGE_COPY = {
   listTitle: 'コース一覧',
+  detailTitleSuffix: 'コース詳細',
+  detailFallbackTitle: 'コース',
   back: '← 戻る',
-  ownRecordHeading: '自己ベスト',
+  classPrefix: 'CLASS',
+  ownRecordHeading: OWN_SCORE_LABEL,
   notPlayed: '未プレイ',
+  perTrackAveragePrefix: '1曲平均',
+  updatedAtPrefix: '更新',
+  overview: {
+    sectionAriaLabel: 'コース統計サマリー',
+    players: 'プレイ人数',
+    playersUnit: '人',
+    clearRate: 'クリア率',
+    comboRate: 'FC / AJ率',
+    ajPrefix: 'AJ',
+    averageScore: 'CLEAR平均',
+    medianPrefix: '中央値',
+  },
   statsHeading: 'プレイヤー統計',
+  statsDescription:
+    '実力帯(ベスト枠平均)ごとに集計されます。スコアはクリア済み記録を対象とし、データは1日に2回更新されます。',
   statsEmpty: '統計はまだありません。',
   statsLoadingLabel: '統計を読み込み中',
-  statsColumns: {
-    ratingBand: 'レート帯',
-    players: '人数',
-    average: 'CLEAR平均',
-    median: 'CLEAR中央値',
-    clear: 'CLEAR',
-    fc: 'FC',
-    aj: 'AJ',
+  statsViewSelectLabel: '統計テーブルの表示内容',
+  statsRatingBandColumn: '実力帯',
+  statsCharts: {
+    averageTitle: 'CLEAR平均・中央値',
+    averageAriaLabel: 'レーティング帯別のコースCLEAR平均スコアと中央値スコアの折れ線グラフ',
+    averageWithOwnScoreAriaLabel:
+      'レーティング帯別のコースCLEAR平均スコア、中央値スコア、自分のスコアの折れ線グラフ',
+    clearTitle: 'CLEAR',
+    clearAriaLabel: 'レーティング帯別のコース未クリア・クリア済み人数グラフ',
+    comboTitle: 'COMBO',
+    comboAriaLabel: 'レーティング帯別のコースNONE、FC、AJ人数グラフ',
   },
 } as const
 

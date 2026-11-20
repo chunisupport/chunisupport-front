@@ -2,6 +2,7 @@ import { queryOptions } from '@tanstack/solid-query'
 import { fetchUserComment } from '../api/userComment'
 import { requestUserUpdatedAt } from '../api/users'
 import { appQueryClient } from '../lib/queryClient'
+import { fetchUserRatingWithCache } from '../usecases/cache/fetchUserRatingWithCache'
 
 /** ユーザーqueryのkey factory。 */
 export const userQueryKeys = {
@@ -17,6 +18,12 @@ export const userQueryKeys = {
    * @returns ユーザー別のプロフィールコメントキー。
    */
   comment: (username: string) => ['users', username, 'comment'] as const,
+  /**
+   * ユーザー別のレーティング情報キーを生成する。
+   * @param username - 対象ユーザー名。
+   * @returns ユーザー別のレーティング情報キー。
+   */
+  rating: (username: string) => ['users', username, 'rating'] as const,
 }
 
 /**
@@ -54,3 +61,16 @@ export const userUpdatedAtQueryOptions = (username: string) =>
  */
 export const fetchUserUpdatedAt = (username: string) =>
   appQueryClient.fetchQuery(userUpdatedAtQueryOptions(username))
+
+/**
+ * ユーザーのレーティング情報をキャッシュ付きで取得するquery optionsを生成する。
+ *
+ * @param username - 対象ユーザー名。未ログイン時は null。
+ * @returns ユーザーレーティング取得用のquery options。
+ */
+export const userRatingQueryOptions = (username: string | null) =>
+  queryOptions({
+    queryKey: userQueryKeys.rating(username ?? ''),
+    queryFn: () => fetchUserRatingWithCache(username ?? ''),
+    enabled: Boolean(username),
+  })
