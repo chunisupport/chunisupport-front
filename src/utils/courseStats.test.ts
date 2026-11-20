@@ -5,7 +5,6 @@ import {
   COURSE_MAX_SCORE,
   calculateCoursePerTrackAverageScore,
   completeCourseStatsRatingBands,
-  findCourseAllStatsBand,
   formatCourseStatsRate,
 } from './courseStats.ts'
 
@@ -44,22 +43,6 @@ test('欠落したレーティング帯が0人行で補完され sort_order 順�
   assert.equal(result[0].average_score, null)
   assert.equal(result[1].player_count, 4)
   assert.equal(result[2].clear.clear, 0)
-})
-
-test('ALL帯の統計行を取得できること', () => {
-  // Given: ALL帯を含む統計一覧。
-  const allBand: CourseStatsBandDTO = {
-    rating_band: 'ALL',
-    combo: { none: 7, fc: 2, aj: 1 },
-    clear: { failed: 3, clear: 7 },
-    average_score: 2980000,
-    median_score: 2990000,
-    player_count: 10,
-  }
-
-  // When & Then
-  assert.equal(findCourseAllStatsBand([allBand]), allBand)
-  assert.equal(findCourseAllStatsBand([]), undefined)
 })
 
 test('達成率を小数1桁のパーセントへ整形し0人の場合はハイフンを返すこと', () => {

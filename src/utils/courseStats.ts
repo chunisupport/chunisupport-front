@@ -1,7 +1,6 @@
 import type { CourseStatsBandDTO, RatingBandDTO } from '../types/api'
 import { calculateChartStatsPercent } from './chartStats'
 import { COURSE_TRACK_COUNT } from './courseScoreRank'
-import { ALL_RATING_BAND_LABEL } from './ratingBand'
 import { MAX_SCORE } from './scoreRank'
 
 /** コースモードの理論値スコア（3曲合計） */
@@ -49,17 +48,6 @@ export const completeCourseStatsRatingBands = (
         statsByRatingBand.get(ratingBand.label) ?? createEmptyCourseStatsBand(ratingBand.label)
     )
 }
-
-/**
- * コース統計一覧から全プレイヤー集計（ALL）の行を取得する。
- *
- * @param stats - APIから取得したコース統計一覧。
- * @returns ALL帯の統計行。存在しない場合は undefined。
- */
-export const findCourseAllStatsBand = (
-  stats: readonly CourseStatsBandDTO[]
-): CourseStatsBandDTO | undefined =>
-  stats.find((band) => band.rating_band === ALL_RATING_BAND_LABEL)
 
 /**
  * 人数をプレイ人数に対する割合として表示用に整形する。

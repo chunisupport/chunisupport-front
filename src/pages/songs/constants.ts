@@ -25,16 +25,6 @@ export const COURSE_PAGE_COPY = {
     trackPrefix: 'TRACK',
     unregistered: '未登録',
   },
-  overview: {
-    sectionAriaLabel: 'コース統計サマリー',
-    players: 'プレイ人数',
-    playersUnit: '人',
-    clearRate: 'クリア率',
-    comboRate: 'FC / AJ率',
-    ajPrefix: 'AJ',
-    averageScore: 'CLEAR平均',
-    medianPrefix: '中央値',
-  },
   statsHeading: 'プレイヤー統計',
   statsDescription:
     '実力帯(ベスト枠平均)ごとに集計されます。スコアはクリア済み記録を対象とし、データは1日に2回更新されます。',
