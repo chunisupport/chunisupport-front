@@ -115,8 +115,9 @@ const LAMP_GLOSS_GRADIENT_VARIABLE = '--cs-gradient-record-lamp-badge-gloss'
 /** 平均・中央値グラフのセクション見出し */
 const AVERAGE_SCORE_CHART_TITLE = '平均・中央値'
 /** 平均スコア系列の凡例・ツールチップ表示名 */
-const AVERAGE_SCORE_CHART_LABEL = '平均スコア'
-const MEDIAN_SCORE_CHART_LABEL = '中央値スコア'
+const AVERAGE_SCORE_CHART_LABEL = '平均'
+/** 中央値スコア系列の凡例・ツールチップ表示名 */
+const MEDIAN_SCORE_CHART_LABEL = '中央値'
 const AVERAGE_SCORE_CHART_COLOR = '--cs-color-action-primary'
 const MEDIAN_SCORE_CHART_BORDER_DASH = [6, 4]
 /** 平均・中央値グラフに常時表示するデータ点の半径 */
