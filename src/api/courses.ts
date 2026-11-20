@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config'
 import type {
+  CourseScoreHistoryResponseDTO,
   CourseStatsResponseDTO,
   CreateCourseRequestDTO,
   ManagedCourseDTO,
@@ -10,6 +11,8 @@ import { fetchWithAuth } from './fetchWithAuth'
 
 /** 内部向けコースAPIのベースパス */
 const INTERNAL_COURSES_PATH = `${API_BASE_URL}/internal/courses`
+/** 内部向けユーザーAPIのベースパス */
+const INTERNAL_USERS_PATH = `${API_BASE_URL}/internal/users`
 /** 編集者向けコースAPIのベースパス */
 const INTERNAL_EDITOR_COURSES_PATH = `${API_BASE_URL}/internal/editor/courses`
 
@@ -85,6 +88,33 @@ export const restoreCourseByDisplayId = async (displayId: string): Promise<void>
   await fetchWithAuth(`${INTERNAL_COURSES_PATH}/${encodeURIComponent(displayId)}/restore`, {
     method: 'POST',
   })
+}
+
+/**
+ * ログインユーザーのコースベスト履歴を取得する。
+ *
+ * @param username - ログイン中のユーザー名。
+ * @param displayId - コース表示ID。
+ * @param signal - リクエストの中断シグナル。
+ * @returns 現行ベストを先頭とする履歴。履歴が未登録の場合は空配列を含む。
+ */
+export const fetchOwnCourseScoreHistory = async (
+  username: string,
+  displayId: string,
+  signal?: AbortSignal
+): Promise<CourseScoreHistoryResponseDTO> => {
+  try {
+    const response = await fetchWithAuth(
+      `${INTERNAL_USERS_PATH}/${encodeURIComponent(username)}/record/courses/${encodeURIComponent(displayId)}/history`,
+      { requireAuthentication: true, signal }
+    )
+    return response.json()
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'score_history_not_found') {
+      return { entries: [] }
+    }
+    throw error
+  }
 }
 
 /**

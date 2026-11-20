@@ -4,11 +4,61 @@ import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironme
 
 /**
  * モジュール内定数をテストごとに再評価して courses API 関数群を読み込む。
+ * @param authenticate - ログイン中の Firebase ユーザーを用意するか。
  * @returns courses API モジュール。
  */
-const loadCoursesApi = () => loadTestModule((cacheKey) => import(`./courses.ts?cache=${cacheKey}`))
+const loadCoursesApi = (authenticate = false) =>
+  loadTestModule((cacheKey) => import(`./courses.ts?cache=${cacheKey}`), { authenticate })
 
 type CoursesApi = Awaited<ReturnType<typeof loadCoursesApi>>
+
+test('コーススコア履歴を認証付きで取得し、APIの順序を維持する', async (t) => {
+  // Given: 現行ベストと過去ベストを返すAPI。
+  const originalFetch = globalThis.fetch
+  t.after(() => {
+    globalThis.fetch = originalFetch
+  })
+  const entries = [
+    {
+      score: 3010000,
+      is_clear: true,
+      combo_lamp: 'ALL JUSTICE',
+      updated_at: '2026-11-01T12:34:56Z',
+    },
+    { score: 2020000, is_clear: false, combo_lamp: null, updated_at: '2026-10-01T08:00:00Z' },
+  ]
+  const calls = installFetchRecorder(() => Response.json({ entries }))
+  const { fetchOwnCourseScoreHistory } = await loadCoursesApi(true)
+
+  // When: 自分のコーススコア履歴を取得する。
+  const result = await fetchOwnCourseScoreHistory('test user', 'A/B C')
+
+  // Then: 認証付きのユーザー別パスからレスポンスをそのまま取得する。
+  assert.equal(calls.length, 1)
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/users/test%20user/record/courses/A%2FB%20C/history'
+  )
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
+  assert.deepEqual(result, { entries })
+})
+
+test('履歴未登録だけを空履歴にして、コース不存在はエラーにする', async (t) => {
+  // Given: 履歴未登録とコース不存在を別のコードで返すAPI。
+  const originalFetch = globalThis.fetch
+  t.after(() => {
+    globalThis.fetch = originalFetch
+  })
+  installFetchRecorder((input) => {
+    const code = String(input).endsWith('/played/history') ? 'score_history_not_found' : 'not_found'
+    return Response.json({ error: { status: 404, code } }, { status: 404 })
+  })
+  const { fetchOwnCourseScoreHistory } = await loadCoursesApi(true)
+
+  // When & Then: 履歴未登録は空配列、コース不存在は取得エラーとして扱う。
+  assert.deepEqual(await fetchOwnCourseScoreHistory('test_user', 'played'), { entries: [] })
+  await assert.rejects(fetchOwnCourseScoreHistory('test_user', 'missing'), { code: 'not_found' })
+})
 
 /** 成功レスポンスとして返す編集者向けコース。 */
 const managedCourse = {
