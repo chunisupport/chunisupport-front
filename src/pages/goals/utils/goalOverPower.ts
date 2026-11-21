@@ -18,9 +18,6 @@ import {
 } from '../../../utils/goalAttributes'
 import { resolveGoalVersionValueByReleaseDate } from '../../../utils/goalVersion'
 
-const OVERPOWER_CHART_CONST_BONUS = 3
-const OVERPOWER_CHART_MULTIPLIER = 5
-
 const EMPTY_MASTER_DATA: MasterDataDTO = {
   genres: [],
   difficulties: [],
@@ -59,15 +56,6 @@ export interface GoalOverPowerCalculationInput {
   /** 未解禁楽曲設定。未指定なら除外しない */
   lockedSongs?: OverPowerLockedSong[]
 }
-
-/**
- * 譜面定数から譜面別の理論OVER POWERを算出する。
- *
- * @param chartConst - 対象譜面の譜面定数。
- * @returns 譜面別の理論OVER POWER。
- */
-export const calculateGoalChartMaxOverPower = (chartConst: number): number =>
-  (chartConst + OVERPOWER_CHART_CONST_BONUS) * OVERPOWER_CHART_MULTIPLIER
 
 /**
  * 未解禁設定を反映した残譜面から、楽曲の理論OP対象譜面定数を解決する。

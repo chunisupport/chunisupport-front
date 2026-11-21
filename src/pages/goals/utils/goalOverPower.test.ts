@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { MasterDataDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
-import {
-  calculateGoalChartMaxOverPower,
-  calculateGoalOverPowerChartMax,
-  calculateGoalOverPowerTotals,
-} from './goalOverPower'
+import { calculateGoalOverPowerChartMax, calculateGoalOverPowerTotals } from './goalOverPower'
 
 const MASTER_DATA: MasterDataDTO = {
   genres: [{ id: 1, name: 'POPS', short_name: 'POPS' }],
@@ -78,17 +74,6 @@ const createSong = (overrides: Partial<SongDTO>): SongDTO => ({
   is_new: false,
   unlock_required: false,
   ...overrides,
-})
-
-test('譜面定数から譜面別の理論OVER POWERを算出する', () => {
-  // Given
-  const chartConst = 14.5
-
-  // When
-  const result = calculateGoalChartMaxOverPower(chartConst)
-
-  // Then
-  assert.equal(result, 87.5)
 })
 
 test('通常条件では各譜面の定数から最大OVER POWER合計を算出する', () => {

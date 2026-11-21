@@ -5,10 +5,6 @@ import LockKeyhole from 'lucide-solid/icons/lock-keyhole'
 import LockKeyholeOpen from 'lucide-solid/icons/lock-keyhole-open'
 import type { Component, JSX } from 'solid-js'
 import { createMemo, createSignal, Show } from 'solid-js'
-import { getAppIconButtonClass } from '../../../../components/common/AppButton'
-import { AppSelect } from '../../../../components/common/AppSelect'
-import { CheckboxField } from '../../../../components/common/CheckboxField'
-import { LockedSongsOpComparison } from '../../../../components/common/LockedSongsOpComparison'
 import type {
   MasterItemDTO,
   NameFolderDTO,
@@ -17,41 +13,45 @@ import type {
   PlayerRecordDTO,
   SongDTO,
   VersionDTO,
-} from '../../../../types/api'
+} from '../../../types/api'
 import {
   createLockedSongKey,
   toLockedSongRequests,
-} from '../../../../usecases/overpower/lockedSongsBatch'
-import { buildLockedSongsOpComparison } from '../../../../usecases/overpower/lockedSongsOpComparison'
-import { isNullableSelectionMatched } from '../../../../utils/filterSelection'
-import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
+} from '../../../usecases/overpower/lockedSongsBatch'
+import { buildLockedSongsOpComparison } from '../../../usecases/overpower/lockedSongsOpComparison'
+import { isNullableSelectionMatched } from '../../../utils/filterSelection'
+import { hasSameFilterValues, hasSameNullableFilterValues } from '../../../utils/filterValue'
+import { sortMasterItemsBySortOrder } from '../../../utils/masterData'
 import {
   normalizeForReadingSearch,
   normalizeForSearch,
   normalizeQuery,
-} from '../../../../utils/searchUtils'
-import { normalizeSongReading } from '../../../../utils/songReading'
+} from '../../../utils/searchUtils'
+import { normalizeSongReading } from '../../../utils/songReading'
 import {
   filterReleasedVersions,
   getShortVersionName,
   resolveVersionNameByReleaseDate,
-} from '../../../../utils/versionConverter'
-import { createSongSelectionDialogModel } from '../../components/createSongSelectionDialogModel'
-import { SongSelectionDialogBase } from '../../components/SongSelectionDialogBase'
+} from '../../../utils/versionConverter'
+import { getAppIconButtonClass } from '../AppButton'
+import { AppSelect } from '../AppSelect'
+import { CheckboxField } from '../CheckboxField'
+import { LockedSongsOpComparison } from '../LockedSongsOpComparison'
+import { createSongSelectionDialogModel } from '../songSelection/createSongSelectionDialogModel'
+import { SongSelectionDialogBase } from '../songSelection/SongSelectionDialogBase'
 import {
   buildDefaultSongSelectionFilter,
   getSongSelectionRowClass,
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   sortSongSelectionCandidates,
-} from '../../components/songSelectionDialog'
-import { hasSameFilterValues, hasSameNullableFilterValues } from '../../utils/filterValue'
+} from '../songSelection/songSelectionDialog'
 import {
   DEFAULT_LOCKED_SONGS_UNLOCK_REQUIRED_ONLY,
   LOCKED_SONG_PLAY_STATUS_FILTER_COPY,
   LOCKED_SONG_PLAY_STATUS_OPTIONS,
   LOCKED_SONGS_UNLOCK_REQUIRED_ONLY_LABEL,
   type LockedSongsPlayStatus,
-} from '../constants'
+} from './LockedSongsDialog.constants'
 import { matchesLockedSongsPlayStatus } from './lockedSongsFilter'
 
 type Props = {

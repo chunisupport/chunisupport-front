@@ -1,4 +1,4 @@
-import type { LockedSongsPlayStatus } from '../constants'
+import type { LockedSongsPlayStatus } from './LockedSongsDialog.constants'
 
 /**
  * 未解禁楽曲設定のプレイ状況フィルターに候補が一致するか判定する。

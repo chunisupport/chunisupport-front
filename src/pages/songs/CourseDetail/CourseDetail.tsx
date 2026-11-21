@@ -99,19 +99,21 @@ const CourseDetail = () => {
                 </div>
               </header>
 
-              <CourseTracksSection />
-
-              <Show when={isAuthenticated()}>
-                <CourseOwnScoreCard record={currentCourse()} />
-              </Show>
-
-              <Show when={currentCourse().is_played && username()}>
-                {(currentUsername) => (
-                  <CourseScoreHistorySection
-                    username={currentUsername()}
-                    displayId={currentCourse().id}
-                  />
-                )}
+              <Show when={isAuthenticated()} fallback={<CourseTracksSection />}>
+                <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-[15rem_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)]">
+                  <CourseTracksSection />
+                  <div class="min-w-0 space-y-4">
+                    <CourseOwnScoreCard record={currentCourse()} />
+                    <Show when={currentCourse().is_played && username()}>
+                      {(currentUsername) => (
+                        <CourseScoreHistorySection
+                          username={currentUsername()}
+                          displayId={currentCourse().id}
+                        />
+                      )}
+                    </Show>
+                  </div>
+                </div>
               </Show>
 
               <CourseStatsSection

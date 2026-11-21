@@ -1,9 +1,5 @@
-import {
-  getSearchTextFieldFrameStateClass,
-  getSearchTextFieldIconClass,
-} from '../../../components/common/searchTextFieldStyles'
 import type { SongDTO } from '../../../types/api'
-import { hasSameFilterValues, hasSameNullableFilterValues } from '../utils/filterValue'
+import { hasSameFilterValues, hasSameNullableFilterValues } from '../../../utils/filterValue'
 
 /** 楽曲選択ダイアログで共通利用するジャンル・バージョン・楽曲名順フィルター */
 export type SongSelectionFilter = {
@@ -92,24 +88,6 @@ export const toggleSelectionKey = (
   }
   return next
 }
-
-/**
- * 楽曲検索欄の状態に応じた外枠クラスを返す。
- *
- * @param active - 検索文字列が入力されているか。
- * @returns 検索欄の外枠へ適用するクラス。
- */
-export const getSongSelectionSearchFrameClass = (active: boolean): string =>
-  getSearchTextFieldFrameStateClass(active)
-
-/**
- * 楽曲検索欄の状態に応じたアイコンクラスを返す。
- *
- * @param active - 検索文字列が入力されているか。
- * @returns 検索アイコンへ適用するクラス。
- */
-export const getSongSelectionSearchIconClass = (active: boolean): string =>
-  getSearchTextFieldIconClass(active)
 
 /**
  * 楽曲選択行の状態に応じたクラスを返す。

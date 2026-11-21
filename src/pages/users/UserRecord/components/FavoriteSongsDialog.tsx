@@ -2,6 +2,14 @@ import { Button } from '@kobalte/core/button'
 import Star from 'lucide-solid/icons/star'
 import type { Component, JSX } from 'solid-js'
 import { createMemo } from 'solid-js'
+import { createSongSelectionDialogModel } from '../../../../components/common/songSelection/createSongSelectionDialogModel'
+import { SongSelectionDialogBase } from '../../../../components/common/songSelection/SongSelectionDialogBase'
+import {
+  buildDefaultSongSelectionFilter,
+  getSongSelectionRowClass,
+  hasSongSelectionFilterChanges,
+  sortSongSelectionCandidates,
+} from '../../../../components/common/songSelection/songSelectionDialog'
 import type {
   MasterItemDTO,
   NameFolderDTO,
@@ -17,14 +25,6 @@ import {
   getShortVersionName,
   resolveVersionNameByReleaseDate,
 } from '../../../../utils/versionConverter'
-import { createSongSelectionDialogModel } from '../../components/createSongSelectionDialogModel'
-import { SongSelectionDialogBase } from '../../components/SongSelectionDialogBase'
-import {
-  buildDefaultSongSelectionFilter,
-  getSongSelectionRowClass,
-  hasSongSelectionFilterChanges,
-  sortSongSelectionCandidates,
-} from '../../components/songSelectionDialog'
 
 type Props = {
   open: boolean

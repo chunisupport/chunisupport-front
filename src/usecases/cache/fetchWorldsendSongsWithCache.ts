@@ -2,7 +2,7 @@ import { fetchWorldsendSongs } from '../../api/songs'
 import { fetchSongsUpdatedAt } from '../../queries/masterData'
 import {
   getSongCacheGeneration,
-  readCachedWorldsendSongs,
+  readCachedWorldsendSongsSnapshot,
   replaceCachedWorldsendSongs,
 } from '../../repositories/songCacheRepository'
 import type { WorldsendSongDTO } from '../../types/api'
@@ -17,6 +17,7 @@ type FetchWorldsendSongsWithCacheOptions = {
 
 /**
  * WORLD'S END 楽曲一覧を IndexedDB キャッシュ判定付きで取得する。
+ * 変更世代の確認とキャッシュ読み込みは並行して行い、変更世代が一致すればキャッシュを返す。
  *
  * @param options - キャッシュ利用方法。
  * @returns キャッシュ、または API から取得した WORLD'S END 楽曲一覧レスポンス。
@@ -25,23 +26,15 @@ export const fetchWorldsendSongsWithCache = async (
   options: FetchWorldsendSongsWithCacheOptions = {}
 ): Promise<WorldsendSongsResponse> => {
   const cacheGeneration = getSongCacheGeneration()
-  let songsRevision: number
+  const [songsCacheState, cachedSongs] = await Promise.all([
+    fetchSongsUpdatedAt().catch(() => undefined),
+    options.forceRefresh ? null : readCachedWorldsendSongsSnapshot().catch(() => null),
+  ])
+  if (!songsCacheState) return fetchWorldsendSongs()
 
-  try {
-    songsRevision = (await fetchSongsUpdatedAt()).revision
-  } catch {
-    return fetchWorldsendSongs()
-  }
-
-  if (!options.forceRefresh) {
-    try {
-      const cachedSongs = await readCachedWorldsendSongs(songsRevision)
-      if (cachedSongs) {
-        return { songs: cachedSongs }
-      }
-    } catch {
-      return fetchWorldsendSongs()
-    }
+  const songsRevision = songsCacheState.revision
+  if (cachedSongs?.revision === songsRevision && cacheGeneration === getSongCacheGeneration()) {
+    return { songs: cachedSongs.songs }
   }
 
   const response = await fetchWorldsendSongs()

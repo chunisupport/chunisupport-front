@@ -3,10 +3,11 @@ import CircleAlert from 'lucide-solid/icons/circle-alert'
 import CheckCircle from 'lucide-solid/icons/circle-check-big'
 import Info from 'lucide-solid/icons/info'
 import X from 'lucide-solid/icons/x'
-import type { JSX } from 'solid-js'
+import { type JSX, Show } from 'solid-js'
 import { Portal } from 'solid-js/web'
 import { navBarSide, navRailSide } from '../../stores/navPlacementPreferences'
 import type { NavBarSide, NavRailSide } from '../../utils/navPlacementPreference'
+import { AppButton } from './AppButton'
 
 type AppToastTone = 'success' | 'error' | 'info'
 
@@ -15,6 +16,13 @@ type AppToastOptions = {
   tone: AppToastTone
   /** トースト本文として表示する文言 */
   message: string
+  /** 本文の下に置く操作。指定時は利用者が操作するまで自動で閉じない。 */
+  action?: {
+    /** ボタンの文言 */
+    label: string
+    /** ボタン押下時の処理 */
+    onClick: () => void
+  }
 }
 
 const APP_TOAST_DURATION_MS = 3000
@@ -81,7 +89,7 @@ export const AppToastRegion = (): JSX.Element => (
 /**
  * アプリ共通のトーストを表示する。
  *
- * @param options - 表示するトーストの種別と文言。
+ * @param options - 表示するトーストの種別、文言、任意の操作。
  * @returns 作成されたトーストID。
  */
 export const showAppToast = (options: AppToastOptions): number =>
@@ -89,13 +97,23 @@ export const showAppToast = (options: AppToastOptions): number =>
     <Toast
       toastId={props.toastId}
       priority={options.tone === 'error' ? 'high' : 'low'}
+      persistent={options.action !== undefined}
       class={`overflow-hidden rounded-md border shadow-lg ${APP_TOAST_TONE_CLASS[options.tone]}`}
     >
       <div class="flex items-start gap-3 px-4 py-3">
         <span class="mt-0.5 shrink-0">{getAppToastIcon(options.tone)}</span>
-        <Toast.Description class="min-w-0 flex-1 break-words text-sm leading-5">
-          {options.message}
-        </Toast.Description>
+        <div class="flex min-w-0 flex-1 flex-col items-start gap-2">
+          <Toast.Description class="break-words text-sm leading-5">
+            {options.message}
+          </Toast.Description>
+          <Show when={options.action}>
+            {(action) => (
+              <AppButton variant="primary" size="xs" onClick={() => action().onClick()}>
+                {action().label}
+              </AppButton>
+            )}
+          </Show>
+        </div>
         <Toast.CloseButton
           aria-label={APP_TOAST_CLOSE_LABEL}
           class="shrink-0 rounded p-1 hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
@@ -103,9 +121,11 @@ export const showAppToast = (options: AppToastOptions): number =>
           <X class="h-4 w-4" aria-hidden="true" />
         </Toast.CloseButton>
       </div>
-      <Toast.ProgressTrack class="h-1 bg-surface-muted">
-        <Toast.ProgressFill class="h-full w-[var(--kb-toast-progress-fill-width)] bg-current" />
-      </Toast.ProgressTrack>
+      <Show when={!options.action}>
+        <Toast.ProgressTrack class="h-1 bg-surface-muted">
+          <Toast.ProgressFill class="h-full w-[var(--kb-toast-progress-fill-width)] bg-current" />
+        </Toast.ProgressTrack>
+      </Show>
     </Toast>
   ))
 

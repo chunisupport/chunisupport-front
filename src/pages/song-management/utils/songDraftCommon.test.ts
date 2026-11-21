@@ -24,7 +24,7 @@ test('更新日時は日本時間で整形し、不正値は - になること',
   const result = formatUpdatedAt(value)
 
   // Then
-  assert.equal(result, '2025/1/2 00:00:00')
+  assert.equal(result, '2025/01/02 00:00:00')
   assert.equal(formatUpdatedAt(null), '-')
   assert.equal(formatUpdatedAt('invalid'), '-')
 })

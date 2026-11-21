@@ -144,11 +144,10 @@ for (const { name, respond } of [
   },
 ]) {
   test(`更新系リクエストの${name}ではバージョン確認をしない`, async () => {
-    // Given: 新しいビルドが公開済みで、バージョン確認が走れば再読み込みされる状態。
+    // Given: 新しいビルドが公開済みで、バージョン確認が走れば更新を通知する状態。
     const originalFetch = globalThis.fetch
     const originalWindow = globalThis.window
     const requestedUrls: string[] = []
-    let reloadCount = 0
     globalThis.fetch = async (input) => {
       requestedUrls.push(String(input))
       if (String(input) === '/version.json') {
@@ -159,11 +158,7 @@ for (const { name, respond } of [
     Object.assign(globalThis, {
       __FRONTEND_BUILD_ID__: 'current-build',
       window: {
-        location: {
-          reload: () => {
-            reloadCount += 1
-          },
-        },
+        location: { reload: () => undefined },
         sessionStorage: {
           getItem: () => null,
           setItem: () => undefined,
@@ -179,10 +174,9 @@ for (const { name, respond } of [
       )
       await new Promise((resolve) => setImmediate(resolve))
 
-      // Then: version.jsonを取得せず、再読み込みもしない。
+      // Then: version.jsonを取得しない。
       assert.equal(requestedUrls.length, 2)
       assert.ok(requestedUrls.every((url) => !url.includes('/version.json')))
-      assert.equal(reloadCount, 0)
     } finally {
       globalThis.fetch = originalFetch
       Object.assign(globalThis, { window: originalWindow })
