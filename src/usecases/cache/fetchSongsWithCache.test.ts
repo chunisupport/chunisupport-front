@@ -456,6 +456,33 @@ test('更新日時の応答前にキャッシュを通知し、外部更新後�
   )
 })
 
+test("WORLD'S END楽曲は更新日時の応答を待たずにキャッシュを読み込むこと", async () => {
+  // Given: 有効なキャッシュがあり、更新日時 API の応答は保留されている。
+  const { fetchWorldsendSongsWithCache } = await loadSongsCacheUsecases()
+  await replaceCachedWorldsendSongs([cachedWorldsendSong], SONGS_REVISION)
+  let resolveUpdatedAt!: (response: Response) => void
+  const updatedAtResponse = new Promise<Response>((resolve) => {
+    resolveUpdatedAt = resolve
+  })
+  const requestedUrls: string[] = []
+  globalThis.fetch = async (input) => {
+    requestedUrls.push(String(input))
+    return String(input).endsWith('/updated-at')
+      ? updatedAtResponse
+      : Response.json({ songs: [fetchedWorldsendSong] })
+  }
+
+  // When: 更新日時の応答前に読み込みを済ませ、その後でキャッシュの中身を消してから応答する。
+  const request = fetchWorldsendSongsWithCache()
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  await db.worldsendSongs.clear()
+  resolveUpdatedAt(Response.json({ updated_at: SONGS_UPDATED_AT, revision: SONGS_REVISION }))
+
+  // Then: 応答前に読み込んだキャッシュを返し、一覧 API は呼ばない。
+  assert.deepEqual((await request).songs, [cachedWorldsendSong])
+  assert.ok(requestedUrls.every((url) => !url.endsWith('/internal/worldsend-songs')))
+})
+
 test('キャッシュなしでは更新日時の応答を待たずに楽曲一覧を取得すること', async () => {
   // Given: キャッシュがなく、更新日時 API は保留されている。
   const { fetchAllSongsWithCache } = await loadSongsCacheUsecases()

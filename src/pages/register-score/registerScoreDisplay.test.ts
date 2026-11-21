@@ -6,10 +6,9 @@ import type {
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
 } from '../../types/api'
+import { courseClassBadgeClass, formatCourseClass } from '../../utils/courseClassDisplay.ts'
 import { REGISTER_SCORE_INCREASE_TEXT_CLASS } from './constants.ts'
 import {
-  courseClassBadgeClass,
-  formatCourseClass,
   formatRegisterScoreChangeDelta,
   formatRegisterScoreImportedAt,
   formatRegisterScoreNullableRating,
@@ -67,7 +66,7 @@ test('コースクラスをレポート用の短縮表記へ変換すること',
   const result = courseClasses.map(formatCourseClass)
 
   // Then: ローマ数字・無限大・EXで表示される。
-  assert.deepEqual(result, ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', '∞', 'EX'])
+  assert.deepEqual(result, ['I', 'II', 'III', 'IV', 'V', '∞', 'EX'])
 })
 
 test('コースクラスの英字値は大文字小文字を区別せず変換すること', () => {

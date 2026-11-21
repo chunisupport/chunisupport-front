@@ -13,6 +13,7 @@ import {
   toNullableAllDisplaySelection,
   toNullableAllFilterSelection,
 } from '../../../../utils/filterSelection'
+import { toggleArray } from '../../../../utils/filterValue'
 import {
   parseNumberInput,
   toInputValue,
@@ -25,7 +26,6 @@ import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterS
 import NumericRangeSection from '../../components/filter/NumericRangeSection'
 import ScoreSection from '../../components/filter/ScoreSection'
 import { JUSTICE_COUNT_RANGE_FILTER } from '../../constants/rangeFilters'
-import { toggleArray } from '../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../utils/scoreRank'
 import type { WorldsendFilterState } from '../types/filterTypes'

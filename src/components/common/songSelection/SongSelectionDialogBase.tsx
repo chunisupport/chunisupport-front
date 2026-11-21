@@ -7,21 +7,17 @@ import ListChecks from 'lucide-solid/icons/list-checks'
 import LoaderCircle from 'lucide-solid/icons/loader-circle'
 import type { Accessor, JSX, Setter } from 'solid-js'
 import { For, Show } from 'solid-js'
-import {
-  AppButton,
-  type AppButtonSize,
-  getAppButtonClass,
-} from '../../../components/common/AppButton'
-import { AppDialog } from '../../../components/common/AppDialog'
-import { toMultiSelectOptions } from '../../../components/common/AppMultiSelect'
+import type { NameFolderDTO } from '../../../types/api'
+import Loading from '../../Loading/Loading'
+import { AppButton, type AppButtonSize, getAppButtonClass } from '../AppButton'
+import { AppDialog } from '../AppDialog'
+import { toMultiSelectOptions } from '../AppMultiSelect'
 import {
   GenreMultiSelect,
   NameFolderFilterMultiSelect,
   VersionMultiSelect,
-} from '../../../components/common/DomainMultiSelect'
-import { SearchTextField } from '../../../components/common/SearchTextField'
-import Loading from '../../../components/Loading/Loading'
-import type { NameFolderDTO } from '../../../types/api'
+} from '../DomainMultiSelect'
+import { SearchTextField } from '../SearchTextField'
 import {
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   SONG_SELECTION_LIST_VIRTUAL,
@@ -99,7 +95,7 @@ type SongSelectionVirtualListProps<TItem> = {
  * @param props - 候補一覧、スクロール要素の取得処理、行の描画処理。
  * @returns 表示範囲付近の行だけを含む一覧。
  */
-const SongSelectionVirtualList = <TItem,>(
+export const SongSelectionVirtualList = <TItem,>(
   props: SongSelectionVirtualListProps<TItem>
 ): JSX.Element => {
   const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLLIElement>({

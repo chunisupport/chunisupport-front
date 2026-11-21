@@ -1,15 +1,15 @@
 import { TextField } from '@kobalte/core/text-field'
+import { useQuery, useQueryClient } from '@tanstack/solid-query'
+import ListMusic from 'lucide-solid/icons/list-music'
 import Pencil from 'lucide-solid/icons/pencil'
 import Plus from 'lucide-solid/icons/plus'
 import RotateCcw from 'lucide-solid/icons/rotate-ccw'
-import Search from 'lucide-solid/icons/search'
 import Trash2 from 'lucide-solid/icons/trash-2'
 import type { Component, JSX } from 'solid-js'
-import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import {
   createCourse,
   deleteCourseByDisplayId,
-  fetchManagedCourses,
   restoreCourseByDisplayId,
   updateCourse,
 } from '../../api/courses'
@@ -17,23 +17,31 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppConfirmDialog } from '../../components/common/AppConfirmDialog'
 import { AppDialog } from '../../components/common/AppDialog'
-import { FormSelect } from '../../components/common/AppSelect'
+import { AppSelect, FormSelect } from '../../components/common/AppSelect'
+import { type AppTabOption, SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
-import { ClassEmblem } from '../../components/common/profile/ClassEmblem'
-import { RECORD_COMPACT_BADGE_CLASS } from '../../components/common/record/RecordBadges'
+import { CourseChartDifficultyBadge } from '../../components/common/course/CourseChartDifficultyBadge'
+import { CourseClassMark } from '../../components/common/course/CourseRecordParts'
+import { SearchTextField } from '../../components/common/SearchTextField'
+import { COURSE_TRACK_NUMBERS } from '../../constants/courseTracks'
+import { createCourseTrackSongs } from '../../hooks/createCourseTrackSongs'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { courseQueryKeys, managedCoursesQueryOptions } from '../../queries/courses'
+import { authSession } from '../../stores/authSession'
 import type {
+  CourseTrackDTO,
   CreateCourseRequestDTO,
   ManagedCourseDTO,
+  SongDTO,
   UpdateCourseRequestDTO,
+  WorldsendSongDTO,
 } from '../../types/api'
 import {
   COURSE_CLASS_OPTIONS,
   type CourseClassOption,
-  courseClassBadgeClass,
-  formatCourseClass,
-  resolveCourseClassEmblemName,
+  formatCourseClassLabel,
 } from '../../utils/courseClassDisplay'
+import { formatCourseTrackFilter } from '../../utils/courseTracks'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   COURSE_INPUT_LIMITS,
@@ -43,11 +51,18 @@ import {
   formatCourseEditLabel,
   formatCourseRestoreLabel,
 } from './CourseManagementPage.constants'
+import { CourseTrackEditorDialog } from './CourseTrackEditorDialog'
 import {
+  type CourseTrackFilterStatus,
   filterManagedCourses,
+  hasCourseTracks,
   isManagedCourseDeleted,
   sortManagedCourses,
 } from './courseManagement'
+import {
+  COURSE_TRACK_EDITOR_COPY,
+  COURSE_TRACK_SELECTION_SHORT_LABELS,
+} from './courseTrackEditor.constants'
 
 type CourseManagementPageProps = {
   title: string
@@ -57,45 +72,20 @@ type CourseManagementPageProps = {
 
 type CourseFormMode = 'create' | 'edit'
 
-/**
- * Ⅰ〜Ⅴと∞をエンブレム、EXと未対応値をバッジで表示する。
- * エンブレムと同じ大きさの枠内に中央揃えし、バッジとの中心位置を揃える。
- *
- * @param props - 表示するコースクラス。
- * @returns 一覧とクラス選択で使用するクラス表示。
- */
-const CourseClassDisplay: Component<{ courseClass: string }> = (props) => (
-  <span class="flex aspect-[94/46] h-8 items-center justify-center">
-    <Show
-      when={resolveCourseClassEmblemName(props.courseClass)}
-      fallback={
-        <span class={`${RECORD_COMPACT_BADGE_CLASS} ${courseClassBadgeClass(props.courseClass)}`}>
-          {formatCourseClass(props.courseClass)}
-        </span>
-      }
-    >
-      {(emblem) => (
-        <ClassEmblem
-          emblem={emblem()}
-          base={null}
-          label={formatCourseClass(props.courseClass)}
-          class="h-8"
-        />
-      )}
-    </Show>
-  </span>
-)
-
-type CourseFormDialogProps = {
-  open: boolean
-  mode: CourseFormMode
-  course: ManagedCourseDTO | null
-  saving: boolean
-  errorMessage: string
-  onOpenChange: (open: boolean) => void
-  onCreate: (request: CreateCourseRequestDTO) => void
-  onUpdate: (request: UpdateCourseRequestDTO) => void
+type ClassFilterOption = {
+  value: string
+  label: string
 }
+
+/** クラス絞り込みで全クラス表示を表す値（Kobalte Select で空文字キーが未選択扱いになるのを防ぐ） */
+const ALL_CLASS_FILTER_VALUE = '__all__'
+
+const ALL_CLASS_FILTER_OPTION: ClassFilterOption = {
+  value: ALL_CLASS_FILTER_VALUE,
+  label: COURSE_MANAGEMENT_COPY.allClassesOption,
+}
+
+const CLASS_FILTER_OPTIONS: ClassFilterOption[] = [ALL_CLASS_FILTER_OPTION, ...COURSE_CLASS_OPTIONS]
 
 const COURSE_INPUT_CLASS =
   'w-full rounded border border-border-strong bg-surface px-3 py-2 text-base text-text outline-none transition hover:border-input-border-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:bg-surface-hover disabled:text-text-muted disabled:opacity-100'
@@ -119,10 +109,36 @@ const buildCourseFormValue = (course: ManagedCourseDTO | null): CourseFormValue 
 })
 
 /**
- * コース追加・編集フォームを表示する。
+ * プルダウン内でコースクラスのアイコンとラベルを左揃えで表示する。
+ *
+ * @param props - 表示するコースクラス。
+ * @returns セレクト向けのクラス表示。
+ */
+const CourseClassSelectOption: Component<{ courseClass: string }> = (props) => (
+  <span class="inline-flex items-center gap-2">
+    <CourseClassMark courseClass={props.courseClass} size="sm" />
+    <span class="font-oswald text-sm font-medium tracking-wide">
+      CLASS {formatCourseClassLabel(props.courseClass)}
+    </span>
+  </span>
+)
+
+type CourseFormDialogProps = {
+  open: boolean
+  mode: CourseFormMode
+  course: ManagedCourseDTO | null
+  saving: boolean
+  errorMessage: string
+  onOpenChange: (open: boolean) => void
+  onCreate: (request: CreateCourseRequestDTO) => void
+  onUpdate: (request: UpdateCourseRequestDTO) => void
+}
+
+/**
+ * コース追加・基本情報編集フォームを表示する。
  *
  * @param props - フォーム種別、対象コース、送信状態とイベント。
- * @returns コース編集ダイアログ。
+ * @returns コース基本情報ダイアログ。
  */
 const CourseFormDialog: Component<CourseFormDialogProps> = (props): JSX.Element => {
   const [formValue, setFormValue] = createSignal(buildCourseFormValue(props.course))
@@ -250,7 +266,9 @@ const CourseFormDialog: Component<CourseFormDialogProps> = (props): JSX.Element 
             }
             placeholder={COURSE_MANAGEMENT_COPY.classPlaceholder}
             contentZIndexClass="z-60"
-            formatLabel={(option) => <CourseClassDisplay courseClass={option.value} />}
+            triggerClass="h-10 !py-0"
+            valueClass="flex items-center"
+            formatLabel={(option) => <CourseClassSelectOption courseClass={option.value} />}
             disabled={props.saving}
           />
 
@@ -282,6 +300,74 @@ const CourseFormDialog: Component<CourseFormDialogProps> = (props): JSX.Element 
 }
 
 /**
+ * コースカード下部に表示する1トラック分のコンパクトなプレビュー。
+ *
+ * @param props - トラック番号、トラック定義、曲名解決用の楽曲マップ。
+ * @returns トラック1枠のサマリー要素。
+ */
+const CourseTrackSummaryChip: Component<{
+  trackNo: number
+  track?: CourseTrackDTO
+  songs: ReadonlyMap<string, SongDTO | WorldsendSongDTO>
+  songsLoading: boolean
+}> = (props) => {
+  const fixedChart = () =>
+    props.track?.selection_type === 'FIXED' ? props.track.charts[0] : undefined
+  const detailText = () => {
+    const track = props.track
+    if (track?.selection_type === 'RANDOM_FILTER') {
+      return formatCourseTrackFilter(track.filter)
+    }
+    if (track?.selection_type === 'RANDOM_POOL') {
+      return `${track.charts.length}${COURSE_TRACK_EDITOR_COPY.chartCountSuffix}`
+    }
+    return ''
+  }
+
+  return (
+    <div class="flex min-w-0 items-center gap-2 rounded-md border border-border bg-surface-muted/70 px-2.5 py-1.5 text-xs">
+      <span class="shrink-0 font-oswald text-[11px] font-semibold tracking-wider text-text-subtle">
+        T{props.trackNo}
+      </span>
+      <Show
+        when={props.track}
+        fallback={
+          <span class="truncate text-text-subtle">
+            {COURSE_TRACK_EDITOR_COPY.unconfiguredTabSummary}
+          </span>
+        }
+      >
+        {(track) => (
+          <Show
+            when={fixedChart()}
+            fallback={
+              <div class="flex min-w-0 flex-1 items-center gap-1.5">
+                <span class="shrink-0 rounded bg-surface px-1.5 py-0.5 text-[11px] font-medium text-text-muted">
+                  {COURSE_TRACK_SELECTION_SHORT_LABELS[track().selection_type]}
+                </span>
+                <span class="min-w-0 truncate font-sans text-text">{detailText()}</span>
+              </div>
+            }
+          >
+            {(chart) => (
+              <div class="flex min-w-0 flex-1 items-center gap-1.5">
+                <CourseChartDifficultyBadge difficulty={chart().difficulty} />
+                <span class="min-w-0 truncate font-sans text-text">
+                  {props.songs.get(chart().id)?.title ??
+                    (props.songsLoading
+                      ? COURSE_TRACK_EDITOR_COPY.loadingSongPlaceholder
+                      : COURSE_TRACK_EDITOR_COPY.chartUnavailable)}
+                </span>
+              </div>
+            )}
+          </Show>
+        )}
+      </Show>
+    </div>
+  )
+}
+
+/**
  * EDITOR / ADMIN 向けのコース一覧と編集操作を表示する。
  *
  * @param props - 画面タイトルと作成・削除権限。
@@ -290,8 +376,12 @@ const CourseFormDialog: Component<CourseFormDialogProps> = (props): JSX.Element 
 const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => {
   useDocumentTitle(props.title)
 
-  const [refreshKey, setRefreshKey] = createSignal(0)
+  const queryClient = useQueryClient()
+  const [trackTarget, setTrackTarget] = createSignal<ManagedCourseDTO | null>(null)
+  let trackTrigger: HTMLElement | undefined
   const [searchQuery, setSearchQuery] = createSignal('')
+  const [classFilter, setClassFilter] = createSignal<ClassFilterOption>(ALL_CLASS_FILTER_OPTION)
+  const [statusFilter, setStatusFilter] = createSignal<CourseTrackFilterStatus>('all')
   const [formMode, setFormMode] = createSignal<CourseFormMode | null>(null)
   const [editingCourse, setEditingCourse] = createSignal<ManagedCourseDTO | null>(null)
   const [saving, setSaving] = createSignal(false)
@@ -299,13 +389,87 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
   const [deleteTargetCourse, setDeleteTargetCourse] = createSignal<ManagedCourseDTO | null>(null)
   const [deleting, setDeleting] = createSignal(false)
 
-  const [coursesResponse] = createResource(refreshKey, fetchManagedCourses)
-  const courses = createMemo(() => sortManagedCourses(coursesResponse()?.courses ?? []))
-  const filteredCourses = createMemo(() => filterManagedCourses(courses(), searchQuery()))
+  const username = (): string | null => authSession.user?.username ?? null
+  const coursesQuery = useQuery(() => managedCoursesQueryOptions(username()))
+  const courses = createMemo(() => sortManagedCourses(coursesQuery.data?.courses ?? []))
+  const fixedCharts = createMemo(() =>
+    courses().flatMap(
+      (course) =>
+        course.tracks?.flatMap((track) => (track.selection_type === 'FIXED' ? track.charts : [])) ??
+        []
+    )
+  )
+  const trackSongs = createCourseTrackSongs(
+    () => fixedCharts().some((chart) => chart.difficulty !== 'WORLDSEND'),
+    () => fixedCharts().some((chart) => chart.difficulty === 'WORLDSEND')
+  )
+
+  const hasDeletedCourses = createMemo(() => courses().some(isManagedCourseDeleted))
+  const unconfiguredCount = createMemo(
+    () =>
+      courses().filter((course) => !isManagedCourseDeleted(course) && !hasCourseTracks(course))
+        .length
+  )
+
+  const statusOptions = createMemo<readonly AppTabOption<CourseTrackFilterStatus>[]>(() => {
+    const base: AppTabOption<CourseTrackFilterStatus>[] = [
+      { value: 'all', label: COURSE_MANAGEMENT_COPY.statusFilterAll },
+      { value: 'unconfigured', label: COURSE_MANAGEMENT_COPY.statusFilterUnconfigured },
+      { value: 'configured', label: COURSE_MANAGEMENT_COPY.statusFilterConfigured },
+    ]
+    if (hasDeletedCourses()) {
+      base.push({ value: 'deleted', label: COURSE_MANAGEMENT_COPY.statusFilterDeleted })
+    }
+    return base
+  })
+
+  createEffect(() => {
+    if (statusFilter() === 'deleted' && !hasDeletedCourses()) {
+      setStatusFilter('all')
+    }
+  })
+
+  const filteredCourses = createMemo(() =>
+    filterManagedCourses(courses(), searchQuery(), {
+      courseClass: classFilter().value === ALL_CLASS_FILTER_VALUE ? '' : classFilter().value,
+      status: statusFilter(),
+    })
+  )
+
+  const isFiltering = createMemo(
+    () =>
+      searchQuery().trim().length > 0 ||
+      classFilter().value !== ALL_CLASS_FILTER_VALUE ||
+      statusFilter() !== 'all'
+  )
+
+  /** 検索・絞り込み条件を初期状態へ戻す。 */
+  const resetFilters = (): void => {
+    setSearchQuery('')
+    setClassFilter(ALL_CLASS_FILTER_OPTION)
+    setStatusFilter('all')
+  }
 
   /** コース一覧を再取得する。 */
   const refresh = (): void => {
-    setRefreshKey((current) => current + 1)
+    void coursesQuery.refetch()
+  }
+
+  /** 構成エディターを閉じて、起動ボタンにフォーカスを戻す。 */
+  const closeTrackEditor = (): void => {
+    setTrackTarget(null)
+    if (trackTrigger?.isConnected) trackTrigger.focus({ preventScroll: true })
+    trackTrigger = undefined
+  }
+
+  /**
+   * 構成保存後に、変更したコースの管理一覧と公開コース詳細のキャッシュだけを無効化する。
+   *
+   * @param displayId - 構成を保存したコースの公開ID。
+   */
+  const refreshCourseTracks = (displayId: string): void => {
+    void queryClient.invalidateQueries({ queryKey: courseQueryKeys.managed(username()) })
+    void queryClient.invalidateQueries({ queryKey: courseQueryKeys.detail(displayId) })
   }
 
   /** コース追加ダイアログを開く。 */
@@ -441,10 +605,21 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
 
   return (
     <div class="mx-auto w-full max-w-6xl space-y-4 p-4">
-      <div class="flex items-start justify-between gap-3">
-        <div>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2.5">
           <h1 class="text-2xl font-semibold">{props.title}</h1>
-          <p class="mt-1 text-sm text-text-muted">{COURSE_MANAGEMENT_COPY.pageDescription}</p>
+          <Show when={!coursesQuery.isPending && !coursesQuery.error}>
+            <span class="rounded-full bg-surface-muted px-2.5 py-0.5 font-jost text-xs font-medium text-text-muted">
+              {courses().length}
+              {COURSE_MANAGEMENT_COPY.totalCountSuffix}
+            </span>
+            <Show when={unconfiguredCount() > 0}>
+              <span class="rounded-full border border-warning-border bg-warning-bg px-2.5 py-0.5 font-jost text-xs font-semibold text-warning">
+                {COURSE_MANAGEMENT_COPY.unconfiguredSummary} {unconfiguredCount()}
+                {COURSE_MANAGEMENT_COPY.totalCountSuffix}
+              </span>
+            </Show>
+          </Show>
         </div>
         <Show when={props.canCreate}>
           <AppButton
@@ -457,112 +632,212 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
         </Show>
       </div>
 
-      <Show when={!coursesResponse.loading} fallback={<Loading />}>
-        <Show when={!coursesResponse.error} fallback={<LoadError error={coursesResponse.error} />}>
-          <TextField class="flex items-center gap-2 rounded border border-border-strong px-2 focus-within:border-focus-ring">
-            <Search class="h-4 w-4 shrink-0 text-text-subtle" aria-hidden="true" />
-            <TextField.Label class="sr-only">{COURSE_MANAGEMENT_COPY.searchLabel}</TextField.Label>
-            <TextField.Input
-              type="search"
-              value={searchQuery()}
-              onInput={(event) => setSearchQuery(event.currentTarget.value)}
-              placeholder={COURSE_MANAGEMENT_COPY.searchPlaceholder}
-              class="min-w-0 flex-1 py-2 font-sans text-sm outline-none"
-            />
-          </TextField>
+      <Show when={!coursesQuery.isPending} fallback={<Loading />}>
+        <Show when={!coursesQuery.error} fallback={<LoadError error={coursesQuery.error} />}>
+          <div class="space-y-3 rounded-lg border border-border bg-surface p-3">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-[1fr_12rem]">
+              <SearchTextField
+                ariaLabel={COURSE_MANAGEMENT_COPY.searchLabel}
+                value={searchQuery()}
+                onChange={setSearchQuery}
+                placeholder={COURSE_MANAGEMENT_COPY.searchPlaceholder}
+                active={searchQuery().trim().length > 0}
+                frameClass="h-10 rounded-md"
+              />
+              <AppSelect<ClassFilterOption>
+                label={COURSE_MANAGEMENT_COPY.classFilterLabel}
+                labelVariant="srOnly"
+                options={CLASS_FILTER_OPTIONS}
+                optionValue="value"
+                optionTextValue="label"
+                value={classFilter()}
+                onChange={(option) => setClassFilter(option ?? ALL_CLASS_FILTER_OPTION)}
+                disallowEmptySelection
+                triggerClass="h-10 rounded-md !py-0"
+                valueClass="flex items-center"
+                formatLabel={(option) =>
+                  option.value !== ALL_CLASS_FILTER_VALUE ? (
+                    <CourseClassSelectOption courseClass={option.value} />
+                  ) : (
+                    <span class="text-sm">{option.label}</span>
+                  )
+                }
+              />
+            </div>
 
-          <div class="overflow-x-auto rounded-lg border border-border bg-surface">
-            <table class="min-w-full text-sm">
-              <thead class="bg-surface-muted">
-                <tr>
-                  <th class="w-0 whitespace-nowrap px-3 py-2 text-left">
-                    {COURSE_MANAGEMENT_COPY.actionsHeading}
-                  </th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">
-                    {COURSE_MANAGEMENT_COPY.displayIdLabel}
-                  </th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">
-                    {COURSE_MANAGEMENT_COPY.idxLabel}
-                  </th>
-                  <th class="px-3 py-2 text-left">{COURSE_MANAGEMENT_COPY.nameLabel}</th>
-                  <th class="whitespace-nowrap px-3 py-2 text-center">
-                    {COURSE_MANAGEMENT_COPY.classLabel}
-                  </th>
-                  <th class="whitespace-nowrap px-3 py-2 text-left">
-                    {COURSE_MANAGEMENT_COPY.statusLabel}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={filteredCourses()}>
-                  {(course) => (
-                    <tr
-                      class="border-t border-border"
-                      classList={{ 'bg-danger-bg': isManagedCourseDeleted(course) }}
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <SegmentedToggleGroup
+                ariaLabel={COURSE_MANAGEMENT_COPY.statusFilterLabel}
+                options={statusOptions()}
+                value={statusFilter()}
+                onChange={setStatusFilter}
+                class="flex-wrap"
+                itemClass="px-2.5 py-1 text-xs sm:text-sm"
+              />
+              <Show when={isFiltering()}>
+                <span class="font-jost text-xs text-text-muted">
+                  {COURSE_MANAGEMENT_COPY.showingCountPrefix} {filteredCourses().length} /{' '}
+                  {courses().length}
+                  {COURSE_MANAGEMENT_COPY.totalCountSuffix}
+                </span>
+              </Show>
+            </div>
+          </div>
+
+          <Show
+            when={filteredCourses().length > 0}
+            fallback={
+              <div class="flex flex-col items-center gap-3 rounded-lg border border-border bg-surface px-4 py-10 text-center">
+                <p class="text-sm text-text-muted">
+                  {courses().length === 0
+                    ? COURSE_MANAGEMENT_COPY.emptyState
+                    : COURSE_MANAGEMENT_COPY.emptySearchState}
+                </p>
+                <Show when={isFiltering()}>
+                  <AppButton variant="surface" size="sm" onClick={resetFilters}>
+                    {COURSE_MANAGEMENT_COPY.resetFiltersButton}
+                  </AppButton>
+                </Show>
+              </div>
+            }
+          >
+            <ul class="space-y-2.5">
+              <For each={filteredCourses()}>
+                {(course) => {
+                  const deleted = () => isManagedCourseDeleted(course)
+                  const configured = () => hasCourseTracks(course)
+
+                  return (
+                    <li
+                      class={`rounded-lg border p-3 transition-colors sm:p-4 ${
+                        deleted()
+                          ? 'border-danger-border bg-danger-bg/60'
+                          : 'border-border bg-surface'
+                      }`}
                     >
-                      <td class="w-0 whitespace-nowrap px-3 py-2">
-                        <div class="flex gap-2">
-                          <AppIconButton
-                            aria-label={formatCourseEditLabel(course.name)}
-                            title={COURSE_MANAGEMENT_COPY.editAction}
-                            onClick={() => openEditDialog(course)}
-                          >
-                            <Pencil class="h-4 w-4" aria-hidden="true" />
-                          </AppIconButton>
-                          <Show
-                            when={!isManagedCourseDeleted(course)}
-                            fallback={
-                              <AppIconButton
-                                tone="primary"
-                                aria-label={formatCourseRestoreLabel(course.name)}
-                                title={COURSE_MANAGEMENT_COPY.restoreAction}
-                                onClick={() => void handleRestore(course)}
+                      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex min-w-0 items-center gap-3">
+                          <CourseClassMark courseClass={course.class} />
+                          <div class="min-w-0 flex-1 space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                              <h2 class="break-words font-sans text-base font-semibold text-text">
+                                {course.name}
+                              </h2>
+                              <Show
+                                when={!deleted()}
+                                fallback={
+                                  <span class="rounded-full border border-danger-border bg-danger-bg px-2 py-0.5 text-xs font-medium text-danger">
+                                    {COURSE_MANAGEMENT_COPY.deletedStatus}
+                                  </span>
+                                }
                               >
-                                <RotateCcw class="h-4 w-4" aria-hidden="true" />
-                              </AppIconButton>
+                                <Show when={!configured()}>
+                                  <span class="rounded-full border border-warning-border bg-warning-bg px-2 py-0.5 text-xs font-medium text-warning">
+                                    {COURSE_MANAGEMENT_COPY.unconfiguredStatus}
+                                  </span>
+                                </Show>
+                              </Show>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-xs text-text-subtle">
+                              <span>idx: {course.idx}</span>
+                              <span class="break-all">id: {course.id}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-2 sm:justify-end">
+                          <Show
+                            when={!deleted()}
+                            fallback={
+                              <>
+                                <AppIconButton
+                                  size="sm"
+                                  aria-label={formatCourseEditLabel(course.name)}
+                                  title={COURSE_MANAGEMENT_COPY.editBasicInfoAction}
+                                  onClick={() => openEditDialog(course)}
+                                >
+                                  <Pencil class="size-4" aria-hidden="true" />
+                                </AppIconButton>
+                                <AppIconButton
+                                  tone="primary"
+                                  size="sm"
+                                  aria-label={formatCourseRestoreLabel(course.name)}
+                                  title={COURSE_MANAGEMENT_COPY.restoreAction}
+                                  onClick={() => void handleRestore(course)}
+                                >
+                                  <RotateCcw class="size-4" aria-hidden="true" />
+                                </AppIconButton>
+                              </>
                             }
                           >
+                            <AppIconButton
+                              tone={configured() ? 'surface' : 'primary'}
+                              size="sm"
+                              aria-label={`${course.name}の${COURSE_TRACK_EDITOR_COPY.action}`}
+                              title={COURSE_MANAGEMENT_COPY.editTracksAction}
+                              onClick={(
+                                event: MouseEvent & { currentTarget: HTMLButtonElement }
+                              ) => {
+                                trackTrigger = event.currentTarget
+                                setTrackTarget(course)
+                              }}
+                            >
+                              <ListMusic class="size-4" aria-hidden="true" />
+                            </AppIconButton>
+                            <AppIconButton
+                              size="sm"
+                              aria-label={formatCourseEditLabel(course.name)}
+                              title={COURSE_MANAGEMENT_COPY.editBasicInfoAction}
+                              onClick={() => openEditDialog(course)}
+                            >
+                              <Pencil class="size-4" aria-hidden="true" />
+                            </AppIconButton>
                             <Show when={props.canDelete}>
                               <AppIconButton
                                 tone="danger"
+                                size="sm"
                                 aria-label={formatCourseDeleteLabel(course.name)}
                                 title={COURSE_MANAGEMENT_COPY.deleteAction}
                                 onClick={() => setDeleteTargetCourse(course)}
                               >
-                                <Trash2 class="h-4 w-4" aria-hidden="true" />
+                                <Trash2 class="size-4" aria-hidden="true" />
                               </AppIconButton>
                             </Show>
                           </Show>
                         </div>
-                      </td>
-                      <td class="whitespace-nowrap px-3 py-2 font-mono text-xs">{course.id}</td>
-                      <td class="whitespace-nowrap px-3 py-2 font-mono">{course.idx}</td>
-                      <td class="px-3 py-2 font-sans">{course.name}</td>
-                      <td class="whitespace-nowrap px-3 py-2">
-                        <div class="flex justify-center">
-                          <CourseClassDisplay courseClass={course.class} />
-                        </div>
-                      </td>
-                      <td class="whitespace-nowrap px-3 py-2">
-                        {isManagedCourseDeleted(course)
-                          ? COURSE_MANAGEMENT_COPY.deletedStatus
-                          : COURSE_MANAGEMENT_COPY.activeStatus}
-                      </td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
-          </div>
+                      </div>
 
-          <Show when={filteredCourses().length === 0}>
-            <p class="text-sm text-text-subtle">
-              {courses().length === 0
-                ? COURSE_MANAGEMENT_COPY.emptyState
-                : COURSE_MANAGEMENT_COPY.emptySearchState}
-            </p>
+                      <Show when={!deleted() && configured()}>
+                        <div class="mt-3 grid grid-cols-1 gap-1.5 border-t border-border pt-2.5 sm:grid-cols-3">
+                          <For each={COURSE_TRACK_NUMBERS}>
+                            {(trackNo) => (
+                              <CourseTrackSummaryChip
+                                trackNo={trackNo}
+                                track={course.tracks?.find((item) => item.track_no === trackNo)}
+                                songs={trackSongs.songsById()}
+                                songsLoading={trackSongs.loading()}
+                              />
+                            )}
+                          </For>
+                        </div>
+                      </Show>
+                    </li>
+                  )
+                }}
+              </For>
+            </ul>
           </Show>
         </Show>
+      </Show>
+
+      <Show when={trackTarget()} keyed>
+        {(course) => (
+          <CourseTrackEditorDialog
+            course={course}
+            onClose={closeTrackEditor}
+            onSaved={() => refreshCourseTracks(course.id)}
+          />
+        )}
       </Show>
 
       <CourseFormDialog

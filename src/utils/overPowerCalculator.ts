@@ -6,7 +6,6 @@ import {
   CALCULATOR_VALUE_DECIMALS,
   CALCULATOR_VALUE_SCALE,
 } from './overPowerCalculatorConstants'
-import { formatOverPowerValue } from './overPowerFormat'
 import { clampNumber, parseNumberInput } from './rangeInput'
 import { MAX_SCORE } from './scoreRank'
 import { calculateSingleOverPower } from './singleOverPower'
@@ -392,14 +391,6 @@ export const calculateRequiredChartCount = (
   const scaledGain = BigInt(gain) * percentDivisor
   return Number((difference + scaledGain - 1n) / scaledGain)
 }
-
-/**
- * OVER POWERの差分を符号付きで整形する。
- * @param value - 表示する差分。
- * @returns 正数に+を付けた小数点以下3桁の表示文字列。
- */
-export const formatSignedOverPowerValue = (value: number): string =>
-  `${value > 0 ? '+' : ''}${formatOverPowerValue(value)}`
 
 /**
  * 編集済みの計算入力を保持し、集計対象の変更時のみ増減を反映する。

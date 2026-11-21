@@ -42,28 +42,6 @@ export const OVER_POWER_AGGREGATION_TARGET_OPTIONS: OverPowerAggregationTargetOp
 /** OVER POWER集計画面で表示する達成率の小数点以下桁数 */
 export const OVER_POWER_SUMMARY_PERCENT_DECIMAL_PLACES = 5
 
-/** 未解禁楽曲設定ダイアログで要解禁楽曲だけを表示する初期状態 */
-export const DEFAULT_LOCKED_SONGS_UNLOCK_REQUIRED_ONLY = true
-
-/** 未解禁楽曲設定ダイアログの要解禁楽曲表示操作のラベル */
-export const LOCKED_SONGS_UNLOCK_REQUIRED_ONLY_LABEL = '要解禁楽曲のみ表示'
-
-/** 未解禁楽曲設定ダイアログのプレイ状況フィルター */
-export type LockedSongsPlayStatus = 'played' | 'unplayed'
-
-/** 未解禁楽曲設定ダイアログのプレイ状況フィルター選択肢 */
-export const LOCKED_SONG_PLAY_STATUS_OPTIONS = [
-  { value: 'unplayed', label: '未プレイ' },
-  { value: 'played', label: 'プレイ済み' },
-] as const
-
-/** 未解禁楽曲設定ダイアログのプレイ状況フィルター表示文言 */
-export const LOCKED_SONG_PLAY_STATUS_FILTER_COPY = {
-  label: 'プレイ状況',
-  suffix: 'のみ表示',
-  ariaLabel: 'プレイ状況フィルターを有効にする',
-} as const
-
 /** 通常レコードへのフィルター付き遷移に失敗したときの表示文言 */
 export const OVER_POWER_RECORD_NAVIGATION_ERROR_MESSAGE = 'レコードの表示に失敗しました。'
 

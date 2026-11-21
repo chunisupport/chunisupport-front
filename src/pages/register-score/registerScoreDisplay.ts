@@ -24,8 +24,6 @@ import {
   REGISTER_SCORE_STATISTIC_DIVIDER_START_COLUMN,
 } from './registerScoreStatistics'
 
-export { courseClassBadgeClass, formatCourseClass } from '../../utils/courseClassDisplay'
-
 /** 楽曲またはコース名を解決できない場合の表示名 */
 export const REGISTER_SCORE_UNKNOWN_TITLE = '-'
 

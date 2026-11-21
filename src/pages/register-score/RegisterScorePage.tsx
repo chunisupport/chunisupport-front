@@ -1,11 +1,10 @@
 import { useSearchParams } from '@solidjs/router'
-import { createQuery, useQueryClient } from '@tanstack/solid-query'
+import { useQueryClient } from '@tanstack/solid-query'
 import { createSignal, Match, onMount, Show, Switch } from 'solid-js'
 
 import { postPlayerDataCommit } from '../../api/register-data'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { courseMasterQueryOptions } from '../../queries/courses'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { authSession } from '../../stores/authSession'
@@ -17,13 +16,6 @@ import {
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import { REGISTER_SCORE_COPY } from './constants'
 import { RegisterScoreResultView } from './RegisterScoreResultView'
-import {
-  resolveRegisterScoreChartLevel,
-  resolveRegisterScoreCourseTitle,
-  resolveRegisterScoreSongMetrics,
-  resolveRegisterScoreSongSortValues,
-  resolveRegisterScoreSongTitle,
-} from './registerScoreResolvers'
 import { isValidUploadToken, normalizeUploadTokenParam } from './registerScoreToken'
 
 /**
@@ -54,19 +46,6 @@ const RegisterScorePage = () => {
   const songsData = useSongsData()
   const queryClient = useQueryClient()
   const [viewState, setViewState] = createSignal<RegisterScoreViewState>({ type: 'committing' })
-  /** @returns 確定結果にコース名の取得を必要とする差分がある場合は true。 */
-  const hasCourseChanges = (): boolean => {
-    const state = viewState()
-    return (
-      state.type === 'success' &&
-      state.result.changes.some((change) => change.record_type === 'course')
-    )
-  }
-  const coursesQuery = createQuery(() => ({
-    ...courseMasterQueryOptions(),
-    enabled: hasCourseChanges(),
-  }))
-
   /**
    * ログイン中ユーザーのフレンドランキングキャッシュを無効化する。
    *
@@ -78,43 +57,6 @@ const RegisterScorePage = () => {
   }
 
   useDocumentTitle(REGISTER_SCORE_COPY.title)
-
-  /**
-   * 差分に含まれる楽曲idxから表示用の楽曲名を解決する。
-   *
-   * @param change - APIから返却された1譜面分の差分。
-   * @returns 楽曲名。未取得の場合はプレースホルダー。
-   */
-  const songTitleByIdx = (change: Parameters<typeof resolveRegisterScoreSongTitle>[0]) => {
-    const standardSongs = songsData.songsResponse.latest?.songs ?? []
-    const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
-    return resolveRegisterScoreSongTitle(change, standardSongs, worldsendSongs)
-  }
-
-  /**
-   * 差分に含まれる楽曲idxと難易度から譜面レベル文字列を解決する。
-   *
-   * @param change - APIから返却された1譜面分の差分。
-   * @returns 譜面レベル文字列（例: "15+"、"★5"）。譜面情報がない場合はundefined。
-   */
-  const chartLevelByIdx = (change: Parameters<typeof resolveRegisterScoreChartLevel>[0]) => {
-    const standardSongs = songsData.songsResponse.latest?.songs ?? []
-    const worldsendSongs = songsData.worldsendSongsResponse.latest?.songs ?? []
-    return resolveRegisterScoreChartLevel(change, standardSongs, worldsendSongs)
-  }
-
-  /**
-   * 差分に含まれる楽曲idxと難易度からソート用の値を解決する。
-   *
-   * @param change - APIから返却された1譜面分の差分。
-   * @returns ソート用のレベルと単曲レーティング。解決できない値はnull。
-   */
-  const songSortValuesByIdx = (
-    change: Parameters<typeof resolveRegisterScoreSongSortValues>[0]
-  ) => {
-    const standardSongs = songsData.songsResponse.latest?.songs ?? []
-    return resolveRegisterScoreSongSortValues(change, standardSongs)
-  }
 
   onMount(async () => {
     const uploadToken = normalizeUploadTokenParam(searchParams.token)
@@ -167,21 +109,6 @@ const RegisterScorePage = () => {
               <RegisterScoreResultView
                 pageTitle={REGISTER_SCORE_COPY.title}
                 result={successState.result}
-                canCapture={
-                  !hasCourseChanges() || (!coursesQuery.isPending && !coursesQuery.isFetching)
-                }
-                resolveSongTitle={songTitleByIdx}
-                resolveChartLevel={chartLevelByIdx}
-                resolveSongSortValues={songSortValuesByIdx}
-                resolveSongMetrics={(change) =>
-                  resolveRegisterScoreSongMetrics(
-                    change,
-                    songsData.songsResponse.latest?.songs ?? []
-                  )
-                }
-                resolveCourseTitle={(change) =>
-                  resolveRegisterScoreCourseTitle(change, coursesQuery.data?.courses ?? [])
-                }
               />
             )
           }}

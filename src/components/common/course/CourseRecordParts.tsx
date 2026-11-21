@@ -26,41 +26,51 @@ const COURSE_CLASS_SIZE_CLASSES = {
     badge: 'size-7 text-base',
     emblem: 'h-8',
   },
-  lg: {
+  md: {
     badge: 'size-10 text-xl',
-    emblem: 'h-11',
+    emblem: 'h-14',
+  },
+  lg: {
+    badge: 'size-10 text-xl sm:size-12 sm:text-2xl',
+    emblem: 'h-12 sm:h-16',
   },
 } as const
 
 /**
  * コースクラスをエンブレム、非対応クラスは円形バッジで表示する。
+ * 台座込みSVG（94:46）の左右透明余白をトリミングし、最大幅の∞羽根が収まる60:46の枠に揃える。
+ * 円形バッジも同じ枠の中央に置き、クラスによって表示幅が変わらないようにする。
  *
  * @param props - 表示するコースクラスのAPI値と表示サイズ。
  * @returns コースクラスの表示要素。
  */
-export const CourseClassMark = (props: { courseClass: string; size?: 'sm' | 'lg' }) => {
+export const CourseClassMark = (props: { courseClass: string; size?: 'sm' | 'md' | 'lg' }) => {
   const sizeClasses = () => COURSE_CLASS_SIZE_CLASSES[props.size ?? 'sm']
 
   return (
-    <Show
-      when={resolveCourseClassEmblemName(props.courseClass)}
-      fallback={
-        <span
-          class={`${COURSE_CLASS_CIRCLE_BADGE_BASE_CLASS} ${sizeClasses().badge} ${courseClassBadgeClass(props.courseClass)}`}
-        >
-          {formatCourseClass(props.courseClass)}
-        </span>
-      }
+    <span
+      class={`inline-flex aspect-[60/46] shrink-0 items-center justify-center overflow-hidden ${sizeClasses().emblem}`}
     >
-      {(emblem) => (
-        <ClassEmblem
-          emblem={emblem()}
-          base={null}
-          class={sizeClasses().emblem}
-          label={formatCourseClass(props.courseClass)}
-        />
-      )}
-    </Show>
+      <Show
+        when={resolveCourseClassEmblemName(props.courseClass)}
+        fallback={
+          <span
+            class={`${COURSE_CLASS_CIRCLE_BADGE_BASE_CLASS} ${sizeClasses().badge} ${courseClassBadgeClass(props.courseClass)}`}
+          >
+            {formatCourseClass(props.courseClass)}
+          </span>
+        }
+      >
+        {(emblem) => (
+          <ClassEmblem
+            emblem={emblem()}
+            base={null}
+            class="h-full"
+            label={formatCourseClass(props.courseClass)}
+          />
+        )}
+      </Show>
+    </span>
   )
 }
 

@@ -120,33 +120,49 @@ export const readCachedSongs = async (songsRevision: number): Promise<SongDTO[] 
 }
 
 /**
+ * 鮮度確認と並行して読めるよう、WORLD'S END 楽曲一覧とその変更世代を同じ時点のデータとして読み込む。
+ *
+ * @returns スキーマが有効な WORLD'S END 楽曲一覧と変更世代。利用できない場合は null。
+ */
+export const readCachedWorldsendSongsSnapshot = async (): Promise<{
+  songs: WorldsendSongDTO[]
+  revision: number | undefined
+} | null> => {
+  const db = await getCacheDB()
+  return db.transaction('r', db.cacheMetadata, db.worldsendSongs, async () => {
+    const metadata = await db.cacheMetadata.get('worldsendSongs')
+    if (metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION) return null
+
+    const cachedSongs = await db.worldsendSongs.toArray()
+    if (
+      cachedSongs.length === 0 ||
+      !hasSongSortOrder(cachedSongs) ||
+      !hasSongFlags(cachedSongs, ['is_new', 'unlock_required']) ||
+      !cachedSongs.every((song) => typeof song.data.name_folder_code === 'string')
+    ) {
+      return null
+    }
+
+    return {
+      songs: cachedSongs
+        .sort((left, right) => left.sortOrder - right.sortOrder)
+        .map((song) => song.data),
+      revision: metadata.songsRevision,
+    }
+  })
+}
+
+/**
  * WORLD'S END 楽曲一覧キャッシュを読み込む。
  *
  * @param songsRevision - API から取得した楽曲データの変更世代。
- * @returns 利用可能な WORLD'S END 楽曲キャッシュ。存在しない場合は null。
+ * @returns 変更世代が一致する WORLD'S END 楽曲キャッシュ。利用できない場合は null。
  */
 export const readCachedWorldsendSongs = async (
   songsRevision: number
 ): Promise<WorldsendSongDTO[] | null> => {
-  if (!(await hasValidSongMetadata('worldsendSongs', songsRevision))) {
-    return null
-  }
-
-  const db = await getCacheDB()
-  const cachedSongs = await db.worldsendSongs.toArray()
-  if (
-    cachedSongs.length === 0 ||
-    !hasSongSortOrder(cachedSongs) ||
-    !hasSongFlags(cachedSongs, ['is_new', 'unlock_required']) ||
-    !cachedSongs.every((song) => typeof song.data.name_folder_code === 'string')
-  ) {
-    return null
-  }
-
-  return cachedSongs
-    .slice()
-    .sort((left, right) => left.sortOrder - right.sortOrder)
-    .map((song) => song.data)
+  const cached = await readCachedWorldsendSongsSnapshot()
+  return cached?.revision === songsRevision ? cached.songs : null
 }
 
 /**

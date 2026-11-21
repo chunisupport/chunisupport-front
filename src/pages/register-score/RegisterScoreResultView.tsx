@@ -1,5 +1,9 @@
-import { createSignal } from 'solid-js'
+import { createQuery } from '@tanstack/solid-query'
+import { createMemo, createSignal, onMount } from 'solid-js'
+import { courseMasterQueryOptions } from '../../queries/courses'
+import { useSongsData } from '../../stores/songsData'
 import type { NormalizedPlayerDataUpdateResult } from '../../usecases/registerScoreCommit'
+import { requestChangedSongMasters } from '../../usecases/registerScoreCommit'
 import {
   REGISTER_SCORE_COPY,
   REGISTER_SCORE_RESULT_LAYOUT_CLASS,
@@ -23,12 +27,12 @@ import {
   type RegisterScoreImageLayout,
 } from './registerScoreImageCapture'
 import { formatRegisterScoreImageFilename } from './registerScoreImageFiles'
-import type {
-  RegisterScoreChartLevelResolver,
-  RegisterScoreCourseTitleResolver,
-  RegisterScoreSongMetricsResolver,
-  RegisterScoreSongSortValuesResolver,
-  RegisterScoreSongTitleResolver,
+import {
+  resolveRegisterScoreChartLevel,
+  resolveRegisterScoreCourseTitle,
+  resolveRegisterScoreSongMetrics,
+  resolveRegisterScoreSongSortValues,
+  resolveRegisterScoreSongTitle,
 } from './registerScoreResolvers'
 import {
   createDefaultRegisterScoreStatisticRowVisibility,
@@ -36,6 +40,7 @@ import {
   toRegisterScoreStatisticRows,
   toRegisterScoreTotalHighScoreRows,
 } from './registerScoreStatistics'
+import { resolveReportMasterState } from './reportMasterState'
 
 /** スコア登録結果画面へ渡す登録結果と表示値の解決関数 */
 type RegisterScoreResultViewProps = {
@@ -43,18 +48,6 @@ type RegisterScoreResultViewProps = {
   pageTitle: string
   /** 表示用に正規化した登録結果 */
   result: NormalizedPlayerDataUpdateResult
-  /** 初回の補助データ取得を終え、共有画像を生成できるか。省略時は生成できる。 */
-  canCapture?: boolean
-  /** 楽曲タイトルの解決関数 */
-  resolveSongTitle: RegisterScoreSongTitleResolver
-  /** 譜面レベル表記の解決関数 */
-  resolveChartLevel?: RegisterScoreChartLevelResolver
-  /** 単曲メトリクスの解決関数 */
-  resolveSongMetrics: RegisterScoreSongMetricsResolver
-  /** 楽曲カードのソート値の解決関数 */
-  resolveSongSortValues: RegisterScoreSongSortValuesResolver
-  /** コースタイトルの解決関数 */
-  resolveCourseTitle: RegisterScoreCourseTitleResolver
   /** 更新された楽曲がない場合の文言 */
   changedSongsEmptyMessage?: string
 }
@@ -64,14 +57,48 @@ type RegisterScoreResultViewProps = {
  *
  * 表示設定の状態を生成し、表示設定・縮小表示枠・画像化する原寸レポートを組み立てる。
  *
- * @param props - ページ見出し、登録結果、画像生成可否、各表示値の解決関数、空状態文言。
+ * @param props - ページ見出し、登録結果、空状態文言。
  * @returns 登録結果パネル。
  */
 export const RegisterScoreResultView = (props: RegisterScoreResultViewProps) => {
+  const songs = useSongsData()
+  onMount(() => requestChangedSongMasters(props.result, songs))
+  const hasCourses = () => props.result.changes.some((change) => change.record_type === 'course')
+  const courses = createQuery(() => ({
+    ...courseMasterQueryOptions(),
+    enabled: hasCourses(),
+  }))
+  const masterState = () =>
+    resolveReportMasterState(
+      imageTypes(),
+      songs.songsRevalidationFailed() && !songs.songsResponse.loading
+        ? 'errored'
+        : songs.songsResponse.state,
+      songs.worldsendSongsResponse.state,
+      courses.isFetching ? 'pending' : courses.status
+    )
+  // errored の Resource.latest は例外を投げるため、結果表示と再試行導線を残す。
+  const standard = () =>
+    songs.songsResponse.error ? [] : (songs.songsResponse.latest?.songs ?? [])
+  const worldsend = () =>
+    songs.worldsendSongsResponse.error ? [] : (songs.worldsendSongsResponse.latest?.songs ?? [])
+  /** 失敗した補助データだけを再取得し、登録の確定処理は再実行しない。 */
+  const retryMasters = () => {
+    requestChangedSongMasters(props.result, songs)
+    if (imageTypes().has('course') && courses.isError) void courses.refetch()
+  }
   const changeList = createRegisterScoreChangeListState({
     changes: () => props.result.changes,
-    resolveSongSortValues: (change) => props.resolveSongSortValues(change),
+    resolveSongSortValues: (change) => resolveRegisterScoreSongSortValues(change, standard()),
   })
+  const imageTypes = createMemo(
+    () =>
+      new Set(
+        [...changeList.songChanges(), ...changeList.courseChanges()]
+          .filter((change) => !changeList.isExcludedFromImage(change))
+          .map((change) => change.record_type)
+      )
+  )
   const totalHighScore = createRegisterScoreAggregateSectionState({
     rows: () => toRegisterScoreTotalHighScoreRows(props.result.statistics),
     initialRowVisibility: createDefaultRegisterScoreTotalHighScoreRowVisibility(
@@ -103,7 +130,8 @@ export const RegisterScoreResultView = (props: RegisterScoreResultViewProps) => 
         <h1 class="text-2xl font-semibold">{props.pageTitle}</h1>
         <RegisterScoreImagePreviewDialog
           captureImages={captureReportImages}
-          canCapture={props.canCapture}
+          masterState={masterState()}
+          retryMasters={retryMasters}
           imageFilename={formatRegisterScoreImageFilename(props.result.imported_at)}
         />
       </header>
@@ -140,9 +168,13 @@ export const RegisterScoreResultView = (props: RegisterScoreResultViewProps) => 
             />
             <RegisterScoreSongChangesSection
               changes={changeList.songChanges()}
-              resolveSongTitle={props.resolveSongTitle}
-              resolveChartLevel={props.resolveChartLevel}
-              resolveSongMetrics={props.resolveSongMetrics}
+              resolveSongTitle={(change) =>
+                resolveRegisterScoreSongTitle(change, standard(), worldsend())
+              }
+              resolveChartLevel={(change) =>
+                resolveRegisterScoreChartLevel(change, standard(), worldsend())
+              }
+              resolveSongMetrics={(change) => resolveRegisterScoreSongMetrics(change, standard())}
               emptyMessage={
                 changeList.hideLampOnlyChanges()
                   ? REGISTER_SCORE_COPY.filteredChangedSongsEmpty
@@ -154,7 +186,9 @@ export const RegisterScoreResultView = (props: RegisterScoreResultViewProps) => 
             />
             <RegisterScoreCourseChangesSection
               changes={changeList.courseChanges()}
-              resolveCourseTitle={props.resolveCourseTitle}
+              resolveCourseTitle={(change) =>
+                resolveRegisterScoreCourseTitle(change, courses.data?.courses ?? [])
+              }
               excludedFromImage={changeList.courseSectionExcludedFromImage()}
               isChangeExcludedFromImage={changeList.isExcludedFromImage}
               onChangeExcludedFromImage={changeList.setExcludedFromImage}

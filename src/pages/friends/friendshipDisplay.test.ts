@@ -2,44 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   buildFriendCardDisplay,
-  formatFriendDateTime,
   formatFriendOverPowerValue,
   formatFriendPlayerName,
   shouldHideFriendProfile,
 } from './friendshipDisplay'
-
-test('formatFriendDateTime: 不正な日時はハイフンを返す', () => {
-  // Given: API日時として扱えない文字列。
-  const value = 'not-a-date'
-
-  // When: フレンド画面用日時へ変換する。
-  const result = formatFriendDateTime(value)
-
-  // Then: 不正値は安全な代替表示になる。
-  assert.equal(result, '-')
-})
-
-test('formatFriendDateTime: null はハイフンを返す', () => {
-  // Given: APIが返す未設定日時。
-  const value = null
-
-  // When: フレンド画面用日時へ変換する。
-  const result = formatFriendDateTime(value)
-
-  // Then: 未設定値は安全な代替表示になる。
-  assert.equal(result, '-')
-})
-
-test('formatFriendDateTime: 正常なISO日時は実行環境によらずJSTの日時文字列を返す', () => {
-  // Given: APIが返す正常なISO日時。
-  const value = '2026-07-08T12:00:00Z'
-
-  // When: フレンド画面用日時へ変換する。
-  const result = formatFriendDateTime(value)
-
-  // Then: JSTへ変換した日時になる。
-  assert.equal(result, '2026/07/08 21:00')
-})
 
 test('formatFriendOverPowerValue: OVER POWER値は小数点以下3桁で表示する', () => {
   // Given: 小数点以下3桁未満のOVER POWER値。

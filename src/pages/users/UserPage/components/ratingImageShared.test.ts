@@ -4,7 +4,6 @@ import type { HonorDTO } from '../../../../types/api'
 import { MAX_SCORE } from '../../../../utils/scoreRank'
 import {
   buildHonorSlots,
-  formatRatingImageOverPowerLine,
   formatRatingImageOverPowerPercent,
   formatRatingImageOverPowerValue,
   getPrimaryHonor,
@@ -87,18 +86,6 @@ test('formatRatingImageOverPowerValue は未設定値をハイフンへするこ
 
   // Then: ハイフンになる。
   assert.equal(label, '-')
-})
-
-test('formatRatingImageOverPowerLine は値と達成率を括弧付き1行へすること', () => {
-  // Given: OVER POWER値と達成率がある。
-  const value = 123.4567
-  const percent = 12.345678
-
-  // When: 1行表記へ整形する。
-  const label = formatRatingImageOverPowerLine(value, percent)
-
-  // Then: OP値と括弧付き達成率になる。
-  assert.equal(label, 'OP 123.456 (12.34567%)')
 })
 
 test('formatRatingImageOverPowerPercent は未設定値をハイフンへすること', () => {

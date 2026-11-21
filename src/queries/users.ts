@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/solid-query'
+import { fetchRecentPlayerDataUpdates } from '../api/register-data'
 import { fetchUserComment } from '../api/userComment'
 import { requestUserUpdatedAt } from '../api/users'
 import { appQueryClient } from '../lib/queryClient'
@@ -24,7 +25,19 @@ export const userQueryKeys = {
    * @returns ユーザー別のレーティング情報キー。
    */
   rating: (username: string) => ['users', username, 'rating'] as const,
+  /** 本人のスコア更新履歴。 */
+  recentUpdates: (username?: string) => ['users', username ?? '', 'recent-score-updates'] as const,
 }
+
+/** 閲覧中の本人だけが使う更新履歴を取得し、画面を離れたら保持しない。 */
+export const recentScoreUpdatesQueryOptions = (username?: string) =>
+  queryOptions({
+    queryKey: userQueryKeys.recentUpdates(username),
+    queryFn: ({ signal }) => fetchRecentPlayerDataUpdates(signal),
+    enabled: Boolean(username),
+    staleTime: Infinity,
+    gcTime: 0,
+  })
 
 /**
  * プロフィールコメントのquery optionsを生成する。

@@ -1,13 +1,19 @@
 import ScanSearch from 'lucide-solid/icons/scan-search'
-import { type Component, createSignal, ErrorBoundary, type JSX, Show } from 'solid-js'
+import {
+  type Component,
+  createSignal,
+  ErrorBoundary,
+  type JSX,
+  lazy,
+  Show,
+  Suspense,
+} from 'solid-js'
 import { Dynamic } from 'solid-js/web'
-import { LoadError } from '../../components'
+import { LoadError, Loading } from '../../components'
 import { SegmentedToggleGroup } from '../../components/common/AppTabs'
 import { WEAK_CHART_INSPECTOR_PATH } from '../../constants/routes'
 import { getToolLink } from '../../constants/tools'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import LegacyWeakChartInspector from './LegacyWeakChartInspector'
-import UnifiedWeakChartInspector from './UnifiedWeakChartInspector'
 import {
   WEAK_CHART_INSPECTOR_VERSION_LABEL,
   WEAK_CHART_INSPECTOR_VERSION_OPTIONS,
@@ -18,10 +24,10 @@ import {
   saveWeakChartInspectorVersion,
 } from './weakChartInspectorVersionStorage'
 
-/** 版ごとの表示内容 */
+/** 版ごとの表示内容。選んだ版だけを読み込むよう遅延 import にする。 */
 const VERSION_VIEWS: Record<WeakChartInspectorVersion, Component> = {
-  unified: UnifiedWeakChartInspector,
-  legacy: LegacyWeakChartInspector,
+  unified: lazy(() => import('./UnifiedWeakChartInspector')),
+  legacy: lazy(() => import('./LegacyWeakChartInspector')),
 }
 
 /**
@@ -64,7 +70,9 @@ const WeakChartInspectorPage = (): JSX.Element => {
       <Show when={version()} keyed>
         {(current) => (
           <ErrorBoundary fallback={(error) => <LoadError error={error} />}>
-            <Dynamic component={VERSION_VIEWS[current]} />
+            <Suspense fallback={<Loading />}>
+              <Dynamic component={VERSION_VIEWS[current]} />
+            </Suspense>
           </ErrorBoundary>
         )}
       </Show>

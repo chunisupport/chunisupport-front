@@ -7,11 +7,17 @@ import { CourseClassMark } from '../../../components/common/course/CourseRecordP
 import { COURSES_PATH } from '../../../constants/routes'
 import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { courseListQueryOptions, courseStatsQueryOptions } from '../../../queries/courses'
+import {
+  courseDetailQueryOptions,
+  courseListQueryOptions,
+  courseStatsQueryOptions,
+  courseTrackScoresQueryOptions,
+} from '../../../queries/courses'
 import { ratingBandsQueryOptions } from '../../../queries/ratingBands'
 import { userRatingQueryOptions } from '../../../queries/users'
 import { authSession } from '../../../stores/authSession'
-import { formatCourseClass } from '../../../utils/courseClassDisplay'
+import { formatCourseClassLabel } from '../../../utils/courseClassDisplay'
+import { buildCourseTrackBestRecords } from '../../../utils/courseTracks'
 import NotFoundPage from '../../NotFoundPage'
 import { COURSE_PAGE_COPY } from '../constants'
 import CourseOwnScoreCard from './components/CourseOwnScoreCard'
@@ -31,10 +37,25 @@ const CourseDetail = () => {
   const username = () => (isAuthenticated() ? (authSession.user?.username ?? null) : null)
 
   const coursesQuery = useQuery(() => courseListQueryOptions(username()))
-  // shortcut: 単件APIを使わず一覧キャッシュから引く。収録曲など一覧にない情報を出すときは単件APIへ切り替える
   const course = createMemo(() =>
     coursesQuery.data?.courses.find((candidate) => candidate.id === params.displayid)
   )
+  const detailQuery = useQuery(() => ({
+    ...courseDetailQueryOptions(params.displayid),
+    enabled: Boolean(course()),
+  }))
+  const tracks = () => detailQuery.data?.tracks ?? []
+  const trackScoresQuery = useQuery(() =>
+    courseTrackScoresQueryOptions(
+      authSession.user?.last_score_update && tracks().some((track) => track.candidates.length > 0)
+        ? username()
+        : null
+    )
+  )
+  const trackRecords = createMemo(() => {
+    const records = trackScoresQuery.data
+    return records ? buildCourseTrackBestRecords(records) : undefined
+  })
   // 存在しないコースでは統計APIを呼ばない
   const statsQuery = useQuery(() => ({
     ...courseStatsQueryOptions(params.displayid),
@@ -85,34 +106,48 @@ const CourseDetail = () => {
                 </Button>
               </div>
 
-              <header class="flex items-center gap-4">
-                <div class="shrink-0">
+              <header class="flex items-center gap-3">
+                <div class="flex shrink-0">
                   <CourseClassMark courseClass={currentCourse().class} size="lg" />
                 </div>
                 <div class="min-w-0 space-y-0.5">
-                  <h1 class="font-sans text-2xl font-semibold break-words">
+                  <p class="font-oswald text-xs font-semibold tracking-wider text-text-muted">
+                    {COURSE_PAGE_COPY.classPrefix} {formatCourseClassLabel(currentCourse().class)}
+                  </p>
+                  <h1 class="font-sans text-xl leading-snug font-semibold break-words sm:text-2xl">
                     {currentCourse().name}
                   </h1>
-                  <p class="font-oswald text-sm font-medium tracking-wide text-text-muted">
-                    {COURSE_PAGE_COPY.classPrefix} {formatCourseClass(currentCourse().class)}
-                  </p>
                 </div>
               </header>
 
-              <CourseTracksSection />
-
-              <Show when={isAuthenticated()}>
-                <CourseOwnScoreCard record={currentCourse()} />
-              </Show>
-
-              <Show when={currentCourse().is_played && username()}>
-                {(currentUsername) => (
-                  <CourseScoreHistorySection
-                    username={currentUsername()}
-                    displayId={currentCourse().id}
-                  />
-                )}
-              </Show>
+              <div
+                class="grid grid-cols-1 items-start gap-4"
+                classList={{
+                  'lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]':
+                    isAuthenticated(),
+                }}
+              >
+                <CourseTracksSection
+                  tracks={tracks()}
+                  loading={detailQuery.isPending}
+                  error={detailQuery.isError ? detailQuery.error : undefined}
+                  records={trackRecords()}
+                  scoreError={trackScoresQuery.isError}
+                />
+                <Show when={isAuthenticated()}>
+                  <div class="min-w-0 space-y-4">
+                    <CourseOwnScoreCard record={currentCourse()} />
+                    <Show when={currentCourse().is_played && username()}>
+                      {(currentUsername) => (
+                        <CourseScoreHistorySection
+                          username={currentUsername()}
+                          displayId={currentCourse().id}
+                        />
+                      )}
+                    </Show>
+                  </div>
+                </Show>
+              </div>
 
               <CourseStatsSection
                 stats={statsQuery.data?.stats}

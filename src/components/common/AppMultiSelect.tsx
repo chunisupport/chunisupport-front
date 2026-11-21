@@ -27,6 +27,8 @@ export type AppMultiSelectProps<TValue extends AppMultiSelectValue> = {
   onChange: (selected: TValue[]) => void
   /** Select のポータルコンテンツに適用する z-index クラス */
   contentZIndexClass?: string
+  /** ダイアログ内から選択肢を開く場合のポータル配置先。 */
+  portalMount?: HTMLElement
   /** トリガー内に表示する選択済み項目数の上限 */
   selectedPreviewLimit?: number
   /** 操作を無効化するかどうか */
@@ -160,7 +162,7 @@ export const AppMultiSelect = <TValue extends AppMultiSelectValue>(
           <ChevronsUpDown size={16} />
         </span>
       </Select.Trigger>
-      <Select.Portal>
+      <Select.Portal mount={props.portalMount}>
         <Select.Content
           ref={setContentRef}
           class={`${props.contentZIndexClass ?? DEFAULT_MULTI_SELECT_CONTENT_Z_INDEX_CLASS} ${MULTI_SELECT_CONTENT_BASE_CLASS}`}
@@ -212,6 +214,7 @@ export const MultiSelectField = <TValue extends AppMultiSelectValue>(
       placeholder={props.placeholder}
       onChange={props.onChange}
       contentZIndexClass={props.contentZIndexClass}
+      portalMount={props.portalMount}
       selectedPreviewLimit={props.selectedPreviewLimit}
       disabled={props.disabled}
       triggerClass={props.triggerClass}

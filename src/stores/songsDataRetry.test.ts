@@ -106,6 +106,32 @@ assert.equal(calls(), 2)
   )
 })
 
+test('先行表示した旧要求が後で失敗しても新しい楽曲で画像を生成できる', async () => {
+  await runBrowserTest(
+    `
+await import('fake-indexeddb/auto')
+const { replaceCachedSongs } = await import('./src/repositories/songCacheRepository.ts')
+const cached = { id: 'a', title: 'Old', unlock_required: false, name_folder_code: 'NUMBER' }
+await replaceCachedSongs([cached], 1)
+let rejectOld
+let songRequests = 0
+globalThis.fetch = async input => {
+  if (String(input).endsWith('/updated-at')) return Response.json({ revision: 2 })
+  if (++songRequests === 1) return new Promise((_, reject) => { rejectOld = reject })
+  return Response.json({songs:[{...cached, title:'New'}]})
+}
+store.ensureSongsLoaded()
+await waitUntil(() => rejectOld && store.songsResponse.latest?.songs[0]?.title === 'Old')
+await store.refreshSongs()
+rejectOld(new TypeError('offline'))
+await flush()
+assert.equal(store.songsResponse.latest.songs[0].title, 'New')
+assert.equal(store.songsRevalidationFailed(), false)
+`,
+    '/internal/songs'
+  )
+})
+
 for (const shouldFail of [false, true]) {
   test(`通常楽曲は再検証の完了前に表示でき、再検証${shouldFail ? '失敗時も表示を維持' : '成功時は外部更新を反映'}すること`, async () => {
     await runBrowserTest(
@@ -135,6 +161,7 @@ resolveUpdatedAt(Response.json({ updated_at: 'new' }))
 await waitUntil(() => !store.songsResponse.loading)
 assert.deepEqual(store.songsResponse().songs, [${shouldFail ? 'cachedSong' : 'fetchedSong'}])
 assert.equal(store.songsResponse.error, undefined)
+assert.equal(store.songsRevalidationFailed(), ${shouldFail})
 ${
   shouldFail
     ? `
@@ -143,6 +170,7 @@ globalThis.fetch = async () => Response.json({ songs: [fetchedSong] })
 store.ensureSongsLoaded()
 await waitUntil(() => !store.songsResponse.loading)
 // Then: 背景再検証の失敗からも最新データへ復帰する。
+assert.equal(store.songsRevalidationFailed(), false)
 assert.deepEqual(store.songsResponse().songs, [fetchedSong])
 `
     : ''

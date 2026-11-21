@@ -132,3 +132,41 @@ for (const scenario of [
     assert.equal(calls[0]?.init?.body, scenario.body)
   })
 }
+
+test('コース構成を取得・一括更新し、空配列でクリアできる', async (t) => {
+  // Given: 楽曲候補を返す公開APIと204を返す認証付き更新API。
+  const originalFetch = globalThis.fetch
+  t.after(() => {
+    globalThis.fetch = originalFetch
+  })
+  const tracks = [
+    {
+      track_no: 1,
+      selection_type: 'RANDOM_FILTER',
+      filter: { min_level: '14+', genres: ['ゲキマイ'] },
+    },
+  ] as const
+  const detail = { ...managedCourse, tracks: [{ ...tracks[0], candidates: [] }] }
+  const calls = installFetchRecorder((_input, init) =>
+    init?.method === 'PUT' ? new Response(null, { status: 204 }) : Response.json(detail)
+  )
+  const { fetchCourseDetail, replaceCourseTracks } = await loadCoursesApi(true)
+  const path = 'http://localhost:3000/internal/courses/A%2FB%20C'
+
+  // When: 詳細取得、設定更新、構成クリアを実行する。
+  const result = await fetchCourseDetail('A/B C')
+  await replaceCourseTracks('A/B C', [
+    { ...tracks[0], filter: { min_level: '14+', genres: ['ゲキマイ'] } },
+  ])
+  await replaceCourseTracks('A/B C', [])
+
+  // Then: 更新は同じトラック用パスに認証とJSONを送信する。
+  assert.deepEqual(result, detail)
+  assert.deepEqual(
+    calls.map(({ input }) => String(input)),
+    [path, `${path}/tracks`, `${path}/tracks`]
+  )
+  assert.equal(new Headers(calls[1]?.init?.headers).get('Authorization'), 'Bearer test-token')
+  assert.deepEqual(JSON.parse(String(calls[1]?.init?.body)), { tracks })
+  assert.equal(calls[2]?.init?.body, '{"tracks":[]}')
+})

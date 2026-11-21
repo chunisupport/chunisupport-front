@@ -4,8 +4,6 @@ import type { SongDTO } from '../../../types/api'
 import {
   buildDefaultSongSelectionFilter,
   getSongSelectionRowClass,
-  getSongSelectionSearchFrameClass,
-  getSongSelectionSearchIconClass,
   hasSameSelectionKeys,
   hasSongSelectionFilterChanges,
   sortSongSelectionCandidates,
@@ -96,22 +94,18 @@ test('楽曲選択フィルターは楽曲名順を全選択の null とし、�
   )
 })
 
-test('楽曲選択UIは状態に応じてアクセントカラーのクラスを返すこと', () => {
+test('楽曲選択行は選択状態に応じてアクセントカラーのクラスを返すこと', () => {
   // Given
-  const active = true
-  const inactive = false
+  const selected = true
+  const unselected = false
 
   // When
-  const activeSearchFrameClass = getSongSelectionSearchFrameClass(active)
-  const activeSearchIconClass = getSongSelectionSearchIconClass(active)
-  const selectedRowClass = getSongSelectionRowClass(active)
-  const inactiveRowClass = getSongSelectionRowClass(inactive)
+  const selectedRowClass = getSongSelectionRowClass(selected)
+  const unselectedRowClass = getSongSelectionRowClass(unselected)
 
   // Then
-  assert.match(activeSearchFrameClass, /bg-action-primary-muted/)
-  assert.match(activeSearchIconClass, /text-action-primary/)
   assert.match(selectedRowClass, /bg-action-primary/)
-  assert.doesNotMatch(inactiveRowClass, /action-primary/)
+  assert.doesNotMatch(unselectedRowClass, /action-primary/)
 })
 
 test('保存済みとdraftの選択キーは順序に依存せず比較できること', () => {

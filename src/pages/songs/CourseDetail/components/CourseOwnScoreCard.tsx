@@ -37,14 +37,14 @@ const CourseOwnScoreCard = (props: Props) => {
         when={props.record.is_played}
         fallback={
           <div class={OWN_COURSE_CARD_CLASS}>
-            <CourseClassMark courseClass={props.record.class} />
+            <CourseClassMark courseClass={props.record.class} size="md" />
             <span class="text-sm text-text-muted">{COURSE_PAGE_COPY.notPlayed}</span>
           </div>
         }
       >
         <div class={OWN_COURSE_CARD_CLASS}>
-          <div class="flex items-center gap-3">
-            <CourseClassMark courseClass={props.record.class} />
+          <div class="flex items-center gap-2">
+            <CourseClassMark courseClass={props.record.class} size="md" />
             <Show when={formattedUpdatedAt()}>
               {(updatedAt) => (
                 <span class="font-jost text-xs text-text-muted tabular-nums">

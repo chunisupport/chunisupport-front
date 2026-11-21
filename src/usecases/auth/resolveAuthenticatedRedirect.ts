@@ -1,22 +1,10 @@
-import type { UserDTO } from '../../types/api.ts'
-
-type FetchUserProfile = (username: string) => Promise<unknown>
+import { resolvePostLoginRedirectPath } from './redirectPath'
 
 /**
- * 認証済みユーザーのプロフィール存在確認後に遷移先を解決する。
- *
- * @param user - 認証済みユーザー。未認証の場合はnull。
- * @param fetchUserProfile - ユーザープロフィールを取得する処理。
- * @returns ユーザーページのパス。未認証の場合はnull。
+ * 認証確認後の遷移先を決める。プロフィールの読み込みとエラー処理は遷移先が担当する。
+ * @param username - 確認済みのユーザー名。
+ * @param redirectPath - URL の戻り先候補。
+ * @returns 安全な戻り先、または本人のページ。
  */
-export const resolveAuthenticatedRedirect = async (
-  user: UserDTO | null,
-  fetchUserProfile: FetchUserProfile
-): Promise<string | null> => {
-  if (!user) {
-    return null
-  }
-
-  await fetchUserProfile(user.username)
-  return `/users/${encodeURIComponent(user.username)}`
-}
+export const resolveAuthenticatedRedirect = (username: string, redirectPath?: string): string =>
+  resolvePostLoginRedirectPath(redirectPath) ?? `/users/${encodeURIComponent(username)}`

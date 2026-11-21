@@ -2,16 +2,19 @@ import { initializeApp } from 'firebase/app'
 import {
   type Auth,
   type AuthProvider,
+  beforeAuthStateChanged,
   browserPopupRedirectResolver,
   GoogleAuthProvider,
   getAuth,
   initializeAuth,
   inMemoryPersistence,
+  onAuthStateChanged,
   TwitterAuthProvider,
 } from 'firebase/auth'
 
 import type { AuthProviderKind } from '../constants/authProviders'
 import { getEnv, getRequiredEnv } from './env'
+import { createTabIdentity } from './tabIdentity'
 
 const env = getEnv()
 
@@ -29,6 +32,20 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
+
+/** 新アカウントで旧画面の操作や登録トークンを再実行しないよう、トップへ戻す。 */
+export const tabIdentity = createTabIdentity(() => window.location.replace('/'))
+
+/** アプリ起動時に既定 Auth だけを監視する。変更先アカウントの一時 Auth は監視しない。 */
+export const watchTabIdentity = (): void => {
+  // Firebase は別タブからの同期では beforeAuthStateChanged を呼ばない。
+  beforeAuthStateChanged(
+    auth,
+    (user) => tabIdentity.expect(user?.uid ?? null),
+    () => tabIdentity.expect(undefined)
+  )
+  onAuthStateChanged(auth, (user) => tabIdentity.observe(user?.uid ?? null))
+}
 
 /** 認証プロバイダ作成時の追加指定 */
 type AuthProviderOptions = {

@@ -59,25 +59,6 @@ export const resolveProfilePageQuery = (
 }
 
 /**
- * ユーザーページの指定がレコード系ページかどうかを判定する。
- *
- * @param pagePathParam - URLから取得したページのパスパラメータ。
- * @param pageQueryParam - 互換用に読む旧pageクエリパラメータ。
- * @returns 通常、WORLD'S END、コースのいずれかのレコードページならtrue。
- */
-export const isRecordPageQuery = (
-  pagePathParam: string | string[] | undefined,
-  pageQueryParam?: string | string[] | undefined
-): boolean => {
-  const resolvedPage = resolveProfilePageQuery(pagePathParam, pageQueryParam)
-  return (
-    resolvedPage === 'record_normal' ||
-    resolvedPage === 'record_we' ||
-    resolvedPage === 'record_course'
-  )
-}
-
-/**
  * ユーザーページの内部リンク用パスを生成する。
  *
  * @param username - パスへ埋め込むユーザー名。

@@ -1,6 +1,9 @@
 /** メンテナンスコメントに許可するUnicodeコードポイント数 */
 export const MAINTENANCE_COMMENT_MAX_CODE_POINTS = 1_000
 
+/** 可用性確認が応答を待つ上限（ミリ秒）。 */
+export const SYSTEM_STATUS_TIMEOUT_MS = 10_000
+
 /** メンテナンス中の状態確認間隔（ミリ秒） */
 export const MAINTENANCE_POLL_INTERVAL_MS = 60_000
 
