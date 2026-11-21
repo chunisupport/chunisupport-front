@@ -10,7 +10,6 @@ import {
   calculateRequiredOverPower,
   calculateUnplayedOverPower,
   formatOverPowerInputValue,
-  formatSignedOverPowerValue,
   interpolatePlayedAverageScoreByConst,
   normalizeOverPowerCalculatorInput,
   parseOverPowerInput,
@@ -663,17 +662,6 @@ test('無限大の入力はOVER POWER計算の数値にしないこと', () => {
 
   // Then
   assert.equal(result, null)
-})
-
-test('差分が0の場合は符号を付けずに表示すること', () => {
-  // Given
-  const value = 0
-
-  // When
-  const result = formatSignedOverPowerValue(value)
-
-  // Then
-  assert.equal(result, '0.000')
 })
 
 test('集計対象が変わらなければ編集済みの入力を維持すること', () => {

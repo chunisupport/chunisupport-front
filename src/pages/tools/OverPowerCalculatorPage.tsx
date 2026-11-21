@@ -19,6 +19,7 @@ import { LoadError, Loading } from '../../components'
 import { AppButton, AppIconButton } from '../../components/common/AppButton'
 import { AppTabContent, UnderlineTabs } from '../../components/common/AppTabs'
 import { CheckboxField } from '../../components/common/CheckboxField'
+import LockedSongsDialog from '../../components/common/lockedSongs/LockedSongsDialog'
 import { ScoreField } from '../../components/common/ScoreField'
 import { SelectableCardItem } from '../../components/common/SelectableCardButton'
 import { OwnDataNotice } from '../../components/LoginRequiredState'
@@ -58,7 +59,6 @@ import {
 } from '../../utils/overPowerCalculatorConstants'
 import { formatOverPowerPercent, formatOverPowerValue } from '../../utils/overPowerFormat'
 import { calculateRequiredChartCountResult } from '../../utils/requiredChartCount'
-import LockedSongsDialog from '../users/UserOverPower/components/LockedSongsDialog'
 import {
   DEFAULT_MANUAL_FILL_SCORE,
   DEFAULT_REQUIRED_CURRENT_SCORE,

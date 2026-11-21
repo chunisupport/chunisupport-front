@@ -699,11 +699,12 @@ const ApplicationRoot = (props: { children?: JSX.Element }) => {
   useRobotsMeta()
   useRememberAppMainScrollNavigationType()
 
+  // 接続不能画面でも更新通知を出せるよう、トースト領域はゲートの外に置く。
   return (
-    <ApplicationAvailabilityGate>
-      {props.children}
+    <>
+      <ApplicationAvailabilityGate>{props.children}</ApplicationAvailabilityGate>
       <AppToastRegion />
-    </ApplicationAvailabilityGate>
+    </>
   )
 }
 

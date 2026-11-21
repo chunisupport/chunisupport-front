@@ -1,31 +1,8 @@
-import { JST_TIME_ZONE } from '../../constants/dateTime'
 import type { FriendshipUserDTO } from '../../types/api'
 import { formatOverPowerValue } from '../../utils/overPowerFormat'
 import { formatNullablePlayerRating } from '../../utils/ratingFormat'
 import type { FriendsTabValue } from './constants'
 import { FRIENDS_COPY } from './constants'
-
-/** 実行環境のタイムゾーンに依存せず、フレンド画面の日時をJSTで表示するフォーマッター */
-const friendDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
-  timeZone: JST_TIME_ZONE,
-  dateStyle: 'short',
-  timeStyle: 'short',
-})
-
-/**
- * API日時をフレンド画面用のJST固定の短い日時表記に変換する。
- *
- * @param value - ISO8601形式の日時。未設定の場合は null または undefined。
- * @returns 表示用日時。不正値または未設定の場合はハイフン。
- */
-export const formatFriendDateTime = (value: string | null | undefined): string => {
-  if (!value) return FRIENDS_COPY.emptyValue
-
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? FRIENDS_COPY.emptyValue
-    : friendDateTimeFormatter.format(date)
-}
 
 /**
  * OVER POWER値をプロフィールカードと同じ桁数で表示する。

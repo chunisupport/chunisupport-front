@@ -28,6 +28,7 @@ import {
   toNullableAllDisplaySelection,
   toNullableAllFilterSelection,
 } from '../../../../../utils/filterSelection'
+import { toggleArray } from '../../../../../utils/filterValue'
 import { sortMasterItemsBySortOrder } from '../../../../../utils/masterData'
 import {
   parseNumberInput,
@@ -47,7 +48,6 @@ import {
   OVER_POWER_RANGE_FILTER,
   SINGLE_RATING_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
-import { toggleArray } from '../../../utils/filterValue'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import DifficultySection from './sections/DifficultySection'

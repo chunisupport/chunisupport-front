@@ -1,5 +1,5 @@
-import { JST_TIME_ZONE } from '../../../constants/dateTime'
 import type { MasterItemDTO, PlayerDataDifficulty, SongDTO } from '../../../types/api'
+import { formatJstDateTime } from '../../../utils/jstDateTime'
 
 /** 楽曲管理画面で編集できる通常譜面の難易度名 */
 export type EditableDifficultyName = PlayerDataDifficulty
@@ -10,31 +10,14 @@ export type EditableDifficultyName = PlayerDataDifficulty
  */
 export type DraftRequestResult<T> = { ok: true; request: T } | { ok: false; message: string }
 
-const dateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
-  year: 'numeric',
-  month: 'numeric',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-  timeZone: JST_TIME_ZONE,
-})
-
 /**
  * 更新日時を日本時間の表示文字列へ整形する。
  *
  * @param value ISO 形式などの日時文字列
  * @returns 表示用の日時。未設定または不正な値なら `-`
  */
-export const formatUpdatedAt = (value: string | null | undefined): string => {
-  if (!value) return '-'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '-'
-
-  return dateTimeFormatter.format(date)
-}
+export const formatUpdatedAt = (value: string | null | undefined): string =>
+  formatJstDateTime(value ?? null) ?? '-'
 
 /**
  * BASIC / ADVANCED は NOTES DESIGNER が存在しないため、入力対象外とする。

@@ -1,75 +1,75 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { checkForFrontendUpdate, reloadWhenNewFrontendIsAvailable } from './frontendVersion.ts'
+import { checkForFrontendUpdate, notifyWhenNewFrontendIsAvailable } from './frontendVersion.ts'
 
-test('公開中のビルドIDが実行中と異なる場合は一度だけ再読み込みする', async () => {
-  // Given: 新しいビルドが公開され、まだ自動再読み込みしていない。
+test('公開中のビルドIDが実行中と異なる場合は一度だけ更新を通知する', async () => {
+  // Given: 新しいビルドが公開され、まだ通知していない。
   const session = new Map<string, string>()
-  let reloadCount = 0
+  let notifyCount = 0
   const dependencies = {
     currentBuildId: 'current-build',
     fetchVersion: async () => ({ buildId: 'new-build' }),
     getSessionValue: (key: string) => session.get(key) ?? null,
     setSessionValue: (key: string, value: string) => session.set(key, value),
-    reload: () => {
-      reloadCount += 1
+    notifyUpdate: () => {
+      notifyCount += 1
     },
   }
 
   // When: 1回目のAPI失敗を通知する。
-  await reloadWhenNewFrontendIsAvailable(dependencies)
+  await notifyWhenNewFrontendIsAvailable(dependencies)
 
-  // Then: 初回の通知で再読み込みする。
-  assert.equal(reloadCount, 1)
+  // Then: 初回のAPI失敗で更新を通知する。
+  assert.equal(notifyCount, 1)
 
   // When: 同じセッションで2回目のAPI失敗を通知する。
-  await reloadWhenNewFrontendIsAvailable(dependencies)
+  await notifyWhenNewFrontendIsAvailable(dependencies)
 
-  // Then: 同じ公開ビルドへは再度読み込まない。
-  assert.equal(reloadCount, 1)
+  // Then: 同じ公開ビルドは再度通知しない。
+  assert.equal(notifyCount, 1)
 })
 
-test('同一セッションでも未確認の公開ビルドへは再度読み込む', async () => {
-  // Given: ビルドAからBへの自動更新を同一セッションですでに実施している。
+test('同一セッションでも未通知の公開ビルドは再度通知する', async () => {
+  // Given: ビルドBの公開を同一セッションですでに通知している。
   const session = new Map<string, string>()
   let publishedBuildId = 'build-b'
-  let reloadCount = 0
+  let notifyCount = 0
   const createDependencies = (currentBuildId: string) => ({
     currentBuildId,
     fetchVersion: async () => ({ buildId: publishedBuildId }),
     getSessionValue: (key: string) => session.get(key) ?? null,
     setSessionValue: (key: string, value: string) => session.set(key, value),
-    reload: () => {
-      reloadCount += 1
+    notifyUpdate: () => {
+      notifyCount += 1
     },
   })
-  await reloadWhenNewFrontendIsAvailable(createDependencies('build-a'))
+  await notifyWhenNewFrontendIsAvailable(createDependencies('build-a'))
 
-  // When: 再読み込み後にビルドCが公開され、ビルドBから更新確認する。
+  // When: ビルドBへ更新した後にビルドCが公開され、ビルドBから更新確認する。
   publishedBuildId = 'build-c'
-  await reloadWhenNewFrontendIsAvailable(createDependencies('build-b'))
+  await notifyWhenNewFrontendIsAvailable(createDependencies('build-b'))
 
-  // Then: 確認済みのビルドBではなく、未確認のビルドCへ再度読み込む。
-  assert.equal(reloadCount, 2)
+  // Then: 通知済みのビルドBではなく、未通知のビルドCを再度通知する。
+  assert.equal(notifyCount, 2)
 })
 
-test('公開中のビルドIDが実行中と同じ場合は再読み込みしない', async () => {
+test('公開中のビルドIDが実行中と同じ場合は通知しない', async () => {
   // Given: 実行中と同じビルドが公開されている。
-  let reloadCount = 0
+  let notifyCount = 0
 
   // When: API失敗を通知する。
-  await reloadWhenNewFrontendIsAvailable({
+  await notifyWhenNewFrontendIsAvailable({
     currentBuildId: 'same-build',
     fetchVersion: async () => ({ buildId: 'same-build' }),
     getSessionValue: () => null,
     setSessionValue: () => undefined,
-    reload: () => {
-      reloadCount += 1
+    notifyUpdate: () => {
+      notifyCount += 1
     },
   })
 
-  // Then: 再読み込みしない。
-  assert.equal(reloadCount, 0)
+  // Then: 通知しない。
+  assert.equal(notifyCount, 0)
 })
 
 test('windowがない環境ではバージョン確認を何もせず解決すること', async () => {
@@ -88,10 +88,11 @@ test('windowがない環境ではバージョン確認を何もせず解決す�
   }
 })
 
-test('公開中バージョンのbuildIdが文字列なら再読み込みに使うこと', async () => {
+test('公開中バージョンのbuildIdが文字列なら通知済みとして記録し、再読み込みはしないこと', async () => {
   // Given: 公開中のversion.jsonが文字列のbuildIdを返す。
   const originalFetch = globalThis.fetch
   const originalWindow = globalThis.window
+  const session = new Map<string, string>()
   let reloadCount = 0
   globalThis.fetch = async () =>
     new Response(JSON.stringify({ buildId: 'new-build' }), { status: 200 })
@@ -104,8 +105,8 @@ test('公開中バージョンのbuildIdが文字列なら再読み込みに使�
         },
       },
       sessionStorage: {
-        getItem: () => null,
-        setItem: () => undefined,
+        getItem: (key: string) => session.get(key) ?? null,
+        setItem: (key: string, value: string) => session.set(key, value),
       },
     },
   })
@@ -114,8 +115,9 @@ test('公開中バージョンのbuildIdが文字列なら再読み込みに使�
     // When: フロントエンド更新を確認する。
     await checkForFrontendUpdate()
 
-    // Then: 文字列のbuildIdを正しい形式として再読み込みする。
-    assert.equal(reloadCount, 1)
+    // Then: 公開ビルドを通知済みとして記録し、入力を消さないよう自動では再読み込みしない。
+    assert.deepEqual([...session.values()], ['new-build'])
+    assert.equal(reloadCount, 0)
   } finally {
     globalThis.fetch = originalFetch
     Object.assign(globalThis, { window: originalWindow })
@@ -124,21 +126,21 @@ test('公開中バージョンのbuildIdが文字列なら再読み込みに使�
 
 test('バージョン情報を取得できない場合は既存エラー処理へフォールバックする', async () => {
   // Given: バージョン情報の取得も失敗する。
-  let reloadCount = 0
+  let notifyCount = 0
 
-  // When & Then: エラーを外へ伝播せず、再読み込みもしない。
+  // When & Then: エラーを外へ伝播せず、通知もしない。
   await assert.doesNotReject(
-    reloadWhenNewFrontendIsAvailable({
+    notifyWhenNewFrontendIsAvailable({
       currentBuildId: 'current-build',
       fetchVersion: async () => {
         throw new Error('network error')
       },
       getSessionValue: () => null,
       setSessionValue: () => undefined,
-      reload: () => {
-        reloadCount += 1
+      notifyUpdate: () => {
+        notifyCount += 1
       },
     })
   )
-  assert.equal(reloadCount, 0)
+  assert.equal(notifyCount, 0)
 })

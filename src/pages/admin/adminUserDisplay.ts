@@ -1,27 +1,16 @@
-import { JST_TIME_ZONE } from '../../constants/dateTime'
 import type { AccountType, AdminUserListResponse } from '../../types/api'
+import { formatJstDateTime } from '../../utils/jstDateTime'
 
 type AdminUserListEditableFields = Pick<AdminUserListResponse, 'account_type' | 'is_suspicious'>
 
-const adminUserDateTimeFormatter = new Intl.DateTimeFormat('ja-JP', {
-  year: 'numeric',
-  month: 'numeric',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-  timeZone: JST_TIME_ZONE,
-})
-
-export const formatAdminUserDateTime = (value: string | null): string => {
-  if (!value) return '-'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '-'
-
-  return adminUserDateTimeFormatter.format(date)
-}
+/**
+ * 管理画面の日時をJSTの秒まで表示する。
+ *
+ * @param value - API が返す日時。未設定の場合は null。
+ * @returns `YYYY/MM/DD hh:mm:ss` 形式の日時。未設定または不正な値ならハイフン。
+ */
+export const formatAdminUserDateTime = (value: string | null): string =>
+  formatJstDateTime(value) ?? '-'
 
 /**
  * APIが返すアカウント種別を一覧表示用の文字列へ変換する。

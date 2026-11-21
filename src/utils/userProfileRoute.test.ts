@@ -4,7 +4,6 @@ import {
   buildUserOverPowerPagePath,
   buildUserProfilePagePath,
   buildUserStatsPagePath,
-  isRecordPageQuery,
   resolveOverPowerSubPage,
   resolveProfilePageQuery,
 } from './userProfileRoute.ts'
@@ -41,15 +40,6 @@ test('page パスパラメータが許可値ならそのまま返す', () => {
 
 test('page パスパラメータが無効でもクエリパラメータが有効ならクエリを採用する', () => {
   assert.equal(resolveProfilePageQuery(undefined, 'record_we'), 'record_we')
-})
-
-test('record 系ページかどうかを判定できる', () => {
-  assert.equal(isRecordPageQuery('record_normal'), true)
-  assert.equal(isRecordPageQuery('record_we'), true)
-  assert.equal(isRecordPageQuery('record_course'), true)
-  assert.equal(isRecordPageQuery('rating_best'), false)
-  assert.equal(isRecordPageQuery('overpower'), false)
-  assert.equal(isRecordPageQuery(undefined), false)
 })
 
 test('デフォルトタブはユーザールート直下に正規化する', () => {
