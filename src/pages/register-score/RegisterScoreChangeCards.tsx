@@ -6,6 +6,7 @@ import Play from 'lucide-solid/icons/play'
 import { createMemo, createSignal, onCleanup, Show } from 'solid-js'
 import { AppIconButton } from '../../components/common/AppButton'
 import { showErrorToast, showSuccessToast } from '../../components/common/AppToast'
+import { CourseClassMark } from '../../components/common/course/CourseRecordParts'
 import { LampPlaceholderBadge } from '../../components/common/record/RecordBadges'
 import {
   RecordFullChainCell,
@@ -28,8 +29,6 @@ import {
   REGISTER_SCORE_SHOW_SONG_OP_PERCENT,
 } from './constants'
 import {
-  courseClassBadgeClass,
-  formatCourseClass,
   formatRegisterScoreChangeDelta,
   getRegisterScoreDifficultyBadgeClass,
   getRegisterScoreShortDifficultyLabel,
@@ -64,9 +63,6 @@ const SCORE_CHANGE_SCORE_GRID_CLASS =
   'mt-1.5 flex items-center justify-around gap-x-2 text-lg leading-6'
 /** コース差分のスコアとランプ表示領域を固定幅にするクラス */
 const COURSE_CHANGE_SCORE_VALUE_CLASS = 'w-[95px] shrink-0'
-/** コースクラスバッジの共通レイアウトクラス */
-const COURSE_CLASS_BADGE_LAYOUT_CLASS =
-  'inline-flex min-w-6 shrink-0 items-center justify-center rounded font-sans text-xs font-bold uppercase leading-5'
 
 /**
  * 曲名をクリップボードへコピーし、結果をトーストで通知する。
@@ -382,13 +378,7 @@ export const RegisterScoreCourseChangeCard = (props: {
       }`}
     >
       <div class="flex min-w-0 items-center gap-2 pr-10 text-base">
-        <span
-          class={`${COURSE_CLASS_BADGE_LAYOUT_CLASS} whitespace-nowrap ${courseClassBadgeClass(
-            props.change.course_class
-          )}`}
-        >
-          {formatCourseClass(props.change.course_class)}
-        </span>
+        <CourseClassMark courseClass={props.change.course_class} />
         <h3 class="min-w-0 flex-1 truncate font-sans text-base font-bold">{props.courseTitle}</h3>
       </div>
       <div class={SCORE_CHANGE_SCORE_GRID_CLASS}>

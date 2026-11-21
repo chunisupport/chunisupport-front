@@ -109,18 +109,6 @@ const buildCourseFormValue = (course: ManagedCourseDTO | null): CourseFormValue 
 })
 
 /**
- * エンブレムと円形バッジの中心位置を揃えてクラスを表示する。
- *
- * @param props - 表示するコースクラス。
- * @returns 固定幅のクラス表示。
- */
-const CourseClassFrame: Component<{ courseClass: string }> = (props) => (
-  <span class="flex aspect-[60/46] h-8 shrink-0 items-center justify-center">
-    <CourseClassMark courseClass={props.courseClass} size="sm" />
-  </span>
-)
-
-/**
  * プルダウン内でコースクラスのアイコンとラベルを左揃えで表示する。
  *
  * @param props - 表示するコースクラス。
@@ -729,7 +717,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
                     >
                       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div class="flex min-w-0 items-center gap-3">
-                          <CourseClassFrame courseClass={course.class} />
+                          <CourseClassMark courseClass={course.class} />
                           <div class="min-w-0 flex-1 space-y-1">
                             <div class="flex flex-wrap items-center gap-2">
                               <h2 class="break-words font-sans text-base font-semibold text-text">

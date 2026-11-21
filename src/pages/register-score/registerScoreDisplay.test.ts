@@ -6,10 +6,9 @@ import type {
   PlayerDataRecordState,
   PlayerDataSongRecordChange,
 } from '../../types/api'
+import { courseClassBadgeClass, formatCourseClass } from '../../utils/courseClassDisplay.ts'
 import { REGISTER_SCORE_INCREASE_TEXT_CLASS } from './constants.ts'
 import {
-  courseClassBadgeClass,
-  formatCourseClass,
   formatRegisterScoreChangeDelta,
   formatRegisterScoreImportedAt,
   formatRegisterScoreNullableRating,
