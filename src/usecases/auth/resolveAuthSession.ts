@@ -1,6 +1,7 @@
 import {
   clearAuthenticatedUser,
   getAuthStatus,
+  getSessionRevision,
   setAuthenticatedUser,
   setAuthSessionError,
 } from '../../stores/authSession.ts'
@@ -10,6 +11,8 @@ export type AuthResolution = 'authenticated' | 'unauthenticated' | 'error'
 export type FetchCurrentUser = () => Promise<UserDTO>
 type ResolveAuthSessionOptions = {
   forceRefresh?: boolean
+  /** 自分の応答が破棄された場合に、遷移など要求固有の後続処理を取り消す。 */
+  onSuperseded?: () => void
 }
 
 // fetchWithAuth が付与する status/code プロパティで 401 系エラーを判定する
@@ -27,44 +30,56 @@ const isAuthError = (error: unknown): boolean => {
 }
 
 let inFlightResolution: Promise<AuthResolution> | null = null
+let inFlightRevision = 0
 
-const resolveWithFetcher = async (fetchCurrentUser: FetchCurrentUser): Promise<AuthResolution> => {
-  try {
-    const user = await fetchCurrentUser()
-    setAuthenticatedUser(user)
-    return 'authenticated'
-  } catch (error) {
-    if (isAuthError(error)) {
-      clearAuthenticatedUser()
-      return 'unauthenticated'
-    }
-    // ネットワーク障害・5xx などの一時的なエラーはセッション状態をクリアしない
-    setAuthSessionError()
-    return 'error'
-  }
-}
-
+/** 認証確認を共有し、強制再確認やログアウト以前の応答を破棄する。
+ * @param fetchCurrentUser - 本人情報の取得処理。
+ * @param options - 強制再確認の指定。
+ * @returns 最新の認証判定。
+ */
 export const resolveAuthSession = (
   fetchCurrentUser: FetchCurrentUser,
   options: ResolveAuthSessionOptions = {}
 ): Promise<AuthResolution> => {
+  const revision = getSessionRevision()
   if (!options.forceRefresh) {
-    const authStatus = getAuthStatus()
-    if (authStatus === 'authenticated' || authStatus === 'unauthenticated') {
-      return Promise.resolve(authStatus)
-    }
-
-    if (inFlightResolution) {
-      return inFlightResolution
-    }
+    if (inFlightResolution && inFlightRevision === revision) return inFlightResolution
+    const status = getAuthStatus()
+    if (status === 'authenticated' || status === 'unauthenticated') return Promise.resolve(status)
   }
 
-  const resolution = resolveWithFetcher(fetchCurrentUser).finally(() => {
-    if (inFlightResolution === resolution) {
-      inFlightResolution = null
-    }
-  })
+  const isCurrent = () => inFlightResolution === resolution && getSessionRevision() === revision
+  const latest = (): AuthResolution | Promise<AuthResolution> => {
+    options.onSuperseded?.()
+    if (inFlightResolution && inFlightResolution !== resolution) return inFlightResolution
+    const status = getAuthStatus()
+    return status === 'unknown' ? 'error' : status
+  }
 
+  const resolution: Promise<AuthResolution> = Promise.resolve()
+    .then(async (): Promise<AuthResolution> => {
+      try {
+        const user = await fetchCurrentUser()
+        if (!isCurrent()) return latest()
+        setAuthenticatedUser(user)
+        return 'authenticated'
+      } catch (error) {
+        if (!isCurrent()) return latest()
+        if (isAuthError(error)) {
+          clearAuthenticatedUser()
+          return 'unauthenticated'
+        }
+        setAuthSessionError()
+        return 'error'
+      }
+    })
+    .finally(() => {
+      if (inFlightResolution === resolution) {
+        inFlightResolution = null
+      }
+    })
+
+  inFlightRevision = revision
   inFlightResolution = resolution
   return resolution
 }

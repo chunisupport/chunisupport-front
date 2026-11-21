@@ -30,6 +30,7 @@ export const REGISTER_SCORE_COPY = {
   imagePreviewDialogDescription: '現在の表示設定で画像を作成します。',
   preparingImagePreview: 'プレビューを準備中',
   imagePreviewAlt: '更新差分の画像プレビュー',
+  masterLoadError: '画像に必要な楽曲・コース情報を取得できませんでした。',
   imagePreviewError: 'プレビューの作成に失敗しました。',
   retryImagePreview: '再試行',
   closeImagePreview: '閉じる',

@@ -61,6 +61,8 @@ const StaffLogin = () => {
    * @returns フォーム付近に表示するエラーメッセージ。
    */
   const handleFailure = async (error: unknown): Promise<string> => {
+    if (error instanceof DOMException && error.name === 'AbortError')
+      return toUserFriendlyErrorMessage(error, STAFF_LOGIN_COPY.error)
     try {
       await signOut(auth)
     } catch {

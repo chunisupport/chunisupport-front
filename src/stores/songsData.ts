@@ -26,7 +26,7 @@ const invalidateSongsDataCache = async (): Promise<void> => {
  * @returns 通常楽曲と WORLD'S END 楽曲の共有 resource と操作関数。
  */
 const createSongsStore = () => {
-  let songsRevalidationFailed = false
+  const [songsRevalidationFailed, setSongsRevalidationFailed] = createSignal(false)
   const [songsRequested, setSongsRequested] = createSignal(false)
   const [worldsendSongsRequested, setWorldsendSongsRequested] = createSignal(false)
   const [songsMustRefresh, setSongsMustRefresh] = createSignal(false)
@@ -38,24 +38,25 @@ const createSongsStore = () => {
   >(
     () => (songsRequested() ? true : undefined),
     async (_requested, info) => {
-      songsRevalidationFailed = false
       let cachedResponse: { songs: SongDTO[] } | undefined
-      const response = await fetchAllSongsWithCache({
-        forceRefresh: untrack(songsMustRefresh) || Boolean(info.refetching),
-        onCached: (cached) => {
-          cachedResponse = cached
-          mutateSongs(cached)
-        },
-      }).catch((error: unknown) => {
-        // 再検証失敗時も表示中のキャッシュを保つ。メンテナンスは可用性ゲートが処理する。
-        if (cachedResponse) {
-          songsRevalidationFailed = true
-          return cachedResponse
-        }
-        throw error
-      })
-      setSongsMustRefresh(false)
-      return response
+      try {
+        const response = await fetchAllSongsWithCache({
+          forceRefresh: untrack(songsMustRefresh) || Boolean(info.refetching),
+          onCached: (cached) => {
+            cachedResponse = cached
+            mutateSongs(cached)
+          },
+        })
+        setSongsRevalidationFailed(false)
+        setSongsMustRefresh(false)
+        return response
+      } catch (error) {
+        // 既存の表示を維持しても、再検証が必要な共有画像は生成しない。
+        if (!cachedResponse) throw error
+        setSongsRevalidationFailed(true)
+        setSongsMustRefresh(false)
+        return cachedResponse
+      }
     }
   )
   const [worldsendSongsResponse, { refetch: refetchWorldsendSongs }] = createResource<
@@ -76,7 +77,7 @@ const createSongsStore = () => {
   const ensureSongsLoaded = (): void => {
     if (
       untrack(() => songsResponse.state) === 'errored' ||
-      (songsRevalidationFailed && !untrack(() => songsResponse.loading))
+      (untrack(songsRevalidationFailed) && !untrack(() => songsResponse.loading))
     ) {
       void refetchSongs(false)
       return
@@ -138,6 +139,7 @@ const createSongsStore = () => {
 
   return {
     songCount,
+    songsRevalidationFailed,
     songsResponse,
     worldsendSongsResponse,
     ensureSongsLoaded,

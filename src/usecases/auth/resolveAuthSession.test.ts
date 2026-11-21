@@ -11,6 +11,40 @@ import {
 import type { UserDTO } from '../../types/api.ts'
 import { resolveAuthSession } from './resolveAuthSession.ts'
 
+/** テスト側で本人確認の応答順を指定する。 */
+const delayedUser = () => {
+  let resolve!: (user: UserDTO) => void
+  const promise = new Promise<UserDTO>((done) => {
+    resolve = done
+  })
+  return { promise, resolve }
+}
+
+test('強制再確認の401は遅れて返った旧ユーザーで上書きされない', async () => {
+  resetAuthSession()
+  const old = delayedUser()
+  const first = resolveAuthSession(() => old.promise)
+  await resolveAuthSession(
+    async () => {
+      throw Object.assign(new Error(), { status: 401 })
+    },
+    { forceRefresh: true }
+  )
+  old.resolve(createUser())
+  assert.equal(await first, 'unauthenticated')
+  assert.equal(getAuthenticatedUser(), null)
+})
+
+test('本人確認中にログアウトしたら成功応答でも復帰しない', async () => {
+  resetAuthSession()
+  const old = delayedUser()
+  const pending = resolveAuthSession(() => old.promise)
+  clearAuthenticatedUser()
+  assert.equal(await resolveAuthSession(() => assert.fail()), 'unauthenticated')
+  old.resolve(createUser())
+  assert.equal(await pending, 'unauthenticated')
+})
+
 const createUser = (): UserDTO => ({
   username: 'alice',
   account_type: 'PLAYER',

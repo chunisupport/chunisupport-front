@@ -135,6 +135,7 @@ resolveUpdatedAt(Response.json({ updated_at: 'new' }))
 await waitUntil(() => !store.songsResponse.loading)
 assert.deepEqual(store.songsResponse().songs, [${shouldFail ? 'cachedSong' : 'fetchedSong'}])
 assert.equal(store.songsResponse.error, undefined)
+assert.equal(store.songsRevalidationFailed(), ${shouldFail})
 ${
   shouldFail
     ? `
@@ -143,6 +144,7 @@ globalThis.fetch = async () => Response.json({ songs: [fetchedSong] })
 store.ensureSongsLoaded()
 await waitUntil(() => !store.songsResponse.loading)
 // Then: 背景再検証の失敗からも最新データへ復帰する。
+assert.equal(store.songsRevalidationFailed(), false)
 assert.deepEqual(store.songsResponse().songs, [fetchedSong])
 `
     : ''
