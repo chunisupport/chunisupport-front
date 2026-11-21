@@ -7,7 +7,7 @@ import { COURSE_PAGE_COPY } from '../../constants'
 const COURSE_TRACK_NUMBERS = Array.from({ length: COURSE_TRACK_COUNT }, (_, index) => index + 1)
 
 /**
- * コースを構成する3曲分の配置スペースを縦並びで表示する。
+ * コースを構成する3曲分の配置スペースを表示する。
  * 収録曲マスタが未連携の間は、ジャケットと楽曲情報が入るプレースホルダーカードを3枠並べる。
  *
  * @returns 3曲分のトラックカード領域。
@@ -15,7 +15,7 @@ const COURSE_TRACK_NUMBERS = Array.from({ length: COURSE_TRACK_COUNT }, (_, inde
 const CourseTracksSection = () => (
   <section aria-label={COURSE_PAGE_COPY.tracks.heading}>
     <h2 class="mb-3 text-lg font-semibold">{COURSE_PAGE_COPY.tracks.heading}</h2>
-    <ol class="grid grid-cols-1 gap-3">
+    <ol class="grid grid-cols-1 gap-3 md:grid-cols-3">
       <For each={COURSE_TRACK_NUMBERS}>
         {(trackNumber) => (
           <li class="flex items-center gap-3 rounded-lg border border-dashed border-border bg-surface p-3">
