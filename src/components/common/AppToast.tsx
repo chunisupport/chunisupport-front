@@ -108,7 +108,15 @@ export const showAppToast = (options: AppToastOptions): number =>
           </Toast.Description>
           <Show when={options.action}>
             {(action) => (
-              <AppButton variant="primary" size="xs" onClick={() => action().onClick()}>
+              <AppButton
+                variant="primary"
+                size="xs"
+                onClick={(event: MouseEvent) => {
+                  // スワイプで閉じた直後のクリックは Kobalte が取り消すため、操作として扱わない。
+                  if (event.defaultPrevented) return
+                  action().onClick()
+                }}
+              >
                 {action().label}
               </AppButton>
             )}

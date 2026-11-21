@@ -26,12 +26,14 @@ export const fetchWorldsendSongsWithCache = async (
   options: FetchWorldsendSongsWithCacheOptions = {}
 ): Promise<WorldsendSongsResponse> => {
   const cacheGeneration = getSongCacheGeneration()
-  const [songsCacheState, cachedSongs] = await Promise.all([
-    fetchSongsUpdatedAt().catch(() => undefined),
-    options.forceRefresh ? null : readCachedWorldsendSongsSnapshot().catch(() => null),
-  ])
+  const cachedSongsRequest = options.forceRefresh
+    ? null
+    : readCachedWorldsendSongsSnapshot().catch(() => null)
+  const songsCacheState = await fetchSongsUpdatedAt().catch(() => undefined)
+  // 更新確認の失敗時は、IndexedDB が開けず止まっている場合に備えて読み込みを待たない。
   if (!songsCacheState) return fetchWorldsendSongs()
 
+  const cachedSongs = await cachedSongsRequest
   const songsRevision = songsCacheState.revision
   if (cachedSongs?.revision === songsRevision && cacheGeneration === getSongCacheGeneration()) {
     return { songs: cachedSongs.songs }
