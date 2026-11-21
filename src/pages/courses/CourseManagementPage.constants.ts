@@ -1,17 +1,21 @@
 /** コース管理画面で使用する表示文言 */
 export const COURSE_MANAGEMENT_COPY = {
-  pageDescription: 'コース一覧とコース名、クラスを確認・編集します。',
   createButton: 'コースを追加',
   createDialogTitle: 'コースを追加',
-  editDialogTitle: 'コースを編集',
-  createDialogDescription: '公式ID、コース名、クラスを入力します。',
-  editDialogDescription: 'コース名とクラスを更新します。公式IDは変更できません。',
-  displayIdLabel: 'id',
-  idxLabel: 'idx',
+  editDialogTitle: '基本情報を編集',
+  createDialogDescription: '公式ID (idx)、コース名、クラスを入力します。',
+  editDialogDescription: 'コース名とクラスを更新します。',
+  displayIdLabel: '表示ID',
+  idxLabel: '公式ID (idx)',
   nameLabel: 'コース名',
   classLabel: 'クラス',
-  statusLabel: '状態',
-  actionsHeading: '操作',
+  allClassesOption: 'すべてのクラス',
+  classFilterLabel: 'クラスで絞り込む',
+  statusFilterLabel: '構成状態で絞り込む',
+  statusFilterAll: 'すべて',
+  statusFilterUnconfigured: '未登録',
+  statusFilterConfigured: '登録済み',
+  statusFilterDeleted: '削除済み',
   classPlaceholder: '選択してください',
   searchPlaceholder: 'コース名・idx・idで検索',
   searchLabel: 'コース検索',
@@ -19,13 +23,18 @@ export const COURSE_MANAGEMENT_COPY = {
   createSubmit: '追加する',
   saveSubmit: '保存する',
   saving: '保存中...',
-  editAction: '編集',
+  editBasicInfoAction: '基本情報',
+  editTracksAction: '構成編集',
   deleteAction: '削除',
   restoreAction: '復元',
-  activeStatus: '有効',
+  unconfiguredStatus: '構成未登録',
   deletedStatus: '削除済み',
+  unconfiguredSummary: '構成未登録',
+  totalCountSuffix: '件',
+  showingCountPrefix: '表示中',
   emptyState: '登録されているコースがありません。',
-  emptySearchState: '一致するコースが見つかりません。',
+  emptySearchState: '条件に一致するコースが見つかりません。',
+  resetFiltersButton: '絞り込みを解除',
   createSuccess: 'コースを追加しました。',
   createError: 'コースの追加に失敗しました。',
   editSuccess: 'コースを更新しました。',
@@ -46,12 +55,12 @@ export const COURSE_INPUT_LIMITS = {
 } as const
 
 /**
- * コース編集ボタンのアクセシブルなラベルを生成する。
+ * コース基本情報編集ボタンのアクセシブルなラベルを生成する。
  *
  * @param courseName - 対象コース名。
  * @returns スクリーンリーダー向けの編集ラベル。
  */
-export const formatCourseEditLabel = (courseName: string): string => `${courseName}を編集`
+export const formatCourseEditLabel = (courseName: string): string => `${courseName}の基本情報を編集`
 
 /**
  * コース削除ボタンのアクセシブルなラベルを生成する。

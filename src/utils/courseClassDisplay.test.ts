@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { courseClassBadgeClass, resolveCourseClassEmblemName } from './courseClassDisplay.ts'
+import {
+  courseClassBadgeClass,
+  formatCourseClassLabel,
+  resolveCourseClassEmblemName,
+} from './courseClassDisplay.ts'
 
 test('Ⅰ〜Ⅴと∞のコースクラスはエンブレム名へ変換されること', () => {
   // Given: エンブレム表示対象のコースクラス（大文字を含む）。
@@ -43,4 +47,15 @@ test('EXと未対応値のコースクラスはエンブレム対象外になる
 
   // Then: すべて null が返る。
   assert.deepEqual(result, [null, null, null])
+})
+
+test('ラベル表示用のコースクラス変換ではextraのみEXTRAを返すこと', () => {
+  // Given: 全コースクラスと大文字のEXTRAおよび未対応値。
+  const courseClasses = ['1', '2', '3', '4', '5', 'inf', 'extra', 'EXTRA', 'unknown']
+
+  // When: ラベル表示用に変換する。
+  const result = courseClasses.map(formatCourseClassLabel)
+
+  // Then: extra系はEXTRA、それ以外は短縮表記または元の値が返る。
+  assert.deepEqual(result, ['I', 'II', 'III', 'IV', 'V', '∞', 'EXTRA', 'EXTRA', 'unknown'])
 })

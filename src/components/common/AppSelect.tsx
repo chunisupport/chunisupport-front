@@ -57,6 +57,8 @@ export type AppSelectProps<T> = KobalteSingleSelectProps<T> & {
   contentClass?: string
   /** Content の z-index を調整する Tailwind クラス */
   contentZIndexClass?: string
+  /** ダイアログ内から選択肢を開く場合のポータル配置先。 */
+  portalMount?: HTMLElement
   /** Listbox に追加で適用する Tailwind クラス */
   listboxClass?: string
 }
@@ -146,6 +148,7 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
     'itemClass',
     'contentClass',
     'contentZIndexClass',
+    'portalMount',
     'listboxClass',
   ])
   const formatLabel = (option: T): JSX.Element =>
@@ -211,7 +214,7 @@ export const AppSelect = <T,>(props: AppSelectProps<T>): JSX.Element => {
           </Select.ErrorMessage>
         )}
       </Show>
-      <Select.Portal>
+      <Select.Portal mount={local.portalMount}>
         <Select.Content
           ref={setContentRef}
           class={`${local.contentZIndexClass ?? DEFAULT_APP_SELECT_CONTENT_Z_INDEX_CLASS} ${

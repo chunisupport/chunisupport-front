@@ -24,6 +24,12 @@ export const COURSE_PAGE_COPY = {
     heading: 'コース楽曲',
     trackPrefix: 'TRACK',
     unregistered: '未登録',
+    noCandidates: '現在選曲できる譜面がありません。',
+    unavailableChart: '現在選曲できない登録譜面',
+    candidates: '候補譜面',
+    closeCandidates: '閉じる',
+    ownBest: '自己ベスト',
+    bestLoadError: '譜面の自己ベストを取得できませんでした。',
   },
   statsHeading: 'プレイヤー統計',
   statsDescription:

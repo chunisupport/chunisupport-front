@@ -1,7 +1,9 @@
 import { API_BASE_URL } from '../config'
 import type {
+  CourseDetailDTO,
   CourseScoreHistoryResponseDTO,
   CourseStatsResponseDTO,
+  CourseTrackDTO,
   CreateCourseRequestDTO,
   ManagedCourseDTO,
   ManagedCoursesResponse,
@@ -19,10 +21,13 @@ const INTERNAL_EDITOR_COURSES_PATH = `${API_BASE_URL}/internal/editor/courses`
 /**
  * 削除済みを含む編集者向けコース一覧を取得する。
  *
+ * @param signal - 中断シグナル。
  * @returns コース一覧レスポンス。
  */
-export const fetchManagedCourses = async (): Promise<ManagedCoursesResponse> => {
-  const response = await fetchWithAuth(INTERNAL_EDITOR_COURSES_PATH)
+export const fetchManagedCourses = async (
+  signal?: AbortSignal
+): Promise<ManagedCoursesResponse> => {
+  const response = await fetchWithAuth(INTERNAL_EDITOR_COURSES_PATH, { signal })
 
   return response.json()
 }
@@ -129,4 +134,41 @@ export const fetchCourseStats = async (displayId: string): Promise<CourseStatsRe
   )
 
   return response.json()
+}
+
+/**
+ * コースの詳細と現在の候補譜面を取得する。
+ *
+ * @param displayId - コースの公開ID。
+ * @param signal - 中断シグナル。
+ * @returns コース詳細。
+ */
+export const fetchCourseDetail = async (
+  displayId: string,
+  signal?: AbortSignal
+): Promise<CourseDetailDTO> => {
+  const response = await fetchWithAuth(
+    `${INTERNAL_COURSES_PATH}/${encodeURIComponent(displayId)}`,
+    { signal }
+  )
+  return response.json()
+}
+
+/**
+ * コースの全トラックを一括更新する。
+ *
+ * @param displayId - 更新対象のコースの公開ID。
+ * @param tracks - 登録する3枠。空配列で構成をクリアする。
+ * @returns 更新完了時に解決するPromise。
+ */
+export const replaceCourseTracks = async (
+  displayId: string,
+  tracks: readonly CourseTrackDTO[]
+): Promise<void> => {
+  await fetchWithAuth(`${INTERNAL_COURSES_PATH}/${encodeURIComponent(displayId)}/tracks`, {
+    method: 'PUT',
+    requireAuthentication: true,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tracks }),
+  })
 }

@@ -16,7 +16,7 @@
   --color-primary-900: var(--cs-color-accent-900);
 
   /* フォント: 装飾用（スコア表示など） */
-  --font-oswald: "Oswald", sans-serif;
+  --font-oswald: "Oswald", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
   /* フォント: 数値表示用 */
   --font-jost: "Jost", "Noto Sans", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
   /* フォント: 本文用 */

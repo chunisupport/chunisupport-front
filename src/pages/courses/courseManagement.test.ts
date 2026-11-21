@@ -3,6 +3,7 @@ import test from 'node:test'
 import type { ManagedCourseDTO } from '../../types/api.ts'
 import {
   filterManagedCourses,
+  hasCourseTracks,
   isManagedCourseDeleted,
   sortManagedCourses,
 } from './courseManagement.ts'
@@ -92,4 +93,52 @@ test('filterManagedCoursesはコース名・idx・idで絞り込むこと', () =
     ['cccccccccccccccc']
   )
   assert.deepEqual(unmatched, [])
+})
+
+test('filterManagedCoursesはクラスと構成状態でも絞り込めること', () => {
+  // Given: 構成登録済み・未登録・削除済みが混在するコース一覧
+  const sample: ManagedCourseDTO[] = [
+    {
+      id: 'configured-1',
+      idx: '1',
+      name: '登録済みコース',
+      class: '1',
+      tracks: [
+        { track_no: 1, selection_type: 'FIXED', charts: [{ id: 's1', difficulty: 'MASTER' }] },
+      ],
+    },
+    {
+      id: 'unconfigured-2',
+      idx: '2',
+      name: '未登録コース',
+      class: '2',
+    },
+    {
+      id: 'deleted-1',
+      idx: '3',
+      name: '削除済みコース',
+      class: '1',
+      is_deleted: true,
+    },
+  ]
+
+  // When & Then
+  assert.equal(hasCourseTracks(sample[0]), true)
+  assert.equal(hasCourseTracks(sample[1]), false)
+  assert.deepEqual(
+    filterManagedCourses(sample, '', { courseClass: '1' }).map((c) => c.id),
+    ['configured-1', 'deleted-1']
+  )
+  assert.deepEqual(
+    filterManagedCourses(sample, '', { status: 'configured' }).map((c) => c.id),
+    ['configured-1']
+  )
+  assert.deepEqual(
+    filterManagedCourses(sample, '', { status: 'unconfigured' }).map((c) => c.id),
+    ['unconfigured-2']
+  )
+  assert.deepEqual(
+    filterManagedCourses(sample, '', { status: 'deleted' }).map((c) => c.id),
+    ['deleted-1']
+  )
 })

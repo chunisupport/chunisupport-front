@@ -1212,6 +1212,8 @@ export interface CourseDTO {
   name: string
   /** コースクラス */
   class: string
+  /** コース一覧の登録済みトラック。旧キャッシュでは省略される。 */
+  tracks?: CourseTrackDTO[]
 }
 
 /** コース統計のレーティング帯1件分 */
@@ -1236,6 +1238,48 @@ export interface CourseStatsResponseDTO {
   course_id: string
   /** レーティング帯別統計。未集計の場合は空配列 */
   stats: CourseStatsBandDTO[]
+}
+
+/** コースの選曲方式。 */
+export type CourseTrackSelectionType = 'FIXED' | 'RANDOM_FILTER' | 'RANDOM_POOL'
+
+/** コースのランダム選曲条件。両端の表示レベルを候補に含める。 */
+export interface CourseTrackFilterDTO {
+  min_level?: string
+  max_level?: string
+  genres?: string[]
+}
+
+/** コースで直接参照できる譜面の難易度。 */
+export type CourseChartDifficulty = PlayerDataDifficulty | 'WORLDSEND'
+
+/** コースで参照する譜面。idは楽曲の公開ID。 */
+export interface CourseChartRefDTO {
+  id: string
+  difficulty: CourseChartDifficulty
+}
+
+/** コース詳細の候補譜面。難易度に合わせて定数またはWORLD'S END固有情報を返す。 */
+export type CourseTrackCandidateDTO = { id: string; title: string; jacket: string | null } & (
+  | { difficulty: PlayerDataDifficulty; const: number; is_const_unknown: boolean }
+  | {
+      difficulty: 'WORLDSEND'
+      attribute: string | null
+      level_star: number | null
+      notes: number | null
+    }
+)
+
+/** 一覧と更新APIで使う、登録済みトラックの定義。 */
+export type CourseTrackDTO = { track_no: number } & (
+  | { selection_type: 'FIXED'; charts: CourseChartRefDTO[] }
+  | { selection_type: 'RANDOM_FILTER'; filter: CourseTrackFilterDTO }
+  | { selection_type: 'RANDOM_POOL'; charts: CourseChartRefDTO[] }
+)
+
+/** 現在の候補を含む公開コース詳細。構成未登録の場合は空配列。 */
+export interface CourseDetailDTO extends CourseDTO {
+  tracks: (CourseTrackDTO & { candidates: CourseTrackCandidateDTO[] })[]
 }
 
 /** 編集者向けコースマスタ。削除済みを含み、更新日時を返す */

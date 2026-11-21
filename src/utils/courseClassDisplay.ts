@@ -12,11 +12,11 @@ export type CourseClassOption = {
 
 /** コースクラスのAPI値と表示値の対応表 */
 const COURSE_CLASS_LABELS: Readonly<Record<CourseClassValue, string>> = {
-  '1': 'Ⅰ',
-  '2': 'Ⅱ',
-  '3': 'Ⅲ',
-  '4': 'Ⅳ',
-  '5': 'Ⅴ',
+  '1': 'I',
+  '2': 'II',
+  '3': 'III',
+  '4': 'IV',
+  '5': 'V',
   inf: '∞',
   extra: 'EX',
 }
@@ -50,6 +50,18 @@ const COURSE_CLASS_INF_BG_CLASS = 'bg-[image:var(--cs-color-course-class-inf-bg)
  */
 export const formatCourseClass = (courseClass: string): string =>
   COURSE_CLASS_LABELS[courseClass.toLowerCase() as CourseClassValue] ?? courseClass
+
+/**
+ * コースクラスのAPI値をラベル表示用の表記へ変換する。
+ * バッジ用の短縮表記とは異なり、extra は EXTRA として返す。
+ *
+ * @param courseClass - APIから返却されたコースクラス。
+ * @returns ラベル表示用のコースクラス。未対応値は元の値を返す。
+ */
+export const formatCourseClassLabel = (courseClass: string): string => {
+  if (courseClass.toLowerCase() === 'extra') return 'EXTRA'
+  return formatCourseClass(courseClass)
+}
 
 /**
  * コースクラスに応じたバッジ用Tailwindクラスを返す。

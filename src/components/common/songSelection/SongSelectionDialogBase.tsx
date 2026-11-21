@@ -95,7 +95,7 @@ type SongSelectionVirtualListProps<TItem> = {
  * @param props - 候補一覧、スクロール要素の取得処理、行の描画処理。
  * @returns 表示範囲付近の行だけを含む一覧。
  */
-const SongSelectionVirtualList = <TItem,>(
+export const SongSelectionVirtualList = <TItem,>(
   props: SongSelectionVirtualListProps<TItem>
 ): JSX.Element => {
   const rowVirtualizer = createVirtualizer<HTMLDivElement, HTMLLIElement>({
