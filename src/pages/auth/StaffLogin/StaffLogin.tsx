@@ -5,11 +5,12 @@ import { createSignal, Show } from 'solid-js'
 
 import { Loading } from '../../../components'
 import { AuthenticationForm } from '../../../components/auth/AuthenticationForm'
+import { AppButton } from '../../../components/common/AppButton'
 import { LOGIN_PATH } from '../../../constants/routes'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import useRedirectIfAuthenticated from '../../../hooks/useRedirectIfAuthenticated'
 import { auth } from '../../../lib/firebase'
-import { clearAuthenticatedUser } from '../../../stores/authSession'
+import { clearAuthenticatedUser, getAuthStatus } from '../../../stores/authSession'
 import type { UserDTO } from '../../../types/api'
 import { isUnregisteredLoginError, normalizeRedirectParam } from '../../../usecases/auth/loginFlow'
 import { loginWithPassword } from '../../../usecases/auth/loginWithPassword'
@@ -30,6 +31,10 @@ const StaffLogin = () => {
   const [email, setEmail] = createSignal('')
   const [password, setPassword] = createSignal('')
 
+  const [loginError, setLoginError] = createSignal('')
+  const [redirectError, setRedirectError] = createSignal('')
+  const [retrying, setRetrying] = createSignal(false)
+
   useDocumentTitle(STAFF_LOGIN_COPY.title)
 
   /**
@@ -39,6 +44,7 @@ const StaffLogin = () => {
    * @returns APIで検証済みのユーザー情報。
    */
   const login = async (token: string): Promise<UserDTO> => {
+    setLoginError('')
     try {
       return await loginWithPassword(email(), password(), token)
     } finally {
@@ -51,8 +57,14 @@ const StaffLogin = () => {
    *
    * @returns 遷移処理が完了した後に解決されるPromise。
    */
-  const handleSuccess = async (): Promise<void> =>
-    redirectAfterAuthentication(navigate, redirectParam())
+  const handleSuccess = async (): Promise<void> => {
+    try {
+      await redirectAfterAuthentication(navigate, redirectParam())
+    } catch (error) {
+      if (getAuthStatus() !== 'error' || isUnregisteredLoginError(error)) throw error
+      setRedirectError(toUserFriendlyErrorMessage(error, STAFF_LOGIN_COPY.redirectError))
+    }
+  }
 
   /**
    * ログイン失敗後のセッションを破棄し、登録画面へ遷移せずエラーを返す。
@@ -74,6 +86,19 @@ const StaffLogin = () => {
     return toUserFriendlyErrorMessage(error, STAFF_LOGIN_COPY.error)
   }
 
+  /** パスワード認証は繰り返さず本人確認だけを再試行する。 */
+  const retryRedirect = async (): Promise<void> => {
+    setRetrying(true)
+    try {
+      await handleSuccess()
+    } catch (error) {
+      setRedirectError('')
+      setLoginError(await handleFailure(error))
+    } finally {
+      setRetrying(false)
+    }
+  }
+
   return (
     <main class="min-h-dvh flex justify-center px-4 py-10">
       <div class="w-full max-w-md">
@@ -85,40 +110,59 @@ const StaffLogin = () => {
           </A>
         </div>
         <Show when={!isCheckingAuth()} fallback={<Loading />}>
-          <AuthenticationForm
-            methods={[{ id: STAFF_LOGIN_METHOD_ID, label: STAFF_LOGIN_COPY.submit, login }]}
-            onSuccess={handleSuccess}
-            onFailure={handleFailure}
-            submittingLabel={STAFF_LOGIN_COPY.submitting}
-            fallbackErrorMessage={STAFF_LOGIN_COPY.error}
+          <Show
+            when={!redirectError()}
+            fallback={
+              <div class="space-y-3">
+                <p role="alert" class="text-sm text-danger">
+                  {redirectError()}
+                </p>
+                <AppButton variant="primary" disabled={retrying()} onClick={retryRedirect}>
+                  {STAFF_LOGIN_COPY.retry}
+                </AppButton>
+              </div>
+            }
           >
-            <div class="mb-4 space-y-4">
-              <TextField required value={email()} onChange={setEmail}>
-                <TextField.Label for="email" class="mb-1 block text-sm">
-                  {STAFF_LOGIN_COPY.email}
-                </TextField.Label>
-                <TextField.Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autocomplete="username"
-                  class={STAFF_LOGIN_INPUT_CLASS}
-                />
-              </TextField>
-              <TextField required value={password()} onChange={setPassword}>
-                <TextField.Label for="current-password" class="mb-1 block text-sm">
-                  {STAFF_LOGIN_COPY.password}
-                </TextField.Label>
-                <TextField.Input
-                  id="current-password"
-                  name="password"
-                  type="password"
-                  autocomplete="current-password"
-                  class={STAFF_LOGIN_INPUT_CLASS}
-                />
-              </TextField>
-            </div>
-          </AuthenticationForm>
+            <Show when={loginError()}>
+              <p role="alert" class="text-sm text-danger">
+                {loginError()}
+              </p>
+            </Show>
+            <AuthenticationForm
+              methods={[{ id: STAFF_LOGIN_METHOD_ID, label: STAFF_LOGIN_COPY.submit, login }]}
+              onSuccess={handleSuccess}
+              onFailure={handleFailure}
+              submittingLabel={STAFF_LOGIN_COPY.submitting}
+              fallbackErrorMessage={STAFF_LOGIN_COPY.error}
+            >
+              <div class="mb-4 space-y-4">
+                <TextField required value={email()} onChange={setEmail}>
+                  <TextField.Label for="email" class="mb-1 block text-sm">
+                    {STAFF_LOGIN_COPY.email}
+                  </TextField.Label>
+                  <TextField.Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autocomplete="username"
+                    class={STAFF_LOGIN_INPUT_CLASS}
+                  />
+                </TextField>
+                <TextField required value={password()} onChange={setPassword}>
+                  <TextField.Label for="current-password" class="mb-1 block text-sm">
+                    {STAFF_LOGIN_COPY.password}
+                  </TextField.Label>
+                  <TextField.Input
+                    id="current-password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    class={STAFF_LOGIN_INPUT_CLASS}
+                  />
+                </TextField>
+              </div>
+            </AuthenticationForm>
+          </Show>
         </Show>
       </div>
     </main>

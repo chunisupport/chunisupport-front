@@ -26,6 +26,7 @@ const invalidateSongsDataCache = async (): Promise<void> => {
  * @returns 通常楽曲と WORLD'S END 楽曲の共有 resource と操作関数。
  */
 const createSongsStore = () => {
+  let latestSongsRequest = 0
   const [songsRevalidationFailed, setSongsRevalidationFailed] = createSignal(false)
   const [songsRequested, setSongsRequested] = createSignal(false)
   const [worldsendSongsRequested, setWorldsendSongsRequested] = createSignal(false)
@@ -38,23 +39,28 @@ const createSongsStore = () => {
   >(
     () => (songsRequested() ? true : undefined),
     async (_requested, info) => {
+      const request = ++latestSongsRequest
       let cachedResponse: { songs: SongDTO[] } | undefined
       try {
         const response = await fetchAllSongsWithCache({
           forceRefresh: untrack(songsMustRefresh) || Boolean(info.refetching),
           onCached: (cached) => {
             cachedResponse = cached
-            mutateSongs(cached)
+            if (request === latestSongsRequest) mutateSongs(cached)
           },
         })
-        setSongsRevalidationFailed(false)
-        setSongsMustRefresh(false)
+        if (request === latestSongsRequest) {
+          setSongsRevalidationFailed(false)
+          setSongsMustRefresh(false)
+        }
         return response
       } catch (error) {
         // 既存の表示を維持しても、再検証が必要な共有画像は生成しない。
         if (!cachedResponse) throw error
-        setSongsRevalidationFailed(true)
-        setSongsMustRefresh(false)
+        if (request === latestSongsRequest) {
+          setSongsRevalidationFailed(true)
+          setSongsMustRefresh(false)
+        }
         return cachedResponse
       }
     }

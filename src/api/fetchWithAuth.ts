@@ -87,7 +87,12 @@ export const fetchWithAuth = async (
   if (idToken === undefined) await auth.authStateReady()
   const user = auth.currentUser
   const requestUid = user?.uid ?? null
-  const token = idToken ?? (await user?.getIdToken())
+  /** トークン取得・通信失敗でも、別アカウントの要求を呼び出し元の失敗処理に渡さない。 */
+  const rethrowCurrentError = (error: unknown): never => {
+    assertRequestIdentity(requestUid)
+    throw error
+  }
+  const token = idToken ?? (await user?.getIdToken().catch(rethrowCurrentError))
   assertRequestIdentity(requestUid)
   if (requireAuthentication && !token) {
     if (redirectOnUnauthorized) {
@@ -114,7 +119,7 @@ export const fetchWithAuth = async (
   const response = await fetchApi(input, {
     ...requestInit,
     headers,
-  })
+  }).catch(rethrowCurrentError)
 
   if (!response.ok) {
     let error: ErrorResponse | undefined

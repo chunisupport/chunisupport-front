@@ -2,6 +2,8 @@
 export const STAFF_LOGIN_COPY = {
   title: 'スタッフログイン',
   notice: 'スタッフ向けログイン画面です。ここからのログインはできません',
+  retry: '本人確認を再試行',
+  redirectError: 'ログイン後の本人確認に失敗しました。',
   normalLogin: '通常のログイン画面へ',
   email: 'メールアドレス',
   password: 'パスワード',

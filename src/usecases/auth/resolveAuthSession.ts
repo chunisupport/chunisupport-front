@@ -1,4 +1,7 @@
+import { appQueryClient } from '../../lib/queryClient'
+import { authSessionQueryOptions, pendingAuthResolution } from '../../queries/authSession'
 import {
+  advanceSessionRevision,
   clearAuthenticatedUser,
   getAuthStatus,
   getSessionRevision,
@@ -29,57 +32,49 @@ const isAuthError = (error: unknown): boolean => {
   return typeof e?.code === 'string' && (AUTH_ERROR_CODES as readonly string[]).includes(e.code)
 }
 
-let inFlightResolution: Promise<AuthResolution> | null = null
-let inFlightRevision = 0
-
 /** 認証確認を共有し、強制再確認やログアウト以前の応答を破棄する。
  * @param fetchCurrentUser - 本人情報の取得処理。
  * @param options - 強制再確認の指定。
  * @returns 最新の認証判定。
  */
-export const resolveAuthSession = (
+export const resolveAuthSession = async (
   fetchCurrentUser: FetchCurrentUser,
   options: ResolveAuthSessionOptions = {}
 ): Promise<AuthResolution> => {
-  const revision = getSessionRevision()
-  if (!options.forceRefresh) {
-    if (inFlightResolution && inFlightRevision === revision) return inFlightResolution
-    const status = getAuthStatus()
-    if (status === 'authenticated' || status === 'unauthenticated') return Promise.resolve(status)
-  }
+  const revision = options.forceRefresh ? advanceSessionRevision() : getSessionRevision()
+  const pending = pendingAuthResolution(revision)
+  const status = getAuthStatus()
+  if (
+    !options.forceRefresh &&
+    !pending &&
+    (status === 'authenticated' || status === 'unauthenticated')
+  )
+    return status
 
-  const isCurrent = () => inFlightResolution === resolution && getSessionRevision() === revision
-  const latest = (): AuthResolution | Promise<AuthResolution> => {
-    options.onSuperseded?.()
-    if (inFlightResolution && inFlightResolution !== resolution) return inFlightResolution
-    const status = getAuthStatus()
-    return status === 'unknown' ? 'error' : status
-  }
-
-  const resolution: Promise<AuthResolution> = Promise.resolve()
-    .then(async (): Promise<AuthResolution> => {
-      try {
-        const user = await fetchCurrentUser()
-        if (!isCurrent()) return latest()
-        setAuthenticatedUser(user)
-        return 'authenticated'
-      } catch (error) {
-        if (!isCurrent()) return latest()
-        if (isAuthError(error)) {
-          clearAuthenticatedUser()
-          return 'unauthenticated'
+  const applied = await (pending ??
+    appQueryClient.fetchQuery(
+      authSessionQueryOptions(revision, async () => {
+        try {
+          const user = await fetchCurrentUser()
+          if (getSessionRevision() !== revision) return revision
+          setAuthenticatedUser(user)
+        } catch (error) {
+          if (getSessionRevision() !== revision) return revision
+          if (isAuthError(error)) clearAuthenticatedUser()
+          else setAuthSessionError()
         }
-        setAuthSessionError()
-        return 'error'
-      }
-    })
-    .finally(() => {
-      if (inFlightResolution === resolution) {
-        inFlightResolution = null
-      }
-    })
-
-  inFlightRevision = revision
-  inFlightResolution = resolution
-  return resolution
+        return getSessionRevision()
+      })
+    ))
+  if (applied !== getSessionRevision()) {
+    options.onSuperseded?.()
+    // 旧要求の呼び出し元にも、後続の強制再確認が確定した状態を返す。
+    let next = pendingAuthResolution(getSessionRevision())
+    while (next) {
+      await next
+      next = pendingAuthResolution(getSessionRevision())
+    }
+  }
+  const resolved = getAuthStatus()
+  return resolved === 'unknown' ? 'error' : resolved
 }
