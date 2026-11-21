@@ -48,6 +48,76 @@ test('401応答は通常セッションを消去し、明示した抑止時だ�
   }
 })
 
+test('タブ内の UID と現在の UID が異なる場合は送信前に中止する', async (t) => {
+  const { fetchWithAuth } = await loadFetchWithAuthModule()
+  const { tabIdentity } = await import('../lib/firebase')
+  t.mock.method(tabIdentity, 'matches', () => false)
+  const request = t.mock.method(globalThis, 'fetch', () => assert.fail('送信してはいけない'))
+  await assert.rejects(fetchWithAuth('https://example.com/internal/me/goals', { method: 'POST' }), {
+    name: 'AbortError',
+  })
+  assert.equal(request.mock.callCount(), 0)
+})
+
+test('送信後にタブが無効になれば旧401で現在のユーザーを消さない', async (t) => {
+  const { fetchWithAuth } = await loadFetchWithAuthModule()
+  const { tabIdentity } = await import('../lib/firebase')
+  const session = await import('../stores/authSession')
+  let valid = true
+  t.mock.method(tabIdentity, 'matches', () => valid)
+  t.mock.method(globalThis, 'fetch', async () => {
+    valid = false
+    session.setAuthenticatedUser({
+      username: 'new',
+      account_type: 'PLAYER',
+      is_private: false,
+      last_score_update: null,
+    })
+    return Response.json({ error: { code: 'invalid_token' } }, { status: 401 })
+  })
+  try {
+    await assert.rejects(fetchWithAuth('https://example.com/internal/me'), { name: 'AbortError' })
+    assert.equal(session.getAuthenticatedUser()?.username, 'new')
+  } finally {
+    session.clearAuthenticatedUser()
+  }
+})
+
+for (const phase of ['token', 'fetch'] as const) {
+  test(`${phase}失敗時は UID 変更だけを AbortError とし、同一 UID の原因を保持する`, async (t) => {
+    const { fetchWithAuth } = await loadFetchWithAuthModule()
+    const { auth } = await import('../lib/firebase')
+    const original = Object.getOwnPropertyDescriptor(auth, 'currentUser')
+    t.mock.method(auth, 'authStateReady', async () => undefined)
+    const failure = new TypeError('offline')
+    let uid = 'a'
+    let switchUser = false
+    const fail = async (): Promise<never> => {
+      if (switchUser) uid = 'b'
+      throw failure
+    }
+    Object.defineProperty(auth, 'currentUser', {
+      configurable: true,
+      get: () => ({
+        uid,
+        getIdToken: phase === 'token' ? fail : async () => 'token',
+      }),
+    })
+    t.mock.method(globalThis, 'fetch', fail)
+    try {
+      await assert.rejects(
+        fetchWithAuth('https://example.com/internal/me'),
+        (error) => error === failure
+      )
+      switchUser = true
+      await assert.rejects(fetchWithAuth('https://example.com/internal/me'), { name: 'AbortError' })
+    } finally {
+      if (original) Object.defineProperty(auth, 'currentUser', original)
+      else Reflect.deleteProperty(auth, 'currentUser')
+    }
+  })
+}
+
 test('recent_sign_in_required は抑止対象ならセッションクリアしない', async () => {
   const { shouldClearSessionOnUnauthorized } = await loadFetchWithAuthModule()
   const result = shouldClearSessionOnUnauthorized(

@@ -19,8 +19,10 @@ import { createRegisterScoreImageFiles } from './registerScoreImageFiles'
 type Props = {
   /** プレビュー用画像を生成する処理 */
   captureImages: (layout: RegisterScoreImageLayout) => Promise<RegisterScoreImageCaptureResult>
-  /** プレビュー画像の生成を開始できるか。省略時は直ちに生成する。 */
-  canCapture?: boolean
+  /** 表示対象の差分に必要な補助データの状態。 */
+  masterState: 'ready' | 'pending' | 'error'
+  /** 取得に失敗した補助データを再取得する。 */
+  retryMasters: () => void
   /** 共有するJPEG画像のファイル名 */
   imageFilename: string
 }
@@ -38,7 +40,7 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
 
   const preview = createImagePreview({
     capture: () => props.captureImages(imageLayout()),
-    canCapture: () => props.canCapture ?? true,
+    canCapture: () => props.masterState === 'ready',
     toFiles: ({ blobs, splitPageCount: pageCount }) => {
       setSplitPageCount(pageCount)
       return createRegisterScoreImageFiles(blobs, props.imageFilename)
@@ -132,11 +134,15 @@ export const RegisterScoreImagePreviewDialog: Component<Props> = (props) => {
         </div>
       }
       hasPreview={preview.previews().length > 0}
-      previewBusy={props.canCapture === false || preview.isCapturing()}
+      previewBusy={props.masterState === 'pending' || preview.isCapturing()}
       loadingLabel={REGISTER_SCORE_COPY.preparingImagePreview}
-      captureError={preview.captureError()}
+      captureError={
+        props.masterState === 'error' ? REGISTER_SCORE_COPY.masterLoadError : preview.captureError()
+      }
       retryLabel={REGISTER_SCORE_COPY.retryImagePreview}
-      onRetry={preview.retryCapture}
+      onRetry={() =>
+        props.masterState === 'error' ? props.retryMasters() : preview.retryCapture()
+      }
       footerError={shareErrorPage() === undefined ? preview.shareError() : undefined}
       footer={
         <Show when={canShareReportImages()}>

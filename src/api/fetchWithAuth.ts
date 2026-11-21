@@ -1,5 +1,5 @@
 import { LOGIN_PATH } from '../constants/routes'
-import { auth } from '../lib/firebase'
+import { auth, tabIdentity } from '../lib/firebase'
 import { clearAuthenticatedUser } from '../stores/authSession'
 import { markMaintenanceDetected } from '../stores/availability'
 import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
@@ -57,11 +57,12 @@ const redirectToLogin = () => {
   window.location.replace(buildLoginRedirectPath(currentPath))
 }
 
-const getFirebaseIdToken = async (): Promise<string | null> => {
-  await auth.authStateReady()
-  const user = auth.currentUser
-  if (!user) return null
-  return user.getIdToken()
+/** 送信または応答処理の直前に、その要求がまだ現セッションのものか検証する。 */
+const assertRequestIdentity = (requestUid: string | null): void => {
+  const currentUid = auth.currentUser?.uid ?? null
+  if (!tabIdentity.matches(currentUid) || currentUid !== requestUid) {
+    throw new DOMException('認証アカウントが変更されました', 'AbortError')
+  }
 }
 
 /**
@@ -83,10 +84,19 @@ export const fetchWithAuth = async (
     ...requestInit
   } = init
 
-  const token = idToken ?? (await getFirebaseIdToken())
+  if (idToken === undefined) await auth.authStateReady()
+  const user = auth.currentUser
+  const requestUid = user?.uid ?? null
+  /** トークン取得・通信失敗でも、別アカウントの要求を呼び出し元の失敗処理に渡さない。 */
+  const rethrowCurrentError = (error: unknown): never => {
+    assertRequestIdentity(requestUid)
+    throw error
+  }
+  const token = idToken ?? (await user?.getIdToken().catch(rethrowCurrentError))
+  assertRequestIdentity(requestUid)
   if (requireAuthentication && !token) {
-    clearAuthenticatedUser()
     if (redirectOnUnauthorized) {
+      clearAuthenticatedUser()
       redirectToLogin()
     }
 
@@ -109,7 +119,7 @@ export const fetchWithAuth = async (
   const response = await fetchApi(input, {
     ...requestInit,
     headers,
-  })
+  }).catch(rethrowCurrentError)
 
   if (!response.ok) {
     let error: ErrorResponse | undefined
@@ -120,6 +130,7 @@ export const fetchWithAuth = async (
       // ignore
     }
 
+    assertRequestIdentity(requestUid)
     if (isMaintenanceModeError(response.status, error)) {
       markMaintenanceDetected(parseRetryAfterSeconds(response.headers.get('Retry-After')))
     }
@@ -145,5 +156,6 @@ export const fetchWithAuth = async (
     throw apiError
   }
 
+  assertRequestIdentity(requestUid)
   return response
 }

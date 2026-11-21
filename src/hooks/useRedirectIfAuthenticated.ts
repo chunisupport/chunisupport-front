@@ -1,9 +1,8 @@
 import { useNavigate } from '@solidjs/router'
-import { createSignal, onMount } from 'solid-js'
+import { createSignal, onCleanup, onMount } from 'solid-js'
 
-import { fetchMe, fetchUserProfileSummary } from '../api/users'
-import { clearAuthenticatedUser, getAuthenticatedUser, getAuthStatus } from '../stores/authSession'
-import { resolvePostLoginRedirectPath } from '../usecases/auth/redirectPath.ts'
+import { fetchMe } from '../api/users'
+import { getAuthenticatedUser } from '../stores/authSession'
 import { resolveAuthenticatedRedirect } from '../usecases/auth/resolveAuthenticatedRedirect.ts'
 import { resolveAuthSession } from '../usecases/auth/resolveAuthSession.ts'
 
@@ -15,34 +14,28 @@ import { resolveAuthSession } from '../usecases/auth/resolveAuthSession.ts'
  */
 const useRedirectIfAuthenticated = (redirectPath?: string) => {
   const navigate = useNavigate()
-  const [isCheckingAuth, setIsCheckingAuth] = createSignal(getAuthStatus() !== 'authenticated')
+  const [isCheckingAuth, setIsCheckingAuth] = createSignal(true)
 
+  let cancelled = false
+  onCleanup(() => {
+    cancelled = true
+  })
   onMount(async () => {
     const authStatus = await resolveAuthSession(() => fetchMe({ redirectOnUnauthorized: false }), {
       forceRefresh: true,
+      onSuperseded: () => {
+        cancelled = true
+      },
     })
 
-    if (authStatus === 'authenticated') {
-      try {
-        const fallbackRedirectPath = await resolveAuthenticatedRedirect(
-          getAuthenticatedUser(),
-          fetchUserProfileSummary
-        )
-
-        const safeRedirectPath = resolvePostLoginRedirectPath(redirectPath)
-        if (safeRedirectPath) {
-          navigate(safeRedirectPath)
-          return
-        }
-
-        if (fallbackRedirectPath) {
-          navigate(fallbackRedirectPath)
-          return
-        }
-      } catch (error) {
-        console.error('Failed to redirect authenticated user:', error)
-        clearAuthenticatedUser()
-      }
+    if (cancelled) {
+      setIsCheckingAuth(false)
+      return
+    }
+    const user = getAuthenticatedUser()
+    if (authStatus === 'authenticated' && user) {
+      navigate(resolveAuthenticatedRedirect(user.username, redirectPath))
+      return
     }
 
     setIsCheckingAuth(false)

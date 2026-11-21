@@ -42,11 +42,15 @@ export const postPlayerDataCommit = async (uploadToken: string): Promise<PlayerD
 /**
  * 本人の保存済み更新差分を新しい順に取得する。
  *
+ * @param signal - 画面を離れた場合の取得中止通知。
  * @returns 最新を含む最大5件の更新結果。
  */
-export const fetchRecentPlayerDataUpdates = async (): Promise<PlayerLatestUpdateResult[]> => {
+export const fetchRecentPlayerDataUpdates = async (
+  signal?: AbortSignal
+): Promise<PlayerLatestUpdateResult[]> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/internal/me/player-data/updates`, {
     requireAuthentication: true,
+    signal,
   })
   const results: PlayerLatestUpdateResult[] = await response.json()
   if (

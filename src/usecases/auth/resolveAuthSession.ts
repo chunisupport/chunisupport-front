@@ -1,6 +1,10 @@
+import { appQueryClient } from '../../lib/queryClient'
+import { authSessionQueryOptions, pendingAuthResolution } from '../../queries/authSession'
 import {
+  advanceSessionRevision,
   clearAuthenticatedUser,
   getAuthStatus,
+  getSessionRevision,
   setAuthenticatedUser,
   setAuthSessionError,
 } from '../../stores/authSession.ts'
@@ -10,6 +14,8 @@ export type AuthResolution = 'authenticated' | 'unauthenticated' | 'error'
 export type FetchCurrentUser = () => Promise<UserDTO>
 type ResolveAuthSessionOptions = {
   forceRefresh?: boolean
+  /** 自分の応答が破棄された場合に、遷移など要求固有の後続処理を取り消す。 */
+  onSuperseded?: () => void
 }
 
 // fetchWithAuth が付与する status/code プロパティで 401 系エラーを判定する
@@ -26,45 +32,49 @@ const isAuthError = (error: unknown): boolean => {
   return typeof e?.code === 'string' && (AUTH_ERROR_CODES as readonly string[]).includes(e.code)
 }
 
-let inFlightResolution: Promise<AuthResolution> | null = null
-
-const resolveWithFetcher = async (fetchCurrentUser: FetchCurrentUser): Promise<AuthResolution> => {
-  try {
-    const user = await fetchCurrentUser()
-    setAuthenticatedUser(user)
-    return 'authenticated'
-  } catch (error) {
-    if (isAuthError(error)) {
-      clearAuthenticatedUser()
-      return 'unauthenticated'
-    }
-    // ネットワーク障害・5xx などの一時的なエラーはセッション状態をクリアしない
-    setAuthSessionError()
-    return 'error'
-  }
-}
-
-export const resolveAuthSession = (
+/** 認証確認を共有し、強制再確認やログアウト以前の応答を破棄する。
+ * @param fetchCurrentUser - 本人情報の取得処理。
+ * @param options - 強制再確認の指定。
+ * @returns 最新の認証判定。
+ */
+export const resolveAuthSession = async (
   fetchCurrentUser: FetchCurrentUser,
   options: ResolveAuthSessionOptions = {}
 ): Promise<AuthResolution> => {
-  if (!options.forceRefresh) {
-    const authStatus = getAuthStatus()
-    if (authStatus === 'authenticated' || authStatus === 'unauthenticated') {
-      return Promise.resolve(authStatus)
-    }
+  const revision = options.forceRefresh ? advanceSessionRevision() : getSessionRevision()
+  const pending = pendingAuthResolution(revision)
+  const status = getAuthStatus()
+  if (
+    !options.forceRefresh &&
+    !pending &&
+    (status === 'authenticated' || status === 'unauthenticated')
+  )
+    return status
 
-    if (inFlightResolution) {
-      return inFlightResolution
+  const applied = await (pending ??
+    appQueryClient.fetchQuery(
+      authSessionQueryOptions(revision, async () => {
+        try {
+          const user = await fetchCurrentUser()
+          if (getSessionRevision() !== revision) return revision
+          setAuthenticatedUser(user)
+        } catch (error) {
+          if (getSessionRevision() !== revision) return revision
+          if (isAuthError(error)) clearAuthenticatedUser()
+          else setAuthSessionError()
+        }
+        return getSessionRevision()
+      })
+    ))
+  if (applied !== getSessionRevision()) {
+    options.onSuperseded?.()
+    // 旧要求の呼び出し元にも、後続の強制再確認が確定した状態を返す。
+    let next = pendingAuthResolution(getSessionRevision())
+    while (next) {
+      await next
+      next = pendingAuthResolution(getSessionRevision())
     }
   }
-
-  const resolution = resolveWithFetcher(fetchCurrentUser).finally(() => {
-    if (inFlightResolution === resolution) {
-      inFlightResolution = null
-    }
-  })
-
-  inFlightResolution = resolution
-  return resolution
+  const resolved = getAuthStatus()
+  return resolved === 'unknown' ? 'error' : resolved
 }
