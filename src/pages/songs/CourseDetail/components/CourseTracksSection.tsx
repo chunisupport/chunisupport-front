@@ -9,6 +9,7 @@ import { CourseChartDifficultyBadge } from '../../../../components/common/course
 import { JacketImage } from '../../../../components/common/JacketImage'
 import { DefaultRecordLampBadges } from '../../../../components/common/record/RecordDisplayParts'
 import { SongSelectionVirtualList } from '../../../../components/common/songSelection/SongSelectionDialogBase'
+import { SCORE_THEORETICAL_MAX } from '../../../../constants/chart'
 import {
   COURSE_TRACK_NUMBERS,
   COURSE_TRACK_SELECTION_LABELS,
@@ -450,6 +451,19 @@ const CourseTracksSection = (props: Props) => (
             )}
           </For>
         </ol>
+        <Show
+          when={COURSE_TRACK_NUMBERS.every(
+            (number) =>
+              props.tracks.find((track) => track.track_no === number)?.selection_type === 'FIXED'
+          )}
+        >
+          <p class="mt-3 flex items-baseline justify-end gap-2">
+            <span class="text-xs text-text-muted">{COPY.theoreticalMax}</span>
+            <span class="font-jost text-lg font-semibold leading-none text-text tabular-nums">
+              {(SCORE_THEORETICAL_MAX * COURSE_TRACK_NUMBERS.length).toLocaleString('ja-JP')}
+            </span>
+          </p>
+        </Show>
       </Show>
     </Show>
   </section>

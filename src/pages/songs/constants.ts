@@ -29,6 +29,7 @@ export const COURSE_PAGE_COPY = {
     closeCandidates: '閉じる',
     ownBest: '自己ベスト',
     bestLoadError: '譜面の自己ベストを取得できませんでした。',
+    theoreticalMax: '理論値',
   },
   statsHeading: 'プレイヤー統計',
   statsDescription: 'スコアはクリア済み記録が対象です。データは1日に2回更新されます。',
