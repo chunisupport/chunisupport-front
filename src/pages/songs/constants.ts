@@ -32,12 +32,11 @@ export const COURSE_PAGE_COPY = {
     bestLoadError: '譜面の自己ベストを取得できませんでした。',
   },
   statsHeading: 'プレイヤー統計',
-  statsDescription:
-    '実力帯(ベスト枠平均)ごとに集計されます。スコアはクリア済み記録を対象とし、データは1日に2回更新されます。',
+  statsDescription: 'スコアはクリア済み記録が対象です。データは1日に2回更新されます。',
   statsEmpty: '統計はまだありません。',
   statsLoadingLabel: '統計を読み込み中',
   statsViewSelectLabel: '統計テーブルの表示内容',
-  statsRatingBandColumn: '実力帯',
+  statsRatingBandColumn: 'ベスト枠平均',
   statsCharts: {
     averageTitle: 'CLEAR平均・中央値',
     averageAriaLabel: 'レーティング帯別のコースCLEAR平均スコアと中央値スコアの折れ線グラフ',

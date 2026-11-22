@@ -35,8 +35,7 @@ type Props = {
 } & (SelectableDifficultyProps | ReadonlyDifficultyProps)
 
 /** 難易度別統計の補足説明文 */
-const SONG_STATS_DESCRIPTION =
-  '実力帯(ベスト枠平均)ごとに集計されます。データは1日に2回更新されます。'
+const SONG_STATS_DESCRIPTION = 'データは1日に2回更新されます。'
 
 /** 難易度別統計のSelect群を横並びにするコンテナクラス */
 const STATS_CONTROL_ROW_CLASS = 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center'

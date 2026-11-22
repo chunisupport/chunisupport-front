@@ -75,7 +75,7 @@ const TABLE_HEADER_CELL_CLASS =
 /** 統計テーブルの左寄せヘッダーセルに適用するTailwindクラス */
 const TABLE_LEFT_HEADER_CELL_CLASS =
   'sticky top-0 z-10 bg-surface-muted px-2 py-2 text-left whitespace-nowrap'
-/** 統計テーブルの実力帯セルに適用するTailwindクラス */
+/** 統計テーブルのベスト枠平均セルに適用するTailwindクラス */
 const TABLE_RATING_BAND_CELL_CLASS = 'px-2 py-2 text-left'
 /** 統計テーブルの通常セルに適用するTailwindクラス */
 const TABLE_VALUE_CELL_CLASS = 'px-2 py-2 text-right tabular-nums'
@@ -278,7 +278,7 @@ const SongStatsTable = (props: Props) => {
         <table class="min-w-full text-sm">
           <thead>
             <tr>
-              <th class={TABLE_LEFT_HEADER_CELL_CLASS}>実力帯</th>
+              <th class={TABLE_LEFT_HEADER_CELL_CLASS}>ベスト枠平均</th>
               <For each={displayedColumns()}>
                 {(column) => <th class={TABLE_HEADER_CELL_CLASS}>{column.label}</th>}
               </For>
