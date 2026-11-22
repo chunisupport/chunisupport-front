@@ -4,6 +4,11 @@ import RotateCcw from 'lucide-solid/icons/rotate-ccw'
 import type { Component } from 'solid-js'
 import { createSignal, Show } from 'solid-js'
 import { AppButton, getAppButtonClass, getAppIconButtonClass } from './AppButton'
+import {
+  type AppDialogLayer,
+  appDialogContentZClass,
+  appDialogOverlayClass,
+} from './appDialogUtils'
 
 type FilterResetDialogProps = {
   onReset: () => void
@@ -11,6 +16,8 @@ type FilterResetDialogProps = {
   title?: string
   /** 長押しリセットが利用可能な画面で操作ヒントを表示するか */
   showShortcutHint?: boolean
+  /** 確認ダイアログの重なり順。重ねて開いたダイアログ内に置く場合は、その層より上を指定する。既定は raised */
+  layer?: AppDialogLayer
 }
 
 /** リセット確認ダイアログで共通表示する補足文の先頭 */
@@ -39,6 +46,8 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
    * @returns ダイアログタイトル。
    */
   const title = () => props.title ?? 'フィルターをリセットしますか？'
+  /** @returns 確認ダイアログの重なり順。 */
+  const layer = () => props.layer ?? 'raised'
 
   return (
     <AlertDialog open={resetDialogOpen()} onOpenChange={setResetDialogOpen}>
@@ -52,8 +61,10 @@ const FilterResetDialog: Component<FilterResetDialogProps> = (props) => {
         <RotateCcw class="h-5 w-5" aria-hidden="true" />
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay class="fixed inset-0 bg-overlay z-50" />
-        <AlertDialog.Content class="fixed z-60 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md">
+        <AlertDialog.Overlay class={appDialogOverlayClass(layer())} />
+        <AlertDialog.Content
+          class={`fixed ${appDialogContentZClass(layer())} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface rounded-lg shadow-lg p-6 w-[90vw] max-w-md`}
+        >
           <AlertDialog.Title class="text-lg font-bold mb-2">{title()}</AlertDialog.Title>
           <Show when={props.showShortcutHint ?? true}>
             <AlertDialog.Description class="mb-4 text-sm text-text-muted">

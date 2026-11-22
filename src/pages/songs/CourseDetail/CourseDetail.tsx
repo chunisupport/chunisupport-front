@@ -128,21 +128,28 @@ const CourseDetail = () => {
                 }}
               >
                 <CourseTracksSection
+                  courseId={currentCourse().id}
                   tracks={tracks()}
                   loading={detailQuery.isPending}
                   error={detailQuery.isError ? detailQuery.error : undefined}
                   records={trackRecords()}
                   scoreError={trackScoresQuery.isError}
+                  ownCourseScore={ownScore()}
                 />
                 <Show when={isAuthenticated()}>
-                  <div class="min-w-0 space-y-4">
-                    <CourseOwnScoreCard record={currentCourse()} />
+                  {/* lg未満では子要素をグリッドに展開し、自分のスコアをコース楽曲より上に出す */}
+                  <div class="contents lg:block lg:min-w-0 lg:space-y-4">
+                    <div class="order-first min-w-0 lg:order-none">
+                      <CourseOwnScoreCard record={currentCourse()} />
+                    </div>
                     <Show when={currentCourse().is_played && username()}>
                       {(currentUsername) => (
-                        <CourseScoreHistorySection
-                          username={currentUsername()}
-                          displayId={currentCourse().id}
-                        />
+                        <div class="min-w-0">
+                          <CourseScoreHistorySection
+                            username={currentUsername()}
+                            displayId={currentCourse().id}
+                          />
+                        </div>
                       )}
                     </Show>
                   </div>

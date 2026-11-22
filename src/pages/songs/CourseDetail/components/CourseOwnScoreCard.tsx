@@ -39,17 +39,23 @@ const CourseOwnScoreCard = (props: Props) => {
             <span class="ml-auto text-sm text-text-muted">{COURSE_PAGE_COPY.notPlayed}</span>
           }
         >
-          <div class="ml-auto flex flex-col items-end gap-1">
+          <div class="ml-auto flex min-w-0 flex-col items-end gap-1.5">
             <div class="flex items-baseline gap-1.5">
               <span class="font-jost text-xl font-semibold tabular-nums">
                 {props.record.score.toLocaleString('ja-JP')}
               </span>
               <RecordScoreRank rank={scoreRank()} class="text-xs" />
-              <span class="font-jost text-xs text-text-muted tabular-nums">
-                {COURSE_PAGE_COPY.perTrackAveragePrefix} {perTrackAverage().toLocaleString('ja-JP')}
-              </span>
             </div>
-            <CourseRecordLampBadges record={props.record} />
+            {/* 狭い幅でも折り返さないよう、平均はランプと同じ行に置きランプを右端に揃える */}
+            <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+              <span class="whitespace-nowrap font-jost text-xs text-text-muted tabular-nums">
+                <abbr title={COURSE_PAGE_COPY.perTrackAverageLabel} class="no-underline">
+                  {COURSE_PAGE_COPY.perTrackAveragePrefix}
+                </abbr>{' '}
+                {perTrackAverage().toLocaleString('ja-JP')}
+              </span>
+              <CourseRecordLampBadges record={props.record} />
+            </div>
           </div>
         </Show>
       </div>

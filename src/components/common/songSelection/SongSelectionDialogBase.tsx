@@ -19,10 +19,9 @@ import {
 } from '../DomainMultiSelect'
 import { SearchTextField } from '../SearchTextField'
 import {
+  getSongSelectionToolbarButtonClass,
   SONG_SELECTION_FILTER_SELECT_CONTENT_Z_INDEX_CLASS,
   SONG_SELECTION_LIST_VIRTUAL,
-  SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS,
-  SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS,
 } from './songSelectionDialog'
 
 /** 共通楽曲選択ダイアログへ渡す表示状態と画面固有の描画処理 */
@@ -180,11 +179,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
         />
         <Button
           type="button"
-          class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
-            props.filterChanged()
-              ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
-              : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
-          }`}
+          class={getSongSelectionToolbarButtonClass(props.filterChanged(), false)}
           aria-label={filterButtonLabel()}
           aria-pressed={props.filterChanged()}
           title={filterButtonLabel()}
@@ -194,11 +189,7 @@ export const SongSelectionDialogBase = <TItem, TFilter>(
         </Button>
         <Button
           type="button"
-          class={`-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-r border transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
-            props.showSelectedOnly()
-              ? SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS
-              : SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS
-          }`}
+          class={getSongSelectionToolbarButtonClass(props.showSelectedOnly(), true)}
           aria-label={SELECTED_ONLY_LABEL}
           aria-pressed={props.showSelectedOnly()}
           title={SELECTED_ONLY_LABEL}
