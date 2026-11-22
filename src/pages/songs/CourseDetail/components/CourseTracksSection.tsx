@@ -42,7 +42,7 @@ const TRACK_CARD_SURFACE_CLASS =
   'flex h-full min-w-0 flex-col gap-3 rounded-lg border border-border bg-surface p-3.5'
 
 /** 楽曲詳細へ遷移する固定譜面カード用のインタラクティブクラス */
-const TRACK_CARD_LINK_CLASS = `${TRACK_CARD_SURFACE_CLASS} group transition-colors hover:border-action-primary/60 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring`
+const TRACK_CARD_LINK_CLASS = `${TRACK_CARD_SURFACE_CLASS} transition-colors hover:border-action-primary/60 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring`
 
 /**
  * 譜面定数またはWORLD'S ENDの譜面表記を返す。
@@ -124,7 +124,7 @@ const CandidateRow = (props: {
 }) => (
   <A
     href={getCourseTrackSongPath(props.chart)}
-    class="group flex min-w-0 items-center gap-3.5 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+    class="flex min-w-0 items-center gap-3.5 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
   >
     <JacketImage
       source={buildChunithmJacketUrl(props.chart.jacket) ?? undefined}
@@ -136,7 +136,7 @@ const CandidateRow = (props: {
     />
     <div class="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div class="min-w-0 space-y-1">
-        <span class="block break-words font-sans text-sm font-semibold leading-snug text-action-primary group-hover:underline">
+        <span class="block break-words font-sans text-sm font-semibold leading-snug text-action-primary">
           {props.chart.title}
         </span>
         <div class="flex flex-wrap items-center gap-1.5">
@@ -400,7 +400,7 @@ const CourseTrackCard = (props: {
                   fallback={<img src={placeholderImageUrl} alt="" class="size-full object-cover" />}
                 />
                 <div class="flex min-w-0 flex-1 flex-col gap-2 @md:flex-row @md:items-center @md:justify-between @md:gap-4 @4xl:flex-col @4xl:items-stretch @4xl:gap-2">
-                  <span class="block min-w-0 break-words font-sans text-sm font-semibold leading-snug text-action-primary group-hover:underline">
+                  <span class="block min-w-0 break-words font-sans text-sm font-semibold leading-snug text-action-primary">
                     {chart().title}
                   </span>
                   <Show when={props.records}>
