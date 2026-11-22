@@ -155,7 +155,7 @@ const CandidateRow = (props: {
     />
     <div class="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div class="min-w-0 space-y-1">
-        <span class="block break-words font-sans text-sm font-semibold leading-snug text-action-primary">
+        <span class="block truncate font-sans text-sm font-semibold leading-snug text-action-primary">
           {props.chart.title}
         </span>
         <div class="flex flex-wrap items-center gap-1.5">
@@ -164,7 +164,7 @@ const CandidateRow = (props: {
             class={
               props.chart.difficulty === 'WORLDSEND'
                 ? 'font-sans text-xs text-text-muted'
-                : 'font-jost text-xs font-medium text-text-muted tabular-nums'
+                : 'font-jost text-sm font-medium text-text-muted tabular-nums'
             }
           >
             {formatChartMetaLabel(props.chart)}
