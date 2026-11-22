@@ -46,16 +46,13 @@ const CourseOwnScoreCard = (props: Props) => {
               </span>
               <RecordScoreRank rank={scoreRank()} class="text-xs" />
             </div>
-            {/* 狭い幅でも折り返さないよう、平均はランプと同じ行に置きランプを右端に揃える */}
-            <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-              <span class="whitespace-nowrap font-jost text-xs text-text-muted tabular-nums">
-                <abbr title={COURSE_PAGE_COPY.perTrackAverageLabel} class="no-underline">
-                  {COURSE_PAGE_COPY.perTrackAveragePrefix}
-                </abbr>{' '}
-                {perTrackAverage().toLocaleString('ja-JP')}
-              </span>
-              <CourseRecordLampBadges record={props.record} />
-            </div>
+            <span class="whitespace-nowrap font-jost text-xs text-text-muted tabular-nums">
+              <abbr title={COURSE_PAGE_COPY.perTrackAverageLabel} class="no-underline">
+                {COURSE_PAGE_COPY.perTrackAveragePrefix}
+              </abbr>{' '}
+              {perTrackAverage().toLocaleString('ja-JP')}
+            </span>
+            <CourseRecordLampBadges record={props.record} />
           </div>
         </Show>
       </div>
