@@ -20,13 +20,21 @@ export const SONG_SELECTION_LIST_VIRTUAL = {
   overscan: 10,
 } as const
 
-/** 楽曲選択ツールバーボタンの選択状態へ適用するクラス */
-export const SONG_SELECTION_TOOLBAR_BUTTON_ACTIVE_CLASS =
-  'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
-
-/** 楽曲選択ツールバーボタンの未選択状態へ適用するクラス */
-export const SONG_SELECTION_TOOLBAR_BUTTON_INACTIVE_CLASS =
-  'border-border-strong bg-surface text-text-muted hover:bg-surface-hover'
+/**
+ * 検索欄の右に連結して並べるツールバーボタンのクラスを返す。
+ *
+ * @param active - オンの状態か。
+ * @param last - 連結の右端か。右端だけ右側の角を丸める。
+ * @returns ツールバーボタンへ適用するクラス。
+ */
+export const getSongSelectionToolbarButtonClass = (active: boolean, last: boolean): string =>
+  `-ml-px flex h-9.5 w-9.5 shrink-0 items-center justify-center border transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-focus-ring ${
+    last ? 'rounded-r ' : ''
+  }${
+    active
+      ? 'border-action-primary bg-action-primary text-text-inverse hover:bg-action-primary-hover'
+      : 'border-border-strong bg-surface text-text-muted hover:bg-surface-hover'
+  }`
 
 /**
  * 楽曲選択フィルターの初期値を生成する。

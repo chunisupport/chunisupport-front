@@ -165,6 +165,14 @@ export const appDialogOverlayClass = (layer: AppDialogLayer): string =>
   joinClass('fixed inset-0 bg-overlay', LAYER_CLASS[layer].overlay)
 
 /**
+ * ダイアログ本体の重なり順クラスを返す。AppDialog 以外のダイアログを同じ層へ置くときに使う。
+ *
+ * @param layer - 重なり順。
+ * @returns z-index のクラス。
+ */
+export const appDialogContentZClass = (layer: AppDialogLayer): string => LAYER_CLASS[layer].content
+
+/**
  * ダイアログ枠のクラスを返す。本文のスクロールクラスは含めない。
  *
  * @param options - 置き方、幅、高さ、重なり順と追加の見た目。

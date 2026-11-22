@@ -128,6 +128,7 @@ const CourseDetail = () => {
                 }}
               >
                 <CourseTracksSection
+                  courseId={currentCourse().id}
                   tracks={tracks()}
                   loading={detailQuery.isPending}
                   error={detailQuery.isError ? detailQuery.error : undefined}
