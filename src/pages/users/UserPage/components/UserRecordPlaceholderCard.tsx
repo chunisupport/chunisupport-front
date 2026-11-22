@@ -4,12 +4,20 @@ import { buildEmptyRatingSlotLabel } from '../UserProfileView.constants'
 type Props = {
   /** 一覧内の0始まりインデックス */
   index: number
+  /** 枠番号の大きさ。`normal` は UserRecordCard、`large` はレーティング画像の番号に揃える。 */
+  size?: 'normal' | 'large'
 }
+
+/** 枠番号の大きさごとのクラス */
+const SLOT_NUMBER_SIZE_CLASS = {
+  normal: 'h-8 w-8 text-lg',
+  large: 'h-11 w-11 text-2xl',
+} as const
 
 /**
  * レーティング対象の空き枠を薄いカード形式で表示する。
  *
- * @param props - 表示する空き枠の一覧内インデックス。
+ * @param props - 表示する空き枠の一覧内インデックスと番号の大きさ。
  * @returns 枠番号のみを示す非操作のプレースホルダーカード。
  */
 export const UserRecordPlaceholderCard: Component<Props> = (props) => {
@@ -25,7 +33,7 @@ export const UserRecordPlaceholderCard: Component<Props> = (props) => {
       <span class="sr-only">{buildEmptyRatingSlotLabel(slotNumber())}</span>
       <div class="flex h-full items-center p-1.5 pl-4">
         <div
-          class="flex h-11 w-11 items-center justify-center rounded-full bg-surface-hover font-oswald text-2xl font-bold leading-none text-disabled-text"
+          class={`flex ${SLOT_NUMBER_SIZE_CLASS[props.size ?? 'normal']} items-center justify-center rounded-full bg-surface-hover font-oswald font-bold leading-none text-disabled-text`}
           aria-hidden="true"
         >
           {slotNumber()}
