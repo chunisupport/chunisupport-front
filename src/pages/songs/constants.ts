@@ -39,6 +39,8 @@ export const COURSE_PAGE_COPY = {
   statsViewSelectLabel: '統計テーブルの表示内容',
   statsRatingBandColumn: '実力帯',
   statsCharts: {
+    clearRateTitle: 'クリア率',
+    clearRateAriaLabel: 'レーティング帯別のコースクリア率の棒グラフ',
     averageTitle: 'CLEAR平均・中央値',
     averageAriaLabel: 'レーティング帯別のコースCLEAR平均スコアと中央値スコアの折れ線グラフ',
     averageWithOwnScoreAriaLabel:
