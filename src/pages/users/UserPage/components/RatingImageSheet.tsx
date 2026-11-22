@@ -199,7 +199,7 @@ const RatingImageColumn: Component<RatingImageColumnProps> = (props) => {
         <For each={emptySlotIndexes()}>
           {(index) => (
             <li>
-              <UserRecordPlaceholderCard index={index} />
+              <UserRecordPlaceholderCard index={index} size="large" />
             </li>
           )}
         </For>
