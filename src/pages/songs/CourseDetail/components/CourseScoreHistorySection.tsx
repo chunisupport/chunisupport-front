@@ -10,6 +10,7 @@ import { COURSE_MAX_SCORE } from '../../../../utils/courseStats'
 import {
   SCORE_HISTORY_CLOSE_LABEL,
   SCORE_HISTORY_EMPTY_LABEL,
+  SCORE_HISTORY_MAX_ENTRIES_LABEL,
   SCORE_HISTORY_SECTION_LABEL,
   SCORE_HISTORY_TABLE_TOGGLE_LABEL,
 } from '../../components/chartDetail/constants'
@@ -30,7 +31,10 @@ const CourseScoreHistorySection = (props: { username: string; displayId: string 
   return (
     <section class="space-y-4">
       <div class="flex items-center justify-between gap-3">
-        <h2 class="text-lg font-semibold">{SCORE_HISTORY_SECTION_LABEL}</h2>
+        <h2 class="flex flex-wrap items-baseline gap-2 text-lg font-semibold">
+          {SCORE_HISTORY_SECTION_LABEL}
+          <span class="text-xs font-normal text-text-muted">{SCORE_HISTORY_MAX_ENTRIES_LABEL}</span>
+        </h2>
         <Show when={entries().length > 0}>
           <AppDialog
             open={tableOpen()}
