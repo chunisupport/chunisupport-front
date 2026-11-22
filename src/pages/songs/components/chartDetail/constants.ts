@@ -18,6 +18,10 @@ export const FRIEND_RANKING_EMPTY_LABEL = 'ランキング対象がありませ�
 export const FRIEND_RANKING_RANK_LABEL = '順位'
 /** フレンドランキングのプレイヤー列ラベル */
 export const FRIEND_RANKING_PLAYER_LABEL = 'プレイヤー'
+/** 履歴一覧ダイアログを開くボタンのラベル */
+export const SCORE_HISTORY_TABLE_TOGGLE_LABEL = '履歴一覧'
+/** 履歴一覧ダイアログの閉じるボタンの名前 */
+export const SCORE_HISTORY_CLOSE_LABEL = '閉じる'
 /** 履歴一覧の日付列ラベル */
 export const SCORE_HISTORY_UPDATED_AT_LABEL = '更新日'
 /** 履歴一覧のスコア列ラベル */

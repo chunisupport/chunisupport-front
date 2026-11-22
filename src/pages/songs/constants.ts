@@ -19,7 +19,6 @@ export const COURSE_PAGE_COPY = {
   ownRecordHeading: OWN_SCORE_LABEL,
   notPlayed: '未プレイ',
   perTrackAveragePrefix: '1曲平均',
-  updatedAtPrefix: '更新',
   tracks: {
     heading: 'コース楽曲',
     trackPrefix: 'TRACK',
