@@ -86,7 +86,7 @@ const formatTruncatedScore = (score: number): string =>
  *
  * @param view - 選択中の表示カテゴリ。
  * @param ownScore - 差分比較に使うログインユーザーのプレイ済みスコア。
- * @returns 実力帯列の右側に表示する列定義一覧。
+ * @returns ベスト枠平均列の右側に表示する列定義一覧。
  */
 const getCourseTableColumnDefinitions = (
   view: CourseStatsTableView,
@@ -192,7 +192,7 @@ const getCourseTableColumnDefinitions = (
 /**
  * コース詳細ページのレーティング帯別統計を表とグラフで表示する。
  *
- * @param props - 統計データ、読み込み状態、エラー、ログインユーザーの実力帯・スコア情報。
+ * @param props - 統計データ、読み込み状態、エラー、ログインユーザーのベスト枠平均・スコア情報。
  * @returns コース統計セクション。
  */
 const CourseStatsSection = (props: Props) => {
