@@ -1,9 +1,14 @@
-import { createResource, createRoot, createSignal, untrack } from 'solid-js'
+import {
+  type QueryKey,
+  QueryObserver,
+  type QueryObserverOptions,
+  type QueryObserverResult,
+} from '@tanstack/solid-query'
+import { createRoot, createSignal } from 'solid-js'
+import { appQueryClient } from '../lib/queryClient'
 import { invalidateSongsUpdatedAtCache } from '../queries/masterData'
+import { standardSongsQueryOptions, worldsendSongsQueryOptions } from '../queries/songs'
 import { clearCachedSongData } from '../repositories/songCacheRepository'
-import type { SongDTO, WorldsendSongDTO } from '../types/api'
-import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache'
-import { fetchWorldsendSongsWithCache } from '../usecases/cache/fetchWorldsendSongsWithCache'
 import { compareSongsByReading } from '../utils/songTitleSorting'
 
 /**
@@ -16,97 +21,110 @@ const invalidateSongsDataCache = async (): Promise<void> => {
   try {
     await clearCachedSongData()
   } catch {
-    // IndexedDB の削除失敗時も、強制再取得と更新日時の再検証を継続する。
+    // IndexedDB の削除失敗時も、更新日時の再検証で最新の楽曲を取得できる。
   }
+}
+
+/** Solid の resource と同じ読み方で query の状態を参照するアクセサ。 */
+export type SongsQueryResource<T> = (() => T | undefined) & {
+  /** 要求前は unresolved、取得失敗時は errored。 */
+  readonly state: 'unresolved' | 'pending' | 'ready' | 'refreshing' | 'errored'
+  /** 取得または再取得の通信中は true。 */
+  readonly loading: boolean
+  /** 取得に失敗した場合のエラー。 */
+  readonly error: unknown
+  /** 直近に取得できたデータ。 */
+  readonly latest: T | undefined
+}
+
+/**
+ * 共有 QueryClient の query を監視し、要求されるまで取得しないアクセサを作成する。
+ *
+ * @param options - 監視する query の options。
+ * @returns query の状態を読むアクセサと、要求済みかどうか・observer。
+ */
+const createSongsQueryResource = <T, TQueryKey extends QueryKey>(
+  options: QueryObserverOptions<T, Error, T, T, TQueryKey>
+) => {
+  const observer = new QueryObserver(appQueryClient, { ...options, enabled: false })
+  const [result, setResult] = createSignal<QueryObserverResult<T>>(observer.getCurrentResult(), {
+    equals: false,
+  })
+  observer.subscribe(setResult)
+  const [requested, setRequested] = createSignal(false)
+
+  const error = (): unknown => (result().status === 'error' ? result().error : undefined)
+  const resource = (() => result().data) as SongsQueryResource<T>
+  Object.defineProperties(resource, {
+    state: {
+      get: () => {
+        if (!requested()) return 'unresolved'
+        const current = result()
+        if (current.status === 'error') return 'errored'
+        if (current.data === undefined) return 'pending'
+        return current.fetchStatus === 'fetching' ? 'refreshing' : 'ready'
+      },
+    },
+    loading: { get: () => requested() && result().fetchStatus === 'fetching' },
+    error: { get: error },
+    latest: { get: () => result().data },
+  })
+
+  /** 初回は取得を有効にし、以後は失敗していれば再取得する。 */
+  const request = (shouldRetry: (current: QueryObserverResult<T>) => boolean): void => {
+    if (!requested()) {
+      setRequested(true)
+      observer.setOptions({ ...options, enabled: true })
+      return
+    }
+    const current = observer.getCurrentResult()
+    if (current.fetchStatus === 'idle' && (current.status === 'error' || shouldRetry(current))) {
+      void observer.refetch()
+    }
+  }
+
+  /**
+   * 進行中の取得を打ち切り、共有 query を無効化する。
+   * 初回取得中は TanStack Query が既存の取得を再利用するため、先に明示的に中断する。
+   * store 経由で要求していなくても他画面の query が保持する一覧を古いまま残さず、
+   * 監視中の画面があれば再取得し、なければ次回の利用時に再取得させる。
+   */
+  const refetch = async (): Promise<void> => {
+    const filters = { queryKey: options.queryKey, exact: true }
+    await appQueryClient.cancelQueries(filters)
+    await appQueryClient.invalidateQueries(filters, { throwOnError: true })
+  }
+
+  return { resource, result, requested, request, refetch }
 }
 
 /**
  * 共有楽曲データの遅延ロード・再取得状態を作成する。
+ * 取得とキャッシュは TanStack Query の楽曲一覧 query が担い、ここでは既存画面向けの参照方法を提供する。
  *
  * @returns 通常楽曲と WORLD'S END 楽曲の共有 resource と操作関数。
  */
 const createSongsStore = () => {
-  let latestSongsRequest = 0
-  const [songsRevalidationFailed, setSongsRevalidationFailed] = createSignal(false)
-  const [songsRequested, setSongsRequested] = createSignal(false)
-  const [worldsendSongsRequested, setWorldsendSongsRequested] = createSignal(false)
-  const [songsMustRefresh, setSongsMustRefresh] = createSignal(false)
-  const [worldsendSongsMustRefresh, setWorldsendSongsMustRefresh] = createSignal(false)
+  const standard = createSongsQueryResource(standardSongsQueryOptions())
+  const worldsend = createSongsQueryResource(worldsendSongsQueryOptions())
 
-  const [songsResponse, { refetch: refetchSongs, mutate: mutateSongs }] = createResource<
-    { songs: SongDTO[] },
-    true
-  >(
-    () => (songsRequested() ? true : undefined),
-    async (_requested, info) => {
-      const request = ++latestSongsRequest
-      let cachedResponse: { songs: SongDTO[] } | undefined
-      try {
-        const response = await fetchAllSongsWithCache({
-          forceRefresh: untrack(songsMustRefresh) || Boolean(info.refetching),
-          onCached: (cached) => {
-            cachedResponse = cached
-            if (request === latestSongsRequest) mutateSongs(cached)
-          },
-        })
-        if (request === latestSongsRequest) {
-          setSongsRevalidationFailed(false)
-          setSongsMustRefresh(false)
-        }
-        return response
-      } catch (error) {
-        // 既存の表示を維持しても、再検証が必要な共有画像は生成しない。
-        if (!cachedResponse) throw error
-        if (request === latestSongsRequest) {
-          setSongsRevalidationFailed(true)
-          setSongsMustRefresh(false)
-        }
-        return cachedResponse
-      }
-    }
-  )
-  const [worldsendSongsResponse, { refetch: refetchWorldsendSongs }] = createResource<
-    { songs: WorldsendSongDTO[] },
-    true
-  >(
-    () => (worldsendSongsRequested() ? true : undefined),
-    async (_requested, info) => {
-      const response = await fetchWorldsendSongsWithCache({
-        forceRefresh: untrack(worldsendSongsMustRefresh) || Boolean(info.refetching),
-      })
-      setWorldsendSongsMustRefresh(false)
-      return response
-    }
-  )
+  /** @returns キャッシュを表示したまま背景の再検証に失敗した場合は true */
+  const songsRevalidationFailed = (): boolean => standard.result().data?.revalidationFailed ?? false
 
   /** 通常楽曲の初回ロードを開始し、取得または背景再検証が失敗していれば再試行する */
-  const ensureSongsLoaded = (): void => {
-    if (
-      untrack(() => songsResponse.state) === 'errored' ||
-      (untrack(songsRevalidationFailed) && !untrack(() => songsResponse.loading))
-    ) {
-      void refetchSongs(false)
-      return
-    }
-    setSongsRequested(true)
-  }
+  const ensureSongsLoaded = (): void =>
+    standard.request((current) => current.data?.revalidationFailed === true)
 
   /** WORLD'S END 楽曲が未要求の場合に初回ロードを開始し、前回の取得が失敗していれば再試行する */
-  const ensureWorldsendSongsLoaded = (): void => {
-    if (untrack(() => worldsendSongsResponse.state) === 'errored') {
-      void refetchWorldsendSongs(false)
-      return
-    }
-    setWorldsendSongsRequested(true)
-  }
+  const ensureWorldsendSongsLoaded = (): void => worldsend.request(() => false)
 
   /** @returns 通常楽曲の表示可能なデータがまだない場合は true */
   const isSongsLoading = (): boolean =>
-    !songsRequested() || (songsResponse.loading && !songsResponse())
+    !standard.requested() || (standard.result().data === undefined && !standard.resource.error)
 
   /** @returns WORLD'S END 楽曲の初回要求前または取得中の場合は true */
   const isWorldsendSongsLoading = (): boolean =>
-    !worldsendSongsRequested() || worldsendSongsResponse.loading
+    !worldsend.requested() || worldsend.resource.loading || worldsend.result().status === 'pending'
 
   /**
    * 楽曲 CRUD 後に通常楽曲キャッシュを無効化し、利用済みならサーバーから再取得する。
@@ -114,12 +132,8 @@ const createSongsStore = () => {
    * @returns 再取得または無効化完了後に解決される Promise。
    */
   const refreshSongs = async (): Promise<void> => {
-    setSongsMustRefresh(true)
     await invalidateSongsDataCache()
-
-    if (songsRequested()) {
-      await refetchSongs()
-    }
+    await standard.refetch()
   }
 
   /**
@@ -128,12 +142,8 @@ const createSongsStore = () => {
    * @returns 再取得または無効化完了後に解決される Promise。
    */
   const refreshWorldsendSongs = async (): Promise<void> => {
-    setWorldsendSongsMustRefresh(true)
     await invalidateSongsDataCache()
-
-    if (worldsendSongsRequested()) {
-      await refetchWorldsendSongs()
-    }
+    await worldsend.refetch()
   }
 
   /**
@@ -141,13 +151,13 @@ const createSongsStore = () => {
    * @returns 収録曲数。取得前または取得失敗時はundefined。
    */
   const songCount = (): number | undefined =>
-    songsResponse.error ? undefined : songsResponse()?.songs.length
+    standard.resource.error ? undefined : standard.result().data?.songs.length
 
   return {
     songCount,
     songsRevalidationFailed,
-    songsResponse,
-    worldsendSongsResponse,
+    songsResponse: standard.resource,
+    worldsendSongsResponse: worldsend.resource,
     ensureSongsLoaded,
     ensureWorldsendSongsLoaded,
     refreshSongs,
