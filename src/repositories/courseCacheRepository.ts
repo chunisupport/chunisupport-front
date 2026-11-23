@@ -182,3 +182,18 @@ export const replaceCachedUserCourseRecords = async (
     })
   })
 }
+
+/**
+ * コースマスタキャッシュを削除する。
+ *
+ * 更新日時は秒精度のため、同一秒内の再編集でも古い一覧を採用しないよう編集後に呼び出す。
+ *
+ * @returns 削除完了後に解決されるPromise。
+ */
+export const clearCachedCourses = async (): Promise<void> => {
+  const db = await getCacheDB()
+  await db.transaction('rw', db.courses, db.cacheMetadata, async () => {
+    await db.courses.clear()
+    await db.cacheMetadata.delete('courses')
+  })
+}

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
 import { onlineManager } from '@tanstack/solid-query'
-import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../constants/songMaster'
+import {
+  COURSES_UPDATED_AT_CACHE_TTL_MS,
+  SONGS_UPDATED_AT_CACHE_TTL_MS,
+} from '../constants/songMaster'
 import { appQueryClient } from '../lib/queryClient'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
@@ -179,8 +182,9 @@ test('無効化前に開始した楽曲更新日時の取得も最新値で解�
   assert.deepEqual(latest, afterMutation)
 })
 
-test('fetchCoursesUpdatedAtは完了後の呼び出しで最新更新日時を再取得する', async () => {
-  // Given: コースマスタ更新日時APIが成功する。
+test('fetchCoursesUpdatedAtはTTL内であれば取得済みの更新日時を再利用する', async (t) => {
+  // Given: コース更新日時を一度取得済みで、TTL 直前まで時間が経過している。
+  t.mock.timers.enable({ apis: ['Date'], now: 1 })
   let fetchCount = 0
   installFetchRecorder((input) => {
     assert.equal(String(input), 'http://localhost:3000/internal/courses/updated-at')
@@ -188,13 +192,43 @@ test('fetchCoursesUpdatedAtは完了後の呼び出しで最新更新日時を�
     return Response.json({ updated_at: '2026-07-15T09:00:00Z' })
   })
   const { fetchCoursesUpdatedAt } = await loadMasterDataQueries()
-
-  // When: 直列に2回取得する。
-  await fetchCoursesUpdatedAt()
   await fetchCoursesUpdatedAt()
 
-  // Then: 呼び出しごとにAPIから最新値を取得する。
+  // When: TTL 内に再取得し、その後 TTL を経過させて再取得する。
+  t.mock.timers.tick(COURSES_UPDATED_AT_CACHE_TTL_MS - 1)
+  await fetchCoursesUpdatedAt()
+  const fetchCountWithinTtl = fetchCount
+  t.mock.timers.tick(1)
+  await fetchCoursesUpdatedAt()
+
+  // Then: TTL 内は API を呼ばず、TTL 経過後に再検証する。
+  assert.equal(fetchCountWithinTtl, 1)
   assert.equal(fetchCount, 2)
+})
+
+test('コース更新日時キャッシュは無効化後にAPIから最新値を再取得する', async () => {
+  // Given: 初回の更新日時を取得してメモリへキャッシュする。
+  const responseBodies = [
+    { updated_at: '2026-07-15T09:00:00Z' },
+    { updated_at: '2026-07-20T09:00:00Z' },
+  ]
+  let fetchCount = 0
+  installFetchRecorder((input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/courses/updated-at')
+    const responseBody = responseBodies[fetchCount]
+    fetchCount += 1
+    return Response.json(responseBody)
+  })
+  const { fetchCoursesUpdatedAt, invalidateCoursesUpdatedAtCache } = await loadMasterDataQueries()
+  await fetchCoursesUpdatedAt()
+
+  // When: コース編集後を想定して更新日時キャッシュを無効化し、再取得する。
+  invalidateCoursesUpdatedAtCache()
+  const afterMutation = await fetchCoursesUpdatedAt()
+
+  // Then: API が再実行され、更新後の値へ置き換わる。
+  assert.equal(fetchCount, 2)
+  assert.deepEqual(afterMutation, responseBodies[1])
 })
 
 test('fetchCoursesUpdatedAtは同時呼び出しを1リクエストにまとめる', async () => {

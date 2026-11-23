@@ -36,6 +36,7 @@ import type {
   UpdateCourseRequestDTO,
   WorldsendSongDTO,
 } from '../../types/api'
+import { invalidateCourseMasterCache } from '../../usecases/cache/invalidateCourseMasterCache'
 import {
   COURSE_CLASS_OPTIONS,
   type CourseClassOption,
@@ -450,9 +451,23 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
     setStatusFilter('all')
   }
 
-  /** コース一覧を再取得する。 */
-  const refresh = (): void => {
-    void coursesQuery.refetch()
+  /**
+   * コース編集後に、コース更新日時とコースマスタのキャッシュを破棄して関連queryを再取得させる。
+   *
+   * @param displayId - 変更したコースの公開ID。新規作成時は省略する。
+   * @returns 無効化処理完了後に解決されるPromise。
+   */
+  const refresh = async (displayId?: string): Promise<void> => {
+    await invalidateCourseMasterCache()
+    void queryClient.invalidateQueries({ queryKey: courseQueryKeys.managed(username()) })
+    void queryClient.invalidateQueries({ queryKey: courseQueryKeys.master() })
+    void queryClient.invalidateQueries({ queryKey: courseQueryKeys.list(username()) })
+    if (username() !== null) {
+      void queryClient.invalidateQueries({ queryKey: courseQueryKeys.list(null) })
+    }
+    if (displayId) {
+      void queryClient.invalidateQueries({ queryKey: courseQueryKeys.detail(displayId) })
+    }
   }
 
   /** 構成エディターを閉じて、起動ボタンにフォーカスを戻す。 */
@@ -460,16 +475,6 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
     setTrackTarget(null)
     if (trackTrigger?.isConnected) trackTrigger.focus({ preventScroll: true })
     trackTrigger = undefined
-  }
-
-  /**
-   * 構成保存後に、変更したコースの管理一覧と公開コース詳細のキャッシュだけを無効化する。
-   *
-   * @param displayId - 構成を保存したコースの公開ID。
-   */
-  const refreshCourseTracks = (displayId: string): void => {
-    void queryClient.invalidateQueries({ queryKey: courseQueryKeys.managed(username()) })
-    void queryClient.invalidateQueries({ queryKey: courseQueryKeys.detail(displayId) })
   }
 
   /** コース追加ダイアログを開く。 */
@@ -522,7 +527,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
       await createCourse(request)
       showSuccessToast(COURSE_MANAGEMENT_COPY.createSuccess)
       closeForm()
-      refresh()
+      void refresh()
     } catch (error) {
       setFormError(toUserFriendlyErrorMessage(error, COURSE_MANAGEMENT_COPY.createError))
     } finally {
@@ -546,7 +551,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
       await updateCourse(course.id, request)
       showSuccessToast(COURSE_MANAGEMENT_COPY.editSuccess)
       closeForm()
-      refresh()
+      void refresh(course.id)
     } catch (error) {
       setFormError(toUserFriendlyErrorMessage(error, COURSE_MANAGEMENT_COPY.editError))
     } finally {
@@ -578,7 +583,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
     try {
       await deleteCourseByDisplayId(course.id)
       showSuccessToast(COURSE_MANAGEMENT_COPY.deleteSuccess)
-      refresh()
+      void refresh(course.id)
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, COURSE_MANAGEMENT_COPY.deleteError))
     } finally {
@@ -597,7 +602,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
     try {
       await restoreCourseByDisplayId(course.id)
       showSuccessToast(COURSE_MANAGEMENT_COPY.restoreSuccess)
-      refresh()
+      void refresh(course.id)
     } catch (error) {
       showErrorToast(toUserFriendlyErrorMessage(error, COURSE_MANAGEMENT_COPY.restoreError))
     }
@@ -835,7 +840,7 @@ const CourseManagementPage = (props: CourseManagementPageProps): JSX.Element => 
           <CourseTrackEditorDialog
             course={course}
             onClose={closeTrackEditor}
-            onSaved={() => refreshCourseTracks(course.id)}
+            onSaved={() => void refresh(course.id)}
           />
         )}
       </Show>

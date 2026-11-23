@@ -111,19 +111,14 @@ export const CourseTrackEditorDialog = (props: Props) => {
   const id = createUniqueId()
 
   const usesCharts = () => drafts().some((track) => track.selectionType !== 'RANDOM_FILTER')
-  const { songsQuery, worldsendSongsQuery, songsById, loading } = createCourseTrackSongs(
-    usesCharts,
-    usesCharts
-  )
+  const { standard, worldsend, songsById, loading } = createCourseTrackSongs(usesCharts, usesCharts)
   const genresQuery = useQuery(() => ({
     ...genresQueryOptions(),
     enabled: drafts().some((track) => track.selectionType === 'RANDOM_FILTER'),
   }))
-  const searchable = createMemo(() => buildSearchableItems(songsQuery.data?.songs ?? []))
+  const searchable = createMemo(() => buildSearchableItems(standard.songs()))
   const searchableWorldsend = createMemo(() =>
-    buildSearchableItems(
-      worldsendSongsQuery.data?.songs.filter((song) => song.charts.WORLDSEND) ?? []
-    )
+    buildSearchableItems(worldsend.songs().filter((song) => song.charts.WORLDSEND))
   )
   const genreOptions = createMemo(() =>
     toMultiSelectOptions(genresQuery.data?.map((genre) => genre.name) ?? [])
@@ -335,13 +330,13 @@ export const CourseTrackEditorDialog = (props: Props) => {
                               catalog === 'worldsend'
                                 ? {
                                     songs: filterSearchableItems(searchableWorldsend(), query),
-                                    loading: worldsendSongsQuery.isPending,
-                                    error: worldsendSongsQuery.error,
+                                    loading: worldsend.loading(),
+                                    error: worldsend.error(),
                                   }
                                 : {
                                     songs: filterSearchableItems(searchable(), query),
-                                    loading: songsQuery.isPending,
-                                    error: songsQuery.error,
+                                    loading: standard.loading(),
+                                    error: standard.error(),
                                   }
                             }
                             loading={loading()}
