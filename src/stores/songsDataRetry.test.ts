@@ -258,3 +258,35 @@ assert.deepEqual(store.songsResponse()?.songs, [{ title: 'New' }])
     '/internal/songs'
   )
 })
+
+test('他画面のqueryが再検証に失敗した一覧は、storeの初回要求で再取得されること', async () => {
+  await runBrowserTest(
+    `
+// Given: 表示可能なキャッシュがあり、コース画面などがstoreを経由せずに取得して再検証に失敗している。
+await import('fake-indexeddb/auto')
+const { replaceCachedSongs } = await import('./src/repositories/songCacheRepository.ts')
+const { appQueryClient } = await import('./src/lib/queryClient.ts')
+const { standardSongsQueryOptions } = await import('./src/queries/songs.ts')
+const cachedSong = { id: 'cached', title: 'Cached', unlock_required: false, name_folder_code: 'NUMBER' }
+const fetchedSong = { ...cachedSong, title: 'Updated' }
+await replaceCachedSongs([cachedSong], 1)
+let online = false
+globalThis.fetch = async (input) => {
+  if (!online) throw new TypeError('network error')
+  if (String(input).endsWith('/updated-at')) return Response.json({ updated_at: null, revision: 2 })
+  return Response.json({ songs: [fetchedSong] })
+}
+const failed = await appQueryClient.fetchQuery(standardSongsQueryOptions())
+assert.equal(failed.revalidationFailed, true)
+
+// When: 通信復旧後に、storeから初めて一覧を要求する。
+online = true
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'ready' && !store.songsRevalidationFailed())
+
+// Then: キャッシュのまま止まらず、最新の一覧を取得する。
+assert.deepEqual(store.songsResponse()?.songs, [fetchedSong])
+`,
+    '/internal/songs'
+  )
+})

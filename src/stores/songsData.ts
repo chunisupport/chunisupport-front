@@ -70,12 +70,14 @@ const createSongsQueryResource = <T, TQueryKey extends QueryKey>(
     latest: { get: () => result().data },
   })
 
-  /** 初回は取得を有効にし、以後は失敗していれば再取得する。 */
+  /**
+   * 初回は取得を有効にし、失敗していれば再取得する。
+   * 他画面の query が先に取得していた場合、有効化だけでは再取得されないため、初回も失敗状態を確認する。
+   */
   const request = (shouldRetry: (current: QueryObserverResult<T>) => boolean): void => {
     if (!requested()) {
       setRequested(true)
       observer.setOptions({ ...options, enabled: true })
-      return
     }
     const current = observer.getCurrentResult()
     if (current.fetchStatus === 'idle' && (current.status === 'error' || shouldRetry(current))) {
