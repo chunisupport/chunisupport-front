@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
 import { onlineManager } from '@tanstack/solid-query'
 import { appQueryClient } from '../lib/queryClient'
+import { clearAuthenticatedUser, resetAuthSession } from '../stores/authSession'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 beforeEach(() => appQueryClient.clear())
@@ -94,6 +95,30 @@ test('更新日時はユーザーごとに異なるqueryとして同時取得す
   assert.equal(calls.length, 2)
   assert.notEqual(alice.updated_at, bob.updated_at)
   assert.deepEqual(userQueryKeys.updatedAt('alice'), ['users', 'alice', 'updated-at'])
+})
+
+test('全楽曲レコードは同じユーザーのqueryで再利用し、無効化後は取得し直す', async (t) => {
+  // Given: IndexedDBを介さず、呼び出すたびに更新日時が変わるレコードAPI。
+  clearAuthenticatedUser()
+  t.after(resetAuthSession)
+  let fetchCount = 0
+  installFetchRecorder((input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/users/alice/record')
+    fetchCount += 1
+    return Response.json({ meta: { updated_at: `updated-${fetchCount}` }, standard: [] })
+  })
+  const { userQueryKeys, userRecordQueryOptions } = await loadUsersApi()
+
+  // When: 同じユーザーのレコードを再度要求し、スコア登録後と同様に無効化する。
+  const first = await appQueryClient.fetchQuery(userRecordQueryOptions('alice'))
+  const reused = await appQueryClient.fetchQuery(userRecordQueryOptions('alice'))
+  await appQueryClient.invalidateQueries({ queryKey: userQueryKeys.record('alice'), exact: true })
+  const refreshed = await appQueryClient.fetchQuery(userRecordQueryOptions('alice'))
+
+  // Then: 無効化前はキャッシュを共有し、無効化後に新しいデータを取得する。
+  assert.equal(fetchCount, 2)
+  assert.equal(first, reused)
+  assert.equal(refreshed.meta.updated_at, 'updated-2')
 })
 
 test('プロフィールコメントqueryは enabled が false のとき取得しない設定になること', async () => {

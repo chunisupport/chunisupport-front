@@ -9,9 +9,11 @@ import {
   Show,
 } from 'solid-js'
 
-import { fetchUserProfileSummary } from '../../../api/users'
+import { fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
+import { appQueryClient } from '../../../lib/queryClient'
+import { userRecordQueryOptions } from '../../../queries/users'
 import type {
   PlayerDTO,
   UserCourseRecordsDTO,
@@ -20,7 +22,7 @@ import type {
 } from '../../../types/api'
 import { fetchUserCourseRecordsWithCache } from '../../../usecases/cache/fetchUserCourseRecordsWithCache'
 import { fetchUserRatingWithCache } from '../../../usecases/cache/fetchUserRatingWithCache'
-import { fetchUserRecordWithCache } from '../../../usecases/cache/fetchUserRecordWithCache'
+import { isAuthenticatedOwnUser } from '../../../usecases/cache/userApiCache'
 import { isNotFoundApiError } from '../../../utils/apiError'
 import { resolveOverPowerSubPage, resolveProfilePageQuery } from '../../../utils/userProfileRoute'
 import NotFoundPage from '../../NotFoundPage'
@@ -89,14 +91,20 @@ const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadSta
 }
 
 /**
- * ユーザーレコードと取得対象ユーザー名をまとめて取得する。
+ * 本人の楽曲レコードはコース詳細と共有し、他のユーザーのレコードは閲覧権限をAPIで確認する。
  *
  * @param username - レコード取得対象のユーザー名。
  * @returns 取得対象ユーザー名付きのレコード取得結果。
  */
 const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecordLoadState> => ({
   username,
-  record: await fetchUserRecordWithCache(username),
+  record: (await isAuthenticatedOwnUser(username))
+    ? await appQueryClient.fetchQuery({
+        ...userRecordQueryOptions(username),
+        networkMode: 'always',
+        retry: false,
+      })
+    : await fetchUserRecord(username),
 })
 
 /**

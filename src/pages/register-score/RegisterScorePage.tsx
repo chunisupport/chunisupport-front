@@ -6,6 +6,8 @@ import { postPlayerDataCommit } from '../../api/register-data'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
+import { invalidateCoursesUpdatedAtCache } from '../../queries/masterData'
+import { userQueryKeys } from '../../queries/users'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
@@ -56,6 +58,23 @@ const RegisterScorePage = () => {
     return username ? invalidateFriendRankings(queryClient, username) : Promise.resolve()
   }
 
+  /**
+   * スコア確定後にユーザーAPIの保存データと本人の共有楽曲レコードを無効化する。
+   *
+   * @param username - スコア登録を開始したユーザー名。
+   * @returns キャッシュ削除と無効化の完了を表すPromise。
+   */
+  const clearScoreCaches = async (username: string | undefined): Promise<void> => {
+    const filters = username ? { queryKey: userQueryKeys.record(username), exact: true } : null
+    if (filters) await queryClient.cancelQueries(filters)
+
+    try {
+      await clearCachedUserApiResponses()
+    } finally {
+      if (filters) await queryClient.invalidateQueries(filters)
+    }
+  }
+
   useDocumentTitle(REGISTER_SCORE_COPY.title)
 
   onMount(async () => {
@@ -66,16 +85,18 @@ const RegisterScorePage = () => {
     }
 
     try {
+      const username = authSession.user?.username
       const { result } = await commitRegisterScore(
         { uploadToken },
         {
           commitPlayerData: postPlayerDataCommit,
-          clearUserApiCache: clearCachedUserApiResponses,
+          clearUserApiCache: () => clearScoreCaches(username),
           invalidateFriendRankings: invalidateCurrentUserFriendRankings,
           ensureSongsLoaded: songsData.ensureSongsLoaded,
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
       )
+      invalidateCoursesUpdatedAtCache()
       setViewState({ type: 'success', result })
     } catch (error) {
       setViewState({ type: 'error', message: resolveRegisterScoreErrorMessage(error) })

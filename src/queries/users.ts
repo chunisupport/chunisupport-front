@@ -7,6 +7,9 @@ import type { UserRecordDTO } from '../types/api'
 import { fetchUserRatingWithCache } from '../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../usecases/cache/fetchUserRecordWithCache'
 
+/** 全楽曲レコードを画面間で再利用する期間。 */
+const USER_RECORD_STALE_TIME_MS = 5 * 60 * 1_000
+
 /** ユーザーqueryのkey factory。 */
 export const userQueryKeys = {
   /**
@@ -100,11 +103,12 @@ export const userRatingQueryOptions = (username: string | null) =>
  * ユーザーの全楽曲レコード（通常譜面とWORLD'S ENDの自己ベスト）をキャッシュ付きで取得するquery optionsを生成する。
  *
  * @param username - 対象ユーザー名。取得不要ならnull。
- * @returns 全楽曲レコード取得用のquery options。
+ * @returns 全楽曲レコードを5分間再利用するquery options。
  */
 export const userRecordQueryOptions = (username: string | null) =>
   queryOptions({
     queryKey: userQueryKeys.record(username ?? ''),
     queryFn: (): Promise<UserRecordDTO> => fetchUserRecordWithCache(username ?? ''),
     enabled: Boolean(username),
+    staleTime: USER_RECORD_STALE_TIME_MS,
   })
