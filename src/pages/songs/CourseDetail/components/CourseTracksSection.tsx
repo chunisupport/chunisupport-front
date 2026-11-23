@@ -60,7 +60,7 @@ import {
 } from '../../../../utils/courseTracks'
 import { buildChunithmJacketUrl } from '../../../../utils/jacket'
 import { normalizeScoreRangeInput } from '../../../../utils/rangeInput'
-import { formatScoreDifference } from '../../../../utils/scoreDifference'
+import { formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
 import type { SortDirection } from '../../../../utils/sortingQuery'
 import { COURSE_PAGE_COPY } from '../../constants'
 
@@ -884,7 +884,11 @@ const CourseTracksSection = (props: Props) => {
                 </p>
                 <Show when={props.ownCourseScore}>
                   {(ownScore) => (
-                    <p class="font-jost text-sm leading-none text-success tabular-nums">
+                    <p
+                      class={`font-jost text-sm leading-none tabular-nums ${getScoreDifferenceClass(
+                        score() - ownScore()
+                      )}`}
+                    >
                       <span class="sr-only">{COPY.totalDiffLabel} </span>
                       {formatScoreDifference(score() - ownScore())}
                     </p>

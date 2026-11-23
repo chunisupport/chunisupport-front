@@ -1,13 +1,10 @@
 import { useQuery } from '@tanstack/solid-query'
 import { createMemo } from 'solid-js'
-import {
-  courseTrackSongsQueryOptions,
-  courseTrackWorldsendSongsQueryOptions,
-} from '../queries/courses'
+import { standardSongsQueryOptions, worldsendSongsQueryOptions } from '../queries/songs'
 import type { SongDTO, WorldsendSongDTO } from '../types/api'
 
 /**
- * コース構成の譜面表示に使う通常楽曲・WORLD'S END楽曲を取得し、公開IDで引ける形にする。
+ * コース構成の譜面表示に使う通常楽曲・WORLD'S END楽曲を、楽曲画面と共有するqueryから取得し、公開IDで引ける形にする。
  *
  * @param standardEnabled - 通常楽曲一覧を取得するか。
  * @param worldsendEnabled - WORLD'S END楽曲一覧を取得するか。
@@ -18,11 +15,11 @@ export const createCourseTrackSongs = (
   worldsendEnabled: () => boolean
 ) => {
   const songsQuery = useQuery(() => ({
-    ...courseTrackSongsQueryOptions(),
+    ...standardSongsQueryOptions(),
     enabled: standardEnabled(),
   }))
   const worldsendSongsQuery = useQuery(() => ({
-    ...courseTrackWorldsendSongsQueryOptions(),
+    ...worldsendSongsQueryOptions(),
     enabled: worldsendEnabled(),
   }))
   const songsById = createMemo(

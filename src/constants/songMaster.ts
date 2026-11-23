@@ -10,3 +10,6 @@ export const SONG_DATA_REFRESH_ERROR_MESSAGE =
 
 /** 楽曲更新日時をメモリ上で再利用する期間（5分）。経過後は API で再検証する */
 export const SONGS_UPDATED_AT_CACHE_TTL_MS = 5 * 60 * 1_000
+
+/** コース更新日時をメモリ上で再利用する期間（5分）。経過後は API で再検証する */
+export const COURSES_UPDATED_AT_CACHE_TTL_MS = 5 * 60 * 1_000

@@ -2,6 +2,7 @@ import { createMemo, createSignal, For, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../../components'
 import { AppSelect } from '../../../../components/common/AppSelect'
 import type { CourseStatsBandDTO, RatingBandDTO } from '../../../../types/api'
+import { calculateChartStatsPercent } from '../../../../utils/chartStats'
 import {
   COURSE_MAX_SCORE,
   completeCourseStatsRatingBands,
@@ -221,6 +222,15 @@ const CourseStatsSection = (props: Props) => {
       : rawStats
   })
   const labels = createMemo(() => chartStats().map((band) => band.rating_band))
+  const clearRateDatasets = createMemo<StatsChartDataset[]>(() => [
+    {
+      label: COURSE_PAGE_COPY.statsCharts.clearRateTitle,
+      colorVariable: '--cs-color-lamp-clear-bg',
+      values: chartStats().map((band) =>
+        calculateChartStatsPercent(band.clear.clear, band.player_count)
+      ),
+    },
+  ])
   const clearDatasets = createMemo<StatsChartDataset[]>(() =>
     COURSE_CLEAR_CHART_DATASET_DEFINITIONS.map((definition) => ({
       ...definition,
@@ -324,8 +334,14 @@ const CourseStatsSection = (props: Props) => {
             </div>
 
             <div class="mt-4 grid gap-4 lg:grid-cols-2">
+              <StatsBarChart
+                title={COURSE_PAGE_COPY.statsCharts.clearRateTitle}
+                ariaLabel={COURSE_PAGE_COPY.statsCharts.clearRateAriaLabel}
+                labels={labels()}
+                datasets={clearRateDatasets()}
+                percentage
+              />
               <StatsAverageScoreChart
-                class="lg:col-span-2"
                 title={COURSE_PAGE_COPY.statsCharts.averageTitle}
                 ariaLabel={COURSE_PAGE_COPY.statsCharts.averageAriaLabel}
                 ariaLabelWithOwnScore={COURSE_PAGE_COPY.statsCharts.averageWithOwnScoreAriaLabel}

@@ -180,3 +180,113 @@ assert.deepEqual(store.songsResponse().songs, [fetchedSong])
     )
   })
 }
+
+test('共有storeとTanStack Queryの楽曲一覧queryは同じキャッシュを参照すること', async () => {
+  await runBrowserTest(
+    `
+// Given: 初回取得は失敗し、2回目以降は成功する楽曲一覧API。
+const { appQueryClient } = await import('./src/lib/queryClient.ts')
+const { standardSongsQueryOptions, songListQueryKeys } = await import('./src/queries/songs.ts')
+
+// When: storeから取得を要求し、失敗後に再要求して成功させる。
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'errored')
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'ready')
+
+// Then: queryキャッシュにも同じ一覧が入り、queryから取得しても追加の通信は発生しない。
+assert.deepEqual(appQueryClient.getQueryData(songListQueryKeys.standard())?.songs, [{ title: 'A' }])
+const fromQuery = await appQueryClient.fetchQuery(standardSongsQueryOptions())
+assert.deepEqual(fromQuery.songs, [{ title: 'A' }])
+assert.equal(calls(), 2)
+`,
+    '/internal/songs'
+  )
+})
+
+test('キャッシュがない初回取得中に楽曲を更新すると、更新前の応答を採用せず再取得すること', async () => {
+  await runBrowserTest(
+    `
+// Given: キャッシュがなく、初回の楽曲一覧取得は応答待ちになっている。
+let resolveFirst
+let songRequests = 0
+globalThis.fetch = async (input) => {
+  if (String(input).endsWith('/updated-at')) return Response.json({ updated_at: null, revision: 1 })
+  songRequests += 1
+  if (songRequests === 1) return new Promise((resolve) => { resolveFirst = resolve })
+  return Response.json({ songs: [{ title: 'New' }] })
+}
+store.ensureSongsLoaded()
+await waitUntil(() => resolveFirst)
+
+// When: 初回取得中に楽曲更新後の再取得を行い、その後に古い応答を返す。
+const refreshing = store.refreshSongs()
+resolveFirst(Response.json({ songs: [{ title: 'Old' }] }))
+await refreshing
+await flush()
+
+// Then: 一覧APIを再度呼び、更新後の一覧を表示する。
+assert.equal(songRequests, 2)
+assert.deepEqual(store.songsResponse()?.songs, [{ title: 'New' }])
+`,
+    '/internal/songs'
+  )
+})
+
+test('store経由で要求していない画面が取得した一覧も、楽曲更新後は再取得されること', async () => {
+  await runBrowserTest(
+    `
+// Given: コース画面などがstoreを経由せずにqueryから一覧を取得済み。
+const { appQueryClient } = await import('./src/lib/queryClient.ts')
+const { standardSongsQueryOptions } = await import('./src/queries/songs.ts')
+let title = 'Old'
+globalThis.fetch = async (input) => {
+  if (String(input).endsWith('/updated-at')) return Response.json({ updated_at: null, revision: 1 })
+  return Response.json({ songs: [{ title }] })
+}
+assert.deepEqual((await appQueryClient.fetchQuery(standardSongsQueryOptions())).songs, [{ title: 'Old' }])
+
+// When: 楽曲更新後の再取得を行ってから、storeで初めて一覧を要求する。
+title = 'New'
+await store.refreshSongs()
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'ready')
+
+// Then: 更新前の一覧を使い続けず、更新後の一覧を取得する。
+assert.deepEqual(store.songsResponse()?.songs, [{ title: 'New' }])
+`,
+    '/internal/songs'
+  )
+})
+
+test('他画面のqueryが再検証に失敗した一覧は、storeの初回要求で再取得されること', async () => {
+  await runBrowserTest(
+    `
+// Given: 表示可能なキャッシュがあり、コース画面などがstoreを経由せずに取得して再検証に失敗している。
+await import('fake-indexeddb/auto')
+const { replaceCachedSongs } = await import('./src/repositories/songCacheRepository.ts')
+const { appQueryClient } = await import('./src/lib/queryClient.ts')
+const { standardSongsQueryOptions } = await import('./src/queries/songs.ts')
+const cachedSong = { id: 'cached', title: 'Cached', unlock_required: false, name_folder_code: 'NUMBER' }
+const fetchedSong = { ...cachedSong, title: 'Updated' }
+await replaceCachedSongs([cachedSong], 1)
+let online = false
+globalThis.fetch = async (input) => {
+  if (!online) throw new TypeError('network error')
+  if (String(input).endsWith('/updated-at')) return Response.json({ updated_at: null, revision: 2 })
+  return Response.json({ songs: [fetchedSong] })
+}
+const failed = await appQueryClient.fetchQuery(standardSongsQueryOptions())
+assert.equal(failed.revalidationFailed, true)
+
+// When: 通信復旧後に、storeから初めて一覧を要求する。
+online = true
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'ready' && !store.songsRevalidationFailed())
+
+// Then: キャッシュのまま止まらず、最新の一覧を取得する。
+assert.deepEqual(store.songsResponse()?.songs, [fetchedSong])
+`,
+    '/internal/songs'
+  )
+})

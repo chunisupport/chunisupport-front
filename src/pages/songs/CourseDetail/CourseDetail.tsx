@@ -11,10 +11,9 @@ import {
   courseDetailQueryOptions,
   courseListQueryOptions,
   courseStatsQueryOptions,
-  courseTrackScoresQueryOptions,
 } from '../../../queries/courses'
 import { ratingBandsQueryOptions } from '../../../queries/ratingBands'
-import { userRatingQueryOptions } from '../../../queries/users'
+import { userRatingQueryOptions, userRecordQueryOptions } from '../../../queries/users'
 import { authSession } from '../../../stores/authSession'
 import { formatCourseClassLabel } from '../../../utils/courseClassDisplay'
 import { buildCourseTrackBestRecords } from '../../../utils/courseTracks'
@@ -46,7 +45,7 @@ const CourseDetail = () => {
   }))
   const tracks = () => detailQuery.data?.tracks ?? []
   const trackScoresQuery = useQuery(() =>
-    courseTrackScoresQueryOptions(
+    userRecordQueryOptions(
       authSession.user?.last_score_update && tracks().some((track) => track.candidates.length > 0)
         ? username()
         : null

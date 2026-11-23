@@ -46,7 +46,8 @@ Chart.register(
 /** 積み上げ棒グラフの1系列データ */
 export type StatsChartDataset = {
   label: string
-  values: number[]
+  /** 横軸ラベルごとの値。集計対象のない帯はnull。 */
+  values: (number | null)[]
   colorVariable: string
   legendBackgroundVariable?: string
   gradientColorVariables?: readonly string[]
@@ -59,6 +60,8 @@ type StatsBarChartProps = {
   ariaLabel: string
   labels: string[]
   datasets: StatsChartDataset[]
+  /** 縦軸とツールチップを百分率で表示するか。 */
+  percentage?: boolean
   class?: string
 }
 
@@ -78,6 +81,8 @@ const CHART_HEIGHT_CLASS = 'h-72'
 const CHART_DEFAULT_TEXT_COLOR = '--cs-color-text'
 const CHART_DEFAULT_GRID_COLOR = '--cs-color-border'
 const CHART_X_AXIS_TICK_PADDING = 8
+/** 百分率の棒グラフの縦軸上限 */
+const BAR_CHART_PERCENT_MAX = 100
 /** 光沢付きランプの凡例色見本へ重ねるCSSグラデーション変数名 */
 const LAMP_GLOSS_GRADIENT_VARIABLE = '--cs-gradient-record-lamp-badge-gloss'
 /** 平均・中央値グラフの既定セクション見出し */
@@ -269,9 +274,10 @@ const getLegendBackground = (dataset: StatsChartDataset): string => {
 
 /**
  * Chart.jsの棒グラフ設定を生成する。
+ * @param percentage - 縦軸とツールチップを百分率で表示するか。
  * @returns 統計グラフで共通利用するChart.jsオプション。
  */
-const createStatsBarChartOptions = (): ChartOptions<'bar'> => {
+const createStatsBarChartOptions = (percentage: boolean): ChartOptions<'bar'> => {
   const textColor = resolveChartColor(CHART_DEFAULT_TEXT_COLOR, CHART_COLOR_FALLBACK)
   const gridColor = resolveChartColor(CHART_DEFAULT_GRID_COLOR, CHART_COLOR_FALLBACK)
 
@@ -279,6 +285,7 @@ const createStatsBarChartOptions = (): ChartOptions<'bar'> => {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    interaction: percentage ? { intersect: false, mode: 'index' } : undefined,
     plugins: {
       legend: {
         display: false,
@@ -290,7 +297,14 @@ const createStatsBarChartOptions = (): ChartOptions<'bar'> => {
       },
       tooltip: {
         callbacks: {
-          label: (context) => `${context.dataset.label}: ${context.parsed.y?.toLocaleString()}人`,
+          label: (context) => {
+            const value = context.parsed.y
+            if (value === null) return ''
+            const formattedValue = percentage
+              ? `${value.toFixed(1)}%`
+              : `${value.toLocaleString()}人`
+            return `${context.dataset.label}: ${formattedValue}`
+          },
         },
       },
     },
@@ -310,9 +324,11 @@ const createStatsBarChartOptions = (): ChartOptions<'bar'> => {
       y: {
         stacked: true,
         beginAtZero: true,
+        max: percentage ? BAR_CHART_PERCENT_MAX : undefined,
         ticks: {
           color: textColor,
           precision: 0,
+          callback: percentage ? (value) => `${value}%` : undefined,
         },
         grid: {
           color: gridColor,
@@ -331,7 +347,7 @@ const createStatsBarChartOptions = (): ChartOptions<'bar'> => {
 const createStatsBarChartData = (
   labels: string[],
   datasets: StatsChartDataset[]
-): ChartData<'bar', number[], string> => ({
+): ChartData<'bar', (number | null)[], string> => ({
   labels,
   datasets: datasets.map((dataset) => {
     const color = resolveChartColor(dataset.colorVariable, CHART_COLOR_FALLBACK)
@@ -353,7 +369,7 @@ const createStatsBarChartData = (
  */
 export const StatsBarChart = (props: StatsBarChartProps) => {
   let canvasRef!: HTMLCanvasElement
-  let chart: Chart<'bar', number[], string> | undefined
+  let chart: Chart<'bar', (number | null)[], string> | undefined
   const [mounted, setMounted] = createSignal(false)
 
   onMount(() => {
@@ -367,7 +383,7 @@ export const StatsBarChart = (props: StatsBarChartProps) => {
     accentPreference()
 
     const chartData = createStatsBarChartData(props.labels, props.datasets)
-    const chartOptions = createStatsBarChartOptions()
+    const chartOptions = createStatsBarChartOptions(props.percentage ?? false)
     const chartPlugins = [
       createBarBackgroundPlugin(props.datasets),
       createBarGlossPlugin(props.datasets),
