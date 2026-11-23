@@ -111,14 +111,19 @@ export const CourseTrackEditorDialog = (props: Props) => {
   const id = createUniqueId()
 
   const usesCharts = () => drafts().some((track) => track.selectionType !== 'RANDOM_FILTER')
-  const { standard, worldsend, songsById, loading } = createCourseTrackSongs(usesCharts, usesCharts)
+  const { songsQuery, worldsendSongsQuery, songsById, loading } = createCourseTrackSongs(
+    usesCharts,
+    usesCharts
+  )
   const genresQuery = useQuery(() => ({
     ...genresQueryOptions(),
     enabled: drafts().some((track) => track.selectionType === 'RANDOM_FILTER'),
   }))
-  const searchable = createMemo(() => buildSearchableItems(standard.songs()))
+  const searchable = createMemo(() => buildSearchableItems(songsQuery.data?.songs ?? []))
   const searchableWorldsend = createMemo(() =>
-    buildSearchableItems(worldsend.songs().filter((song) => song.charts.WORLDSEND))
+    buildSearchableItems(
+      worldsendSongsQuery.data?.songs.filter((song) => song.charts.WORLDSEND) ?? []
+    )
   )
   const genreOptions = createMemo(() =>
     toMultiSelectOptions(genresQuery.data?.map((genre) => genre.name) ?? [])
@@ -330,13 +335,13 @@ export const CourseTrackEditorDialog = (props: Props) => {
                               catalog === 'worldsend'
                                 ? {
                                     songs: filterSearchableItems(searchableWorldsend(), query),
-                                    loading: worldsend.loading(),
-                                    error: worldsend.error(),
+                                    loading: worldsendSongsQuery.isPending,
+                                    error: worldsendSongsQuery.error,
                                   }
                                 : {
                                     songs: filterSearchableItems(searchable(), query),
-                                    loading: standard.loading(),
-                                    error: standard.error(),
+                                    loading: songsQuery.isPending,
+                                    error: songsQuery.error,
                                   }
                             }
                             loading={loading()}
