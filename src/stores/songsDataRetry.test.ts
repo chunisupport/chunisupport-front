@@ -180,3 +180,26 @@ assert.deepEqual(store.songsResponse().songs, [fetchedSong])
     )
   })
 }
+
+test('共有storeとTanStack Queryの楽曲一覧queryは同じキャッシュを参照すること', async () => {
+  await runBrowserTest(
+    `
+// Given: 初回取得は失敗し、2回目以降は成功する楽曲一覧API。
+const { appQueryClient } = await import('./src/lib/queryClient.ts')
+const { standardSongsQueryOptions, songListQueryKeys } = await import('./src/queries/songs.ts')
+
+// When: storeから取得を要求し、失敗後に再要求して成功させる。
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'errored')
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'ready')
+
+// Then: queryキャッシュにも同じ一覧が入り、queryから取得しても追加の通信は発生しない。
+assert.deepEqual(appQueryClient.getQueryData(songListQueryKeys.standard())?.songs, [{ title: 'A' }])
+const fromQuery = await appQueryClient.fetchQuery(standardSongsQueryOptions())
+assert.deepEqual(fromQuery.songs, [{ title: 'A' }])
+assert.equal(calls(), 2)
+`,
+    '/internal/songs'
+  )
+})

@@ -5,11 +5,8 @@ import {
   fetchManagedCourses,
   fetchOwnCourseScoreHistory,
 } from '../api/courses'
-import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../constants/songMaster'
-import { fetchAllSongsWithCache } from '../usecases/cache/fetchAllSongsWithCache'
 import { fetchCoursesWithCache } from '../usecases/cache/fetchCoursesWithCache'
 import { fetchUserCourseRecordsWithCache } from '../usecases/cache/fetchUserCourseRecordsWithCache'
-import { fetchWorldsendSongsWithCache } from '../usecases/cache/fetchWorldsendSongsWithCache'
 import { mergeCourseRecords } from '../utils/courseRecordMerger'
 
 /** 統計はバッチ集計のため、短時間の再取得を避ける時間 */
@@ -33,10 +30,6 @@ export const courseQueryKeys = {
   managed: (username: string | null) => [...courseQueryKeys.user(username), 'managed'] as const,
   /** @returns コース詳細と現行の候補譜面のqueryキー。 */
   detail: (displayId: string) => [...courseQueryKeys.all, 'detail', displayId] as const,
-  /** @returns コース構成の楽曲選択で参照する通常楽曲のqueryキー。 */
-  trackSongs: () => [...courseQueryKeys.all, 'track-songs'] as const,
-  /** @returns コース編集で使うWORLD'S END楽曲一覧のqueryキー。 */
-  trackWorldsendSongs: () => [...courseQueryKeys.all, 'track-worldsend-songs'] as const,
   /** @returns コース統計のqueryキー。 */
   stats: (displayId: string) => [...courseQueryKeys.all, 'stats', displayId] as const,
   /** @returns ユーザー別・コース別のスコア履歴のqueryキー。 */
@@ -120,20 +113,4 @@ export const courseDetailQueryOptions = (displayId: string) =>
   queryOptions({
     queryKey: courseQueryKeys.detail(displayId),
     queryFn: ({ signal }) => fetchCourseDetail(displayId, signal),
-  })
-
-/** @returns トラック編集の譜面選択用query options。楽曲更新日時と同じ期間はIndexedDBを読み直さない。 */
-export const courseTrackSongsQueryOptions = () =>
-  queryOptions({
-    queryKey: courseQueryKeys.trackSongs(),
-    queryFn: () => fetchAllSongsWithCache(),
-    staleTime: SONGS_UPDATED_AT_CACHE_TTL_MS,
-  })
-
-/** @returns トラック編集のWORLD'S END譜面選択用query options。楽曲更新日時と同じ期間はIndexedDBを読み直さない。 */
-export const courseTrackWorldsendSongsQueryOptions = () =>
-  queryOptions({
-    queryKey: courseQueryKeys.trackWorldsendSongs(),
-    queryFn: () => fetchWorldsendSongsWithCache(),
-    staleTime: SONGS_UPDATED_AT_CACHE_TTL_MS,
   })
