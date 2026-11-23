@@ -6,7 +6,10 @@ import {
   requestSongsUpdatedAt,
   requestVersions,
 } from '../api/songs'
-import { SONGS_UPDATED_AT_CACHE_TTL_MS } from '../constants/songMaster'
+import {
+  COURSES_UPDATED_AT_CACHE_TTL_MS,
+  SONGS_UPDATED_AT_CACHE_TTL_MS,
+} from '../constants/songMaster'
 import { appQueryClient } from '../lib/queryClient'
 import type { MasterDataDTO } from '../types/api'
 import { fetchQueryWithRestartOnRemoval } from './fetchQueryWithRestartOnRemoval'
@@ -113,16 +116,17 @@ export const coursesUpdatedAtQueryOptions = () =>
   queryOptions({
     queryKey: masterDataQueryKeys.coursesUpdatedAt(),
     queryFn: requestCoursesUpdatedAt,
-    staleTime: 0,
+    staleTime: COURSES_UPDATED_AT_CACHE_TTL_MS,
     retry: false,
     networkMode: 'always',
   })
 
 /**
  * コース更新日時を共通QueryClient経由で取得する。
- * @returns APIから取得した最新のコース更新日時。
+ * @returns キャッシュ済み、またはAPIから取得したコース更新日時。
  */
-export const fetchCoursesUpdatedAt = () => appQueryClient.fetchQuery(coursesUpdatedAtQueryOptions())
+export const fetchCoursesUpdatedAt = () =>
+  fetchQueryWithRestartOnRemoval(coursesUpdatedAtQueryOptions())
 
 /**
  * 楽曲更新日時queryを進行中の取得ごと破棄する。
@@ -131,6 +135,15 @@ export const fetchCoursesUpdatedAt = () => appQueryClient.fetchQuery(coursesUpda
  */
 export const invalidateSongsUpdatedAtCache = (): void => {
   appQueryClient.removeQueries({ queryKey: masterDataQueryKeys.songsUpdatedAt(), exact: true })
+}
+
+/**
+ * コース更新日時queryを進行中の取得ごと破棄する。
+ * 無効化前の応答は以後のキャッシュに採用せず、進行中の呼び出しは最大1回再取得する。
+ * @returns なし。
+ */
+export const invalidateCoursesUpdatedAtCache = (): void => {
+  appQueryClient.removeQueries({ queryKey: masterDataQueryKeys.coursesUpdatedAt(), exact: true })
 }
 
 /**

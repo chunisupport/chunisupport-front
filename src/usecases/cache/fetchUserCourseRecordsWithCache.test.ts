@@ -150,12 +150,15 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
     throw new Error(`unexpected fetch: ${url}`)
   }
   const { fetchUserCourseRecordsWithCache } = await import('./fetchUserCourseRecordsWithCache.ts')
+  const { invalidateCoursesUpdatedAtCache } = await import('../../queries/masterData.ts')
 
   // When: 同じ更新日時、マスタだけ更新、レコードだけ更新の順で取得する。
   const first = await fetchUserCourseRecordsWithCache('alice')
   const second = await fetchUserCourseRecordsWithCache('alice')
   coursesUpdatedAt = '2026-07-15T11:00:00Z'
   courseName = 'COURSE 1 UPDATED'
+  // コース更新日時はTTL内で再利用されるため、コース編集時と同様に無効化する。
+  invalidateCoursesUpdatedAtCache()
   const masterUpdated = await fetchUserCourseRecordsWithCache('alice')
   userUpdatedAt = '2026-07-15T12:00:00Z'
   courseScore = 3_025_000

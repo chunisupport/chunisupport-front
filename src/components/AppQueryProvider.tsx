@@ -3,6 +3,7 @@ import { createEffect, type JSX } from 'solid-js'
 import { appQueryClient } from '../lib/queryClient'
 import { courseQueryKeys } from '../queries/courses'
 import { clearFriendQueriesForUser } from '../queries/friends'
+import { userQueryKeys } from '../queries/users'
 import { authSession } from '../stores/authSession'
 
 type AppQueryProviderProps = {
@@ -11,7 +12,7 @@ type AppQueryProviderProps = {
 }
 
 /**
- * ログアウトやユーザー名の変更時に、旧ユーザーのフレンド・コース関連キャッシュを破棄する。
+ * ログアウトやユーザー名の変更時に、旧ユーザーのフレンド・コース関連キャッシュと楽曲レコードを破棄する。
  *
  * @param props - QueryClient配下のアプリケーション要素。
  * @returns 認証ライフサイクル監視を付与した要素。
@@ -27,6 +28,7 @@ const AuthenticatedUserQueryLifecycle = (props: AppQueryProviderProps): JSX.Elem
 
     if (usernameToClear && usernameToClear !== currentUsername) {
       queryClient.removeQueries({ queryKey: courseQueryKeys.user(usernameToClear) })
+      queryClient.removeQueries({ queryKey: userQueryKeys.record(usernameToClear), exact: true })
       void clearFriendQueriesForUser(queryClient, usernameToClear)
     }
   })

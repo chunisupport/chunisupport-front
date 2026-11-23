@@ -3,7 +3,9 @@ import { fetchRecentPlayerDataUpdates } from '../api/register-data'
 import { fetchUserComment } from '../api/userComment'
 import { requestUserUpdatedAt } from '../api/users'
 import { appQueryClient } from '../lib/queryClient'
+import type { UserRecordDTO } from '../types/api'
 import { fetchUserRatingWithCache } from '../usecases/cache/fetchUserRatingWithCache'
+import { fetchUserRecordWithCache } from '../usecases/cache/fetchUserRecordWithCache'
 
 /** ユーザーqueryのkey factory。 */
 export const userQueryKeys = {
@@ -25,6 +27,12 @@ export const userQueryKeys = {
    * @returns ユーザー別のレーティング情報キー。
    */
   rating: (username: string) => ['users', username, 'rating'] as const,
+  /**
+   * ユーザー別の全楽曲レコード（自己ベスト）キーを生成する。
+   * @param username - 対象ユーザー名。
+   * @returns ユーザー別の全楽曲レコードキー。
+   */
+  record: (username: string) => ['users', username, 'record'] as const,
   /** 本人のスコア更新履歴。 */
   recentUpdates: (username?: string) => ['users', username ?? '', 'recent-score-updates'] as const,
 }
@@ -85,5 +93,18 @@ export const userRatingQueryOptions = (username: string | null) =>
   queryOptions({
     queryKey: userQueryKeys.rating(username ?? ''),
     queryFn: () => fetchUserRatingWithCache(username ?? ''),
+    enabled: Boolean(username),
+  })
+
+/**
+ * ユーザーの全楽曲レコード（通常譜面とWORLD'S ENDの自己ベスト）をキャッシュ付きで取得するquery optionsを生成する。
+ *
+ * @param username - 対象ユーザー名。取得不要ならnull。
+ * @returns 全楽曲レコード取得用のquery options。
+ */
+export const userRecordQueryOptions = (username: string | null) =>
+  queryOptions({
+    queryKey: userQueryKeys.record(username ?? ''),
+    queryFn: (): Promise<UserRecordDTO> => fetchUserRecordWithCache(username ?? ''),
     enabled: Boolean(username),
   })
