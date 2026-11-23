@@ -203,3 +203,58 @@ assert.equal(calls(), 2)
     '/internal/songs'
   )
 })
+
+test('キャッシュがない初回取得中に楽曲を更新すると、更新前の応答を採用せず再取得すること', async () => {
+  await runBrowserTest(
+    `
+// Given: キャッシュがなく、初回の楽曲一覧取得は応答待ちになっている。
+let resolveFirst
+let songRequests = 0
+globalThis.fetch = async (input) => {
+  if (String(input).endsWith('/updated-at')) return Response.json({ updated_at: null, revision: 1 })
+  songRequests += 1
+  if (songRequests === 1) return new Promise((resolve) => { resolveFirst = resolve })
+  return Response.json({ songs: [{ title: 'New' }] })
+}
+store.ensureSongsLoaded()
+await waitUntil(() => resolveFirst)
+
+// When: 初回取得中に楽曲更新後の再取得を行い、その後に古い応答を返す。
+const refreshing = store.refreshSongs()
+resolveFirst(Response.json({ songs: [{ title: 'Old' }] }))
+await refreshing
+await flush()
+
+// Then: 一覧APIを再度呼び、更新後の一覧を表示する。
+assert.equal(songRequests, 2)
+assert.deepEqual(store.songsResponse()?.songs, [{ title: 'New' }])
+`,
+    '/internal/songs'
+  )
+})
+
+test('store経由で要求していない画面が取得した一覧も、楽曲更新後は再取得されること', async () => {
+  await runBrowserTest(
+    `
+// Given: コース画面などがstoreを経由せずにqueryから一覧を取得済み。
+const { appQueryClient } = await import('./src/lib/queryClient.ts')
+const { standardSongsQueryOptions } = await import('./src/queries/songs.ts')
+let title = 'Old'
+globalThis.fetch = async (input) => {
+  if (String(input).endsWith('/updated-at')) return Response.json({ updated_at: null, revision: 1 })
+  return Response.json({ songs: [{ title }] })
+}
+assert.deepEqual((await appQueryClient.fetchQuery(standardSongsQueryOptions())).songs, [{ title: 'Old' }])
+
+// When: 楽曲更新後の再取得を行ってから、storeで初めて一覧を要求する。
+title = 'New'
+await store.refreshSongs()
+store.ensureSongsLoaded()
+await waitUntil(() => store.songsResponse.state === 'ready')
+
+// Then: 更新前の一覧を使い続けず、更新後の一覧を取得する。
+assert.deepEqual(store.songsResponse()?.songs, [{ title: 'New' }])
+`,
+    '/internal/songs'
+  )
+})

@@ -83,11 +83,16 @@ const createSongsQueryResource = <T, TQueryKey extends QueryKey>(
     }
   }
 
-  /** 要求済みなら進行中の取得を打ち切って再取得する。 */
+  /**
+   * 進行中の取得を打ち切り、共有 query を無効化する。
+   * 初回取得中は TanStack Query が既存の取得を再利用するため、先に明示的に中断する。
+   * store 経由で要求していなくても他画面の query が保持する一覧を古いまま残さず、
+   * 監視中の画面があれば再取得し、なければ次回の利用時に再取得させる。
+   */
   const refetch = async (): Promise<void> => {
-    if (!requested()) return
-    const refetched = await observer.refetch()
-    if (refetched.status === 'error') throw refetched.error
+    const filters = { queryKey: options.queryKey, exact: true }
+    await appQueryClient.cancelQueries(filters)
+    await appQueryClient.invalidateQueries(filters, { throwOnError: true })
   }
 
   return { resource, result, requested, request, refetch }
