@@ -661,23 +661,23 @@ const GuardedRegisterScoreTempPage = () => (
 )
 
 /**
- * ADMIN 権限を要求してコース一覧画面を表示する。
+ * ADMINまたはEDITOR権限を要求してコース一覧画面を表示する。
  *
  * @returns 権限制御と route module 読み込み境界を付与したコース一覧画面。
  */
 const GuardedCoursesListPage = () => (
-  <RequireRole allowedRoles={['ADMIN']}>
+  <RequireRole allowedRoles={['ADMIN', 'EDITOR']}>
     <LoadableCoursesListPage />
   </RequireRole>
 )
 
 /**
- * ADMIN 権限を要求してコース詳細画面を表示する。
+ * ADMINまたはEDITOR権限を要求してコース詳細画面を表示する。
  *
  * @returns 権限制御と route module 読み込み境界を付与したコース詳細画面。
  */
 const GuardedCourseDetailPage = () => (
-  <RequireRole allowedRoles={['ADMIN']}>
+  <RequireRole allowedRoles={['ADMIN', 'EDITOR']}>
     <LoadableCourseDetailPage />
   </RequireRole>
 )

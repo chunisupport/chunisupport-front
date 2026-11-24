@@ -19,17 +19,18 @@ import { formatUpdatedAt } from '../../../utils/recordUpdatedAt'
 import type { CourseRecordColumnId } from './columns'
 
 /**
- * 現在のログインユーザーが ADMIN 権限を持つか判定する。
+ * 現在のログインユーザーがコース詳細を閲覧できる ADMIN または EDITOR 権限を持つか判定する。
  *
- * @returns ADMIN として認証済みなら true。
+ * @returns ADMIN または EDITOR として認証済みなら true。
  */
-const isAdminAuthenticated = (): boolean =>
-  authSession.status === 'authenticated' && authSession.user?.account_type === 'ADMIN'
+const canViewCourseDetail = (): boolean =>
+  authSession.status === 'authenticated' &&
+  (authSession.user?.account_type === 'ADMIN' || authSession.user?.account_type === 'EDITOR')
 
 /** コースレコードの列IDごとのセル描画処理 */
 const courseRecordColumnRenderers: Record<CourseRecordColumnId, ColumnRenderer<CourseRecordDTO>> = {
   title: (record) => (
-    <Show when={isAdminAuthenticated()} fallback={<RecordTitleCell title={record.name} />}>
+    <Show when={canViewCourseDetail()} fallback={<RecordTitleCell title={record.name} />}>
       <RecordTitleCell title={record.name} href={buildCourseDetailPath(record.id)} />
     </Show>
   ),
