@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/solid-query'
+import { type QueryClient, queryOptions } from '@tanstack/solid-query'
 import { fetchRecentPlayerDataUpdates } from '../api/register-data'
 import { fetchUserComment } from '../api/userComment'
 import { requestUserUpdatedAt } from '../api/users'
@@ -6,6 +6,9 @@ import { appQueryClient } from '../lib/queryClient'
 import type { UserRecordDTO } from '../types/api'
 import { fetchUserRatingWithCache } from '../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../usecases/cache/fetchUserRecordWithCache'
+
+/** 全楽曲レコードを画面間で再利用する期間。 */
+const USER_RECORD_STALE_TIME_MS = 5 * 60 * 1_000
 
 /** ユーザーqueryのkey factory。 */
 export const userQueryKeys = {
@@ -98,13 +101,29 @@ export const userRatingQueryOptions = (username: string | null) =>
 
 /**
  * ユーザーの全楽曲レコード（通常譜面とWORLD'S ENDの自己ベスト）をキャッシュ付きで取得するquery optionsを生成する。
+ * IndexedDBから返せる場合もあるためオフラインでも取得し、失敗時は画面ごとに差が出ないよう再試行しない。
  *
  * @param username - 対象ユーザー名。取得不要ならnull。
- * @returns 全楽曲レコード取得用のquery options。
+ * @returns 全楽曲レコードを5分間再利用するquery options。
  */
 export const userRecordQueryOptions = (username: string | null) =>
   queryOptions({
     queryKey: userQueryKeys.record(username ?? ''),
     queryFn: (): Promise<UserRecordDTO> => fetchUserRecordWithCache(username ?? ''),
     enabled: Boolean(username),
+    staleTime: USER_RECORD_STALE_TIME_MS,
+    networkMode: 'always',
+    retry: false,
   })
+
+/**
+ * ユーザーの全楽曲レコードqueryを進行中の取得ごと破棄する。
+ * 破棄前に始まった取得の応答は以後のキャッシュに採用しない。
+ *
+ * @param queryClient - 対象のQueryClient。
+ * @param username - レコードを破棄するユーザー名。
+ * @returns なし。
+ */
+export const removeUserRecordQuery = (queryClient: QueryClient, username: string): void => {
+  queryClient.removeQueries({ queryKey: userQueryKeys.record(username), exact: true })
+}

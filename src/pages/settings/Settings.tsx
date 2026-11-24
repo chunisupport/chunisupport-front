@@ -18,6 +18,7 @@ import { LOGIN_PATH } from '../../constants/routes'
 import { createLinkedAuthAccounts } from '../../hooks/createLinkedAuthAccounts'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
+import { removeUserRecordQuery } from '../../queries/users'
 import { authSession, setAuthenticatedUser } from '../../stores/authSession'
 import { findLinkedAuthAccount } from '../../usecases/auth/authProviders'
 import { canChangeGoogleAccount } from '../../usecases/auth/changeGoogleAccount'
@@ -69,6 +70,16 @@ const Settings = () => {
     const username = authSession.user?.username
     return username ? invalidateFriendRankings(queryClient, username) : Promise.resolve()
   }
+
+  /**
+   * ログイン中ユーザーの全楽曲レコードキャッシュを進行中の取得ごと破棄する。
+   *
+   * @returns なし。
+   */
+  const removeCurrentUserRecord = (): void => {
+    const username = authSession.user?.username
+    if (username) removeUserRecordQuery(queryClient, username)
+  }
   const [summary, { refetch: refetchSummary, mutate: mutateSummary }] = createResource(
     () => authSession.user?.username,
     async (username): Promise<SettingsSummary> => {
@@ -101,7 +112,10 @@ const Settings = () => {
   const playerDataDeletion = createPlayerDataDeletion({
     username: () => currentSummary()?.me.username,
     deletePlayerData,
-    onDeleted: () => Promise.allSettled([invalidateCurrentUserFriendRankings(), refetchSummary()]),
+    onDeleted: () => {
+      removeCurrentUserRecord()
+      return Promise.allSettled([invalidateCurrentUserFriendRankings(), refetchSummary()])
+    },
   })
   const accountDeletion = createAccountDeletion({
     deleteAccount,
