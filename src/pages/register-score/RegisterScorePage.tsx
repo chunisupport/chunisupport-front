@@ -6,6 +6,8 @@ import { postPlayerDataCommit } from '../../api/register-data'
 import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
+import { invalidateCoursesUpdatedAtCache } from '../../queries/masterData'
+import { removeUserRecordQuery } from '../../queries/users'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
@@ -56,6 +58,18 @@ const RegisterScorePage = () => {
     return username ? invalidateFriendRankings(queryClient, username) : Promise.resolve()
   }
 
+  /**
+   * スコア確定後に本人の共有楽曲レコードを同期的に破棄し、ユーザーAPIの保存データを削除する。
+   * 成功画面の表示前に破棄するため、直後に開いたプロフィールでも旧レコードを使わない。
+   *
+   * @param username - スコア登録を開始したユーザー名。
+   * @returns 保存データ削除の完了を表すPromise。
+   */
+  const clearScoreCaches = (username: string | undefined): Promise<void> => {
+    if (username) removeUserRecordQuery(queryClient, username)
+    return clearCachedUserApiResponses()
+  }
+
   useDocumentTitle(REGISTER_SCORE_COPY.title)
 
   onMount(async () => {
@@ -66,16 +80,18 @@ const RegisterScorePage = () => {
     }
 
     try {
+      const username = authSession.user?.username
       const { result } = await commitRegisterScore(
         { uploadToken },
         {
           commitPlayerData: postPlayerDataCommit,
-          clearUserApiCache: clearCachedUserApiResponses,
+          clearUserApiCache: () => clearScoreCaches(username),
           invalidateFriendRankings: invalidateCurrentUserFriendRankings,
           ensureSongsLoaded: songsData.ensureSongsLoaded,
           ensureWorldsendSongsLoaded: songsData.ensureWorldsendSongsLoaded,
         }
       )
+      invalidateCoursesUpdatedAtCache()
       setViewState({ type: 'success', result })
     } catch (error) {
       setViewState({ type: 'error', message: resolveRegisterScoreErrorMessage(error) })

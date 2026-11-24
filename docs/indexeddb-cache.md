@@ -192,7 +192,7 @@ src/
 - `src/lib/db/getCacheDB.ts`: `cacheDB.ts` を動的 import して Dexie インスタンスを返す。Dexie を初期バンドルから外すため、アプリケーションコードは `cacheDB.ts` を直接 import せずこの関数を使う（テストからの直接参照は可）。
 - `src/repositories/*`: IndexedDB の読み書きのみ。
 - `src/usecases/cache/*`: `updated-at` 判定、API 呼び出し、フォールバック制御。
-- `src/queries/`: key factory と `queryOptions` を定義する。更新日時の同時取得共有・TTLは TanStack Query に任せる。ユーザー・コース更新日時は `staleTime: 0` で完了後は再取得し、楽曲更新日時の無効化は `removeQueries` で進行中の query ごと破棄する。対象 query は `retry: false` とし、失敗後は次の呼び出しで再取得する。楽曲更新日時の取得中に query が削除された場合は、`fetchQueryWithRestartOnRemoval` が最大1回だけ再取得し、待機中の呼び出し元にも最新値を返す。query を残した通常のキャンセルは再取得しない。
+- `src/queries/`: key factory と `queryOptions` を定義する。更新日時の同時取得共有・TTLは TanStack Query に任せる。ユーザー更新日時は `staleTime: 0` で完了後は再取得する。楽曲・コース更新日時は5分間再利用し、無効化時は `removeQueries` で進行中の query ごと破棄する。コース更新日時は管理画面でのコース変更とスコア登録の完了時に無効化する。対象 query は `retry: false` とし、失敗後は次の呼び出しで再取得する。楽曲・コース更新日時の取得中に query が削除された場合は、`fetchQueryWithRestartOnRemoval` が最大1回だけ再取得し、待機中の呼び出し元にも最新値を返す。query を残した通常のキャンセルは再取得しない。
 - コンポーネント: `createQuery` から query を利用する。コンポーネント外では `appQueryClient.fetchQuery` を利用し、Dexie キャッシュが必要な query の `queryFn` から usecase を呼び出す。既存の `createResource` による利用は段階移行中。
 
 ## 画面・ストアからの利用
@@ -203,9 +203,9 @@ src/
 
 ### ユーザーページ
 
-`src/pages/users/UserPage/UserPage.tsx` は `fetchUserRatingWithCache(username)` と `fetchUserRecordWithCache(username)` を利用しています。
+`src/pages/users/UserPage/UserPage.tsx` は `fetchUserRatingWithCache(username)` を利用しています。ログインユーザー本人の全楽曲レコードは `userRecordQueryOptions(username)` から取得し、コース詳細と共有して5分間再利用します。スコア登録後は、ユーザーAPIの IndexedDB キャッシュを消去し、成功画面の表示前に登録したユーザーの全楽曲レコード query を進行中の取得ごと破棄します。プレイヤーデータの削除後も、本人の全楽曲レコード query を同様に破棄します。プロフィールは `fetchQueryWithRestartOnRemoval` で取得し、取得中に破棄された場合は最大1回だけ取り直します。
 
-ログインユーザー本人以外の username が指定された場合、usecase 内で API 直呼び出しにします。
+他のユーザーの全楽曲レコードは、表示時の閲覧権限に従って API から取得します。
 
 ### レコード画面・OVER POWER・目標画面
 

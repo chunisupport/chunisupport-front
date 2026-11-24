@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
 import { onlineManager } from '@tanstack/solid-query'
 import { appQueryClient } from '../lib/queryClient'
+import { clearAuthenticatedUser, resetAuthSession } from '../stores/authSession'
 import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironment'
 
 beforeEach(() => appQueryClient.clear())
@@ -94,6 +95,61 @@ test('更新日時はユーザーごとに異なるqueryとして同時取得す
   assert.equal(calls.length, 2)
   assert.notEqual(alice.updated_at, bob.updated_at)
   assert.deepEqual(userQueryKeys.updatedAt('alice'), ['users', 'alice', 'updated-at'])
+})
+
+test('全楽曲レコードは同じユーザーのqueryで再利用し、破棄後は取得し直す', async (t) => {
+  // Given: IndexedDBを介さず、呼び出すたびに更新日時が変わるレコードAPI。
+  clearAuthenticatedUser()
+  t.after(resetAuthSession)
+  let fetchCount = 0
+  installFetchRecorder((input) => {
+    assert.equal(String(input), 'http://localhost:3000/internal/users/alice/record')
+    fetchCount += 1
+    return Response.json({ meta: { updated_at: `updated-${fetchCount}` }, standard: [] })
+  })
+  const { removeUserRecordQuery, userRecordQueryOptions } = await loadUsersApi()
+
+  // When: 同じユーザーのレコードを再度要求し、スコア登録後と同様に破棄する。
+  const first = await appQueryClient.fetchQuery(userRecordQueryOptions('alice'))
+  const reused = await appQueryClient.fetchQuery(userRecordQueryOptions('alice'))
+  removeUserRecordQuery(appQueryClient, 'alice')
+  const refreshed = await appQueryClient.fetchQuery(userRecordQueryOptions('alice'))
+
+  // Then: 破棄前はキャッシュを共有し、破棄後に新しいデータを取得する。
+  assert.equal(fetchCount, 2)
+  assert.equal(first, reused)
+  assert.equal(refreshed.meta.updated_at, 'updated-2')
+})
+
+test('取得中に全楽曲レコードを破棄すると、旧応答を使わず取り直した値を返す', async (t) => {
+  // Given: 1回目の応答だけ手動で完了させるレコードAPI。
+  clearAuthenticatedUser()
+  t.after(resetAuthSession)
+  let fetchCount = 0
+  let releaseFirst: () => void = () => undefined
+  installFetchRecorder(async () => {
+    fetchCount += 1
+    const updatedAt = `updated-${fetchCount}`
+    if (fetchCount === 1) await new Promise<void>((resolve) => (releaseFirst = resolve))
+    return Response.json({ meta: { updated_at: updatedAt }, standard: [] })
+  })
+  const { removeUserRecordQuery, userRecordQueryOptions } = await loadUsersApi()
+  const { fetchQueryWithRestartOnRemoval } = await loadTestModule(
+    () => import('./fetchQueryWithRestartOnRemoval.ts')
+  )
+
+  // When: プロフィールと同じ方法で取得中にqueryを破棄し、その後に旧応答を完了させる。
+  const pending = fetchQueryWithRestartOnRemoval(userRecordQueryOptions('alice'))
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  removeUserRecordQuery(appQueryClient, 'alice')
+  releaseFirst()
+  const result = await pending
+  const cached = await appQueryClient.fetchQuery(userRecordQueryOptions('alice'))
+
+  // Then: 待機中の呼び出し元もキャッシュも、破棄後に取り直した応答になる。
+  assert.equal(fetchCount, 2)
+  assert.equal(result.meta.updated_at, 'updated-2')
+  assert.equal(cached, result)
 })
 
 test('プロフィールコメントqueryは enabled が false のとき取得しない設定になること', async () => {
