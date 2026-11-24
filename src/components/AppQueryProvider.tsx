@@ -3,7 +3,7 @@ import { createEffect, type JSX } from 'solid-js'
 import { appQueryClient } from '../lib/queryClient'
 import { courseQueryKeys } from '../queries/courses'
 import { clearFriendQueriesForUser } from '../queries/friends'
-import { userQueryKeys } from '../queries/users'
+import { removeUserRecordQuery } from '../queries/users'
 import { authSession } from '../stores/authSession'
 
 type AppQueryProviderProps = {
@@ -28,7 +28,7 @@ const AuthenticatedUserQueryLifecycle = (props: AppQueryProviderProps): JSX.Elem
 
     if (usernameToClear && usernameToClear !== currentUsername) {
       queryClient.removeQueries({ queryKey: courseQueryKeys.user(usernameToClear) })
-      queryClient.removeQueries({ queryKey: userQueryKeys.record(usernameToClear), exact: true })
+      removeUserRecordQuery(queryClient, usernameToClear)
       void clearFriendQueriesForUser(queryClient, usernameToClear)
     }
   })

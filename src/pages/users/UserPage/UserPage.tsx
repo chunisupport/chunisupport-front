@@ -12,7 +12,7 @@ import {
 import { fetchUserProfileSummary, fetchUserRecord } from '../../../api/users'
 import { LoadError, Loading, PlayerDataEmptyState } from '../../../components'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
-import { appQueryClient } from '../../../lib/queryClient'
+import { fetchQueryWithRestartOnRemoval } from '../../../queries/fetchQueryWithRestartOnRemoval'
 import { userRecordQueryOptions } from '../../../queries/users'
 import type {
   PlayerDTO,
@@ -91,7 +91,8 @@ const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadSta
 }
 
 /**
- * 本人の楽曲レコードはコース詳細と共有し、他のユーザーのレコードは閲覧権限をAPIで確認する。
+ * 本人の楽曲レコードはコース詳細と共有し、取得中に破棄された場合は1回だけ取り直す。
+ * 他のユーザーのレコードは閲覧権限をAPIで確認する。
  *
  * @param username - レコード取得対象のユーザー名。
  * @returns 取得対象ユーザー名付きのレコード取得結果。
@@ -99,7 +100,7 @@ const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadSta
 const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecordLoadState> => ({
   username,
   record: (await isAuthenticatedOwnUser(username))
-    ? await appQueryClient.fetchQuery(userRecordQueryOptions(username))
+    ? await fetchQueryWithRestartOnRemoval(userRecordQueryOptions(username))
     : await fetchUserRecord(username),
 })
 

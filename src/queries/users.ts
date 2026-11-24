@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/solid-query'
+import { type QueryClient, queryOptions } from '@tanstack/solid-query'
 import { fetchRecentPlayerDataUpdates } from '../api/register-data'
 import { fetchUserComment } from '../api/userComment'
 import { requestUserUpdatedAt } from '../api/users'
@@ -115,3 +115,15 @@ export const userRecordQueryOptions = (username: string | null) =>
     networkMode: 'always',
     retry: false,
   })
+
+/**
+ * ユーザーの全楽曲レコードqueryを進行中の取得ごと破棄する。
+ * 破棄前に始まった取得の応答は以後のキャッシュに採用しない。
+ *
+ * @param queryClient - 対象のQueryClient。
+ * @param username - レコードを破棄するユーザー名。
+ * @returns なし。
+ */
+export const removeUserRecordQuery = (queryClient: QueryClient, username: string): void => {
+  queryClient.removeQueries({ queryKey: userQueryKeys.record(username), exact: true })
+}

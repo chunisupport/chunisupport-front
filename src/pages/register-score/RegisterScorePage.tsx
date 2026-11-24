@@ -7,7 +7,7 @@ import { Loading } from '../../components'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { invalidateFriendRankings } from '../../queries/friendRankings'
 import { invalidateCoursesUpdatedAtCache } from '../../queries/masterData'
-import { userQueryKeys } from '../../queries/users'
+import { removeUserRecordQuery } from '../../queries/users'
 import { clearCachedUserApiResponses } from '../../repositories/userApiCacheRepository'
 import { authSession } from '../../stores/authSession'
 import { useSongsData } from '../../stores/songsData'
@@ -59,20 +59,15 @@ const RegisterScorePage = () => {
   }
 
   /**
-   * スコア確定後にユーザーAPIの保存データと本人の共有楽曲レコードを無効化する。
+   * スコア確定後に本人の共有楽曲レコードを同期的に破棄し、ユーザーAPIの保存データを削除する。
+   * 成功画面の表示前に破棄するため、直後に開いたプロフィールでも旧レコードを使わない。
    *
    * @param username - スコア登録を開始したユーザー名。
-   * @returns キャッシュ削除と無効化の完了を表すPromise。
+   * @returns 保存データ削除の完了を表すPromise。
    */
-  const clearScoreCaches = async (username: string | undefined): Promise<void> => {
-    const filters = username ? { queryKey: userQueryKeys.record(username), exact: true } : null
-    if (filters) await queryClient.cancelQueries(filters)
-
-    try {
-      await clearCachedUserApiResponses()
-    } finally {
-      if (filters) await queryClient.invalidateQueries(filters)
-    }
+  const clearScoreCaches = (username: string | undefined): Promise<void> => {
+    if (username) removeUserRecordQuery(queryClient, username)
+    return clearCachedUserApiResponses()
   }
 
   useDocumentTitle(REGISTER_SCORE_COPY.title)

@@ -203,7 +203,7 @@ src/
 
 ### ユーザーページ
 
-`src/pages/users/UserPage/UserPage.tsx` は `fetchUserRatingWithCache(username)` を利用しています。ログインユーザー本人の全楽曲レコードは `userRecordQueryOptions(username)` から取得し、コース詳細と共有して5分間再利用します。スコア登録後は、ユーザーAPIの IndexedDB キャッシュを消去し、登録したユーザーの全楽曲レコード query を無効化します。プレイヤーデータの削除後も、本人の全楽曲レコード query を無効化します。
+`src/pages/users/UserPage/UserPage.tsx` は `fetchUserRatingWithCache(username)` を利用しています。ログインユーザー本人の全楽曲レコードは `userRecordQueryOptions(username)` から取得し、コース詳細と共有して5分間再利用します。スコア登録後は、ユーザーAPIの IndexedDB キャッシュを消去し、成功画面の表示前に登録したユーザーの全楽曲レコード query を進行中の取得ごと破棄します。プレイヤーデータの削除後も、本人の全楽曲レコード query を同様に破棄します。プロフィールは `fetchQueryWithRestartOnRemoval` で取得し、取得中に破棄された場合は最大1回だけ取り直します。
 
 他のユーザーの全楽曲レコードは、表示時の閲覧権限に従って API から取得します。
 
