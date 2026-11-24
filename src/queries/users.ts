@@ -101,6 +101,7 @@ export const userRatingQueryOptions = (username: string | null) =>
 
 /**
  * ユーザーの全楽曲レコード（通常譜面とWORLD'S ENDの自己ベスト）をキャッシュ付きで取得するquery optionsを生成する。
+ * IndexedDBから返せる場合もあるためオフラインでも取得し、失敗時は画面ごとに差が出ないよう再試行しない。
  *
  * @param username - 対象ユーザー名。取得不要ならnull。
  * @returns 全楽曲レコードを5分間再利用するquery options。
@@ -111,4 +112,6 @@ export const userRecordQueryOptions = (username: string | null) =>
     queryFn: (): Promise<UserRecordDTO> => fetchUserRecordWithCache(username ?? ''),
     enabled: Boolean(username),
     staleTime: USER_RECORD_STALE_TIME_MS,
+    networkMode: 'always',
+    retry: false,
   })

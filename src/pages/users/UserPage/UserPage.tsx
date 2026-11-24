@@ -99,11 +99,7 @@ const fetchUserPageLoadState = async (username: string): Promise<UserPageLoadSta
 const fetchUserRecordLoadState = async (username: string): Promise<UserPageRecordLoadState> => ({
   username,
   record: (await isAuthenticatedOwnUser(username))
-    ? await appQueryClient.fetchQuery({
-        ...userRecordQueryOptions(username),
-        networkMode: 'always',
-        retry: false,
-      })
+    ? await appQueryClient.fetchQuery(userRecordQueryOptions(username))
     : await fetchUserRecord(username),
 })
 
