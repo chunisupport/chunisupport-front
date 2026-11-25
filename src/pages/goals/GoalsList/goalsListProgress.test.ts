@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GoalCreateRequest, GoalDTO, PlayerRecordDTO } from '../../../types/api'
+import type { GoalCreateRequest, GoalDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
 import {
   buildGoalsWithProgress,
   isOverPowerAchievementType,
   resolveDraftGoalProgress,
   resolveGoalAllCount,
+  resolveGoalOverPowerChartMax,
 } from './goalsListProgress'
 import type { GoalsListData } from './goalsListResource'
 
@@ -71,6 +72,56 @@ test('データ未取得時の下書き進捗は未達成の初期値を返す',
     targetCount: 0,
     hasUnknownMaxOp: false,
   })
+})
+
+test('OVER POWER目標の対象数と理論値に同じ未解禁設定を反映する', () => {
+  // Given: プレイ済みの未解禁譜面と、未プレイの解禁済み譜面がある。
+  const songs: SongDTO[] = ['locked', 'unplayed'].map((id) => ({
+    id,
+    title: id,
+    reading: null,
+    name_folder_code: 'NUMBER',
+    genre: 'POPS',
+    artist: 'Artist',
+    release: '2024-01-01',
+    bpm: 180,
+    jacket: null,
+    charts: { MASTER: { const: 14, notes: 400, is_const_unknown: false } },
+    maxop: 85,
+    is_maxop_unknown: false,
+    op_target_difficulty: 'MASTER',
+    is_new: false,
+    unlock_required: false,
+  }))
+  const data = {
+    username: 'player',
+    noPlayerData: false,
+    goals: [],
+    groups: [],
+    songs,
+    masterData: {
+      difficulties: [],
+      genres: [],
+      versions: [],
+      name_folders: [],
+      account_types: [],
+      rating_bands: [],
+      achievement_types: [],
+      possessions: [],
+    },
+    versions: [],
+    records: [
+      createRecord({ id: 'locked', const: 14 }),
+      createRecord({ id: 'unplayed', const: 14, is_played: false, score: 0 }),
+    ],
+    lockedSongs: [{ id: 'locked', is_ultima: false }],
+  } satisfies GoalsListData
+  const attributes = { const: { min: 14, max: 14.4 } }
+
+  // When / Then
+  assert.equal(resolveGoalAllCount(data, attributes, 'overpower_value'), 1)
+  assert.equal(resolveGoalAllCount(data, attributes, 'overpower_percent'), 1)
+  assert.equal(resolveGoalOverPowerChartMax(data, attributes), 85)
 })
 
 test('単曲レート入力の変更に応じて到達可能譜面数を再解決できる', () => {
