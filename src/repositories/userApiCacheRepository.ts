@@ -15,6 +15,7 @@ export type UserApiCacheMatch = {
   username: string
   userUpdatedAt: string | null
   songsRevision: number
+  statsRevision: number
 }
 
 /**
@@ -43,10 +44,10 @@ const hasCurrentRatingSummary = (data: UserRatingDTO): boolean =>
   (typeof data.new_average === 'number' || data.new_average === null)
 
 /**
- * ユーザー API キャッシュが現行スキーマ・ユーザー更新日時・楽曲データの変更世代に一致するか判定する。
+ * ユーザー API キャッシュが現行スキーマ・ユーザー更新日時・楽曲データの変更世代・統計世代に一致するか判定する。
  *
  * @param cached - IndexedDB から読み込んだ保存済みレスポンス。
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @returns キャッシュが利用可能な場合は true。
  */
 const isUserApiCacheMatched = (
@@ -56,13 +57,14 @@ const isUserApiCacheMatched = (
   cached?.schemaVersion === CLIENT_CACHE_SCHEMA_VERSION &&
   cached.username === match.username &&
   cached.userUpdatedAt === match.userUpdatedAt &&
-  cached.songsRevision === match.songsRevision
+  cached.songsRevision === match.songsRevision &&
+  cached.statsRevision === match.statsRevision
 
 /**
- * 曲単位レコードキャッシュが現在のユーザー・ユーザー更新日時・楽曲データの変更世代に一致するか判定する。
+ * 曲単位レコードキャッシュが現在のユーザー・ユーザー更新日時・楽曲データの変更世代・統計世代に一致するか判定する。
  *
  * @param cached - 判定対象の曲単位キャッシュ。
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @returns キャッシュが利用可能な場合はtrue。
  */
 const isUserSongRecordCacheMatched = (
@@ -72,12 +74,13 @@ const isUserSongRecordCacheMatched = (
   cached?.schemaVersion === CLIENT_CACHE_SCHEMA_VERSION &&
   cached.username === match.username &&
   cached.userUpdatedAt === match.userUpdatedAt &&
-  cached.songsRevision === match.songsRevision
+  cached.songsRevision === match.songsRevision &&
+  cached.statsRevision === match.statsRevision
 
 /**
  * レーティング API レスポンスキャッシュを読み込む。
  *
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @returns 利用可能なレーティングレスポンス。存在しない場合は null。
  */
 export const readCachedUserRating = async (
@@ -99,7 +102,7 @@ export const readCachedUserRating = async (
 /**
  * 全件取得済みの曲単位レコードキャッシュを復元する。
  *
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @returns 完全なレコードレスポンスを復元できる場合はその値、それ以外はnull。
  */
 export const readCachedUserRecord = async (
@@ -112,7 +115,8 @@ export const readCachedUserRecord = async (
       metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
       metadata.username !== match.username ||
       metadata.userUpdatedAt !== match.userUpdatedAt ||
-      metadata.songsRevision !== match.songsRevision
+      metadata.songsRevision !== match.songsRevision ||
+      metadata.statsRevision !== match.statsRevision
     ) {
       return null
     }
@@ -143,7 +147,7 @@ export const readCachedUserRecord = async (
 /**
  * 通常楽曲1曲分のレコードキャッシュを読み込む。
  *
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @param songId - 楽曲表示ID。
  * @returns 利用可能なレコード配列。存在しない場合はnull。
  */
@@ -165,7 +169,7 @@ export const readCachedStandardSongRecord = async (
 /**
  * WORLD'S END楽曲1曲分のレコードキャッシュを読み込む。
  *
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @param songId - 楽曲表示ID。
  * @returns 利用可能なレコード。未プレイの場合はnull、キャッシュがなければundefined。
  */
@@ -215,6 +219,7 @@ export const clearCachedUserApiResponses = async (): Promise<void> => {
  * @param username - 対象ユーザー名。
  * @param userUpdatedAt - ユーザー更新日時。
  * @param songsRevision - 楽曲データの変更世代。
+ * @param statsRevision - 上位%統計の変更世代。
  * @param data - 保存するレーティングレスポンス。
  * @returns 保存完了後に解決される Promise。
  */
@@ -222,6 +227,7 @@ export const saveCachedUserRating = async (
   username: string,
   userUpdatedAt: string | null,
   songsRevision: number,
+  statsRevision: number,
   data: UserRatingDTO
 ): Promise<void> => {
   const db = await getCacheDB()
@@ -231,6 +237,7 @@ export const saveCachedUserRating = async (
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
     userUpdatedAt,
     songsRevision,
+    statsRevision,
     fetchedAt: new Date().toISOString(),
     data,
   })
@@ -242,6 +249,7 @@ export const saveCachedUserRating = async (
  * @param username - 対象ユーザー名。
  * @param userUpdatedAt - ユーザー更新日時。
  * @param songsRevision - 楽曲データの変更世代。
+ * @param statsRevision - 上位%統計の変更世代。
  * @param data - 保存する全件レコードレスポンス。
  * @returns 保存完了後に解決されるPromise。
  */
@@ -249,6 +257,7 @@ export const saveCachedUserRecord = async (
   username: string,
   userUpdatedAt: string | null,
   songsRevision: number,
+  statsRevision: number,
   data: UserRecordDTO
 ): Promise<void> => {
   const fetchedAt = new Date().toISOString()
@@ -271,6 +280,7 @@ export const saveCachedUserRecord = async (
       schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
       userUpdatedAt,
       songsRevision,
+      statsRevision,
       fetchedAt,
       data: records,
     })),
@@ -283,6 +293,7 @@ export const saveCachedUserRecord = async (
       schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
       userUpdatedAt,
       songsRevision,
+      statsRevision,
       fetchedAt,
       data: record,
     })),
@@ -298,6 +309,7 @@ export const saveCachedUserRecord = async (
       username,
       userUpdatedAt,
       songsRevision,
+      statsRevision,
       fetchedAt,
       recordUpdatedAt: data.meta.updated_at,
     })
@@ -307,7 +319,7 @@ export const saveCachedUserRecord = async (
 /**
  * 通常楽曲1曲分のレコードを保存する。
  *
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @param songId - 楽曲表示ID。
  * @param data - 保存する通常譜面レコード。
  * @returns 保存完了後に解決されるPromise。
@@ -326,6 +338,7 @@ export const saveCachedStandardSongRecord = async (
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
     userUpdatedAt: match.userUpdatedAt,
     songsRevision: match.songsRevision,
+    statsRevision: match.statsRevision,
     fetchedAt: new Date().toISOString(),
     data,
   })
@@ -333,7 +346,7 @@ export const saveCachedStandardSongRecord = async (
 /**
  * WORLD'S END楽曲1曲分のレコードを保存する。
  *
- * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代。
+ * @param match - 対象ユーザー名、ユーザー更新日時、楽曲データの変更世代、統計世代。
  * @param songId - 楽曲表示ID。
  * @param data - 保存するWORLD'S ENDレコード。
  * @returns 保存完了後に解決されるPromise。
@@ -352,6 +365,7 @@ export const saveCachedWorldsendSongRecord = async (
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
     userUpdatedAt: match.userUpdatedAt,
     songsRevision: match.songsRevision,
+    statsRevision: match.statsRevision,
     fetchedAt: new Date().toISOString(),
     data,
   })

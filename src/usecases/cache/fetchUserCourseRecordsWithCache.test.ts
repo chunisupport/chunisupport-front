@@ -108,8 +108,10 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
   const requestedUrls: string[] = []
   let coursesUpdatedAt = '2026-07-15T09:00:00Z'
   let userUpdatedAt = '2026-07-15T10:00:00Z'
+  let statsRevision = 1
   let courseName = 'COURSE 1'
   let courseScore = 3_020_000
+  let courseTopPercent: number | null = 3.42
   globalThis.fetch = async (input) => {
     const url = String(input)
     requestedUrls.push(url)
@@ -118,7 +120,7 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
       return Response.json({ updated_at: coursesUpdatedAt })
     }
     if (url.endsWith('/internal/users/alice/updated-at')) {
-      return Response.json({ updated_at: userUpdatedAt })
+      return Response.json({ updated_at: userUpdatedAt, stats_revision: statsRevision })
     }
     if (url.endsWith('/internal/courses')) {
       return Response.json({
@@ -138,6 +140,7 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
             class: '1',
             is_played: true,
             score: courseScore,
+            top_percent: courseTopPercent,
             is_clear: true,
             combo_lamp: 'FULL COMBO',
             updated_at: userUpdatedAt,
@@ -152,7 +155,7 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
   const { fetchUserCourseRecordsWithCache } = await import('./fetchUserCourseRecordsWithCache.ts')
   const { invalidateCoursesUpdatedAtCache } = await import('../../queries/masterData.ts')
 
-  // When: 同じ更新日時、マスタだけ更新、レコードだけ更新の順で取得する。
+  // When: 同じ更新日時、マスタだけ更新、レコードだけ更新、統計世代だけ更新の順で取得する。
   const first = await fetchUserCourseRecordsWithCache('alice')
   const second = await fetchUserCourseRecordsWithCache('alice')
   coursesUpdatedAt = '2026-07-15T11:00:00Z'
@@ -163,19 +166,27 @@ test('コースマスタとプレイ済みレコードを更新日時ごとに�
   userUpdatedAt = '2026-07-15T12:00:00Z'
   courseScore = 3_025_000
   const recordUpdated = await fetchUserCourseRecordsWithCache('alice')
+  statsRevision = 2
+  courseTopPercent = 1.25
+  const statsUpdated = await fetchUserCourseRecordsWithCache('alice')
 
-  // Then: 変更された側の一覧だけ再取得し、未プレイコースをマスタから補完する。
+  // Then: 変更された側の一覧だけ再取得し、未プレイコースをマスタから補完し、上位%も引き継ぐ。
   assert.deepEqual(first, second)
   assert.equal(first.courses[0].is_played, true)
+  assert.equal(first.courses[0].top_percent, 3.42)
   assert.equal(first.courses[1].is_played, false)
+  assert.equal(first.courses[1].top_percent, null)
   assert.equal(masterUpdated.courses[0].name, 'COURSE 1 UPDATED')
   assert.equal(masterUpdated.courses[0].score, 3_020_000)
+  assert.equal(masterUpdated.courses[0].top_percent, 3.42)
   assert.equal(recordUpdated.courses[0].name, 'COURSE 1 UPDATED')
   assert.equal(recordUpdated.courses[0].score, 3_025_000)
+  assert.equal(statsUpdated.courses[0].score, 3_025_000)
+  assert.equal(statsUpdated.courses[0].top_percent, 1.25)
   assert.equal(requestedUrls.filter((url) => url.endsWith('/internal/courses')).length, 2)
   assert.equal(
     requestedUrls.filter((url) => url.endsWith('/internal/users/alice/record/courses')).length,
-    2
+    3
   )
   assert.equal(await db.courses.count(), 2)
   assert.equal(await db.userCourseRecords.count(), 1)

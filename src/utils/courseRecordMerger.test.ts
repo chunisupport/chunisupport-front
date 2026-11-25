@@ -14,6 +14,7 @@ test('コースマスタへプレイ済みレコードを結合し、未プレ�
     {
       id: 'course-1',
       score: 3_020_000,
+      top_percent: 3.42,
       is_clear: true,
       combo_lamp: 'FULL COMBO' as const,
       updated_at: '2026-07-15T10:00:00Z',
@@ -30,6 +31,7 @@ test('コースマスタへプレイ済みレコードを結合し、未プレ�
         ...courses[0],
         is_played: true,
         score: 3_020_000,
+        top_percent: 3.42,
         is_clear: true,
         combo_lamp: 'FULL COMBO',
         updated_at: '2026-07-15T10:00:00Z',
@@ -38,6 +40,7 @@ test('コースマスタへプレイ済みレコードを結合し、未プレ�
         ...courses[1],
         is_played: false,
         score: 0,
+        top_percent: null,
         is_clear: false,
         combo_lamp: null,
         updated_at: null,

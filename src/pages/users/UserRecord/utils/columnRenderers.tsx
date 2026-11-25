@@ -10,6 +10,7 @@ import {
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
+  RecordTopPercentCell,
   RecordUpdatedAtCell,
 } from '../../../../components/common/record/RecordDisplayParts'
 import type { RecordColumnId } from '../../../../types/recordFilter'
@@ -60,6 +61,7 @@ export const recordColumnRenderers: Record<
     )
   },
   score: (record) => <RecordScoreCell record={record} />,
+  topPercent: (record) => <RecordTopPercentCell record={record} />,
   rating: (record) => {
     const ratingDisplay = getRatingDisplay(record.rating, record.is_played, record.is_const_unknown)
     return (

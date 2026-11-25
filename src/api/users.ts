@@ -10,13 +10,13 @@ import type {
   PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
   PlayerMetricHistoryResponseDTO,
-  UpdatedAtResponseDTO,
   UserCourseRecordsDTO,
   UserDTO,
   UserProfileDTO,
   UserRatingDTO,
   UserRecordDTO,
   UserStandardSongRecordDTO,
+  UserUpdatedAtResponseDTO,
   UserWorldsendSongRecordDTO,
 } from '../types/api'
 import { fetchWithAuth } from './fetchWithAuth'
@@ -60,16 +60,34 @@ export const fetchUserRatingOpHistory = async (
 }
 
 /**
- * ユーザー系キャッシュの更新判定に使う最新更新日時を取得する。
+ * ユーザー系キャッシュの更新判定に使う最新更新日時と統計世代を取得する。
  *
  * @param username - 更新日時を取得するユーザー名。
- * @returns ユーザー更新日時レスポンス。
+ * @returns ユーザー更新日時と統計世代のレスポンス。
  */
-export const requestUserUpdatedAt = async (username: string): Promise<UpdatedAtResponseDTO> => {
+export const requestUserUpdatedAt = async (username: string): Promise<UserUpdatedAtResponseDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/updated-at`
   )
-  return response.json()
+  const data: unknown = await response.json()
+  if (
+    typeof data !== 'object' ||
+    data === null ||
+    !('updated_at' in data) ||
+    (data.updated_at !== null && typeof data.updated_at !== 'string')
+  ) {
+    throw new TypeError('ユーザー更新日時レスポンスの updated_at が不正です')
+  }
+  if (
+    !('stats_revision' in data) ||
+    typeof data.stats_revision !== 'number' ||
+    !Number.isSafeInteger(data.stats_revision) ||
+    data.stats_revision < 0
+  ) {
+    throw new TypeError('ユーザー更新日時レスポンスの stats_revision が不正です')
+  }
+
+  return { updated_at: data.updated_at, stats_revision: data.stats_revision }
 }
 
 /**

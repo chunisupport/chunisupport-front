@@ -68,9 +68,24 @@ test('表示カラムIDを定義順に並び替える', () => {
       'updatedAt',
       'overpowerPercent',
       'overpower',
+      'topPercent',
       'title',
       'score',
     ]),
-    ['title', 'score', 'overpower', 'overpowerPercent', 'updatedAt']
+    ['title', 'score', 'topPercent', 'overpower', 'overpowerPercent', 'updatedAt']
   )
+})
+
+test('上位%列はスコアの直後に配置し、既定では非表示にする', () => {
+  // Given: 通常レコードの列定義。
+  const columnIds = RECORD_COLUMN_DEFINITIONS.map((column) => column.id)
+
+  // When: 上位%列の定義と既定表示列を取得する。
+  const topPercentColumn = RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'topPercent')
+  const defaultColumnIds = getDefaultVisibleColumnIds()
+
+  // Then: スコアの直後に配置され、ラベルは「上位%」で既定表示には含まれない。
+  assert.equal(columnIds.indexOf('topPercent'), columnIds.indexOf('score') + 1)
+  assert.equal(topPercentColumn?.label, '上位%')
+  assert.equal(defaultColumnIds.includes('topPercent'), false)
 })

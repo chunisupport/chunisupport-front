@@ -31,6 +31,12 @@ export interface SongsUpdatedAtResponseDTO extends UpdatedAtResponseDTO {
   revision: number
 }
 
+/** ユーザーキャッシュ更新判定 API が返す更新日時と統計世代のレスポンス */
+export interface UserUpdatedAtResponseDTO extends UpdatedAtResponseDTO {
+  /** 公開中の上位%統計スナップショットの変更世代。キャッシュ判定では一致・不一致だけを比較する */
+  stats_revision: number
+}
+
 /** APIが返すシステムの運用状態 */
 export type SystemStatus = 'operational' | 'maintenance'
 
@@ -1514,6 +1520,8 @@ export interface CourseRecordDTO {
   is_played: boolean
   /** 3曲合計スコア */
   score: number
+  /** ChuniSupport内（ALL帯・全プレイ記録）での上位%（0.01〜100.00）。未プレイまたは未集計時はnull */
+  top_percent?: number | null
   /** コースをクリア済みか */
   is_clear: boolean
   /** コースのコンボランプ */
@@ -1597,6 +1605,8 @@ export interface PlayerRecordDTO {
   is_const_unknown: boolean
   // 補足: 未プレイデータの場合でも、score・rating・overpowerは0が返る仕様である。
   score: number
+  /** ChuniSupport内（ALL帯・全プレイ記録）での上位%（0.01〜100.00）。未プレイまたは未集計時はnull */
+  top_percent?: number | null
   rating: number
   overpower: number
   /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull */
@@ -1620,6 +1630,8 @@ export interface WorldsendRecordDTO {
   attribute: string | null
   notes: number | null
   score: number
+  /** ChuniSupport内（ALL帯・全プレイ記録）での上位%（0.01〜100.00）。未プレイまたは未集計時はnull */
+  top_percent?: number | null
   /** AJ時のJUSTICE数。AJ以外または算出不能な場合はnull */
   justice_count: number | null
   img: string

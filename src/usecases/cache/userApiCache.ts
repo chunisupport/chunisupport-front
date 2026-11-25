@@ -7,6 +7,7 @@ import { resolveAuthSession } from '../auth/resolveAuthSession'
 export type UserApiCacheTimestamps = {
   userUpdatedAt: string | null
   songsRevision: number
+  statsRevision: number
 }
 
 /**
@@ -29,10 +30,10 @@ export const isAuthenticatedOwnUser = async (username: string): Promise<boolean>
 }
 
 /**
- * ユーザー API キャッシュ判定に必要なユーザー更新日時と楽曲データの変更世代を取得する。
+ * ユーザー API キャッシュ判定に必要なユーザー更新日時・楽曲データの変更世代・統計世代を取得する。
  *
  * @param username - 更新日時を取得するユーザー名。
- * @returns ユーザー更新日時と楽曲データの変更世代。
+ * @returns ユーザー更新日時・楽曲データの変更世代・統計世代。
  */
 export const fetchUserApiCacheTimestamps = async (
   username: string
@@ -45,5 +46,6 @@ export const fetchUserApiCacheTimestamps = async (
   return {
     userUpdatedAt: userUpdatedAt.updated_at,
     songsRevision: songsCacheState.revision,
+    statsRevision: userUpdatedAt.stats_revision,
   }
 }

@@ -6,6 +6,7 @@ export type CourseRecordColumnId =
   | 'title'
   | 'courseClass'
   | 'score'
+  | 'topPercent'
   | 'lamp'
   | 'hardLamp'
   | 'updatedAt'
@@ -28,6 +29,7 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
   const title = getRecordColumnBaseDefinition('title')
   const difficulty = getRecordColumnBaseDefinition('difficulty')
   const score = getRecordColumnBaseDefinition('score')
+  const topPercent = getRecordColumnBaseDefinition('topPercent')
   const lamp = getRecordColumnBaseDefinition('lamp')
   const hardLamp = getRecordColumnBaseDefinition('hardLamp')
   const updatedAt = getRecordColumnBaseDefinition('updatedAt')
@@ -42,6 +44,7 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
       defaultVisible: true,
     },
     { ...score, id: 'score', sortKey: 'score', defaultVisible: true },
+    { ...topPercent, id: 'topPercent', sortKey: 'topPercent', defaultVisible: true },
     { ...lamp, id: 'lamp', sortKey: 'lamp', defaultVisible: true },
     { ...hardLamp, id: 'hardLamp', label: 'クリア', sortKey: 'hardLamp', defaultVisible: true },
     { ...updatedAt, id: 'updatedAt', sortKey: 'updatedAt', defaultVisible: true },

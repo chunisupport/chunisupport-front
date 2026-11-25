@@ -67,6 +67,30 @@ test('コーススコアの昇降順でも未プレイを末尾へ固定する�
   )
 })
 
+test('コースの上位%ソートは未集計・未プレイを末尾に固定すること', () => {
+  // Given: 上位%あり2件、プレイ済み未集計1件、未プレイ1件。
+  const records = [
+    createCourseRecord({ idx: 'mid', top_percent: 25.0 }),
+    createCourseRecord({ idx: 'unaggregated', top_percent: null }),
+    createCourseRecord({ idx: 'top', top_percent: 1.5 }),
+    createCourseRecord({ idx: 'unplayed', is_played: false, score: 0, top_percent: null }),
+  ]
+
+  // When: 昇順と降順で並べ替える。
+  const ascending = sortCourseRecords(records, { key: 'topPercent', direction: 'asc' })
+  const descending = sortCourseRecords(records, { key: 'topPercent', direction: 'desc' })
+
+  // Then: 未集計と未プレイは方向に関係なく末尾に固定される。
+  assert.deepEqual(
+    ascending.map((record) => record.idx),
+    ['top', 'mid', 'unaggregated', 'unplayed']
+  )
+  assert.deepEqual(
+    descending.map((record) => record.idx),
+    ['mid', 'top', 'unaggregated', 'unplayed']
+  )
+})
+
 test('コースのコンボランプをAJC、AJ、FCの順序で並べ替えること', () => {
   // Given: 3曲分の理論値を含むコンボランプと未プレイのコース。
   const records = [

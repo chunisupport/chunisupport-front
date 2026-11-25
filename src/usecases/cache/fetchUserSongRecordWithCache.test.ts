@@ -74,7 +74,7 @@ test('通常楽曲詳細の単曲レコード取得は2回目にIndexedDBキャ�
     requestedUrls.push(url)
 
     if (url.endsWith('/internal/users/alice/updated-at')) {
-      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', stats_revision: 1 })
     }
     if (url.endsWith('/internal/songs/updated-at')) {
       return Response.json({ updated_at: '2026-07-06T00:00:00Z', revision: 1 })
@@ -118,7 +118,7 @@ test('単曲レコード取得はTTL経過後に楽曲の外部更新を検知�
   globalThis.fetch = async (input) => {
     const url = String(input)
     if (url.endsWith('/internal/users/alice/updated-at')) {
-      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', stats_revision: 1 })
     }
     if (url.endsWith('/internal/songs/updated-at')) {
       return Response.json({ updated_at: '2026-07-06T00:00:00Z', revision: songsRevision })
@@ -161,7 +161,7 @@ test('WORLD END未プレイはnullをキャッシュし2回目はAPIを呼ばな
   globalThis.fetch = async (input) => {
     const url = String(input)
     if (url.endsWith('/internal/users/alice/updated-at')) {
-      return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', stats_revision: 1 })
     }
     if (url.endsWith('/internal/songs/updated-at')) {
       return Response.json({ updated_at: '2026-07-06T00:00:00Z', revision: 1 })
@@ -185,4 +185,42 @@ test('WORLD END未プレイはnullをキャッシュし2回目はAPIを呼ばな
   assert.equal(first, null)
   assert.equal(second, null)
   assert.equal(worldsendFetchCount, 1)
+})
+
+test('単曲レコード取得はユーザー更新日時と楽曲世代が同じでも統計世代が進めば再取得すること', async () => {
+  // Given: 統計世代 1 で単曲レコードをキャッシュ済み。
+  setupApiTestEnv()
+  const { fetchUserStandardSongRecordWithCache } = await import('./fetchUserSongRecordWithCache.ts')
+  setAuthenticatedUser(user)
+  let statsRevision = 1
+  let recordFetchCount = 0
+  globalThis.fetch = async (input) => {
+    const url = String(input)
+    if (url.endsWith('/internal/users/alice/updated-at')) {
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', stats_revision: statsRevision })
+    }
+    if (url.endsWith('/internal/songs/updated-at')) {
+      return Response.json({ updated_at: '2026-07-06T00:00:00Z', revision: 1 })
+    }
+    if (url === `${API_BASE_URL}/internal/users/alice/record/songs/song%2F1`) {
+      recordFetchCount += 1
+      return Response.json({
+        standard: [record],
+        meta: { updated_at: '2026-07-06T00:00:00Z' },
+      })
+    }
+
+    throw new Error(`unexpected fetch: ${url}`)
+  }
+  await fetchUserStandardSongRecordWithCache('alice', 'song/1')
+
+  // When: 統計世代だけ 2 に進んでから再取得する。
+  statsRevision = 2
+  await fetchUserStandardSongRecordWithCache('alice', 'song/1')
+
+  // Then: キャッシュを使わず再取得し、新しい統計世代で保存する。
+  assert.equal(recordFetchCount, 2)
+  const cached = await db.userSongRecords.toArray()
+  assert.equal(cached.length, 1)
+  assert.equal(cached[0].statsRevision, 2)
 })

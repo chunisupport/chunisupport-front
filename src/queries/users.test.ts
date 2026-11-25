@@ -16,7 +16,7 @@ const loadUsersApi = () => loadTestModule(() => import('./users.ts'))
 
 test('fetchUserUpdatedAtは同じユーザーへの同時呼び出しを1リクエストにまとめること', async () => {
   // Given
-  const responseBody = { updated_at: '2026-07-06T00:00:00Z' }
+  const responseBody = { updated_at: '2026-07-06T00:00:00Z', stats_revision: 1 }
   let fetchCount = 0
   installFetchRecorder(async (input) => {
     assert.equal(String(input), 'http://localhost:3000/internal/users/alice/updated-at')
@@ -43,7 +43,7 @@ test('fetchUserUpdatedAtは完了後の呼び出しで最新更新日時を再�
   let fetchCount = 0
   installFetchRecorder(async () => {
     fetchCount += 1
-    return Response.json({ updated_at: `updated-${fetchCount}` })
+    return Response.json({ updated_at: `updated-${fetchCount}`, stats_revision: fetchCount })
   })
   const { fetchUserUpdatedAt } = await loadUsersApi()
 
@@ -66,7 +66,7 @@ test('fetchUserUpdatedAtは失敗した同時リクエストの完了後に再�
       await new Promise((resolve) => setTimeout(resolve, 10))
       throw new Error('network error')
     }
-    return Response.json({ updated_at: '2026-07-06T00:00:00Z' })
+    return Response.json({ updated_at: '2026-07-06T00:00:00Z', stats_revision: 1 })
   })
   const { fetchUserUpdatedAt } = await loadUsersApi()
 
@@ -85,7 +85,9 @@ test('fetchUserUpdatedAtは失敗した同時リクエストの完了後に再�
 
 test('更新日時はユーザーごとに異なるqueryとして同時取得する', async () => {
   // Given: ユーザーごとに値が異なるAPI。
-  const calls = installFetchRecorder((input) => Response.json({ updated_at: String(input) }))
+  const calls = installFetchRecorder((input) =>
+    Response.json({ updated_at: String(input), stats_revision: 1 })
+  )
   const { fetchUserUpdatedAt, userQueryKeys } = await loadUsersApi()
 
   // When: 別ユーザーを同時に取得する。
@@ -95,6 +97,15 @@ test('更新日時はユーザーごとに異なるqueryとして同時取得す
   assert.equal(calls.length, 2)
   assert.notEqual(alice.updated_at, bob.updated_at)
   assert.deepEqual(userQueryKeys.updatedAt('alice'), ['users', 'alice', 'updated-at'])
+})
+
+test('fetchUserUpdatedAtはstats_revisionが欠損または不正なレスポンスをエラーにすること', async () => {
+  // Given: 旧API相当で stats_revision を含まないレスポンス。
+  installFetchRecorder(() => Response.json({ updated_at: '2026-07-06T00:00:00Z' }))
+  const { fetchUserUpdatedAt } = await loadUsersApi()
+
+  // When & Then: キャッシュ判定へ undefined を通さず TypeError で拒否する。
+  await assert.rejects(() => fetchUserUpdatedAt('alice'), TypeError)
 })
 
 test('全楽曲レコードは同じユーザーのqueryで再利用し、破棄後は取得し直す', async (t) => {

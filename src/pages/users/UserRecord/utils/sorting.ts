@@ -13,7 +13,10 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../../../utils/sortingQuery'
-import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
+import {
+  compareNullableNumberWithMissingLast,
+  compareNumberWithUnplayedLast,
+} from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay.ts'
 import { isJusticeCountMissing } from '../../utils/justiceCountSorting'
@@ -29,6 +32,7 @@ const RECORD_SORT_COL_MAP: Record<string, RecordSortKey> = {
   const: 'const',
   rating: 'rating',
   score: 'score',
+  top_percent: 'topPercent',
   overpower: 'overpower',
   op_percent: 'overpowerPercent',
   updated_at: 'updatedAt',
@@ -121,6 +125,13 @@ const compareRecordBySortCondition = (
       return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.score },
         { isPlayed: right.is_played, value: right.score },
+        direction
+      )
+    }
+    case 'topPercent': {
+      return compareNullableNumberWithMissingLast(
+        { isPlayed: left.is_played, value: left.top_percent },
+        { isPlayed: right.is_played, value: right.top_percent },
         direction
       )
     }

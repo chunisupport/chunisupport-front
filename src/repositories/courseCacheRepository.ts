@@ -13,6 +13,7 @@ import { toPlayedCourseRecords } from '../utils/courseRecordMerger'
 export type UserCourseRecordCacheMatch = {
   username: string
   userUpdatedAt: string | null
+  statsRevision: number
 }
 
 /**
@@ -99,7 +100,7 @@ export const replaceCachedCourses = async (
 /**
  * プレイ済みコースレコードキャッシュを読み込む。
  *
- * @param match - 対象ユーザー名とユーザー関連データ更新日時。
+ * @param match - 対象ユーザー名、ユーザー関連データ更新日時、統計世代。
  * @returns 利用可能なプレイ済みコースレコード。キャッシュが無効な場合はnull。
  */
 export const readCachedUserCourseRecords = async (
@@ -112,7 +113,8 @@ export const readCachedUserCourseRecords = async (
       metadata?.schemaVersion !== CLIENT_CACHE_SCHEMA_VERSION ||
       metadata.courseSchemaVersion !== COURSE_CACHE_SCHEMA_VERSION ||
       metadata.username !== match.username ||
-      metadata.userUpdatedAt !== match.userUpdatedAt
+      metadata.userUpdatedAt !== match.userUpdatedAt ||
+      metadata.statsRevision !== match.statsRevision
     ) {
       return null
     }
@@ -124,6 +126,7 @@ export const readCachedUserCourseRecords = async (
           entry.schemaVersion === COURSE_CACHE_SCHEMA_VERSION &&
           entry.username === match.username &&
           entry.userUpdatedAt === match.userUpdatedAt &&
+          entry.statsRevision === match.statsRevision &&
           Number.isInteger(entry.sortOrder)
       )
     ) {
@@ -144,12 +147,14 @@ export const readCachedUserCourseRecords = async (
  *
  * @param username - 対象ユーザー名。
  * @param userUpdatedAt - ユーザー関連データ更新日時。
+ * @param statsRevision - 上位%統計の変更世代。
  * @param response - APIから取得したコースレコードレスポンス。
  * @returns 保存完了後に解決されるPromise。
  */
 export const replaceCachedUserCourseRecords = async (
   username: string,
   userUpdatedAt: string | null,
+  statsRevision: number,
   response: UserCourseRecordsDTO
 ): Promise<void> => {
   const fetchedAt = new Date().toISOString()
@@ -162,6 +167,7 @@ export const replaceCachedUserCourseRecords = async (
       sortOrder,
       schemaVersion: COURSE_CACHE_SCHEMA_VERSION,
       userUpdatedAt,
+      statsRevision,
       fetchedAt,
       data: course,
     })
@@ -177,6 +183,7 @@ export const replaceCachedUserCourseRecords = async (
       courseSchemaVersion: COURSE_CACHE_SCHEMA_VERSION,
       username,
       userUpdatedAt,
+      statsRevision,
       fetchedAt,
       recordUpdatedAt: response.meta.updated_at,
     })

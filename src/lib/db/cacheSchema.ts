@@ -39,6 +39,7 @@ export type CacheMetadata = {
   schemaVersion: number
   courseSchemaVersion?: number
   songsRevision?: number
+  statsRevision?: number
   coursesUpdatedAt?: string | null
   userUpdatedAt?: string | null
   username?: string
@@ -77,6 +78,7 @@ export type CachedUserCourseRecord = {
   sortOrder: number
   schemaVersion: number
   userUpdatedAt: string | null
+  statsRevision: number
   fetchedAt: string
   data: PlayedCourseRecord
 }
@@ -92,6 +94,7 @@ export type CachedUserSongRecord =
       schemaVersion: number
       userUpdatedAt: string | null
       songsRevision: number
+      statsRevision: number
       fetchedAt: string
       data: PlayerRecordDTO[]
     }
@@ -104,6 +107,7 @@ export type CachedUserSongRecord =
       schemaVersion: number
       userUpdatedAt: string | null
       songsRevision: number
+      statsRevision: number
       fetchedAt: string
       data: WorldsendRecordDTO | null
     }
@@ -115,6 +119,7 @@ export type UserApiResponse = {
   schemaVersion: number
   userUpdatedAt: string | null
   songsRevision: number
+  statsRevision: number
   fetchedAt: string
   data: UserRatingDTO
 }

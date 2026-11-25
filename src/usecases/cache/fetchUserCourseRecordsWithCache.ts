@@ -28,14 +28,21 @@ const fetchPlayedCourseRecordsWithCache = async (
   }
 
   let userUpdatedAt: string | null
+  let statsRevision: number
   try {
-    userUpdatedAt = (await fetchUserUpdatedAt(username)).updated_at
+    const userState = await fetchUserUpdatedAt(username)
+    userUpdatedAt = userState.updated_at
+    statsRevision = userState.stats_revision
   } catch {
     return toPlayedCourseRecords(await fetchUserCourseRecords(username))
   }
 
   try {
-    const cachedRecords = await readCachedUserCourseRecords({ username, userUpdatedAt })
+    const cachedRecords = await readCachedUserCourseRecords({
+      username,
+      userUpdatedAt,
+      statsRevision,
+    })
     if (cachedRecords) {
       return cachedRecords
     }
@@ -45,7 +52,7 @@ const fetchPlayedCourseRecordsWithCache = async (
 
   const response = await fetchUserCourseRecords(username)
   try {
-    await replaceCachedUserCourseRecords(username, userUpdatedAt, response)
+    await replaceCachedUserCourseRecords(username, userUpdatedAt, statsRevision, response)
   } catch {
     // IndexedDBへの保存失敗は画面表示を止めない。
   }

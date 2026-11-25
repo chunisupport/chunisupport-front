@@ -29,6 +29,7 @@ const WORLDSEND_RECORD_COLUMN_SETTINGS: WorldsendRecordColumnSetting[] = [
   { id: 'attribute', defaultVisible: true },
   { id: 'level', defaultVisible: true },
   { id: 'score', defaultVisible: true },
+  { id: 'topPercent', defaultVisible: false },
   { id: 'lamp', defaultVisible: true },
   { id: 'hardLamp', defaultVisible: true },
   { id: 'fullChain', defaultVisible: false },

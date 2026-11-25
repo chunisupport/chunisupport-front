@@ -9,6 +9,7 @@ import {
   RecordLampCell,
   RecordScoreCell,
   RecordTitleCell,
+  RecordTopPercentCell,
   RecordUpdatedAtCell,
 } from '../../../../components/common/record/RecordDisplayParts'
 import { buildWorldsendSongDetailPath } from '../../../../constants/routes'
@@ -50,6 +51,7 @@ const worldsendColumnRenderers: Record<
     </div>
   ),
   score: (record) => <RecordScoreCell record={record} />,
+  topPercent: (record) => <RecordTopPercentCell record={record} />,
   lamp: (record) => <RecordLampCell record={record} />,
   hardLamp: (record) => <RecordHardLampCell record={record} />,
   fullChain: (record) => <RecordFullChainCell record={record} />,
