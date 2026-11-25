@@ -21,6 +21,13 @@ export const GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES = ['MASTER', 'ULTIMA'] as cons
 /** 理論値OVER POWERが最大となる譜面を選ぶ項目の表示名 */
 export const THEORETICAL_OVER_POWER_TARGET_LABEL = 'OP対象（MAS+ULT）'
 
+/**
+ * 目標の「OP対象」項目の表示名。
+ * 目標では理論値譜面に固定せず、楽曲ごとにプレイ実績で最もOPが高い1譜面を集計するため、
+ * 理論値譜面を選ぶ他画面のラベルとは分けている。
+ */
+export const GOAL_OVER_POWER_TARGET_LABEL = 'OP対象'
+
 /** 理論値OVER POWERが最大となる譜面を選ぶ共通フィルター値 */
 export const THEORETICAL_OVER_POWER_TARGET_FILTER = 'OP_TARGET' as const
 

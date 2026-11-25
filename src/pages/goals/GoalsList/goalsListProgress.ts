@@ -6,7 +6,10 @@ import type {
   PlayerRecordDTO,
 } from '../../../types/api'
 import { filterRatingReachableRecords } from '../../../utils/goalRatingCount'
-import { calculateGoalOverPowerChartMax } from '../utils/goalOverPower'
+import {
+  calculateGoalOverPowerChartMax,
+  calculateGoalOverPowerTotals,
+} from '../utils/goalOverPower'
 import {
   calculateGoalProgress,
   filterRecordsByAttributes,
@@ -124,7 +127,7 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
  * @param attributes - 件数を確認する対象条件。
  * @param achievementType - 集約単位を決める目標種別。虹枠では楽曲単位にする。
  * @param achievementParams - 到達可能譜面数の解決に使う成果パラメータ。
- * @returns 条件に一致する譜面数または楽曲数。
+ * @returns 条件に一致する譜面数または楽曲数。OVER POWERでは理論値の集計対象と同じ譜面数。
  */
 export const resolveGoalAllCount = (
   data: GoalsListData | undefined,
@@ -133,6 +136,13 @@ export const resolveGoalAllCount = (
   achievementParams?: GoalCreateRequest['achievement_params']
 ): number => {
   if (!data) return 0
+  if (achievementType && isOverPowerAchievementType(achievementType)) {
+    return calculateGoalOverPowerTotals({
+      ...toOverPowerProgressContext(data),
+      songs: data.songs,
+      attributes,
+    }).targetCount
+  }
   if (achievementType === 'rainbow_count') {
     return filterRainbowTargetSongs(data.songs, attributes, data.masterData, data.versions).length
   }
