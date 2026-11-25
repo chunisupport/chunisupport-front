@@ -44,9 +44,9 @@ const createCourseRecordColumnDefinitions = (): CourseRecordColumnDefinition[] =
       defaultVisible: true,
     },
     { ...score, id: 'score', sortKey: 'score', defaultVisible: true },
-    { ...topPercent, id: 'topPercent', sortKey: 'topPercent', defaultVisible: true },
     { ...lamp, id: 'lamp', sortKey: 'lamp', defaultVisible: true },
     { ...hardLamp, id: 'hardLamp', label: 'クリア', sortKey: 'hardLamp', defaultVisible: true },
+    { ...topPercent, id: 'topPercent', sortKey: 'topPercent', defaultVisible: true },
     { ...updatedAt, id: 'updatedAt', sortKey: 'updatedAt', defaultVisible: true },
   ]
 }
