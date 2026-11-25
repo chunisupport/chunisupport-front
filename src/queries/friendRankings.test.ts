@@ -8,8 +8,8 @@ import { loadTestModule } from '../test/setupTestEnvironment'
  */
 const loadFriendRankingsQuery = () => loadTestModule(() => import('./friendRankings.ts'))
 
-test('フレンドランキングquery keyは認証ユーザーと譜面種別で分離される', async () => {
-  // Given: 2ユーザーと通常譜面、WORLD'S END譜面。
+test('フレンドランキングquery keyは認証ユーザーと対象種別で分離される', async () => {
+  // Given: 2ユーザーと通常譜面、WORLD'S END譜面、コース。
   const { friendRankingQueryKeys } = await loadFriendRankingsQuery()
 
   // When: 各query keyを生成する。
@@ -17,9 +17,14 @@ test('フレンドランキングquery keyは認証ユーザーと譜面種別�
   const bobSong = friendRankingQueryKeys.song('bob', 'song-1', 'MASTER')
   const worldsend = friendRankingQueryKeys.worldsend('alice', 'song-1')
 
-  // Then: ユーザーと譜面種別ごとに異なるkeyになる。
+  const aliceCourse = friendRankingQueryKeys.course('alice', 'song-1')
+
+  // Then: ユーザーと対象種別ごとに異なるkeyになり、フレンド変更時の無効化範囲に入る。
   assert.notDeepEqual(aliceSong, bobSong)
   assert.notDeepEqual(aliceSong, worldsend)
+  assert.notDeepEqual(aliceCourse, aliceSong)
+  assert.notDeepEqual(aliceCourse, worldsend)
+  assert.deepEqual(aliceCourse, [...friendRankingQueryKeys.user('alice'), 'course', 'song-1'])
   assert.deepEqual(aliceSong, ['friend-rankings', 'alice', 'song', 'song-1', 'MASTER'])
   assert.deepEqual(worldsend, ['friend-rankings', 'alice', 'worldsend', 'song-1'])
 })

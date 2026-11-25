@@ -1,19 +1,22 @@
 import { A } from '@solidjs/router'
 import { For, Show } from 'solid-js'
-import type { FriendRankingEntryDTO, WorldsendFriendRankingEntryDTO } from '../../../../types/api'
-import { formatScoreDifference, getScoreDifferenceClass } from '../../../../utils/scoreDifference'
-import { buildUserProfilePagePath } from '../../../../utils/userProfileRoute'
+import { formatScoreDifference, getScoreDifferenceClass } from '../../../utils/scoreDifference'
+import { buildUserProfilePagePath } from '../../../utils/userProfileRoute'
 import {
   FRIEND_RANKING_EMPTY_LABEL,
   FRIEND_RANKING_PLAYER_LABEL,
   FRIEND_RANKING_RANK_LABEL,
-  SCORE_HISTORY_SCORE_LABEL,
+  FRIEND_RANKING_SCORE_LABEL,
 } from './constants'
 
-type FriendRankingTableEntry = Pick<
-  FriendRankingEntryDTO | WorldsendFriendRankingEntryDTO,
-  'rank' | 'username' | 'player_name' | 'score' | 'is_self'
->
+/** ランキング表に表示する自己ベスト。 */
+export type FriendRankingTableEntry = {
+  rank: number
+  username: string
+  player_name: string
+  score: number
+  is_self: boolean
+}
 
 type Props = {
   /** 表示対象のフレンドランキング */
@@ -42,7 +45,7 @@ const FriendRankingRow = (props: {
         <div class="min-w-0">
           <A
             href={buildUserProfilePagePath(props.entry.username, 'rating_best')}
-            class="block truncate font-semibold text-action-primary hover:underline"
+            class="block truncate font-sans font-semibold text-action-primary hover:underline"
           >
             {props.entry.player_name}
           </A>
@@ -67,7 +70,7 @@ const FriendRankingRow = (props: {
 }
 
 /**
- * 通常譜面のフレンドランキングを表形式で表示する。
+ * フレンドランキングを表形式で表示する。
  *
  * @param props - ランキング一覧。
  * @returns フレンドランキング表。
@@ -95,7 +98,7 @@ const FriendRankingTable = (props: Props) => {
                 {FRIEND_RANKING_PLAYER_LABEL}
               </th>
               <th scope="col" class="w-32 px-3 py-2 text-right sm:w-44 sm:px-4">
-                {SCORE_HISTORY_SCORE_LABEL}
+                {FRIEND_RANKING_SCORE_LABEL}
               </th>
             </tr>
           </thead>

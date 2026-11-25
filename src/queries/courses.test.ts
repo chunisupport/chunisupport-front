@@ -4,13 +4,18 @@ import { QueryClient } from '@tanstack/solid-query'
 import { setupTestEnvironment } from '../test/setupTestEnvironment'
 
 test('旧ユーザーのコース関連キャッシュを破棄しても公開データや別ユーザーの履歴は残る', async () => {
-  // Given: 旧ユーザーのコース一覧・履歴と、別ユーザーや公開データのキャッシュがある。
+  // Given: 旧ユーザーのコース一覧・履歴・管理用ランキングと、別ユーザーや公開データのキャッシュがある。
   setupTestEnvironment()
   const { courseQueryKeys: keys } = await import('./courses.ts')
   const queryClient = new QueryClient()
-  const removedKeys = [keys.list('old_name'), keys.history('old_name', 'course')]
+  const removedKeys = [
+    keys.list('old_name'),
+    keys.history('old_name', 'course'),
+    keys.adminRanking('old_name', 'course'),
+  ]
   const keptKeys = [
     keys.history('other_name', 'course'),
+    keys.adminRanking('other_name', 'course'),
     keys.list(null),
     keys.master(),
     keys.stats('course'),

@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/solid-query'
 import {
+  fetchAdminCourseRanking,
   fetchCourseDetail,
   fetchCourseStats,
   fetchManagedCourses,
@@ -32,6 +33,13 @@ export const courseQueryKeys = {
   detail: (displayId: string) => [...courseQueryKeys.all, 'detail', displayId] as const,
   /** @returns コース統計のqueryキー。 */
   stats: (displayId: string) => [...courseQueryKeys.all, 'stats', displayId] as const,
+  /**
+   * @param username - 現在の認証ユーザー名。
+   * @param displayId - コースの公開ID。
+   * @returns 閲覧者別の管理者向けコースランキングqueryキー。
+   */
+  adminRanking: (username: string | null, displayId: string) =>
+    [...courseQueryKeys.user(username), 'admin-ranking', displayId] as const,
   /** @returns ユーザー別・コース別のスコア履歴のqueryキー。 */
   history: (username: string, displayId: string) =>
     [...courseQueryKeys.user(username), 'history', displayId] as const,
@@ -113,4 +121,18 @@ export const courseDetailQueryOptions = (displayId: string) =>
   queryOptions({
     queryKey: courseQueryKeys.detail(displayId),
     queryFn: ({ signal }) => fetchCourseDetail(displayId, signal),
+  })
+
+/**
+ * 管理者向けコースランキングquery optionsを生成する。
+ *
+ * @param username - ADMINのユーザー名。ADMIN以外はnull。
+ * @param displayId - コースの公開ID。
+ * @returns 管理者向けコースランキング用query options。
+ */
+export const adminCourseRankingQueryOptions = (username: string | null, displayId: string) =>
+  queryOptions({
+    queryKey: courseQueryKeys.adminRanking(username, displayId),
+    queryFn: ({ signal }) => fetchAdminCourseRanking(displayId, signal),
+    enabled: Boolean(username && displayId),
   })

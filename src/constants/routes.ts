@@ -65,6 +65,8 @@ export const ADMIN_VERSIONS_PATH = `${ADMIN_PATH}/versions`
 export const ADMIN_BATCH_PATH = `${ADMIN_PATH}/batch`
 /** ADMIN向けコース管理画面のパス */
 export const ADMIN_COURSES_PATH = `${ADMIN_PATH}/courses`
+/** ADMIN向けコースランキング画面のパス */
+export const ADMIN_COURSE_RANKING_PATH = `${ADMIN_PATH}/course-rankings/:displayid`
 /** ADMIN向けテスト用ページ集のパス。プロフィールカードとレーティング画像DOMの確認タブを持つ */
 export const ADMIN_PREVIEWS_PATH = `${ADMIN_PATH}/previews`
 
@@ -167,3 +169,12 @@ export const buildAdminChartRankingPath = (displayId: string, difficulty: string
  */
 export const buildAdminWorldsendChartRankingPath = (displayId: string): string =>
   `${ADMIN_PATH}/chart-rankings/worldsend-songs/${encodeURIComponent(displayId)}`
+
+/**
+ * 管理者向けコースランキングのパスを生成する。
+ *
+ * @param displayId - コースの公開ID。
+ * @returns コースランキング画面のパス。
+ */
+export const buildAdminCourseRankingPath = (displayId: string): string =>
+  ADMIN_COURSE_RANKING_PATH.replace(':displayid', () => encodeURIComponent(displayId))

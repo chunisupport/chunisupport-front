@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/solid-query'
 import { createMemo, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
 import { CourseClassMark } from '../../../components/common/course/CourseRecordParts'
-import { COURSES_PATH } from '../../../constants/routes'
+import AdminRankingLink from '../../../components/common/ranking/AdminRankingLink'
+import { buildAdminCourseRankingPath, COURSES_PATH } from '../../../constants/routes'
 import { joinDocumentTitleParts } from '../../../constants/site'
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle'
 import {
@@ -19,13 +20,14 @@ import { formatCourseClassLabel } from '../../../utils/courseClassDisplay'
 import { buildCourseTrackBestRecords } from '../../../utils/courseTracks'
 import NotFoundPage from '../../NotFoundPage'
 import { COURSE_PAGE_COPY } from '../constants'
+import CourseFriendRankingSection from './components/CourseFriendRankingSection'
 import CourseOwnScoreCard from './components/CourseOwnScoreCard'
 import CourseScoreHistorySection from './components/CourseScoreHistorySection'
 import CourseStatsSection from './components/CourseStatsSection'
 import CourseTracksSection from './components/CourseTracksSection'
 
 /**
- * コースの基本情報、自己ベストと履歴、プレイヤー統計を表示する。
+ * コースの基本情報、自己ベストと履歴、プレイヤー統計、ランキングを表示する。
  *
  * @returns コース詳細ページ。
  */
@@ -163,6 +165,16 @@ const CourseDetail = () => {
                 ratingBands={ratingBandsQuery.data}
                 ownScore={ownScore()}
               />
+
+              <Show when={username()}>
+                {(currentUsername) => (
+                  <CourseFriendRankingSection
+                    username={currentUsername()}
+                    displayId={currentCourse().id}
+                  />
+                )}
+              </Show>
+              <AdminRankingLink href={buildAdminCourseRankingPath(currentCourse().id)} />
             </div>
           )}
         </Show>

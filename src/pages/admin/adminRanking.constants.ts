@@ -1,9 +1,11 @@
-/** 管理者向け譜面ランキング画面の表示文言 */
-export const ADMIN_CHART_RANKING_COPY = {
-  title: '譜面ランキング',
+/** 管理者向けランキング画面の表示文言 */
+export const ADMIN_RANKING_COPY = {
+  chartTitle: '譜面ランキング',
+  courseTitle: 'コースランキング',
   total: '登録者数',
   empty: 'ランキングデータがありません。',
-  tableCaption: '譜面スコアランキング',
+  chartTableCaption: '譜面スコアランキング',
+  courseTableCaption: 'コーススコアランキング',
   rankColumn: '順位',
   playerColumn: 'プレイヤー',
   scoreColumn: 'スコア',

@@ -1,4 +1,5 @@
 import { type QueryClient, queryOptions } from '@tanstack/solid-query'
+import { fetchFriendCourseRanking } from '../api/courses'
 import {
   fetchSongFriendRanking,
   fetchWorldsendFriendRanking,
@@ -11,6 +12,13 @@ import { FRIEND_QUERY_STALE_TIME_MS } from './friendQueryConstants'
 export const friendRankingQueryKeys = {
   all: ['friend-rankings'] as const,
   user: (username: string) => ['friend-rankings', username] as const,
+  /**
+   * @param username - 現在の認証ユーザー名。
+   * @param displayId - コースの公開ID。
+   * @returns コースのフレンドランキングqueryキー。
+   */
+  course: (username: string, displayId: string) =>
+    [...friendRankingQueryKeys.user(username), 'course', displayId] as const,
   song: (username: string | null, displayId: string, difficulty: ScoreHistoryDifficulty | null) =>
     ['friend-rankings', username, 'song', displayId, difficulty] as const,
   worldsend: (username: string | null, displayId: string) =>
@@ -55,6 +63,20 @@ export const worldsendFriendRankingQueryOptions = (username: string | null, disp
     queryKey: friendRankingQueryKeys.worldsend(username, displayId),
     queryFn: ({ signal }) => fetchWorldsendFriendRanking(displayId, signal),
     enabled: Boolean(username && displayId),
+    staleTime: FRIEND_QUERY_STALE_TIME_MS,
+  })
+
+/**
+ * コースのフレンドランキングquery optionsを生成する。
+ *
+ * @param username - 現在の認証ユーザー名。
+ * @param displayId - コースの公開ID。
+ * @returns コースのフレンドランキング用query options。
+ */
+export const courseFriendRankingQueryOptions = (username: string, displayId: string) =>
+  queryOptions({
+    queryKey: friendRankingQueryKeys.course(username, displayId),
+    queryFn: ({ signal }) => fetchFriendCourseRanking(displayId, signal),
     staleTime: FRIEND_QUERY_STALE_TIME_MS,
   })
 

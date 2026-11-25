@@ -170,3 +170,34 @@ test('コース構成を取得・一括更新し、空配列でクリアでき�
   assert.deepEqual(JSON.parse(String(calls[1]?.init?.body)), { tracks })
   assert.equal(calls[2]?.init?.body, '{"tracks":[]}')
 })
+
+test('コースランキングを閲覧範囲ごとの認証付きパスから取得する', async (t) => {
+  // Given
+  const originalFetch = globalThis.fetch
+  t.after(() => {
+    globalThis.fetch = originalFetch
+  })
+  const result = { course: managedCourse, ranking: [], total: 0 }
+  const calls = installFetchRecorder(() => Response.json(result))
+  const { fetchFriendCourseRanking, fetchAdminCourseRanking } = await loadCoursesApi(true)
+  const { signal } = new AbortController()
+
+  // When
+  const friends = await fetchFriendCourseRanking('A/B C', signal)
+  const admin = await fetchAdminCourseRanking('A/B C', signal)
+
+  // Then
+  assert.deepEqual(
+    calls.map(({ input }) => String(input)),
+    [
+      'http://localhost:3000/internal/friend-rankings/courses/A%2FB%20C',
+      'http://localhost:3000/internal/admin/course-rankings/A%2FB%20C',
+    ]
+  )
+  for (const { init } of calls) {
+    assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer test-token')
+    assert.equal(init?.signal, signal)
+  }
+  assert.deepEqual(friends, result)
+  assert.deepEqual(admin, result)
+})
