@@ -5,7 +5,10 @@ import {
   updatedAtTimestamp,
 } from '../../../utils/recordUpdatedAt'
 import type { SortCondition } from '../../../utils/sortConditions'
-import { compareNumberWithUnplayedLast } from '../recordTable/sortComparators'
+import {
+  compareNullableNumberWithMissingLast,
+  compareNumberWithUnplayedLast,
+} from '../recordTable/sortComparators'
 import { compareComboLamp } from '../utils/lampSorting'
 import type { CourseRecordSortKey } from './columns'
 
@@ -62,6 +65,13 @@ export const sortCourseRecords = (
           comparison = compareNumberWithUnplayedLast(
             { isPlayed: left.is_played, value: left.score },
             { isPlayed: right.is_played, value: right.score },
+            direction
+          )
+          break
+        case 'topPercent':
+          comparison = compareNullableNumberWithMissingLast(
+            { isPlayed: left.is_played, value: left.top_percent },
+            { isPlayed: right.is_played, value: right.top_percent },
             direction
           )
           break

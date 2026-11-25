@@ -3,6 +3,7 @@ export type RecordColumnBaseId =
   | 'difficulty'
   | 'const'
   | 'score'
+  | 'topPercent'
   | 'rating'
   | 'lamp'
   | 'hardLamp'
@@ -36,6 +37,7 @@ export const RECORD_COLUMN_BASE_DEFINITIONS: Record<
   difficulty: { id: 'difficulty', label: '難易度', width: '2.5rem', sortKey: 'difficulty' },
   const: { id: 'const', label: '定数', width: '2.5rem', sortKey: 'const' },
   score: { id: 'score', label: 'スコア', width: '4.6rem', sortKey: 'score' },
+  topPercent: { id: 'topPercent', label: '上位%', width: '3.8rem', sortKey: 'topPercent' },
   rating: { id: 'rating', label: 'レート', width: '40px', sortKey: 'rating' },
   lamp: { id: 'lamp', label: 'AJ', width: '40px', sortKey: 'lamp' },
   hardLamp: { id: 'hardLamp', label: 'ハード', width: '40px', sortKey: 'hardLamp' },

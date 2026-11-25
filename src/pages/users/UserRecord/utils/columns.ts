@@ -33,6 +33,7 @@ const RECORD_COLUMN_SETTINGS: RecordColumnSetting[] = [
   { id: 'level', defaultVisible: false },
   { id: 'const', defaultVisible: true },
   { id: 'score', defaultVisible: true },
+  { id: 'topPercent', defaultVisible: false },
   { id: 'rating', defaultVisible: true },
   { id: 'lamp', defaultVisible: true },
   { id: 'hardLamp', defaultVisible: true },

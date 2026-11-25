@@ -435,6 +435,26 @@ test('J数ソートは数値順に並べ、J数なし行は入力順を維持し
   )
 })
 
+test('上位%ソートは昇降順とも未集計と未プレイを末尾へ固定する', () => {
+  // Given
+  const records = [
+    createRecord({ id: 'mid', top_percent: 12.34 }),
+    createRecord({ id: 'null-stats', top_percent: null }),
+    createRecord({ id: 'top', top_percent: 0.05 }),
+    createRecord({ id: 'unplayed', is_played: false, top_percent: null }),
+  ]
+
+  // When / Then
+  assert.deepEqual(
+    sortRecords(records, 'topPercent', 'asc').map((record) => record.id),
+    ['top', 'mid', 'null-stats', 'unplayed']
+  )
+  assert.deepEqual(
+    sortRecords(records, 'topPercent', 'desc').map((record) => record.id),
+    ['mid', 'top', 'null-stats', 'unplayed']
+  )
+})
+
 test('J数なし行同士は後続のスコア降順で並べる', () => {
   // Given: J数なしのプレイ済み行をスコア昇順で渡す。
   const records = [

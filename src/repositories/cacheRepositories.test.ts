@@ -340,21 +340,28 @@ test('コースキャッシュの専用schemaVersion不一致は他のキャッ�
 
 test('コースレコードキャッシュはマスタ情報を除いてユーザー単位で保存されること', async () => {
   // Given: マスタ情報を含むAPIレスポンスを保存する。
-  await replaceCachedUserCourseRecords('alice', 'user-1', courseRecordResponse)
+  await replaceCachedUserCourseRecords('alice', 'user-1', 1, courseRecordResponse)
 
-  // When: 同じユーザー更新日時でキャッシュを読み込む。
+  // When: 同じユーザー更新日時・統計世代でキャッシュを読み込む。
   const cached = await readCachedUserCourseRecords({
     username: 'alice',
     userUpdatedAt: 'user-1',
+    statsRevision: 1,
+  })
+  const mismatchedStats = await readCachedUserCourseRecords({
+    username: 'alice',
+    userUpdatedAt: 'user-1',
+    statsRevision: 2,
   })
   const stored = await db.userCourseRecords.get(JSON.stringify(['alice', course.id]))
 
-  // Then: プレイ状態だけを復元し、名称などのマスタ情報は保存しない。
+  // Then: プレイ状態だけを復元し、名称などのマスタ情報は保存しない。統計世代不一致は読み込まない。
   assert.deepEqual(cached, {
     courses: [
       {
         id: course.id,
         score: 3_020_000,
+        top_percent: null,
         is_clear: true,
         combo_lamp: 'FULL COMBO',
         updated_at: '2026-07-15T10:00:00Z',
@@ -362,48 +369,68 @@ test('コースレコードキャッシュはマスタ情報を除いてユー�
     ],
     meta: courseRecordResponse.meta,
   })
+  assert.equal(mismatchedStats, null)
   assert.ok(stored)
   assert.deepEqual(stored.data, {
     id: 'course-1',
     score: 3_020_000,
+    top_percent: null,
     is_clear: true,
     combo_lamp: 'FULL COMBO',
     updated_at: '2026-07-15T10:00:00Z',
   })
 })
 
-test('ユーザー API キャッシュは username と更新日時・変更世代が一致する場合だけ読み込まれること', async () => {
+test('ユーザー API キャッシュは username と更新日時・変更世代・統計世代が一致する場合だけ読み込まれること', async () => {
   // Given
-  await saveCachedUserRating('alice', 'user-1', 1, rating)
-  await saveCachedUserRecord('alice', 'user-1', 1, record)
+  await saveCachedUserRating('alice', 'user-1', 1, 10, rating)
+  await saveCachedUserRecord('alice', 'user-1', 1, 10, record)
 
   // When
   const matchedRating = await readCachedUserRating({
     username: 'alice',
     userUpdatedAt: 'user-1',
     songsRevision: 1,
+    statsRevision: 10,
   })
   const mismatchedRating = await readCachedUserRating({
     username: 'bob',
     userUpdatedAt: 'user-1',
     songsRevision: 1,
+    statsRevision: 10,
+  })
+  const mismatchedStatsRating = await readCachedUserRating({
+    username: 'alice',
+    userUpdatedAt: 'user-1',
+    songsRevision: 1,
+    statsRevision: 11,
   })
   const matchedRecord = await readCachedUserRecord({
     username: 'alice',
     userUpdatedAt: 'user-1',
     songsRevision: 1,
+    statsRevision: 10,
   })
   const mismatchedRecord = await readCachedUserRecord({
     username: 'bob',
     userUpdatedAt: 'user-1',
     songsRevision: 1,
+    statsRevision: 10,
+  })
+  const mismatchedStatsRecord = await readCachedUserRecord({
+    username: 'alice',
+    userUpdatedAt: 'user-1',
+    songsRevision: 1,
+    statsRevision: 11,
   })
 
   // Then
   assert.deepEqual(matchedRating, rating)
   assert.equal(mismatchedRating, null)
+  assert.equal(mismatchedStatsRating, null)
   assert.deepEqual(matchedRecord, record)
   assert.equal(mismatchedRecord, null)
+  assert.equal(mismatchedStatsRecord, null)
 })
 
 const standardSongRecord = {
@@ -432,11 +459,12 @@ const standardSongRecordKey = {
   username: 'alice',
   userUpdatedAt: 'user-1',
   songsRevision: 1,
+  statsRevision: 10,
 }
 
 test('全件レコードキャッシュは1曲1譜面を曲単位で保存し、全件レスポンスとしては保存しないこと', async () => {
   // Given
-  await saveCachedUserRecord('alice', 'user-1', 1, {
+  await saveCachedUserRecord('alice', 'user-1', 1, 10, {
     standard: [standardSongRecord],
     worldsend: [],
     meta: { updated_at: '2026-06-16T12:00:00Z' },
@@ -454,7 +482,7 @@ test('全件レコードキャッシュは同じ曲の複数譜面をまとめ�
   // Given: 同じ曲の EXPERT・MASTER の間に別曲のレコードを挟む。
   const expertRecord = { ...standardSongRecord, difficulty: 'EXPERT', score: 1_000_000 } as const
   const otherSongRecord = { ...standardSongRecord, id: 'song-2', title: '別の楽曲' } as const
-  await saveCachedUserRecord('alice', 'user-1', 1, {
+  await saveCachedUserRecord('alice', 'user-1', 1, 10, {
     standard: [expertRecord, otherSongRecord, standardSongRecord],
     worldsend: [],
     meta: { updated_at: '2026-06-16T12:00:00Z' },
@@ -472,7 +500,7 @@ test('全件レコードキャッシュは同じ曲の複数譜面をまとめ�
 test('全件レコードのメタデータを読み取った直後にキャッシュが削除されても空の成績を返さないこと', async (t) => {
   // Given: 1譜面分の全件レコードが保存されている。
   const saved = { ...record, standard: [standardSongRecord] }
-  await saveCachedUserRecord('alice', 'user-1', 1, saved)
+  await saveCachedUserRecord('alice', 'user-1', 1, 10, saved)
   let deletion: Promise<void> | undefined
   const getMetadata: (key: CacheMetadataKey) => Promise<unknown> = db.cacheMetadata.get
   const get = t.mock.method(db.cacheMetadata, 'get', async (key: CacheMetadataKey) => {
@@ -502,6 +530,7 @@ test("WORLD'S END未プレイはキャッシュなしと区別して保存され
     username: 'alice',
     userUpdatedAt: 'user-1',
     songsRevision: 1,
+    statsRevision: 10,
   }
   await saveCachedWorldsendSongRecord(match, 'worldsend-1', null)
 
@@ -516,18 +545,19 @@ test("WORLD'S END未プレイはキャッシュなしと区別して保存され
 
 test('ユーザーAPIキャッシュの全削除はレーティング・曲別レコード・全件メタデータを削除すること', async () => {
   // Given
-  await saveCachedUserRating('alice', 'user-1', 1, rating)
-  await saveCachedUserRecord('alice', 'user-1', 1, record)
+  await saveCachedUserRating('alice', 'user-1', 1, 10, rating)
+  await saveCachedUserRecord('alice', 'user-1', 1, 10, record)
   await saveCachedWorldsendSongRecord(
     {
       username: 'alice',
       userUpdatedAt: 'user-1',
       songsRevision: 1,
+      statsRevision: 10,
     },
     'worldsend-1',
     null
   )
-  await replaceCachedUserCourseRecords('alice', 'user-1', courseRecordResponse)
+  await replaceCachedUserCourseRecords('alice', 'user-1', 10, courseRecordResponse)
 
   // When
   await clearCachedUserApiResponses()
@@ -548,6 +578,7 @@ test('集計値がない旧形式のレーティングキャッシュは読み�
     schemaVersion: CLIENT_CACHE_SCHEMA_VERSION,
     userUpdatedAt: 'user-1',
     songsRevision: 1,
+    statsRevision: 10,
     fetchedAt: new Date().toISOString(),
     data: {
       best: [],
@@ -563,6 +594,7 @@ test('集計値がない旧形式のレーティングキャッシュは読み�
     username: 'alice',
     userUpdatedAt: 'user-1',
     songsRevision: 1,
+    statsRevision: 10,
   })
 
   // Then
@@ -612,9 +644,9 @@ test("フォルダコードのない旧楽曲キャッシュは通常曲とWORLD
 
 test('変更世代を保存していない旧形式のユーザー API キャッシュは読み込まれないこと', async () => {
   // Given: レーティング・全件レコード・曲単位レコードを保存し、変更世代を取り除いて旧形式にする。
-  await saveCachedUserRating('alice', 'user-1', 1, rating)
-  await saveCachedUserRecord('alice', 'user-1', 1, record)
-  const match = { username: 'alice', userUpdatedAt: 'user-1', songsRevision: 1 }
+  await saveCachedUserRating('alice', 'user-1', 1, 10, rating)
+  await saveCachedUserRecord('alice', 'user-1', 1, 10, record)
+  const match = { username: 'alice', userUpdatedAt: 'user-1', songsRevision: 1, statsRevision: 10 }
   await saveCachedStandardSongRecord(match, 'song-1', [])
   await db.userApiResponses.update('userRating', { songsRevision: undefined } as never)
   await db.cacheMetadata.update('userRecord', { songsRevision: undefined })
@@ -631,4 +663,38 @@ test('変更世代を保存していない旧形式のユーザー API キャッ
   assert.equal(cachedRating, null)
   assert.equal(cachedRecord, null)
   assert.equal(cachedSongRecord, null)
+})
+
+test('統計世代を保存していない旧形式のユーザー API・コースキャッシュは読み込まれないこと', async () => {
+  // Given: 統計世代を保存したキャッシュから statsRevision だけを取り除いて旧形式にする。
+  await saveCachedUserRating('alice', 'user-1', 1, 0, rating)
+  await saveCachedUserRecord('alice', 'user-1', 1, 0, record)
+  const match = { username: 'alice', userUpdatedAt: 'user-1', songsRevision: 1, statsRevision: 0 }
+  await saveCachedStandardSongRecord(match, 'song-1', [])
+  await replaceCachedUserCourseRecords('alice', 'user-1', 0, courseRecordResponse)
+  await db.userApiResponses.update('userRating', { statsRevision: undefined } as never)
+  await db.cacheMetadata.update('userRecord', { statsRevision: undefined })
+  await db.cacheMetadata.update('userCourseRecords', { statsRevision: undefined })
+  await db.userSongRecords.toCollection().modify((entry) => {
+    delete (entry as Partial<typeof entry>).statsRevision
+  })
+  await db.userCourseRecords.toCollection().modify((entry) => {
+    delete (entry as Partial<typeof entry>).statsRevision
+  })
+
+  // When: 統計世代 0 で読み込む。
+  const cachedRating = await readCachedUserRating(match)
+  const cachedRecord = await readCachedUserRecord(match)
+  const cachedSongRecord = await readCachedStandardSongRecord(match, 'song-1')
+  const cachedCourseRecords = await readCachedUserCourseRecords({
+    username: 'alice',
+    userUpdatedAt: 'user-1',
+    statsRevision: 0,
+  })
+
+  // Then: いずれも不一致として扱い、API から再取得させる。
+  assert.equal(cachedRating, null)
+  assert.equal(cachedRecord, null)
+  assert.equal(cachedSongRecord, null)
+  assert.equal(cachedCourseRecords, null)
 })

@@ -19,6 +19,7 @@ export type WorldsendRecordColumnId =
   | 'attribute'
   | 'level'
   | 'score'
+  | 'topPercent'
   | 'lamp'
   | 'hardLamp'
   | 'fullChain'

@@ -9,6 +9,7 @@ import {
   RECORD_CELL_BASE_CLASS,
   RecordScoreCell,
   RecordTitleCell,
+  RecordTopPercentCell,
   RecordUpdatedAtCell,
 } from '../../../components/common/record/RecordDisplayParts'
 import { buildCourseDetailPath } from '../../../constants/routes'
@@ -40,6 +41,7 @@ const courseRecordColumnRenderers: Record<CourseRecordColumnId, ColumnRenderer<C
     </div>
   ),
   score: (record) => <RecordScoreCell record={record} getRank={getCourseScoreRank} />,
+  topPercent: (record) => <RecordTopPercentCell record={record} />,
   lamp: (record) => <CourseLampCell record={record} />,
   hardLamp: (record) => <CourseHardLampCell record={record} />,
   updatedAt: (record) => <RecordUpdatedAtCell record={record} formatUpdatedAt={formatUpdatedAt} />,

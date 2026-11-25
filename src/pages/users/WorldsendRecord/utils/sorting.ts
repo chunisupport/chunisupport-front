@@ -10,7 +10,10 @@ import {
   type SortDirection,
   type SortParamsSource,
 } from '../../../../utils/sortingQuery'
-import { compareNumberWithUnplayedLast } from '../../recordTable/sortComparators'
+import {
+  compareNullableNumberWithMissingLast,
+  compareNumberWithUnplayedLast,
+} from '../../recordTable/sortComparators'
 import { sortRecordsWithConditions } from '../../recordTable/sortRecords'
 import { formatJusticeCountForAj } from '../../utils/justiceCountDisplay'
 import { isJusticeCountMissing } from '../../utils/justiceCountSorting'
@@ -35,6 +38,7 @@ const WE_SORT_COL_MAP: Record<string, WorldsendRecordSortKey> = {
   attr: 'attribute',
   level: 'level',
   score: 'score',
+  top_percent: 'topPercent',
   updated_at: 'updatedAt',
   lamp: 'lamp',
   hard_lamp: 'hardLamp',
@@ -113,6 +117,13 @@ const compareWorldsendRecordBySortCondition = <TRecord extends WorldsendRecordDT
       return compareNumberWithUnplayedLast(
         { isPlayed: left.is_played, value: left.score },
         { isPlayed: right.is_played, value: right.score },
+        direction
+      )
+    }
+    case 'topPercent': {
+      return compareNullableNumberWithMissingLast(
+        { isPlayed: left.is_played, value: left.top_percent },
+        { isPlayed: right.is_played, value: right.top_percent },
         direction
       )
     }

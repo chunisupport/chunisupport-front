@@ -51,11 +51,11 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 | 用途 | エンドポイント | レスポンス |
 | ---- | -------------- | ---------- |
 | 楽曲更新判定 | `GET /internal/songs/updated-at` | `{ updated_at: string \| null, revision: number }` |
-| ユーザー更新判定 | `GET /internal/users/{username}/updated-at` | `{ updated_at: string \| null }` |
+| ユーザー更新判定 | `GET /internal/users/{username}/updated-at` | `{ updated_at: string \| null, stats_revision: number }` |
 
 `GET /internal/songs/updated-at` は `songs`, `charts`, `worldsend_charts` の `updated_at` 最大値と、楽曲データの変更世代 `revision` を返します。通常楽曲と WORLD'S END 楽曲の共通更新判定には `revision` を使います。`updated_at` は秒精度のため同じ秒内の変更を取りこぼすので、キャッシュ判定には使いません。`revision` は一致・不一致だけを比較し、大小は比較しません（API 側の DB 再構築などで小さくなる場合があります）。
 
-`GET /internal/users/{username}/updated-at` は、プロフィール更新日時と通常/WORLD'S END レコード更新日時の最大値を返します。このため、プロフィール更新時もユーザー系キャッシュを再検証します。
+`GET /internal/users/{username}/updated-at` は、プロフィール更新日時と通常/WORLD'S END レコード更新日時の最大値に加え、API プロセスが公開中の上位%統計スナップショット世代 `stats_revision` を返します。このため、プロフィール更新時だけでなく、譜面統計バッチの再集計で上位%が変わった場合もユーザー系キャッシュを再検証します。
 
 ホームやマイページ初期表示では、レーティング API のレスポンスを使ってレーティングを高速に読み込みます。
 
@@ -66,9 +66,9 @@ API 側にはキャッシュ判定用の `updated-at` エンドポイントが�
 | 通常楽曲一覧 | 1曲単位（`id -> SongDTO`） | `songsRevision` |
 | WORLD'S END 楽曲一覧 | 1曲単位（`id -> WorldsendSongDTO`） | `songsRevision` |
 | コース一覧 | 1コース単位 | `coursesUpdatedAt` |
-| ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsRevision` |
-| ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsRevision` |
-| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` |
+| ログインユーザー本人のレーティング | `UserRatingDTO` 丸ごと | `userUpdatedAt` + `songsRevision` + `statsRevision` |
+| ログインユーザー本人の通常/WORLD'S ENDレコード | 1曲単位 | `userUpdatedAt` + `songsRevision` + `statsRevision` |
+| ログインユーザー本人のコースレコード | 1コース単位 | `userUpdatedAt` + `statsRevision` |
 
 全件レコード API のレスポンスは `saveCachedUserRecord` で曲単位へ分割して `userSongRecords` に保存します。全件取得時は、メタデータと曲単位キャッシュが一致していれば `UserRecordDTO` を復元します。曲詳細画面では同じ `userSongRecords` から対象曲だけを取得できます。
 

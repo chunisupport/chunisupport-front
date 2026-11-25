@@ -410,6 +410,38 @@ export const RecordJusticeCountCell = (props: {
 }
 
 /**
+ * 上位%（0.01〜100.00）をレコード表の表示用文字列へ整形する。
+ *
+ * @param topPercent - API が返した上位%。未集計または未プレイの場合は null / undefined。
+ * @param isPlayed - プレイ済みか。
+ * @returns 未プレイは空文字、プレイ済みで未集計はハイフン、それ以外は小数点以下2桁の%表記。
+ */
+export const formatTopPercent = (
+  topPercent: number | null | undefined,
+  isPlayed: boolean
+): string => {
+  if (!isPlayed) return ''
+  if (typeof topPercent !== 'number') return '-'
+  return `${topPercent.toFixed(2)}%`
+}
+
+/**
+ * レコードの上位%を表示する。
+ *
+ * @param props - プレイ状態と上位%を含むレコード。
+ * @returns 上位%セル。未プレイ時は空セル、未集計時はハイフン。
+ */
+export const RecordTopPercentCell = (props: {
+  record: { is_played: boolean; top_percent?: number | null }
+}): JSX.Element => (
+  <div class={RECORD_CELL_CENTER_TEXT_CLASS}>
+    <span class="inline-block w-full text-center leading-none tabular-nums">
+      {formatTopPercent(props.record.top_percent, props.record.is_played)}
+    </span>
+  </div>
+)
+
+/**
  * レコード更新日を表示する。
  *
  * @param props - プレイ状態、更新日時、表示整形関数。

@@ -13,6 +13,7 @@ export const toPlayedCourseRecords = (response: UserCourseRecordsDTO): PlayedCou
     .map((course) => ({
       id: course.id,
       score: course.score,
+      top_percent: course.top_percent ?? null,
       is_clear: course.is_clear,
       combo_lamp: course.combo_lamp,
       updated_at: course.updated_at,
@@ -42,6 +43,7 @@ export const mergeCourseRecords = (
         ...course,
         is_played: Boolean(record),
         score: record?.score ?? 0,
+        top_percent: record ? (record.top_percent ?? null) : null,
         is_clear: record?.is_clear ?? false,
         combo_lamp: record?.combo_lamp ?? null,
         updated_at: record?.updated_at ?? null,
