@@ -11,7 +11,7 @@ import {
   NameFolderMultiSelect,
   VersionMultiSelect,
 } from '../../../../../components/common/DomainMultiSelect'
-import { THEORETICAL_OVER_POWER_TARGET_LABEL } from '../../../../../constants/chart'
+import { GOAL_OVER_POWER_TARGET_LABEL } from '../../../../../constants/chart'
 import type { MasterDataDTO } from '../../../../../types/api'
 import { GoalFilterCheckbox } from './goalFormFields'
 import type { GoalChartTargetMode } from './goalFormModel'
@@ -91,7 +91,7 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
             </div>
             <div class="space-y-1 bg-surface rounded border border-border-strong px-3 py-2">
               <GoalFilterCheckbox
-                label={THEORETICAL_OVER_POWER_TARGET_LABEL}
+                label={GOAL_OVER_POWER_TARGET_LABEL}
                 checked={props.chartTargetMode === 'op_target'}
                 onChange={props.onToggleOpTarget}
               />
