@@ -76,7 +76,7 @@ test('表示カラムIDを定義順に並び替える', () => {
   )
 })
 
-test('上位%列はスコアの直後に配置し、既定では非表示にする', () => {
+test('上位%列はJ数と更新日の間に配置し、既定では非表示にする', () => {
   // Given: 通常レコードの列定義。
   const columnIds = RECORD_COLUMN_DEFINITIONS.map((column) => column.id)
 
@@ -84,8 +84,9 @@ test('上位%列はスコアの直後に配置し、既定では非表示にす�
   const topPercentColumn = RECORD_COLUMN_DEFINITIONS.find((column) => column.id === 'topPercent')
   const defaultColumnIds = getDefaultVisibleColumnIds()
 
-  // Then: スコアの直後に配置され、ラベルは「上位%」で既定表示には含まれない。
-  assert.equal(columnIds.indexOf('topPercent'), columnIds.indexOf('score') + 1)
+  // Then: J数の直後かつ更新日より前に配置され、ラベルは「上位%」で既定表示には含まれない。
+  assert.equal(columnIds.indexOf('topPercent'), columnIds.indexOf('justiceCount') + 1)
+  assert.ok(columnIds.indexOf('topPercent') < columnIds.indexOf('updatedAt'))
   assert.equal(topPercentColumn?.label, '上位%')
   assert.equal(defaultColumnIds.includes('topPercent'), false)
 })
