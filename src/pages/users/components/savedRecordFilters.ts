@@ -8,6 +8,8 @@ import {
   SCORE_MIN,
   SINGLE_RATING_MAX,
   SINGLE_RATING_MIN,
+  TOP_PERCENT_MAX,
+  TOP_PERCENT_MIN,
   WORLDSEND_LEVEL_STAR_MAX,
   WORLDSEND_LEVEL_STAR_MIN,
 } from '../../../constants/chart'
@@ -245,6 +247,8 @@ export const isValidSavedStandardFilter = (value: unknown): value is FilterState
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
     (value.rating === undefined ||
       isOptionalNumberRange(value.rating, SINGLE_RATING_MIN, SINGLE_RATING_MAX)) &&
+    (value.topPercent === undefined ||
+      isOptionalNumberRange(value.topPercent, TOP_PERCENT_MIN, TOP_PERCENT_MAX)) &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
     isOptionalNumberRange(value.overPower, OVER_POWER_MIN, OVER_POWER_MAX) &&
     isArrayOfOptions<ComboLampFilter>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
@@ -284,6 +288,8 @@ export const isValidSavedWorldsendFilter = (value: unknown): value is WorldsendF
       isStringArray(value.nameFolders)) &&
     isRequiredNumberRange(value.score, SCORE_MIN, MAX_SCORE, true) &&
     (value.scoreFilterMode === 'rank' || value.scoreFilterMode === 'number') &&
+    (value.topPercent === undefined ||
+      isOptionalNumberRange(value.topPercent, TOP_PERCENT_MIN, TOP_PERCENT_MAX)) &&
     isOptionalNumberRange(value.justiceCount, JUSTICE_COUNT_MIN, JUSTICE_COUNT_MAX, true) &&
     isArrayOfOptions<ComboLampFilter>(value.combo_lamp, RECORD_COMBO_LAMP_OPTIONS) &&
     isArrayOfOptions<ChainLamp>(value.chain_lamp, RECORD_CHAIN_LAMP_OPTIONS) &&

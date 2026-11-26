@@ -15,6 +15,7 @@ import {
 import { normalizeForSearch } from '../../../../utils/searchUtils'
 import { toRatingHundredths } from '../../../../utils/singleRating'
 import { isTheoreticalOverPowerTargetDifficulty } from '../../../../utils/theoreticalOverPowerTarget'
+import { matchesTopPercentRange } from '../../utils/topPercentFilter'
 import { hasJusticeCountFilter, hasOverPowerFilter, hasRatingFilter } from './filterDialog'
 
 /** フィルターのデフォルト値を取得する */
@@ -173,6 +174,8 @@ export function isRecordMatchedWithTitleMatcher(
   const score = record.is_played ? record.score : 0
   if (score < filters.score.min) return false
   if (score > filters.score.max) return false
+
+  if (!matchesTopPercentRange(record, filters.topPercent)) return false
 
   if (hasRatingFilter(filters)) {
     if (record.is_const_unknown || !isSingleRatingWithinFilter(record.rating, filters.rating)) {

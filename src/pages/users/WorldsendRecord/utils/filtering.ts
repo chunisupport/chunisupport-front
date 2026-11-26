@@ -11,6 +11,7 @@ import {
   normalizeSearchText,
 } from '../../../../utils/searchHelpers'
 import { normalizeForSearch } from '../../../../utils/searchUtils'
+import { matchesTopPercentRange } from '../../utils/topPercentFilter'
 import type { WorldsendFilterState, WorldsendRecordWithSongMeta } from '../types/filterTypes'
 import { hasWorldsendJusticeCountFilter } from './filterDialog'
 
@@ -79,6 +80,8 @@ export function isWorldsendRecordMatchedWithTitleMatcher(
   const score = record.is_played ? record.score : 0
   if (score < filters.score.min) return false
   if (score > filters.score.max) return false
+
+  if (!matchesTopPercentRange(record, filters.topPercent)) return false
 
   if (hasWorldsendJusticeCountFilter(filters)) {
     if (record.combo_lamp !== 'ALL JUSTICE' || record.justice_count === null) return false

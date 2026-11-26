@@ -431,3 +431,29 @@ test("WORLD'S END フィルターはJUSTICE数指定中にAJ以外のJ数あり�
   // Then: JUSTICE数条件があるためAJ以外は除外する。
   assert.equal(result, false)
 })
+
+test("WORLD'S END の上位%は下限または上限だけでも絞り込める", () => {
+  // Given
+  const defaults = { ...buildDefaultWorldsendFilter(), attributes: ['狂'] }
+  const maxOnly = { ...defaults, topPercent: { min: null, max: 5.1 } }
+  const minOnly = { ...defaults, topPercent: { min: 5.1, max: null } }
+  const records = [3, 5.1, 7, null].map((top_percent) => createRecord({ top_percent }))
+
+  // When
+  const maxMatches = records.filter((record) =>
+    isWorldsendRecordMatchedWithTitleMatcher(record, maxOnly, matcher())
+  )
+  const minMatches = records.filter((record) =>
+    isWorldsendRecordMatchedWithTitleMatcher(record, minOnly, matcher())
+  )
+
+  // Then
+  assert.deepEqual(
+    maxMatches.map((record) => record.top_percent),
+    [3, 5.1]
+  )
+  assert.deepEqual(
+    minMatches.map((record) => record.top_percent),
+    [5.1, 7]
+  )
+})

@@ -49,6 +49,8 @@ export function isWorldsendFilterOptionsChanged(
     current.levelStarRange.max !== defaultFilter.levelStarRange.max ||
     current.score.min !== defaultFilter.score.min ||
     current.score.max !== defaultFilter.score.max ||
+    current.topPercent.min !== defaultFilter.topPercent.min ||
+    current.topPercent.max !== defaultFilter.topPercent.max ||
     current.justiceCount.min !== defaultFilter.justiceCount.min ||
     current.justiceCount.max !== defaultFilter.justiceCount.max ||
     !hasSameFilterValues(current.attributes, defaultFilter.attributes) ||

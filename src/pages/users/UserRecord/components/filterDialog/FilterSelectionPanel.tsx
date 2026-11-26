@@ -42,6 +42,7 @@ import LampSection from '../../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../../components/filter/NumericRangeSection'
 import ScoreSection from '../../../components/filter/ScoreSection'
+import TopPercentRangeSection from '../../../components/filter/TopPercentRangeSection'
 import { RECORD_FILTER_NAME_MAX_LENGTH } from '../../../components/savedRecordFilters'
 import {
   JUSTICE_COUNT_RANGE_FILTER,
@@ -49,11 +50,13 @@ import {
   SINGLE_RATING_RANGE_FILTER,
 } from '../../../constants/rangeFilters'
 import { formatFullChainLampLabel } from '../../../utils/fullChainDisplay'
+import type { RecordRangePlaceholders } from '../../../utils/recordRangePlaceholders'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../../utils/scoreRank'
 import DifficultySection from './sections/DifficultySection'
 
 type FilterSelectionPanelProps = {
   open: boolean
+  rangePlaceholders?: RecordRangePlaceholders
   filters: FilterState
   /** 編集中フィルターを直前の状態から更新する。 */
   setFilters: (update: (prev: FilterState) => FilterState) => void
@@ -340,7 +343,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
     const nextRange = updateOptionalNumberRange(props.filters.rating, type, value, {
       min: SINGLE_RATING_MIN,
       max: SINGLE_RATING_MAX,
-      decimalPlaces: 2,
+      decimalPlaces: SINGLE_RATING_RANGE_FILTER.decimalPlaces,
     })
     const nextValue = toInputValue(nextRange[type])
     if (type === 'min') {
@@ -375,7 +378,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       {
         min: OVER_POWER_RANGE_FILTER.min,
         max: OVER_POWER_RANGE_FILTER.max,
-        decimalPlaces: 3,
+        decimalPlaces: OVER_POWER_RANGE_FILTER.decimalPlaces,
       }
     )
     const nextValue = toInputValue(nextRange[type])
@@ -524,8 +527,14 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
         onExcludeNoPlayChange={handleExcludeNoPlayChange}
         onUnplayedOnlyChange={handleUnplayedOnlyChange}
       />
+      <TopPercentRangeSection
+        range={props.filters.topPercent}
+        observedRange={props.rangePlaceholders?.topPercent}
+        onChange={(topPercent) => props.setFilters((prev) => ({ ...prev, topPercent }))}
+      />
       <NumericRangeSection
         config={SINGLE_RATING_RANGE_FILTER}
+        observedRange={props.rangePlaceholders?.rating}
         minValue={ratingMinInput()}
         maxValue={ratingMaxInput()}
         onMinInput={setRatingMinInput}
@@ -535,6 +544,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       />
       <NumericRangeSection
         config={JUSTICE_COUNT_RANGE_FILTER}
+        observedRange={props.rangePlaceholders?.justiceCount}
         minValue={justiceCountMinInput()}
         maxValue={justiceCountMaxInput()}
         onMinInput={setJusticeCountMinInput}
@@ -544,6 +554,7 @@ const FilterSelectionPanel: Component<FilterSelectionPanelProps> = (props) => {
       />
       <NumericRangeSection
         config={OVER_POWER_RANGE_FILTER}
+        observedRange={props.rangePlaceholders?.overPower}
         minValue={overPowerMinInput()}
         maxValue={overPowerMaxInput()}
         onMinInput={setOverPowerMinInput}

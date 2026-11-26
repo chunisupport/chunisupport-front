@@ -46,6 +46,7 @@ import FilterStats from '../components/FilterStats'
 import FilterToolbar from '../components/FilterToolbar'
 import RecordDataTable from '../components/RecordDataTable'
 import { isValidSavedStandardFilter } from '../components/savedRecordFilters'
+import { getRecordRangePlaceholders } from '../utils/recordRangePlaceholders'
 import ColumnSettingsDialog from './components/ColumnSettingsDialog'
 import FavoriteSongsDialog from './components/FavoriteSongsDialog'
 import FilterDialog from './components/FilterDialog'
@@ -247,15 +248,20 @@ const UserRecord: Component<Props> = (props) => {
     setFilters((current) => ({ ...current, excludeLockedSongs: false }))
   })
 
-  const { sortedRecords, totalCount, filteredCount, stats } = useUserRecordPageModel({
-    songs: allSongs,
-    versions: versionData,
-    sourceRecords: () => props.record.standard,
-    filters,
-    favoriteSongIds,
-    lockedSongKeys,
-    sortConditions,
-  })
+  const { recordsWithSongMeta, sortedRecords, totalCount, filteredCount, stats } =
+    useUserRecordPageModel({
+      songs: allSongs,
+      versions: versionData,
+      sourceRecords: () => props.record.standard,
+      filters,
+      favoriteSongIds,
+      lockedSongKeys,
+      sortConditions,
+    })
+
+  const rangePlaceholders = createMemo(() =>
+    filterOpen() ? getRecordRangePlaceholders(recordsWithSongMeta()) : undefined
+  )
 
   /**
    * お気に入り楽曲の差分を解除、追加の順に保存する。
@@ -343,6 +349,7 @@ const UserRecord: Component<Props> = (props) => {
 
               {/* フィルターダイアログ */}
               <FilterDialog
+                rangePlaceholders={rangePlaceholders()}
                 open={filterOpen()}
                 onOpenChange={setFilterOpen}
                 filters={filters()}

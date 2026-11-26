@@ -27,6 +27,7 @@ import { createSearchTextCache } from '../../../utils/searchHelpers'
 import { getReleasedVersionShortNames } from '../../../utils/versionConverter'
 import FilterStats from '../components/FilterStats'
 import FilterToolbar from '../components/FilterToolbar'
+import { getRecordRangePlaceholders } from '../utils/recordRangePlaceholders'
 import { getRecordStats } from '../utils/recordStats'
 import WorldsendFilterDialog from './components/WorldsendFilterDialog'
 import WorldsendRecordTable from './components/WorldsendRecordTable'
@@ -163,6 +164,10 @@ const WorldsendRecord = (props: Props) => {
       isWorldsendRecordMatchedWithTitleMatcher(record, currentFilters, matchTitle)
     )
   })
+  const rangePlaceholders = createMemo(() =>
+    filterOpen() ? getRecordRangePlaceholders(recordsWithSongMeta()) : undefined
+  )
+
   const stats = createMemo(() => getRecordStats(filteredRecords()))
 
   return (
@@ -217,6 +222,7 @@ const WorldsendRecord = (props: Props) => {
               />
 
               <WorldsendFilterDialog
+                rangePlaceholders={rangePlaceholders()}
                 open={filterOpen()}
                 onOpenChange={setFilterOpen}
                 filters={filters()}

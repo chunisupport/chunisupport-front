@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_FILTER } from '../../../utils/recordFilterDefaults'
-import { DEFAULT_WORLDSEND_FILTER } from '../WorldsendRecord/types/filterDefaults'
+import { DEFAULT_FILTER, normalizeFilterState } from '../../../utils/recordFilterDefaults'
+import {
+  DEFAULT_WORLDSEND_FILTER,
+  normalizeWorldsendFilterState,
+} from '../WorldsendRecord/types/filterDefaults'
 import {
   buildUniqueRecordFilterName,
   hasRecordFilterNameControlCharacter,
@@ -160,8 +163,13 @@ test('isValidSavedWorldsendFilter は型が違う保存値を壊れたフィル�
 
 test('isRecordFilterPayloadWithinLimit は上限ちょうどを制限内として許可すること', () => {
   // Given
-  const boundaryFilter = { ...DEFAULT_FILTER, title: 'x'.repeat(7470) }
-  const overFilter = { ...DEFAULT_FILTER, title: 'x'.repeat(7471) }
+  const emptyTitleFilter = { ...DEFAULT_FILTER, title: '' }
+  const emptyTitleSize = Buffer.byteLength(
+    JSON.stringify({ schema_version: 3, filter: emptyTitleFilter }),
+    'utf8'
+  )
+  const boundaryFilter = { ...emptyTitleFilter, title: 'x'.repeat(8192 - emptyTitleSize) }
+  const overFilter = { ...boundaryFilter, title: `${boundaryFilter.title}x` }
 
   // When
   const boundaryResult = isRecordFilterPayloadWithinLimit(3, boundaryFilter)
@@ -280,4 +288,30 @@ test('isValidSavedWorldsendFilter はupdatedAt省略を旧保存値として許�
 
   // Then
   assert.equal(result, true)
+})
+
+test('上位%の保存値を検証し、上位%がない保存値は両端を未指定として復元する', () => {
+  // Given
+  const { topPercent: _standard, ...standard } = DEFAULT_FILTER
+  const { topPercent: _worldsend, ...worldsend } = DEFAULT_WORLDSEND_FILTER
+  const upperBoundOnly = { min: null, max: 5.75 }
+  const outOfBounds = { min: null, max: 100.01 }
+
+  // When / Then
+  assert.equal(isValidSavedStandardFilter(standard), true)
+  assert.equal(isValidSavedWorldsendFilter(worldsend), true)
+  assert.deepEqual(normalizeFilterState(standard).topPercent, { min: null, max: null })
+  assert.deepEqual(normalizeWorldsendFilterState(worldsend).topPercent, { min: null, max: null })
+  assert.equal(isValidSavedStandardFilter({ ...standard, topPercent: upperBoundOnly }), true)
+  assert.equal(isValidSavedWorldsendFilter({ ...worldsend, topPercent: upperBoundOnly }), true)
+  assert.deepEqual(
+    normalizeFilterState({ ...standard, topPercent: upperBoundOnly }).topPercent,
+    upperBoundOnly
+  )
+  assert.deepEqual(
+    normalizeWorldsendFilterState({ ...worldsend, topPercent: upperBoundOnly }).topPercent,
+    upperBoundOnly
+  )
+  assert.equal(isValidSavedStandardFilter({ ...standard, topPercent: outOfBounds }), false)
+  assert.equal(isValidSavedWorldsendFilter({ ...worldsend, topPercent: outOfBounds }), false)
 })

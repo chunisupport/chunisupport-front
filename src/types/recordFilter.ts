@@ -84,6 +84,8 @@ export interface FilterState {
   scoreFilterMode: 'number' | 'rank'
   /** 単曲レートの任意範囲。nullは端点未指定を表す */
   rating: NumericRangeFilter<number | null>
+  /** 上位%の範囲。null の端は指定なし。 */
+  topPercent: NumericRangeFilter<number | null>
   justiceCount: NumericRangeFilter<number | null>
   overPower: NumericRangeFilter<number | null>
   combo_lamp: ComboLampFilter[]

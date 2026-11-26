@@ -45,6 +45,8 @@ export interface WorldsendFilterState {
   nameFolders: string[] | null
   score: NumericRangeFilter
   scoreFilterMode: 'number' | 'rank'
+  /** 上位%の範囲。null の端は指定なし。 */
+  topPercent: NumericRangeFilter<number | null>
   justiceCount: NumericRangeFilter<number | null>
   combo_lamp: ComboLampFilter[]
   chain_lamp: ChainLamp[]

@@ -31,6 +31,10 @@ export const DEFAULT_WORLDSEND_FILTER: WorldsendFilterState = {
     max: MAX_SCORE,
   },
   scoreFilterMode: 'rank',
+  topPercent: {
+    min: null,
+    max: null,
+  },
   justiceCount: {
     min: null,
     max: null,
@@ -89,6 +93,7 @@ export const buildDefaultWorldsendFilter = (
     ...defaults,
     versions: toNullableAllFilterSelection(defaults.versions, defaults.versions),
     score: { ...DEFAULT_WORLDSEND_FILTER.score },
+    topPercent: { ...DEFAULT_WORLDSEND_FILTER.topPercent },
     justiceCount: { ...DEFAULT_WORLDSEND_FILTER.justiceCount },
     levelStarRange: { ...DEFAULT_WORLDSEND_FILTER.levelStarRange },
     combo_lamp: [...RECORD_COMBO_LAMP_OPTIONS],
@@ -110,6 +115,7 @@ export const normalizeWorldsendFilterState = (
   ...DEFAULT_WORLDSEND_FILTER,
   ...filter,
   score: filter.score ?? { ...DEFAULT_WORLDSEND_FILTER.score },
+  topPercent: filter.topPercent ?? { ...DEFAULT_WORLDSEND_FILTER.topPercent },
   justiceCount: filter.justiceCount ?? { ...DEFAULT_WORLDSEND_FILTER.justiceCount },
   attributes: filter.attributes ?? [...DEFAULT_WORLDSEND_FILTER.attributes],
   nameFolders: filter.nameFolders ?? null,

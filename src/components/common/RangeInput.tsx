@@ -36,6 +36,8 @@ type RangeTextFieldProps = {
   label: JSX.Element
   /** 現在の入力値 */
   value: string
+  /** 空欄に表示する入力の目安 */
+  placeholder?: string
   /** 入力モード */
   inputMode?: JSX.InputHTMLAttributes<HTMLInputElement>['inputMode']
   /** pattern 属性 */
@@ -156,6 +158,7 @@ const RangeTextField = (props: { field: RangeTextFieldProps; inputClass: string 
       type="text"
       class={props.inputClass}
       value={props.field.value}
+      placeholder={props.field.placeholder}
       inputMode={props.field.inputMode}
       pattern={props.field.pattern}
       autocomplete="off"

@@ -680,3 +680,25 @@ test('OVER POWERフィルターは下限と上限に一致するレコードを�
   assert.equal(isRecordMatched(createRecord({ overpower: 88 }), filters), true)
   assert.equal(isRecordMatched(createRecord({ overpower: 88.5 }), filters), true)
 })
+
+test('通常レコードの上位%が指定範囲の境界内にあるときだけ一致する', () => {
+  // Given
+  const filters = { ...getDefaultFilter(), topPercent: { min: 1.25, max: 5.75 } }
+  const records = [1.24, 1.25, 3.5, 5.75, 5.76, null, undefined].map((top_percent) =>
+    createRecord({ top_percent })
+  )
+
+  // When
+  const matched = records.filter((record) => isRecordMatched(record, filters))
+
+  // Then
+  assert.deepEqual(
+    matched.map((record) => record.top_percent),
+    [1.25, 3.5, 5.75]
+  )
+  assert.equal(
+    isRecordMatched(createRecord({ top_percent: 3.5, is_played: false }), filters),
+    false
+  )
+  assert.equal(isRecordMatched(createRecord({ top_percent: null }), getDefaultFilter()), true)
+})
