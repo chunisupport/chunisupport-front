@@ -15,6 +15,7 @@ import {
 } from './constants'
 import ScoreHistoryChart from './ScoreHistoryChart'
 import ScoreHistoryTable from './ScoreHistoryTable'
+import ScoreHistoryTableDialog from './ScoreHistoryTableDialog'
 
 type Props = {
   /** 表示対象の楽曲名 */
@@ -42,7 +43,7 @@ type Props = {
 }
 
 /**
- * 通常譜面と WORLD'S END で共通の譜面詳細を表示する。
+ * 通常譜面と WORLD'S END で共通の譜面詳細を表示し、履歴の明細をダイアログで開く。
  *
  * @param props - 楽曲情報、履歴、ランキングと読み込み状態。
  * @returns スコア推移とフレンドランキングを含む譜面詳細画面。
@@ -78,24 +79,33 @@ const ChartDetailPage = (props: Props) => {
               {SCORE_HISTORY_MAX_ENTRIES_LABEL}
             </span>
           </h2>
-          <Show when={!versions.error}>
-            <CheckboxField
-              id="score-history-version-label-toggle"
-              checked={showVersions()}
-              label={SCORE_HISTORY_VERSION_LABEL_TOGGLE}
-              disabled={versions.loading}
-              onChange={setShowVersions}
-            />
+          <Show
+            when={!props.historyError && !props.isHistoryLoading && props.historyEntries.length > 0}
+          >
+            <ScoreHistoryTableDialog>
+              <Show when={!versions.error}>
+                <CheckboxField
+                  id="score-history-version-label-toggle"
+                  checked={showVersions()}
+                  label={SCORE_HISTORY_VERSION_LABEL_TOGGLE}
+                  disabled={versions.loading}
+                  onChange={setShowVersions}
+                  class="mb-3 w-fit"
+                  inputClass="peer"
+                  controlClass="peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-inset peer-focus-visible:ring-focus-ring"
+                />
+              </Show>
+              <ScoreHistoryTable
+                entries={props.historyEntries}
+                versions={availableVersions()}
+                showVersions={showVersions()}
+              />
+            </ScoreHistoryTableDialog>
           </Show>
         </div>
         <Show when={!props.historyError} fallback={<LoadError error={props.historyError} />}>
           <Show when={!props.isHistoryLoading} fallback={<Loading />}>
             <ScoreHistoryChart entries={props.historyEntries} />
-            <ScoreHistoryTable
-              entries={props.historyEntries}
-              versions={availableVersions()}
-              showVersions={showVersions()}
-            />
           </Show>
         </Show>
       </section>
