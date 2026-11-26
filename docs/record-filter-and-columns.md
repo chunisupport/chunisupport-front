@@ -146,6 +146,18 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - 定義に存在しない列 ID は無視します。
 - 正規化後に有効な列が 1 つも残らない場合は、デフォルト表示列を使います。
 
+## 数値範囲のプレースホルダー
+
+通常レコードの上位%、単曲レート、JUSTICE数、OVER POWER、および WORLD'S END の上位%とJUSTICE数では、空欄の左右に絞り込み前のプレイ済みレコードから求めた実測の最小値・最大値を表示します。実測値がある項目に表示し、上位%と単曲レートは小数第2位、OVER POWER は小数第3位、JUSTICE数は整数で表します。
+
+上位%は集計済みの値、単曲レートは譜面定数が判明している譜面の値、JUSTICE数は AJ 時に記録された値を使います。プレースホルダーが表示されている範囲端は未指定として扱います。
+
+## 上位%フィルター
+
+通常レコードと WORLD'S END のフィルターで、上位%の下限と上限を 0〜100 の範囲で小数第2位まで指定できます。上位5%以内のレコードを表示するには、上限に `5` を入力します。
+
+下限・上限はそれぞれ空欄にできます。いずれかを指定すると、上位%が集計済みのプレイ済みレコードのうち、指定した境界を含む範囲内のものを表示します。両方が空欄の場合は上位%で絞り込みません。
+
 ## 通常レコード FilterState
 
 ```json
@@ -169,6 +181,10 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
     "max": 1010000
   },
   "scoreFilterMode": "rank",
+  "topPercent": {
+    "min": null,
+    "max": null
+  },
   "justiceCount": {
     "min": null,
     "max": null
@@ -206,6 +222,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `constFilterMode` | `"level"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `const.min` / `const.max` を参照します。 |
 | `score` | `{ min: number, max: number }` | はい | スコア範囲です。未プレイ譜面はスコア `0` として判定します。 |
 | `scoreFilterMode` | `"rank"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `score.min` / `score.max` を参照します。 |
+| `topPercent` | `{ min: number \| null, max: number \| null }` | いいえ | 上位%の範囲です。`null` の端は条件なしです。フィールドを省略した保存値は両端とも未指定として復元します。 |
 | `justiceCount` | `{ min: number \| null, max: number \| null }` | はい | AJ 時の JUSTICE 数の範囲です。`null` なら該当する範囲端は条件なしです。 |
 | `overPower` | `{ min: number \| null, max: number \| null }` | はい | OVER POWER 値の範囲です。`null` なら該当する範囲端は条件なしです。 |
 | `combo_lamp` | `Array<string \| null>` | はい | 許可するコンボランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
@@ -255,6 +272,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `score.min`: `0`
 - `score.max`: `1010000`
 - `scoreFilterMode`: `"rank"`
+- `topPercent.min` と `topPercent.max` はともに `null`
 - `justiceCount.min`: `null`
 - `justiceCount.max`: `null`
 - `overPower.min`: `null`
@@ -285,6 +303,10 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
     "max": 1010000
   },
   "scoreFilterMode": "rank",
+  "topPercent": {
+    "min": null,
+    "max": null
+  },
   "justiceCount": {
     "min": null,
     "max": null
@@ -308,6 +330,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 | `nameFolders` | `string[] \| null` | はい | 対象楽曲名順フォルダのコード (`name_folders[].code`) の配列です。`null` なら全フォルダ対象、空配列なら全件不一致です。画面上では `null` を全選択として表示し、全選択は `null` として保存します。 |
 | `score` | `{ min: number, max: number }` | はい | スコア範囲です。未プレイ譜面はスコア `0` として判定します。 |
 | `scoreFilterMode` | `"rank"` \| `"number"` | はい | UI の入力モードです。絞り込み判定は `score.min` / `score.max` を参照します。 |
+| `topPercent` | `{ min: number \| null, max: number \| null }` | いいえ | 上位%の範囲です。`null` の端は条件なしです。フィールドを省略した保存値は両端とも未指定として復元します。 |
 | `justiceCount` | `{ min: number \| null, max: number \| null }` | はい | AJ 時の JUSTICE 数の範囲です。`null` なら該当する範囲端は条件なしです。 |
 | `combo_lamp` | `Array<string \| null>` | はい | 許可するコンボランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
 | `chain_lamp` | `Array<string \| null>` | はい | 許可する FULL CHAIN ランプの配列です。`null` はランプなしを表します。空配列にすると全件不一致になります。 |
@@ -343,6 +366,7 @@ STANDARD、WORLD'S END、COURSE は、ブラウザの「戻る・進む」で戻
 - `score.min`: `0`
 - `score.max`: `1010000`
 - `scoreFilterMode`: `"rank"`
+- `topPercent.min` と `topPercent.max` はともに `null`
 - `justiceCount.min`: `null`
 - `justiceCount.max`: `null`
 - `combo_lamp`: `["ALL JUSTICE CRITICAL", "ALL JUSTICE", "FULL COMBO", null]`

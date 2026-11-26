@@ -4,6 +4,7 @@ import { AppButton } from '../../../../components/common/AppButton'
 import { AppDialog } from '../../../../components/common/AppDialog'
 import FilterResetDialog from '../../../../components/common/FilterResetDialog'
 import type { NameFolderDTO } from '../../../../types/api'
+import type { RecordRangePlaceholders } from '../../utils/recordRangePlaceholders'
 import { normalizeWorldsendFilterState } from '../types/filterDefaults'
 import type { WorldsendFilterState } from '../types/filterTypes'
 import WorldsendFilterSelectionPanel from './WorldsendFilterSelectionPanel'
@@ -11,6 +12,7 @@ import WorldsendSavedFiltersDialog from './WorldsendSavedFiltersDialog'
 
 type WorldsendFilterDialogProps = {
   open: boolean
+  rangePlaceholders?: RecordRangePlaceholders
   onOpenChange: (open: boolean) => void
   filters: WorldsendFilterState
   onChange: (filters: WorldsendFilterState) => void
@@ -57,6 +59,7 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
     setFilters({
       ...props.defaultFilter,
       score: { ...props.defaultFilter.score },
+      topPercent: { ...props.defaultFilter.topPercent },
       justiceCount: { ...props.defaultFilter.justiceCount },
       attributes: [...props.defaultFilter.attributes],
       levelStarRange: { ...props.defaultFilter.levelStarRange },
@@ -121,6 +124,7 @@ const WorldsendFilterDialog: Component<WorldsendFilterDialogProps> = (props) => 
       }
     >
       <WorldsendFilterSelectionPanel
+        rangePlaceholders={props.rangePlaceholders}
         open={props.open}
         filters={filters()}
         setFilters={setFilters}

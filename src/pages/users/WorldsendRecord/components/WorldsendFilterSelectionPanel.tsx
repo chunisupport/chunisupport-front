@@ -25,8 +25,10 @@ import LampSection from '../../components/filter/LampSection'
 import MultiSelectFilterSection from '../../components/filter/MultiSelectFilterSection'
 import NumericRangeSection from '../../components/filter/NumericRangeSection'
 import ScoreSection from '../../components/filter/ScoreSection'
+import TopPercentRangeSection from '../../components/filter/TopPercentRangeSection'
 import { JUSTICE_COUNT_RANGE_FILTER } from '../../constants/rangeFilters'
 import { formatFullChainLampLabel } from '../../utils/fullChainDisplay'
+import type { RecordRangePlaceholders } from '../../utils/recordRangePlaceholders'
 import { filterRankToScore, type ScoreRank, scoreToFilterRank } from '../../utils/scoreRank'
 import type { WorldsendFilterState } from '../types/filterTypes'
 import { formatWorldsendAttribute } from '../utils/filterDialog'
@@ -34,6 +36,7 @@ import WorldsendLevelRangeSection from './WorldsendLevelRangeSection'
 
 type WorldsendFilterSelectionPanelProps = {
   open: boolean
+  rangePlaceholders?: RecordRangePlaceholders
   filters: WorldsendFilterState
   setFilters: Setter<WorldsendFilterState>
   defaultFilter: WorldsendFilterState
@@ -246,8 +249,14 @@ const WorldsendFilterSelectionPanel: Component<WorldsendFilterSelectionPanelProp
           props.setFilters((prev) => ({ ...prev, excludeNoPlay: checked }))
         }
       />
+      <TopPercentRangeSection
+        range={props.filters.topPercent}
+        observedRange={props.rangePlaceholders?.topPercent}
+        onChange={(topPercent) => props.setFilters((prev) => ({ ...prev, topPercent }))}
+      />
       <NumericRangeSection
         config={JUSTICE_COUNT_RANGE_FILTER}
+        observedRange={props.rangePlaceholders?.justiceCount}
         minValue={justiceCountMinInput()}
         maxValue={justiceCountMaxInput()}
         onMinInput={setJusticeCountMinInput}

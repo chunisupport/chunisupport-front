@@ -7,6 +7,7 @@ import type { MasterDataDTO, NameFolderDTO, VersionSummaryDTO } from '../../../.
 import type { FilterState } from '../../../../types/recordFilter'
 import { normalizeFilterState } from '../../../../utils/recordFilterDefaults'
 import type { EditingFilter } from '../../components/SavedRecordFiltersDialog'
+import type { RecordRangePlaceholders } from '../../utils/recordRangePlaceholders'
 import SavedFiltersDialog from './filterDialog/dialogs/SavedFiltersDialog'
 import FilterSelectionPanel from './filterDialog/FilterSelectionPanel'
 
@@ -19,6 +20,7 @@ const FILTER_DIALOG_TEXT = {
 
 interface FilterDialogProps {
   open: boolean
+  rangePlaceholders?: RecordRangePlaceholders
   onOpenChange: (open: boolean) => void
   filters: FilterState
   onChange: (filters: FilterState) => void
@@ -153,6 +155,7 @@ export const FilterDialog: Component<FilterDialogProps> = (props) => {
       }
     >
       <FilterSelectionPanel
+        rangePlaceholders={props.rangePlaceholders}
         open={props.open}
         filters={filters()}
         setFilters={setFilters}

@@ -7,7 +7,7 @@ export const FILTER_DIALOG_FIELD_FOCUS_CLASS =
 /**
  * レコードフィルターダイアログ内の数値入力欄に適用する共通スタイル。
  */
-export const FILTER_DIALOG_FIELD_INPUT_CLASS = `inline-flex w-full items-center justify-between rounded border border-border-strong bg-surface px-3 py-2 text-sm hover:border-input-border-hover ${FILTER_DIALOG_FIELD_FOCUS_CLASS}`
+export const FILTER_DIALOG_FIELD_INPUT_CLASS = `inline-flex w-full items-center justify-between rounded border border-border-strong bg-surface px-3 py-2 text-sm placeholder:text-text-placeholder hover:border-input-border-hover ${FILTER_DIALOG_FIELD_FOCUS_CLASS}`
 
 /** 楽曲フィルタの範囲入力欄に適用する共通スタイル。 */
 export const SONG_FILTER_INPUT_CLASS =

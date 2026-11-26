@@ -66,6 +66,8 @@ export function isRecordFilterOptionsChanged(
     current.score.max !== defaultFilter.score.max ||
     current.rating.min !== defaultFilter.rating.min ||
     current.rating.max !== defaultFilter.rating.max ||
+    current.topPercent.min !== defaultFilter.topPercent.min ||
+    current.topPercent.max !== defaultFilter.topPercent.max ||
     current.justiceCount.min !== defaultFilter.justiceCount.min ||
     current.justiceCount.max !== defaultFilter.justiceCount.max ||
     current.overPower.min !== defaultFilter.overPower.min ||
@@ -108,6 +110,8 @@ export function isRecordDifficultyFilterOnlyChanged(
     current.score.max === defaultFilter.score.max &&
     current.rating.min === defaultFilter.rating.min &&
     current.rating.max === defaultFilter.rating.max &&
+    current.topPercent.min === defaultFilter.topPercent.min &&
+    current.topPercent.max === defaultFilter.topPercent.max &&
     current.justiceCount.min === defaultFilter.justiceCount.min &&
     current.justiceCount.max === defaultFilter.justiceCount.max &&
     current.overPower.min === defaultFilter.overPower.min &&

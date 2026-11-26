@@ -1,11 +1,13 @@
 import type { Component } from 'solid-js'
 import { FILTER_DIALOG_FIELD_INPUT_CLASS } from '../../../../components/common/filterStyles'
 import { TextRangeInput } from '../../../../components/common/RangeInput'
+import type { NumericRangeFilter } from '../../../../types/record'
 import { sanitizeRangeInput } from '../../../../utils/rangeInput'
 import type { NumericRangeFilterConfig } from '../../constants/rangeFilters'
 
 type NumericRangeSectionProps = {
   config: NumericRangeFilterConfig
+  observedRange?: NumericRangeFilter
   minValue: string
   maxValue: string
   onMinInput: (value: string) => void
@@ -17,7 +19,7 @@ type NumericRangeSectionProps = {
 /**
  * 空欄を許す数値範囲フィルターの入力欄を表示する。
  *
- * @param props - 入力欄設定、現在値、入力中/確定時の変更ハンドラ。
+ * @param props - 入力欄設定、現在値、実測範囲、入力中/確定時の変更ハンドラ。
  * @returns 数値範囲フィルターセクションの JSX 要素。
  */
 const NumericRangeSection: Component<NumericRangeSectionProps> = (props) => (
@@ -28,6 +30,7 @@ const NumericRangeSection: Component<NumericRangeSectionProps> = (props) => (
       id: `filter-${props.config.idPrefix}-min`,
       label: props.config.minLabel,
       value: props.minValue,
+      placeholder: props.observedRange?.min.toFixed(props.config.decimalPlaces),
       inputMode: props.config.inputMode,
       pattern: props.config.pattern,
       onInput: (value) => props.onMinInput(sanitizeRangeInput(value, props.config.allowedInput)),
@@ -37,6 +40,7 @@ const NumericRangeSection: Component<NumericRangeSectionProps> = (props) => (
       id: `filter-${props.config.idPrefix}-max`,
       label: props.config.maxLabel,
       value: props.maxValue,
+      placeholder: props.observedRange?.max.toFixed(props.config.decimalPlaces),
       inputMode: props.config.inputMode,
       pattern: props.config.pattern,
       onInput: (value) => props.onMaxInput(sanitizeRangeInput(value, props.config.allowedInput)),

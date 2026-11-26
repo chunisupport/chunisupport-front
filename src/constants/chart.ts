@@ -52,6 +52,12 @@ export const SINGLE_RATING_MIN = 0
 /** 現在の譜面定数上限から算出した単曲レートの理論上限 */
 export const SINGLE_RATING_MAX = CHART_CONST_MAX + 2.15
 
+/** レコードの上位%フィルターで指定できる最小値 */
+export const TOP_PERCENT_MIN = 0
+
+/** レコードの上位%フィルターで指定できる最大値 */
+export const TOP_PERCENT_MAX = 100
+
 /** レコードフィルターで許可する JUSTICE 数の最小値 */
 export const JUSTICE_COUNT_MIN = 0
 
