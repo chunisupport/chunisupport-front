@@ -4,9 +4,11 @@ import { installFetchRecorder, loadTestModule } from '../test/setupTestEnvironme
 
 /**
  * モジュール内状態をテストごとに分離してusers APIを読み込む。
+ * @param authenticate - ログイン中の Firebase ユーザーを用意するか。
  * @returns users APIモジュール。
  */
-const loadUsersApi = () => loadTestModule((cacheKey) => import(`./users.ts?cache=${cacheKey}`))
+const loadUsersApi = (authenticate = false) =>
+  loadTestModule((cacheKey) => import(`./users.ts?cache=${cacheKey}`), { authenticate })
 
 test('fetchUserRatingOpHistoryはURLエンコードしたユーザー名の公式指標履歴を取得すること', async () => {
   // Given
@@ -143,4 +145,46 @@ test('updateUserSuspiciousはURLエンコードしたユーザー名と不審フ
   assert.equal(calls[0]?.init?.method, 'PATCH')
   assert.equal(new Headers(calls[0]?.init?.headers).get('Content-Type'), 'application/json')
   assert.equal(calls[0]?.init?.body, JSON.stringify({ is_suspicious: true }))
+})
+
+test('直近のプレイ履歴は認証付きの対象ユーザーのパスから取得する', async (t) => {
+  // Given
+  const originalFetch = globalThis.fetch
+  t.after(() => {
+    globalThis.fetch = originalFetch
+  })
+  const entries = [
+    {
+      title: '譜面A',
+      difficulty: 'MASTER',
+      score: 1005000,
+      clear_lamp: 'CLEAR',
+      combo_lamp: null,
+      full_chain: null,
+      played_at: '2026-11-26T09:01:00Z',
+    },
+    {
+      title: null,
+      difficulty: 'WORLDSEND',
+      score: 990000,
+      clear_lamp: 'FAILED',
+      combo_lamp: null,
+      full_chain: null,
+      played_at: '2026-11-26T08:58:00Z',
+    },
+  ]
+  const calls = installFetchRecorder(() => Response.json({ entries }))
+  const { fetchUserPlayHistory } = await loadUsersApi(true)
+
+  // When
+  const result = await fetchUserPlayHistory('alice bob')
+
+  // Then
+  assert.equal(calls.length, 1)
+  assert.equal(
+    String(calls[0]?.input),
+    'http://localhost:3000/internal/users/alice%20bob/record/play-history'
+  )
+  assert.equal(new Headers(calls[0]?.init?.headers).get('Authorization'), 'Bearer test-token')
+  assert.deepEqual(result, { entries })
 })

@@ -1,18 +1,21 @@
-import { useLocation, useNavigate } from '@solidjs/router'
+import { A, useLocation, useNavigate } from '@solidjs/router'
+import History from 'lucide-solid/icons/history'
 import ImageOff from 'lucide-solid/icons/image-off'
 import type { Accessor, Component, Resource } from 'solid-js'
 import { createMemo, createSignal, For, lazy, Show, Suspense } from 'solid-js'
 import { LoadError, Loading } from '../../../components'
-import { AppIconButton } from '../../../components/common/AppButton'
+import { AppIconButton, getAppIconButtonClass } from '../../../components/common/AppButton'
 import { AppTabContent, SegmentedTabs, UnderlineTabs } from '../../../components/common/AppTabs'
 import { UserNameplate } from '../../../components/common/profile/UserNameplate'
 import { UserRecordCard } from '../../../components/common/record/UserRecordCard'
+import { PLAY_HISTORY_LABEL, PLAY_HISTORY_ROLES } from '../../../constants/playHistory'
 import { RATING_SLOT_COUNT } from '../../../constants/rating'
 import {
   createAppMainScrollOffsetRestoreEffect,
   useAppMainScrollRestoration,
 } from '../../../hooks/useAppMainScrollRestoration'
 import { isFeatureEnabled } from '../../../lib/featureFlags'
+import { authSession } from '../../../stores/authSession'
 import type { HonorDTO, PlayerDTO, PlayerRecordDTO } from '../../../types/api'
 import {
   getAppMainScrollTop,
@@ -24,6 +27,7 @@ import {
 } from '../../../utils/candidateScoreDifference'
 import {
   buildUserOverPowerPagePath,
+  buildUserPlayHistoryPagePath,
   buildUserProfilePagePath,
   buildUserStatsPagePath,
   type OverPowerSubPage,
@@ -172,6 +176,11 @@ const RecordList: Component<{
  */
 export const UserProfileView: Component<Props> = (props) => {
   const [showJackets, setShowJackets] = createSignal(true)
+  /** @returns レコードのプレイ履歴を閲覧できる場合は true。 */
+  const canViewPlayHistory = () =>
+    authSession.status === 'authenticated' &&
+    authSession.user !== null &&
+    PLAY_HISTORY_ROLES.includes(authSession.user.account_type)
   const playerInfo = (): PlayerDTO => props.profile.player
   const honors = (): HonorDTO[] => playerInfo().honors
   const bestRecords = (): PlayerRecordDTO[] => props.profile.rating.best
@@ -433,7 +442,19 @@ export const UserProfileView: Component<Props> = (props) => {
             onChange={handleRecordTabChange}
             options={RECORD_TAB_OPTIONS}
             listClass="rounded-xl"
-            listWrapperClass="mx-4 mb-4 flex flex-wrap items-center justify-between gap-3"
+            listWrapperClass="mx-4 mb-4 flex flex-wrap items-center gap-1"
+            listAside={
+              <Show when={canViewPlayHistory()}>
+                <A
+                  href={buildUserPlayHistoryPagePath(props.username)}
+                  class={getAppIconButtonClass({ size: 'xs', class: 'shrink-0' })}
+                  aria-label={PLAY_HISTORY_LABEL}
+                  title={PLAY_HISTORY_LABEL}
+                >
+                  <History class="size-4" aria-hidden="true" />
+                </A>
+              </Show>
+            }
             triggerClass="p-2"
           >
             <AppTabContent value="standard" forceMount class={forceMountedTabContentClass}>

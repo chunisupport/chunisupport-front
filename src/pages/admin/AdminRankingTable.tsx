@@ -69,24 +69,24 @@ const AdminRankingTable = <Entry extends RankingEntry>(props: Props<Entry>) => (
             <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
               {ADMIN_RANKING_COPY.playerColumn}
             </th>
-            <th scope="col" class="px-3 py-2 text-right whitespace-nowrap">
+            <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
               {ADMIN_RANKING_COPY.scoreColumn}
             </th>
             <Show when={props.showChartMetrics}>
-              <th scope="col" class="px-3 py-2 text-right whitespace-nowrap">
+              <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
                 {ADMIN_RANKING_COPY.ratingColumn}
               </th>
-              <th scope="col" class="px-3 py-2 text-right whitespace-nowrap">
+              <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
                 {ADMIN_RANKING_COPY.overpowerColumn}
               </th>
-              <th scope="col" class="px-3 py-2 text-right whitespace-nowrap">
+              <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
                 {ADMIN_RANKING_COPY.overpowerPercentColumn}
               </th>
             </Show>
             <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
               {ADMIN_RANKING_COPY.lampColumn}
             </th>
-            <th scope="col" class="px-3 py-2 text-left whitespace-nowrap">
+            <th scope="col" class="px-3 py-2 text-center whitespace-nowrap">
               {ADMIN_RANKING_COPY.updatedAtColumn}
             </th>
           </tr>
@@ -112,22 +112,22 @@ const AdminRankingTable = <Entry extends RankingEntry>(props: Props<Entry>) => (
                     {entry.username}
                   </div>
                 </td>
-                <td class="px-3 py-2 text-right font-oswald text-base whitespace-nowrap tabular-nums">
+                <td class="px-3 py-2 text-center font-jost text-base whitespace-nowrap tabular-nums">
                   {formatInteger(entry.score)}
                 </td>
                 <Show when={props.showChartMetrics}>
-                  <td class="px-3 py-2 text-right font-oswald whitespace-nowrap tabular-nums">
+                  <td class="px-3 py-2 text-center font-jost whitespace-nowrap tabular-nums">
                     {formatOptionalNumber(entry.rating, formatRatingFixed2)}
                   </td>
-                  <td class="px-3 py-2 text-right font-oswald whitespace-nowrap tabular-nums">
+                  <td class="px-3 py-2 text-center font-jost whitespace-nowrap tabular-nums">
                     {formatOptionalNumber(entry.overpower, formatOverPowerValue)}
                   </td>
-                  <td class="px-3 py-2 text-right font-oswald whitespace-nowrap tabular-nums">
+                  <td class="px-3 py-2 text-center font-jost whitespace-nowrap tabular-nums">
                     {formatOptionalNumber(entry.overpower_percent, formatOverPowerPercent)}
                   </td>
                 </Show>
                 <td class="px-3 py-2 whitespace-nowrap">{props.renderLamps(entry)}</td>
-                <td class="px-3 py-2 whitespace-nowrap">
+                <td class="px-3 py-2 text-center whitespace-nowrap tabular-nums">
                   {formatAdminUserDateTime(entry.updated_at)}
                 </td>
               </tr>

@@ -10,6 +10,7 @@ import type {
   PlayerLockedSongsBatchRequest,
   PlayerLockedSongsResponse,
   PlayerMetricHistoryResponseDTO,
+  PlayerPlayHistoryResponseDTO,
   UserCourseRecordsDTO,
   UserDTO,
   UserProfileDTO,
@@ -54,6 +55,25 @@ export const fetchUserRatingOpHistory = async (
 ): Promise<PlayerMetricHistoryResponseDTO> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/rating-op-history`
+  )
+
+  return response.json()
+}
+
+/**
+ * 指定したユーザーの直近のプレイ履歴を管理者・編集者として取得する。
+ *
+ * @param username - 履歴取得対象のユーザー名。
+ * @param signal - リクエストの中断シグナル。
+ * @returns 保存済みのプレイ履歴。未保存の場合は空配列を含む。
+ */
+export const fetchUserPlayHistory = async (
+  username: string,
+  signal?: AbortSignal
+): Promise<PlayerPlayHistoryResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/users/${encodeURIComponent(username)}/record/play-history`,
+    { requireAuthentication: true, signal }
   )
 
   return response.json()
