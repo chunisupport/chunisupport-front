@@ -5,6 +5,8 @@ export const STAFF_LOGIN_PATH = '/staff/login'
 export const MAINTENANCE_LOGIN_PATH = '/maintenance/login'
 /** ユーザーページのベースパス */
 export const USERS_PATH = '/users'
+/** 管理者・編集者向けの直近プレイ履歴ページのパス。 */
+export const USER_PLAY_HISTORY_PATH = `${USERS_PATH}/:username/play-history`
 export const REGISTER_PATH = '/register'
 export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'

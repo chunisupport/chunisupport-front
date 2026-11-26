@@ -468,6 +468,19 @@ export interface ScoreHistoryResponseDTO {
   entries: ScoreHistoryEntryDTO[]
 }
 
+/** 保存済みのプレイ履歴1件。譜面を照合できない場合は曲名または難易度がnullになる。 */
+export interface PlayerPlayHistoryEntryDTO
+  extends Pick<ScoreHistoryEntryDTO, 'score' | 'clear_lamp' | 'combo_lamp' | 'full_chain'> {
+  title: string | null
+  difficulty: CourseChartDifficulty | null
+  played_at: string
+}
+
+/** 新しい順に並んだ直近のプレイ履歴。 */
+export interface PlayerPlayHistoryResponseDTO {
+  entries: PlayerPlayHistoryEntryDTO[]
+}
+
 /** フレンドランキングの対象楽曲概要 */
 export interface FriendRankingSongDTO {
   /** 楽曲表示ID */

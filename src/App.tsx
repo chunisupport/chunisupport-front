@@ -39,6 +39,7 @@ import {
   FOOTER_DISCLAIMER_TEXT,
 } from './constants/footer'
 import { LANDING_GUEST_HERO_SECTION_CLASS } from './constants/landingPage'
+import { PLAY_HISTORY_ROLES } from './constants/playHistory'
 import {
   ADMIN_BATCH_PATH,
   ADMIN_CHART_RANKING_PATH,
@@ -75,6 +76,7 @@ import {
   STAFF_LOGIN_PATH,
   TOOLS_PATH,
   UNI_FILL_MATRIX_PATH,
+  USER_PLAY_HISTORY_PATH,
   WEAK_CHART_INSPECTOR_PATH,
   WORLDSEND_SONGS_PATH,
 } from './constants/routes'
@@ -102,6 +104,7 @@ const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'))
 const MaintenanceLoginPage = lazy(() => import('./pages/maintenance/MaintenanceLoginPage'))
 
 const UserPage = lazy(() => import('./pages/users/UserPage/UserPage'))
+const UserPlayHistoryPage = lazy(() => import('./pages/users/UserPlayHistory/UserPlayHistoryPage'))
 const UserStatsPage = lazy(() => import('./pages/users/UserStats/UserStatsPage'))
 const GoalsList = lazy(() => import('./pages/goals/GoalsList/GoalsList'))
 
@@ -495,8 +498,20 @@ const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
 const LoadableEditorSongsPage = withRouteLoadBoundary(EditorSongsPage)
 const LoadableEditorCoursesPage = withRouteLoadBoundary(EditorCoursesPage)
 const LoadableRegisterScoreTempPage = withRouteLoadBoundary(RegisterScoreTempPage)
+const LoadableUserPlayHistoryPage = withRouteLoadBoundary(UserPlayHistoryPage)
 const LoadableCoursesListPage = withRouteLoadBoundary(CoursesList)
 const LoadableCourseDetailPage = withRouteLoadBoundary(CourseDetail)
+
+/**
+ * 管理者・編集者だけに直近のプレイ履歴ページを表示する。
+ *
+ * @returns 権限制御と読み込み境界を備えたプレイ履歴ページ。
+ */
+const GuardedUserPlayHistoryPage = () => (
+  <RequireRole allowedRoles={PLAY_HISTORY_ROLES}>
+    <LoadableUserPlayHistoryPage />
+  </RequireRole>
+)
 
 /**
  * ADMIN 権限を要求して管理メニューを表示する。
@@ -744,6 +759,7 @@ const App = () => {
       />
 
       {/* ユーザ */}
+      <Route path={USER_PLAY_HISTORY_PATH} component={withNavBar(GuardedUserPlayHistoryPage)} />
       <Route
         path="/users/:username/stats"
         component={withNavBar(withRouteLoadBoundary(UserStatsPage))}

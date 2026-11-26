@@ -1,3 +1,5 @@
+import { USER_PLAY_HISTORY_PATH } from '../constants/routes'
+
 export const DEFAULT_PROFILE_PAGE_QUERY = 'rating_best' as const
 
 export const profilePageQueryValues = [
@@ -92,3 +94,12 @@ export const buildUserStatsPagePath = (username: string): string =>
  */
 export const buildUserOverPowerPagePath = (username: string, subPage: OverPowerSubPage): string =>
   `${buildUserProfilePagePath(username, 'overpower')}/${subPage}`
+
+/**
+ * ユーザーの直近のプレイ履歴ページへの内部リンク用パスを生成する。
+ *
+ * @param username - パスへ埋め込むユーザー名。
+ * @returns ユーザー名をエンコード済みのプレイ履歴ページパス。
+ */
+export const buildUserPlayHistoryPagePath = (username: string): string =>
+  USER_PLAY_HISTORY_PATH.replace(':username', () => encodeURIComponent(username))
