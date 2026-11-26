@@ -1541,6 +1541,26 @@ export interface CourseScoreHistoryResponseDTO {
   entries: CourseScoreHistoryEntryDTO[]
 }
 
+/** コースランキングに表示する順位付きの自己ベスト。 */
+export type CourseRankingEntryDTO = CourseScoreHistoryEntryDTO & {
+  rank: number
+  username: string
+  player_name: string
+}
+
+/** 管理者向けコースランキング。totalは表示上限適用前の件数。 */
+export interface AdminCourseRankingResponseDTO {
+  course: Pick<CourseRecordDTO, 'id' | 'name' | 'class'>
+  ranking: CourseRankingEntryDTO[]
+  total: number
+}
+
+/** コースのフレンドランキング。本人の記録はis_selfで識別する。 */
+export interface FriendCourseRankingResponseDTO
+  extends Omit<AdminCourseRankingResponseDTO, 'ranking'> {
+  ranking: (CourseRankingEntryDTO & { is_self: boolean })[]
+}
+
 /** ユーザーのコースレコード一覧レスポンス */
 export interface UserCourseRecordsDTO {
   courses: CourseRecordDTO[]

@@ -1,10 +1,12 @@
 import { API_BASE_URL } from '../config'
 import type {
+  AdminCourseRankingResponseDTO,
   CourseDetailDTO,
   CourseScoreHistoryResponseDTO,
   CourseStatsResponseDTO,
   CourseTrackDTO,
   CreateCourseRequestDTO,
+  FriendCourseRankingResponseDTO,
   ManagedCourseDTO,
   ManagedCoursesResponse,
   UpdateCourseRequestDTO,
@@ -171,4 +173,40 @@ export const replaceCourseTracks = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ tracks }),
   })
+}
+
+/**
+ * 指定コースのフレンドランキングを取得する。
+ *
+ * @param displayId - コースの公開ID。
+ * @param signal - 中断シグナル。
+ * @returns 自分とフレンドのコース自己ベスト一覧。
+ */
+export const fetchFriendCourseRanking = async (
+  displayId: string,
+  signal?: AbortSignal
+): Promise<FriendCourseRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/friend-rankings/courses/${encodeURIComponent(displayId)}`,
+    { requireAuthentication: true, signal }
+  )
+  return response.json()
+}
+
+/**
+ * 指定コースの管理者向け全体ランキングを取得する。
+ *
+ * @param displayId - コースの公開ID。
+ * @param signal - 中断シグナル。
+ * @returns コース情報と全ユーザーの上位記録。
+ */
+export const fetchAdminCourseRanking = async (
+  displayId: string,
+  signal?: AbortSignal
+): Promise<AdminCourseRankingResponseDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/admin/course-rankings/${encodeURIComponent(displayId)}`,
+    { requireAuthentication: true, signal }
+  )
+  return response.json()
 }

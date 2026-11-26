@@ -1,33 +1,20 @@
 import { Button } from '@kobalte/core/button'
-import { A } from '@solidjs/router'
-import Trophy from 'lucide-solid/icons/trophy'
 import type { JSX } from 'solid-js'
 import { createMemo, createResource, createSignal, Show } from 'solid-js'
 import { LoadError, Loading } from '../../../../components'
-import { getAppButtonClass } from '../../../../components/common/AppButton'
 import { CheckboxField } from '../../../../components/common/CheckboxField'
+import AdminRankingLink from '../../../../components/common/ranking/AdminRankingLink'
+import FriendRankingSection from '../../../../components/common/ranking/FriendRankingSection'
+import type { FriendRankingTableEntry } from '../../../../components/common/ranking/FriendRankingTable'
 import { fetchVersions } from '../../../../queries/masterData'
-import { authSession } from '../../../../stores/authSession'
-import type {
-  FriendRankingEntryDTO,
-  ScoreHistoryEntryDTO,
-  WorldsendFriendRankingEntryDTO,
-} from '../../../../types/api'
+import type { ScoreHistoryEntryDTO } from '../../../../types/api'
 import {
-  ADMIN_CHART_RANKING_LINK_LABEL,
-  FRIEND_RANKING_SECTION_LABEL,
   SCORE_HISTORY_MAX_ENTRIES_LABEL,
   SCORE_HISTORY_SECTION_LABEL,
   SCORE_HISTORY_VERSION_LABEL_TOGGLE,
 } from './constants'
-import FriendRankingTable from './FriendRankingTable'
 import ScoreHistoryChart from './ScoreHistoryChart'
 import ScoreHistoryTable from './ScoreHistoryTable'
-
-type FriendRankingTableEntry = Pick<
-  FriendRankingEntryDTO | WorldsendFriendRankingEntryDTO,
-  'rank' | 'username' | 'player_name' | 'score' | 'is_self'
->
 
 type Props = {
   /** 表示対象の楽曲名 */
@@ -113,31 +100,13 @@ const ChartDetailPage = (props: Props) => {
         </Show>
       </section>
 
-      <section class="space-y-4">
-        <h2 class="text-lg font-semibold">{FRIEND_RANKING_SECTION_LABEL}</h2>
-        <Show
-          when={!props.friendRankingError}
-          fallback={<LoadError error={props.friendRankingError} />}
-        >
-          <Show when={!props.isFriendRankingLoading} fallback={<Loading />}>
-            <FriendRankingTable entries={props.friendRankingEntries} />
-          </Show>
-        </Show>
-      </section>
+      <FriendRankingSection
+        entries={props.friendRankingEntries}
+        isLoading={props.isFriendRankingLoading}
+        error={props.friendRankingError}
+      />
 
-      <Show
-        when={authSession.status === 'authenticated' && authSession.user?.account_type === 'ADMIN'}
-      >
-        <div class="flex justify-end">
-          <A
-            href={props.adminRankingHref}
-            class={getAppButtonClass({ variant: 'surface', size: 'sm' })}
-          >
-            <Trophy class="h-4 w-4" aria-hidden="true" />
-            {ADMIN_CHART_RANKING_LINK_LABEL}
-          </A>
-        </div>
-      </Show>
+      <AdminRankingLink href={props.adminRankingHref} />
     </main>
   )
 }
