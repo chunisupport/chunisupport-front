@@ -74,6 +74,7 @@ import {
   REGISTER_SCORE_TEMP_PATH,
   SONGS_PATH,
   STAFF_LOGIN_PATH,
+  TEST_HOME_PATH,
   TOOLS_PATH,
   UNI_FILL_MATRIX_PATH,
   USER_PLAY_HISTORY_PATH,
@@ -97,6 +98,7 @@ import { authSession, getAuthenticatedUser } from './stores/authSession'
 import { resolveAuthSession } from './usecases/auth/resolveAuthSession'
 import { resolveHomeView } from './usecases/auth/resolveHomeView'
 
+const TestHomePage = lazy(() => import('./pages/test-home/TestHomePage'))
 const Login = lazy(() => import('./pages/auth/Login/Login'))
 const StaffLogin = lazy(() => import('./pages/auth/StaffLogin/StaffLogin'))
 const Register = lazy(() => import('./pages/auth/Register/Register'))
@@ -747,6 +749,7 @@ const App = () => {
     <Router root={ApplicationRoot}>
       {/* ランディングページ */}
       <Route path="/" component={LandingPage} />
+      <Route path={TEST_HOME_PATH} component={withNavBar(withRouteLoadBoundary(TestHomePage))} />
 
       {/* 認証 */}
       <Route path="/login" component={withRouteLoadBoundary(Login)} />

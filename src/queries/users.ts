@@ -1,9 +1,10 @@
 import { type QueryClient, queryOptions } from '@tanstack/solid-query'
 import { fetchRecentPlayerDataUpdates } from '../api/register-data'
 import { fetchUserComment } from '../api/userComment'
-import { requestUserUpdatedAt } from '../api/users'
+import { fetchUserProfileSummary, requestUserUpdatedAt } from '../api/users'
 import { appQueryClient } from '../lib/queryClient'
 import type { UserRecordDTO } from '../types/api'
+import { fetchLandingProfile } from '../usecases/auth/fetchLandingProfile'
 import { fetchUserRatingWithCache } from '../usecases/cache/fetchUserRatingWithCache'
 import { fetchUserRecordWithCache } from '../usecases/cache/fetchUserRecordWithCache'
 
@@ -24,6 +25,12 @@ export const userQueryKeys = {
    * @returns ユーザー別のプロフィールコメントキー。
    */
   comment: (username: string) => ['users', username, 'comment'] as const,
+  /**
+   * ユーザー別のホーム表示用プロフィールキーを生成する。
+   * @param username - 対象ユーザー名。
+   * @returns ユーザー別のホーム表示用プロフィールキー。
+   */
+  landingProfile: (username: string) => ['users', username, 'landing-profile'] as const,
   /**
    * ユーザー別のレーティング情報キーを生成する。
    * @param username - 対象ユーザー名。
@@ -114,6 +121,23 @@ export const userRecordQueryOptions = (username: string | null) =>
     staleTime: USER_RECORD_STALE_TIME_MS,
     networkMode: 'always',
     retry: false,
+  })
+
+/**
+ * ユーザーのホーム表示用プロフィール（名札情報とレーティング）を取得するquery optionsを生成する。
+ *
+ * @param username - 対象ユーザー名。未ログイン時は null。
+ * @returns ホーム表示用プロフィール取得用のquery options。
+ */
+export const userLandingProfileQueryOptions = (username: string | null) =>
+  queryOptions({
+    queryKey: userQueryKeys.landingProfile(username ?? ''),
+    queryFn: () =>
+      fetchLandingProfile(username ?? '', {
+        fetchProfile: fetchUserProfileSummary,
+        fetchRating: fetchUserRatingWithCache,
+      }),
+    enabled: Boolean(username),
   })
 
 /**
