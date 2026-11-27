@@ -12,6 +12,8 @@ export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
 /** 保存済みの最新スコア更新結果画面のパス */
 export const LATEST_SCORE_UPDATE_PATH = '/latest-score-update'
+/** 新しいホーム画面レイアウトの試作プレビューパス */
+export const TEST_HOME_PATH = '/test-home'
 export const TOOLS_PATH = '/tools'
 /** 全譜面レコード統計画面のパス */
 export const CHART_STATS_PATH = `${TOOLS_PATH}/chart-stats`
