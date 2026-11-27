@@ -18,11 +18,68 @@ export const TEST_HOME_COPY = {
   documentTitle: 'ホーム（試作）',
   previewBadge: '試作ホーム',
   dummyDataNote: 'ダミー表示',
+  modalPreviewButton: 'ポップアップ確認',
+  modalCloseLabel: '閉じる',
+  modalConfirmLabel: '確認しました',
+  modalDetailLinkLabel: '詳しく見る',
+  appBannersHeading: '新着・アップデート',
   profileHeading: 'プレイヤー情報',
   quickAccessHeading: 'クイックアクセス',
   toolsHeading: 'ツール',
   allToolsLink: 'すべて見る',
 } as const
+
+/** Issue #417 想定のアプリ内お知らせ種別（本文型 / リンク型） */
+export type DummyAppAnnouncementKind = 'message' | 'link'
+
+/** Issue #417 想定のアプリ内お知らせダミー項目 */
+export type DummyAppAnnouncement = {
+  /** 安定した固有ID */
+  id: string
+  /** 本文型・リンク型の種別 */
+  kind: DummyAppAnnouncementKind
+  /** バッジ表示ラベル */
+  badgeLabel: string
+  /** タイトル */
+  title: string
+  /** 補足本文 */
+  body: string
+  /** リンク型の場合の遷移先パス */
+  targetPath?: string
+  /** リンク型の場合のアクションラベル */
+  actionLabel?: string
+}
+
+/** ホーム上部に表示するアプリ内お知らせバナーのダミーデータ */
+export const DUMMY_APP_BANNER_ANNOUNCEMENTS: readonly DummyAppAnnouncement[] = [
+  {
+    id: '2026-11-sort-top-percent',
+    kind: 'message',
+    badgeLabel: 'UPDATE',
+    title: 'ソートに「上位%」を追加しました',
+    body: 'レコード一覧で全プレイヤー中の上位%順に並べ替えられます。',
+  },
+  {
+    id: '2026-11-friend-vs-banner',
+    kind: 'link',
+    badgeLabel: 'PICKUP',
+    title: 'フレンドVSでスコアを比較しよう',
+    body: 'フレンドとのスコア差を譜面ごとにまとめて確認できます。',
+    targetPath: FRIEND_VS_PATH,
+    actionLabel: '開く',
+  },
+]
+
+/** 全画面共通ポップアップ（global_modal）のプレビュー用ダミーデータ */
+export const DUMMY_APP_MODAL_ANNOUNCEMENT: DummyAppAnnouncement = {
+  id: '2026-11-modal-preview',
+  kind: 'link',
+  badgeLabel: 'UPDATE',
+  title: 'レコードフィルターに「上位%」の範囲指定を追加しました',
+  body: 'ソートだけでなく、上位%の範囲で譜面を絞り込めるようになりました。レコード画面のフィルターからすぐにお試しいただけます。',
+  targetPath: SONGS_PATH,
+  actionLabel: '楽曲DBを見る',
+}
 
 /** 名札下部に並べるマイページ各タブへのショートカット定義 */
 export type ProfileTabShortcut = {
