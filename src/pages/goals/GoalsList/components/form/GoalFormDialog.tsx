@@ -39,6 +39,7 @@ import {
   buildAllNameSelections,
   buildAllVersionSelections,
   buildDefaultDifficultySelections,
+  buildDifficultySelections,
   buildGoalFormAchievementParams,
   buildGoalFormAttributes,
   buildGoalFormGaugeStartParams,
@@ -184,7 +185,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const displayErrorMessage = createMemo(() => errorMessage() || props.apiErrorMessage)
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
   const allDifficultySelections = createMemo(() =>
-    buildAllNameSelections(props.masterData.difficulties)
+    buildDifficultySelections(props.masterData.difficulties)
   )
   const defaultDifficultySelections = createMemo(() =>
     buildDefaultDifficultySelections(props.masterData.difficulties)
@@ -651,7 +652,7 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
       <GoalGroupSection groups={props.groups} groupId={groupId()} onGroupIdChange={setGroupId} />
 
       <GoalTargetChartsSection
-        difficultyItems={props.masterData.difficulties}
+        difficultyNames={allDifficultySelections()}
         isRainbowGoal={achievementType() === 'rainbow_count'}
         chartTargetMode={chartTargetMode()}
         diffs={diffs()}

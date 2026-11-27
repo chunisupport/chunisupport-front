@@ -12,7 +12,6 @@ import {
   VersionMultiSelect,
 } from '../../../../../components/common/DomainMultiSelect'
 import { GOAL_OVER_POWER_TARGET_LABEL } from '../../../../../constants/chart'
-import type { MasterDataDTO } from '../../../../../types/api'
 import { GoalFilterCheckbox } from './goalFormFields'
 import type { GoalChartTargetMode } from './goalFormModel'
 import {
@@ -24,7 +23,8 @@ import {
 } from './goalFormStyles'
 
 interface GoalTargetChartsSectionProps {
-  difficultyItems: MasterDataDTO['difficulties']
+  /** 選択肢として表示する大文字の難易度名 */
+  difficultyNames: string[]
   /** 虹枠目標向けに楽曲単位の対象条件だけを表示するか */
   isRainbowGoal: boolean
   chartTargetMode: GoalChartTargetMode
@@ -96,13 +96,15 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
                 checked={props.chartTargetMode === 'op_target'}
                 onChange={props.onToggleOpTarget}
               />
-              <For each={props.difficultyItems}>
-                {(item) => (
+              <For each={props.difficultyNames}>
+                {(difficultyName) => (
                   <GoalFilterCheckbox
-                    label={item.name}
-                    checked={props.chartTargetMode === 'normal' && props.diffs.includes(item.name)}
+                    label={difficultyName}
+                    checked={
+                      props.chartTargetMode === 'normal' && props.diffs.includes(difficultyName)
+                    }
                     disabled={props.chartTargetMode === 'op_target'}
-                    onChange={(checked) => props.onToggleDifficulty(item.name, checked)}
+                    onChange={(checked) => props.onToggleDifficulty(difficultyName, checked)}
                   />
                 )}
               </For>

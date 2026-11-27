@@ -367,18 +367,28 @@ export const buildAllNameSelections = (items: readonly { name: string }[]): stri
   items.map((item) => item.name)
 
 /**
+ * 難易度マスタを、目標フォームの選択値として使う大文字の難易度名へ変換する。
+ * 難易度は選択値・チェック判定・保存値のすべてで大文字に統一する。
+ *
+ * @param items - 難易度マスタデータ一覧。
+ * @returns 大文字の難易度名配列。通常譜面の難易度でない項目は含めない。
+ */
+export const buildDifficultySelections = (items: readonly { name: string }[]): string[] =>
+  items.flatMap((item) => {
+    const difficulty = normalizePlayerDataDifficulty(item.name)
+    return difficulty ? [difficulty] : []
+  })
+
+/**
  * 目標作成フォームで初期選択する難易度（MASTER・ULTIMA）の名前配列を作成する。
  *
  * @param items - 難易度マスタデータ一覧。
- * @returns MASTERとULTIMAの難易度名配列。
+ * @returns MASTERとULTIMAの大文字の難易度名配列。
  */
 export const buildDefaultDifficultySelections = (items: readonly { name: string }[]): string[] =>
-  items
-    .filter((item) => {
-      const difficulty = normalizePlayerDataDifficulty(item.name)
-      return GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES.some((target) => target === difficulty)
-    })
-    .map((item) => item.name)
+  buildDifficultySelections(items).filter((difficulty) =>
+    GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES.some((target) => target === difficulty)
+  )
 
 /**
  * 保存済み属性が未指定の場合だけ、現在の全選択値で補完する。

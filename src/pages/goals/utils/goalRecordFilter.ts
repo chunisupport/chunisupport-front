@@ -2,7 +2,10 @@ import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
 import type { FilterState } from '../../../types/recordFilter'
-import { normalizeGoalAttributeValues } from '../../../utils/goalAttributes'
+import {
+  normalizeGoalAttributeValues,
+  normalizeGoalDifficultyNames,
+} from '../../../utils/goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
   FULL_CHAIN_UNACHIEVED_FILTERS,
@@ -178,6 +181,9 @@ export const buildGoalRecordFilter = (
   versions: VersionDTO[]
 ): FilterState => {
   const difficultyNames = normalizeGoalAttributeValues(goal.attributes.diff)
+  const selectedDifficulties = difficultyNames
+    ? normalizeGoalDifficultyNames(difficultyNames)
+    : undefined
   const genreNames = normalizeGoalAttributeValues(goal.attributes.genre)
   const versionIds = normalizeGoalAttributeValues(goal.attributes.ver)
   const nameFolderCodes = normalizeGoalAttributeValues(goal.attributes.name_folder)
@@ -198,12 +204,11 @@ export const buildGoalRecordFilter = (
     opTargetType: isOpTargetGoal ? 'theoretical' : defaultFilter.opTargetType,
     difficulties: hasNoSelectedCharts
       ? []
-      : masterData.difficulties
-          .filter((difficulty) => !difficultyNames || difficultyNames.includes(difficulty.name))
-          .flatMap((difficulty) => {
-            const normalized = normalizePlayerDataDifficulty(difficulty.name)
-            return normalized ? [normalized] : []
-          }),
+      : masterData.difficulties.flatMap((difficulty) => {
+          const normalized = normalizePlayerDataDifficulty(difficulty.name)
+          if (!normalized) return []
+          return !selectedDifficulties || selectedDifficulties.has(normalized) ? [normalized] : []
+        }),
     genres:
       hasNoSelectedCharts || !genreNames
         ? []

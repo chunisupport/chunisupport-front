@@ -65,7 +65,7 @@ test('作成フォームの難易度初期選択はMASTERとULTIMAだけを含�
   const result = buildDefaultDifficultySelections(difficulties)
 
   // Then: 大文字正規化のうえ MASTER と ULTIMA だけが選択される
-  assert.deepEqual(result, ['master', 'ULTIMA'])
+  assert.deepEqual(result, ['MASTER', 'ULTIMA'])
 })
 
 test('編集フォームでdiffが未指定の場合は全難易度が選択される', () => {
