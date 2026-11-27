@@ -12,7 +12,7 @@ import { AppDialog } from '../../components/common/AppDialog'
 import { showSuccessToast } from '../../components/common/AppToast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { createVersion, deleteVersion, renameVersion } from '../../queries/versions'
-import type { CreateVersionRequestDTO, VersionDTO } from '../../types/api'
+import type { AdminVersionDTO, CreateVersionRequestDTO } from '../../types/api'
 import { toUserFriendlyErrorMessage } from '../../utils/errorMessage'
 import {
   ADMIN_VERSIONS_COPY,
@@ -27,7 +27,7 @@ type VersionFormMode = 'create' | 'edit'
 type VersionFormDialogProps = {
   open: boolean
   mode: VersionFormMode
-  version: VersionDTO | null
+  version: AdminVersionDTO | null
   saving: boolean
   errorMessage: string
   onOpenChange: (open: boolean) => void
@@ -35,7 +35,7 @@ type VersionFormDialogProps = {
 }
 
 type VersionDeleteDialogProps = {
-  version: VersionDTO | null
+  version: AdminVersionDTO | null
   deleting: boolean
   errorMessage: string
   onOpenChange: (open: boolean) => void
@@ -53,7 +53,7 @@ const VERSION_INPUT_CLASS =
  * @param version - 編集対象。新規作成時はnull。
  * @returns バージョンフォームの初期値。
  */
-const buildVersionFormValue = (version: VersionDTO | null): CreateVersionRequestDTO => ({
+const buildVersionFormValue = (version: AdminVersionDTO | null): CreateVersionRequestDTO => ({
   name: version?.name ?? '',
   short_name: version?.short_name ?? '',
   released_at: version?.released_at.slice(0, 10) ?? '',
@@ -260,18 +260,18 @@ const AdminVersionsPage = (): JSX.Element => {
 
   const [refreshKey, setRefreshKey] = createSignal(0)
   const [formMode, setFormMode] = createSignal<VersionFormMode | null>(null)
-  const [editingVersion, setEditingVersion] = createSignal<VersionDTO | null>(null)
-  const [deletingVersion, setDeletingVersion] = createSignal<VersionDTO | null>(null)
+  const [editingVersion, setEditingVersion] = createSignal<AdminVersionDTO | null>(null)
+  const [deletingVersion, setDeletingVersion] = createSignal<AdminVersionDTO | null>(null)
   const [saving, setSaving] = createSignal(false)
   const [deleting, setDeleting] = createSignal(false)
   const [formError, setFormError] = createSignal('')
   const [deleteError, setDeleteError] = createSignal('')
 
   const [versionsResponse] = createResource(() => refreshKey(), fetchAdminVersions)
-  // APIの並び順に依存せず、稼働日昇順・ID順で表示と最新判定を一致させる。
+  // APIの並び順に依存せず、稼働日昇順で表示と最新判定を一致させる。稼働日はバージョン間で重複しない。
   const versions = createMemo(() =>
-    [...(versionsResponse() ?? [])].sort(
-      (left, right) => left.released_at.localeCompare(right.released_at, 'ja') || left.id - right.id
+    [...(versionsResponse() ?? [])].sort((left, right) =>
+      left.released_at.localeCompare(right.released_at, 'ja')
     )
   )
   const latestVersionId = createMemo(() => {
@@ -285,7 +285,7 @@ const AdminVersionsPage = (): JSX.Element => {
    * @param version - 判定対象のバージョン。
    * @returns 最新版の場合は true。
    */
-  const canDeleteVersion = (version: VersionDTO): boolean => version.id === latestVersionId()
+  const canDeleteVersion = (version: AdminVersionDTO): boolean => version.id === latestVersionId()
 
   /** バージョン一覧を再取得する。 */
   const refresh = (): void => {
@@ -304,7 +304,7 @@ const AdminVersionsPage = (): JSX.Element => {
    *
    * @param version - 編集するバージョン。
    */
-  const openEditDialog = (version: VersionDTO): void => {
+  const openEditDialog = (version: AdminVersionDTO): void => {
     setEditingVersion(version)
     setFormError('')
     setFormMode('edit')
@@ -363,7 +363,7 @@ const AdminVersionsPage = (): JSX.Element => {
    *
    * @param version - 削除候補の最新バージョン。
    */
-  const openDeleteDialog = (version: VersionDTO): void => {
+  const openDeleteDialog = (version: AdminVersionDTO): void => {
     setDeleteError('')
     setDeletingVersion(version)
   }

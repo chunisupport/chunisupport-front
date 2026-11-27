@@ -48,16 +48,19 @@ export const createHonor = async (request: HonorRequestDTO): Promise<AdminHonorD
 /**
  * 指定した称号を更新する。
  *
- * @param id - 更新対象の称号ID。
+ * @param id - 更新対象の称号の公開ID。
  * @param request - 更新内容。
  * @returns 更新後の称号。
  */
-export const updateHonor = async (id: number, request: HonorRequestDTO): Promise<AdminHonorDTO> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/internal/honors/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-  })
+export const updateHonor = async (id: string, request: HonorRequestDTO): Promise<AdminHonorDTO> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/internal/honors/${encodeURIComponent(id)}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    }
+  )
 
   return response.json()
 }

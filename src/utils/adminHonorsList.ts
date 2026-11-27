@@ -62,20 +62,29 @@ const getCreatedAtTime = (value: string | null): number | null => {
  * @param a - 1件目の称号。
  * @param b - 2件目の称号。
  * @param order - 日時の昇順または降順。
+ * @param newerFirst - 同順のときに新しく登録された称号を先にする比較関数。
  * @returns 配列の並べ替えに使う比較結果。
  */
-const compareCreatedAt = (a: AdminHonorDTO, b: AdminHonorDTO, order: 'asc' | 'desc'): number => {
+const compareCreatedAt = (
+  a: AdminHonorDTO,
+  b: AdminHonorDTO,
+  order: 'asc' | 'desc',
+  newerFirst: (a: AdminHonorDTO, b: AdminHonorDTO) => number
+): number => {
   const aTime = getCreatedAtTime(a.created_at)
   const bTime = getCreatedAtTime(b.created_at)
-  if (aTime === null) return bTime === null ? b.id - a.id : 1
+  if (aTime === null) return bTime === null ? newerFirst(a, b) : 1
   if (bTime === null) return -1
-  return (order === 'asc' ? aTime - bTime : bTime - aTime) || b.id - a.id
+  return (order === 'asc' ? aTime - bTime : bTime - aTime) || newerFirst(a, b)
 }
 
 /**
  * 称号名検索、クラス絞り込み、並べ替えを適用する。
  *
- * @param honors - APIから取得した全称号。
+ * `id` 列の並べ替えは登録順で行う。称号の id は登録順と無関係な公開IDのため、
+ * 登録順に返されるAPIの並びを基準にする。
+ *
+ * @param honors - APIから取得した全称号（登録順）。
  * @param query - 称号名の検索文字列。
  * @param typeName - 絞り込むクラス名。nullなら全クラス。
  * @param sort - 並べ替え条件。
@@ -88,6 +97,11 @@ export const filterAndSortAdminHonors = (
   sort: AdminHonorSort
 ): AdminHonorDTO[] => {
   const normalizedQuery = query.trim().normalize('NFKC').toLocaleLowerCase('ja')
+  const registrationOrder = new Map(honors.map((honor, index) => [honor.id, index]))
+  const getRegistrationOrder = (honor: AdminHonorDTO): number =>
+    registrationOrder.get(honor.id) ?? 0
+  const newerFirst = (a: AdminHonorDTO, b: AdminHonorDTO): number =>
+    getRegistrationOrder(b) - getRegistrationOrder(a)
 
   return honors
     .filter(
@@ -98,25 +112,25 @@ export const filterAndSortAdminHonors = (
     .sort((a, b) => {
       switch (sort) {
         case 'id-asc':
-          return a.id - b.id
+          return getRegistrationOrder(a) - getRegistrationOrder(b)
         case 'name-asc':
-          return a.name.localeCompare(b.name, 'ja') || b.id - a.id
+          return a.name.localeCompare(b.name, 'ja') || newerFirst(a, b)
         case 'name-desc':
-          return b.name.localeCompare(a.name, 'ja') || b.id - a.id
+          return b.name.localeCompare(a.name, 'ja') || newerFirst(a, b)
         case 'type-asc':
-          return a.type_name.localeCompare(b.type_name, 'ja') || b.id - a.id
+          return a.type_name.localeCompare(b.type_name, 'ja') || newerFirst(a, b)
         case 'type-desc':
-          return b.type_name.localeCompare(a.type_name, 'ja') || b.id - a.id
+          return b.type_name.localeCompare(a.type_name, 'ja') || newerFirst(a, b)
         case 'image-url-asc':
-          return a.image_url.localeCompare(b.image_url, 'ja') || b.id - a.id
+          return a.image_url.localeCompare(b.image_url, 'ja') || newerFirst(a, b)
         case 'image-url-desc':
-          return b.image_url.localeCompare(a.image_url, 'ja') || b.id - a.id
+          return b.image_url.localeCompare(a.image_url, 'ja') || newerFirst(a, b)
         case 'created-at-asc':
-          return compareCreatedAt(a, b, 'asc')
+          return compareCreatedAt(a, b, 'asc', newerFirst)
         case 'created-at-desc':
-          return compareCreatedAt(a, b, 'desc')
+          return compareCreatedAt(a, b, 'desc', newerFirst)
         default:
-          return b.id - a.id
+          return newerFirst(a, b)
       }
     })
 }

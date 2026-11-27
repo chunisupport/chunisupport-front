@@ -13,7 +13,12 @@ for (const operation of ['create', 'rename', 'delete'] as const) {
       authenticate: true,
     })
     const mutations = await import('./versions.ts')
-    const version = { id: 1, name: 'CHUNITHM', short_name: 'CH', released_at: '2026-01-01' }
+    const version = {
+      id: '0123456789abcdef',
+      name: 'CHUNITHM',
+      short_name: 'CH',
+      released_at: '2026-01-01',
+    }
     const calls = installFetchRecorder((_input, init) => {
       if (init?.method === 'DELETE') return new Response(null, { status: 204 })
       if (init?.method) return Response.json(version)
@@ -55,7 +60,12 @@ for (const operation of ['create', 'rename', 'delete'] as const) {
       authenticate: true,
     })
     const mutations = await import('./versions.ts')
-    const version = { id: 1, name: 'CHUNITHM', short_name: 'CH', released_at: '2026-01-01' }
+    const version = {
+      id: '0123456789abcdef',
+      name: 'CHUNITHM',
+      short_name: 'CH',
+      released_at: '2026-01-01',
+    }
     const calls = installFetchRecorder((_input, init) => {
       if (init?.method) throw new Error('network error')
       return Response.json({ versions: [version], genres: [] })

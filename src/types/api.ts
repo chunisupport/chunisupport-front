@@ -826,6 +826,15 @@ export interface VersionDTO {
   released_at: string
 }
 
+/**
+ * 管理者向けバージョン管理API（`/internal/admin/versions`）が返すバージョン。
+ * バージョンは改名されるため、DBの数値IDと独立した公開IDを `id` に持つ。
+ */
+export interface AdminVersionDTO extends Omit<VersionDTO, 'id'> {
+  /** バージョンの公開ID（16文字の小文字16進数）。DBの数値IDではない */
+  id: string
+}
+
 /** 管理者向けバージョン作成リクエスト */
 export interface CreateVersionRequestDTO {
   name: string
@@ -1474,7 +1483,8 @@ export interface HonorDTO {
 }
 
 export interface AdminHonorDTO {
-  id: number
+  /** 称号の公開ID（16文字の小文字16進数）。DBの数値IDではない */
+  id: string
   name: string
   type_name: string
   image_url: string
