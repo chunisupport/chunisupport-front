@@ -2,10 +2,7 @@ import { CHART_CONST_MAX, CHART_CONST_MIN, SCORE_MIN } from '../../../constants/
 import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type { GoalDTO, MasterDataDTO, VersionDTO } from '../../../types/api'
 import type { FilterState } from '../../../types/recordFilter'
-import {
-  normalizeGoalAttributeIds,
-  normalizeGoalNameFolderCodes,
-} from '../../../utils/goalAttributes'
+import { normalizeGoalAttributeValues } from '../../../utils/goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
   FULL_CHAIN_UNACHIEVED_FILTERS,
@@ -35,13 +32,13 @@ const NAVIGABLE_ACHIEVEMENT_TYPES = new Set<GoalDTO['achievement_type']>([
 ])
 
 /**
- * 属性ID・コード配列が空選択として保存されているか判定する。
+ * 属性の識別子配列が空選択として保存されているか判定する。
  *
- * @param ids - 正規化済みの属性ID・コード配列。
+ * @param values - 正規化済みの属性の識別子配列。
  * @returns 空配列なら true。
  */
-const hasNoSelectedAttributeIds = (ids: readonly unknown[] | undefined): boolean =>
-  ids?.length === 0
+const hasNoSelectedAttributeValues = (values: readonly unknown[] | undefined): boolean =>
+  values?.length === 0
 
 /**
  * API由来の成果パラメータからランプ指定値を安全に取り出す。
@@ -172,7 +169,7 @@ const applyUnachievedCondition = (filter: FilterState, goal: GoalDTO): FilterSta
  *
  * @param goal - 変換元となる目標。
  * @param masterData - 難易度とジャンルを解決するマスタデータ。
- * @param versions - 目標用バージョン番号を表示名へ変換するバージョン一覧。
+ * @param versions - 目標のバージョン公開IDを表示名へ変換するバージョン一覧。
  * @returns 目標属性と未達成条件を反映した通常レコードフィルター。改善対象が存在しないスコア目標は空の難易度条件を返す。
  */
 export const buildGoalRecordFilter = (
@@ -180,19 +177,19 @@ export const buildGoalRecordFilter = (
   masterData: MasterDataDTO,
   versions: VersionDTO[]
 ): FilterState => {
-  const difficultyIds = normalizeGoalAttributeIds(goal.attributes.diff)
-  const genreIds = normalizeGoalAttributeIds(goal.attributes.genre)
-  const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
-  const nameFolderCodes = normalizeGoalNameFolderCodes(goal.attributes.name_folder)
+  const difficultyNames = normalizeGoalAttributeValues(goal.attributes.diff)
+  const genreNames = normalizeGoalAttributeValues(goal.attributes.genre)
+  const versionIds = normalizeGoalAttributeValues(goal.attributes.ver)
+  const nameFolderCodes = normalizeGoalAttributeValues(goal.attributes.name_folder)
   const versionNameMap = buildGoalVersionNameMap(versions)
   const defaultFilter = buildDefaultFilter(masterData.genres, versions)
   const isOpTargetGoal = goal.attributes.chart_target === 'OP_TARGET'
   const hasNoSelectedCharts =
     hasNoUnachievedScore(goal) ||
-    hasNoSelectedAttributeIds(difficultyIds) ||
-    hasNoSelectedAttributeIds(genreIds) ||
-    hasNoSelectedAttributeIds(versionIds) ||
-    hasNoSelectedAttributeIds(nameFolderCodes)
+    hasNoSelectedAttributeValues(difficultyNames) ||
+    hasNoSelectedAttributeValues(genreNames) ||
+    hasNoSelectedAttributeValues(versionIds) ||
+    hasNoSelectedAttributeValues(nameFolderCodes)
 
   const filter: FilterState = {
     ...defaultFilter,
@@ -202,16 +199,16 @@ export const buildGoalRecordFilter = (
     difficulties: hasNoSelectedCharts
       ? []
       : masterData.difficulties
-          .filter((difficulty) => !difficultyIds || difficultyIds.includes(difficulty.id))
+          .filter((difficulty) => !difficultyNames || difficultyNames.includes(difficulty.name))
           .flatMap((difficulty) => {
             const normalized = normalizePlayerDataDifficulty(difficulty.name)
             return normalized ? [normalized] : []
           }),
     genres:
-      hasNoSelectedCharts || !genreIds
+      hasNoSelectedCharts || !genreNames
         ? []
         : masterData.genres
-            .filter((genre) => genreIds.includes(genre.id))
+            .filter((genre) => genreNames.includes(genre.name))
             .map((genre) => genre.name),
     versions:
       hasNoSelectedCharts || !versionIds
@@ -250,10 +247,10 @@ export const buildGoalRecordFilter = (
  */
 export const isGoalRecordNavigationEnabled = (goal: GoalDTO): boolean =>
   !hasNoUnachievedScore(goal) &&
-  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.diff)) &&
-  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.genre)) &&
-  !hasNoSelectedAttributeIds(normalizeGoalAttributeIds(goal.attributes.ver)) &&
-  !hasNoSelectedAttributeIds(normalizeGoalNameFolderCodes(goal.attributes.name_folder)) &&
+  !hasNoSelectedAttributeValues(normalizeGoalAttributeValues(goal.attributes.diff)) &&
+  !hasNoSelectedAttributeValues(normalizeGoalAttributeValues(goal.attributes.genre)) &&
+  !hasNoSelectedAttributeValues(normalizeGoalAttributeValues(goal.attributes.ver)) &&
+  !hasNoSelectedAttributeValues(normalizeGoalAttributeValues(goal.attributes.name_folder)) &&
   NAVIGABLE_ACHIEVEMENT_TYPES.has(goal.achievement_type) &&
   (goal.achievement_type !== 'hardlamp_count' || isNavigableHardLampGoal(goal)) &&
   (goal.achievement_type !== 'combolamp_count' || isNavigableComboLampGoal(goal)) &&

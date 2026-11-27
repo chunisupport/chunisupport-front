@@ -93,7 +93,7 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                     reading={currentDraft().reading}
                     artist={currentDraft().artist}
                     wikiPageTitle={currentDraft().wiki_page_title}
-                    genreId={currentDraft().genre_id}
+                    genre={currentDraft().genre}
                     bpm={currentDraft().bpm}
                     releasedAt={currentDraft().released_at}
                     jacket={currentDraft().jacket}
@@ -105,9 +105,7 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                     onWikiPageTitleChange={(value) =>
                       props.management.updateDraftField('wiki_page_title', value)
                     }
-                    onGenreIdChange={(value) =>
-                      props.management.updateDraftField('genre_id', value)
-                    }
+                    onGenreChange={(value) => props.management.updateDraftField('genre', value)}
                     onBpmChange={(value) => props.management.updateDraftField('bpm', value)}
                     onReleasedAtChange={(value) =>
                       props.management.updateDraftField('released_at', value)
@@ -167,7 +165,7 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                                     value={chart().const}
                                     onInput={(event) =>
                                       props.management.updateDraftChart(
-                                        chart().difficulty_id,
+                                        chart().difficulty_name,
                                         'const',
                                         event.currentTarget.value
                                       )
@@ -182,7 +180,7 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                                   ariaLabel={`${chart().difficulty_name}の定数未確定`}
                                   onChange={(checked) =>
                                     props.management.updateDraftChart(
-                                      chart().difficulty_id,
+                                      chart().difficulty_name,
                                       'is_const_unknown',
                                       checked
                                     )
@@ -196,7 +194,7 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                                     value={chart().notes ?? ''}
                                     onInput={(event) =>
                                       props.management.updateDraftChart(
-                                        chart().difficulty_id,
+                                        chart().difficulty_name,
                                         'notes',
                                         toOptionalNumberInput(event.currentTarget.value)
                                       )
@@ -211,7 +209,7 @@ const StandardSongEditSection = (props: StandardSongEditSectionProps) => {
                                     value={chart().notes_designer ?? ''}
                                     onInput={(event) =>
                                       props.management.updateDraftChart(
-                                        chart().difficulty_id,
+                                        chart().difficulty_name,
                                         'notes_designer',
                                         toOptionalTextInput(event.currentTarget.value)
                                       )

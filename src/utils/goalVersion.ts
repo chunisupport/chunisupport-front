@@ -1,9 +1,9 @@
-import type { VersionDTO } from '../types/api'
+import type { VersionDTO, VersionSummaryDTO } from '../types/api'
 import { filterReleasedVersions, getShortVersionName } from './versionConverter'
 
 export type GoalVersionOption = {
+  /** バージョンの公開ID。目標の `attributes.ver` に保存する値 */
   value: string
-  numericValue: number
   label: string
 }
 
@@ -13,7 +13,9 @@ export type GoalVersionOption = {
  * @param versions - API から返されたバージョン一覧。
  * @returns リリース日順、同日なら名前順で安定化したバージョン一覧。
  */
-export const sortGoalVersionsByReleaseDate = (versions: readonly VersionDTO[]): VersionDTO[] =>
+export const sortGoalVersionsByReleaseDate = <T extends VersionSummaryDTO>(
+  versions: readonly T[]
+): T[] =>
   [...versions].sort((left, right) => {
     const releaseOrder = left.released_at.localeCompare(right.released_at, 'ja')
     if (releaseOrder !== 0) return releaseOrder
@@ -21,12 +23,10 @@ export const sortGoalVersionsByReleaseDate = (versions: readonly VersionDTO[]): 
   })
 
 /**
- * 目標条件のバージョン選択肢をリリース日順の番号で作る。
+ * 目標条件のバージョン選択肢をリリース日順に作る。
+ * 値にはバージョンの公開IDを使うため、改名やバージョン追加で保存済みの目標条件は変わらない。
  *
- * 未来分は除外してから番号を振る。末尾追加のみの運用では公開済みの番号は不変になる。
- * 進捗側の解決は全件で行い、未来曲が未来番号になることで現行目標から外れる。
- *
- * @param versions - API から返されたバージョン一覧。
+ * @param versions - `/internal/master` から返された公開ID付きのバージョン一覧。
  * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
  * @returns チェックボックスに描画する選択肢。
  */
@@ -34,86 +34,80 @@ export const buildGoalVersionOptions = (
   versions: readonly VersionDTO[],
   referenceDate?: string
 ): GoalVersionOption[] =>
-  sortGoalVersionsByReleaseDate(filterReleasedVersions(versions, referenceDate)).map(
-    (version, index) => {
-      const numericValue = index + 1
-      return {
-        value: String(numericValue),
-        numericValue,
-        label: getShortVersionName(version.name),
-      }
-    }
-  )
+  sortGoalVersionsByReleaseDate(filterReleasedVersions(versions, referenceDate)).map((version) => ({
+    value: version.id,
+    label: getShortVersionName(version.name),
+  }))
 
 /**
- * 目標条件のバージョン番号から表示名を引く Map を作る。
+ * 目標条件のバージョン公開IDから表示名を引く Map を作る。
  *
- * @param versions - API から返されたバージョン一覧。
+ * @param versions - `/internal/master` から返された公開ID付きのバージョン一覧。
  * @param referenceDate - 公開済み判定に使うCHUNITHM運用日（YYYY-MM-DD、JST 07:00切替）。既定は現在の運用日。
- * @returns リリース日順番号をキーにした表示名 Map。
+ * @returns バージョンの公開IDをキーにした表示名 Map。
  */
 export const buildGoalVersionNameMap = (
   versions: readonly VersionDTO[],
   referenceDate?: string
-): Map<number, string> =>
+): Map<string, string> =>
   new Map(
     buildGoalVersionOptions(versions, referenceDate).map((version) => [
-      version.numericValue,
+      version.value,
       version.label,
     ])
   )
 
-/** バージョン一覧ごとの、リリース日からバージョン番号への解決結果キャッシュ */
-const goalVersionValueCache = new WeakMap<readonly VersionDTO[], Map<string, number | undefined>>()
+/** バージョン一覧ごとの、リリース日からバージョン公開IDへの解決結果キャッシュ */
+const goalVersionIdCache = new WeakMap<readonly VersionDTO[], Map<string, string | undefined>>()
 
 /**
- * 正規化済みのリリース日からバージョン番号を求める。
+ * 正規化済みのリリース日から、そのリリース日を含むバージョンの公開IDを求める。
  *
  * @param normalizedReleaseDate - YYYY-MM-DD 形式のリリース日。
  * @param sortedVersions - リリース日順に並べたバージョン一覧。
- * @returns リリース日順の 1 始まり番号。該当しない場合は undefined。
+ * @returns 直近のバージョンの公開ID。該当しない場合は undefined。
  */
-const findGoalVersionValue = (
+const findGoalVersionId = (
   normalizedReleaseDate: string,
   sortedVersions: readonly VersionDTO[]
-): number | undefined => {
-  let candidate: number | undefined
-  sortedVersions.forEach((version, index) => {
+): string | undefined => {
+  let candidate: string | undefined
+  for (const version of sortedVersions) {
     if (normalizedReleaseDate >= version.released_at.slice(0, 10)) {
-      candidate = index + 1
+      candidate = version.id
     }
-  })
+  }
   return candidate
 }
 
 /**
- * 曲のリリース日から目標条件用のバージョン番号を解決する。
+ * 曲のリリース日から目標条件用のバージョン公開IDを解決する。
  *
  * 目標の進捗計算では全譜面に対して呼ばれるため、同じバージョン一覧に対する解決結果をリリース日単位でキャッシュする。
  * バージョン一覧はAPI取得後に変更しない前提で、配列の参照をキャッシュキーにする。
  *
  * @param releaseDate - 曲のリリース日。
- * @param versions - API から返されたバージョン一覧。
- * @returns リリース日順の 1 始まり番号。不明な場合は undefined。
+ * @param versions - `/internal/master` から返された公開ID付きのバージョン一覧。
+ * @returns 曲が属するバージョンの公開ID。不明な場合は undefined。
  */
-export const resolveGoalVersionValueByReleaseDate = (
+export const resolveGoalVersionIdByReleaseDate = (
   releaseDate: string | null,
   versions: readonly VersionDTO[]
-): number | undefined => {
+): string | undefined => {
   if (!releaseDate) return undefined
 
   const normalizedReleaseDate = releaseDate.slice(0, 10)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/
   if (!dateRegex.test(normalizedReleaseDate)) return undefined
 
-  let cache = goalVersionValueCache.get(versions)
+  let cache = goalVersionIdCache.get(versions)
   if (!cache) {
     cache = new Map()
-    goalVersionValueCache.set(versions, cache)
+    goalVersionIdCache.set(versions, cache)
   }
   if (cache.has(normalizedReleaseDate)) return cache.get(normalizedReleaseDate)
 
-  const value = findGoalVersionValue(normalizedReleaseDate, sortGoalVersionsByReleaseDate(versions))
-  cache.set(normalizedReleaseDate, value)
-  return value
+  const id = findGoalVersionId(normalizedReleaseDate, sortGoalVersionsByReleaseDate(versions))
+  cache.set(normalizedReleaseDate, id)
+  return id
 }

@@ -15,11 +15,11 @@ export const createVersion = async (request: CreateVersionRequestDTO) => {
 
 /**
  * バージョンを改名し、公開一覧と全マスタのqueryを破棄する。
- * @param id - 対象バージョンID。
+ * @param id - 対象バージョンの公開ID。
  * @param request - 変更後の名前と超ショート名。
  * @returns 更新したバージョン。
  */
-export const renameVersion = async (id: number, request: RenameVersionRequestDTO) => {
+export const renameVersion = async (id: string, request: RenameVersionRequestDTO) => {
   const version = await requestRenameVersion(id, request)
   invalidateVersionCaches()
   return version
@@ -27,10 +27,10 @@ export const renameVersion = async (id: number, request: RenameVersionRequestDTO
 
 /**
  * バージョンを削除し、公開一覧と全マスタのqueryを破棄する。
- * @param id - 対象バージョンID。
+ * @param id - 対象バージョンの公開ID。
  * @returns 削除と無効化の完了を表すPromise。
  */
-export const deleteVersion = async (id: number): Promise<void> => {
+export const deleteVersion = async (id: string): Promise<void> => {
   await requestDeleteVersion(id)
   invalidateVersionCaches()
 }

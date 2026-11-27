@@ -1,39 +1,41 @@
 import { CHART_CONST_MAX, CHART_CONST_MIN } from '../constants/chart'
-import type { GoalAttributes, GoalConstFilterMode } from '../types/api'
+import { normalizePlayerDataDifficulty } from '../constants/difficulty'
+import type { GoalAttributes, GoalConstFilterMode, PlayerDataDifficulty } from '../types/api'
 import type { NumericRangeFilter } from '../types/record'
 import { isChartLevelFilterRange } from './chartLevel'
 
 /**
- * 目標属性で扱う単一IDまたはID配列の保存形式。
- */
-type GoalAttributeIdValue = number | number[] | undefined
-
-/**
- * 単一値または配列で保持された目標属性IDを条件ID配列へ正規化する。
+ * 単一値または配列で保持された目標属性の公開識別子を条件配列へ正規化する。
+ * 難易度・ジャンルは名前、バージョンは公開ID、楽曲名順フォルダはコードで保存される。
  *
- * @param value - 目標属性に保存されたID。
- * @returns 未指定なら undefined、有効な整数ID指定なら配列。
+ * @param value - 目標属性に保存された識別子。
+ * @returns 未指定なら undefined、指定ありなら文字列の識別子配列。
  */
-export const normalizeGoalAttributeIds = (value: GoalAttributeIdValue): number[] | undefined => {
-  if (typeof value === 'number') return [value]
+export const normalizeGoalAttributeValues = (
+  value: string | readonly string[] | undefined
+): string[] | undefined => {
+  if (typeof value === 'string') return [value]
   if (Array.isArray(value)) {
-    return value.filter((id): id is number => Number.isInteger(id))
+    return value.filter((item): item is string => typeof item === 'string')
   }
   return undefined
 }
 
 /**
- * 単一コードまたはコード配列で保持された目標属性の楽曲名順フォルダを配列へ正規化する。
+ * 目標属性の難易度名をレコードの難易度表記へ正規化した集合にする。
  *
- * @param value - 目標属性に保存された楽曲名順フォルダのコード。
- * @returns 未指定なら undefined、指定ありならコード配列。
+ * @param difficultyNames - 目標属性に保存された難易度名。
+ * @returns 正規化できた難易度名の集合。
  */
-export const normalizeGoalNameFolderCodes = (
-  value: string | string[] | undefined
-): string[] | undefined => {
-  if (typeof value === 'string') return [value]
-  return value
-}
+export const normalizeGoalDifficultyNames = (
+  difficultyNames: readonly string[]
+): Set<PlayerDataDifficulty> =>
+  new Set(
+    difficultyNames.flatMap((name) => {
+      const normalized = normalizePlayerDataDifficulty(name)
+      return normalized ? [normalized] : []
+    })
+  )
 
 /**
  * 楽曲の楽曲名順フォルダが目標属性の条件に一致するか判定する。

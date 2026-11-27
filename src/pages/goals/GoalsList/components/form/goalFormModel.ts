@@ -10,7 +10,7 @@ import type {
 import { createFullChartConstRange } from '../../../../../utils/chartLevel'
 import {
   type GoalConstSelection,
-  normalizeGoalNameFolderCodes,
+  normalizeGoalAttributeValues,
   resolveGoalConstSelection,
 } from '../../../../../utils/goalAttributes'
 import {
@@ -317,31 +317,22 @@ export const getDefaultTotalGoalValue = (type: GoalAchievementType): string =>
         : DEFAULT_TOTAL_GOAL_VALUE
 
 /**
- * API属性に保存された単一IDまたはID配列をフォーム用の文字列配列へ変換する。
+ * API属性に保存された単一値または配列の識別子をフォーム用の文字列配列へ変換する。
  *
- * @param value - API属性に保存されたID指定。
- * @returns フォームのチェック状態として扱う文字列ID配列。
+ * @param value - API属性に保存された識別子（難易度名・ジャンル名・バージョンの公開ID）。
+ * @returns フォームのチェック状態として扱う識別子配列。
  */
-export const normalizeAttributeSelection = (value: number | number[] | undefined): string[] => {
-  if (typeof value === 'number') return [String(value)]
-  if (Array.isArray(value)) {
-    return value
-      .filter((item): item is number => Number.isInteger(item))
-      .map((item) => String(item))
-  }
-  return []
-}
+export const normalizeAttributeSelection = (value: string | string[] | undefined): string[] =>
+  normalizeGoalAttributeValues(value) ?? []
 
 /**
- * フォームの選択値をAPI属性で使う単一IDまたはID配列へ変換する。
+ * フォームの選択値をAPI属性で使う単一値または配列の識別子へ変換する。
  *
- * @param selectedValues - フォーム上で選択されている文字列ID配列。
- * @returns 選択値が1件なら単一数値、それ以外は数値配列。
+ * @param selectedValues - フォーム上で選択されている識別子配列。
+ * @returns 選択値が1件なら単一の識別子、それ以外は重複を除いた識別子配列。
  */
-export const parseAttributeSelection = (selectedValues: string[]): number | number[] => {
+export const parseAttributeSelection = (selectedValues: string[]): string | string[] => {
   const normalized = Array.from(new Set(selectedValues))
-    .map((value) => Number(value))
-    .filter((value) => Number.isInteger(value))
 
   if (normalized.length === 1) return normalized[0]
   return normalized
@@ -366,39 +357,38 @@ export const parseNameFolderSelection = (
 }
 
 /**
- * マスタデータのID一覧をフォーム用の全選択値へ変換する。
+ * マスタデータの名前一覧をフォーム用の全選択値へ変換する。
+ * 難易度・ジャンルはDBの数値IDを公開しないため、名前を識別子として使う。
  *
- * @param items - IDを持つマスタデータ一覧。
- * @returns 全項目を選択済みにする文字列ID配列。
+ * @param items - 名前を持つマスタデータ一覧。
+ * @returns 全項目を選択済みにする名前配列。
  */
-export const buildAllIdSelections = (items: readonly { id: number }[]): string[] =>
-  items.map((item) => String(item.id))
+export const buildAllNameSelections = (items: readonly { name: string }[]): string[] =>
+  items.map((item) => item.name)
 
 /**
- * 目標作成フォームで初期選択する難易度（MASTER・ULTIMA）のID配列を作成する。
+ * 目標作成フォームで初期選択する難易度（MASTER・ULTIMA）の名前配列を作成する。
  *
  * @param items - 難易度マスタデータ一覧。
- * @returns MASTERとULTIMAの文字列ID配列。
+ * @returns MASTERとULTIMAの難易度名配列。
  */
-export const buildDefaultDifficultySelections = (
-  items: readonly { id: number; name: string }[]
-): string[] =>
+export const buildDefaultDifficultySelections = (items: readonly { name: string }[]): string[] =>
   items
     .filter((item) => {
       const difficulty = normalizePlayerDataDifficulty(item.name)
       return GOAL_DEFAULT_TARGET_DIFFICULTY_NAMES.some((target) => target === difficulty)
     })
-    .map((item) => String(item.id))
+    .map((item) => item.name)
 
 /**
  * 保存済み属性が未指定の場合だけ、現在の全選択値で補完する。
  *
- * @param value - API属性に保存されたID指定。
+ * @param value - API属性に保存された識別子指定。
  * @param fallbackValues - 属性未指定時に使う全選択値。
  * @returns 編集フォームへ反映する選択値。
  */
 export const resolveInitialAttributeSelection = (
-  value: number | number[] | undefined,
+  value: string | string[] | undefined,
   fallbackValues: string[]
 ): string[] => (value === undefined ? fallbackValues : normalizeAttributeSelection(value))
 
@@ -540,7 +530,7 @@ export const createGoalFormInitialState = (
     genres: resolveInitialAttributeSelection(goal.attributes.genre, fallbacks.allGenreSelections),
     versions: resolveInitialAttributeSelection(goal.attributes.ver, fallbacks.allVersionSelections),
     nameFolders:
-      normalizeGoalNameFolderCodes(goal.attributes.name_folder) ??
+      normalizeGoalAttributeValues(goal.attributes.name_folder) ??
       fallbacks.allNameFolderSelections,
   }
 }

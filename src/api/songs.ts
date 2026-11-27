@@ -16,14 +16,15 @@ import type {
   UpdatedAtResponseDTO,
   UpdateSongRequestDTO,
   UpdateWorldsendSongRequestDTO,
-  VersionDTO,
+  VersionSummaryDTO,
   WorldsendFriendRankingResponseDTO,
   WorldsendSongDTO,
 } from '../types/api'
 import { sortMasterItemsBySortOrder } from '../utils/masterData'
 import { fetchWithAuth } from './fetchWithAuth'
 
-type VersionsResponse = { versions: VersionDTO[] }
+/** `/internal/master/versions` のレスポンス。公開IDを含まないバージョン概要の一覧 */
+type VersionsResponse = { versions: VersionSummaryDTO[] }
 export type ScoreHistoryDifficulty = 'EXPERT' | 'MASTER' | 'ULTIMA'
 
 /** 内部向け WORLD'S END 楽曲APIのベースパス */

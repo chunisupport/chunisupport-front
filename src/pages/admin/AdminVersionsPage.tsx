@@ -268,10 +268,10 @@ const AdminVersionsPage = (): JSX.Element => {
   const [deleteError, setDeleteError] = createSignal('')
 
   const [versionsResponse] = createResource(() => refreshKey(), fetchAdminVersions)
-  // APIの並び順に依存せず、稼働日昇順・ID順で表示と最新判定を一致させる。
+  // APIの並び順に依存せず、稼働日昇順で表示と最新判定を一致させる。稼働日はバージョン間で重複しない。
   const versions = createMemo(() =>
-    [...(versionsResponse() ?? [])].sort(
-      (left, right) => left.released_at.localeCompare(right.released_at, 'ja') || left.id - right.id
+    [...(versionsResponse() ?? [])].sort((left, right) =>
+      left.released_at.localeCompare(right.released_at, 'ja')
     )
   )
   const latestVersionId = createMemo(() => {

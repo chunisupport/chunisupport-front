@@ -884,8 +884,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
   const filteredCandidates = createMemo(() => {
     const goal = selectedGoal()
     const goalData = availableMyGoalData()
-    const versions = versionsResponse()?.versions
-    if (!goal || !goalData || !versions || !hasMyRecordData()) {
+    if (!goal || !goalData || !hasMyRecordData()) {
       return goal ? [] : standardFilteredCandidates()
     }
 
@@ -893,8 +892,7 @@ const RandomSongSelectorPage = (): JSX.Element => {
       allCandidates(),
       recordsByChartKey(),
       goal,
-      goalData.options,
-      versions
+      goalData.options
     )
   })
   const constWeightOptions = createMemo(() =>

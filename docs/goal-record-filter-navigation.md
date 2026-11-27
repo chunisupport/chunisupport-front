@@ -56,14 +56,14 @@
 
 | 目標属性 | 変換先 | 変換規則 |
 | --- | --- | --- |
-| `diff` | `difficulties` | マスターデータの ID から難易度名へ変換し、大文字に統一する |
-| `genre` | `genres` | マスターデータの ID からジャンル名へ変換する |
-| `ver` | `versions` | リリース日順の 1 始まり番号として解釈し、`buildGoalVersionNameMap` で短縮バージョン名へ変換する |
+| `diff` | `difficulties` | 保存済みの難易度名をマスタの表示順で並べ、大文字に統一する |
+| `genre` | `genres` | 保存済みのジャンル名をマスタの表示順で並べる |
+| `ver` | `versions` | バージョンの公開ID（`/internal/master` の `versions[].id`）として解釈し、`buildGoalVersionNameMap` で短縮バージョン名へ変換する |
 | `name_folder` | `nameFolders` | 楽曲名順フォルダのコードをそのまま使用する |
 | `const.min` / `const.max` | `const.min` / `const.max` | 指定値をそのまま使用する |
 | `const_filter_mode` | なし | 使用しない。目標作成時の入力方法の復元用であり、単曲レート目標では下限を引き上げてレベル境界と一致しなくなるため、遷移先は常に数値指定（`constFilterMode: 'number'`）にする |
 
-`diff`、`genre`、`ver` は単一値と配列の両方を受け付け、有効な整数 ID の配列へ正規化します。`name_folder` も単一コードと配列の両方を受け付け、コード配列へ正規化します。`diff`、`genre`、`ver`、`name_folder` のいずれかが空配列の目標は対象譜面がないため、タイトルを操作できないテキストとして表示します。難易度は `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA` のような大文字のドメイン値として扱います。
+`diff`、`genre`、`ver`、`name_folder` は単一値と配列の両方を受け付け、文字列の識別子配列へ正規化します（難易度・ジャンルは名前、バージョンは公開ID、楽曲名順はコード。DBの数値IDは使いません）。`diff`、`genre`、`ver`、`name_folder` のいずれかが空配列の目標は対象譜面がないため、タイトルを操作できないテキストとして表示します。難易度は `BASIC`、`ADVANCED`、`EXPERT`、`MASTER`、`ULTIMA` のような大文字のドメイン値として扱います。
 
 ## 目標種別ごとの未達成条件
 

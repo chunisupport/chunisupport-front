@@ -57,9 +57,9 @@ test("WORLD'S END楽曲のジャンルはマスタ順にソートし、マスタ
   // マスタの配列順 (POPS, niconico, 東方)、ID順 (POPS, 東方, niconico)、名前順 (niconico, POPS, 東方) は
   // いずれもsort_order順 (東方, niconico, POPS) と食い違う
   const genres = [
-    { id: 1, name: 'POPS & ANIME', sort_order: 30 },
-    { id: 3, name: 'niconico', sort_order: 20 },
-    { id: 2, name: '東方Project', sort_order: 10 },
+    { name: 'POPS & ANIME', sort_order: 30 },
+    { name: 'niconico', sort_order: 20 },
+    { name: '東方Project', sort_order: 10 },
   ]
 
   // When & Then: 昇順・降順ともsort_order順に並び、マスタ外は末尾に残る
@@ -192,7 +192,7 @@ test('ジャンルの欠損値はマスタ外のジャンルより後に寄せ�
     createSong({ id: 'present', genre: 'VARIETY' }),
     createSong({ id: 'missing', genre: null }),
   ]
-  const genres = [{ id: 1, name: 'POPS & ANIME', sort_order: 10 }]
+  const genres = [{ name: 'POPS & ANIME', sort_order: 10 }]
 
   // When: ジャンルの昇順でソートする
   const result = sortWorldsendSongs(songs, 'genre', 'asc', genres).map((song) => song.id)

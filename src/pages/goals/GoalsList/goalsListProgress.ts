@@ -53,7 +53,6 @@ export const isOverPowerAchievementType = (
 const toOverPowerProgressContext = (data: GoalsListData): GoalOverPowerProgressContext => ({
   records: data.records,
   versions: data.versions,
-  masterData: data.masterData,
   lockedSongs: data.lockedSongs,
 })
 
@@ -82,7 +81,6 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
     const filtered = filterRecordsByAttributes(
       data.records,
       attributes,
-      data.masterData,
       data.songs,
       data.versions,
       { songMap }
@@ -93,12 +91,7 @@ export const buildGoalsWithProgress = (data: GoalsListData | undefined): GoalWit
 
   return data.goals.map((goal) => {
     if (goal.achievement_type === 'rainbow_count') {
-      const targetSongs = filterRainbowTargetSongs(
-        data.songs,
-        goal.attributes,
-        data.masterData,
-        data.versions
-      )
+      const targetSongs = filterRainbowTargetSongs(data.songs, goal.attributes, data.versions)
       return {
         goal,
         progress: calculateRainbowGoalProgress(goal, targetSongs, data.records),
@@ -144,12 +137,11 @@ export const resolveGoalAllCount = (
     }).targetCount
   }
   if (achievementType === 'rainbow_count') {
-    return filterRainbowTargetSongs(data.songs, attributes, data.masterData, data.versions).length
+    return filterRainbowTargetSongs(data.songs, attributes, data.versions).length
   }
   const filteredRecords = filterRecordsByAttributes(
     data.records,
     attributes,
-    data.masterData,
     data.songs,
     data.versions
   )
@@ -178,7 +170,6 @@ export const resolveGoalOverPowerChartMax = (
     data.songs,
     attributes,
     data.versions,
-    data.masterData,
     data.lockedSongs
   )
 }
@@ -196,12 +187,7 @@ export const resolveDraftGoalProgress = (
 ): GoalProgressResult => {
   if (!data) return EMPTY_DRAFT_GOAL_PROGRESS
   if (draftGoal.achievement_type === 'rainbow_count') {
-    const targetSongs = filterRainbowTargetSongs(
-      data.songs,
-      draftGoal.attributes,
-      data.masterData,
-      data.versions
-    )
+    const targetSongs = filterRainbowTargetSongs(data.songs, draftGoal.attributes, data.versions)
     return calculateRainbowGoalProgress(
       { ...draftGoal, id: 0, sort_order: 0, created_at: '' },
       targetSongs,
@@ -228,7 +214,6 @@ export const resolveDraftGoalProgress = (
   const filtered = filterRecordsByAttributes(
     data.records,
     draftGoal.attributes,
-    data.masterData,
     data.songs,
     data.versions
   )

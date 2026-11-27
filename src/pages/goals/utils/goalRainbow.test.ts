@@ -1,19 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { ChartDTO, GoalDTO, MasterDataDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
+import type { ChartDTO, GoalDTO, PlayerRecordDTO, SongDTO, VersionDTO } from '../../../types/api'
 import { getRainbowRequiredDifficulties } from '../../../utils/goalRainbowCharts'
 import { calculateRainbowGoalProgress, filterRainbowTargetSongs } from './goalRainbow'
 
 const CHART = { const: 1 } as ChartDTO
-const MASTER_DATA = {
-  genres: [
-    { id: 1, name: 'POPS' },
-    { id: 2, name: 'GAME' },
-  ],
-} as MasterDataDTO
-const VERSIONS = [
-  { id: 1, name: 'A', short_name: 'A', released_at: '2024-01-01' },
-  { id: 2, name: 'B', short_name: 'B', released_at: '2025-01-01' },
+const VERSIONS: VersionDTO[] = [
+  { id: 'aaaaaaaaaaaaaaa1', name: 'A', short_name: 'A', released_at: '2024-01-01' },
+  { id: 'aaaaaaaaaaaaaaa2', name: 'B', short_name: 'B', released_at: '2025-01-01' },
 ]
 
 /**
@@ -92,8 +86,7 @@ test('BASICからMASTERが揃いジャンルとバージョンに一致する楽
   // When
   const result = filterRainbowTargetSongs(
     [createSong(), missingBasic, wrongGenre, wrongVersion],
-    { genre: 1, ver: 1 },
-    MASTER_DATA,
+    { genre: 'POPS', ver: 'aaaaaaaaaaaaaaa1' },
     VERSIONS
   )
 
@@ -114,7 +107,6 @@ test('楽曲名順を指定した虹枠目標は対象フォルダの楽曲だ�
   const result = filterRainbowTargetSongs(
     [aSong, kaSong, numberSong],
     { name_folder: ['A', 'NUMBER'] },
-    MASTER_DATA,
     VERSIONS
   )
 
@@ -130,7 +122,7 @@ test('楽曲名順が空配列の虹枠目標は対象楽曲なしとして扱�
   const song = createSong({ name_folder_code: 'A' })
 
   // When
-  const result = filterRainbowTargetSongs([song], { name_folder: [] }, MASTER_DATA, VERSIONS)
+  const result = filterRainbowTargetSongs([song], { name_folder: [] }, VERSIONS)
 
   // Then
   assert.deepEqual(result, [])

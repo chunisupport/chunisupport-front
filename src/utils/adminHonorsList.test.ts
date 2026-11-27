@@ -9,9 +9,9 @@ import {
 } from './adminHonorsList'
 
 const honors: AdminHonorDTO[] = [
-  { id: 2, name: '東方の称号', type_name: 'gold', image_url: '', created_at: null },
-  { id: 5, name: '東方達人', type_name: 'normal', image_url: '', created_at: null },
-  { id: 3, name: '別の称号', type_name: 'gold', image_url: '', created_at: null },
+  { id: 'honor-2', name: '東方の称号', type_name: 'gold', image_url: '', created_at: null },
+  { id: 'honor-3', name: '別の称号', type_name: 'gold', image_url: '', created_at: null },
+  { id: 'honor-5', name: '東方達人', type_name: 'normal', image_url: '', created_at: null },
 ]
 
 test('画像名とフルURLから公式画像リンクを作る', () => {
@@ -30,7 +30,7 @@ test('称号名の部分一致検索とクラス絞り込みを組み合わせ�
 
   assert.deepEqual(
     result.map((honor) => honor.id),
-    [2]
+    ['honor-2']
   )
 })
 
@@ -44,7 +44,7 @@ test('検索は全角半角と前後の空白を正規化する', () => {
 
   assert.deepEqual(
     result.map((honor) => honor.id),
-    [2]
+    ['honor-2']
   )
 })
 
@@ -58,19 +58,19 @@ test('4種類の並べ替えを適用し、元配列は変更しない', () => {
 
   assert.deepEqual(
     idDesc.map((honor) => honor.id),
-    [5, 3, 2]
+    ['honor-5', 'honor-3', 'honor-2']
   )
   assert.deepEqual(
     idAsc.map((honor) => honor.id),
-    [2, 3, 5]
+    ['honor-2', 'honor-3', 'honor-5']
   )
   assert.deepEqual(
     nameAsc.map((honor) => honor.id),
-    [2, 5, 3]
+    ['honor-2', 'honor-5', 'honor-3']
   )
   assert.deepEqual(
     nameDesc.map((honor) => honor.id),
-    [3, 5, 2]
+    ['honor-3', 'honor-5', 'honor-2']
   )
   assert.deepEqual(
     honors.map((honor) => honor.id),
@@ -87,17 +87,17 @@ test('登録日時を日本時間で表示し、日時がない場合はハイ�
 test('登録日時順はタイムゾーンを考慮し、日時がない称号を末尾に置く', () => {
   const datedHonors: AdminHonorDTO[] = [
     { ...honors[0], created_at: '2026-09-22T12:00:00+09:00' },
-    { ...honors[1], created_at: '2026-09-22T02:00:00Z' },
-    { ...honors[2], created_at: null },
+    { ...honors[1], created_at: null },
+    { ...honors[2], created_at: '2026-09-22T02:00:00Z' },
   ]
 
   assert.deepEqual(
     filterAndSortAdminHonors(datedHonors, '', null, 'created-at-desc').map((honor) => honor.id),
-    [2, 5, 3]
+    ['honor-2', 'honor-5', 'honor-3']
   )
   assert.deepEqual(
     filterAndSortAdminHonors(datedHonors, '', null, 'created-at-asc').map((honor) => honor.id),
-    [5, 2, 3]
+    ['honor-5', 'honor-2', 'honor-3']
   )
 })
 
@@ -109,63 +109,81 @@ test('見出しをクリックすると列の初期方向を選び、同じ列�
   assert.equal(nextAdminHonorSort('name-asc', 'id'), 'id-desc')
 })
 
-test('クラスが同じ称号はID降順で並べ替えられる', () => {
+test('クラスが同じ称号は登録が新しい順で並べ替えられる', () => {
   // Given: クラスが同じ3件の称号
   const sameTypeHonors: AdminHonorDTO[] = [
-    { id: 2, name: '東方の称号', type_name: 'gold', image_url: '', created_at: null },
-    { id: 5, name: '東方達人', type_name: 'gold', image_url: '', created_at: null },
-    { id: 3, name: '別の称号', type_name: 'gold', image_url: '', created_at: null },
+    { id: 'honor-2', name: '東方の称号', type_name: 'gold', image_url: '', created_at: null },
+    { id: 'honor-3', name: '別の称号', type_name: 'gold', image_url: '', created_at: null },
+    { id: 'honor-5', name: '東方達人', type_name: 'gold', image_url: '', created_at: null },
   ]
 
   // When: クラス昇順で並べ替える
   const result = filterAndSortAdminHonors(sameTypeHonors, '', null, 'type-asc')
 
-  // Then: ID降順になる
+  // Then: 登録が新しい順になる
   assert.deepEqual(
     result.map((honor) => honor.id),
-    [5, 3, 2]
+    ['honor-5', 'honor-3', 'honor-2']
   )
 })
 
-test('画像URLが同じ称号はID降順で並べ替えられる', () => {
+test('画像URLが同じ称号は登録が新しい順で並べ替えられる', () => {
   // Given: 画像URLが同じ3件の称号
   const sameImageHonors: AdminHonorDTO[] = [
-    { id: 2, name: '東方の称号', type_name: 'gold', image_url: 'same.png', created_at: null },
-    { id: 5, name: '東方達人', type_name: 'normal', image_url: 'same.png', created_at: null },
-    { id: 3, name: '別の称号', type_name: 'silver', image_url: 'same.png', created_at: null },
+    {
+      id: 'honor-2',
+      name: '東方の称号',
+      type_name: 'gold',
+      image_url: 'same.png',
+      created_at: null,
+    },
+    {
+      id: 'honor-3',
+      name: '別の称号',
+      type_name: 'silver',
+      image_url: 'same.png',
+      created_at: null,
+    },
+    {
+      id: 'honor-5',
+      name: '東方達人',
+      type_name: 'normal',
+      image_url: 'same.png',
+      created_at: null,
+    },
   ]
 
   // When: 画像URL昇順で並べ替える
   const result = filterAndSortAdminHonors(sameImageHonors, '', null, 'image-url-asc')
 
-  // Then: ID降順になる
+  // Then: 登録が新しい順になる
   assert.deepEqual(
     result.map((honor) => honor.id),
-    [5, 3, 2]
+    ['honor-5', 'honor-3', 'honor-2']
   )
 })
 
 test('クラスと画像URLでも昇順・降順に並べ替えられる', () => {
   const values: AdminHonorDTO[] = [
     { ...honors[0], type_name: 'silver', image_url: 'z.png' },
-    { ...honors[1], type_name: 'gold', image_url: 'a.png' },
-    { ...honors[2], type_name: 'normal', image_url: 'm.png' },
+    { ...honors[1], type_name: 'normal', image_url: 'm.png' },
+    { ...honors[2], type_name: 'gold', image_url: 'a.png' },
   ]
 
   assert.deepEqual(
     filterAndSortAdminHonors(values, '', null, 'type-asc').map((honor) => honor.id),
-    [5, 3, 2]
+    ['honor-5', 'honor-3', 'honor-2']
   )
   assert.deepEqual(
     filterAndSortAdminHonors(values, '', null, 'type-desc').map((honor) => honor.id),
-    [2, 3, 5]
+    ['honor-2', 'honor-3', 'honor-5']
   )
   assert.deepEqual(
     filterAndSortAdminHonors(values, '', null, 'image-url-asc').map((honor) => honor.id),
-    [5, 3, 2]
+    ['honor-5', 'honor-3', 'honor-2']
   )
   assert.deepEqual(
     filterAndSortAdminHonors(values, '', null, 'image-url-desc').map((honor) => honor.id),
-    [2, 3, 5]
+    ['honor-2', 'honor-3', 'honor-5']
   )
 })

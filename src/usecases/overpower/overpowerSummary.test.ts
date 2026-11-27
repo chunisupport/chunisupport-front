@@ -234,9 +234,9 @@ test('ジャンル別はマスタのsort_order順で並ぶ', () => {
     versions,
     [],
     [
-      { id: 1, name: 'POPS & ANIME', sort_order: 10 },
-      { id: 2, name: 'niconico', sort_order: 20 },
-      { id: 3, name: '東方Project', sort_order: 30 },
+      { name: 'POPS & ANIME', sort_order: 10 },
+      { name: 'niconico', sort_order: 20 },
+      { name: '東方Project', sort_order: 30 },
     ]
   )
 

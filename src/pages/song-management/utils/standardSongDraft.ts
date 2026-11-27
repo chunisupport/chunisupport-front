@@ -13,15 +13,13 @@ import { SONG_MANAGEMENT_INPUT_LIMITS, SONG_MANAGEMENT_MESSAGES } from '../const
 import {
   type DraftRequestResult,
   type EditableDifficultyName,
-  findGenreIdByName,
-  findGenreNameById,
   readSongNewFlag,
+  resolveGenreName,
   toNullableTrimmedString,
 } from './songDraftCommon'
 
 /** 既存通常楽曲の譜面編集ドラフト */
 export type EditableChartDraft = {
-  difficulty_id: number
   difficulty_name: EditableDifficultyName
   const: string
   is_const_unknown: boolean
@@ -40,7 +38,8 @@ export type SongDraft = {
   reading: string | null
   wiki_page_title: string | null
   artist: string
-  genre_id: number | null
+  /** ジャンル名。未選択またはマスタにないジャンルは null */
+  genre: string | null
   bpm: number | null
   released_at: string | null
   jacket: string | null
@@ -75,7 +74,8 @@ export type CreateSongDraft = {
   reading: string | null
   wiki_page_title: string | null
   artist: string
-  genre_id: number | null
+  /** ジャンル名。未選択またはマスタにないジャンルは null */
+  genre: string | null
   bpm: number | null
   released_at: string | null
   jacket: string | null
@@ -96,7 +96,7 @@ export const buildCreateSongDraft = (): CreateSongDraft => {
     reading: null,
     wiki_page_title: null,
     artist: '',
-    genre_id: null,
+    genre: null,
     bpm: null,
     released_at: null,
     jacket: null,
@@ -116,15 +116,12 @@ export const buildCreateSongDraft = (): CreateSongDraft => {
 /**
  * 未登録の通常譜面を編集ドラフトへ追加する初期値を組み立てる。
  *
- * @param difficultyId 追加する難易度マスタID
  * @param difficultyName 追加する難易度名
  * @returns 編集用の譜面ドラフト
  */
 export const buildEmptyEditableChartDraft = (
-  difficultyId: number,
   difficultyName: EditableDifficultyName
 ): EditableChartDraft => ({
-  difficulty_id: difficultyId,
   difficulty_name: difficultyName,
   const: '0',
   is_const_unknown: false,
@@ -148,15 +145,14 @@ export const hasUltimaChart = (draft: Pick<SongDraft, 'charts'>): boolean => {
  * すでに ULTIMA 譜面がある場合は元のドラフトを返す。
  *
  * @param draft 追加先の通常楽曲ドラフト
- * @param ultimaDifficultyId ULTIMA の難易度マスタID
  * @returns ULTIMA 譜面を含むドラフト
  */
-export const addUltimaChartToDraft = (draft: SongDraft, ultimaDifficultyId: number): SongDraft => {
+export const addUltimaChartToDraft = (draft: SongDraft): SongDraft => {
   if (hasUltimaChart(draft)) return draft
 
   return {
     ...draft,
-    charts: [...draft.charts, buildEmptyEditableChartDraft(ultimaDifficultyId, 'ULTIMA')],
+    charts: [...draft.charts, buildEmptyEditableChartDraft('ULTIMA')],
   }
 }
 
@@ -216,7 +212,7 @@ export const toSongDraft = (
     reading: song.reading ?? null,
     wiki_page_title: song.wiki_page_title ?? null,
     artist: song.artist,
-    genre_id: findGenreIdByName(genres, song.genre),
+    genre: resolveGenreName(genres, song.genre),
     bpm: song.bpm ?? null,
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
@@ -231,7 +227,6 @@ export const toSongDraft = (
         const chart = song.charts[difficultyName]
         if (!chart) return null
         return {
-          difficulty_id: difficulty.id,
           difficulty_name: difficultyName,
           const: String(chart.const),
           is_const_unknown: chart.is_const_unknown,
@@ -261,7 +256,7 @@ export const hasSongDraftChanges = (
     current.reading !== initial.reading ||
     current.wiki_page_title !== initial.wiki_page_title ||
     current.artist !== initial.artist ||
-    current.genre_id !== initial.genre_id ||
+    current.genre !== initial.genre ||
     current.bpm !== initial.bpm ||
     current.released_at !== initial.released_at ||
     current.jacket !== initial.jacket ||
@@ -274,7 +269,7 @@ export const hasSongDraftChanges = (
   return current.charts.some((chart, index) => {
     const original = initial.charts[index]
     return (
-      chart.difficulty_id !== original.difficulty_id ||
+      chart.difficulty_name !== original.difficulty_name ||
       chart.const !== original.const ||
       chart.is_const_unknown !== original.is_const_unknown ||
       chart.notes !== original.notes ||
@@ -311,7 +306,7 @@ export const buildUpdateSongRequest = (
       reading: toNullableTrimmedString(draft.reading),
       wiki_page_title: toNullableTrimmedString(draft.wiki_page_title),
       artist: draft.artist,
-      genre: findGenreNameById(genres, draft.genre_id),
+      genre: resolveGenreName(genres, draft.genre),
       bpm: draft.bpm,
       released_at: normalizedReleasedAt,
       jacket: draft.jacket,
@@ -351,7 +346,7 @@ export const buildCreateSongRequest = (
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.officialIdxTooLong }
   }
 
-  const genreName = findGenreNameById(genres, draft.genre_id)
+  const genreName = resolveGenreName(genres, draft.genre)
   if (!genreName) {
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.genreRequired }
   }

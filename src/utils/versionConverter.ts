@@ -1,9 +1,9 @@
-import type { VersionDTO, VersionSummaryDTO } from '../types/api'
+import type { VersionSummaryDTO } from '../types/api'
 import { getTodayChunithmDate } from './chunithmDate'
 
 export { getTodayChunithmDate }
 
-type VersionLike = Pick<VersionDTO, 'name' | 'released_at'> | VersionSummaryDTO
+type VersionLike = Pick<VersionSummaryDTO, 'name' | 'released_at'>
 
 const ORIGINAL_VERSION_NAMES = new Set(['CHUNITHM', 'CHUNITHM PLUS'])
 

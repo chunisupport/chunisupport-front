@@ -1,20 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
-  findGenreIdByName,
-  findGenreNameById,
   formatUpdatedAt,
   hasNotesDesigner,
   readSongNewFlag,
+  resolveGenreName,
   toNullableTrimmedString,
   toOptionalNumberInput,
   toOptionalTextInput,
 } from './songDraftCommon'
 
-const genres = [
-  { id: 1, name: 'POPS & ANIME' },
-  { id: 2, name: 'ORIGINAL' },
-]
+const genres = [{ name: 'POPS & ANIME' }, { name: 'ORIGINAL' }]
 
 test('更新日時は日本時間で整形し、不正値は - になること', () => {
   // Given
@@ -79,12 +75,11 @@ test('任意数値入力は空文字をnull、数値文字列を数値に変換�
   assert.equal(number, 180)
 })
 
-test('ジャンル名とジャンルIDを相互に解決し、未登録なら null になること', () => {
+test('ジャンル名をマスタで解決し、未登録・未指定なら null になること', () => {
   // Given / When / Then
-  assert.equal(findGenreIdByName(genres, 'ORIGINAL'), 2)
-  assert.equal(findGenreIdByName(genres, '未登録'), null)
-  assert.equal(findGenreNameById(genres, 1), 'POPS & ANIME')
-  assert.equal(findGenreNameById(genres, null), null)
+  assert.equal(resolveGenreName(genres, 'ORIGINAL'), 'ORIGINAL')
+  assert.equal(resolveGenreName(genres, '未登録'), null)
+  assert.equal(resolveGenreName(genres, null), null)
 })
 
 test('新曲フラグはtrueのときだけ真になること', () => {

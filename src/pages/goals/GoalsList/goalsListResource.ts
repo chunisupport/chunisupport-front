@@ -7,7 +7,7 @@ import {
 } from '../../../api/goalGroups'
 import { createGoal, deleteGoal, fetchGoals, reorderGoals, updateGoal } from '../../../api/goals'
 import { fetchMe, fetchUserLockedSongs, fetchUserProfileSummary } from '../../../api/users'
-import { fetchMasterData, fetchVersions } from '../../../queries/masterData'
+import { fetchMasterData } from '../../../queries/masterData'
 import type {
   GoalCreateRequest,
   GoalDTO,
@@ -30,6 +30,7 @@ export interface GoalsListData {
   groups: GoalGroupDTO[]
   songs: SongDTO[]
   masterData: MasterDataDTO
+  /** 目標の `attributes.ver` の解決に使う公開ID付きのバージョン一覧 */
   versions: VersionDTO[]
   records: PlayerRecordDTO[]
   /** OVER POWER目標の集計から除外する未解禁楽曲設定 */
@@ -53,23 +54,15 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
 
   const profile = await fetchUserProfileSummary(me.username)
 
-  const [
-    goalsResponse,
-    groupsResponse,
-    songsResponse,
-    masterData,
-    versionData,
-    records,
-    lockedSongsResponse,
-  ] = await Promise.all([
-    fetchGoals(),
-    fetchGoalGroups(),
-    fetchAllSongsWithCache(),
-    fetchMasterData(),
-    fetchVersions(),
-    profile.player ? fetchUserRecordWithCache(me.username).then((record) => record.standard) : [],
-    profile.player ? fetchUserLockedSongs(me.username) : { items: [] },
-  ])
+  const [goalsResponse, groupsResponse, songsResponse, masterData, records, lockedSongsResponse] =
+    await Promise.all([
+      fetchGoals(),
+      fetchGoalGroups(),
+      fetchAllSongsWithCache(),
+      fetchMasterData(),
+      profile.player ? fetchUserRecordWithCache(me.username).then((record) => record.standard) : [],
+      profile.player ? fetchUserLockedSongs(me.username) : { items: [] },
+    ])
 
   return {
     username: me.username,
@@ -78,7 +71,8 @@ export const fetchGoalsListData = async (onUnauthorized: () => void): Promise<Go
     groups: groupsResponse.groups,
     songs: songsResponse.songs,
     masterData,
-    versions: versionData.versions ?? [],
+    // 目標の ver はバージョンの公開IDで保存されるため、公開IDを含む全マスタのバージョン一覧を使う。
+    versions: masterData.versions,
     records,
     lockedSongs: lockedSongsResponse.items,
   }

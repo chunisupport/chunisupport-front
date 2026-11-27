@@ -37,15 +37,15 @@ export const requestCreateVersion = async (
 /**
  * 指定したバージョンの名前と超ショート名を変更する。
  *
- * @param id - 更新対象のバージョンID。
+ * @param id - 更新対象のバージョンの公開ID。
  * @param request - 変更後のバージョン名と超ショート名。
  * @returns 更新したバージョン。
  */
 export const requestRenameVersion = async (
-  id: number,
+  id: string,
   request: RenameVersionRequestDTO
 ): Promise<VersionDTO> => {
-  const response = await fetchWithAuth(`${ADMIN_VERSIONS_API_PATH}/${id}`, {
+  const response = await fetchWithAuth(`${ADMIN_VERSIONS_API_PATH}/${encodeURIComponent(id)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -57,11 +57,11 @@ export const requestRenameVersion = async (
 /**
  * 指定した最新版バージョンを削除する。
  *
- * @param id - 削除対象のバージョンID。
+ * @param id - 削除対象のバージョンの公開ID。
  * @returns 削除完了時に解決するPromise。
  */
-export const requestDeleteVersion = async (id: number): Promise<void> => {
-  await fetchWithAuth(`${ADMIN_VERSIONS_API_PATH}/${id}`, {
+export const requestDeleteVersion = async (id: string): Promise<void> => {
+  await fetchWithAuth(`${ADMIN_VERSIONS_API_PATH}/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     requireAuthentication: true,
   })

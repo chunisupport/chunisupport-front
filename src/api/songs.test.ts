@@ -253,8 +253,8 @@ test('フレンドランキングAPIはAbortSignalをHTTPリクエストへ引�
   )
 })
 
-test('requestMasterData は所持状況マスタをID順で受け取る', async () => {
-  // Given: 順不同の所持状況マスタを含むマスターデータ。
+test('requestMasterData は所持状況マスタをAPIの並び順で受け取る', async () => {
+  // Given: APIはDBの数値IDを返さず、所持状況マスタをマスタの登録順に並べて返す。
   installFetchRecorder(() =>
     Response.json({
       genres: [],
@@ -263,10 +263,7 @@ test('requestMasterData は所持状況マスタをID順で受け取る', async 
       account_types: [],
       rating_bands: [],
       achievement_types: [],
-      possessions: [
-        { id: 5, name: 'rainbow' },
-        { id: 1, name: 'normal' },
-      ],
+      possessions: [{ name: 'silver' }, { name: 'gold' }],
     })
   )
 
@@ -274,10 +271,10 @@ test('requestMasterData は所持状況マスタをID順で受け取る', async 
   const { requestMasterData } = await loadSongsApi()
   const result = await requestMasterData()
 
-  // Then: 所持状況がID昇順で受け取れる。
+  // Then: 名称順に並べ替えず、APIの並び順のまま受け取れる。
   assert.equal(result.possessions.length, 2)
-  assert.equal(result.possessions[0]?.name, 'normal')
-  assert.equal(result.possessions[1]?.name, 'rainbow')
+  assert.equal(result.possessions[0]?.name, 'silver')
+  assert.equal(result.possessions[1]?.name, 'gold')
 })
 
 test('requestMasterData は所持状況マスタが無い場合に空配列へ正規化する', async () => {

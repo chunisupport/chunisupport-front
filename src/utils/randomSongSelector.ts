@@ -1,6 +1,11 @@
 import { THEORETICAL_OVER_POWER_TARGET_FILTER } from '../constants/chart'
 import { PLAYER_DATA_DIFFICULTIES } from '../constants/difficulty'
-import type { PlayerDataDifficulty, PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
+import type {
+  PlayerDataDifficulty,
+  PlayerRecordDTO,
+  SongDTO,
+  VersionSummaryDTO,
+} from '../types/api'
 import { formatChartConst } from './chartConstFormat'
 import { getComboLampFilterValue } from './comboLampFilter'
 import { isNullableSelectionMatched, matchesNullableVersionFilter } from './filterSelection'
@@ -363,7 +368,7 @@ export const resolveRandomSongRecordLamp = (
  */
 export const buildRandomSongCandidates = (
   songs: readonly SongDTO[],
-  versions: readonly VersionDTO[]
+  versions: readonly VersionSummaryDTO[]
 ): RandomSongCandidate[] => {
   const candidates: RandomSongCandidate[] = []
 

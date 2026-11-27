@@ -156,15 +156,18 @@ export const invalidateVersionCaches = (): void => {
   appQueryClient.removeQueries({ queryKey: masterDataQueryKeys.masterData(), exact: true })
 }
 
-/** 目標の対象条件を解決するための難易度・ジャンル情報。 */
-export type GoalFilterOptions = Pick<MasterDataDTO, 'difficulties' | 'genres'>
+/**
+ * 目標の対象条件を解決するための情報。
+ * 難易度・ジャンルは目標属性に名前で保存されるため、公開ID付きのバージョン一覧だけを持つ。
+ */
+export type GoalFilterOptions = Pick<MasterDataDTO, 'versions'>
 
 /**
- * 目標フィルターに必要な難易度とジャンルだけを取得する。
+ * 目標フィルターに必要な公開ID付きのバージョン一覧だけを取得する。
  *
- * @returns 目標属性IDの解決に使う選択肢。
+ * @returns 目標属性のバージョン公開IDの解決に使う選択肢。
  */
 export const fetchGoalFilterOptions = async (): Promise<GoalFilterOptions> => {
-  const { difficulties, genres } = await fetchMasterData()
-  return { difficulties, genres }
+  const { versions } = await fetchMasterData()
+  return { versions }
 }

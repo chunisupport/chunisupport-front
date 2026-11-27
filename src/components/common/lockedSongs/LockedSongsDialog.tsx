@@ -12,7 +12,7 @@ import type {
   PlayerLockedSongResponseItem,
   PlayerRecordDTO,
   SongDTO,
-  VersionDTO,
+  VersionSummaryDTO,
 } from '../../../types/api'
 import {
   createLockedSongKey,
@@ -59,7 +59,7 @@ type Props = {
   songs: SongDTO[]
   records: PlayerRecordDTO[]
   genres: MasterItemDTO[]
-  versions: VersionDTO[]
+  versions: VersionSummaryDTO[]
   /** 楽曲名順フォルダ一覧（表示順） */
   nameFolders: NameFolderDTO[]
   lockedSongs: PlayerLockedSongResponseItem[]

@@ -42,7 +42,8 @@ interface GoalTargetChartsSectionProps {
   targetCountText: string
   onClearDifficulty: () => void
   onToggleOpTarget: (checked: boolean) => void
-  onToggleDifficulty: (id: number, checked: boolean) => void
+  /** 難易度名のチェック状態変更時に呼ばれる */
+  onToggleDifficulty: (difficultyName: string, checked: boolean) => void
   onGenresChange: (genres: string[]) => void
   onVersionsChange: (versions: string[]) => void
   /** 楽曲名順フォルダの選択変更時に呼ばれる */
@@ -99,11 +100,9 @@ export const GoalTargetChartsSection: Component<GoalTargetChartsSectionProps> = 
                 {(item) => (
                   <GoalFilterCheckbox
                     label={item.name}
-                    checked={
-                      props.chartTargetMode === 'normal' && props.diffs.includes(String(item.id))
-                    }
+                    checked={props.chartTargetMode === 'normal' && props.diffs.includes(item.name)}
                     disabled={props.chartTargetMode === 'op_target'}
-                    onChange={(checked) => props.onToggleDifficulty(item.id, checked)}
+                    onChange={(checked) => props.onToggleDifficulty(item.name, checked)}
                   />
                 )}
               </For>

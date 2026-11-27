@@ -7,15 +7,10 @@ import { isRecordMatched } from '../../users/UserRecord/utils/filtering'
 import { buildGoalRecordFilter, isGoalRecordNavigationEnabled } from './goalRecordFilter'
 
 const MASTER_DATA: MasterDataDTO = {
-  difficulties: [
-    { id: 1, name: 'BASIC' },
-    { id: 2, name: 'EXPERT' },
-    { id: 3, name: 'MASTER' },
-    { id: 4, name: 'ULTIMA' },
-  ],
+  difficulties: [{ name: 'BASIC' }, { name: 'EXPERT' }, { name: 'MASTER' }, { name: 'ULTIMA' }],
   genres: [
-    { id: 10, name: 'POPS & ANIME', short_name: 'P&A' },
-    { id: 11, name: 'niconico', short_name: 'nico' },
+    { name: 'POPS & ANIME', short_name: 'P&A' },
+    { name: 'niconico', short_name: 'nico' },
   ],
   versions: [],
   name_folders: [],
@@ -25,9 +20,16 @@ const MASTER_DATA: MasterDataDTO = {
   possessions: [],
 }
 
+const VERSE_ID = '0000000000000101'
+
 const VERSIONS: VersionDTO[] = [
-  { id: 100, name: 'CHUNITHM LUMINOUS', short_name: 'LMN', released_at: '2023-12-14' },
-  { id: 101, name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
+  {
+    id: '0000000000000100',
+    name: 'CHUNITHM LUMINOUS',
+    short_name: 'LMN',
+    released_at: '2023-12-14',
+  },
+  { id: VERSE_ID, name: 'CHUNITHM VERSE', short_name: 'VRS', released_at: '2024-12-12' },
 ]
 
 /**
@@ -92,7 +94,12 @@ const createRecord = (
 test('目標属性を難易度・定数・ジャンル・バージョンのフィルターへ変換する', () => {
   // Given
   const goal = createGoal({
-    attributes: { diff: 2, const: { min: 12.5, max: 14.8 }, genre: 11, ver: 2 },
+    attributes: {
+      diff: 'EXPERT',
+      const: { min: 12.5, max: 14.8 },
+      genre: 'niconico',
+      ver: VERSE_ID,
+    },
   })
 
   // When
@@ -372,7 +379,7 @@ test('虹枠目標ではAJ以外の通常譜面を未達成として表示する
   const goal = createGoal({
     achievement_type: 'rainbow_count',
     achievement_params: {},
-    attributes: { genre: 10, ver: 2 },
+    attributes: { genre: 'POPS & ANIME', ver: VERSE_ID },
   })
 
   // When

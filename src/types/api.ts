@@ -699,8 +699,8 @@ export interface WorldsendFriendRankingResponseDTO {
 }
 
 // --- マスターデータ用型定義 ---
+/** マスタの1項目。DBの数値IDは公開されず、マスタ内で一意な `name` で識別する */
 export interface MasterItemDTO {
-  id: number
   name: string
   sort_order?: number
 }
@@ -710,8 +710,8 @@ export interface GenreDTO extends MasterItemDTO {
   short_name: string
 }
 
+/** レーティング帯マスタ。一意な `label` で識別する */
 export interface RatingBandDTO {
-  id: number
   label: string
   min_inclusive: number | null
   max_exclusive: number | null
@@ -818,12 +818,13 @@ export interface MasterDataDTO {
   possessions: MasterItemDTO[]
 }
 
-export interface VersionDTO {
-  id: number
-  name: string
-  /** 表示幅を抑えるための超ショート名（例: CRY+） */
-  short_name: string
-  released_at: string
+/**
+ * `/internal/master` と管理者向けAPIが返すバージョン。
+ * バージョンは改名されるため、DBの数値IDと独立した公開IDを `id` に持つ。
+ */
+export interface VersionDTO extends VersionSummaryDTO {
+  /** バージョンの公開ID（16文字の小文字16進数）。目標の `attributes.ver` に使う */
+  id: string
 }
 
 /** 管理者向けバージョン作成リクエスト */
@@ -863,7 +864,8 @@ export type GoalAchievementType =
 export type GoalConstFilterMode = 'level' | 'number'
 
 export interface GoalAttributes {
-  diff?: number | number[]
+  /** 難易度名（`BASIC`〜`ULTIMA`）。未指定時は全難易度が対象 */
+  diff?: string | string[]
   chart_target?: 'OP_TARGET'
   const?: {
     min?: number
@@ -874,8 +876,10 @@ export interface GoalAttributes {
    * 入力方法の保存前に作成した目標では省略され、`number` として扱う。
    */
   const_filter_mode?: GoalConstFilterMode
-  genre?: number | number[]
-  ver?: number | number[]
+  /** ジャンル名。未指定時は全ジャンルが対象 */
+  genre?: string | string[]
+  /** バージョンの公開ID（`VersionDTO.id`）。未指定時は全バージョンが対象 */
+  ver?: string | string[]
   /** 楽曲名順フォルダのコード。未指定時は全楽曲名順が対象 */
   name_folder?: string | string[]
 }
@@ -1474,7 +1478,8 @@ export interface HonorDTO {
 }
 
 export interface AdminHonorDTO {
-  id: number
+  /** 称号の公開ID（16文字の小文字16進数）。DBの数値IDではない */
+  id: string
   name: string
   type_name: string
   image_url: string

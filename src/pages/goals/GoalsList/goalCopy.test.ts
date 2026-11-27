@@ -16,7 +16,7 @@ const createGoal = (overrides: Partial<GoalDTO> = {}): GoalDTO => ({
   title: 'SSS+を10譜面',
   achievement_type: 'score_count',
   achievement_params: { score: 1_009_000, count: 10 },
-  attributes: { diff: [3], const: { min: 14, max: 15 } },
+  attributes: { diff: ['EXPERT'], const: { min: 14, max: 15 } },
   invert_value: true,
   invert_percentage: false,
   gauge_start: 0,

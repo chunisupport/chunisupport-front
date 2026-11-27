@@ -12,10 +12,7 @@ import {
   toWorldsendDraft,
 } from './worldsendSongDraft'
 
-const genres = [
-  { id: 1, name: 'POPS & ANIME' },
-  { id: 2, name: 'ORIGINAL' },
-]
+const genres = [{ name: 'POPS & ANIME' }, { name: 'ORIGINAL' }]
 
 const managedSong: ManagedWorldsendSongDTO = {
   id: 'we-1',
@@ -53,7 +50,7 @@ const validCreateDraft = (): CreateWorldsendDraft => ({
   official_idx: '8001',
   title: '新WE',
   artist: 'artist',
-  genre_id: 1,
+  genre: 'POPS & ANIME',
 })
 
 test("管理用 WORLD'S END 楽曲から譜面項目を含む編集ドラフトを生成すること", () => {
@@ -61,7 +58,7 @@ test("管理用 WORLD'S END 楽曲から譜面項目を含む編集ドラフト�
   const draft = toWorldsendDraft(managedSong, genres)
 
   // Then
-  assert.equal(draft.genre_id, 1)
+  assert.equal(draft.genre, 'POPS & ANIME')
   assert.equal(draft.attribute, '狂')
   assert.equal(draft.level_star, 3)
   assert.equal(draft.chart_updated_at, '2025-02-02T00:00:00Z')
@@ -156,7 +153,11 @@ for (const { name, overrides, message } of [
     overrides: { official_idx: '12345678901' },
     message: OFFICIAL_IDX_MESSAGE,
   },
-  { name: '存在しないジャンルなら選択エラー', overrides: { genre_id: 99 }, message: GENRE_MESSAGE },
+  {
+    name: '存在しないジャンルなら選択エラー',
+    overrides: { genre: '未登録' },
+    message: GENRE_MESSAGE,
+  },
   { name: 'BPMが負ならBPMエラー', overrides: { bpm: -1 }, message: BPM_MESSAGE },
   {
     name: '星数が下限未満の0ならレベルエラー',
@@ -181,12 +182,12 @@ for (const { name, overrides, message } of [
   },
   {
     name: 'ID長超過とジャンル不正ではID長エラー',
-    overrides: { official_idx: '12345678901', genre_id: 99 },
+    overrides: { official_idx: '12345678901', genre: '未登録' },
     message: OFFICIAL_IDX_MESSAGE,
   },
   {
     name: 'ジャンル不正とBPM負値ではジャンルエラー',
-    overrides: { genre_id: 99, bpm: -1 },
+    overrides: { genre: '未登録', bpm: -1 },
     message: GENRE_MESSAGE,
   },
   {

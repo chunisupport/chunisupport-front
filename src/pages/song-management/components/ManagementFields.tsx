@@ -31,10 +31,11 @@ type ManagementTextFieldProps = {
 
 type GenreSelectFieldProps = {
   label: string
-  value: number | null
+  /** 選択中のジャンル名 */
+  value: string | null
   genres: MasterItemDTO[]
   placeholder: string
-  onChange: (value: number | null) => void
+  onChange: (value: string | null) => void
 }
 
 type ManagementCheckboxProps = {
@@ -76,17 +77,17 @@ export const ManagementTextField: Component<ManagementTextFieldProps> = (props) 
  * @returns 共通 FormSelect を利用したジャンル選択欄
  */
 export const GenreSelectField: Component<GenreSelectFieldProps> = (props) => {
-  const selectedGenre = () => props.genres.find((genre) => genre.id === props.value) ?? null
+  const selectedGenre = () => props.genres.find((genre) => genre.name === props.value) ?? null
 
   return (
     <FormSelect<MasterItemDTO>
       rootClass="text-sm"
       label={props.label}
       options={props.genres}
-      optionValue="id"
+      optionValue="name"
       optionTextValue="name"
       value={selectedGenre()}
-      onChange={(genre: MasterItemDTO | null) => props.onChange(genre?.id ?? null)}
+      onChange={(genre: MasterItemDTO | null) => props.onChange(genre?.name ?? null)}
       placeholder={props.placeholder}
       contentZIndexClass="z-50"
       contentClass="max-h-[min(16rem,var(--kb-popper-content-available-height))] w-[--kb-popper-anchor-width]"

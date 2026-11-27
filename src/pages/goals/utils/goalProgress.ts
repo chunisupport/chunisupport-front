@@ -1,8 +1,6 @@
-import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
 import type {
   GoalAttributes,
   GoalDTO,
-  MasterDataDTO,
   PlayerRecordDTO,
   SongDTO,
   VersionDTO,
@@ -10,8 +8,8 @@ import type {
 import type { OverPowerLockedSong } from '../../../usecases/overpower/types'
 import {
   isGoalNameFolderMatched,
-  normalizeGoalAttributeIds,
-  normalizeGoalNameFolderCodes,
+  normalizeGoalAttributeValues,
+  normalizeGoalDifficultyNames,
 } from '../../../utils/goalAttributes'
 import {
   COMBO_LAMP_ORDER,
@@ -23,7 +21,7 @@ import {
   resolveHardLampRecordName,
 } from '../../../utils/goalLamp'
 import { filterRatingReachableRecords } from '../../../utils/goalRatingCount'
-import { resolveGoalVersionValueByReleaseDate } from '../../../utils/goalVersion'
+import { resolveGoalVersionIdByReleaseDate } from '../../../utils/goalVersion'
 import { MAX_SCORE } from '../../../utils/scoreRank'
 import { isTheoreticalOverPowerTargetDifficulty } from '../../../utils/theoreticalOverPowerTarget'
 import { getNumberGoalTargetParam, resolveGoalDynamicTarget } from './goalCountTarget'
@@ -53,23 +51,10 @@ interface FilterRecordsByAttributesOptions {
 export interface GoalOverPowerProgressContext {
   /** 属性抽出前の全プレイヤーレコード */
   records: PlayerRecordDTO[]
-  /** バージョン一覧 */
+  /** 公開ID付きのバージョン一覧 */
   versions: VersionDTO[]
-  /** 難易度・ジャンルなどのマスタデータ */
-  masterData: MasterDataDTO
   /** 未解禁楽曲設定 */
   lockedSongs: OverPowerLockedSong[]
-}
-
-const EMPTY_MASTER_DATA: MasterDataDTO = {
-  genres: [],
-  difficulties: [],
-  versions: [],
-  name_folders: [],
-  account_types: [],
-  rating_bands: [],
-  achievement_types: [],
-  possessions: [],
 }
 
 /**
@@ -119,17 +104,17 @@ const getOverPowerTargetChartConst = (song: SongDTO): number | undefined => {
  *
  * @param song - 判定対象の楽曲マスタ。
  * @param attributes - 目標に設定された対象条件。
- * @param genreNames - ジャンルIDから解決した対象ジャンル名。
- * @param versionIds - 対象バージョン番号。
+ * @param genreNames - 対象ジャンル名。
+ * @param versionIds - 対象バージョンの公開ID。
  * @param nameFolderCodes - 対象楽曲名順フォルダのコード。
- * @param versions - version API から返されたバージョン一覧。
+ * @param versions - `/internal/master` から返された公開ID付きのバージョン一覧。
  * @returns OP対象譜面の定数、曲ジャンル、曲バージョン、楽曲名順が条件に一致する場合はtrue。
  */
 const isOverPowerTargetSongMatched = (
   song: SongDTO | undefined,
   attributes: GoalAttributes,
   genreNames: Set<string> | undefined,
-  versionIds: number[] | undefined,
+  versionIds: string[] | undefined,
   nameFolderCodes: string[] | undefined,
   versions: VersionDTO[]
 ): song is SongDTO => {
@@ -146,8 +131,8 @@ const isOverPowerTargetSongMatched = (
   if (!isGoalNameFolderMatched(song.name_folder_code, nameFolderCodes)) return false
 
   if (versionIds && versionIds.length > 0) {
-    const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
-    if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
+    const songVersionId = resolveGoalVersionIdByReleaseDate(song.release, versions)
+    if (!songVersionId || !versionIds.includes(songVersionId)) return false
   }
 
   return true
@@ -158,55 +143,36 @@ const isOverPowerTargetSongMatched = (
  *
  * @param records - 判定対象のプレイヤーレコード一覧。
  * @param attributes - 目標に設定された対象条件。
- * @param masterData - 難易度・ジャンルなどのマスタデータ。
  * @param songs - 楽曲マスタ一覧。
- * @param versions - version API から返されたバージョン一覧。
+ * @param versions - `/internal/master` から返された公開ID付きのバージョン一覧。
  * @param options - OP対象のレコード粒度と、共有する楽曲Mapを指定する追加オプション。
  * @returns 目標条件に一致したレコード一覧。
  */
 export const filterRecordsByAttributes = (
   records: PlayerRecordDTO[],
   attributes: GoalAttributes,
-  masterData: MasterDataDTO,
   songs: SongDTO[],
   versions: VersionDTO[],
   options: FilterRecordsByAttributesOptions = {}
 ): PlayerRecordDTO[] => {
   const songMap = options.songMap ?? new Map(songs.map((song) => [song.id, song]))
-  const diffIds = normalizeGoalAttributeIds(attributes.diff)
-  const genreIds = normalizeGoalAttributeIds(attributes.genre)
-  const versionIds = normalizeGoalAttributeIds(attributes.ver)
-  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
+  const diffValues = normalizeGoalAttributeValues(attributes.diff)
+  const genreValues = normalizeGoalAttributeValues(attributes.genre)
+  const versionIds = normalizeGoalAttributeValues(attributes.ver)
+  const nameFolderCodes = normalizeGoalAttributeValues(attributes.name_folder)
   const opTargetOnly = attributes.chart_target === 'OP_TARGET'
 
   if (
-    diffIds?.length === 0 ||
-    genreIds?.length === 0 ||
+    diffValues?.length === 0 ||
+    genreValues?.length === 0 ||
     versionIds?.length === 0 ||
     nameFolderCodes?.length === 0
   ) {
     return []
   }
 
-  const diffNames =
-    diffIds && diffIds.length > 0
-      ? new Set(
-          masterData.difficulties
-            .filter((difficulty) => diffIds.includes(difficulty.id))
-            .flatMap((difficulty) => {
-              const normalized = normalizePlayerDataDifficulty(difficulty.name)
-              return normalized ? [normalized] : []
-            })
-        )
-      : undefined
-  const genreNames =
-    genreIds && genreIds.length > 0
-      ? new Set(
-          masterData.genres
-            .filter((genre) => genreIds.includes(genre.id))
-            .map((genre) => genre.name)
-        )
-      : undefined
+  const diffNames = diffValues ? normalizeGoalDifficultyNames(diffValues) : undefined
+  const genreNames = genreValues ? new Set(genreValues) : undefined
 
   return records.filter((record) => {
     const song = songMap.get(record.id)
@@ -241,8 +207,8 @@ export const filterRecordsByAttributes = (
 
     if (versionIds && versionIds.length > 0) {
       if (!song) return false
-      const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
-      if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
+      const songVersionId = resolveGoalVersionIdByReleaseDate(song.release, versions)
+      if (!songVersionId || !versionIds.includes(songVersionId)) return false
     }
 
     return true
@@ -365,7 +331,6 @@ export const calculateGoalProgress = (
         records: overPowerContext?.records ?? filteredRecords,
         songs,
         versions: overPowerContext?.versions ?? [],
-        masterData: overPowerContext?.masterData ?? EMPTY_MASTER_DATA,
         attributes: goal.attributes,
         lockedSongs: overPowerContext?.lockedSongs ?? [],
       })
@@ -387,7 +352,6 @@ export const calculateGoalProgress = (
         records: overPowerContext?.records ?? filteredRecords,
         songs,
         versions: overPowerContext?.versions ?? [],
-        masterData: overPowerContext?.masterData ?? EMPTY_MASTER_DATA,
         attributes: goal.attributes,
         lockedSongs: overPowerContext?.lockedSongs ?? [],
       })

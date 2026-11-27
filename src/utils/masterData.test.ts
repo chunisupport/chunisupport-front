@@ -9,9 +9,9 @@ import {
 } from './masterData.ts'
 
 const genres: MasterItemDTO[] = [
-  { id: 3, name: '東方Project', sort_order: 30 },
-  { id: 1, name: 'POPS & ANIME', sort_order: 10 },
-  { id: 2, name: 'niconico', sort_order: 20 },
+  { name: '東方Project', sort_order: 30 },
+  { name: 'POPS & ANIME', sort_order: 10 },
+  { name: 'niconico', sort_order: 20 },
 ]
 
 test('マスタ項目をsort_order順に並べる', () => {
@@ -34,12 +34,12 @@ test('マスタ順序にない名称は末尾で日本語順に並べる', () =>
   assert.deepEqual(sorted, ['POPS & ANIME', '東方Project', 'VARIETY', 'あ', 'い'])
 })
 
-test('sort_order順がid順と異なる場合はsort_order順に並べる', () => {
-  // Given: id順とsort_order順が逆になるマスタ項目。
+test('sort_order順が名称順と異なる場合はsort_order順に並べる', () => {
+  // Given: 名称順とsort_order順が異なるマスタ項目。
   const items: MasterItemDTO[] = [
-    { id: 3, name: 'aaa', sort_order: 10 },
-    { id: 1, name: 'bbb', sort_order: 30 },
-    { id: 2, name: 'ccc', sort_order: 20 },
+    { name: 'aaa', sort_order: 10 },
+    { name: 'bbb', sort_order: 30 },
+    { name: 'ccc', sort_order: 20 },
   ]
 
   // When: sort_order順に並べる。
@@ -49,32 +49,29 @@ test('sort_order順がid順と異なる場合はsort_order順に並べる', () =
   assert.deepEqual(sorted, ['aaa', 'ccc', 'bbb'])
 })
 
-test('sort_orderが同じ場合はid順に並べる', () => {
-  // Given: sort_orderが同じでid順と名称順が逆の項目。
+test('sort_orderが同じ場合はAPIの表示順（入力順）を保つ', () => {
+  // Given: sort_orderが同じで入力順と名称順が逆の項目。マスタはDBの数値IDを公開しない。
   const items: MasterItemDTO[] = [
-    { id: 2, name: 'a', sort_order: 10 },
-    { id: 1, name: 'b', sort_order: 10 },
+    { name: 'b', sort_order: 10 },
+    { name: 'a', sort_order: 10 },
   ]
 
   // When: sort_order順に並べる。
   const sorted = sortMasterItemsBySortOrder(items).map((item) => item.name)
 
-  // Then: idの昇順になる。
+  // Then: 入力順のまま並ぶ。
   assert.deepEqual(sorted, ['b', 'a'])
 })
 
-test('sort_orderとidが同じ場合は名称順に並べる', () => {
-  // Given: sort_orderとidが同じで入力順と名称順が逆の項目。
-  const items: MasterItemDTO[] = [
-    { id: 1, name: 'b', sort_order: 10 },
-    { id: 1, name: 'a', sort_order: 10 },
-  ]
+test('sort_orderを持たない項目はAPIの表示順（入力順）を保つ', () => {
+  // Given: APIはsort_orderを返さず、表示順に並べた一覧を返す。
+  const items: MasterItemDTO[] = [{ name: '東方Project' }, { name: 'POPS & ANIME' }]
 
-  // When: sort_order順に並べる。
+  // When
   const sorted = sortMasterItemsBySortOrder(items).map((item) => item.name)
 
-  // Then: 名称の昇順になる。
-  assert.deepEqual(sorted, ['a', 'b'])
+  // Then: 名称順に並べ替えない。
+  assert.deepEqual(sorted, ['東方Project', 'POPS & ANIME'])
 })
 
 test('マスタにない項目は昇順・降順とも末尾へ固定する', () => {

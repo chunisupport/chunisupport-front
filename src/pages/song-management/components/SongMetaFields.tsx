@@ -52,7 +52,8 @@ type SongMetaFieldsProps = {
   /** Wikiページタイトル。未設定は null */
   wikiPageTitle: string | null
   /** ジャンルID。未選択は null */
-  genreId: number | null
+  /** 選択中のジャンル名 */
+  genre: string | null
   /** BPM。未入力は null */
   bpm: number | null
   /** 配信日。未入力は null */
@@ -76,7 +77,7 @@ type SongMetaFieldsProps = {
   /** Wikiページタイトルの変更。空白のみは null */
   onWikiPageTitleChange: (value: string | null) => void
   /** ジャンルIDの変更 */
-  onGenreIdChange: (value: number | null) => void
+  onGenreChange: (value: string | null) => void
   /** BPMの変更。空文字は null */
   onBpmChange: (value: number | null) => void
   /** 配信日の変更。空白のみは null で、日付への丸めはしない */
@@ -312,10 +313,10 @@ const SongMetaDetailFields = (props: SongMetaFieldsViewProps) => {
     <>
       <GenreSelectField
         label={FIELD.genre}
-        value={props.genreId}
+        value={props.genre}
         genres={props.genres}
         placeholder={props.genrePlaceholder}
-        onChange={props.onGenreIdChange}
+        onChange={props.onGenreChange}
       />
       <SongMetaBpmField {...props} />
       <ManagementTextField

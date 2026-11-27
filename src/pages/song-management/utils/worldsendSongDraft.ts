@@ -9,9 +9,8 @@ import { toDateOnly } from '../../../utils/dateOnly'
 import { SONG_MANAGEMENT_INPUT_LIMITS, SONG_MANAGEMENT_MESSAGES } from '../constants'
 import {
   type DraftRequestResult,
-  findGenreIdByName,
-  findGenreNameById,
   readSongNewFlag,
+  resolveGenreName,
   toNullableTrimmedString,
 } from './songDraftCommon'
 
@@ -22,7 +21,8 @@ export type WorldsendDraft = {
   reading: string | null
   wiki_page_title: string | null
   artist: string
-  genre_id: number | null
+  /** ジャンル名。未選択またはマスタにないジャンルは null */
+  genre: string | null
   bpm: number | null
   released_at: string | null
   jacket: string | null
@@ -43,7 +43,8 @@ export type CreateWorldsendDraft = {
   reading: string | null
   wiki_page_title: string | null
   artist: string
-  genre_id: number | null
+  /** ジャンル名。未選択またはマスタにないジャンルは null */
+  genre: string | null
   bpm: number | null
   released_at: string | null
   jacket: string | null
@@ -67,7 +68,7 @@ export const buildCreateWorldsendDraft = (): CreateWorldsendDraft => {
     reading: null,
     wiki_page_title: null,
     artist: '',
-    genre_id: null,
+    genre: null,
     bpm: null,
     released_at: null,
     jacket: null,
@@ -99,7 +100,7 @@ export const toWorldsendDraft = (
     reading: song.reading ?? null,
     wiki_page_title: song.wiki_page_title ?? null,
     artist: song.artist,
-    genre_id: findGenreIdByName(genres, song.genre),
+    genre: resolveGenreName(genres, song.genre),
     bpm: song.bpm ?? null,
     released_at: toDateOnly(song.release),
     jacket: song.jacket ?? null,
@@ -131,7 +132,7 @@ export const hasWorldsendDraftChanges = (
     current.reading !== initial.reading ||
     current.wiki_page_title !== initial.wiki_page_title ||
     current.artist !== initial.artist ||
-    current.genre_id !== initial.genre_id ||
+    current.genre !== initial.genre ||
     current.bpm !== initial.bpm ||
     current.released_at !== initial.released_at ||
     current.jacket !== initial.jacket ||
@@ -168,7 +169,7 @@ export const buildUpdateWorldsendSongRequest = (
       reading: toNullableTrimmedString(draft.reading),
       wiki_page_title: toNullableTrimmedString(draft.wiki_page_title),
       artist: draft.artist,
-      genre: findGenreNameById(genres, draft.genre_id),
+      genre: resolveGenreName(genres, draft.genre),
       bpm: draft.bpm,
       released_at: normalizedReleasedAt,
       jacket: draft.jacket,
@@ -206,7 +207,7 @@ export const buildCreateWorldsendSongRequest = (
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.officialIdxTooLong }
   }
 
-  const genreName = findGenreNameById(genres, draft.genre_id)
+  const genreName = resolveGenreName(genres, draft.genre)
   if (!genreName) {
     return { ok: false, message: SONG_MANAGEMENT_MESSAGES.genreRequired }
   }

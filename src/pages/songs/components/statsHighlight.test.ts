@@ -4,9 +4,9 @@ import type { RatingBandDTO } from '../../../types/api'
 import { isOwnBestAverageRatingBand } from './statsHighlight.ts'
 
 const ratingBands: RatingBandDTO[] = [
-  { id: 1, label: '16.00～16.24', min_inclusive: 16, max_exclusive: 16.25, sort_order: 1 },
-  { id: 2, label: '16.25～16.49', min_inclusive: 16.25, max_exclusive: 16.5, sort_order: 2 },
-  { id: 3, label: '17.00～', min_inclusive: 17, max_exclusive: null, sort_order: 3 },
+  { label: '16.00～16.24', min_inclusive: 16, max_exclusive: 16.25, sort_order: 1 },
+  { label: '16.25～16.49', min_inclusive: 16.25, max_exclusive: 16.5, sort_order: 2 },
+  { label: '17.00～', min_inclusive: 17, max_exclusive: null, sort_order: 3 },
 ]
 
 test('ベスト枠平均が統計行のレーティング帯に含まれる場合はハイライト対象になること', () => {

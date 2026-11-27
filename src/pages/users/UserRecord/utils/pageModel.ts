@@ -1,6 +1,6 @@
 import type { Accessor } from 'solid-js'
 import { createMemo } from 'solid-js'
-import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../../types/api'
+import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../../../../types/api'
 import type { FilterState, RecordSortCondition } from '../../../../types/recordFilter'
 import {
   normalizeVersionFilterSelection,
@@ -20,7 +20,7 @@ import { sortRecordsByConditions } from './sorting'
 /** UserRecordページモデルの入力値 */
 type UserRecordPageModelParams = {
   songs: Accessor<{ songs: SongDTO[] } | undefined>
-  versions: Accessor<{ versions: VersionDTO[] } | undefined>
+  versions: Accessor<{ versions: VersionSummaryDTO[] } | undefined>
   sourceRecords: Accessor<PlayerRecordDTO[]>
   filters: Accessor<FilterState>
   favoriteSongIds: Accessor<ReadonlySet<string>>

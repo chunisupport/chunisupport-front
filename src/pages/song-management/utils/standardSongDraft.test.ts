@@ -16,16 +16,9 @@ import {
   toSongDraft,
 } from './standardSongDraft'
 
-const genres = [
-  { id: 1, name: 'POPS & ANIME' },
-  { id: 2, name: 'ORIGINAL' },
-]
+const genres = [{ name: 'POPS & ANIME' }, { name: 'ORIGINAL' }]
 
-const difficulties = [
-  { id: 10, name: 'BASIC' },
-  { id: 13, name: 'MASTER' },
-  { id: 14, name: 'ULTIMA' },
-]
+const difficulties = [{ name: 'BASIC' }, { name: 'MASTER' }, { name: 'ULTIMA' }]
 
 const managedSong: ManagedSongDTO = {
   id: 'song-1',
@@ -70,7 +63,7 @@ const validCreateDraft = (): CreateSongDraft => {
     official_idx: ' 1234 ',
     title: ' 新曲 ',
     artist: ' artist ',
-    genre_id: 2,
+    genre: 'ORIGINAL',
     jacket: '  ',
     charts: draft.charts.map((chart) =>
       chart.difficulty_name === 'MASTER'
@@ -87,14 +80,14 @@ test('管理用楽曲から難易度マスタ順の編集ドラフトを生成�
   const draft = toSongDraft(managedSong, genres, difficulties)
 
   // Then
-  assert.equal(draft.genre_id, 2)
+  assert.equal(draft.genre, 'ORIGINAL')
   assert.equal(draft.released_at, '2025-01-02')
   assert.equal(draft.is_new, true)
   assert.deepEqual(
-    draft.charts.map((chart) => [chart.difficulty_id, chart.difficulty_name, chart.const]),
+    draft.charts.map((chart) => [chart.difficulty_name, chart.const]),
     [
-      [10, 'BASIC', '3'],
-      [13, 'MASTER', '13.5'],
+      ['BASIC', '3'],
+      ['MASTER', '13.5'],
     ]
   )
   assert.equal(draft.charts[1].updated_at, '2025-01-03T00:00:00Z')
@@ -122,14 +115,14 @@ test('ULTIMA譜面を1回だけ追加すること', () => {
   const draft = toSongDraft(managedSong, genres, difficulties)
 
   // When
-  const added = addUltimaChartToDraft(draft, 14)
-  const addedTwice = addUltimaChartToDraft(added, 14)
+  const added = addUltimaChartToDraft(draft)
+  const addedTwice = addUltimaChartToDraft(added)
 
   // Then
   assert.equal(hasUltimaChart(draft), false)
   assert.equal(hasUltimaChart(added), true)
   assert.equal(addedTwice, added)
-  assert.equal(added.charts[added.charts.length - 1].difficulty_id, 14)
+  assert.equal(added.charts[added.charts.length - 1].difficulty_name, 'ULTIMA')
 })
 
 test('差分判定は編集可能な項目の変更だけを検出すること', () => {
@@ -151,7 +144,7 @@ test('差分判定は編集可能な項目の変更だけを検出すること',
     ),
     true
   )
-  assert.equal(hasSongDraftChanges(addUltimaChartToDraft(initial, 14), initial), true)
+  assert.equal(hasSongDraftChanges(addUltimaChartToDraft(initial), initial), true)
 })
 
 test('定数が数値でない、または負の譜面を無効と判定すること', () => {
@@ -165,7 +158,7 @@ test('定数が数値でない、または負の譜面を無効と判定する�
   assert.equal(hasInvalidEditableChart([{ ...chart, notes: -1 }]), true)
 })
 
-test('更新リクエストは文字列を正規化してジャンル名へ変換すること', () => {
+test('更新リクエストは文字列を正規化してジャンル名を送ること', () => {
   // Given
   const draft = {
     ...toSongDraft(managedSong, genres, difficulties),
@@ -260,7 +253,7 @@ test('追加リクエストは公式IDが11文字なら長さエラーを返す�
 test('追加リクエストはジャンルがnullなら選択エラーを返すこと', () => {
   // Given: 検証対象の不正な入力。
   const draft = validCreateDraft()
-  const input = { ...draft, genre_id: null }
+  const input = { ...draft, genre: null }
 
   // When: 追加リクエストを組み立てる。
   const result = buildCreateSongRequest(input, genres)
@@ -369,7 +362,7 @@ test('追加リクエストは必須欠落をID長超過より優先すること
 test('追加リクエストはID長超過をジャンル未選択より優先すること', () => {
   // Given: 検証対象の不正な入力。
   const draft = validCreateDraft()
-  const input = { ...draft, official_idx: '12345678901', genre_id: null }
+  const input = { ...draft, official_idx: '12345678901', genre: null }
 
   // When: 追加リクエストを組み立てる。
   const result = buildCreateSongRequest(input, genres)
@@ -381,7 +374,7 @@ test('追加リクエストはID長超過をジャンル未選択より優先す
 test('追加リクエストはジャンル未選択をBPM不正より優先すること', () => {
   // Given: 検証対象の不正な入力。
   const draft = validCreateDraft()
-  const input = { ...draft, genre_id: null, bpm: -1 }
+  const input = { ...draft, genre: null, bpm: -1 }
 
   // When: 追加リクエストを組み立てる。
   const result = buildCreateSongRequest(input, genres)

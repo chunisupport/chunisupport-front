@@ -15,7 +15,7 @@ import type {
   NameFolderDTO,
   PlayerFavoriteSongResponseItem,
   SongDTO,
-  VersionDTO,
+  VersionSummaryDTO,
 } from '../../../../types/api'
 import { isNullableSelectionMatched } from '../../../../utils/filterSelection'
 import { sortMasterItemsBySortOrder } from '../../../../utils/masterData'
@@ -30,7 +30,7 @@ type Props = {
   open: boolean
   songs: SongDTO[]
   genres: MasterItemDTO[]
-  versions: VersionDTO[]
+  versions: VersionSummaryDTO[]
   /** 楽曲名順フォルダ一覧（表示順） */
   nameFolders: NameFolderDTO[]
   favoriteSongs: PlayerFavoriteSongResponseItem[]

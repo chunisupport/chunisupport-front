@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GoalDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
+import type { GoalDTO, PlayerRecordDTO, SongDTO, VersionDTO } from '../../../types/api'
 import { calculateGoalProgress, filterRecordsByAttributes } from './goalProgress'
 
 /**
@@ -551,22 +551,7 @@ test('OP対象条件では曲ごとのOP対象難易度に一致するレコー�
   ]
 
   // When
-  const filtered = filterRecordsByAttributes(
-    records,
-    { chart_target: 'OP_TARGET' },
-    {
-      genres: [],
-      difficulties: [],
-      versions: [],
-      name_folders: [],
-      account_types: [],
-      rating_bands: [],
-      achievement_types: [],
-      possessions: [],
-    },
-    songs,
-    []
-  )
+  const filtered = filterRecordsByAttributes(records, { chart_target: 'OP_TARGET' }, songs, [])
 
   // Then
   assert.deepEqual(
@@ -595,27 +580,16 @@ test('楽曲名順条件では通常・OP対象のどちらも対象フォルダ
       charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
     }),
   ]
-  const masterData = {
-    genres: [],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
 
   // When
-  const normal = filterRecordsByAttributes(records, { name_folder: 'KA' }, masterData, songs, [])
+  const normal = filterRecordsByAttributes(records, { name_folder: 'KA' }, songs, [])
   const opTarget = filterRecordsByAttributes(
     records,
     { chart_target: 'OP_TARGET', name_folder: ['A'] },
-    masterData,
     songs,
     []
   )
-  const empty = filterRecordsByAttributes(records, { name_folder: [] }, masterData, songs, [])
+  const empty = filterRecordsByAttributes(records, { name_folder: [] }, songs, [])
 
   // Then
   assert.deepEqual(
@@ -637,25 +611,7 @@ test('属性が空配列の場合は対象レコードなしとして扱う', ()
   ]
 
   // When
-  const filtered = filterRecordsByAttributes(
-    records,
-    { diff: [] },
-    {
-      genres: [],
-      difficulties: [
-        { id: 1, name: 'MASTER' },
-        { id: 2, name: 'ULTIMA' },
-      ],
-      versions: [],
-      name_folders: [],
-      account_types: [],
-      rating_bands: [],
-      achievement_types: [],
-      possessions: [],
-    },
-    [],
-    []
-  )
+  const filtered = filterRecordsByAttributes(records, { diff: [] }, [], [])
 
   // Then
   assert.deepEqual(filtered, [])
@@ -679,19 +635,6 @@ test('OP対象条件でも難易度属性が空配列の場合は対象レコー
   const filtered = filterRecordsByAttributes(
     records,
     { chart_target: 'OP_TARGET', diff: [] },
-    {
-      genres: [],
-      difficulties: [
-        { id: 1, name: 'MASTER' },
-        { id: 2, name: 'ULTIMA' },
-      ],
-      versions: [],
-      name_folders: [],
-      account_types: [],
-      rating_bands: [],
-      achievement_types: [],
-      possessions: [],
-    },
     songs,
     []
   )
@@ -814,16 +757,6 @@ test('未解禁曲設定はOVER POWER達成率の分母から差し引く', () =
   const progress = calculateGoalProgress(goal, records, songs, {
     records,
     versions: [],
-    masterData: {
-      genres: [],
-      difficulties: [],
-      versions: [],
-      name_folders: [],
-      account_types: [],
-      rating_bands: [],
-      achievement_types: [],
-      possessions: [],
-    },
     lockedSongs: [{ id: 'song-1', is_ultima: true }],
   })
 
@@ -843,22 +776,11 @@ test('OP対象の譜面定数が下限と等しい場合は除外しない', () 
       charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
     }),
   ]
-  const masterData = {
-    genres: [],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
 
   // When
   const filtered = filterRecordsByAttributes(
     records,
     { chart_target: 'OP_TARGET', const: { min: 14 } },
-    masterData,
     songs,
     []
   )
@@ -880,22 +802,11 @@ test('OP対象の譜面定数が上限と等しい場合は除外しない', () 
       charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
     }),
   ]
-  const masterData = {
-    genres: [],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
 
   // When
   const filtered = filterRecordsByAttributes(
     records,
     { chart_target: 'OP_TARGET', const: { max: 14 } },
-    masterData,
     songs,
     []
   )
@@ -918,22 +829,11 @@ test('OP対象でジャンルが対象外の楽曲は除外する', () => {
       charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
     }),
   ]
-  const masterData = {
-    genres: [{ id: 1, name: 'POPS', short_name: 'POPS' }],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
 
   // When
   const filtered = filterRecordsByAttributes(
     records,
-    { chart_target: 'OP_TARGET', genre: [1] },
-    masterData,
+    { chart_target: 'OP_TARGET', genre: 'POPS' },
     songs,
     []
   )
@@ -953,26 +853,15 @@ test('OP対象でバージョンが対象外の楽曲は除外する', () => {
       charts: { MASTER: { const: 14, is_const_unknown: false, notes: null } },
     }),
   ]
-  const masterData = {
-    genres: [],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
-  const versions = [
-    { id: 1, name: 'v1', short_name: 'v1', released_at: '2024-01-01T00:00:00Z' },
-    { id: 2, name: 'v2', short_name: 'v2', released_at: '2025-01-01T00:00:00Z' },
+  const versions: VersionDTO[] = [
+    { id: '00000000000000b1', name: 'v1', short_name: 'v1', released_at: '2024-01-01T00:00:00Z' },
+    { id: '00000000000000b2', name: 'v2', short_name: 'v2', released_at: '2025-01-01T00:00:00Z' },
   ]
 
   // When
   const filtered = filterRecordsByAttributes(
     records,
-    { chart_target: 'OP_TARGET', ver: [2] },
-    masterData,
+    { chart_target: 'OP_TARGET', ver: '00000000000000b2' },
     songs,
     versions
   )
@@ -984,19 +873,9 @@ test('OP対象でバージョンが対象外の楽曲は除外する', () => {
 test('譜面定数が下限と等しいレコードは除外しない', () => {
   // Given
   const records = [createRecord({ id: 'song-1', const: 14 })]
-  const masterData = {
-    genres: [],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
 
   // When
-  const filtered = filterRecordsByAttributes(records, { const: { min: 14 } }, masterData, [], [])
+  const filtered = filterRecordsByAttributes(records, { const: { min: 14 } }, [], [])
 
   // Then
   assert.deepEqual(
@@ -1008,19 +887,9 @@ test('譜面定数が下限と等しいレコードは除外しない', () => {
 test('譜面定数が上限と等しいレコードは除外しない', () => {
   // Given
   const records = [createRecord({ id: 'song-1', const: 14 })]
-  const masterData = {
-    genres: [],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
 
   // When
-  const filtered = filterRecordsByAttributes(records, { const: { max: 14 } }, masterData, [], [])
+  const filtered = filterRecordsByAttributes(records, { const: { max: 14 } }, [], [])
 
   // Then
   assert.deepEqual(
@@ -1032,19 +901,9 @@ test('譜面定数が上限と等しいレコードは除外しない', () => {
 test('譜面定数が上限を超えるレコードは除外する', () => {
   // Given
   const records = [createRecord({ id: 'song-1', const: 15 })]
-  const masterData = {
-    genres: [],
-    difficulties: [],
-    versions: [],
-    name_folders: [],
-    account_types: [],
-    rating_bands: [],
-    achievement_types: [],
-    possessions: [],
-  }
 
   // When
-  const filtered = filterRecordsByAttributes(records, { const: { max: 14 } }, masterData, [], [])
+  const filtered = filterRecordsByAttributes(records, { const: { max: 14 } }, [], [])
 
   // Then
   assert.deepEqual(filtered, [])

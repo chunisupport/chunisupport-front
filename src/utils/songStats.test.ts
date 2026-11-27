@@ -15,8 +15,8 @@ const createStatsBand = (ratingBand: string, playerCount: number): SongStatsBand
 })
 
 const ratingBands: RatingBandDTO[] = [
-  { id: 2, label: '16.25～16.49', min_inclusive: 16.25, max_exclusive: 16.5, sort_order: 2 },
-  { id: 1, label: '16.00～16.24', min_inclusive: 16, max_exclusive: 16.25, sort_order: 1 },
+  { label: '16.25～16.49', min_inclusive: 16.25, max_exclusive: 16.5, sort_order: 2 },
+  { label: '16.00～16.24', min_inclusive: 16, max_exclusive: 16.25, sort_order: 1 },
 ]
 
 test('completeSongStatsRatingBands: 欠落した帯を0人の統計行で補完する', () => {

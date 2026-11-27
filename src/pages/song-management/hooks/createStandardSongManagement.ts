@@ -18,6 +18,7 @@ import { SONG_MANAGEMENT_MESSAGES } from '../constants'
 import { createSongManagementFilters, filterManagedSongs } from '../songManagementFilters'
 import { patchManagedSongResponse } from '../utils/patchManagedSongResponse'
 import { sortByReleaseDateDescWithMissingFirst } from '../utils/releaseDateSorting'
+import type { EditableDifficultyName } from '../utils/songDraftCommon'
 import {
   addUltimaChartToDraft,
   applySongDraftToManagedSong,
@@ -109,13 +110,13 @@ export const createStandardSongManagement = (
   /**
    * 編集ドラフトの指定難易度の譜面項目を更新する。
    *
-   * @param difficultyId 更新する譜面の難易度マスタID
+   * @param difficultyName 更新する譜面の難易度名
    * @param key 更新する項目
    * @param value 新しい値
    * @returns なし
    */
   const updateDraftChart = (
-    difficultyId: number,
+    difficultyName: EditableDifficultyName,
     key: EditableChartDraftField,
     value: number | boolean | string | null
   ): void => {
@@ -124,7 +125,7 @@ export const createStandardSongManagement = (
       return {
         ...prev,
         charts: prev.charts.map((chart) =>
-          chart.difficulty_id === difficultyId ? { ...chart, [key]: value } : chart
+          chart.difficulty_name === difficultyName ? { ...chart, [key]: value } : chart
         ),
       }
     })
@@ -142,15 +143,15 @@ export const createStandardSongManagement = (
       return
     }
 
-    const ultimaDifficulty = md.difficulties.find(
+    const hasUltimaDifficulty = md.difficulties.some(
       (difficulty) => normalizePlayerDataDifficulty(difficulty.name) === 'ULTIMA'
     )
-    if (!ultimaDifficulty) {
+    if (!hasUltimaDifficulty) {
       showErrorToast(SONG_MANAGEMENT_MESSAGES.ultimaDifficultyMissing)
       return
     }
 
-    setDraft((prev) => (prev ? addUltimaChartToDraft(prev, ultimaDifficulty.id) : prev))
+    setDraft((prev) => (prev ? addUltimaChartToDraft(prev) : prev))
   }
 
   /**

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../types/api'
+import type { PlayerRecordDTO, SongDTO, VersionSummaryDTO } from '../types/api'
 import { resolveReleasedVersionFilterSelection } from './filterSelection'
 import type { RandomSongCandidate, RandomSongLampFilter } from './randomSongSelector.ts'
 import {
@@ -28,9 +28,9 @@ import {
 } from './randomSongSelector.ts'
 import { MAX_SCORE } from './scoreRank.ts'
 
-const versions: VersionDTO[] = [
-  { id: 1, name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
-  { id: 2, name: 'CHUNITHM NEW', short_name: 'NEW', released_at: '2021-11-04' },
+const versions: VersionSummaryDTO[] = [
+  { name: 'CHUNITHM', short_name: 'ORI', released_at: '2015-07-16' },
+  { name: 'CHUNITHM NEW', short_name: 'NEW', released_at: '2021-11-04' },
 ]
 
 const createSong = (overrides: Partial<SongDTO>): SongDTO => ({

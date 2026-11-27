@@ -1,21 +1,19 @@
 import type {
   GoalAttributes,
   GoalDTO,
-  MasterDataDTO,
   PlayerRecordDTO,
   SongDTO,
   VersionDTO,
 } from '../../../types/api'
 import {
   isGoalNameFolderMatched,
-  normalizeGoalAttributeIds,
-  normalizeGoalNameFolderCodes,
+  normalizeGoalAttributeValues,
 } from '../../../utils/goalAttributes'
 import {
   getRainbowRequiredDifficulties,
   hasRainbowRequiredCharts,
 } from '../../../utils/goalRainbowCharts'
-import { resolveGoalVersionValueByReleaseDate } from '../../../utils/goalVersion'
+import { resolveGoalVersionIdByReleaseDate } from '../../../utils/goalVersion'
 import { resolveGoalDynamicTarget } from './goalCountTarget'
 import type { GoalProgressResult } from './goalProgress'
 
@@ -24,36 +22,30 @@ import type { GoalProgressResult } from './goalProgress'
  *
  * @param songs - 通常楽曲一覧。
  * @param attributes - 虹枠目標の対象条件。
- * @param masterData - ジャンルIDの解決に使うマスタデータ。
- * @param versions - バージョン条件の解決に使うバージョン一覧。
+ * @param versions - バージョン条件の解決に使う公開ID付きのバージョン一覧。
  * @returns 必須譜面が揃い、対象条件に一致する楽曲一覧。
  */
 export const filterRainbowTargetSongs = (
   songs: SongDTO[],
   attributes: GoalAttributes,
-  masterData: MasterDataDTO,
   versions: VersionDTO[]
 ): SongDTO[] => {
-  const genreIds = normalizeGoalAttributeIds(attributes.genre)
-  const versionIds = normalizeGoalAttributeIds(attributes.ver)
-  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
-  if (genreIds?.length === 0 || versionIds?.length === 0 || nameFolderCodes?.length === 0) {
+  const genreValues = normalizeGoalAttributeValues(attributes.genre)
+  const versionIds = normalizeGoalAttributeValues(attributes.ver)
+  const nameFolderCodes = normalizeGoalAttributeValues(attributes.name_folder)
+  if (genreValues?.length === 0 || versionIds?.length === 0 || nameFolderCodes?.length === 0) {
     return []
   }
 
-  const genreNames = genreIds
-    ? new Set(
-        masterData.genres.filter((genre) => genreIds.includes(genre.id)).map((genre) => genre.name)
-      )
-    : undefined
+  const genreNames = genreValues ? new Set(genreValues) : undefined
 
   return songs.filter((song) => {
     if (!hasRainbowRequiredCharts(song)) return false
     if (genreNames && !genreNames.has(song.genre)) return false
     if (!isGoalNameFolderMatched(song.name_folder_code, nameFolderCodes)) return false
     if (versionIds) {
-      const version = resolveGoalVersionValueByReleaseDate(song.release, versions)
-      if (!version || !versionIds.includes(version)) return false
+      const versionId = resolveGoalVersionIdByReleaseDate(song.release, versions)
+      if (!versionId || !versionIds.includes(versionId)) return false
     }
     return true
   })

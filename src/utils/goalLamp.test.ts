@@ -166,13 +166,7 @@ test('ランプ目標の未達成フィルターは達成境界で選曲候補�
       }
 
       // When: 未達成の選曲候補を絞り込む。
-      const result = filterRandomSongCandidatesByGoal(
-        [candidate],
-        records,
-        goal,
-        { difficulties: [], genres: [] },
-        []
-      )
+      const result = filterRandomSongCandidatesByGoal([candidate], records, goal, { versions: [] })
 
       // Then: 直前とnullは残り、目標ちょうどと上位は除外される。
       assert.deepEqual(result, expected ? [candidate] : [])

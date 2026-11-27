@@ -114,7 +114,7 @@ test('既定の全バージョン選択ではバージョン不明のレコー�
     { name: 'CHUNITHM VERSE', short_name: 'VERSE', released_at: '2024-12-12' },
     { name: 'CHUNITHM X-VERSE', short_name: 'X-VERSE', released_at: '2026-01-01' },
   ]
-  const genres = [{ id: 1, name: 'POPS & ANIME', sort_order: 1 }]
+  const genres = [{ name: 'POPS & ANIME', sort_order: 1 }]
   const filters = buildDefaultFilter(genres, versions, '2026-10-22')
   const unknown = createRecord({ release: null, release_version: '不明' })
   const known = createRecord({ release: '2026-01-01', release_version: 'X-VERSE' })

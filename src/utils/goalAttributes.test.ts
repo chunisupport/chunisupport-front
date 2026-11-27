@@ -2,31 +2,31 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   isGoalNameFolderMatched,
-  normalizeGoalAttributeIds,
-  normalizeGoalNameFolderCodes,
+  normalizeGoalAttributeValues,
+  normalizeGoalDifficultyNames,
   resolveGoalConstSelection,
 } from './goalAttributes'
 
-test('単一IDは1件のID配列へ正規化される', () => {
+test('単一の識別子は1件の配列へ正規化される', () => {
   // Given
-  const attributeValue = 3
+  const attributeValue = 'MASTER'
 
   // When
-  const result = normalizeGoalAttributeIds(attributeValue)
+  const result = normalizeGoalAttributeValues(attributeValue)
 
   // Then
-  assert.deepEqual(result, [3])
+  assert.deepEqual(result, ['MASTER'])
 })
 
-test('ID配列は整数だけを残して正規化される', () => {
-  // Given
-  const attributeValue = [1, 2.5, 4]
+test('識別子の配列は文字列だけを残して正規化される', () => {
+  // Given: DBの数値IDなど文字列以外の値が混入した配列
+  const attributeValue = ['A', 4, 'KA'] as unknown as string[]
 
   // When
-  const result = normalizeGoalAttributeIds(attributeValue)
+  const result = normalizeGoalAttributeValues(attributeValue)
 
   // Then
-  assert.deepEqual(result, [1, 4])
+  assert.deepEqual(result, ['A', 'KA'])
 })
 
 test('未指定は条件未指定としてundefinedへ正規化される', () => {
@@ -34,7 +34,7 @@ test('未指定は条件未指定としてundefinedへ正規化される', () =>
   const attributeValue = undefined
 
   // When
-  const result = normalizeGoalAttributeIds(attributeValue)
+  const result = normalizeGoalAttributeValues(attributeValue)
 
   // Then
   assert.equal(result, undefined)
@@ -42,46 +42,24 @@ test('未指定は条件未指定としてundefinedへ正規化される', () =>
 
 test('空配列は0件条件として空配列を維持する', () => {
   // Given
-  const attributeValue: number[] = []
+  const attributeValue: string[] = []
 
   // When
-  const result = normalizeGoalAttributeIds(attributeValue)
+  const result = normalizeGoalAttributeValues(attributeValue)
 
   // Then
   assert.deepEqual(result, [])
 })
 
-test('楽曲名順の単一コードは1件のコード配列へ正規化される', () => {
+test('難易度名はレコードの難易度表記へ正規化され、未知の名前は除かれる', () => {
   // Given
-  const attributeValue = 'A'
+  const difficultyNames = ['master', 'ULTIMA', 'UNKNOWN']
 
   // When
-  const result = normalizeGoalNameFolderCodes(attributeValue)
+  const result = normalizeGoalDifficultyNames(difficultyNames)
 
   // Then
-  assert.deepEqual(result, ['A'])
-})
-
-test('楽曲名順のコード配列はそのまま返される', () => {
-  // Given
-  const attributeValue = ['A', 'KA']
-
-  // When
-  const result = normalizeGoalNameFolderCodes(attributeValue)
-
-  // Then
-  assert.deepEqual(result, ['A', 'KA'])
-})
-
-test('楽曲名順の未指定は条件未指定としてundefinedへ正規化される', () => {
-  // Given
-  const attributeValue = undefined
-
-  // When
-  const result = normalizeGoalNameFolderCodes(attributeValue)
-
-  // Then
-  assert.equal(result, undefined)
+  assert.deepEqual([...result], ['MASTER', 'ULTIMA'])
 })
 
 test('楽曲名順の条件未指定ならどの楽曲も一致する', () => {
@@ -134,7 +112,7 @@ test('入力方法のない目標はレベル境界と一致する範囲でも�
 
 test('定数範囲のない目標は全範囲を数値指定で復元する', () => {
   // Given
-  const attributes = { genre: 1 }
+  const attributes = { genre: 'POPS & ANIME' }
 
   // When
   const result = resolveGoalConstSelection(attributes)

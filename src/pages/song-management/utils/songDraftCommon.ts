@@ -71,29 +71,16 @@ export const readSongNewFlag = (song: Pick<SongDTO, 'is_new'>): boolean => {
 }
 
 /**
- * ジャンル名からジャンルマスタIDを引く。
+ * ジャンル名がジャンルマスタに存在する場合だけ、その名前を返す。
+ * ジャンルはDBの数値IDを公開しないため、名前で識別する。
  *
  * @param genres ジャンルマスタ
  * @param genreName ジャンル名
- * @returns 一致するジャンルID。見つからない場合は null
+ * @returns マスタに存在するジャンル名。未指定または見つからない場合は null
  */
-export const findGenreIdByName = (
+export const resolveGenreName = (
   genres: readonly MasterItemDTO[],
   genreName: string | null | undefined
-): number | null => {
-  return genres.find((genre) => genre.name === genreName)?.id ?? null
-}
-
-/**
- * ジャンルマスタIDからジャンル名を引く。
- *
- * @param genres ジャンルマスタ
- * @param genreId ジャンルID
- * @returns 一致するジャンル名。見つからない場合は null
- */
-export const findGenreNameById = (
-  genres: readonly MasterItemDTO[],
-  genreId: number | null
 ): string | null => {
-  return genres.find((genre) => genre.id === genreId)?.name ?? null
+  return genres.find((genre) => genre.name === genreName)?.name ?? null
 }

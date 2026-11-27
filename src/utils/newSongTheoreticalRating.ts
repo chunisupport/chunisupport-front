@@ -5,7 +5,7 @@ import type {
   PlayerDataDifficulty,
   PlayerRecordDTO,
   SongDTO,
-  VersionDTO,
+  VersionSummaryDTO,
 } from '../types/api'
 import { SCORE_RANK_MIN_SCORES } from './scoreRank'
 import { calculateSingleRatingHundredths, MAX_RATING_SCORE } from './singleRating'
@@ -139,7 +139,7 @@ const toRatingTheoreticalEntry = ({
  * @returns 基準日以前で最新のYYYY-MM-DD形式の稼働開始日。対象がなければ未定義。
  */
 const resolveCurrentVersionReleaseDate = (
-  versions: readonly Pick<VersionDTO, 'released_at'>[],
+  versions: readonly Pick<VersionSummaryDTO, 'released_at'>[],
   referenceDate: string
 ): string | undefined =>
   versions.reduce<string | undefined>((latestReleaseDate, version) => {
@@ -219,7 +219,7 @@ const calculateTheoreticalRating = (
  */
 export const calculateBestTheoreticalRating = (
   songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'release' | 'charts'>[],
-  versions: readonly Pick<VersionDTO, 'released_at'>[],
+  versions: readonly Pick<VersionSummaryDTO, 'released_at'>[],
   referenceDate: string,
   slotCount: number
 ): RatingTheoretical | undefined => {
@@ -246,7 +246,7 @@ export const calculateBestTheoreticalRating = (
  */
 export const calculateNewSongTheoreticalRating = (
   songs: readonly Pick<SongDTO, 'id' | 'title' | 'artist' | 'release' | 'charts'>[],
-  versions: readonly Pick<VersionDTO, 'released_at'>[],
+  versions: readonly Pick<VersionSummaryDTO, 'released_at'>[],
   referenceDate: string,
   slotCount: number
 ): RatingTheoretical | undefined => {

@@ -15,12 +15,15 @@ import {
   toggleSelection,
 } from './goalFormModel'
 
+const V1_ID = 'aaaaaaaaaaaaaaa1'
+const V2_ID = 'aaaaaaaaaaaaaaa2'
+
 const selectionFallbacks = {
-  allDifficultySelections: ['1', '2', '3'],
-  allGenreSelections: ['10', '20'],
-  allVersionSelections: ['1', '2'],
+  allDifficultySelections: ['BASIC', 'ADVANCED', 'EXPERT'],
+  allGenreSelections: ['POPS & ANIME', 'niconico'],
+  allVersionSelections: [V1_ID, V2_ID],
   allNameFolderSelections: ['A', 'KA', 'SA'],
-  defaultDifficultySelections: ['3'],
+  defaultDifficultySelections: ['EXPERT'],
 }
 
 test('作成フォームの初期状態はMASTER/ULTIMA選択と標準値で作成される', () => {
@@ -51,18 +54,18 @@ test('作成フォームの初期状態はMASTER/ULTIMA選択と標準値で作�
 test('作成フォームの難易度初期選択はMASTERとULTIMAだけを含む', () => {
   // Given: BASIC〜ULTIMA を含む難易度マスタデータ（表記揺れを含む）
   const difficulties = [
-    { id: 1, name: 'basic' },
-    { id: 2, name: 'ADVANCED' },
-    { id: 3, name: 'EXPERT' },
-    { id: 4, name: 'master' },
-    { id: 5, name: 'ULTIMA' },
+    { name: 'basic' },
+    { name: 'ADVANCED' },
+    { name: 'EXPERT' },
+    { name: 'master' },
+    { name: 'ULTIMA' },
   ]
 
   // When: 初期選択難易度を構築する
   const result = buildDefaultDifficultySelections(difficulties)
 
   // Then: 大文字正規化のうえ MASTER と ULTIMA だけが選択される
-  assert.deepEqual(result, ['4', '5'])
+  assert.deepEqual(result, ['master', 'ULTIMA'])
 })
 
 test('編集フォームでdiffが未指定の場合は全難易度が選択される', () => {
@@ -73,7 +76,7 @@ test('編集フォームでdiffが未指定の場合は全難易度が選択さ�
     title: '全難易度目標',
     achievement_type: 'rank_count',
     achievement_params: { score: 1000000 },
-    attributes: { genre: [10], ver: [2] },
+    attributes: { genre: ['POPS & ANIME'], ver: [V2_ID] },
     invert_value: false,
     invert_percentage: false,
     gauge_start: 0,
@@ -98,10 +101,10 @@ test('編集フォームの初期状態は保存済み目標から復元され�
     achievement_type: 'hardlamp_count',
     achievement_params: { lamp: 'ABS', remaining: 2 },
     attributes: {
-      diff: 3,
+      diff: 'EXPERT',
       const: { min: 13.5, max: 15 },
-      genre: [10],
-      ver: [2],
+      genre: ['POPS & ANIME'],
+      ver: [V2_ID],
       name_folder: 'KA',
     },
     invert_value: true,
@@ -123,13 +126,13 @@ test('編集フォームの初期状態は保存済み目標から復元され�
   assert.equal(result.countMode, 'remaining')
   assert.equal(result.invertValue, true)
   assert.equal(result.invertPercentage, false)
-  assert.deepEqual(result.diffs, ['3'])
+  assert.deepEqual(result.diffs, ['EXPERT'])
   assert.deepEqual(result.constSelection, {
     constFilterMode: 'number',
     constRange: { min: 13.5, max: 15 },
   })
-  assert.deepEqual(result.genres, ['10'])
-  assert.deepEqual(result.versions, ['2'])
+  assert.deepEqual(result.genres, ['POPS & ANIME'])
+  assert.deepEqual(result.versions, [V2_ID])
   assert.deepEqual(result.nameFolders, ['KA'])
 })
 
@@ -141,7 +144,7 @@ test('編集フォームはレベル指定で保存した目標をレベル指�
     title: 'レベル14 AJ',
     achievement_type: 'combolamp_count',
     achievement_params: { lamp: 'AJ', count: 10 },
-    attributes: { diff: 4, const: { min: 14, max: 14.9 }, const_filter_mode: 'level' },
+    attributes: { diff: 'MASTER', const: { min: 14, max: 14.9 }, const_filter_mode: 'level' },
     invert_value: false,
     invert_percentage: false,
     gauge_start: 0,
@@ -165,38 +168,38 @@ test('対象属性は通常条件とOP対象条件をAPI送信用に変換する
   const normalAttributes = buildGoalFormAttributes({
     achievementType: 'score_count',
     chartTargetMode: 'normal',
-    diffs: ['1', '2'],
+    diffs: ['BASIC', 'ADVANCED'],
     constSelection: { constFilterMode: 'number', constRange: { min: 13, max: 15 } },
-    genres: ['10'],
-    versions: ['1', '2'],
+    genres: ['POPS & ANIME'],
+    versions: [V1_ID, V2_ID],
     nameFolders: ['A', 'KA', 'SA'],
     allNameFolders: ['A', 'KA', 'SA'],
   })
   const opTargetAttributes = buildGoalFormAttributes({
     achievementType: 'overpower_value',
     chartTargetMode: 'op_target',
-    diffs: ['1'],
+    diffs: ['BASIC'],
     constSelection: { constFilterMode: 'level', constRange: { min: 14, max: 14.9 } },
     genres: [],
-    versions: ['2'],
+    versions: [V2_ID],
     nameFolders: ['A', 'KA', 'SA'],
     allNameFolders: ['A', 'KA', 'SA'],
   })
 
   // Then
   assert.deepEqual(normalAttributes, {
-    diff: [1, 2],
+    diff: ['BASIC', 'ADVANCED'],
     const: { min: 13, max: 15 },
     const_filter_mode: 'number',
-    genre: 10,
-    ver: [1, 2],
+    genre: 'POPS & ANIME',
+    ver: [V1_ID, V2_ID],
   })
   assert.deepEqual(opTargetAttributes, {
     chart_target: 'OP_TARGET',
     const: { min: 14, max: 14.9 },
     const_filter_mode: 'level',
     genre: [],
-    ver: 2,
+    ver: V2_ID,
   })
 })
 
@@ -205,18 +208,18 @@ test('虹枠目標の対象属性から難易度・定数範囲と入力方法�
   const attributes = buildGoalFormAttributes({
     achievementType: 'rainbow_count',
     chartTargetMode: 'op_target',
-    diffs: ['4'],
+    diffs: ['MASTER'],
     constSelection: { constFilterMode: 'level', constRange: { min: 13, max: 15.9 } },
-    genres: ['10'],
-    versions: ['2'],
+    genres: ['POPS & ANIME'],
+    versions: [V2_ID],
     nameFolders: ['SA', 'A'],
     allNameFolders: ['A', 'KA', 'SA'],
   })
 
   // Then
   assert.deepEqual(attributes, {
-    genre: 10,
-    ver: 2,
+    genre: 'POPS & ANIME',
+    ver: V2_ID,
     name_folder: ['A', 'SA'],
   })
 })
@@ -226,10 +229,10 @@ test('楽曲名順は全選択なら属性から省略し、1件なら単一コ�
   const baseInput = {
     achievementType: 'score_count' as const,
     chartTargetMode: 'normal' as const,
-    diffs: ['4'],
+    diffs: ['MASTER'],
     constSelection: createDefaultGoalConstSelection(),
-    genres: ['10'],
-    versions: ['2'],
+    genres: ['POPS & ANIME'],
+    versions: [V2_ID],
     allNameFolders: ['A', 'KA', 'SA'],
   }
 

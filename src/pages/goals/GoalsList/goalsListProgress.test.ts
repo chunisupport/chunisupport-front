@@ -251,7 +251,7 @@ test('同じ対象条件の目標が複数あっても、目標ごとの成果�
     title: `目標${id}`,
     achievement_type: 'score_count',
     achievement_params: { score: 1_000_000, count: 1 },
-    attributes: { diff: [4] },
+    attributes: { diff: ['MASTER'] },
     invert_value: false,
     invert_percentage: false,
     gauge_start: 0,
@@ -264,15 +264,12 @@ test('同じ対象条件の目標が複数あっても、目標ごとの成果�
     goals: [
       createGoal(1, { achievement_params: { score: 1_000_000 } }),
       createGoal(2, { achievement_params: { score: 1_009_000 } }),
-      createGoal(3, { attributes: { diff: [3] }, achievement_params: { score: 1_000_000 } }),
+      createGoal(3, { attributes: { diff: ['EXPERT'] }, achievement_params: { score: 1_000_000 } }),
     ],
     groups: [],
     songs: [],
     masterData: {
-      difficulties: [
-        { id: 3, name: 'EXPERT' },
-        { id: 4, name: 'MASTER' },
-      ],
+      difficulties: [{ name: 'EXPERT' }, { name: 'MASTER' }],
       genres: [],
       versions: [],
       name_folders: [],

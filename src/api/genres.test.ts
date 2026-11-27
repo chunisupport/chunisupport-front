@@ -10,11 +10,11 @@ import type * as GenresApi from './genres'
 const loadGenresApi = () =>
   loadTestModule<typeof GenresApi>((cacheKey) => import(`./genres.ts?cache=${cacheKey}`))
 
-test('requestGenres はジャンル個別APIから取得し、ID順に正規化する', async () => {
-  // Given
+test('requestGenres はジャンル個別APIから取得し、APIの表示順を保つ', async () => {
+  // Given: APIはDBの数値IDを返さず、表示順に並べたジャンルを返す。
   const genres = [
-    { id: 2, name: 'niconico', short_name: 'nico' },
-    { id: 1, name: 'POPS & ANIME', short_name: 'P&A' },
+    { name: 'POPS & ANIME', short_name: 'P&A' },
+    { name: 'niconico', short_name: 'nico' },
   ]
   const calls = installFetchRecorder(() => Response.json({ genres }))
   const { requestGenres } = await loadGenresApi()
@@ -26,8 +26,8 @@ test('requestGenres はジャンル個別APIから取得し、ID順に正規化�
   assert.equal(calls.length, 1)
   assert.ok(String(calls[0]?.input).endsWith('/internal/master/genres'))
   assert.deepEqual(
-    first.map((genre) => genre.id),
-    [1, 2]
+    first.map((genre) => genre.name),
+    ['POPS & ANIME', 'niconico']
   )
 })
 

@@ -1,10 +1,9 @@
-import { normalizePlayerDataDifficulty } from '../constants/difficulty'
 import type { GoalFilterOptions } from '../queries/masterData'
-import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO, VersionDTO } from '../types/api'
+import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO } from '../types/api'
 import {
   isGoalNameFolderMatched,
-  normalizeGoalAttributeIds,
-  normalizeGoalNameFolderCodes,
+  normalizeGoalAttributeValues,
+  normalizeGoalDifficultyNames,
 } from './goalAttributes'
 import {
   COMBO_LAMP_UNACHIEVED_FILTERS,
@@ -92,49 +91,34 @@ type ResolvedRandomSongGoalAttributes = {
 }
 
 /**
- * 保存済み目標の属性IDをランダム選曲候補と比較できる条件へ一度だけ解決する。
+ * 保存済み目標の属性をランダム選曲候補と比較できる条件へ一度だけ解決する。
  *
  * @param goal - 適用する保存済み目標。
- * @param masterData - 目標属性IDを表示値へ解決するマスタデータ。
- * @param versions - 目標のバージョン番号を解決するバージョン一覧。
+ * @param options - 目標のバージョン公開IDを表示名へ解決する公開ID付きのバージョン一覧。
  * @returns 候補の各項目と直接比較できる目標条件。
  */
 const resolveRandomSongGoalAttributes = (
   goal: GoalDTO,
-  masterData: GoalFilterOptions,
-  versions: readonly VersionDTO[]
+  options: GoalFilterOptions
 ): ResolvedRandomSongGoalAttributes => {
   const isRainbowGoal = goal.achievement_type === 'rainbow_count'
-  const difficultyIds = isRainbowGoal ? undefined : normalizeGoalAttributeIds(goal.attributes.diff)
-  const genreIds = normalizeGoalAttributeIds(goal.attributes.genre)
-  const versionIds = normalizeGoalAttributeIds(goal.attributes.ver)
-  const nameFolderCodes = normalizeGoalNameFolderCodes(goal.attributes.name_folder)
-  const versionNameMap = buildGoalVersionNameMap(versions)
+  const difficultyNames = isRainbowGoal
+    ? undefined
+    : normalizeGoalAttributeValues(goal.attributes.diff)
+  const genreNames = normalizeGoalAttributeValues(goal.attributes.genre)
+  const versionIds = normalizeGoalAttributeValues(goal.attributes.ver)
+  const nameFolderCodes = normalizeGoalAttributeValues(goal.attributes.name_folder)
+  const versionNameMap = buildGoalVersionNameMap(options.versions)
 
   return {
     hasNoSelectedCharts:
-      difficultyIds?.length === 0 ||
-      genreIds?.length === 0 ||
+      difficultyNames?.length === 0 ||
+      genreNames?.length === 0 ||
       versionIds?.length === 0 ||
       nameFolderCodes?.length === 0,
     opTargetOnly: !isRainbowGoal && goal.attributes.chart_target === 'OP_TARGET',
-    difficulties: difficultyIds
-      ? new Set(
-          masterData.difficulties
-            .filter((difficulty) => difficultyIds.includes(difficulty.id))
-            .flatMap((difficulty) => {
-              const normalized = normalizePlayerDataDifficulty(difficulty.name)
-              return normalized ? [normalized] : []
-            })
-        )
-      : undefined,
-    genres: genreIds
-      ? new Set(
-          masterData.genres
-            .filter((genre) => genreIds.includes(genre.id))
-            .map((genre) => genre.name)
-        )
-      : undefined,
+    difficulties: difficultyNames ? normalizeGoalDifficultyNames(difficultyNames) : undefined,
+    genres: genreNames ? new Set(genreNames) : undefined,
     versions: versionIds
       ? new Set(versionIds.flatMap((id) => versionNameMap.get(id) ?? []))
       : undefined,
@@ -238,19 +222,17 @@ const isRandomSongRecordUnachievedForGoal = (
  * @param candidates - 譜面単位の選曲候補。
  * @param recordsByChartKey - 譜面単位キーで参照できるユーザーレコード。
  * @param goal - 適用する保存済み目標。
- * @param masterData - 目標属性IDを解決するマスタデータ。
- * @param versions - 目標バージョン番号を解決するバージョン一覧。
+ * @param options - 目標のバージョン公開IDを解決する公開ID付きのバージョン一覧。
  * @returns 目標の対象に含まれる未達成譜面候補。
  */
 export const filterRandomSongCandidatesByGoal = (
   candidates: readonly RandomSongCandidate[],
   recordsByChartKey: ReadonlyMap<string, PlayerRecordDTO>,
   goal: GoalDTO,
-  masterData: GoalFilterOptions,
-  versions: readonly VersionDTO[]
+  options: GoalFilterOptions
 ): RandomSongCandidate[] => {
   if (!isRandomSongGoalFilterAvailable(goal)) return []
-  const attributes = resolveRandomSongGoalAttributes(goal, masterData, versions)
+  const attributes = resolveRandomSongGoalAttributes(goal, options)
 
   return candidates.filter((candidate) => {
     if (goal.achievement_type === 'rainbow_count' && !hasRainbowRequiredCharts(candidate.song))

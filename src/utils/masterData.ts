@@ -6,17 +6,20 @@ const jaCollator = new Intl.Collator('ja')
 const getSortOrder = (item: MasterItemDTO): number =>
   typeof item.sort_order === 'number' ? item.sort_order : Number.MAX_SAFE_INTEGER
 
+/**
+ * マスタ項目を `sort_order` 順に並べる。
+ * `sort_order` が同じ、または持たない項目はAPIが返した表示順（入力順）を保つ。
+ * マスタはDBの数値IDを公開しないため、IDでは並べ替えない。
+ *
+ * @param items - APIが表示順に返したマスタ項目。
+ * @returns `sort_order` 昇順、同順なら入力順に並べたマスタ項目。
+ */
 export const sortMasterItemsBySortOrder = <T extends MasterItemDTO>(items: readonly T[]): T[] =>
   items
     .map((item, index) => ({ item, index }))
     .sort((left, right) => {
       const orderDiff = getSortOrder(left.item) - getSortOrder(right.item)
       if (orderDiff !== 0) return orderDiff
-
-      if (left.item.id !== right.item.id) return left.item.id - right.item.id
-
-      const nameDiff = jaCollator.compare(left.item.name, right.item.name)
-      if (nameDiff !== 0) return nameDiff
 
       return left.index - right.index
     })

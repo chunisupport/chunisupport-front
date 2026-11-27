@@ -37,13 +37,13 @@ for (const kind of ['Standard', 'Worldsend']) {
         return new Response(null, { status: 204 })
       }
       const management = createRoot(() => create${kind}SongManagement(
-        () => ({ genres: [{ id: 1, name: 'ORIGINAL' }], difficulties: [] }),
+        () => ({ genres: [{ name: 'ORIGINAL' }], difficulties: [] }),
         () => []
       ))
       management.updateCreateDraftField('official_idx', '1234')
       management.updateCreateDraftField('title', '新曲')
       management.updateCreateDraftField('artist', 'artist')
-      management.updateCreateDraftField('genre_id', 1)
+      management.updateCreateDraftField('genre', 'ORIGINAL')
 
       // When: 追加処理中にもう一度追加を呼ぶ。
       const first = management.create()

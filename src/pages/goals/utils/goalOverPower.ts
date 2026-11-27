@@ -1,11 +1,4 @@
-import { normalizePlayerDataDifficulty } from '../../../constants/difficulty'
-import type {
-  GoalAttributes,
-  MasterDataDTO,
-  PlayerRecordDTO,
-  SongDTO,
-  VersionDTO,
-} from '../../../types/api'
+import type { GoalAttributes, PlayerRecordDTO, SongDTO, VersionDTO } from '../../../types/api'
 import {
   buildOverPowerChartEntries,
   selectOverPowerChartEntries,
@@ -13,21 +6,10 @@ import {
 import type { OverPowerChartEntry, OverPowerLockedSong } from '../../../usecases/overpower/types'
 import {
   isGoalNameFolderMatched,
-  normalizeGoalAttributeIds,
-  normalizeGoalNameFolderCodes,
+  normalizeGoalAttributeValues,
+  normalizeGoalDifficultyNames,
 } from '../../../utils/goalAttributes'
-import { resolveGoalVersionValueByReleaseDate } from '../../../utils/goalVersion'
-
-const EMPTY_MASTER_DATA: MasterDataDTO = {
-  genres: [],
-  difficulties: [],
-  versions: [],
-  name_folders: [],
-  account_types: [],
-  rating_bands: [],
-  achievement_types: [],
-  possessions: [],
-}
+import { resolveGoalVersionIdByReleaseDate } from '../../../utils/goalVersion'
 
 /** OVER POWER目標の現在値と理論値 */
 export interface GoalOverPowerTotals {
@@ -47,10 +29,8 @@ export interface GoalOverPowerCalculationInput {
   records: PlayerRecordDTO[]
   /** 楽曲マスタ一覧 */
   songs: SongDTO[]
-  /** バージョン一覧 */
+  /** 公開ID付きのバージョン一覧 */
   versions: VersionDTO[]
-  /** 難易度・ジャンルなどのマスタデータ */
-  masterData: MasterDataDTO
   /** 目標の対象条件 */
   attributes: GoalAttributes
   /** 未解禁楽曲設定。未指定なら除外しない */
@@ -79,7 +59,7 @@ const resolveRemainingTheoreticalChartConst = (songEntries: OverPowerChartEntry[
  * @param chartConst - 条件比較に使う譜面定数。
  * @param attributes - 目標の対象条件。
  * @param genreNames - 対象ジャンル名。
- * @param versionIds - 対象バージョン番号。
+ * @param versionIds - 対象バージョンの公開ID。
  * @param nameFolderCodes - 対象楽曲名順フォルダのコード。
  * @param versions - バージョン一覧。
  * @returns 条件に一致する場合はtrue。
@@ -89,7 +69,7 @@ const isSongMatchedByGoalAttributes = (
   chartConst: number,
   attributes: GoalAttributes,
   genreNames: Set<string> | undefined,
-  versionIds: number[] | undefined,
+  versionIds: string[] | undefined,
   nameFolderCodes: string[] | undefined,
   versions: VersionDTO[]
 ): boolean => {
@@ -100,8 +80,8 @@ const isSongMatchedByGoalAttributes = (
   if (genreNames && (!song.genre || !genreNames.has(song.genre))) return false
   if (!isGoalNameFolderMatched(song.name_folder_code, nameFolderCodes)) return false
   if (versionIds && versionIds.length > 0) {
-    const songVersionValue = resolveGoalVersionValueByReleaseDate(song.release, versions)
-    if (!songVersionValue || !versionIds.includes(songVersionValue)) return false
+    const songVersionId = resolveGoalVersionIdByReleaseDate(song.release, versions)
+    if (!songVersionId || !versionIds.includes(songVersionId)) return false
   }
   return true
 }
@@ -111,49 +91,30 @@ const isSongMatchedByGoalAttributes = (
  *
  * @param entries - 未解禁設定を反映済みの全譜面エントリ。
  * @param attributes - 目標の対象条件。
- * @param masterData - 難易度・ジャンルなどのマスタデータ。
- * @param versions - バージョン一覧。
+ * @param versions - 公開ID付きのバージョン一覧。
  * @returns 目標条件に一致した譜面エントリ。
  */
 const selectGoalOverPowerChartEntries = (
   entries: OverPowerChartEntry[],
   attributes: GoalAttributes,
-  masterData: MasterDataDTO,
   versions: VersionDTO[]
 ): OverPowerChartEntry[] => {
-  const diffIds = normalizeGoalAttributeIds(attributes.diff)
-  const genreIds = normalizeGoalAttributeIds(attributes.genre)
-  const versionIds = normalizeGoalAttributeIds(attributes.ver)
-  const nameFolderCodes = normalizeGoalNameFolderCodes(attributes.name_folder)
+  const diffValues = normalizeGoalAttributeValues(attributes.diff)
+  const genreValues = normalizeGoalAttributeValues(attributes.genre)
+  const versionIds = normalizeGoalAttributeValues(attributes.ver)
+  const nameFolderCodes = normalizeGoalAttributeValues(attributes.name_folder)
 
   if (
-    diffIds?.length === 0 ||
-    genreIds?.length === 0 ||
+    diffValues?.length === 0 ||
+    genreValues?.length === 0 ||
     versionIds?.length === 0 ||
     nameFolderCodes?.length === 0
   ) {
     return []
   }
 
-  const diffNames =
-    diffIds && diffIds.length > 0
-      ? new Set(
-          masterData.difficulties
-            .filter((difficulty) => diffIds.includes(difficulty.id))
-            .flatMap((difficulty) => {
-              const normalized = normalizePlayerDataDifficulty(difficulty.name)
-              return normalized ? [normalized] : []
-            })
-        )
-      : undefined
-  const genreNames =
-    genreIds && genreIds.length > 0
-      ? new Set(
-          masterData.genres
-            .filter((genre) => genreIds.includes(genre.id))
-            .map((genre) => genre.name)
-        )
-      : undefined
+  const diffNames = diffValues ? normalizeGoalDifficultyNames(diffValues) : undefined
+  const genreNames = genreValues ? new Set(genreValues) : undefined
 
   if (attributes.chart_target === 'OP_TARGET') {
     const entriesBySongId = new Map<string, OverPowerChartEntry[]>()
@@ -216,12 +177,7 @@ export const calculateGoalOverPowerTotals = (
     input.versions,
     input.lockedSongs ?? []
   )
-  const selected = selectGoalOverPowerChartEntries(
-    entries,
-    input.attributes,
-    input.masterData,
-    input.versions
-  )
+  const selected = selectGoalOverPowerChartEntries(entries, input.attributes, input.versions)
 
   let current = 0
   let max = 0
@@ -243,8 +199,7 @@ export const calculateGoalOverPowerTotals = (
  * @param records - プレイヤーレコード一覧。
  * @param songs - 楽曲マスタ一覧。
  * @param attributes - 目標フォームで選択中の対象条件。
- * @param versions - バージョン一覧。
- * @param masterData - 難易度・ジャンルなどのマスタデータ。
+ * @param versions - 公開ID付きのバージョン一覧。
  * @param lockedSongs - 未解禁楽曲設定。
  * @returns 対象譜面それぞれの最大OVER POWERを合計した値。
  */
@@ -253,14 +208,12 @@ export const calculateGoalOverPowerChartMax = (
   songs: SongDTO[],
   attributes: GoalAttributes,
   versions: VersionDTO[] = [],
-  masterData: MasterDataDTO = EMPTY_MASTER_DATA,
   lockedSongs: OverPowerLockedSong[] = []
 ): number =>
   calculateGoalOverPowerTotals({
     records,
     songs,
     versions,
-    masterData,
     attributes,
     lockedSongs,
   }).max

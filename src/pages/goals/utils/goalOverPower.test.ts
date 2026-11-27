@@ -1,24 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { MasterDataDTO, PlayerRecordDTO, SongDTO } from '../../../types/api'
+import type { PlayerRecordDTO, SongDTO, VersionDTO } from '../../../types/api'
 import { calculateGoalOverPowerChartMax, calculateGoalOverPowerTotals } from './goalOverPower'
-
-const MASTER_DATA: MasterDataDTO = {
-  genres: [{ id: 1, name: 'POPS', short_name: 'POPS' }],
-  difficulties: [
-    { id: 1, name: 'BASIC' },
-    { id: 2, name: 'ADVANCED' },
-    { id: 3, name: 'EXPERT' },
-    { id: 4, name: 'MASTER' },
-    { id: 5, name: 'ULTIMA' },
-  ],
-  versions: [],
-  name_folders: [],
-  account_types: [],
-  rating_bands: [],
-  achievement_types: [],
-  possessions: [],
-}
 
 /**
  * OVER POWER目標テスト用のプレイヤーレコードを作る。
@@ -93,7 +76,7 @@ test('通常条件では各譜面の定数から最大OVER POWER合計を算出�
   ]
 
   // When
-  const result = calculateGoalOverPowerChartMax(records, songs, {}, [], MASTER_DATA)
+  const result = calculateGoalOverPowerChartMax(records, songs, {}, [])
 
   // Then
   assert.equal(result, 167.5)
@@ -114,13 +97,7 @@ test('OP対象条件では同一曲を重複せず楽曲マスタの最大OVER P
   ]
 
   // When
-  const result = calculateGoalOverPowerChartMax(
-    records,
-    songs,
-    { chart_target: 'OP_TARGET' },
-    [],
-    MASTER_DATA
-  )
+  const result = calculateGoalOverPowerChartMax(records, songs, { chart_target: 'OP_TARGET' }, [])
 
   // Then
   assert.equal(result, 95)
@@ -146,7 +123,6 @@ test('通常未解禁曲はOVER POWER目標の現在値と理論値から除外�
     records,
     songs,
     versions: [],
-    masterData: MASTER_DATA,
     attributes: { chart_target: 'OP_TARGET' },
     lockedSongs: [{ id: 'locked', is_ultima: false }],
   })
@@ -191,7 +167,6 @@ test('ULTIMA未解禁はULTIMA譜面だけを除外し理論値を残譜面へ�
     records,
     songs,
     versions: [],
-    masterData: MASTER_DATA,
     attributes: { chart_target: 'OP_TARGET' },
     lockedSongs: [{ id: 'song-a', is_ultima: true }],
   })
@@ -223,8 +198,7 @@ test('MASTER指定の目標ではULTIMA未解禁でもMASTER譜面の理論値�
     records,
     songs,
     versions: [],
-    masterData: MASTER_DATA,
-    attributes: { diff: [4] },
+    attributes: { diff: 'MASTER' },
     lockedSongs: [{ id: 'song-1', is_ultima: true }],
   })
 
@@ -255,7 +229,6 @@ test('ULTIMA未解禁で理論OP対象が残譜面へ落ちた曲は定数条件
     records,
     songs,
     versions: [],
-    masterData: MASTER_DATA,
     attributes: { chart_target: 'OP_TARGET', const: { min: 15 } },
     lockedSongs: [{ id: 'song-1', is_ultima: true }],
   })
@@ -284,8 +257,7 @@ test('OP対象条件では理論対象難易度の定数で絞り込む', () => 
     records,
     songs,
     { chart_target: 'OP_TARGET', const: { min: 15 } },
-    [],
-    MASTER_DATA
+    []
   )
 
   // Then
@@ -298,13 +270,7 @@ test('下限を超える定数の譜面は合計に含める', () => {
   const songs = [createSong({})]
 
   // When
-  const result = calculateGoalOverPowerChartMax(
-    records,
-    songs,
-    { const: { min: 14 } },
-    [],
-    MASTER_DATA
-  )
+  const result = calculateGoalOverPowerChartMax(records, songs, { const: { min: 14 } }, [])
 
   // Then
   assert.equal(result, 87.5)
@@ -316,13 +282,7 @@ test('下限と等しい定数の譜面は合計に含める', () => {
   const songs = [createSong({})]
 
   // When
-  const result = calculateGoalOverPowerChartMax(
-    records,
-    songs,
-    { const: { min: 14.5 } },
-    [],
-    MASTER_DATA
-  )
+  const result = calculateGoalOverPowerChartMax(records, songs, { const: { min: 14.5 } }, [])
 
   // Then
   assert.equal(result, 87.5)
@@ -334,13 +294,7 @@ test('上限を超える定数の譜面は合計から除外する', () => {
   const songs = [createSong({})]
 
   // When
-  const result = calculateGoalOverPowerChartMax(
-    records,
-    songs,
-    { const: { max: 14 } },
-    [],
-    MASTER_DATA
-  )
+  const result = calculateGoalOverPowerChartMax(records, songs, { const: { max: 14 } }, [])
 
   // Then
   assert.equal(result, 0)
@@ -352,13 +306,7 @@ test('上限を下回る定数の譜面は合計に含める', () => {
   const songs = [createSong({})]
 
   // When
-  const result = calculateGoalOverPowerChartMax(
-    records,
-    songs,
-    { const: { max: 15 } },
-    [],
-    MASTER_DATA
-  )
+  const result = calculateGoalOverPowerChartMax(records, songs, { const: { max: 15 } }, [])
 
   // Then
   assert.equal(result, 87.5)
@@ -370,13 +318,7 @@ test('上限と等しい定数の譜面は合計に含める', () => {
   const songs = [createSong({})]
 
   // When
-  const result = calculateGoalOverPowerChartMax(
-    records,
-    songs,
-    { const: { max: 14.5 } },
-    [],
-    MASTER_DATA
-  )
+  const result = calculateGoalOverPowerChartMax(records, songs, { const: { max: 14.5 } }, [])
 
   // Then
   assert.equal(result, 87.5)
@@ -388,7 +330,7 @@ test('対象外ジャンルの楽曲は合計から除外する', () => {
   const songs = [createSong({ genre: 'ANIME' })]
 
   // When
-  const result = calculateGoalOverPowerChartMax(records, songs, { genre: [1] }, [], MASTER_DATA)
+  const result = calculateGoalOverPowerChartMax(records, songs, { genre: 'POPS' }, [])
 
   // Then
   assert.equal(result, 0)
@@ -398,13 +340,18 @@ test('対象外バージョンの楽曲は合計から除外する', () => {
   // Given
   const records = [createRecord({})]
   const songs = [createSong({ release: '2024-06-01' })]
-  const versions = [
-    { id: 1, name: 'V1', short_name: 'V1', released_at: '2020-01-01T00:00:00Z' },
-    { id: 2, name: 'V2', short_name: 'V2', released_at: '2024-01-01T00:00:00Z' },
+  const versions: VersionDTO[] = [
+    { id: '00000000000000a1', name: 'V1', short_name: 'V1', released_at: '2020-01-01T00:00:00Z' },
+    { id: '00000000000000a2', name: 'V2', short_name: 'V2', released_at: '2024-01-01T00:00:00Z' },
   ]
 
   // When
-  const result = calculateGoalOverPowerChartMax(records, songs, { ver: [1] }, versions, MASTER_DATA)
+  const result = calculateGoalOverPowerChartMax(
+    records,
+    songs,
+    { ver: '00000000000000a1' },
+    versions
+  )
 
   // Then
   assert.equal(result, 0)

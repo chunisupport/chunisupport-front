@@ -46,7 +46,7 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
         reading={draft().reading}
         artist={draft().artist}
         wikiPageTitle={draft().wiki_page_title}
-        genreId={draft().genre_id}
+        genre={draft().genre}
         bpm={draft().bpm}
         releasedAt={draft().released_at}
         jacket={draft().jacket}
@@ -60,7 +60,7 @@ const WorldsendSongCreateSection = (props: WorldsendSongCreateSectionProps) => {
         onWikiPageTitleChange={(value) =>
           props.management.updateCreateDraftField('wiki_page_title', value)
         }
-        onGenreIdChange={(value) => props.management.updateCreateDraftField('genre_id', value)}
+        onGenreChange={(value) => props.management.updateCreateDraftField('genre', value)}
         onBpmChange={(value) => props.management.updateCreateDraftField('bpm', value)}
         onReleasedAtChange={(value) =>
           props.management.updateCreateDraftField('released_at', value)

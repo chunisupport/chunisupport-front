@@ -36,7 +36,7 @@ import { GoalTargetChartsSection } from './GoalTargetChartsSection'
 import { GoalTitleSection } from './GoalTitleSection'
 import type { GoalSelectOption } from './goalFormFields'
 import {
-  buildAllIdSelections,
+  buildAllNameSelections,
   buildAllVersionSelections,
   buildDefaultDifficultySelections,
   buildGoalFormAchievementParams,
@@ -184,18 +184,18 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
   const displayErrorMessage = createMemo(() => errorMessage() || props.apiErrorMessage)
   const versionOptions = createMemo(() => buildGoalVersionOptions(props.versions))
   const allDifficultySelections = createMemo(() =>
-    buildAllIdSelections(props.masterData.difficulties)
+    buildAllNameSelections(props.masterData.difficulties)
   )
   const defaultDifficultySelections = createMemo(() =>
     buildDefaultDifficultySelections(props.masterData.difficulties)
   )
-  const allGenreSelections = createMemo(() => buildAllIdSelections(props.masterData.genres))
+  const allGenreSelections = createMemo(() => buildAllNameSelections(props.masterData.genres))
   const allVersionSelections = createMemo(() => buildAllVersionSelections(versionOptions()))
   const allNameFolderSelections = createMemo(() =>
     props.masterData.name_folders.map((nameFolder) => nameFolder.code)
   )
   const genreSelectOptions = createMemo(() =>
-    props.masterData.genres.map((genre) => createMultiSelectOption(String(genre.id), genre.name))
+    props.masterData.genres.map((genre) => createMultiSelectOption(genre.name, genre.name))
   )
   const versionSelectOptions = createMemo(() =>
     versionOptions().map((option) => createMultiSelectOption(option.value, option.label))
@@ -673,9 +673,9 @@ const GoalFormDialog: Component<GoalFormDialogProps> = (props) => {
             setDiffs([])
           }
         }}
-        onToggleDifficulty={(id, checked) => {
+        onToggleDifficulty={(difficultyName, checked) => {
           setChartTargetMode('normal')
-          setDiffs((prev) => toggleSelection(prev, String(id), checked))
+          setDiffs((prev) => toggleSelection(prev, difficultyName, checked))
         }}
         onGenresChange={setGenres}
         onVersionsChange={setVersions}

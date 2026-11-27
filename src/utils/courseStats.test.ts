@@ -9,9 +9,9 @@ import {
 } from './courseStats.ts'
 
 const ratingBands: RatingBandDTO[] = [
-  { id: 2, label: '15.0', min_inclusive: 15, max_exclusive: 15.5, sort_order: 2 },
-  { id: 1, label: '-14.9', min_inclusive: null, max_exclusive: 15, sort_order: 1 },
-  { id: 3, label: '15.5', min_inclusive: 15.5, max_exclusive: null, sort_order: 3 },
+  { label: '15.0', min_inclusive: 15, max_exclusive: 15.5, sort_order: 2 },
+  { label: '-14.9', min_inclusive: null, max_exclusive: 15, sort_order: 1 },
+  { label: '15.5', min_inclusive: 15.5, max_exclusive: null, sort_order: 3 },
 ]
 
 test('COURSE_MAX_SCORE が3曲合計の理論値3,030,000であること', () => {
