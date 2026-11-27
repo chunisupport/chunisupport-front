@@ -1,4 +1,5 @@
 import {
+  ADMIN_APP_ANNOUNCEMENTS_PATH,
   ADMIN_BATCH_PATH,
   ADMIN_COURSES_PATH,
   ADMIN_DATA_COVERAGE_PATH,
@@ -21,6 +22,12 @@ export const ADMIN_PAGE_LINKS = [
     title: 'データ充足状況',
     description: '譜面定数・ノーツ数・NOTES DESIGNERの充足状況を確認します。',
     icon: 'coverage',
+  },
+  {
+    href: ADMIN_APP_ANNOUNCEMENTS_PATH,
+    title: 'お知らせ管理',
+    description: 'プロフィールカード上部に表示するお知らせを追加、修正、削除します。',
+    icon: 'announcements',
   },
   {
     href: ADMIN_MAINTENANCE_PATH,

@@ -12,6 +12,8 @@ export const REGISTER_SCORE_PATH = '/register-score'
 export const REGISTER_SCORE_TEMP_PATH = '/register-score-temp'
 /** 保存済みの最新スコア更新結果画面のパス */
 export const LATEST_SCORE_UPDATE_PATH = '/latest-score-update'
+/** 配信中のお知らせ一覧画面のパス */
+export const APP_ANNOUNCEMENTS_PATH = '/announcements'
 export const TOOLS_PATH = '/tools'
 /** 全譜面レコード統計画面のパス */
 export const CHART_STATS_PATH = `${TOOLS_PATH}/chart-stats`
@@ -61,6 +63,8 @@ export const ADMIN_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/songs/:dis
 export const ADMIN_WORLDSEND_CHART_RANKING_PATH = `${ADMIN_PATH}/chart-rankings/worldsend-songs/:displayid`
 /** ADMIN向けメンテナンス管理画面のパス */
 export const ADMIN_MAINTENANCE_PATH = `${ADMIN_PATH}/maintenance`
+/** ADMIN向けお知らせ管理画面のパス */
+export const ADMIN_APP_ANNOUNCEMENTS_PATH = `${ADMIN_PATH}/app-announcements`
 /** ADMIN向けバージョン管理画面のパス */
 export const ADMIN_VERSIONS_PATH = `${ADMIN_PATH}/versions`
 /** ADMIN向けバッチ管理画面のパス */

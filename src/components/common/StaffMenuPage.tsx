@@ -3,6 +3,7 @@ import CalendarRange from 'lucide-solid/icons/calendar-range'
 import ChartPie from 'lucide-solid/icons/chart-pie'
 import DatabaseZap from 'lucide-solid/icons/database-zap'
 import ImageDown from 'lucide-solid/icons/image-down'
+import Megaphone from 'lucide-solid/icons/megaphone'
 import Music from 'lucide-solid/icons/music'
 import Route from 'lucide-solid/icons/route'
 import Users from 'lucide-solid/icons/users'
@@ -23,6 +24,7 @@ export type StaffMenuLinkIcon =
   | 'versions'
   | 'batch'
   | 'ratingImage'
+  | 'announcements'
 
 export type StaffMenuLink = {
   /** 遷移先のアプリ内パス */
@@ -76,6 +78,8 @@ const StaffMenuCardIcon = (props: { icon: StaffMenuLinkIcon }) => {
       return <DatabaseZap class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
     case 'ratingImage':
       return <ImageDown class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
+    case 'announcements':
+      return <Megaphone class={STAFF_MENU_ICON_CLASS} aria-hidden="true" />
   }
 }
 

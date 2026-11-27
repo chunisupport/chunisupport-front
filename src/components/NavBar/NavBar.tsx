@@ -12,6 +12,7 @@ import FlagTriangleRight from 'lucide-solid/icons/flag-triangle-right'
 import History from 'lucide-solid/icons/history'
 import House from 'lucide-solid/icons/house'
 import LogOut from 'lucide-solid/icons/log-out'
+import Megaphone from 'lucide-solid/icons/megaphone'
 import Music from 'lucide-solid/icons/music'
 import Palette from 'lucide-solid/icons/palette'
 import Settings from 'lucide-solid/icons/settings'
@@ -29,12 +30,18 @@ type NavBarProps = {
 import { signOut } from 'firebase/auth'
 import { fetchMe } from '../../api/users'
 import { DOCUMENTATION_BASE_URL } from '../../config'
+import { APP_ANNOUNCEMENTS_TITLE } from '../../constants/appAnnouncements'
 import { CONTACT_FORM } from '../../constants/contactForm'
 import { DISCORD_COMMUNITY } from '../../constants/discordCommunity'
 import { EXTERNAL_LINK_NEW_TAB_DESCRIPTION } from '../../constants/externalLink'
 import { EDITOR_MENU_TITLE, FRIENDS_PAGE_TITLE } from '../../constants/pageTitles'
 import { LATEST_SCORE_UPDATE_TITLE } from '../../constants/playerLatestUpdate'
-import { EDITOR_PATH, FRIENDS_PATH, LATEST_SCORE_UPDATE_PATH } from '../../constants/routes'
+import {
+  APP_ANNOUNCEMENTS_PATH,
+  EDITOR_PATH,
+  FRIENDS_PATH,
+  LATEST_SCORE_UPDATE_PATH,
+} from '../../constants/routes'
 import { auth } from '../../lib/firebase'
 import { authSession, clearAuthenticatedUser } from '../../stores/authSession'
 import {
@@ -195,6 +202,11 @@ const NavBar = (props: NavBarProps) => {
               icon: () => <UsersRound class="h-4 w-4" aria-hidden="true" />,
               path: FRIENDS_PATH,
               hasNotificationDot: friendRequestNotification.hasPendingReceivedRequest,
+            },
+            {
+              label: APP_ANNOUNCEMENTS_TITLE,
+              icon: () => <Megaphone class="h-4 w-4" aria-hidden="true" />,
+              path: APP_ANNOUNCEMENTS_PATH,
             },
             {
               label: LATEST_SCORE_UPDATE_TITLE,
