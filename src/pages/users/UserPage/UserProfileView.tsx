@@ -34,6 +34,7 @@ import {
   type ProfilePageQuery,
 } from '../../../utils/userProfileRoute'
 import { scrollToUserProfileContent } from '../../../utils/userProfileScroll'
+import { ProfileAppAnnouncements } from './components/ProfileAppAnnouncements'
 import { ProfileComment } from './components/ProfileComment'
 import { ProfileFriendAction } from './components/ProfileFriendAction'
 import { RatingImagePreviewDialog } from './components/RatingImagePreviewDialog'
@@ -364,6 +365,7 @@ export const UserProfileView: Component<Props> = (props) => {
     <div class="mb-4 mx-auto w-full max-w-3xl">
       {/* stickyなタブ一覧との兼ね合いで、上下の余白を外枠のmy-4にまとめず、外枠のmb-4とネームプレート側のmt-4に分ける */}
       <div class="mt-4">
+        <ProfileAppAnnouncements username={props.username} />
         {/* ネームプレート */}
         <UserNameplate
           playerInfo={playerInfo()}

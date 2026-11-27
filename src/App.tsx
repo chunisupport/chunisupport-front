@@ -41,6 +41,7 @@ import {
 import { LANDING_GUEST_HERO_SECTION_CLASS } from './constants/landingPage'
 import { PLAY_HISTORY_ROLES } from './constants/playHistory'
 import {
+  ADMIN_APP_ANNOUNCEMENTS_PATH,
   ADMIN_BATCH_PATH,
   ADMIN_CHART_RANKING_PATH,
   ADMIN_COURSE_RANKING_PATH,
@@ -52,6 +53,7 @@ import {
   ADMIN_VERSIONS_PATH,
   ADMIN_WORLDSEND_CHART_RANKING_PATH,
   ALL_SONG_BEST_FRAME_PATH,
+  APP_ANNOUNCEMENTS_PATH,
   BEST_SLOT_RANKING_PATH,
   BORDER_CALCULATOR_PATH,
   CHART_CONSTANT_CALCULATOR_PATH,
@@ -123,6 +125,7 @@ const WorldsendScoreHistory = lazy(
 
 const Settings = lazy(() => import('./pages/settings/Settings'))
 const FriendsPage = lazy(() => import('./pages/friends/FriendsPage'))
+const AppAnnouncementsPage = lazy(() => import('./pages/announcements/AppAnnouncementsPage'))
 const FriendVsPage = lazy(() => import('./pages/tools/FriendVsPage'))
 
 const RegisterScorePage = lazy(() => import('./pages/register-score/RegisterScorePage'))
@@ -157,6 +160,7 @@ const AdminCoursesPage = lazy(() => import('./pages/admin/AdminCoursesPage'))
 const AdminHonorsPage = lazy(() => import('./pages/admin/AdminHonorsPage'))
 const AdminMaintenancePage = lazy(() => import('./pages/admin/AdminMaintenancePage'))
 const AdminVersionsPage = lazy(() => import('./pages/admin/AdminVersionsPage'))
+const AdminAppAnnouncementsPage = lazy(() => import('./pages/admin/AdminAppAnnouncementsPage'))
 const AdminBatchPage = lazy(() => import('./pages/admin/AdminBatchPage'))
 const AdminPreviewsPage = lazy(() => import('./pages/admin/AdminPreviewsPage'))
 const EditorPage = lazy(() => import('./pages/editor/EditorPage'))
@@ -492,6 +496,7 @@ const LoadableAdminCoursesPage = withRouteLoadBoundary(AdminCoursesPage)
 const LoadableAdminHonorsPage = withRouteLoadBoundary(AdminHonorsPage)
 const LoadableAdminMaintenancePage = withRouteLoadBoundary(AdminMaintenancePage)
 const LoadableAdminVersionsPage = withRouteLoadBoundary(AdminVersionsPage)
+const LoadableAdminAppAnnouncementsPage = withRouteLoadBoundary(AdminAppAnnouncementsPage)
 const LoadableAdminBatchPage = withRouteLoadBoundary(AdminBatchPage)
 const LoadableAdminPreviewsPage = withRouteLoadBoundary(AdminPreviewsPage)
 const LoadableEditorPage = withRouteLoadBoundary(EditorPage)
@@ -657,6 +662,17 @@ const GuardedAdminBatchPage = () => (
 )
 
 /**
+ * ADMIN 権限を要求してお知らせ管理画面を表示する。
+ *
+ * @returns 権限制御済みのお知らせ管理画面。
+ */
+const GuardedAdminAppAnnouncementsPage = () => (
+  <RequireRole allowedRoles={['ADMIN']}>
+    <LoadableAdminAppAnnouncementsPage />
+  </RequireRole>
+)
+
+/**
  * ADMIN 権限を要求してバージョン管理画面を表示する。
  *
  * @returns 権限制御済みのバージョン管理画面。
@@ -803,6 +819,10 @@ const App = () => {
 
       {/* その他 */}
       <Route
+        path={APP_ANNOUNCEMENTS_PATH}
+        component={withNavBar(withAuth(withRouteLoadBoundary(AppAnnouncementsPage)))}
+      />
+      <Route
         path={`${FRIENDS_PATH}/:tab?`}
         component={withNavBar(withAuth(withRouteLoadBoundary(FriendsPage)))}
       />
@@ -890,6 +910,10 @@ const App = () => {
       <Route path={ADMIN_COURSES_PATH} component={withNavBar(GuardedAdminCoursesPage)} />
       <Route path="/admin/honors" component={withNavBar(GuardedAdminHonorsPage)} />
       <Route path={ADMIN_MAINTENANCE_PATH} component={withNavBar(GuardedAdminMaintenancePage)} />
+      <Route
+        path={ADMIN_APP_ANNOUNCEMENTS_PATH}
+        component={withNavBar(GuardedAdminAppAnnouncementsPage)}
+      />
       <Route path={ADMIN_VERSIONS_PATH} component={withNavBar(GuardedAdminVersionsPage)} />
       <Route path={`${ADMIN_BATCH_PATH}/:tab?`} component={withNavBar(GuardedAdminBatchPage)} />
       {/* 楽曲バッチ単独だった頃の管理画面URL。ブックマークからの遷移をバッチ管理画面へ移す */}

@@ -1,4 +1,4 @@
-import { JST_TIME_ZONE } from '../constants/dateTime'
+import { JST_TIME_ZONE, JST_UTC_OFFSET } from '../constants/dateTime'
 
 /** 実行環境のタイムゾーンやロケール設定に依存せず、JSTの年月日時分秒を構成要素で得るフォーマッター */
 const jstDateTimeFormatter = new Intl.DateTimeFormat('ja-JP-u-ca-gregory-nu-latn', {
@@ -89,3 +89,30 @@ export const formatJstDateTimeMinute = (value: string | number | null): string |
   const { year, month, day, hour, minute } = parts
   return `${year}/${month}/${day} ${hour}:${minute}`
 }
+
+/** `datetime-local` 入力の値（分単位） */
+const DATE_TIME_LOCAL_INPUT_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+
+/**
+ * 日時を、JSTとして扱う `datetime-local` 入力の値へ整形する。
+ *
+ * @param value - APIが返した日時文字列。
+ * @returns YYYY-MM-DDTHH:mm形式のJST日時。不正な値の場合は空文字。
+ */
+export const formatJstDateTimeLocalInput = (value: string): string => {
+  const parts = toJstDateTimeParts(value)
+  if (!parts) return ''
+
+  const { year, month, day, hour, minute } = parts
+  return `${year}-${month}-${day}T${hour}:${minute}`
+}
+
+/**
+ * JSTとして入力された `datetime-local` の値をRFC3339へ変換する。
+ * 閲覧端末のタイムゾーンに依存させないため、オフセットは常にJSTを付ける。
+ *
+ * @param value - YYYY-MM-DDTHH:mm形式の入力値。
+ * @returns JSTオフセット付きのRFC3339日時。形式が不正な場合はnull。
+ */
+export const parseJstDateTimeLocalInput = (value: string): string | null =>
+  DATE_TIME_LOCAL_INPUT_PATTERN.test(value) ? `${value}:00${JST_UTC_OFFSET}` : null

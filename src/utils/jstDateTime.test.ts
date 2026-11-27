@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatJstCompactDate, formatJstDateTime, formatJstDateTimeMinute } from './jstDateTime'
+import {
+  formatJstCompactDate,
+  formatJstDateTime,
+  formatJstDateTimeLocalInput,
+  formatJstDateTimeMinute,
+  parseJstDateTimeLocalInput,
+} from './jstDateTime'
 
 test('UTC日時をJSTの区切りなし年月日へ整形し、日付をまたぐ場合は翌日になること', () => {
   // Given
@@ -83,4 +89,23 @@ test('分単位の整形でもnull、空文字、不正な日時はnullを返す
 
   // Then
   assert.deepEqual(results, [null, null, null, null])
+})
+
+test('UTC日時をJSTのdatetime-local入力値へ整形し、RFC3339へ戻せること', () => {
+  // Given
+  const value = '2026-11-30T15:30:00Z'
+
+  // When
+  const input = formatJstDateTimeLocalInput(value)
+
+  // Then
+  assert.equal(input, '2026-12-01T00:30')
+  assert.equal(parseJstDateTimeLocalInput(input), '2026-12-01T00:30:00+09:00')
+})
+
+test('不正なdatetime-local入力値はnull、不正な日時は空文字になること', () => {
+  // Given & When & Then
+  assert.equal(parseJstDateTimeLocalInput(''), null)
+  assert.equal(parseJstDateTimeLocalInput('2026-12-01'), null)
+  assert.equal(formatJstDateTimeLocalInput('invalid'), '')
 })

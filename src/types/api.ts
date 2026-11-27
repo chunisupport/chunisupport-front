@@ -481,6 +481,52 @@ export interface PlayerPlayHistoryResponseDTO {
   entries: PlayerPlayHistoryEntryDTO[]
 }
 
+/** 配信中の期間限定のお知らせ。`kind` は今後増える可能性があるため string で受ける。 */
+export interface AppAnnouncementDTO {
+  /** お知らせの固有ID */
+  id: string
+  /** 選択したときの動作。`message` または `link` */
+  kind: string
+  /** バナーと一覧に表示する文言 */
+  title: string
+  /** `message` の本文。`[リンクテキスト](URL)` 記法を含みうるプレーンテキスト */
+  body: string | null
+  /** `link` の遷移先。`/` 始まりはアプリ内パス、それ以外は外部URL */
+  target_url: string | null
+  /** 表示開始日時（RFC3339） */
+  starts_at: string
+  /** 表示終了日時（RFC3339、この時刻を含まない） */
+  expires_at: string
+  /** 閉じた利用者にも再表示させるときに増えるバージョン */
+  revision: number
+}
+
+/** `GET /internal/app-announcements` の応答 */
+export interface AppAnnouncementsResponseDTO {
+  announcements: AppAnnouncementDTO[]
+}
+
+/** 管理画面からお知らせを追加するリクエスト。本文型は target_url、リンク型は body を null にする */
+export interface AppAnnouncementRequestDTO {
+  kind: AppAnnouncementKind
+  title: string
+  body: string | null
+  target_url: string | null
+  /** 表示開始日時（RFC3339） */
+  starts_at: string
+  /** 表示終了日時（RFC3339、この時刻を含まない） */
+  expires_at: string
+}
+
+/** 管理画面からお知らせを更新するリクエスト */
+export interface UpdateAppAnnouncementRequestDTO extends AppAnnouncementRequestDTO {
+  /** true の場合は revision を1つ増やし、閉じた利用者にも再表示させる */
+  bump_revision: boolean
+}
+
+/** 管理画面から登録できるお知らせの種別 */
+export type AppAnnouncementKind = 'message' | 'link'
+
 /** フレンドランキングの対象楽曲概要 */
 export interface FriendRankingSongDTO {
   /** 楽曲表示ID */
