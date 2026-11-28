@@ -32,9 +32,13 @@ export const MAINTENANCE_RECHECK_BUTTON_LABEL = '状態を再確認'
 /** API接続を手動で再試行するボタンの文言 */
 export const API_UNAVAILABLE_RETRY_BUTTON_LABEL = '再試行'
 
-/** API接続不能画面に表示する案内文 */
+/** API接続不能画面に表示する案内文（端末はオンラインで、サーバー側に問題があると考えられる場合） */
 export const API_UNAVAILABLE_MESSAGE =
-  'ネットワーク接続を確認し、時間を置いてから再試行してください'
+  'サーバー側で一時的な問題が発生している可能性があります。復旧次第自動で再接続しますので、しばらくお待ちください。'
+
+/** API接続不能画面に表示する案内文（端末がオフラインの場合） */
+export const API_UNAVAILABLE_OFFLINE_MESSAGE =
+  'お使いの端末がオフラインになっています。ネットワーク接続を確認してください。'
 
 /** スタッフ用ログイン画面で非スタッフへ表示するエラー文言 */
 export const MAINTENANCE_STAFF_ONLY_ERROR_MESSAGE = 'このログイン画面は管理者・編集者専用です'
