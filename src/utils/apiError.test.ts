@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  isAuthApiError,
   isForbiddenApiError,
   isNotFoundApiError,
   isNotFoundOrInvalidDisplayIdApiError,
@@ -86,6 +87,29 @@ test('プレイヤーデータ未連携のAPIエラーだけを未連携とし�
 
   // When
   const results = cases.map(({ error }) => isPlayerNotLinkedApiError(error))
+
+  // Then
+  assert.deepEqual(
+    results,
+    cases.map(({ expected }) => expected)
+  )
+})
+
+test('401または認証エラーコードのAPIエラーだけを未ログインとして判定すること', () => {
+  // Given
+  const cases = [
+    { error: { status: 401 }, expected: true },
+    { error: { code: 'unauthorized' }, expected: true },
+    { error: { code: 'invalid_token' }, expected: true },
+    { error: { code: 'token_expired' }, expected: true },
+    { error: { status: 400, code: 'missing_token' }, expected: true },
+    { error: { status: 403, code: 'forbidden' }, expected: false },
+    { error: new Error('network'), expected: false },
+    { error: null, expected: false },
+  ] as const
+
+  // When
+  const results = cases.map(({ error }) => isAuthApiError(error))
 
   // Then
   assert.deepEqual(

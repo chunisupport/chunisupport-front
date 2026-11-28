@@ -9,6 +9,7 @@ import {
   setAuthSessionError,
 } from '../../stores/authSession.ts'
 import type { UserDTO } from '../../types/api.ts'
+import { isAuthApiError } from '../../utils/apiError.ts'
 
 export type AuthResolution = 'authenticated' | 'unauthenticated' | 'error'
 export type FetchCurrentUser = () => Promise<UserDTO>
@@ -16,20 +17,6 @@ type ResolveAuthSessionOptions = {
   forceRefresh?: boolean
   /** 自分の応答が破棄された場合に、遷移など要求固有の後続処理を取り消す。 */
   onSuperseded?: () => void
-}
-
-// fetchWithAuth が付与する status/code プロパティで 401 系エラーを判定する
-const AUTH_ERROR_CODES = [
-  'unauthorized',
-  'invalid_token',
-  'token_expired',
-  'missing_token',
-] as const
-
-const isAuthError = (error: unknown): boolean => {
-  const e = error as Partial<{ status: number; code: string }>
-  if (typeof e?.status === 'number' && e.status === 401) return true
-  return typeof e?.code === 'string' && (AUTH_ERROR_CODES as readonly string[]).includes(e.code)
 }
 
 /** 認証確認を共有し、強制再確認やログアウト以前の応答を破棄する。
@@ -60,7 +47,7 @@ export const resolveAuthSession = async (
           setAuthenticatedUser(user)
         } catch (error) {
           if (getSessionRevision() !== revision) return revision
-          if (isAuthError(error)) clearAuthenticatedUser()
+          if (isAuthApiError(error)) clearAuthenticatedUser()
           else setAuthSessionError()
         }
         return getSessionRevision()

@@ -10,6 +10,9 @@ const NOT_FOUND_ERROR_CODES = [
   'not_found',
 ]
 
+/** 未ログインまたはログイン切れを表す API エラーコード */
+const AUTH_ERROR_CODES = ['unauthorized', 'invalid_token', 'token_expired', 'missing_token']
+
 /**
  * unknown の値から API エラーとして参照できる形を取り出す。
  *
@@ -40,6 +43,17 @@ export const isNotFoundApiError = (error: unknown): boolean => {
 export const isNotFoundOrInvalidDisplayIdApiError = (error: unknown): boolean => {
   if (isNotFoundApiError(error)) return true
   return toApiErrorLike(error)?.code === 'validation_failed'
+}
+
+/**
+ * API エラーが未ログインまたはログイン切れによるものかを判定する。
+ *
+ * @param error - 判定対象のエラー値。`fetchWithAuth` が付与する status/code を参照する。
+ * @returns 401 または認証エラーコードの場合は true。
+ */
+export const isAuthApiError = (error: unknown): boolean => {
+  const apiError = toApiErrorLike(error)
+  return apiError?.status === 401 || AUTH_ERROR_CODES.includes(apiError?.code ?? '')
 }
 
 /**

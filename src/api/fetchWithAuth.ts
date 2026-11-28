@@ -4,6 +4,7 @@ import { clearAuthenticatedUser } from '../stores/authSession'
 import { markMaintenanceDetected } from '../stores/availability'
 import { type ErrorCode, type ErrorResponse, getErrorMessage } from '../types/api'
 import { buildLoginRedirectPath } from '../usecases/auth/redirectPath'
+import { isAuthApiError } from '../utils/apiError'
 import { buildCurrentPath } from '../utils/currentPath'
 import { isMaintenanceModeError, parseRetryAfterSeconds } from '../utils/maintenanceError'
 import { fetchApi } from './fetchApi'
@@ -14,18 +15,6 @@ type FetchWithAuthOptions = RequestInit & {
   suppressUnauthorizedRedirectForCodes?: readonly ErrorCode[]
   /** ログイン中のセッションとは別のアカウントで呼び出す場合のIDトークン */
   idToken?: string
-}
-
-const AUTH_ERROR_CODES: ErrorCode[] = [
-  'unauthorized',
-  'invalid_token',
-  'token_expired',
-  'missing_token',
-]
-
-const shouldRedirectToLogin = (status: number, error?: ErrorResponse): boolean => {
-  const code = error?.error?.code as ErrorCode | undefined
-  return status === 401 || (typeof code !== 'undefined' && AUTH_ERROR_CODES.includes(code))
 }
 
 export const shouldClearSessionOnUnauthorized = (
@@ -44,7 +33,7 @@ export const shouldClearSessionOnUnauthorized = (
   return (
     redirectOnUnauthorized &&
     !shouldSuppressUnauthorizedRedirect &&
-    shouldRedirectToLogin(status, error)
+    isAuthApiError({ status, code: errorCode })
   )
 }
 

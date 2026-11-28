@@ -58,6 +58,7 @@ import { sortSongsByReleaseDescAndIdxDesc, useSongsData } from '../../stores/son
 import type { GoalDTO, PlayerDataDifficulty, PlayerRecordDTO } from '../../types/api'
 import type { PlayerDataStatus } from '../../usecases/auth/resolvePlayerDataStatus'
 import { fetchUserRecordWithCache } from '../../usecases/cache/fetchUserRecordWithCache'
+import { isAuthApiError } from '../../utils/apiError'
 import { formatChartConst } from '../../utils/chartConstFormat'
 import { createFullChartConstRange } from '../../utils/chartLevel'
 import {
@@ -228,12 +229,6 @@ type MyRandomSongGoalData =
       status: 'error'
     }
 
-const UNAUTHENTICATED_ERROR_CODES = new Set([
-  'missing_token',
-  'unauthorized',
-  'invalid_token',
-  'token_expired',
-])
 const WEIGHT_PERCENT_FORMATTER = new Intl.NumberFormat('ja-JP', {
   maximumFractionDigits: 1,
 })
@@ -440,21 +435,6 @@ const RandomSongCheckbox: Component<{
 )
 
 /**
- * APIエラーが未認証によるものか判定する。
- *
- * @param error - 取得処理で発生したエラー。
- * @returns 未認証エラーの場合は true。
- */
-const isUnauthenticatedRandomSongError = (error: unknown): boolean => {
-  if (typeof error !== 'object' || error === null) return false
-
-  const apiError = error as { status?: number; code?: string }
-  if (apiError.status === 401) return true
-
-  return typeof apiError.code === 'string' && UNAUTHENTICATED_ERROR_CODES.has(apiError.code)
-}
-
-/**
  * ログイン中ユーザーの保存済み目標と条件解決用の選択肢を取得する。
  *
  * @returns 取得できた目標情報、または取得できなかった理由。
@@ -469,9 +449,7 @@ const fetchMyRandomSongGoalData = async (): Promise<MyRandomSongGoalData> => {
       options,
     }
   } catch (error) {
-    return isUnauthenticatedRandomSongError(error)
-      ? { status: 'unauthenticated' }
-      : { status: 'error' }
+    return isAuthApiError(error) ? { status: 'unauthenticated' } : { status: 'error' }
   }
 }
 
@@ -494,9 +472,7 @@ const fetchMyRandomSongRecordData = async (username: string): Promise<MyRandomSo
       bestRecords: rating.best,
     }
   } catch (error) {
-    return isUnauthenticatedRandomSongError(error)
-      ? { status: 'unauthenticated' }
-      : { status: 'error' }
+    return isAuthApiError(error) ? { status: 'unauthenticated' } : { status: 'error' }
   }
 }
 
@@ -517,9 +493,7 @@ const fetchMyRandomSongFavoriteData = async (
       favoriteSongIds: new Set(favoriteSongs.items.map((item) => item.id)),
     }
   } catch (error) {
-    return isUnauthenticatedRandomSongError(error)
-      ? { status: 'unauthenticated' }
-      : { status: 'error' }
+    return isAuthApiError(error) ? { status: 'unauthenticated' } : { status: 'error' }
   }
 }
 
